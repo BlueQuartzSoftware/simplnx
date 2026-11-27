@@ -16,7 +16,7 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ReadHDF5DatasetInputValues
 {
-  ReadHDF5DatasetParameter::ValueType ImportHdf5Object;
+  ReadHDF5DatasetParameter::ValueType import_hdf5_object;
 };
 
 /**
@@ -41,7 +41,7 @@ public:
   /**
    * @brief Destroys the non-owning reader.
    */
-  ~ReadHDF5Dataset() noexcept;
+  ~ReadHDF5Dataset() noexcept = default;
 
   ReadHDF5Dataset(const ReadHDF5Dataset&) = delete;
   ReadHDF5Dataset(ReadHDF5Dataset&&) noexcept = delete;

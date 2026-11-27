@@ -56,11 +56,12 @@ Parameters ComputeFeaturePhasesBinaryFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Cell Feature Ids used only with a Cell mask. Values are not read with a Feature mask.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Mask and Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Boolean or uint8 Cell or Feature mask. Zero assigns phase 0; any nonzero value assigns phase 1.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAMPath_Key, "Cell Feature Attribute Matrix",
                                                                     "The Feature Attribute Matrix where the binary phases array will be created. A mask in this matrix selects Feature-mask mode.",
                                                                     DataPath{}));
@@ -84,14 +85,14 @@ IFilter::VersionType ComputeFeaturePhasesBinaryFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeFeaturePhasesBinaryFilter::clone() const
+IFilter::UniquePointerType ComputeFeaturePhasesBinaryFilter::clone() const
 {
   return std::make_unique<ComputeFeaturePhasesBinaryFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeFeaturePhasesBinaryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeFeaturePhasesBinaryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   const auto featureAMPath = filterArgs.value<DataPath>(k_CellFeatureAMPath_Key);
   const auto maskPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
@@ -105,9 +106,9 @@ IFilter::PreflightResult ComputeFeaturePhasesBinaryFilter::preflightImpl(const D
     const auto& featureIds = dataStructure.getDataRefAs<IDataArray>(featureIdsPath);
     if(mask.getNumberOfTuples() != featureIds.getNumberOfTuples())
     {
-      return {MakeErrorResult<OutputActions>(
-          -53802, fmt::format("Cell mask '{}' has {} tuples, but Feature Ids '{}' has {} tuples. Select arrays with the same tuple count, or select a mask in Feature Attribute Matrix '{}'.",
-                              maskPath.toString(), mask.getNumberOfTuples(), featureIdsPath.toString(), featureIds.getNumberOfTuples(), featureAMPath.toString()))};
+      return {.output_actions = MakeErrorResult<OutputActions>(
+                  -53802, fmt::format("Cell mask '{}' has {} tuples, but Feature Ids '{}' has {} tuples. Select arrays with the same tuple count, or select a mask in Feature Attribute Matrix '{}'.",
+                                      maskPath.toString(), mask.getNumberOfTuples(), featureIdsPath.toString(), featureIds.getNumberOfTuples(), featureAMPath.toString()))};
     }
   }
 
@@ -119,31 +120,31 @@ IFilter::PreflightResult ComputeFeaturePhasesBinaryFilter::preflightImpl(const D
     const auto ensemblePath = featureAMPath.replaceName(filterArgs.value<std::string>(k_CellEnsembleAMName_Key));
     resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(ensemblePath, ShapeType{2}));
   }
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeFeaturePhasesBinaryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeFeaturePhasesBinaryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeFeaturePhasesBinaryInputValues inputValues;
-  inputValues.FeatureIdsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsArrayPath_Key);
-  inputValues.MaskArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_MaskArrayPath_Key);
-  inputValues.CellFeatureAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_CellFeatureAMPath_Key);
-  inputValues.FeaturePhasesArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_FeaturePhasesArrayName_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsArrayPath_Key);
+  inputValues.mask_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_MaskArrayPath_Key);
+  inputValues.cell_feature_attribute_matrix_path = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_CellFeatureAMPath_Key);
+  inputValues.feature_phases_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_FeaturePhasesArrayName_Key);
 
   return ComputeFeaturePhasesBinary(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
-constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
-constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
-} // namespace SIMPL
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_GoodVoxelsArrayPathKey = "GoodVoxelsArrayPath";
+constexpr StringLiteralType k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
+constexpr StringLiteralType k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeFeaturePhasesBinaryFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -152,13 +153,14 @@ Result<Arguments> ComputeFeaturePhasesBinaryFilter::FromSIMPLJson(const nlohmann
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_FeaturePhasesArrayPathKey, k_CellFeatureAMPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_CellFeatureAMPath_Key));
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAMName_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAMName_Key));
   args.insertOrAssign(k_CreateCellEnsembleAM_Key, std::make_any<bool>(true));
 
   Result<> conversionResult = MergeResults(std::move(results));

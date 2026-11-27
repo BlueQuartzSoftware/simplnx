@@ -29,12 +29,12 @@ public:
   GrayscaleMorphologicalClosingImageFilter& operator=(GrayscaleMorphologicalClosingImageFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
-  static constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
-  static constexpr StringLiteral k_KernelRadius_Key = "kernel_radius";
-  static constexpr StringLiteral k_KernelType_Key = "kernel_type_index";
-  static constexpr StringLiteral k_SafeBorder_Key = "safe_border";
+  static constexpr StringLiteralType k_InputImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_InputImageDataPath_Key = "input_image_data_path";
+  static constexpr StringLiteralType k_OutputImageArrayName_Key = "output_array_name";
+  static constexpr StringLiteralType k_KernelRadius_Key = "kernel_radius";
+  static constexpr StringLiteralType k_KernelType_Key = "kernel_type_index";
+  static constexpr StringLiteralType k_SafeBorder_Key = "safe_border";
 
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
@@ -45,7 +45,7 @@ public:
   std::vector<std::string> defaultTags() const override;
   Parameters parameters() const override;
   VersionType parametersVersion() const override;
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,

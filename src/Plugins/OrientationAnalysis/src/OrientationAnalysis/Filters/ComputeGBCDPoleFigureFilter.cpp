@@ -61,17 +61,17 @@ Parameters ComputeGBCDPoleFigureFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Int32Parameter>(k_PhaseOfInterest_Key, "Phase of Interest", "Index of the Ensemble for which to plot the pole figure", 1));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_MisorientationRotation_Key, "Misorientation Angle-Axis", "Angle-Axis values for drawing GBCD", std::vector<float32>{60.0F, 1.0F, 1.0F, 1.0F},
-                                                         std::vector<std::string>{"Angle (Deg)", "h", "k", "l"}));
-  params.insert(std::make_unique<Int32Parameter>(k_OutputImageDimension_Key, "Output Image Dimension", "The value to use for the dimensions for the image geometry", 100));
+  params.insert(std::make_unique<Int32ParameterType>(k_PhaseOfInterest_Key, "Phase of Interest", "Index of the Ensemble for which to plot the pole figure", 1));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_MisorientationRotation_Key, "Misorientation Angle-Axis", "Angle-Axis values for drawing GBCD",
+                                                             std::vector<float32>{60.0F, 1.0F, 1.0F, 1.0F}, std::vector<std::string>{"Angle (Deg)", "h", "k", "l"}));
+  params.insert(std::make_unique<Int32ParameterType>(k_OutputImageDimension_Key, "Output Image Dimension", "The value to use for the dimensions for the image geometry", 100));
   params.insertSeparator(Parameters::Separator{"Input Triangle Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_GBCDArrayPath_Key, "Input GBCD",
                                                           "5 parameter GBCD data. The 6th component is used internally to track the northern vs. southern hemisphere of the Lambert sphere",
-                                                          DataPath({"Face Ensemble Data", "GBCD"}), ArraySelectionParameter::AllowedTypes{DataType::float64}));
+                                                          DataPath({"Face Ensemble Data", "GBCD"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float64}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
-                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypes{DataType::uint32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          DataPath({"Ensemble Data", "CrystalStructures"}), ArraySelectionParameter::AllowedTypeSetType{DataType::uint32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Pole Figure"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryName_Key, "Image Geometry", "The path to the created image geometry", DataPath({"GBCD Pole Figure"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellAttributeMatrixName_Key, "Cell Attribute Matrix Name", "The name of the cell attribute matrix for the created image geometry",
@@ -88,17 +88,17 @@ IFilter::VersionType ComputeGBCDPoleFigureFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeGBCDPoleFigureFilter::clone() const
+IFilter::UniquePointerType ComputeGBCDPoleFigureFilter::clone() const
 {
   return std::make_unique<ComputeGBCDPoleFigureFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeGBCDPoleFigureFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeGBCDPoleFigureFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pPhaseOfInterestValue = filterArgs.value<int32>(k_PhaseOfInterest_Key);
-  auto pMisorientationRotationValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MisorientationRotation_Key);
+  auto pMisorientationRotationValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MisorientationRotation_Key);
   auto pOutputImageDimension = static_cast<usize>(filterArgs.value<int32>(k_OutputImageDimension_Key));
   auto pGBCDArrayPathValue = filterArgs.value<DataPath>(k_GBCDArrayPath_Key);
   auto pCrystalStructuresArrayPathValue = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
@@ -110,20 +110,21 @@ IFilter::PreflightResult ComputeGBCDPoleFigureFilter::preflightImpl(const DataSt
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto& gbcd = dataStructure.getDataRefAs<Float64Array>(pGBCDArrayPathValue);
+  const auto& gbcd = dataStructure.getDataRefAs<Float64ArrayType>(pGBCDArrayPathValue);
 
   const auto componentShape = gbcd.getComponentShape();
   if(componentShape.size() != 6 || componentShape[5] != 2 || std::any_of(componentShape.begin(), componentShape.end(), [](usize dimension) { return dimension == 0; }))
   {
-    return {MakeErrorResult<OutputActions>(-34645, fmt::format("The DataArray '{}' selected for **Input GBCD** has component shape [{}]. The GBCD DataArray must have 6 component dimensions: 5 "
-                                                               "positive bin dimensions followed by a final dimension of 2 (hemispheres).",
-                                                               pGBCDArrayPathValue.toString(), fmt::join(componentShape, ", ")))};
+    return {.output_actions =
+                MakeErrorResult<OutputActions>(-34645, fmt::format("The DataArray '{}' selected for **Input GBCD** has component shape [{}]. The GBCD DataArray must have 6 component dimensions: 5 "
+                                                                   "positive bin dimensions followed by a final dimension of 2 (hemispheres).",
+                                                                   pGBCDArrayPathValue.toString(), fmt::join(componentShape, ", ")))};
   }
 
   auto numEnsembles = gbcd.getNumberOfTuples();
   if(pPhaseOfInterestValue >= numEnsembles)
   {
-    return {MakeErrorResult<OutputActions>(-34642, fmt::format("The phase index {} is larger than the number of Ensembles {}", pPhaseOfInterestValue, numEnsembles))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-34642, fmt::format("The phase index {} is larger than the number of Ensembles {}", pPhaseOfInterestValue, numEnsembles))};
   }
 
   std::vector<usize> imageDims = {pOutputImageDimension, pOutputImageDimension, 1ULL}; // Image Geometry wants the tuple dims as XYZ
@@ -139,43 +140,43 @@ IFilter::PreflightResult ComputeGBCDPoleFigureFilter::preflightImpl(const DataSt
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float64, tDims, cDims, cellIntensityArrayPath);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeGBCDPoleFigureFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeGBCDPoleFigureFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeGBCDPoleFigureInputValues inputValues;
-  inputValues.PhaseOfInterest = filterArgs.value<int32>(k_PhaseOfInterest_Key);
-  inputValues.MisorientationRotation = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MisorientationRotation_Key);
-  inputValues.GBCDArrayPath = filterArgs.value<DataPath>(k_GBCDArrayPath_Key);
-  inputValues.CrystalStructuresArrayPath = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
-  inputValues.OutputImageDimension = filterArgs.value<int32>(k_OutputImageDimension_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryName_Key);
-  inputValues.CellAttributeMatrixName = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
-  inputValues.CellIntensityArrayName = filterArgs.value<std::string>(k_CellIntensityArrayName_Key);
+  inputValues.phase_of_interest = filterArgs.value<int32>(k_PhaseOfInterest_Key);
+  inputValues.misorientation_rotation = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MisorientationRotation_Key);
+  inputValues.gbcd_array_path = filterArgs.value<DataPath>(k_GBCDArrayPath_Key);
+  inputValues.crystal_structures_array_path = filterArgs.value<DataPath>(k_CrystalStructuresArrayPath_Key);
+  inputValues.output_image_dimension = filterArgs.value<int32>(k_OutputImageDimension_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_ImageGeometryName_Key);
+  inputValues.cell_attribute_matrix_name = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
+  inputValues.cell_intensity_array_name = filterArgs.value<std::string>(k_CellIntensityArrayName_Key);
 
-  auto* gbcdArray = dataStructure.getDataAs<IDataArray>(inputValues.GBCDArrayPath);
+  auto* gbcdArrayPtr = dataStructure.getDataAs<IDataArray>(inputValues.gbcd_array_path);
   // A disk-backed GBCD selects the phase-slice scanline executor. A resident
   // GBCD selects the full-cache direct executor.
-  return DispatchAlgorithm<ComputeGBCDPoleFigureDirect, ComputeGBCDPoleFigureScanline>({gbcdArray}, dataStructure, messageHandler, shouldCancel, &inputValues);
+  return DispatchAlgorithm<ComputeGBCDPoleFigureDirect, ComputeGBCDPoleFigureScanline>({gbcdArrayPtr}, dataStructure, messageHandler, shouldCancel, &inputValues);
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_PhaseOfInterestKey = "PhaseOfInterest";
-constexpr StringLiteral k_MisorientationRotationKey = "MisorientationRotation";
-constexpr StringLiteral k_OutputFileKey = "OutputFile";
-constexpr StringLiteral k_OutputDimensionKey = "OutputDimension";
-constexpr StringLiteral k_GBCDArrayPathKey = "GBCDArrayPath";
-constexpr StringLiteral k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
-constexpr StringLiteral k_IntensityArrayNameKey = "IntensityArrayName";
-} // namespace SIMPL
+constexpr StringLiteralType k_PhaseOfInterestKey = "PhaseOfInterest";
+constexpr StringLiteralType k_MisorientationRotationKey = "MisorientationRotation";
+constexpr StringLiteralType k_OutputFileKey = "OutputFile";
+constexpr StringLiteralType k_OutputDimensionKey = "OutputDimension";
+constexpr StringLiteralType k_GBCDArrayPathKey = "GBCDArrayPath";
+constexpr StringLiteralType k_CrystalStructuresArrayPathKey = "CrystalStructuresArrayPath";
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteralType k_IntensityArrayNameKey = "IntensityArrayName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeGBCDPoleFigureFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -184,35 +185,35 @@ Result<Arguments> ComputeGBCDPoleFigureFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_PhaseOfInterestKey, k_PhaseOfInterest_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AxisAngleFilterParameterConverter<float32>>(args, json, SIMPL::k_MisorientationRotationKey, k_MisorientationRotation_Key));
-  Result<> dimResult = SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_OutputDimensionKey, k_OutputImageDimension_Key);
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_PhaseOfInterestKey, k_PhaseOfInterest_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AxisAngleFilterParameterConverter<float32>>(args, json, simpl::k_MisorientationRotationKey, k_MisorientationRotation_Key));
+  Result<> dimResult = simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_OutputDimensionKey, k_OutputImageDimension_Key);
   if(dimResult.valid())
   {
     // Version 6.5 can omit this parameter. Retain it only when conversion succeeds.
     results.push_back(std::move(dimResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_GBCDArrayPathKey, k_GBCDArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GBCDArrayPathKey, k_GBCDArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
-  Result<> imageResult = SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_ImageGeometryName_Key);
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
+  Result<> imageResult = simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_ImageGeometryName_Key);
   if(imageResult.invalid())
   {
     // 6.5 pulled this from crystal structures array
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayPathKey, k_ImageGeometryName_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_ImageGeometryName_Key));
   }
   else
   {
     results.push_back(std::move(imageResult));
   }
   Result<> cellAMResult =
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key);
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key);
   if(cellAMResult.valid())
   {
     // Version 6.5 can omit this parameter. Retain it only when conversion succeeds.
     results.push_back(std::move(cellAMResult));
   }
-  Result<> intensityResult = SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_IntensityArrayNameKey, k_CellIntensityArrayName_Key);
+  Result<> intensityResult = simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_IntensityArrayNameKey, k_CellIntensityArrayName_Key);
   if(intensityResult.valid())
   {
     // Version 6.5 can omit this parameter. Retain it only when conversion succeeds.

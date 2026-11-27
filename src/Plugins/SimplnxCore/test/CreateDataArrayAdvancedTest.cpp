@@ -17,15 +17,15 @@ using namespace nx::core;
 
 TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Instantiate)", "[SimplnxCore][CreateDataArrayAdvancedFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   static constexpr uint64 k_NComp = 3;
   static constexpr uint64 k_NumTuples = 25;
-  const static DynamicTableInfo::TableDataType k_TupleDims = {{static_cast<double>(k_NumTuples)}};
-  static const DataPath k_DataPath({"foo"});
+  const static DynamicTableInfo::TableDataType kTupleDims = {{static_cast<double>(k_NumTuples)}};
+  static const DataPath kDataPath({"foo"});
 
   SECTION("Component-specific fill values")
   {
@@ -34,16 +34,16 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Instantiate)", "[SimplnxCo
     Arguments args;
     args.insert(CreateDataArrayAdvancedFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int32));
     args.insert(CreateDataArrayAdvancedFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(k_NComp)}}));
-    args.insert(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
-    args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
+    args.insert(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(kTupleDims));
+    args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(kDataPath));
     args.insert(CreateDataArrayAdvancedFilter::k_InitType_Key, std::make_any<uint64>(0));
     args.insert(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("5;17;-3"));
 
     const auto result = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_DataPath));
-    const auto& array = dataStructure.getDataRefAs<Int32Array>(k_DataPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(kDataPath));
+    const auto& array = dataStructure.getDataRefAs<Int32ArrayType>(kDataPath);
     REQUIRE(array.getNumberOfTuples() == k_NumTuples);
     REQUIRE(array.getNumberOfComponents() == k_NComp);
     for(usize tupleIdx = 0; tupleIdx < k_NumTuples; tupleIdx++)
@@ -52,7 +52,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Instantiate)", "[SimplnxCo
       REQUIRE(array[tupleIdx * k_NComp + 1] == 17);
       REQUIRE(array[tupleIdx * k_NComp + 2] == -3);
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Component-specific incremental values")
@@ -62,8 +62,8 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Instantiate)", "[SimplnxCo
     Arguments args;
     args.insert(CreateDataArrayAdvancedFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int32));
     args.insert(CreateDataArrayAdvancedFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(k_NComp)}}));
-    args.insert(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
-    args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
+    args.insert(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(kTupleDims));
+    args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(kDataPath));
     args.insert(CreateDataArrayAdvancedFilter::k_InitType_Key, std::make_any<uint64>(1));
     args.insert(CreateDataArrayAdvancedFilter::k_StartingFillValue_Key, std::make_any<std::string>("4;10;-8"));
     args.insert(CreateDataArrayAdvancedFilter::k_StepOperation_Key, std::make_any<uint64>(0));
@@ -72,8 +72,8 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Instantiate)", "[SimplnxCo
     const auto result = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_DataPath));
-    const auto& array = dataStructure.getDataRefAs<Int32Array>(k_DataPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(kDataPath));
+    const auto& array = dataStructure.getDataRefAs<Int32ArrayType>(kDataPath);
     REQUIRE(array.getNumberOfTuples() == k_NumTuples);
     REQUIRE(array.getNumberOfComponents() == k_NComp);
     REQUIRE(array[0] == 4);
@@ -85,7 +85,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Instantiate)", "[SimplnxCo
     REQUIRE(array[6] == 8);
     REQUIRE(array[7] == 4);
     REQUIRE(array[8] == 2);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Fixed-seed component-specific random range")
@@ -95,8 +95,8 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Instantiate)", "[SimplnxCo
     Arguments args;
     args.insert(CreateDataArrayAdvancedFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int32));
     args.insert(CreateDataArrayAdvancedFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(k_NComp)}}));
-    args.insert(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
-    args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
+    args.insert(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(kTupleDims));
+    args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(kDataPath));
     args.insert(CreateDataArrayAdvancedFilter::k_InitType_Key, std::make_any<uint64>(3));
     args.insert(CreateDataArrayAdvancedFilter::k_UseSeed_Key, std::make_any<bool>(true));
     args.insert(CreateDataArrayAdvancedFilter::k_SeedValue_Key, std::make_any<uint64>(8675309));
@@ -107,8 +107,8 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Instantiate)", "[SimplnxCo
     const auto result = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_DataPath));
-    const auto& array = dataStructure.getDataRefAs<Int32Array>(k_DataPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(kDataPath));
+    const auto& array = dataStructure.getDataRefAs<Int32ArrayType>(kDataPath);
     REQUIRE(array.getNumberOfTuples() == k_NumTuples);
     REQUIRE(array.getNumberOfComponents() == k_NComp);
     for(usize tupleIdx = 0; tupleIdx < k_NumTuples; tupleIdx++)
@@ -120,18 +120,18 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Instantiate)", "[SimplnxCo
       REQUIRE(array[tupleIdx * k_NComp + 2] >= -8);
       REQUIRE(array[tupleIdx * k_NComp + 2] <= -6);
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Invalid Parameters)", "[SimplnxCore][CreateDataArrayAdvancedFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   static constexpr uint64 k_NComp = 3;
   static constexpr uint64 k_NumTuples = 25;
-  const static DynamicTableInfo::TableDataType k_TupleDims = {{static_cast<double>(k_NumTuples)}};
-  static const DataPath k_DataPath({"foo"});
+  const static DynamicTableInfo::TableDataType kTupleDims = {{static_cast<double>(k_NumTuples)}};
+  static const DataPath kDataPath({"foo"});
 
   CreateDataArrayAdvancedFilter filter;
   DataStructure dataStructure;
@@ -141,8 +141,8 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Invalid Parameters)", "[Si
   {
     args.insert(CreateDataArrayAdvancedFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::uint16));
     args.insert(CreateDataArrayAdvancedFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(k_NComp)}}));
-    args.insert(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
-    args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
+    args.insert(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(kTupleDims));
+    args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(kDataPath));
     args.insert(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("-1"));
 
     auto result = filter.execute(dataStructure, args);
@@ -152,8 +152,8 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Invalid Parameters)", "[Si
   {
     args.insert(CreateDataArrayAdvancedFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int8));
     args.insert(CreateDataArrayAdvancedFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(k_NComp)}}));
-    args.insert(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
-    args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
+    args.insert(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(kTupleDims));
+    args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(kDataPath));
     args.insert(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("1024"));
 
     auto result = filter.execute(dataStructure, args);
@@ -163,8 +163,8 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Invalid Parameters)", "[Si
   {
     args.insert(CreateDataArrayAdvancedFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::float32));
     args.insert(CreateDataArrayAdvancedFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{0.0}}));
-    args.insert(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
-    args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
+    args.insert(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(kTupleDims));
+    args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(kDataPath));
     args.insert(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("1"));
 
     auto result = filter.execute(dataStructure, args);
@@ -175,9 +175,9 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Invalid Parameters)", "[Si
     args.insert(CreateDataArrayAdvancedFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::float32));
     args.insert(CreateDataArrayAdvancedFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{1.0}}));
 
-    DynamicTableInfo::TableDataType tupleDims = {{static_cast<double>(0.0)}};
+    DynamicTableInfo::TableDataType tupleDims = {{0.0}};
     args.insert(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
-    args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
+    args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(kDataPath));
     args.insert(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("1"));
 
     auto result = filter.execute(dataStructure, args);
@@ -187,9 +187,9 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Invalid Parameters)", "[Si
   {
     args.insert(CreateDataArrayAdvancedFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int8));
     args.insert(CreateDataArrayAdvancedFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{1.0}}));
-    DynamicTableInfo::TableDataType tupleDims = {{static_cast<double>(1.0)}};
+    DynamicTableInfo::TableDataType tupleDims = {{1.0}};
     args.insert(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
-    args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
+    args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(kDataPath));
     args.insert(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>(""));
 
     auto result = filter.execute(dataStructure, args);
@@ -199,9 +199,9 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Invalid Parameters)", "[Si
   {
     args.insert(CreateDataArrayAdvancedFilter::k_NumericType_Key, std::make_any<NumericType>(NumericType::int8));
     args.insert(CreateDataArrayAdvancedFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{1.0}}));
-    DynamicTableInfo::TableDataType tupleDims = {{static_cast<double>(1.0)}};
+    DynamicTableInfo::TableDataType tupleDims = {{1.0}};
     args.insert(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(tupleDims));
-    args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(k_DataPath));
+    args.insert(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(kDataPath));
     args.insert(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("1000"));
 
     auto result = filter.execute(dataStructure, args);
@@ -233,12 +233,12 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter(Invalid Parameters)", "[Si
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter: Non-Integer Text Does Not Throw In Preflight", "[SimplnxCore][CreateDataArrayAdvancedFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   CreateDataArrayAdvancedFilter filter;
   DataStructure dataStructure;
@@ -263,7 +263,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter: Non-Integer Text Does Not
       CAPTURE(valueIdx);
       REQUIRE(array[valueIdx] == expectedValues[valueIdx]);
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   };
 
   SECTION("a: Fractional float32 incremental start")
@@ -303,7 +303,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter: Non-Integer Text Does Not
 
 TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter: Standardized Seeded Float Random Is Identical And Reproducible", "[SimplnxCore][CreateDataArrayAdvancedFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   CreateDataArrayAdvancedFilter filter;
   const DataPath arrayPath({"Data"});
@@ -348,8 +348,8 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter: Standardized Seeded Float
       CAPTURE(valueIdx);
       REQUIRE(firstArray[valueIdx] == secondArray[valueIdx]);
     }
-    UnitTest::CheckArraysInheritTupleDims(firstRun);
-    UnitTest::CheckArraysInheritTupleDims(secondRun);
+    unit_test::CheckArraysInheritTupleDims(firstRun);
+    unit_test::CheckArraysInheritTupleDims(secondRun);
   };
 
   SECTION("float32")
@@ -366,7 +366,7 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter: Standardized Seeded Float
 
 TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter: Random Range Start Greater Than End Is Rejected", "[SimplnxCore][CreateDataArrayAdvancedFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   CreateDataArrayAdvancedFilter filter;
   DataStructure dataStructure;
@@ -385,9 +385,9 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter: Random Range Start Greate
     args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitStartRange_Key, std::make_any<std::string>("10"));
     args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitEndRange_Key, std::make_any<std::string>("0"));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().size() == 1);
-    REQUIRE(preflightResult.outputActions.errors()[0].code == -11615);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().size() == 1);
+    REQUIRE(preflightResult.output_actions.errors()[0].code == -11615);
   }
   SECTION("float64 reversed range")
   {
@@ -395,31 +395,31 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter: Random Range Start Greate
     args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitStartRange_Key, std::make_any<std::string>("1.5"));
     args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitEndRange_Key, std::make_any<std::string>("0.5"));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().size() == 1);
-    REQUIRE(preflightResult.outputActions.errors()[0].code == -11615);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().size() == 1);
+    REQUIRE(preflightResult.output_actions.errors()[0].code == -11615);
   }
   SECTION("Equal endpoints are valid and produce the endpoint")
   {
     args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitStartRange_Key, std::make_any<std::string>("5"));
     args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitEndRange_Key, std::make_any<std::string>("5"));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(arrayPath));
-    const auto& array = dataStructure.getDataRefAs<Int32Array>(arrayPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(arrayPath));
+    const auto& array = dataStructure.getDataRefAs<Int32ArrayType>(arrayPath);
     REQUIRE(array.getSize() == 3);
     REQUIRE(array[0] == 5);
     REQUIRE(array[1] == 5);
     REQUIRE(array[2] == 5);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter: Non-Whole Tuple Dimensions Are Rejected", "[SimplnxCore][CreateDataArrayAdvancedFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const float64 tupleDim = GENERATE(0.5, 2.5, -1.0);
   CAPTURE(tupleDim);
@@ -435,14 +435,14 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter: Non-Whole Tuple Dimension
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("1"));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -78603);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -78603);
 }
 
 TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter: Non-Whole Component Dimensions Are Rejected", "[SimplnxCore][CreateDataArrayAdvancedFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const float64 compDim = GENERATE(0.5, 2.5, -1.0);
   CAPTURE(compDim);
@@ -458,23 +458,23 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvancedFilter: Non-Whole Component Dimen
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("1"));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -78605);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -78605);
 }
 
 TEST_CASE("SimplnxCore::CreateDataArrayAdvanced: Dimension RED component product", "[SimplnxCore][CreateDataArrayAdvanced][DimensionRed]")
 {
   CreateDataArrayAdvancedFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   auto args = filter.getDefaultArguments();
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("1"));
   // (2^32 + 1) * (2^32 - 1) * (2^32 - 1) * (2^32 + 1) = (2^64 - 1)^2, wraps to 1.
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_CompDims_Key,
                       std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{4294967297.0, 4294967295.0, 4294967295.0, 4294967297.0}}));
-  auto result = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors()[0].code == -79001);
+  auto result = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors()[0].code == -79001);
 }
 
 TEST_CASE("SimplnxCore::CreateDataArrayAdvanced: Dimension fixed-only tuples and inherited shapes", "[SimplnxCore][CreateDataArrayAdvanced]")
@@ -492,26 +492,26 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvanced: Dimension fixed-only tuples and
     for(const auto& [value, expectedCode] : cases)
     {
       CAPTURE(value, expectedCode);
-      DataStructure ds;
+      DataStructure dataStructure;
       auto args = filter.getDefaultArguments();
       args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("1"));
 
       args.insertOrAssign(CreateDataArrayAdvancedFilter::k_AdvancedOptions_Key, std::make_any<bool>(true));
       args.insertOrAssign(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(DataPath({"Dimensions"})));
       args.insertOrAssign(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{value}}));
-      auto result = filter.preflight(ds, args);
-      SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-      REQUIRE(result.outputActions.errors()[0].code == expectedCode);
-      REQUIRE(result.outputActions.errors()[0].message.find("index 0") != std::string::npos);
-      REQUIRE(result.outputActions.errors()[0].message.find("finite whole numbers") != std::string::npos);
+      auto result = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+      REQUIRE(result.output_actions.errors()[0].code == expectedCode);
+      REQUIRE(result.output_actions.errors()[0].message.find("index 0") != std::string::npos);
+      REQUIRE(result.output_actions.errors()[0].message.find("finite whole numbers") != std::string::npos);
     }
   }
   SECTION("Invalid ignored table, including an inherited empty matrix")
   {
     const usize count = GENERATE(usize{0}, usize{2});
     const bool useDimensions = GENERATE(false, true);
-    DataStructure ds;
-    REQUIRE(AttributeMatrix::Create(ds, "Parent", {count}) != nullptr);
+    DataStructure dataStructure;
+    REQUIRE(AttributeMatrix::Create(dataStructure, "Parent", {count}) != nullptr);
     auto args = filter.getDefaultArguments();
     args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("1"));
 
@@ -519,30 +519,30 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvanced: Dimension fixed-only tuples and
     args.insertOrAssign(CreateDataArrayAdvancedFilter::k_AdvancedOptions_Key, std::make_any<bool>(useDimensions));
     args.insertOrAssign(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(path));
     args.insertOrAssign(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{-1}}));
-    auto result = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-    auto applied = result.outputActions.value().applyAll(ds, IDataAction::Mode::Preflight);
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+    auto applied = result.output_actions.value().applyAll(dataStructure, IDataAction::Mode::Preflight);
     SIMPLNX_RESULT_REQUIRE_VALID(applied);
-    REQUIRE_NOTHROW(ds.getDataRefAs<IArray>(path));
-    REQUIRE(ds.getDataRefAs<IArray>(path).getTupleShape() == ShapeType{count});
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IArray>(path));
+    REQUIRE(dataStructure.getDataRefAs<IArray>(path).getTupleShape() == ShapeType{count});
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::CreateDataArrayAdvanced: Dimension tuple product overflow", "[SimplnxCore][CreateDataArrayAdvanced]")
 {
   CreateDataArrayAdvancedFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   auto args = filter.getDefaultArguments();
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("1"));
 
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_AdvancedOptions_Key, std::make_any<bool>(true));
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_DataPath_Key, std::make_any<DataPath>(DataPath({"Overflow"})));
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_TupleDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{4294967296.0, 4294967296.0}}));
-  auto result = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors()[0].code == -79001);
-  REQUIRE(result.outputActions.errors()[0].message.find("product") != std::string::npos);
+  auto result = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors()[0].code == -79001);
+  REQUIRE(result.output_actions.errors()[0].message.find("product") != std::string::npos);
 }
 
 TEST_CASE("SimplnxCore::CreateDataArrayAdvanced: Dimension component boundaries before previews", "[SimplnxCore][CreateDataArrayAdvanced]")
@@ -551,13 +551,13 @@ TEST_CASE("SimplnxCore::CreateDataArrayAdvanced: Dimension component boundaries 
   const uint64 mode = GENERATE(uint64{0}, uint64{1}, uint64{3});
   CAPTURE(value, mode);
   CreateDataArrayAdvancedFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   auto args = filter.getDefaultArguments();
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitValue_Key, std::make_any<std::string>("1"));
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_InitType_Key, std::make_any<uint64>(mode));
   args.insertOrAssign(CreateDataArrayAdvancedFilter::k_CompDims_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{value}}));
-  auto result = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors()[0].code == (value == std::ldexp(1.0, 63) ? -79006 : -79000));
-  REQUIRE(result.outputActions.errors()[0].message.find(value == std::ldexp(1.0, 63) ? "preview storage capacity" : "index 0") != std::string::npos);
+  auto result = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors()[0].code == (value == std::ldexp(1.0, 63) ? -79006 : -79000));
+  REQUIRE(result.output_actions.errors()[0].message.find(value == std::ldexp(1.0, 63) ? "preview storage capacity" : "index 0") != std::string::npos);
 }

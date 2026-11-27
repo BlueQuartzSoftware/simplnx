@@ -23,9 +23,9 @@ namespace nx::core::ImageProcessing::detail
 {
 struct Sweep2DPlan
 {
-  bool fullWidth = true;
-  usize coreRows = 0;
-  usize coreColumns = 0;
+  bool full_width = true;
+  usize core_rows = 0;
+  usize core_columns = 0;
 };
 
 /**
@@ -38,7 +38,7 @@ inline Result<Sweep2DPlan> CreateSweep2DPlan(usize dimX, usize dimY, usize maxBu
 {
   if(dimX == 0 || dimY == 0)
   {
-    return {Sweep2DPlan{true, 0, 0}};
+    return {Sweep2DPlan{.full_width = true, .core_rows = 0, .core_columns = 0}};
   }
   if(maxBufferValues == 0 || tiledRows == 0 || fullWidthHaloRows == std::numeric_limits<usize>::max())
   {
@@ -50,7 +50,7 @@ inline Result<Sweep2DPlan> CreateSweep2DPlan(usize dimX, usize dimY, usize maxBu
   {
     const usize rowCapacity = maxBufferValues / dimX;
     const usize coreRows = std::min(dimY, rowCapacity - fullWidthHaloRows);
-    return {Sweep2DPlan{true, coreRows, dimX}};
+    return {Sweep2DPlan{.full_width = true, .core_rows = coreRows, .core_columns = dimX}};
   }
 
   const usize valuesPerTileRow = maxBufferValues / tiledRows;
@@ -59,7 +59,7 @@ inline Result<Sweep2DPlan> CreateSweep2DPlan(usize dimX, usize dimY, usize maxBu
     return MakeErrorResult<Sweep2DPlan>(-8684,
                                         fmt::format("The bounded 2-D sweep buffer holds {} values, but {} tile rows require room for one core value and two X halos.", maxBufferValues, tiledRows));
   }
-  return {Sweep2DPlan{false, 1, std::min(dimX, valuesPerTileRow - 2)}};
+  return {Sweep2DPlan{.full_width = false, .core_rows = 1, .core_columns = std::min(dimX, valuesPerTileRow - 2)}};
 }
 
 /**
@@ -257,12 +257,12 @@ Result<std::unique_ptr<SweepTemporaryStore<T>>> CreateSweepTemporaryStore(usize 
   }
 
   TemporaryRecordStoreConfig config;
-  config.recordSize = sizeof(T);
-  config.maxRecordsPerBatch = static_cast<uint64>(maxValuesPerBatch);
-  config.initialRecordCount = static_cast<uint64>(valueCount);
+  config.record_size = sizeof(T);
+  config.max_records_per_batch = static_cast<uint64>(maxValuesPerBatch);
+  config.initial_record_count = static_cast<uint64>(valueCount);
   try
   {
-    auto result = DataStoreUtilities::CreateTemporaryRecordStore(config);
+    auto result = data_store_utilities::CreateTemporaryRecordStore(config);
     if(result.invalid())
     {
       return MakeErrorResult<std::unique_ptr<SweepTemporaryStore<T>>>(-8680, fmt::format("{} failed to create fixed-record scratch: {}", context, DescribeSweepTemporaryStoreError(result)));
@@ -272,7 +272,7 @@ Result<std::unique_ptr<SweepTemporaryStore<T>>> CreateSweepTemporaryStore(usize 
     {
       return MakeErrorResult<std::unique_ptr<SweepTemporaryStore<T>>>(-8680, fmt::format("{} failed to create fixed-record scratch: provider returned a null store", context));
     }
-    if(store->recordSize() != config.recordSize || store->recordCount() != config.initialRecordCount || store->maxRecordsPerBatch() != config.maxRecordsPerBatch)
+    if(store->recordSize() != config.record_size || store->recordCount() != config.initial_record_count || store->maxRecordsPerBatch() != config.max_records_per_batch)
     {
       return MakeErrorResult<std::unique_ptr<SweepTemporaryStore<T>>>(-8680, fmt::format("{} failed to create fixed-record scratch: provider returned mismatched store metadata", context));
     }

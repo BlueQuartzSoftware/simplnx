@@ -25,6 +25,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 /**
@@ -46,7 +47,7 @@ public:
   /**
    * @brief Names the abstract data-store base type.
    */
-  using parent_type = AbstractDataStore<T>;
+  using ParentType = AbstractDataStore<T>;
 
   /**
    * @brief Names the stored value type.
@@ -89,10 +90,10 @@ public:
    * @param componentShape Component dimensions in slowest-to-fastest order.
    * @param initValue Initial value retained for future growth; nullopt leaves initial elements unwritten.
    */
-  DataStore(const ShapeType& tupleShape, const ShapeType& componentShape, std::optional<T> initValue)
-  : parent_type(initValue)
-  , m_ComponentShape(componentShape)
-  , m_TupleShape(tupleShape)
+  DataStore(ShapeType tupleShape, ShapeType componentShape, std::optional<T> initValue)
+  : ParentType(initValue)
+  , m_ComponentShape(std::move(componentShape))
+  , m_TupleShape(std::move(tupleShape))
   , m_NumComponents(std::accumulate(m_ComponentShape.cbegin(), m_ComponentShape.cend(), static_cast<usize>(1), std::multiplies<>()))
   , m_NumTuples(std::accumulate(m_TupleShape.cbegin(), m_TupleShape.cend(), static_cast<usize>(1), std::multiplies<>()))
   {
@@ -115,7 +116,7 @@ public:
    * @param componentShape Component dimensions in slowest-to-fastest order.
    */
   DataStore(std::unique_ptr<value_type[]> buffer, ShapeType tupleShape, ShapeType componentShape)
-  : parent_type(GetMudflap<T>())
+  : ParentType(GetMudflap<T>())
   , m_ComponentShape(std::move(componentShape))
   , m_TupleShape(std::move(tupleShape))
   , m_Data(std::move(buffer))
@@ -129,16 +130,16 @@ public:
    * @param other Source data store.
    */
   DataStore(const DataStore& other)
-  : parent_type(other)
+  : ParentType(other)
   , m_ComponentShape(other.m_ComponentShape)
   , m_TupleShape(other.m_TupleShape)
   , m_NumComponents(other.m_NumComponents)
   , m_NumTuples(other.m_NumTuples)
   {
     const usize count = other.getSize();
-    auto* data = new value_type[count];
-    std::memcpy(data, other.m_Data.get(), count * sizeof(T));
-    m_Data.reset(data);
+    auto* dataPtr = new value_type[count];
+    std::memcpy(dataPtr, other.m_Data.get(), count * sizeof(T));
+    m_Data.reset(dataPtr);
   }
 
   /**
@@ -146,12 +147,12 @@ public:
    * @param other Source data store.
    */
   DataStore(DataStore&& other) noexcept
-  : parent_type(std::move(other))
+  : ParentType(std::move(other))
   , m_ComponentShape(std::move(other.m_ComponentShape))
   , m_TupleShape(std::move(other.m_TupleShape))
   , m_Data(std::move(other.m_Data))
-  , m_NumComponents(std::move(other.m_NumComponents))
-  , m_NumTuples(std::move(other.m_NumTuples))
+  , m_NumComponents(other.m_NumComponents)
+  , m_NumTuples(other.m_NumTuples)
   {
   }
 
@@ -162,7 +163,7 @@ public:
    * @param rhs Source data store.
    * @return This data store.
    */
-  DataStore& operator=(DataStore&& rhs)
+  DataStore& operator=(DataStore&& rhs) noexcept
   {
     m_ComponentShape = std::move(rhs.m_ComponentShape);
     m_TupleShape = std::move(rhs.m_TupleShape);
@@ -476,26 +477,26 @@ public:
     Result<> diagnostic;
     if constexpr(std::is_same_v<T, bool>)
     {
-      diagnostic = MakeWarningVoidResult(BoundedRead::Unsupported, "Bounded numeric reads do not support bool stores.");
+      diagnostic = MakeWarningVoidResult(bounded_read::Unsupported, "Bounded numeric reads do not support bool stores.");
       return ConvertResultTo(std::move(diagnostic), false);
     }
     uint64 components = 1;
     for(const auto size : getComponentShape())
     {
-      if(size == 0 || !BoundedRead::Multiply(components, static_cast<uint64>(size), components))
+      if(size == 0 || !bounded_read::Multiply(components, static_cast<uint64>(size), components))
       {
-        return MakeErrorResult<bool>(BoundedRead::InvalidExtent, "Bounded read component shape is empty or overflows uint64.");
+        return MakeErrorResult<bool>(bounded_read::InvalidExtent, "Bounded read component shape is empty or overflows uint64.");
       }
     }
     uint64 selectedTuples = 0;
-    const auto status = BoundedRead::ValidateExtent(extent, getTupleShape(), components, destination.size(), selectedTuples, diagnostic, sizeof(T));
-    if(status != BoundedRead::Status::Complete)
+    const auto status = bounded_read::ValidateExtent(extent, getTupleShape(), components, destination.size(), selectedTuples, diagnostic, sizeof(T));
+    if(status != bounded_read::Status::Complete)
     {
       return ConvertResultTo(std::move(diagnostic), false);
     }
     if(m_Data == nullptr)
     {
-      return MakeErrorResult<bool>(BoundedRead::ReadFailure, "Bounded resident read has no allocated source buffer.");
+      return MakeErrorResult<bool>(bounded_read::ReadFailure, "Bounded resident read has no allocated source buffer.");
     }
     const int exceptions = std::uncaught_exceptions();
     auto publish = MakeScopeGuard([&]() noexcept {
@@ -529,7 +530,7 @@ public:
     });
     // A prvalue constructs the actual return object before the publication guard runs.
 #if SIMPLNX_BUILD_TESTS
-    return Result<bool>{true, BoundedRead::MakeSuccessWarningsForTesting()};
+    return Result<bool>{true, bounded_read::MakeSuccessWarningsForTesting()};
 #else
     return Result<bool>{true};
 #endif
@@ -588,7 +589,7 @@ public:
       return MakeErrorResult(-6032, "DataStore extent read failed: the store has no allocated value buffer.");
     }
 
-    const T* source = m_Data.get();
+    const T* sourcePtr = m_Data.get();
     if(tupleDimensions == 3)
     {
       const uint64 dimY = tupleShape[1];
@@ -608,7 +609,7 @@ public:
             if(xStride == 1)
             {
               const usize rowValues = static_cast<usize>(xCount) * numComponents;
-              std::memcpy(destination.data() + outputIndex, source + sourceRowStart, rowValues * sizeof(T));
+              std::memcpy(destination.data() + outputIndex, sourcePtr + sourceRowStart, rowValues * sizeof(T));
               outputIndex += rowValues;
               continue;
             }
@@ -619,7 +620,7 @@ public:
             const usize sourceOffset = sourceRowStart + static_cast<usize>(xIndex * xStride) * numComponents;
             for(usize componentIndex = 0; componentIndex < numComponents; ++componentIndex)
             {
-              destination[outputIndex + componentIndex] = source[sourceOffset + componentIndex];
+              destination[outputIndex + componentIndex] = sourcePtr[sourceOffset + componentIndex];
             }
             outputIndex += numComponents;
           }
@@ -639,7 +640,7 @@ public:
         const usize sourceIndex = static_cast<usize>(startTuple + tupleOffset * tupleStride) * numComponents;
         for(usize componentIndex = 0; componentIndex < numComponents; ++componentIndex)
         {
-          destination[outputIndex + componentIndex] = source[sourceIndex + componentIndex];
+          destination[outputIndex + componentIndex] = sourcePtr[sourceIndex + componentIndex];
         }
         outputIndex += numComponents;
       }
@@ -666,7 +667,7 @@ public:
       const usize destinationValueIndex = outputTupleIndex * numComponents;
       for(usize componentIndex = 0; componentIndex < numComponents; ++componentIndex)
       {
-        destination[destinationValueIndex + componentIndex] = source[sourceValueIndex + componentIndex];
+        destination[destinationValueIndex + componentIndex] = sourcePtr[sourceValueIndex + componentIndex];
       }
     }
     return {};
@@ -731,7 +732,7 @@ public:
       return MakeErrorResult(-6033, "DataStore extent write failed: the store has no allocated value buffer.");
     }
 
-    T* destBase = m_Data.get();
+    T* destBasePtr = m_Data.get();
 
     if(tupleDims == 3)
     {
@@ -752,7 +753,7 @@ public:
             if(xStride == 1)
             {
               const usize elements = static_cast<usize>(xCountStrided) * numComp;
-              std::memcpy(destBase + destRowStart, data.data() + srcIdx, elements * sizeof(T));
+              std::memcpy(destBasePtr + destRowStart, data.data() + srcIdx, elements * sizeof(T));
               srcIdx += elements;
               continue;
             }
@@ -763,7 +764,7 @@ public:
             const usize destOff = destRowStart + static_cast<usize>(xi * xStride) * numComp;
             for(usize c = 0; c < numComp; ++c)
             {
-              destBase[destOff + c] = data[srcIdx + c];
+              destBasePtr[destOff + c] = data[srcIdx + c];
             }
             srcIdx += numComp;
           }
@@ -783,7 +784,7 @@ public:
         const usize destIdx = static_cast<usize>(startTuple + i * stride) * numComp;
         for(usize c = 0; c < numComp; ++c)
         {
-          destBase[destIdx + c] = data[srcIdx + c];
+          destBasePtr[destIdx + c] = data[srcIdx + c];
         }
         srcIdx += numComp;
       }
@@ -993,7 +994,7 @@ public:
   void byteSwap(usize index) override
   {
     T& element = m_Data.get()[index];
-    element = nx::core::byteswap(element);
+    element = nx::core::Byteswap(element);
   }
 
   /**
@@ -1092,7 +1093,7 @@ public:
    * @param dataset HDF5 dataset to read.
    * @return Error from the HDF5 read.
    */
-  Result<> readHdf5(const HDF5::DatasetIO& dataset) override
+  Result<> readHdf5(const hdf5::DatasetIO& dataset) override
   {
     return dataset.readIntoSpan(createSpan());
   }
@@ -1102,9 +1103,9 @@ public:
    * @param dataset HDF5 dataset to write.
    * @return Error from the HDF5 write.
    */
-  Result<> writeHdf5(HDF5::DatasetIO& dataset) const override
+  Result<> writeHdf5(hdf5::DatasetIO& dataset) const override
   {
-    HDF5::DatasetIO::DimsType dims(m_TupleShape.begin(), m_TupleShape.end());
+    hdf5::DatasetIO::DimsType dims(m_TupleShape.begin(), m_TupleShape.end());
     dims.insert(dims.end(), m_ComponentShape.begin(), m_ComponentShape.end());
     nonstd::span<const T> span = createSpan();
     return dataset.writeSpan(dims, span);
@@ -1121,55 +1122,55 @@ private:
 /**
  * @brief Names an in-memory uint8 data store.
  */
-using UInt8DataStore = DataStore<uint8>;
+using UInt8DataStoreType = DataStore<uint8>;
 
 /**
  * @brief Names an in-memory uint16 data store.
  */
-using UInt16DataStore = DataStore<uint16>;
+using UInt16DataStoreType = DataStore<uint16>;
 
 /**
  * @brief Names an in-memory uint32 data store.
  */
-using UInt32DataStore = DataStore<uint32>;
+using UInt32DataStoreType = DataStore<uint32>;
 
 /**
  * @brief Names an in-memory uint64 data store.
  */
-using UInt64DataStore = DataStore<uint64>;
+using UInt64DataStoreType = DataStore<uint64>;
 
 /**
  * @brief Names an in-memory int8 data store.
  */
-using Int8DataStore = DataStore<int8>;
+using Int8DataStoreType = DataStore<int8>;
 
 /**
  * @brief Names an in-memory int16 data store.
  */
-using Int16DataStore = DataStore<int16>;
+using Int16DataStoreType = DataStore<int16>;
 
 /**
  * @brief Names an in-memory int32 data store.
  */
-using Int32DataStore = DataStore<int32>;
+using Int32DataStoreType = DataStore<int32>;
 
 /**
  * @brief Names an in-memory int64 data store.
  */
-using Int64DataStore = DataStore<int64>;
+using Int64DataStoreType = DataStore<int64>;
 
 /**
  * @brief Names an in-memory bool data store.
  */
-using BoolDataStore = DataStore<bool>;
+using BoolDataStoreType = DataStore<bool>;
 
 /**
  * @brief Names an in-memory float32 data store.
  */
-using Float32DataStore = DataStore<float32>;
+using Float32DataStoreType = DataStore<float32>;
 
 /**
  * @brief Names an in-memory float64 data store.
  */
-using Float64DataStore = DataStore<float64>;
+using Float64DataStoreType = DataStore<float64>;
 } // namespace nx::core

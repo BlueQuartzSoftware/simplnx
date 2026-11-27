@@ -38,7 +38,7 @@ public:
   /**
    * @brief Destroys the direct feature-bound algorithm.
    */
-  ~ComputeFeatureBoundsDirect() noexcept;
+  ~ComputeFeatureBoundsDirect() noexcept = default;
 
   ComputeFeatureBoundsDirect(const ComputeFeatureBoundsDirect&) = delete;
   ComputeFeatureBoundsDirect(ComputeFeatureBoundsDirect&&) noexcept = delete;

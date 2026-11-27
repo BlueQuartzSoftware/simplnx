@@ -27,18 +27,18 @@ class DataStructure;
  * @namespace nx::core::ArrayCreationUtilities
  * @brief Contains storage-aware array creation utilities.
  */
-namespace ArrayCreationUtilities
+namespace array_creation_utilities
 {
 // This declaration avoids an include cycle with ArrayCreationUtilities.hpp, which owns the API documentation.
 SIMPLNX_EXPORT std::string ResolveStorageFormat(const DataStructure& dataStructure, const DataPath& path, DataType numericType, uint64 dataSizeBytes, const std::string& requestedFormat);
-} // namespace ArrayCreationUtilities
+} // namespace array_creation_utilities
 } // namespace nx::core
 
 /**
  * @namespace nx::core::DataStoreUtilities
  * @brief Contains storage-neutral DataStore and ListStore utilities.
  */
-namespace nx::core::DataStoreUtilities
+namespace nx::core::data_store_utilities
 {
 /**
  * @brief Returns a non-owning reference to the application's DataIOCollection.
@@ -256,7 +256,7 @@ std::shared_ptr<AbstractListStore<T>> CreateListStore(const DataStructure& dataS
     // Tuple count gives a lower-bound size because list lengths are not known yet.
     const uint64 numTuples = std::accumulate(tupleShape.begin(), tupleShape.end(), 1ULL, std::multiplies<>());
     const uint64 estimatedBytes = numTuples * sizeof(T);
-    const std::string resolvedFormat = ArrayCreationUtilities::ResolveStorageFormat(dataStructure, arrayPath, GetDataType<T>(), estimatedBytes, dataFormat);
+    const std::string resolvedFormat = array_creation_utilities::ResolveStorageFormat(dataStructure, arrayPath, GetDataType<T>(), estimatedBytes, dataFormat);
     // The manager registered for the resolved format creates the concrete list store.
     return GetIOCollection().createListStoreWithType<T>(resolvedFormat, tupleShape);
   }
@@ -311,4 +311,4 @@ std::shared_ptr<AbstractDataStore<T>> ConvertDataStore(const AbstractDataStore<T
   newStore->copy(dataStore);
   return newStore;
 }
-} // namespace nx::core::DataStoreUtilities
+} // namespace nx::core::data_store_utilities

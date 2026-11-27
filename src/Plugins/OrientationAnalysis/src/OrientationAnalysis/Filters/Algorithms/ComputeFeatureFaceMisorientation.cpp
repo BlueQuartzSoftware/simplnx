@@ -23,7 +23,7 @@
 #include <vector>
 
 using LaueOpsShPtrType = std::shared_ptr<ebsdlib::LaueOps>;
-using LaueOpsContainer = std::vector<LaueOpsShPtrType>;
+using LaueOpsContainerType = std::vector<LaueOpsShPtrType>;
 
 using namespace nx::core;
 
@@ -39,7 +39,7 @@ constexpr usize k_ValidationChunkTuples = 65536;
  * @param inputValues Provides DataPaths for error diagnostics.
  * @return Success, or an error for invalid Phase indices or bulk I/O.
  */
-Result<> ValidateParticipatingFeaturePhases(const Int32Array& faceLabelsArrayRef, const Int32Array& featurePhasesArrayRef, const UInt32Array& crystalStructuresArrayRef,
+Result<> ValidateParticipatingFeaturePhases(const Int32ArrayType& faceLabelsArrayRef, const Int32ArrayType& featurePhasesArrayRef, const UInt32ArrayType& crystalStructuresArrayRef,
                                             const ComputeFeatureFaceMisorientationInputValues& inputValues)
 {
   const usize numFeatures = featurePhasesArrayRef.getNumberOfTuples();
@@ -73,7 +73,7 @@ Result<> ValidateParticipatingFeaturePhases(const Int32Array& faceLabelsArrayRef
             -98412,
             fmt::format(
                 "Feature Phases array '{}' has value {} at Feature index {}, referenced by face {}, but Crystal Structures array '{}' contains {} tuples. Valid positive Phase indices are in [1, {}).",
-                inputValues.featurePhasesArrayPath.toString(), frontPhaseIdx, frontFeatureIdx, faceOffset + chunkFaceIdx, inputValues.crystalStructuresArrayPath.toString(), numCrystalStructures,
+                inputValues.feature_phases_array_path.toString(), frontPhaseIdx, frontFeatureIdx, faceOffset + chunkFaceIdx, inputValues.crystal_structures_array_path.toString(), numCrystalStructures,
                 numCrystalStructures));
       }
     }
@@ -88,17 +88,17 @@ Result<> ValidateParticipatingFeaturePhases(const Int32Array& faceLabelsArrayRef
  */
 class ComputeFeatureMisorientationPerTriangleImpl
 {
-  const Int32Array& m_FaceLabels;
-  const Int32Array& m_FeaturePhases;
-  const Float32Array& m_FeatureAvgQuats;
-  const UInt32Array& m_CrystalStructures;
+  const Int32ArrayType& m_FaceLabels;
+  const Int32ArrayType& m_FeaturePhases;
+  const Float32ArrayType& m_FeatureAvgQuats;
+  const UInt32ArrayType& m_CrystalStructures;
   const std::atomic_bool& m_ShouldCancel;
-  Float32Array& m_Misorientations;
-  LaueOpsContainer m_LaueOrientationOps;
+  Float32ArrayType& m_Misorientations;
+  LaueOpsContainerType m_LaueOrientationOps;
 
 public:
-  ComputeFeatureMisorientationPerTriangleImpl(const Int32Array& labels, const Int32Array& phases, const Float32Array& quats, const UInt32Array& crystalStructures, const std::atomic_bool& shouldCancel,
-                                              Float32Array& output)
+  ComputeFeatureMisorientationPerTriangleImpl(const Int32ArrayType& labels, const Int32ArrayType& phases, const Float32ArrayType& quats, const UInt32ArrayType& crystalStructures,
+                                              const std::atomic_bool& shouldCancel, Float32ArrayType& output)
   : m_FaceLabels(labels)
   , m_FeaturePhases(phases)
   , m_FeatureAvgQuats(quats)
@@ -162,7 +162,7 @@ public:
           quat3 = m_FeatureAvgQuats[backFeatureIdx * 4 + 3];
           const ebsdlib::QuatD q2(quat0, quat1, quat2, quat3);
           ebsdlib::AxisAngleDType axisAngle = m_LaueOrientationOps[currentLaueIndex]->calculateMisorientation(q1, q2);
-          m_Misorientations.setValue(triangleIdx, static_cast<float32>(axisAngle[3] * Constants::k_180OverPiD));
+          m_Misorientations.setValue(triangleIdx, static_cast<float32>(axisAngle[3] * constants::k_180OverPiD));
           continue;
         }
       }
@@ -182,8 +182,8 @@ public:
 
 namespace
 {
-Result<> ComputeFeatureMisorientationInBlocks(const Int32Array& faceLabels, const Int32Array& phases, const Float32Array& quats, const UInt32Array& structures, Float32Array& misorientations,
-                                              const ComputeFeatureFaceMisorientationInputValues& inputValues, const std::atomic_bool& shouldCancel)
+Result<> ComputeFeatureMisorientationInBlocks(const Int32ArrayType& faceLabels, const Int32ArrayType& phases, const Float32ArrayType& quats, const UInt32ArrayType& structures,
+                                              Float32ArrayType& misorientations, const ComputeFeatureFaceMisorientationInputValues& inputValues, const std::atomic_bool& shouldCancel)
 {
   const usize numTriangles = faceLabels.getNumberOfTuples();
   if(shouldCancel || numTriangles == 0)
@@ -191,45 +191,45 @@ Result<> ComputeFeatureMisorientationInBlocks(const Int32Array& faceLabels, cons
     return {};
   }
   using namespace orientation::detail;
-  constexpr usize faceBytes = (2 * sizeof(int32)) + sizeof(float32);
-  auto planResult =
-      PlanLookups({.FaceCount = numTriangles, .FeatureCount = phases.getNumberOfTuples(), .EnsembleCount = structures.getNumberOfTuples(), .OrientationComponents = 4, .FaceBytes = faceBytes}, -98425);
+  constexpr usize k_FaceBytes = (2 * sizeof(int32)) + sizeof(float32);
+  auto planResult = PlanLookups(
+      {.face_count = numTriangles, .feature_count = phases.getNumberOfTuples(), .ensemble_count = structures.getNumberOfTuples(), .orientation_components = 4, .face_bytes = k_FaceBytes}, -98425);
   if(planResult.invalid())
   {
     return ConvertResult(std::move(planResult));
   }
   // This owner precedes every buffer, so the reservation outlives their payloads.
   auto plan = std::move(planResult.value());
-  const usize bufferTriangles = plan.FaceCapacity;
-  const bool wholeTables = plan.CacheWholeTables;
+  const usize bufferTriangles = plan.face_capacity;
+  const bool wholeTables = plan.cache_whole_tables;
   Result<> result;
   std::vector<int32> featurePhases(wholeTables ? phases.getSize() : bufferTriangles * 2);
   std::vector<float32> featureAvgQuats(wholeTables ? quats.getSize() : bufferTriangles * 8);
   std::vector<uint32> crystalStructures(wholeTables ? structures.getSize() : bufferTriangles * 2);
   std::vector<usize> lookupOrder(wholeTables ? 0 : bufferTriangles * 2);
-  std::vector<int32> phasePage(plan.PageCapacity);
-  std::vector<float32> quatPage(plan.PageCapacity * 4);
-  std::vector<uint32> structurePage(plan.PageCapacity);
+  std::vector<int32> phasePage(plan.page_capacity);
+  std::vector<float32> quatPage(plan.page_capacity * 4);
+  std::vector<uint32> structurePage(plan.page_capacity);
   if(wholeTables)
   {
-    result = MergeResults(std::move(result), ReadLookupTable<int32>(phases.getDataStoreRef(), featurePhases, -98420, inputValues.featurePhasesArrayPath));
+    result = MergeResults(std::move(result), ReadLookupTable<int32>(phases.getDataStoreRef(), featurePhases, -98420, inputValues.feature_phases_array_path));
     if(result.invalid())
     {
       return result;
     }
-    result = MergeResults(std::move(result), ReadLookupTable<float32>(quats.getDataStoreRef(), featureAvgQuats, -98421, inputValues.avgQuatsArrayPath));
+    result = MergeResults(std::move(result), ReadLookupTable<float32>(quats.getDataStoreRef(), featureAvgQuats, -98421, inputValues.avg_quats_array_path));
     if(result.invalid())
     {
       return result;
     }
-    result = MergeResults(std::move(result), ReadLookupTable<uint32>(structures.getDataStoreRef(), crystalStructures, -98422, inputValues.crystalStructuresArrayPath));
+    result = MergeResults(std::move(result), ReadLookupTable<uint32>(structures.getDataStoreRef(), crystalStructures, -98422, inputValues.crystal_structures_array_path));
     if(result.invalid())
     {
       return result;
     }
   }
 
-  const LaueOpsContainer orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
+  const LaueOpsContainerType orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
   std::vector<int32> faceLabelsBuffer(bufferTriangles * 2);
   std::vector<float32> misorientationsBuffer(bufferTriangles);
   for(usize start = 0; start < numTriangles;)
@@ -249,7 +249,7 @@ Result<> ComputeFeatureMisorientationInBlocks(const Int32Array& faceLabels, cons
     {
       const nonstd::span<const int32> labels(faceLabelsBuffer.data(), count * 2);
       result = MergeResults(std::move(result),
-                            GatherLookupTuples<int32, 1>(phases.getDataStoreRef(), labels, lookupOrder, featurePhases, phasePage, shouldCancel, -98420, inputValues.featurePhasesArrayPath));
+                            GatherLookupTuples<int32, 1>(phases.getDataStoreRef(), labels, lookupOrder, featurePhases, phasePage, shouldCancel, -98420, inputValues.feature_phases_array_path));
       if(result.invalid() || shouldCancel)
       {
         return result;
@@ -264,13 +264,13 @@ Result<> ComputeFeatureMisorientationInBlocks(const Int32Array& faceLabels, cons
         }
       }
       result = MergeResults(std::move(result),
-                            GatherLookupTuples<float32, 4>(quats.getDataStoreRef(), labels, lookupOrder, featureAvgQuats, quatPage, shouldCancel, -98421, inputValues.avgQuatsArrayPath, true));
+                            GatherLookupTuples<float32, 4>(quats.getDataStoreRef(), labels, lookupOrder, featureAvgQuats, quatPage, shouldCancel, -98421, inputValues.avg_quats_array_path, true));
       if(result.invalid() || shouldCancel)
       {
         return result;
       }
       result = MergeResults(std::move(result), GatherLookupTuples<uint32, 1>(structures.getDataStoreRef(), {featurePhases.data(), count * 2}, lookupOrder, crystalStructures, structurePage,
-                                                                             shouldCancel, -98422, inputValues.crystalStructuresArrayPath));
+                                                                             shouldCancel, -98422, inputValues.crystal_structures_array_path));
       if(result.invalid() || shouldCancel)
       {
         return result;
@@ -321,7 +321,7 @@ Result<> ComputeFeatureMisorientationInBlocks(const Int32Array& faceLabels, cons
           quat3 = featureAvgQuats[backQuat + 3];
           const ebsdlib::QuatD q2(quat0, quat1, quat2, quat3);
           ebsdlib::AxisAngleDType axisAngle = orientationOps[currentLaueIndex]->calculateMisorientation(q1, q2);
-          misorientationsBuffer[triangleIdx] = static_cast<float32>(axisAngle[3] * Constants::k_180OverPiD);
+          misorientationsBuffer[triangleIdx] = static_cast<float32>(axisAngle[3] * constants::k_180OverPiD);
           continue;
         }
       }
@@ -349,16 +349,15 @@ ComputeFeatureFaceMisorientation::ComputeFeatureFaceMisorientation(DataStructure
 }
 
 // -----------------------------------------------------------------------------
-ComputeFeatureFaceMisorientation::~ComputeFeatureFaceMisorientation() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> ComputeFeatureFaceMisorientation::operator()()
 {
-  const auto& faceLabelsArrayRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->surfaceMeshFaceLabelsArrayPath);
-  const auto& avgQuatsArrayRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->avgQuatsArrayPath);
-  const auto& featurePhasesArrayRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->featurePhasesArrayPath);
-  const auto& crystalStructuresArrayRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
-  auto& misorientationsArrayRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->misorientationArrayPath);
+  const auto& faceLabelsArrayRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->surface_mesh_face_labels_array_path);
+  const auto& avgQuatsArrayRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->avg_quats_array_path);
+  const auto& featurePhasesArrayRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_phases_array_path);
+  const auto& crystalStructuresArrayRef = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
+  auto& misorientationsArrayRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->misorientation_array_path);
   const usize numTriangles = faceLabelsArrayRef.getNumberOfTuples();
 
   if(Result<> validationResult = ValidateParticipatingFeaturePhases(faceLabelsArrayRef, featurePhasesArrayRef, crystalStructuresArrayRef, *m_InputValues); validationResult.invalid())

@@ -11,10 +11,10 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ComputeTriangleGeomVolumesInputValues
 {
-  DataPath TriangleGeometryPath;
-  DataPath FaceLabelsArrayPath;
-  DataPath FeatureAttributeMatrixPath;
-  DataPath VolumesArrayPath;
+  DataPath triangle_geometry_path;
+  DataPath face_labels_array_path;
+  DataPath feature_attribute_matrix_path;
+  DataPath volumes_array_path;
 };
 
 /**
@@ -24,7 +24,7 @@ class SIMPLNXCORE_EXPORT ComputeTriangleGeomVolumes
 {
 public:
   ComputeTriangleGeomVolumes(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeTriangleGeomVolumesInputValues* inputValues);
-  ~ComputeTriangleGeomVolumes() noexcept;
+  ~ComputeTriangleGeomVolumes() noexcept = default;
 
   ComputeTriangleGeomVolumes(const ComputeTriangleGeomVolumes&) = delete;
   ComputeTriangleGeomVolumes(ComputeTriangleGeomVolumes&&) noexcept = delete;

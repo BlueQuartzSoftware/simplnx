@@ -26,34 +26,34 @@ constexpr int32 k_NegativeHeight = -8555;
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::HMinimaImageFilter: hand-computed minima suppression", "[NXImageProcessing][HMinimaImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 9;
-  constexpr usize DY = 9;
-  constexpr usize DZ = 1;
-  constexpr int32 background = 50;
-  constexpr int32 deepDent = 30;    // contrast 20 (>= Height) -> survives, raised by Height to 40
-  constexpr int32 shallowDent = 45; // contrast 5  (<  Height) -> filled up to background (50)
-  constexpr float64 height = 10.0;
+  constexpr usize k_Dx = 9;
+  constexpr usize k_Dy = 9;
+  constexpr usize k_Dz = 1;
+  constexpr int32 k_Background = 50;
+  constexpr int32 k_DeepDent = 30;    // contrast 20 (>= Height) -> survives, raised by Height to 40
+  constexpr int32 k_ShallowDent = 45; // contrast 5  (<  Height) -> filled up to background (50)
+  constexpr float64 k_Height = 10.0;
 
-  std::vector<int32> pattern(DX * DY * DZ, background);
-  pattern[rt::FlatIndex(2, 2, 0, DX, DY)] = deepDent;    // isolated regional minimum (all face-neighbors are background)
-  pattern[rt::FlatIndex(6, 6, 0, DX, DY)] = shallowDent; // isolated regional minimum, separated from the deep dent by background
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, k_Background);
+  pattern[rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)] = k_DeepDent;    // isolated regional minimum (all face-neighbors are background)
+  pattern[rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)] = k_ShallowDent; // isolated regional minimum, separated from the deep dent by background
 
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
 
   HMinimaImageFilter filter;
-  rt::RunReconstructionFilter<HMinimaImageFilter>(filter, ds, inputPath, rt::HeightAndFullyConnectedParamSetter<HMinimaImageFilter>(), /*fullyConnected=*/false, height);
+  rt::RunReconstructionFilter<HMinimaImageFilter>(filter, dataStructure, inputPath, rt::HeightAndFullyConnectedParamSetter<HMinimaImageFilter>(), /*fullyConnected=*/false, k_Height);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
 
-  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, DX, DY)) == deepDent + static_cast<int32>(height)); // 30 -> 40 (raised by Height)
-  REQUIRE(outStore.getValue(rt::FlatIndex(6, 6, 0, DX, DY)) == background);                            // 45 -> 50 (shallow minimum removed)
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, DX, DY)) == background);                            // neighbor of the deep dent, unchanged
-  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, DX, DY)) == background);                            // untouched background voxel
+  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == k_DeepDent + static_cast<int32>(k_Height)); // 30 -> 40 (raised by Height)
+  REQUIRE(outStore.getValue(rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)) == k_Background);                              // 45 -> 50 (shallow minimum removed)
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)) == k_Background);                              // neighbor of the deep dent, unchanged
+  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, k_Dx, k_Dy)) == k_Background);                              // untouched background voxel
 }
 
 // -----------------------------------------------------------------------------
@@ -65,46 +65,46 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: hand-computed minima suppressi
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::HMinimaImageFilter: hand-computed minima suppression (both algorithm paths)", "[NXImageProcessing][HMinimaImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
-  constexpr usize DX = 9;
-  constexpr usize DY = 9;
-  constexpr usize DZ = 1;
-  constexpr int32 background = 50;
-  constexpr int32 deepDent = 30;    // contrast 20 (>= Height) -> survives, raised by Height to 40
-  constexpr int32 shallowDent = 45; // contrast 5  (<  Height) -> filled up to background (50)
-  constexpr float64 height = 10.0;
+  constexpr usize k_Dx = 9;
+  constexpr usize k_Dy = 9;
+  constexpr usize k_Dz = 1;
+  constexpr int32 k_Background = 50;
+  constexpr int32 k_DeepDent = 30;    // contrast 20 (>= Height) -> survives, raised by Height to 40
+  constexpr int32 k_ShallowDent = 45; // contrast 5  (<  Height) -> filled up to background (50)
+  constexpr float64 k_Height = 10.0;
 
-  std::vector<int32> pattern(DX * DY * DZ, background);
-  pattern[rt::FlatIndex(2, 2, 0, DX, DY)] = deepDent;    // isolated regional minimum (all face-neighbors are background)
-  pattern[rt::FlatIndex(6, 6, 0, DX, DY)] = shallowDent; // isolated regional minimum, separated from the deep dent by background
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, k_Background);
+  pattern[rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)] = k_DeepDent;    // isolated regional minimum (all face-neighbors are background)
+  pattern[rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)] = k_ShallowDent; // isolated regional minimum, separated from the deep dent by background
 
-  UnitTest::AlgorithmTestScope scope(scenario);
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
-  scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
+  unit_test::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
 
   HMinimaImageFilter filter;
   Arguments args;
   args.insertOrAssign(HMinimaImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
   args.insertOrAssign(HMinimaImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(HMinimaImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  args.insertOrAssign(HMinimaImageFilter::k_Height_Key, std::make_any<float64>(height));
+  args.insertOrAssign(HMinimaImageFilter::k_Height_Key, std::make_any<float64>(k_Height));
   args.insertOrAssign(HMinimaImageFilter::k_FullyConnected_Key, std::make_any<bool>(false));
 
-  auto executeResult = scope.executeFilter(filter, ds, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  auto& outArray = ds.getDataRefAs<DataArray<int32>>(outputPath);
+  auto& outArray = dataStructure.getDataRefAs<DataArray<int32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
-  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, DX, DY)) == deepDent + static_cast<int32>(height)); // 30 -> 40 (raised by Height)
-  REQUIRE(outStore.getValue(rt::FlatIndex(6, 6, 0, DX, DY)) == background);                            // 45 -> 50 (shallow minimum removed)
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, DX, DY)) == background);                            // neighbor of the deep dent, unchanged
-  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, DX, DY)) == background);                            // untouched background voxel
+  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == k_DeepDent + static_cast<int32>(k_Height)); // 30 -> 40 (raised by Height)
+  REQUIRE(outStore.getValue(rt::FlatIndex(6, 6, 0, k_Dx, k_Dy)) == k_Background);                              // 45 -> 50 (shallow minimum removed)
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 2, 0, k_Dx, k_Dy)) == k_Background);                              // neighbor of the deep dent, unchanged
+  REQUIRE(outStore.getValue(rt::FlatIndex(4, 4, 0, k_Dx, k_Dy)) == k_Background);                              // untouched background voxel
 }
 
 // -----------------------------------------------------------------------------
@@ -115,19 +115,21 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: hand-computed minima suppressi
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::HMinimaImageFilter: Height 0 is the identity", "[NXImageProcessing][HMinimaImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 12, DY = 12, DZ = 3;
-  const std::vector<int32> pattern = rt::MakeGradientNoisePattern<int32>(DX, DY, DZ);
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  constexpr usize k_Dx = 12;
+  constexpr usize k_Dy = 12;
+  constexpr usize k_Dz = 3;
+  const std::vector<int32> pattern = rt::MakeGradientNoisePattern<int32>(k_Dx, k_Dy, k_Dz);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
 
   HMinimaImageFilter filter;
-  rt::RunReconstructionFilter<HMinimaImageFilter>(filter, ds, inputPath, rt::HeightAndFullyConnectedParamSetter<HMinimaImageFilter>(), /*fullyConnected=*/false, /*height=*/0.0);
+  rt::RunReconstructionFilter<HMinimaImageFilter>(filter, dataStructure, inputPath, rt::HeightAndFullyConnectedParamSetter<HMinimaImageFilter>(), /*fullyConnected=*/false, /*height=*/0.0);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
   REQUIRE(outStore.getSize() == pattern.size());
   for(usize i = 0; i < outStore.getSize(); ++i)
   {
@@ -145,22 +147,22 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: Height 0 is the identity", "[N
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::HMinimaImageFilter: uint8 full-overflow clamps to type maximum", "[NXImageProcessing][HMinimaImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 12;
-  constexpr usize DY = 12;
-  constexpr usize DZ = 8;
-  constexpr float64 height = 300.0; // > uint8 dynamic range (255) -> every voxel's marker overflows
-  const std::vector<uint8> pattern = rt::MakeGradientNoisePattern<uint8>(DX, DY, DZ);
+  constexpr usize k_Dx = 12;
+  constexpr usize k_Dy = 12;
+  constexpr usize k_Dz = 8;
+  constexpr float64 k_Height = 300.0; // > uint8 dynamic range (255) -> every voxel's marker overflows
+  const std::vector<uint8> pattern = rt::MakeGradientNoisePattern<uint8>(k_Dx, k_Dy, k_Dz);
 
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, DX, DY, DZ, pattern);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<uint8>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
   HMinimaImageFilter filter;
-  rt::RunReconstructionFilter<HMinimaImageFilter>(filter, ds, inputPath, rt::HeightAndFullyConnectedParamSetter<HMinimaImageFilter>(), /*fullyConnected=*/false, height);
+  rt::RunReconstructionFilter<HMinimaImageFilter>(filter, dataStructure, inputPath, rt::HeightAndFullyConnectedParamSetter<HMinimaImageFilter>(), /*fullyConnected=*/false, k_Height);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<uint8>>(outputPath).getDataStoreRef();
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<uint8>>(outputPath).getDataStoreRef();
   for(usize i = 0; i < outStore.getSize(); ++i)
   {
     REQUIRE(outStore.getValue(i) == uint8{255}); // clamped to NonnegativeMax, not wrapped to a small value
@@ -173,8 +175,8 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: uint8 full-overflow clamps to 
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::HMinimaImageFilter: Preflight non-finite Height guard", "[NXImageProcessing][HMinimaImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   HMinimaImageFilter filter;
 
@@ -188,34 +190,34 @@ TEST_CASE("NXImageProcessing::HMinimaImageFilter: Preflight non-finite Height gu
     return args;
   };
 
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, 8, 8, 8, rt::MakeGradientNoisePattern<uint8>(8, 8, 8));
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<uint8>(dataStructure, 8, 8, 8, rt::MakeGradientNoisePattern<uint8>(8, 8, 8));
 
   SECTION("finite Height preflights cleanly")
   {
-    auto result = filter.preflight(ds, makeArgs(inputPath, 2.0));
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    auto result = filter.preflight(dataStructure, makeArgs(inputPath, 2.0));
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
 
   SECTION("NaN Height is rejected")
   {
-    auto result = filter.preflight(ds, makeArgs(inputPath, std::numeric_limits<float64>::quiet_NaN()));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_NonFiniteHeight);
+    auto result = filter.preflight(dataStructure, makeArgs(inputPath, std::numeric_limits<float64>::quiet_NaN()));
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_NonFiniteHeight);
   }
 
   SECTION("Inf Height is rejected")
   {
-    auto result = filter.preflight(ds, makeArgs(inputPath, std::numeric_limits<float64>::infinity()));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_NonFiniteHeight);
+    auto result = filter.preflight(dataStructure, makeArgs(inputPath, std::numeric_limits<float64>::infinity()));
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_NonFiniteHeight);
   }
 
   SECTION("Negative Height is rejected")
   {
-    auto result = filter.preflight(ds, makeArgs(inputPath, -1.0));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_NegativeHeight);
+    auto result = filter.preflight(dataStructure, makeArgs(inputPath, -1.0));
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_NegativeHeight);
   }
 }
 

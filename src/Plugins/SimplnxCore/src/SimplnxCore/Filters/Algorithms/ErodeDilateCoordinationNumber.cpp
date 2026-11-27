@@ -49,8 +49,8 @@ struct OrderedCoordinationSliceTransfer
     auto& storeRef = dynamic_cast<DataArray<T>&>(dataArray).getDataStoreRef();
     const usize componentCount = storeRef.getNumberOfComponents();
     const usize sliceValueCount = sliceSize * componentCount;
-    auto destinationBuffer = SliceBufferedTransferFunctor::makeBuf<T>(sliceValueCount);
-    auto* destinationPtr = SliceBufferedTransferFunctor::bufPtr(destinationBuffer);
+    auto destinationBuffer = SliceBufferedTransferFunctor::MakeBuf<T>(sliceValueCount);
+    auto* destinationPtr = SliceBufferedTransferFunctor::BufPtr(destinationBuffer);
     auto readResult = storeRef.copyIntoBuffer(destZ * sliceValueCount, nonstd::span<T>(destinationPtr, sliceValueCount));
     if(readResult.invalid())
     {
@@ -76,15 +76,15 @@ struct OrderedCoordinationSliceTransfer
         const usize sourceSlot = sourceZ < destZ ? 0 : 1;
         if(!isAdjacentLoaded[sourceSlot] && sourceZ < dimZ)
         {
-          adjacentBuffers[sourceSlot] = SliceBufferedTransferFunctor::makeBuf<T>(sliceValueCount);
-          readResult = storeRef.copyIntoBuffer(sourceZ * sliceValueCount, nonstd::span<T>(SliceBufferedTransferFunctor::bufPtr(adjacentBuffers[sourceSlot]), sliceValueCount));
+          adjacentBuffers[sourceSlot] = SliceBufferedTransferFunctor::MakeBuf<T>(sliceValueCount);
+          readResult = storeRef.copyIntoBuffer(sourceZ * sliceValueCount, nonstd::span<T>(SliceBufferedTransferFunctor::BufPtr(adjacentBuffers[sourceSlot]), sliceValueCount));
           if(readResult.invalid())
           {
             return readResult;
           }
           isAdjacentLoaded[sourceSlot] = true;
         }
-        sourcePtr = SliceBufferedTransferFunctor::bufPtr(adjacentBuffers[sourceSlot]);
+        sourcePtr = SliceBufferedTransferFunctor::BufPtr(adjacentBuffers[sourceSlot]);
       }
 
       for(usize componentIdx = 0; componentIdx < componentCount; componentIdx++)
@@ -114,7 +114,6 @@ ErodeDilateCoordinationNumber::ErodeDilateCoordinationNumber(DataStructure& data
 }
 
 // -----------------------------------------------------------------------------
-ErodeDilateCoordinationNumber::~ErodeDilateCoordinationNumber() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ErodeDilateCoordinationNumber::getCancel() const
@@ -125,18 +124,18 @@ const std::atomic_bool& ErodeDilateCoordinationNumber::getCancel() const
 // -----------------------------------------------------------------------------
 Result<> ErodeDilateCoordinationNumber::operator()()
 {
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
 
-  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
-  SizeVec3 udims = selectedImageGeom.getDimensions();
+  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->input_image_geometry);
+  SizeVec3Type udims = selectedImageGeom.getDimensions();
   std::array<int64, 3> dims = {static_cast<int64>(udims[0]), static_cast<int64>(udims[1]), static_cast<int64>(udims[2])};
 
   // Face order determines which source wins when neighbor tallies compete.
-  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
-  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3DType>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = InitializeFaceNeighborOffsets(dims);
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> k_FaceNeighborInternalIdx = InitializeFaceNeighborInternalIdx();
 
-  std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths);
+  std::vector<std::shared_ptr<IDataArray>> voxelArrays = nx::core::GenerateDataArrayList(m_DataStructure, m_InputValues->feature_ids_array_path, m_InputValues->ignored_data_array_paths);
 
   // Aliases repeat an idempotent tuple copy within one voxel, but must not replay a complete slice twice.
   usize uniqueStoreCount = 0;
@@ -211,7 +210,7 @@ Result<> ErodeDilateCoordinationNumber::operator()()
   while(counter > 0 && keepGoing)
   {
     counter = 0;
-    if(!m_InputValues->Loop)
+    if(!m_InputValues->loop)
     {
       keepGoing = false;
     }
@@ -261,7 +260,7 @@ Result<> ErodeDilateCoordinationNumber::operator()()
           int64 selectedNeighbor = -1;
           int32 selectedFeature = featureName;
 
-          const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+          const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = ComputeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
 
           // The validity mask prevents access to out-of-image neighbor positions.
           const std::array<usize, 6> neighborInSlice = {
@@ -273,7 +272,7 @@ Result<> ErodeDilateCoordinationNumber::operator()()
               inSlice                                          // +Z
           };
 
-          for(const auto& faceIndex : faceNeighborInternalIdx)
+          for(const auto& faceIndex : k_FaceNeighborInternalIdx)
           {
             if(!isValidFaceNeighbor[faceIndex])
             {
@@ -298,7 +297,7 @@ Result<> ErodeDilateCoordinationNumber::operator()()
               }
             }
           }
-          if(coordination >= m_InputValues->CoordinationNumber && coordination > 0)
+          if(coordination >= m_InputValues->coordination_number && coordination > 0)
           {
             sliceNeighbors[inSlice] = selectedNeighbor;
             counter++;
@@ -310,7 +309,7 @@ Result<> ErodeDilateCoordinationNumber::operator()()
           }
 
           // The center update does not change any face-neighbor value used by this reset.
-          for(const auto& faceIndex : faceNeighborInternalIdx)
+          for(const auto& faceIndex : k_FaceNeighborInternalIdx)
           {
             if(!isValidFaceNeighbor[faceIndex])
             {

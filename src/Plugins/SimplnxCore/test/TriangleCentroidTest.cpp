@@ -17,7 +17,7 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace
 {
@@ -26,42 +26,42 @@ constexpr usize k_VertexTupleCount = 11;
 constexpr usize k_VertexCompCount = 3;
 constexpr usize k_FaceTupleCount = 4;
 constexpr usize k_FaceCompCount = 3;
-constexpr StringLiteral k_CentroidsName = "Centroids";
+constexpr StringLiteralType k_CentroidsName = "Centroids";
 
-static const IGeometry::SharedVertexList* CreateVertexList(IGeometry& geom, const DataObject::IdType parentId)
+const IGeometry::SharedVertexListType* CreateVertexList(IGeometry& geom, const DataObject::IdType parentId)
 {
-  auto dataStructure = geom.getDataStructure();
+  auto* dataStructurePtr = geom.getDataStructure();
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{k_VertexTupleCount}, std::vector<usize>{k_VertexCompCount}, 0.0f);
-  auto* dataArr = IGeometry::SharedVertexList::Create(*dataStructure, "Vertices", std::move(dataStore), parentId);
-  REQUIRE(dataArr != nullptr);
-  return dynamic_cast<IGeometry::SharedVertexList*>(dataArr);
+  auto* dataArrPtr = IGeometry::SharedVertexListType::Create(*dataStructurePtr, "Vertices", std::move(dataStore), parentId);
+  REQUIRE(dataArrPtr != nullptr);
+  return dynamic_cast<IGeometry::SharedVertexListType*>(dataArrPtr);
 }
 
-static const IGeometry::SharedFaceList* CreateFaceList(IGeometry& geom, const DataObject::IdType parentId)
+const IGeometry::SharedFaceListType* CreateFaceList(IGeometry& geom, const DataObject::IdType parentId)
 {
-  auto dataStructure = geom.getDataStructure();
+  auto* dataStructurePtr = geom.getDataStructure();
   auto dataStore = std::make_unique<DataStore<IGeometry::MeshIndexType>>(std::vector<usize>{k_FaceTupleCount}, std::vector<usize>{k_FaceCompCount}, 0);
-  auto* dataArr = IGeometry::SharedFaceList::Create(*dataStructure, "Faces", std::move(dataStore), parentId);
-  REQUIRE(dataArr != nullptr);
-  return dynamic_cast<IGeometry::SharedFaceList*>(dataArr);
+  auto* dataArrPtr = IGeometry::SharedFaceListType::Create(*dataStructurePtr, "Faces", std::move(dataStore), parentId);
+  REQUIRE(dataArrPtr != nullptr);
+  return dynamic_cast<IGeometry::SharedFaceListType*>(dataArrPtr);
 }
 
 } // namespace
 
 TEST_CASE("SimplnxCore::TriangleCentroidFilter", "[SimplnxCore][TriangleCentroidFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   TriangleGeom& acuteTriangle = *TriangleGeom::Create(dataStructure, k_TriangleGeometryName);
-  AttributeMatrix* faceData = AttributeMatrix::Create(dataStructure, INodeGeometry2D::k_FaceAttributeMatrixName, {k_FaceTupleCount}, acuteTriangle.getId());
-  acuteTriangle.setFaceAttributeMatrix(*faceData);
-  AttributeMatrix* vertData = AttributeMatrix::Create(dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, {k_VertexTupleCount}, acuteTriangle.getId());
-  acuteTriangle.setVertexAttributeMatrix(*vertData);
-  auto vertexList = CreateVertexList(acuteTriangle, vertData->getId());
-  auto facesList = CreateFaceList(acuteTriangle, faceData->getId());
-  auto underlyingStoreV = vertexList->getDataStorePtr().lock();
-  auto underlyingStoreF = facesList->getDataStorePtr().lock();
+  AttributeMatrix* faceDataPtr = AttributeMatrix::Create(dataStructure, INodeGeometry2D::k_FaceAttributeMatrixName, {k_FaceTupleCount}, acuteTriangle.getId());
+  acuteTriangle.setFaceAttributeMatrix(*faceDataPtr);
+  AttributeMatrix* vertDataPtr = AttributeMatrix::Create(dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, {k_VertexTupleCount}, acuteTriangle.getId());
+  acuteTriangle.setVertexAttributeMatrix(*vertDataPtr);
+  const auto* vertexListPtr = CreateVertexList(acuteTriangle, vertDataPtr->getId());
+  const auto* facesListPtr = CreateFaceList(acuteTriangle, faceDataPtr->getId());
+  auto underlyingStoreV = vertexListPtr->getDataStorePtr().lock();
+  auto underlyingStoreF = facesListPtr->getDataStorePtr().lock();
 
   // load Vertex list
   std::vector<float32> vertexes = {0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.5f, 1.0f, 0.0f, 2.0f, 0.0f, 0.0f, 3.0f, 0.0f,  0.0f, 4.0f, 1.0f,
@@ -78,8 +78,8 @@ TEST_CASE("SimplnxCore::TriangleCentroidFilter", "[SimplnxCore][TriangleCentroid
   {
     underlyingStoreF->setValue(count++, element);
   }
-  acuteTriangle.setFaceList(*facesList);
-  acuteTriangle.setVertices(*vertexList);
+  acuteTriangle.setFaceList(*facesListPtr);
+  acuteTriangle.setVertices(*vertexListPtr);
 
   const TriangleCentroidFilter filter;
   Arguments args;
@@ -93,15 +93,15 @@ TEST_CASE("SimplnxCore::TriangleCentroidFilter", "[SimplnxCore][TriangleCentroid
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  std::vector<Point3Df> centroids = {{0.5F, 0.333333F, 0.0F}, {3.0F, 0.333333, 0.0F}, {6.66667, 0.0F, 0.0F}, {9.0F, 0.0F, 0.0F}};
+  std::vector<FloatVec3Type> centroids = {{0.5F, 0.333333F, 0.0F}, {3.0F, 0.333333, 0.0F}, {6.66667, 0.0F, 0.0F}, {9.0F, 0.0F, 0.0F}};
 
-  const auto& calculatedCentroids = dataStructure.getDataRefAs<Float64Array>(triangleCentroidsDataPath);
+  const auto& calculatedCentroids = dataStructure.getDataRefAs<Float64ArrayType>(triangleCentroidsDataPath);
 
   for(size_t t = 0; t < 4; t++)
   {
@@ -112,14 +112,14 @@ TEST_CASE("SimplnxCore::TriangleCentroidFilter", "[SimplnxCore][TriangleCentroid
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::TriangleCentroidFilter: SIMPL Backwards Compatibility", "[SimplnxCore][TriangleCentroidFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -132,22 +132,22 @@ TEST_CASE("SimplnxCore::TriangleCentroidFilter: SIMPL Backwards Compatibility", 
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<TriangleCentroidFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<TriangleCentroidFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<std::string>(TriangleCentroidFilter::k_CentroidsArrayName_Key) == "TestArray");
       CHECK(args.value<DataPath>(TriangleCentroidFilter::k_TriGeometryDataPath_Key) == DataPath({"DataContainer"}));
     }

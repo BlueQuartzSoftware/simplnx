@@ -33,7 +33,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   DBSCANScanline(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const DBSCANInputValues* inputValues);
-  ~DBSCANScanline() noexcept;
+  ~DBSCANScanline() noexcept = default;
 
   DBSCANScanline(const DBSCANScanline&) = delete;
   DBSCANScanline(DBSCANScanline&&) noexcept = delete;

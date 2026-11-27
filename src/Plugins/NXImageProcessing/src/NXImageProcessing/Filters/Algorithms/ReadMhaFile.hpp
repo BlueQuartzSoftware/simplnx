@@ -21,12 +21,12 @@ namespace nx::core
  */
 struct NXIMAGEPROCESSING_EXPORT ReadMhaFileInputValues
 {
-  std::filesystem::path InputFilePath;
-  DataPath ImageGeometryPath;
-  std::string CellAttributeMatrixName;
-  std::string ImageDataArrayName;
-  CropGeometryParameter::ValueType CroppingOptions;
-  ImageIO::GeometryOverrides GeometryOverrides;
+  std::filesystem::path input_file_path;
+  DataPath image_geometry_path;
+  std::string cell_attribute_matrix_name;
+  std::string image_data_array_name;
+  CropGeometryParameter::ValueType cropping_options;
+  image_io::GeometryOverrides geometry_overrides;
 };
 
 /**
@@ -42,7 +42,7 @@ class NXIMAGEPROCESSING_EXPORT ReadMhaFile
 {
 public:
   ReadMhaFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ReadMhaFileInputValues* inputValues);
-  ~ReadMhaFile() noexcept;
+  ~ReadMhaFile() noexcept = default;
 
   ReadMhaFile(const ReadMhaFile&) = delete;
   ReadMhaFile(ReadMhaFile&&) noexcept = delete;

@@ -16,7 +16,7 @@
  *
  * These helpers are internal implementation details shared by DataStructureJson.cpp, DataStructureText.cpp, and DataStructureGraphViz.cpp and are not intended as public API.
  */
-namespace nx::core::DataStructureExportUtilities
+namespace nx::core::data_structure_export_utilities
 {
 /**
  * @brief Gets non-null objects in alphabetic order.
@@ -37,4 +37,4 @@ namespace nx::core::DataStructureExportUtilities
   std::ranges::sort(sortedObjectPtrs, [](const DataObject* lhsPtr, const DataObject* rhsPtr) { return lhsPtr->getName() < rhsPtr->getName(); });
   return sortedObjectPtrs;
 }
-} // namespace nx::core::DataStructureExportUtilities
+} // namespace nx::core::data_structure_export_utilities

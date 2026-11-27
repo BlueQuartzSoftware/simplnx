@@ -14,15 +14,15 @@ namespace nx::core
 
 struct ORIENTATIONANALYSIS_EXPORT ComputeShapesInputValues
 {
-  DataPath FeatureIdsArrayPath;
-  DataPath FeatureAttributeMatrixPath;
-  DataPath CentroidsArrayPath;
-  DataPath Omega3sArrayPath;
-  DataPath AxisLengthsArrayPath;
-  DataPath AxisEulerAnglesArrayPath;
-  DataPath AspectRatiosArrayPath;
-  DataPath VolumesArrayPath;
-  DataPath ImageGeometryPath;
+  DataPath feature_ids_array_path;
+  DataPath feature_attribute_matrix_path;
+  DataPath centroids_array_path;
+  DataPath omega3s_array_path;
+  DataPath axis_lengths_array_path;
+  DataPath axis_euler_angles_array_path;
+  DataPath aspect_ratios_array_path;
+  DataPath volumes_array_path;
+  DataPath image_geometry_path;
 };
 
 /**

@@ -76,8 +76,8 @@ Parameters ReadH5OinaDataFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_EdaxHexagonalAlignment_Key, "Convert Hexagonal X-Axis to EDAX Standard",
                                                 "Whether or not to convert a Hexagonal phase to the EDAX standard for x-axis alignment", true));
   params.insert(std::make_unique<BoolParameter>(k_ConvertPhaseToInt32_Key, "Convert Phase Data to Int32", "Native Phases data value is uint8. Convert to Int32 for better filter compatibility", true));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the volume", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
-  params.insert(std::make_unique<Float32Parameter>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing in microns between each layer.", 1.0f));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Origin", "The origin of the volume", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
+  params.insert(std::make_unique<Float32ParameterType>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing in microns between each layer.", 1.0f));
   params.insert(std::make_unique<BoolParameter>(k_ReadPatternData_Key, "Import Pattern Data",
                                                 "Whether or not to import the diffraction pattern data. Pattern import is not yet supported for H5OINA files, so turning this on stops the filter "
                                                 "with an error.",
@@ -103,18 +103,18 @@ IFilter::VersionType ReadH5OinaDataFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadH5OinaDataFilter::clone() const
+IFilter::UniquePointerType ReadH5OinaDataFilter::clone() const
 {
   return std::make_unique<ReadH5OinaDataFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                             const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pSelectedScanNamesValue = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
   auto pZSpacingValue = filterArgs.value<float32>(k_ZSpacing_Key);
-  auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
+  auto pOriginValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Origin_Key);
   auto pReadPatternDataValue = filterArgs.value<bool>(k_ReadPatternData_Key);
   auto pImageGeometryNameValue = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
@@ -127,13 +127,13 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const std::string inputFilePath = pSelectedScanNamesValue.inputFilePath.string();
+  const std::string inputFilePath = pSelectedScanNamesValue.input_file_path.string();
 
   if(!std::isfinite(pZSpacingValue) || pZSpacingValue <= 0)
   {
     return MakePreflightErrorResult(-9580, fmt::format("The Z Spacing value ({}) must be finite and positive.", pZSpacingValue));
   }
-  if(pSelectedScanNamesValue.scanNames.empty())
+  if(pSelectedScanNamesValue.scan_names.empty())
   {
     return MakePreflightErrorResult(-9581, "At least one scan must be chosen. Please select a scan from the list.");
   }
@@ -157,7 +157,7 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
   {
     return MakePreflightErrorResult(-9582, fmt::format("An error occurred while listing the scans in '{}'.\n  Error Code: {}\n  Message: {}", inputFilePath, err, reader.getErrorMessage()));
   }
-  for(const std::string& scanName : pSelectedScanNamesValue.scanNames)
+  for(const std::string& scanName : pSelectedScanNamesValue.scan_names)
   {
     if(std::find(availableScanNames.cbegin(), availableScanNames.cend(), scanName) == availableScanNames.cend())
     {
@@ -171,7 +171,7 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
     }
   }
 
-  const std::string& firstScanName = pSelectedScanNamesValue.scanNames.front();
+  const std::string& firstScanName = pSelectedScanNamesValue.scan_names.front();
   reader.setHDF5Path(firstScanName);
   if(const int err = reader.readHeaderOnly(); err < 0)
   {
@@ -285,7 +285,7 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
     ebsdlib::H5OINAReader scanCheckReader;
     scanCheckReader.setFileName(inputFilePath);
     scanCheckReader.setReadPatternData(false);
-    for(const std::string& scanName : pSelectedScanNamesValue.scanNames)
+    for(const std::string& scanName : pSelectedScanNamesValue.scan_names)
     {
       if(scanName == firstScanName)
       {
@@ -318,7 +318,7 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
   }
 
   // Create the Image Geometry and its attribute matrices.
-  const CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(reader.getXDimension()), static_cast<usize>(reader.getYDimension()), pSelectedScanNamesValue.scanNames.size()};
+  const CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(reader.getXDimension()), static_cast<usize>(reader.getYDimension()), pSelectedScanNamesValue.scan_names.size()};
   const ShapeType tupleDims = {dims[2], dims[1], dims[0]};
   {
     CreateImageGeometryAction::SpacingType spacing = {reader.getXStep(), reader.getYStep(), pZSpacingValue};
@@ -327,8 +327,8 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
 
-  EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::H5OINAReader>(reader, preflightUpdatedValues);
-  EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5OINAReader>(reader, preflightUpdatedValues);
+  ebsd_reader_utilities::GeneratePreflightScanInformation<ebsdlib::H5OINAReader>(reader, preflightUpdatedValues);
+  ebsd_reader_utilities::GeneratePreflightPhaseInformation<ebsdlib::H5OINAReader>(reader, preflightUpdatedValues);
 
   std::vector<usize> ensembleTupleDims{phases.size() + 1};
   {
@@ -368,22 +368,22 @@ IFilter::PreflightResult ReadH5OinaDataFilter::preflightImpl(const DataStructure
   resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(ebsdlib::H5OINA::X)));
   resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, tupleDims, std::vector<usize>{1}, cellAMPath.createChildPath(ebsdlib::H5OINA::Y)));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadH5OinaDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ReadH5OinaDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                           const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadH5DataInputValues inputValues;
 
-  inputValues.SelectedScanNames = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
-  inputValues.ReadPatternData = filterArgs.value<bool>(k_ReadPatternData_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
-  inputValues.CellEnsembleAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
-  inputValues.CellAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellAttributeMatrixName_Key));
-  inputValues.ConvertPhaseToInt32 = filterArgs.value<bool>(k_ConvertPhaseToInt32_Key);
-  inputValues.EdaxHexagonalAlignment = filterArgs.value<bool>(k_EdaxHexagonalAlignment_Key);
+  inputValues.selected_scan_names = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
+  inputValues.read_pattern_data = filterArgs.value<bool>(k_ReadPatternData_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
+  inputValues.cell_ensemble_attribute_matrix_path = inputValues.image_geometry_path.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
+  inputValues.cell_attribute_matrix_path = inputValues.image_geometry_path.createChildPath(filterArgs.value<std::string>(k_CellAttributeMatrixName_Key));
+  inputValues.convert_phase_to_int32 = filterArgs.value<bool>(k_ConvertPhaseToInt32_Key);
+  inputValues.edax_hexagonal_alignment = filterArgs.value<bool>(k_EdaxHexagonalAlignment_Key);
 
   return ReadH5OinaData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

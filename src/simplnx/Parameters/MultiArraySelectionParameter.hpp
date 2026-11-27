@@ -14,13 +14,13 @@ class SIMPLNX_EXPORT MultiArraySelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = std::vector<DataPath>;
-  using AllowedTypes = std::set<IArray::ArrayType>;
-  using AllowedDataTypes = nx::core::DataTypeSetType;
-  using AllowedComponentShapes = std::vector<ShapeType>;
+  using AllowedTypeSetType = std::set<IArray::ArrayType>;
+  using AllowedDataTypesType = nx::core::DataTypeSetType;
+  using AllowedComponentShapesType = std::vector<ShapeType>;
 
   MultiArraySelectionParameter() = delete;
-  MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes,
-                               const AllowedDataTypes& allowedDataTypes, AllowedComponentShapes requiredComps = {});
+  MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypeSetType allowedTypes,
+                               AllowedDataTypesType allowedDataTypes, AllowedComponentShapesType requiredComps = {});
   ~MultiArraySelectionParameter() override = default;
 
   MultiArraySelectionParameter(const MultiArraySelectionParameter&) = delete;
@@ -39,13 +39,13 @@ public:
    * @brief Returns a list of accpeted input types.
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief Creates a copy of the parameter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the user defined default value.
@@ -71,19 +71,19 @@ public:
    * @brief Returns the set of allowed IArray types. An empty set means all are allowed.
    * @return
    */
-  AllowedTypes allowedTypes() const;
+  AllowedTypeSetType allowedTypes() const;
 
   /**
    * @brief Returns the set of allowed DataTypes. An empty set means all are allowed.
    * @return
    */
-  AllowedDataTypes allowedDataTypes() const;
+  AllowedDataTypesType allowedDataTypes() const;
 
   /**
    * @brief Returns the required number of components. If return value is empty, then no component requirements.
    * @return
    */
-  AllowedComponentShapes requiredComponentShapes() const;
+  AllowedComponentShapesType requiredComponentShapes() const;
 
   /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
@@ -126,22 +126,22 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
-  AllowedTypes m_AllowedTypes = {};
-  AllowedDataTypes m_AllowedDataTypes = {};
-  AllowedComponentShapes m_RequiredComponentShapes = {};
+  ValueType m_DefaultValue;
+  AllowedTypeSetType m_AllowedTypes;
+  AllowedDataTypesType m_AllowedDataTypes;
+  AllowedComponentShapesType m_RequiredComponentShapes;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT MultiDataArraySelectionFilterParameterConverter
 {
   using ParameterType = MultiArraySelectionParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::MultiArraySelectionParameter, "d11e0bd8-f227-4fd1-b618-b6f16b259fc8");

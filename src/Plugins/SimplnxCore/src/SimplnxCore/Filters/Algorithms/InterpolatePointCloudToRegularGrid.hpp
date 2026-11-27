@@ -15,29 +15,29 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT InterpolatePointCloudToRegularGridInputValues
 {
-  bool useMask;
-  uint64 interpolationTechnique;
-  DataPath vertexGeomPath;
-  DataPath imageGeomPath;
-  std::vector<DataPath> interpolatedDataPaths;
-  std::vector<DataPath> copyDataPaths;
-  std::vector<float32> kernelSize;
+  bool use_mask{};
+  uint64 interpolation_technique{};
+  DataPath vertex_geom_path;
+  DataPath image_geom_path;
+  std::vector<DataPath> interpolated_data_paths;
+  std::vector<DataPath> copy_data_paths;
+  std::vector<float32> kernel_size;
   std::vector<float32> sigmas;
-  DataPath maskDataPath;
+  DataPath mask_data_path;
 
-  bool findLength;
-  bool findMin;
-  bool findMax;
-  bool findMean;
-  bool findStdDeviation;
-  bool findSummation;
+  bool find_length{};
+  bool find_min{};
+  bool find_max{};
+  bool find_mean{};
+  bool find_std_deviation{};
+  bool find_summation{};
 
-  std::string lengthSuffix;
-  std::string minSuffix;
-  std::string maxSuffix;
-  std::string meanSuffix;
-  std::string stdDeviationSuffix;
-  std::string summationSuffix;
+  std::string length_suffix;
+  std::string min_suffix;
+  std::string max_suffix;
+  std::string mean_suffix;
+  std::string std_deviation_suffix;
+  std::string summation_suffix;
 };
 
 /**
@@ -67,7 +67,7 @@ public:
   /**
    * @brief Destroys the non-owning interpolation algorithm.
    */
-  ~InterpolatePointCloudToRegularGrid() noexcept;
+  ~InterpolatePointCloudToRegularGrid() noexcept = default;
 
   InterpolatePointCloudToRegularGrid(const InterpolatePointCloudToRegularGrid&) = delete;
   InterpolatePointCloudToRegularGrid(InterpolatePointCloudToRegularGrid&&) noexcept = delete;

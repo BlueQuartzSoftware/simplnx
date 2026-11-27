@@ -56,11 +56,11 @@ Parameters CopyFeatureArrayToElementArrayFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedFeatureArrayPaths_Key, "Feature Data to Copy to Cell Data",
                                                                "The DataPath to the feature data that should be copied to the cell level", MultiArraySelectionParameter::ValueType{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<StringParameter>(k_CreatedArraySuffix_Key, "Created Array Suffix", "The suffix to add to the input attribute array name when creating the copied array", ""));
 
@@ -74,14 +74,14 @@ IFilter::VersionType CopyFeatureArrayToElementArrayFilter::parametersVersion() c
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CopyFeatureArrayToElementArrayFilter::clone() const
+IFilter::UniquePointerType CopyFeatureArrayToElementArrayFilter::clone() const
 {
   return std::make_unique<CopyFeatureArrayToElementArrayFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CopyFeatureArrayToElementArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult CopyFeatureArrayToElementArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                             const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   const auto pSelectedFeatureArrayPathsValue = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedFeatureArrayPaths_Key);
   const auto pFeatureIdsArrayPathValue = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
@@ -92,7 +92,7 @@ IFilter::PreflightResult CopyFeatureArrayToElementArrayFilter::preflightImpl(con
 
   if(pSelectedFeatureArrayPathsValue.empty())
   {
-    return MakePreflightErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, "You must select at least one feature data array to copy to an element data array.");
+    return MakePreflightErrorResult(nx::core::filter_parameter::constants::k_ValidateEmptyValue, "You must select at least one feature data array to copy to an element data array.");
   }
 
   if(pCreatedArraySuffixValue.find('/') != std::string::npos)
@@ -103,7 +103,8 @@ IFilter::PreflightResult CopyFeatureArrayToElementArrayFilter::preflightImpl(con
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(pSelectedFeatureArrayPathsValue);
   if(!tupleValidityCheck)
   {
-    return {MakeErrorResult<OutputActions>(-3020, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.output_actions =
+                MakeErrorResult<OutputActions>(-3020, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   const auto& featureIdsArray = dataStructure.getDataRefAs<IDataArray>(pFeatureIdsArrayPathValue);
@@ -119,29 +120,29 @@ IFilter::PreflightResult CopyFeatureArrayToElementArrayFilter::preflightImpl(con
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> CopyFeatureArrayToElementArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> CopyFeatureArrayToElementArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                           const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CopyFeatureArrayToElementArrayInputValues inputValues;
-  inputValues.SelectedFeatureArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedFeatureArrayPaths_Key);
-  inputValues.FeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.CreatedArraySuffix = filterArgs.value<StringParameter::ValueType>(k_CreatedArraySuffix_Key);
+  inputValues.selected_feature_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedFeatureArrayPaths_Key);
+  inputValues.feature_ids_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.created_array_suffix = filterArgs.value<StringParameter::ValueType>(k_CreatedArraySuffix_Key);
 
   return CopyFeatureArrayToElementArray(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_SelectedFeatureArrayPathKey = "SelectedFeatureArrayPath";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_CreatedArrayNameKey = "CreatedArrayName";
-} // namespace SIMPL
+constexpr StringLiteralType k_SelectedFeatureArrayPathKey = "SelectedFeatureArrayPath";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_CreatedArrayNameKey = "CreatedArrayName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CopyFeatureArrayToElementArrayFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -151,8 +152,8 @@ Result<Arguments> CopyFeatureArrayToElementArrayFilter::FromSIMPLJson(const nloh
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedFeatureArrayPathKey, k_SelectedFeatureArrayPaths_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_SelectedFeatureArrayPathKey, k_SelectedFeatureArrayPaths_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   // Do not map legacy CreatedArrayName to the suffix.
   // SIMPLNX appends a suffix to the input name, which would produce an incorrect name.
   // Leave the suffix empty so the copied array keeps its input name.

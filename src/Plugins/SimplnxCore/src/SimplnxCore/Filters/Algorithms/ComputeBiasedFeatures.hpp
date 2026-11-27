@@ -11,12 +11,12 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ComputeBiasedFeaturesInputValues
 {
-  bool CalcByPhase;
-  DataPath ImageGeometryPath;
-  DataPath CentroidsArrayPath;
-  DataPath SurfaceFeaturesArrayPath;
-  DataPath PhasesArrayPath;
-  DataPath BiasedFeaturesArrayName;
+  bool calc_by_phase{};
+  DataPath image_geometry_path;
+  DataPath centroids_array_path;
+  DataPath surface_features_array_path;
+  DataPath phases_array_path;
+  DataPath biased_features_array_name;
 };
 
 /**
@@ -28,7 +28,7 @@ class SIMPLNXCORE_EXPORT ComputeBiasedFeatures
 {
 public:
   ComputeBiasedFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeBiasedFeaturesInputValues* inputValues);
-  ~ComputeBiasedFeatures() noexcept;
+  ~ComputeBiasedFeatures() noexcept = default;
 
   ComputeBiasedFeatures(const ComputeBiasedFeatures&) = delete;
   ComputeBiasedFeatures(ComputeBiasedFeatures&&) noexcept = delete;

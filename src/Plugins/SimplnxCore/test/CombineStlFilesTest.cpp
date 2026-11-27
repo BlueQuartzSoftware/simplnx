@@ -33,14 +33,14 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace
 {
 const DataPath k_ComputedTriangleDataContainerName({"ComputedTriangleDataContainer"});
 const DataPath k_ExemplarTriangleDataContainerName({k_TriangleDataContainerName});
 
-void writeStlTriangle(const fs::path& path, float32 base)
+void WriteStlTriangle(const fs::path& path, float32 base)
 {
   std::ofstream output(path, std::ios::binary | std::ios::trunc);
   REQUIRE(output.is_open());
@@ -59,7 +59,7 @@ void writeStlTriangle(const fs::path& path, float32 base)
   REQUIRE(output.good());
 }
 
-void checkNestedVertexLabels(bool requireDiskStores)
+void CheckNestedVertexLabels(bool requireDiskStores)
 {
   const fs::path inputDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / ("NestedCombineStlFiles-" + Uuid::GenerateV4().str());
   const fs::path firstFile = inputDir / "A.stl";
@@ -71,8 +71,8 @@ void checkNestedVertexLabels(bool requireDiskStores)
     fs::remove(secondFile, error);
     fs::remove(inputDir, error);
   });
-  writeStlTriangle(firstFile, 0.0F);
-  writeStlTriangle(secondFile, 10.0F);
+  WriteStlTriangle(firstFile, 0.0F);
+  WriteStlTriangle(secondFile, 10.0F);
 
   const DataPath geometryPath({"Group", "TriGeom"});
   const std::string vertexDataName = "TriGeom Vertex Data";
@@ -85,9 +85,9 @@ void checkNestedVertexLabels(bool requireDiskStores)
   REQUIRE((decoyGroupPtr != nullptr));
   auto* decoyMatrixPtr = AttributeMatrix::Create(dataStructure, vertexDataName, {6}, decoyGroupPtr->getId());
   REQUIRE((decoyMatrixPtr != nullptr));
-  auto decoyStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, decoyPath, {6}, {1});
+  auto decoyStore = data_store_utilities::CreateDataStore<int32>(dataStructure, decoyPath, {6}, {1});
   REQUIRE((decoyStore != nullptr));
-  auto* decoyLabelsPtr = Int32Array::Create(dataStructure, labelName, decoyStore, decoyMatrixPtr->getId());
+  auto* decoyLabelsPtr = Int32ArrayType::Create(dataStructure, labelName, decoyStore, decoyMatrixPtr->getId());
   REQUIRE((decoyLabelsPtr != nullptr));
   decoyLabelsPtr->fill(-73);
 
@@ -100,13 +100,13 @@ void checkNestedVertexLabels(bool requireDiskStores)
   args.insertOrAssign(CombineStlFilesFilter::k_LabelVertices_Key, std::make_any<bool>(true));
   const auto preflightResult = filter.preflight(dataStructure, args);
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = filter.execute(dataStructure, args);
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while) -- The project assertion macro uses a do-while wrapper.
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& geometry = UnitTest::GetRequiredData<TriangleGeom>(dataStructure, geometryPath);
-  const auto& labels = UnitTest::GetRequiredData<Int32Array>(dataStructure, labelsPath);
+  const auto& geometry = unit_test::GetRequiredData<TriangleGeom>(dataStructure, geometryPath);
+  const auto& labels = unit_test::GetRequiredData<Int32ArrayType>(dataStructure, labelsPath);
   REQUIRE((geometry.getNumberOfFaces() == 2));
   REQUIRE((geometry.getNumberOfVertices() == 6));
   REQUIRE((labels.getNumberOfTuples() == 6));
@@ -116,10 +116,10 @@ void checkNestedVertexLabels(bool requireDiskStores)
   const auto& faces = *geometry.getFaces();
   if(requireDiskStores)
   {
-    UnitTest::RequireDiskBackedStore(labels);
-    UnitTest::RequireDiskBackedStore(vertices);
-    UnitTest::RequireDiskBackedStore(faces);
-    UnitTest::RequireDiskBackedStore(*decoyLabelsPtr);
+    unit_test::RequireDiskBackedStore(labels);
+    unit_test::RequireDiskBackedStore(vertices);
+    unit_test::RequireDiskBackedStore(faces);
+    unit_test::RequireDiskBackedStore(*decoyLabelsPtr);
   }
 
   // The root object is an intentional decoy group; no root triangle geometry is created.
@@ -148,33 +148,33 @@ void checkNestedVertexLabels(bool requireDiskStores)
       }
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
 TEST_CASE("SimplnxCore::CombineStlFilesFilter: nested geometry keeps vertex label path", "[SimplnxCore][CombineStlFilesFilter][NestedPaths]")
 {
   Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
-  checkNestedVertexLabels(false);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  CheckNestedVertexLabels(false);
 }
 
 TEST_CASE("SimplnxCore::CombineStlFilesFilter: nested geometry keeps vertex label path with real OOC stores", "[SimplnxCore][CombineStlFilesFilter][NestedPaths][.OocStoreContract]")
 {
-  REQUIRE(DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
-  checkNestedVertexLabels(true);
+  REQUIRE(data_store_utilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"));
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  CheckNestedVertexLabels(true);
 }
 
 TEST_CASE("SimplnxCore::CombineStlFilesFilter: Valid Filter Execution", "[SimplnxCore][CombineStlFilesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_combine_stl_files_v2.tar.gz", "6_6_combine_stl_files.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_combine_stl_files_v2.tar.gz", "6_6_combine_stl_files.dream3d");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_combine_stl_files_v2/6_6_combine_stl_files.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   std::string inputStlDir = fmt::format("{}/6_6_combine_stl_files_v2/STL_Models", unit_test::k_TestFilesDir.view());
 
@@ -195,7 +195,7 @@ TEST_CASE("SimplnxCore::CombineStlFilesFilter: Valid Filter Execution", "[Simpln
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -207,15 +207,15 @@ TEST_CASE("SimplnxCore::CombineStlFilesFilter: Valid Filter Execution", "[Simpln
   REQUIRE(computedTriangleGeom.getNumberOfVertices() == exemplarTriangleGeom.getNumberOfVertices());
   REQUIRE(computedTriangleGeom.getFaceAttributeMatrix()->getShape() == exemplarTriangleGeom.getFaceAttributeMatrix()->getShape());
 
-  UnitTest::CompareArrays<float64>(dataStructure, k_ExemplarTriangleDataContainerName.createChildPath(k_FaceData).createChildPath(k_FaceNormals),
-                                   k_ComputedTriangleDataContainerName.createChildPath(k_FaceData).createChildPath("Face Normals"));
+  unit_test::CompareArrays<float64>(dataStructure, k_ExemplarTriangleDataContainerName.createChildPath(k_FaceData).createChildPath(k_FaceNormals),
+                                    k_ComputedTriangleDataContainerName.createChildPath(k_FaceData).createChildPath("Face Normals"));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CombineStlFilesFilter: InValid Filter Execution")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   CombineStlFilesFilter filter;
@@ -233,20 +233,20 @@ TEST_CASE("SimplnxCore::CombineStlFilesFilter: InValid Filter Execution")
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CombineStlFilesFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CombineStlFilesFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -258,22 +258,22 @@ TEST_CASE("SimplnxCore::CombineStlFilesFilter: SIMPL Backwards Compatibility", "
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<CombineStlFilesFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<CombineStlFilesFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<FileSystemPathParameter::ValueType>(CombineStlFilesFilter::k_StlFilesPath_Key) == fs::path("/test/path/stl_files"));
       CHECK(args.value<DataPath>(CombineStlFilesFilter::k_TriangleGeometryPath_Key) == DataPath({"TriangleDataContainer"}));
       CHECK(args.value<std::string>(CombineStlFilesFilter::k_FaceAttributeMatrixName_Key) == "FaceData");
@@ -284,7 +284,7 @@ TEST_CASE("SimplnxCore::CombineStlFilesFilter: SIMPL Backwards Compatibility", "
 
 TEST_CASE("SimplnxCore::CombineStlFilesFilter: Part numbers match file list", "[SimplnxCore][CombineStlFilesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const fs::path outputDirectory(unit_test::k_BinaryTestOutputDir.view());
   fs::create_directories(outputDirectory);
   const fs::path directory = outputDirectory / ("CombineStlFiles_L08_" + Uuid::GenerateV4().str());
@@ -335,15 +335,15 @@ TEST_CASE("SimplnxCore::CombineStlFilesFilter: Part numbers match file list", "[
   args.insertOrAssign(CombineStlFilesFilter::k_CellFeatureAttributeMatrixName_Key, std::make_any<std::string>("Files"));
   args.insertOrAssign(CombineStlFilesFilter::k_FileListName_Key, std::make_any<std::string>("Paths"));
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(geometryPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(geometryPath.createChildPath("Faces").createChildPath("Parts")));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(geometryPath.createChildPath("Faces").createChildPath("Parts")));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(geometryPath.createChildPath("Files").createChildPath("Paths")));
   const auto& geometry = dataStructure.getDataRefAs<TriangleGeom>(geometryPath);
-  const auto& parts = dataStructure.getDataRefAs<Int32Array>(geometryPath.createChildPath("Faces").createChildPath("Parts"));
+  const auto& parts = dataStructure.getDataRefAs<Int32ArrayType>(geometryPath.createChildPath("Faces").createChildPath("Parts"));
   const auto& paths = dataStructure.getDataRefAs<StringArray>(geometryPath.createChildPath("Files").createChildPath("Paths"));
   REQUIRE(geometry.getNumberOfFaces() == 2);
   REQUIRE(geometry.getNumberOfVertices() == 6);
@@ -380,5 +380,5 @@ TEST_CASE("SimplnxCore::CombineStlFilesFilter: Part numbers match file list", "[
     }
     CHECK(count == 1);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

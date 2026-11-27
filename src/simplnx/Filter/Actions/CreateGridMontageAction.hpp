@@ -26,7 +26,7 @@ public:
    * @param origin The origin of the montage
    * @param spacing The spacing of the montage
    */
-  CreateGridMontageAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing);
+  CreateGridMontageAction(const DataPath& path, DimensionType dims, OriginType origin, SpacingType spacing);
 
   ~CreateGridMontageAction() noexcept override = default;
 
@@ -48,7 +48,7 @@ public:
    * @brief Returns a copy of the action.
    * @return UniquePointer A unique pointer to the cloned action
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the path of the ImageGeometry to be created.

@@ -9,7 +9,7 @@ namespace nx::core
 {
 class DataStructure;
 
-namespace HDF5
+namespace hdf5
 {
 class DataStructureReader;
 class DataStructureWriter;
@@ -19,10 +19,10 @@ using ErrorType = int32;
 class SIMPLNX_EXPORT IDataIO : public nx::core::IDataFactory
 {
 public:
-  using group_reader_type = nx::core::HDF5::GroupIO;
-  using group_writer_type = nx::core::HDF5::GroupIO;
-  using object_writer_type = nx::core::HDF5::ObjectIO;
-  using object_reader_type = nx::core::HDF5::ObjectIO;
+  using GroupReaderType = nx::core::hdf5::GroupIO;
+  using GroupWriterType = nx::core::hdf5::GroupIO;
+  using ObjectWriterType = nx::core::hdf5::ObjectIO;
+  using ObjectReaderType = nx::core::hdf5::ObjectIO;
 
   ~IDataIO() noexcept override;
 
@@ -37,7 +37,7 @@ public:
    * @param useEmptyDataStore = false
    * @return Result<>
    */
-  virtual Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
+  virtual Result<> readData(DataStructureReader& dataStructureReader, const GroupReaderType& parentGroup, const std::string& objectName, DataObject::IdType importId,
                             const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const = 0;
 
   /**
@@ -47,7 +47,7 @@ public:
    * @param dataStructureGroup The HDF5 group containing the data
    * @return Result<> Result with any errors or warnings
    */
-  virtual Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const;
+  virtual Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& dataStructureGroup) const;
 
   /**
    * @brief Attempts to write a DataObject to HDF5.
@@ -56,7 +56,7 @@ public:
    * @param parentGroupIO
    * @return Result<>
    */
-  virtual Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentGroupIO) const = 0;
+  virtual Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, GroupWriterType& parentGroupIO) const = 0;
 
   virtual std::string getTypeName() const = 0;
 
@@ -72,7 +72,7 @@ protected:
    * @param tag The attribute tag name to read
    * @return DataObject::OptionalId The read ID or std::nullopt if not present
    */
-  static DataObject::OptionalId ReadDataId(const object_reader_type& groupReader, const std::string& tag);
+  static DataObject::OptionalIdType ReadDataId(const ObjectReaderType& groupReader, const std::string& tag);
 
   /**
    * @brief Writes a DataObject ID to an HDF5 group attribute.
@@ -81,7 +81,7 @@ protected:
    * @param tag The attribute tag name to write
    * @return Result<> Result with any errors or warnings
    */
-  static Result<> WriteDataId(object_writer_type& groupWriter, const std::optional<DataObject::IdType>& objectId, const std::string& tag);
+  static Result<> WriteDataId(ObjectWriterType& groupWriter, const std::optional<DataObject::IdType>& objectId, const std::string& tag);
 
   /**
    * @brief Writes common DataObject attributes (name, ID, etc.) to HDF5.
@@ -91,7 +91,7 @@ protected:
    * @param importable Whether the object is importable
    * @return Result<> Result with any errors or warnings
    */
-  static Result<> WriteObjectAttributes(DataStructureWriter& dataStructureWriter, const DataObject& dataObject, object_writer_type& objectWriter, bool importable);
+  static Result<> WriteObjectAttributes(DataStructureWriter& dataStructureWriter, const DataObject& dataObject, ObjectWriterType& objectWriter, bool importable);
 
   /**
    * @brief Protected constructor.
@@ -99,17 +99,17 @@ protected:
   IDataIO();
 
   template <class IOClassT>
-  static Result<> WriteDataObjectImpl(IOClassT* instance, DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter)
+  static Result<> WriteDataObjectImpl(IOClassT* instance, DataStructureWriter& dataStructureWriter, const DataObject* dataObject, GroupWriterType& parentWriter)
   {
     using T = typename IOClassT::data_type;
-    const auto* targetData = dynamic_cast<const T*>(dataObject);
-    if(targetData == nullptr)
+    const auto* targetDataPtr = dynamic_cast<const T*>(dataObject);
+    if(targetDataPtr == nullptr)
     {
       return MakeErrorResult(-800, "Provided DataObject could not be cast to the target type");
     }
 
-    return instance->writeData(dataStructureWriter, *targetData, parentWriter, true);
+    return instance->writeData(dataStructureWriter, *targetDataPtr, parentWriter, true);
   }
 };
-} // namespace HDF5
+} // namespace hdf5
 } // namespace nx::core

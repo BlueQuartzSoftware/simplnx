@@ -12,36 +12,36 @@ namespace nx::core
 class SIMPLNX_EXPORT GeneratedFileListParameter : public ValueParameter
 {
 public:
-  using Ordering = FilePathGenerator::Ordering;
+  using OrderingType = file_path_generator::Ordering;
 
   /**
    * @brief This struct holds all of the data necessary to generate a list of file paths.
    */
   struct ValueType
   {
-    int32 startIndex = 0;
-    int32 endIndex = 0;
-    int32 incrementIndex = 1;
-    uint32 paddingDigits = 3;
-    Ordering ordering = Ordering::LowToHigh;
-    std::string inputPath;
-    std::string filePrefix;
-    std::string fileSuffix;
-    std::string fileExtension;
+    int32 start_index = 0;
+    int32 end_index = 0;
+    int32 increment_index = 1;
+    uint32 padding_digits = 3;
+    OrderingType ordering = OrderingType::LowToHigh;
+    std::string input_path;
+    std::string file_prefix;
+    std::string file_suffix;
+    std::string file_extension;
 
     std::vector<std::string> generate() const
     {
-      return FilePathGenerator::GenerateFileList(startIndex, endIndex, incrementIndex, ordering, inputPath, filePrefix, fileSuffix, fileExtension, paddingDigits);
+      return file_path_generator::GenerateFileList(start_index, end_index, increment_index, ordering, input_path, file_prefix, file_suffix, file_extension, padding_digits);
     }
     std::pair<std::vector<std::string>, bool> generateAndValidate(bool failFast) const
     {
-      return FilePathGenerator::GenerateAndValidateFileList(startIndex, endIndex, incrementIndex, ordering, inputPath, filePrefix, fileSuffix, fileExtension, paddingDigits, failFast);
+      return file_path_generator::GenerateAndValidateFileList(start_index, end_index, increment_index, ordering, input_path, file_prefix, file_suffix, file_extension, padding_digits, failFast);
     }
   };
 
   GeneratedFileListParameter() = delete;
 
-  GeneratedFileListParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  GeneratedFileListParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
 
   ~GeneratedFileListParameter() override = default;
 
@@ -61,13 +61,13 @@ public:
    * @brief
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -117,16 +117,16 @@ private:
   ValueType m_DefaultValue = {};
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT FileListInfoFilterParameterConverter
 {
   using ParameterType = GeneratedFileListParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::GeneratedFileListParameter, "aac15aa6-b367-508e-bf73-94ab6be0058b");

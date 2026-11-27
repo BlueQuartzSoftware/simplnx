@@ -20,16 +20,18 @@ namespace
 {
 struct BinaryThresholdOperation
 {
-  float64 lowerThreshold = 0.0;
-  float64 upperThreshold = 255.0;
-  uint8 insideValue = 1;
-  uint8 outsideValue = 0;
+  float64 lower_threshold = 0.0;
+  float64 upper_threshold = 255.0;
+  uint8 inside_value = 1;
+  uint8 outside_value = 0;
 
   template <class T, class U>
   auto makeMapOp() const
   {
-    const float64 lo = lowerThreshold, hi = upperThreshold;
-    const uint8 inV = insideValue, outV = outsideValue;
+    const float64 lo = lower_threshold;
+    const float64 hi = upper_threshold;
+    const uint8 inV = inside_value;
+    const uint8 outV = outside_value;
     return [lo, hi, inV, outV](T value) -> U {
       const double d = static_cast<double>(value);
       return static_cast<U>((d >= lo && d <= hi) ? inV : outV);
@@ -64,17 +66,17 @@ Parameters BinaryThresholdImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Float64Parameter>(k_LowerThreshold_Key, "Lower Threshold", "The lower threshold that a pixel value could be and still be considered 'Inside Value'", 0.0));
-  params.insert(std::make_unique<Float64Parameter>(k_UpperThreshold_Key, "Upper Threshold",
-                                                   "Set the thresholds. The default lower threshold is NumericTraits<InputPixelType>::NonpositiveMin() . The default upper threshold is "
-                                                   "NumericTraits<InputPixelType>::max . An exception is thrown if the lower threshold is greater than the upper threshold.",
-                                                   255.0));
-  params.insert(std::make_unique<UInt8Parameter>(k_InsideValue_Key, "Inside Value", "Set the 'inside' pixel value. The default value NumericTraits<OutputPixelType>::max()", 1u));
-  params.insert(std::make_unique<UInt8Parameter>(k_OutsideValue_Key, "Outside Value", "Set the 'outside' pixel value. The default value NumericTraits<OutputPixelType>::ZeroValue() .", 0u));
+  params.insert(std::make_unique<Float64ParameterType>(k_LowerThreshold_Key, "Lower Threshold", "The lower threshold that a pixel value could be and still be considered 'Inside Value'", 0.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_UpperThreshold_Key, "Upper Threshold",
+                                                       "Set the thresholds. The default lower threshold is NumericTraits<InputPixelType>::NonpositiveMin() . The default upper threshold is "
+                                                       "NumericTraits<InputPixelType>::max . An exception is thrown if the lower threshold is greater than the upper threshold.",
+                                                       255.0));
+  params.insert(std::make_unique<UInt8ParameterType>(k_InsideValue_Key, "Inside Value", "Set the 'inside' pixel value. The default value NumericTraits<OutputPixelType>::max()", 1u));
+  params.insert(std::make_unique<UInt8ParameterType>(k_OutsideValue_Key, "Outside Value", "Set the 'outside' pixel value. The default value NumericTraits<OutputPixelType>::ZeroValue() .", 0u));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
@@ -86,12 +88,12 @@ IFilter::VersionType BinaryThresholdImageFilter::parametersVersion() const
 {
   return 1;
 }
-IFilter::UniquePointer BinaryThresholdImageFilter::clone() const
+IFilter::UniquePointerType BinaryThresholdImageFilter::clone() const
 {
   return std::make_unique<BinaryThresholdImageFilter>();
 }
-IFilter::PreflightResult BinaryThresholdImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult BinaryThresholdImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                   const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -103,15 +105,15 @@ IFilter::PreflightResult BinaryThresholdImageFilter::preflightImpl(const DataStr
   const auto upperThreshold = filterArgs.value<float64>(k_UpperThreshold_Key);
   if(lowerThreshold > upperThreshold)
   {
-    return {MakeErrorResult<OutputActions>(-8330, fmt::format("Lower Threshold ({}) cannot be greater than Upper Threshold ({}).", lowerThreshold, upperThreshold))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-8330, fmt::format("Lower Threshold ({}) cannot be greater than Upper Threshold ({}).", lowerThreshold, upperThreshold))};
   }
 
   Result<OutputActions> resultOutputActions =
-      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
-  return {std::move(resultOutputActions)};
+      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8Type>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  return {.output_actions = std::move(resultOutputActions)};
 }
-Result<> BinaryThresholdImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> BinaryThresholdImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
@@ -122,21 +124,22 @@ Result<> BinaryThresholdImageFilter::executeImpl(DataStructure& dataStructure, c
   auto insideValue = filterArgs.value<uint8>(k_InsideValue_Key);
   auto outsideValue = filterArgs.value<uint8>(k_OutsideValue_Key);
 
-  const BinaryThresholdOperation operation{lowerThreshold, upperThreshold, insideValue, outsideValue};
-  return ImageProcessing::ExecuteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
+  const BinaryThresholdOperation operation{.lower_threshold = lowerThreshold, .upper_threshold = upperThreshold, .inside_value = insideValue, .outside_value = outsideValue};
+  return ImageProcessing::ExecuteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8Type>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel,
+                                                                                                            messageHandler);
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_LowerThresholdKey = "LowerThreshold";
-constexpr StringLiteral k_UpperThresholdKey = "UpperThreshold";
-constexpr StringLiteral k_InsideValueKey = "InsideValue";
-constexpr StringLiteral k_OutsideValueKey = "OutsideValue";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+constexpr StringLiteralType k_LowerThresholdKey = "LowerThreshold";
+constexpr StringLiteralType k_UpperThresholdKey = "UpperThreshold";
+constexpr StringLiteralType k_InsideValueKey = "InsideValue";
+constexpr StringLiteralType k_OutsideValueKey = "OutsideValue";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_NewCellArrayNameKey = "NewCellArrayName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> BinaryThresholdImageFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -145,13 +148,13 @@ Result<Arguments> BinaryThresholdImageFilter::FromSIMPLJson(const nlohmann::json
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_LowerThresholdKey, k_LowerThreshold_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_UpperThresholdKey, k_UpperThreshold_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint8>>(args, json, SIMPL::k_InsideValueKey, k_InsideValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint8>>(args, json, SIMPL::k_OutsideValueKey, k_OutsideValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_LowerThresholdKey, k_LowerThreshold_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_UpperThresholdKey, k_UpperThreshold_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint8>>(args, json, simpl::k_InsideValueKey, k_InsideValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint8>>(args, json, simpl::k_OutsideValueKey, k_OutsideValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

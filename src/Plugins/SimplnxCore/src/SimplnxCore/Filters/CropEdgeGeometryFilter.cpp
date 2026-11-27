@@ -35,17 +35,17 @@ void CreateCroppedArrayActions(const AttributeMatrix& source, const DataPath& de
   for(const auto& [identifier, object] : source)
   {
     const auto path = destination.createChildPath(object->getName());
-    if(const auto* array = dynamic_cast<const IDataArray*>(object.get()); array != nullptr)
+    if(const auto* arrayPtr = dynamic_cast<const IDataArray*>(object.get()); arrayPtr != nullptr)
     {
-      actions.appendAction(std::make_unique<CreateArrayAction>(array->getDataType(), ShapeType{1}, array->getIDataStoreRef().getComponentShape(), path));
+      actions.appendAction(std::make_unique<CreateArrayAction>(arrayPtr->getDataType(), ShapeType{1}, arrayPtr->getIDataStoreRef().getComponentShape(), path));
     }
     else if(dynamic_cast<const StringArray*>(object.get()) != nullptr)
     {
       actions.appendAction(std::make_unique<CreateStringArrayAction>(ShapeType{1}, path));
     }
-    else if(const auto* neighbors = dynamic_cast<const INeighborList*>(object.get()); neighbors != nullptr)
+    else if(const auto* neighborsPtr = dynamic_cast<const INeighborList*>(object.get()); neighborsPtr != nullptr)
     {
-      actions.appendAction(std::make_unique<CreateNeighborListAction>(neighbors->getDataType(), ShapeType{1}, path));
+      actions.appendAction(std::make_unique<CreateNeighborListAction>(neighborsPtr->getDataType(), ShapeType{1}, path));
     }
   }
 }
@@ -100,17 +100,17 @@ Parameters CropEdgeGeometryFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_CropXDim_Key, "Crop X Dimension", "Enable cropping in the X dimension.", false));
   params.insert(std::make_unique<BoolParameter>(k_CropYDim_Key, "Crop Y Dimension", "Enable cropping in the Y dimension.", false));
   params.insert(std::make_unique<BoolParameter>(k_CropZDim_Key, "Crop Z Dimension", "Enable cropping in the Z dimension.", false));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_MinCoord_Key, "Min Coordinate", "Lower bound of the edge geometry to crop.", std::vector<float32>{0.0, 0.0, 0.0},
-                                                         std::vector<std::string>{"X", "Y", "Z"}));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_MaxCoord_Key, "Max Coordinate [Inclusive]", "Upper bound of the edge geometry to crop.", std::vector<float32>{0.0, 0.0, 0.0},
-                                                         std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_MinCoord_Key, "Min Coordinate", "Lower bound of the edge geometry to crop.", std::vector<float32>{0.0, 0.0, 0.0},
+                                                             std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_MaxCoord_Key, "Max Coordinate [Inclusive]", "Upper bound of the edge geometry to crop.", std::vector<float32>{0.0, 0.0, 0.0},
+                                                             std::vector<std::string>{"X", "Y", "Z"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In Place", "Replaces the original Edge Geometry after filter is completed", true));
   params.insert(std::make_unique<ChoicesParameter>(k_BoundaryIntersectionBehavior_Key, "Boundary Intersection Behavior",
                                                    "The behavior to implement if an edge intersects a bound (one vertex is inside, one vertex is outside).\n\n\"Interpolate Outside Vertex\" will move "
                                                    "the outside vertex of a boundary-intersecting edge from its current position to the boundary edge.\n\"Ignore Edge\" will ignore any edge that "
                                                    "intersects a bound.\n\"Filter Error\" will make this filter throw an error when it encounters an edge that intersects a bound.",
                                                    to_underlying(CropEdgeGeometry::BoundaryIntersectionBehavior::InterpolateOutsideVertex),
-                                                   ChoicesParameter::Choices{"Interpolate Outside Vertex", "Ignore Edge", "Filter Error"}));
+                                                   ChoicesParameter::ChoicesType{"Interpolate Outside Vertex", "Ignore Edge", "Filter Error"}));
 
   params.insertSeparator(Parameters::Separator{"Input Edge Geometry"});
   params.insert(
@@ -127,7 +127,7 @@ Parameters CropEdgeGeometryFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_RenumberFeatures_Key, "Renumber Features",
                                                 "Renumber Feature Ids to 0..N and resize the cleared Feature Attribute Matrix to the features that remain after cropping", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_EdgeFeatureIdsPath_Key, "Edge Feature Ids", "Specifies to which feature each edge belongs.", DataPath({"Edge Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Edge Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedEdgeGeometryPath_Key, "Created Edge Geometry", "The DataPath to store the created Edge Geometry", DataPath()));
@@ -148,14 +148,14 @@ IFilter::VersionType CropEdgeGeometryFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CropEdgeGeometryFilter::clone() const
+IFilter::UniquePointerType CropEdgeGeometryFilter::clone() const
 {
   return std::make_unique<CropEdgeGeometryFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                               const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto srcEdgeGeomPath = filterArgs.value<DataPath>(k_SelectedEdgeGeometryPath_Key);
   auto destEdgeGeomPath = filterArgs.value<DataPath>(k_CreatedEdgeGeometryPath_Key);
@@ -171,11 +171,11 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
   const auto featureAmPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrixPath_Key);
   const auto featureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_EdgeFeatureIdsPath_Key);
 
-  auto& srcEdgeGeom = dataStructure.getDataRefAs<EdgeGeom>(srcEdgeGeomPath);
+  const auto& srcEdgeGeom = dataStructure.getDataRefAs<EdgeGeom>(srcEdgeGeomPath);
 
   if(!pCropXDim && !pCropYDim && !pCropZDim)
   {
-    return {MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::NoDimensionsChosen), "At least one dimension must be selected to crop!")};
+    return {.output_actions = MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::NoDimensionsChosen), "At least one dimension must be selected to crop!")};
   }
 
   float32 xMin = pCropXDim ? minCoords[0] : std::numeric_limits<float32>::lowest();
@@ -191,17 +191,17 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
   if(pCropXDim && xMax < xMin)
   {
     const std::string errMsg = fmt::format("X Max ({}) less than X Min ({})", xMax, xMin);
-    return {MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::XMinLargerThanXMax), errMsg)};
+    return {.output_actions = MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::XMinLargerThanXMax), errMsg)};
   }
   if(pCropYDim && yMax < yMin)
   {
     const std::string errMsg = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin);
-    return {MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::YMinLargerThanYMax), errMsg)};
+    return {.output_actions = MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::YMinLargerThanYMax), errMsg)};
   }
   if(pCropZDim && zMax < zMin)
   {
     const std::string errMsg = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin);
-    return {MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::ZMinLargerThanZMax), errMsg)};
+    return {.output_actions = MakeErrorResult<OutputActions>(to_underlying(CropEdgeGeometry::ErrorCodes::ZMinLargerThanZMax), errMsg)};
   }
 
   std::vector<DataPath> ignorePaths; // already copied over so skip these when collecting child paths to finish copying over later
@@ -232,12 +232,12 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
     const AttributeMatrix& selectedVertexData = *srcEdgeGeomPtr->getVertexAttributeMatrix();
     const AttributeMatrix& selectedEdgeData = *srcEdgeGeomPtr->getEdgeAttributeMatrix();
     {
-      auto& vertexAttrMatrix = srcEdgeGeom.getVertexAttributeMatrixRef();
-      auto& edgeAttrMatrix = srcEdgeGeom.getEdgeAttributeMatrixRef();
-      auto& verticesArray = srcEdgeGeom.getVerticesRef();
-      auto& edgesArray = srcEdgeGeom.getEdgesRef();
+      const auto& vertexAttrMatrix = srcEdgeGeom.getVertexAttributeMatrixRef();
+      const auto& edgeAttrMatrix = srcEdgeGeom.getEdgeAttributeMatrixRef();
+      const auto& verticesArray = srcEdgeGeom.getVerticesRef();
+      const auto& edgesArray = srcEdgeGeom.getEdgesRef();
       resultOutputActions.value().appendAction(
-          std::make_unique<CreateEdgeGeometryAction>(destEdgeGeomPath, 1, 1, vertexAttrMatrix.getName(), edgeAttrMatrix.getName(), verticesArray.getName(), edgesArray.getName()));
+          std::make_unique<CreateEdgeGeometryActionType>(destEdgeGeomPath, 1, 1, vertexAttrMatrix.getName(), edgeAttrMatrix.getName(), verticesArray.getName(), edgesArray.getName()));
 
       auto vertexAttrMatDataPaths = vertexAttrMatrix.getDataPaths();
       auto edgeAttrMatDataPaths = edgeAttrMatrix.getDataPaths();
@@ -277,60 +277,61 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
   // The cleared Feature AM keeps its source shape until optional renumbering.
   if(clearFeatureAttributeMatrix)
   {
-    const auto* srcFeatureData = dataStructure.getDataAs<AttributeMatrix>(featureAmPath);
-    if(srcFeatureData == nullptr || !srcEdgeGeom.contains(srcFeatureData))
+    const auto* srcFeatureDataPtr = dataStructure.getDataAs<AttributeMatrix>(featureAmPath);
+    if(srcFeatureDataPtr == nullptr || !srcEdgeGeom.contains(srcFeatureDataPtr))
     {
-      return {MakeErrorResult<OutputActions>(-67411, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Edge Geometry '{}'. Select an Attribute Matrix that is a "
-                                                                 "direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.",
-                                                                 featureAmPath.toString(), srcEdgeGeomPath.toString())),
-              preflightUpdatedValues};
+      return {.output_actions = MakeErrorResult<OutputActions>(
+                  -67411, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected Edge Geometry '{}'. Select an Attribute Matrix that is a "
+                                      "direct child of the geometry, or turn off 'Clear Feature Attribute Matrix'.",
+                                      featureAmPath.toString(), srcEdgeGeomPath.toString())),
+              .output_values = preflightUpdatedValues};
     }
-    if(srcEdgeGeom.getEdgeAttributeMatrix() == srcFeatureData || srcEdgeGeom.getVertexAttributeMatrix() == srcFeatureData)
+    if(srcEdgeGeom.getEdgeAttributeMatrix() == srcFeatureDataPtr || srcEdgeGeom.getVertexAttributeMatrix() == srcFeatureDataPtr)
     {
-      return {MakeErrorResult<OutputActions>(
+      return {.output_actions = MakeErrorResult<OutputActions>(
                   -67412, fmt::format("The Feature Attribute Matrix '{}' is the Edge or Vertex Attribute Matrix of '{}'. Select the Attribute Matrix that holds Feature data, or turn "
                                       "off 'Clear Feature Attribute Matrix'.",
                                       featureAmPath.toString(), srcEdgeGeomPath.toString())),
-              preflightUpdatedValues};
+              .output_values = preflightUpdatedValues};
     }
     auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, featureAmPath);
     if(elementDataResult.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
     }
     if(shouldRenumberFeatures && !IsChildOfAttributeMatrix(dataStructure, featureIdsPath, *srcEdgeGeom.getEdgeAttributeMatrix()))
     {
       return {
-          MakeErrorResult<OutputActions>(
+          .output_actions = MakeErrorResult<OutputActions>(
               -67413, fmt::format("**Edge Feature Ids** DataArray '{}' must be in the Edge Attribute Matrix '{}' of the selected Edge Geometry '{}'. Select the DataArray from that Attribute Matrix.",
                                   featureIdsPath.toString(), srcEdgeGeomPath.createChildPath(srcEdgeGeom.getEdgeAttributeMatrix()->getName()).toString(), srcEdgeGeomPath.toString())),
-          preflightUpdatedValues};
+          .output_values = preflightUpdatedValues};
     }
     if(shouldRenumberFeatures)
     {
-      const auto* featureIdsPtr = dataStructure.getDataAs<Int32Array>(featureIdsPath);
+      const auto* featureIdsPtr = dataStructure.getDataAs<Int32ArrayType>(featureIdsPath);
       if(featureIdsPtr == nullptr || featureIdsPtr->getNumberOfComponents() != 1)
       {
-        return {MakeErrorResult<OutputActions>(
-            -67415,
-            fmt::format("Feature Ids '{}' must be a single-component int32 DataArray. Select a single-component int32 DataArray from the element Attribute Matrix.", featureIdsPath.toString()))};
+        return {.output_actions = MakeErrorResult<OutputActions>(
+                    -67415, fmt::format("Feature Ids '{}' must be a single-component int32 DataArray. Select a single-component int32 DataArray from the element Attribute Matrix.",
+                                        featureIdsPath.toString()))};
       }
       const auto& featureIds = *featureIdsPtr;
       if(featureIds.getNumberOfTuples() != srcEdgeGeom.getNumberOfEdges())
       {
-        return {MakeErrorResult<OutputActions>(
+        return {.output_actions = MakeErrorResult<OutputActions>(
                     -67414, fmt::format("**Edge Feature Ids** DataArray '{}' has {} tuples, but the selected Edge Geometry '{}' has {} edges. Select a DataArray with one tuple per edge.",
                                         featureIdsPath.toString(), featureIds.getNumberOfTuples(), srcEdgeGeomPath.toString(), srcEdgeGeom.getNumberOfEdges())),
-                preflightUpdatedValues};
+                .output_values = preflightUpdatedValues};
       }
     }
-    const auto featureAmPaths = srcFeatureData->getDataPaths();
+    const auto featureAmPaths = srcFeatureDataPtr->getDataPaths();
     ignorePaths.insert(ignorePaths.end(), featureAmPaths.begin(), featureAmPaths.end());
     const DataPath destFeatureAmPath = destEdgeGeomPath.createChildPath(featureAmPath.getTargetName());
-    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destFeatureAmPath, srcFeatureData->getShape()));
+    resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destFeatureAmPath, srcFeatureDataPtr->getShape()));
 
     std::string clearedList;
-    for(const auto& [identifier, object] : *srcFeatureData)
+    for(const auto& [identifier, object] : *srcFeatureDataPtr)
     {
       clearedList += "\n" + featureAmPath.createChildPath(object->getName()).toString();
     }
@@ -372,28 +373,28 @@ IFilter::PreflightResult CropEdgeGeometryFilter::preflightImpl(const DataStructu
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> CropEdgeGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> CropEdgeGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CropEdgeGeometryInputValues inputValues;
 
-  inputValues.clearFeatureAttributeMatrix = filterArgs.value<BoolParameter::ValueType>(k_ClearFeatureAttributeMatrix_Key);
-  inputValues.renumberFeatures = inputValues.clearFeatureAttributeMatrix && filterArgs.value<BoolParameter::ValueType>(k_RenumberFeatures_Key);
-  inputValues.featureAttributeMatrixPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrixPath_Key);
-  inputValues.edgeFeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_EdgeFeatureIdsPath_Key);
-  inputValues.srcEdgeGeomPath = filterArgs.value<DataPath>(k_SelectedEdgeGeometryPath_Key);
-  inputValues.destEdgeGeomPath = filterArgs.value<DataPath>(k_CreatedEdgeGeometryPath_Key);
-  inputValues.minCoords = filterArgs.value<std::vector<float32>>(k_MinCoord_Key);
-  inputValues.maxCoords = filterArgs.value<std::vector<float32>>(k_MaxCoord_Key);
-  inputValues.removeOriginalGeometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
-  inputValues.cropXDim = filterArgs.value<BoolParameter::ValueType>(k_CropXDim_Key);
-  inputValues.cropYDim = filterArgs.value<BoolParameter::ValueType>(k_CropYDim_Key);
-  inputValues.cropZDim = filterArgs.value<BoolParameter::ValueType>(k_CropZDim_Key);
-  inputValues.boundaryIntersectionBehavior = filterArgs.value<ChoicesParameter::ValueType>(k_BoundaryIntersectionBehavior_Key);
+  inputValues.clear_feature_attribute_matrix = filterArgs.value<BoolParameter::ValueType>(k_ClearFeatureAttributeMatrix_Key);
+  inputValues.renumber_features = inputValues.clear_feature_attribute_matrix && filterArgs.value<BoolParameter::ValueType>(k_RenumberFeatures_Key);
+  inputValues.feature_attribute_matrix_path = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAttributeMatrixPath_Key);
+  inputValues.edge_feature_ids_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_EdgeFeatureIdsPath_Key);
+  inputValues.src_edge_geom_path = filterArgs.value<DataPath>(k_SelectedEdgeGeometryPath_Key);
+  inputValues.dest_edge_geom_path = filterArgs.value<DataPath>(k_CreatedEdgeGeometryPath_Key);
+  inputValues.min_coords = filterArgs.value<std::vector<float32>>(k_MinCoord_Key);
+  inputValues.max_coords = filterArgs.value<std::vector<float32>>(k_MaxCoord_Key);
+  inputValues.remove_original_geometry = filterArgs.value<bool>(k_RemoveOriginalGeometry_Key);
+  inputValues.crop_x_dim = filterArgs.value<BoolParameter::ValueType>(k_CropXDim_Key);
+  inputValues.crop_y_dim = filterArgs.value<BoolParameter::ValueType>(k_CropYDim_Key);
+  inputValues.crop_z_dim = filterArgs.value<BoolParameter::ValueType>(k_CropZDim_Key);
+  inputValues.boundary_intersection_behavior = filterArgs.value<ChoicesParameter::ValueType>(k_BoundaryIntersectionBehavior_Key);
 
   return CropEdgeGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

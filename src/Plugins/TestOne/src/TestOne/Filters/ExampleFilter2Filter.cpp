@@ -18,20 +18,20 @@ using namespace nx::core;
 
 namespace
 {
-constexpr StringLiteral k_Param1 = "param1";
-constexpr StringLiteral k_Param2 = "param2";
-constexpr StringLiteral k_Param3 = "param3_index";
-constexpr StringLiteral k_Param4 = "param4";
-constexpr StringLiteral k_Param5 = "param5_path";
-constexpr StringLiteral k_Param6 = "param6_path";
-constexpr StringLiteral k_Param7 = "param7";
-constexpr StringLiteral k_Param8 = "param8_path";
-constexpr StringLiteral k_Param9 = "param9_path";
-constexpr StringLiteral k_Param10 = "param10_path";
-constexpr StringLiteral k_Param11 = "param11_path";
-constexpr StringLiteral k_Param12 = "param12s";
-constexpr StringLiteral k_Param13 = "param13";
-constexpr StringLiteral k_Param30 = "param30_path";
+constexpr StringLiteralType k_Param1 = "param1";
+constexpr StringLiteralType k_Param2 = "param2";
+constexpr StringLiteralType k_Param3 = "param3_index";
+constexpr StringLiteralType k_Param4 = "param4";
+constexpr StringLiteralType k_Param5 = "param5_path";
+constexpr StringLiteralType k_Param6 = "param6_path";
+constexpr StringLiteralType k_Param7 = "param7";
+constexpr StringLiteralType k_Param8 = "param8_path";
+constexpr StringLiteralType k_Param9 = "param9_path";
+constexpr StringLiteralType k_Param10 = "param10_path";
+constexpr StringLiteralType k_Param11 = "param11_path";
+constexpr StringLiteralType k_Param12 = "param12s";
+constexpr StringLiteralType k_Param13 = "param13";
+constexpr StringLiteralType k_Param30 = "param30_path";
 
 } // namespace
 
@@ -73,7 +73,7 @@ Parameters ExampleFilter2Filter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"1rst Group of Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Param7, "Bool Parameter", "Example bool help text", true));
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_Param3, "Choices Parameter", "Example choices help text", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_Param3, "Choices Parameter", "Example choices help text", 0, ChoicesParameter::ChoicesType{"foo", "bar", "baz"}));
 
   params.insertSeparator(Parameters::Separator{"2nd Group of Parameters"});
   DynamicTableInfo tableInfo;
@@ -96,13 +96,13 @@ Parameters ExampleFilter2Filter::parameters() const
   params.insert(std::make_unique<ArrayCreationParameter>(k_Param5, "Array Creation", "Example array creation help text", ArrayCreationParameter::ValueType{}));
 
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_Param9, "DataGroup Selection Parameter", "Example data group selection help text", DataPath{},
-                                                              DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::DataGroup}));
+                                                              DataGroupSelectionParameter::AllowedTypeSetType{BaseGroup::GroupType::DataGroup}));
   params.insert(std::make_unique<DataPathSelectionParameter>(k_Param10, "DataPath Selection Parameter", "Example data path selection help text", DataPath{}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_Param6, "Array Selection", "Example array selection help text", ArraySelectionParameter::ValueType{}, nx::core::GetAllDataTypes()));
   params.insert(
-      std::make_unique<GeometrySelectionParameter>(k_Param11, "Geometry Selection Parameter", "Example geometry selection help text", DataPath{}, GeometrySelectionParameter::AllowedTypes{}));
+      std::make_unique<GeometrySelectionParameter>(k_Param11, "Geometry Selection Parameter", "Example geometry selection help text", DataPath{}, GeometrySelectionParameter::AllowedTypeSetType{}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_Param12, "MultiArray Selection Parameter", "Example multiarray selection help text", MultiArraySelectionParameter::ValueType{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::Any}, nx::core::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::Any}, nx::core::GetAllDataTypes()));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_Param30, "Attribute Matrix Selection", "Example Help Text", DataPath{}));
 
   params.linkParameters(k_Param7, k_Param9, std::make_any<BoolParameter::ValueType>(true));
@@ -117,21 +117,21 @@ IFilter::VersionType ExampleFilter2Filter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ExampleFilter2Filter::clone() const
+IFilter::UniquePointerType ExampleFilter2Filter::clone() const
 {
   return std::make_unique<ExampleFilter2Filter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExampleFilter2Filter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ExampleFilter2Filter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const MessageHandler& /*messageHandler*/,
+                                                             const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   return {};
 }
 
 //------------------------------------------------------------------------------
-Result<> ExampleFilter2Filter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineFilter, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ExampleFilter2Filter::executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineFilter*/, const MessageHandler& /*messageHandler*/,
+                                           const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   return {};
 }

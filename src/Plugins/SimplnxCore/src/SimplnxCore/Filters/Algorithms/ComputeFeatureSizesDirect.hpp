@@ -44,7 +44,7 @@ public:
   /**
    * @brief Destroys the direct feature-size algorithm.
    */
-  ~ComputeFeatureSizesDirect() noexcept;
+  ~ComputeFeatureSizesDirect() noexcept = default;
 
   ComputeFeatureSizesDirect(const ComputeFeatureSizesDirect&) = delete;
   ComputeFeatureSizesDirect(ComputeFeatureSizesDirect&&) noexcept = delete;

@@ -20,20 +20,20 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
 namespace
 {
-constexpr StringLiteral k_FaceEnsembleDataPath("FaceEnsembleData [NX]");
+constexpr StringLiteralType k_FaceEnsembleDataPath("FaceEnsembleData [NX]");
 
-constexpr StringLiteral k_PoleFigureSigma3("GBCD Pole Figure [Sigma 3]");
-constexpr StringLiteral k_PoleFigureSigma9("GBCD Pole Figure [Sigma 9]");
-constexpr StringLiteral k_PoleFigureSigma11("GBCD Pole Figure [Sigma 11]");
-constexpr StringLiteral k_ExemplarCellData("Cell Data");
-constexpr StringLiteral k_Sigma3("Sigma 3");
-constexpr StringLiteral k_Sigma9("Sigma 9");
-constexpr StringLiteral k_Sigma11("Sigma 11");
-constexpr StringLiteral k_MRD("MRD");
+constexpr StringLiteralType k_PoleFigureSigma3("GBCD Pole Figure [Sigma 3]");
+constexpr StringLiteralType k_PoleFigureSigma9("GBCD Pole Figure [Sigma 9]");
+constexpr StringLiteralType k_PoleFigureSigma11("GBCD Pole Figure [Sigma 11]");
+constexpr StringLiteralType k_ExemplarCellData("Cell Data");
+constexpr StringLiteralType k_Sigma3("Sigma 3");
+constexpr StringLiteralType k_Sigma9("Sigma 9");
+constexpr StringLiteralType k_Sigma11("Sigma 11");
+constexpr StringLiteralType k_MRD("MRD");
 
 constexpr int32 k_Dimension = 300;
 
@@ -41,35 +41,35 @@ constexpr int32 k_Dimension = 300;
 
 TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnalysis][ComputeGBCDPoleFigureFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // AlgorithmTestScope forces the selected path and records its target-call
   // witness.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
 
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  DataPath smallIn100Group({nx::core::Constants::k_SmallIN100});
-  DataPath featureDataPath = smallIn100Group.createChildPath(Constants::k_Grain_Data);
-  DataPath avgEulerAnglesPath = featureDataPath.createChildPath(Constants::k_AvgEulerAngles);
-  DataPath featurePhasesPath = featureDataPath.createChildPath(Constants::k_Phases);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
+  DataPath smallIn100Group({nx::core::constants::k_SmallIN100});
+  DataPath featureDataPath = smallIn100Group.createChildPath(constants::k_GrainDataWithSpaces);
+  DataPath avgEulerAnglesPath = featureDataPath.createChildPath(constants::k_AvgEulerAngles);
+  DataPath featurePhasesPath = featureDataPath.createChildPath(constants::k_Phases);
 
-  DataPath ensembleDataPath = smallIn100Group.createChildPath(Constants::k_Phase_Data);
-  DataPath crystalStructurePath = ensembleDataPath.createChildPath(Constants::k_CrystalStructures);
+  DataPath ensembleDataPath = smallIn100Group.createChildPath(constants::k_PhaseData);
+  DataPath crystalStructurePath = ensembleDataPath.createChildPath(constants::k_CrystalStructures);
 
-  DataPath triangleDataContainerPath({Constants::k_TriangleDataContainerName});
-  DataPath faceDataGroup = triangleDataContainerPath.createChildPath(Constants::k_FaceData);
+  DataPath triangleDataContainerPath({constants::k_TriangleDataContainerName});
+  DataPath faceDataGroup = triangleDataContainerPath.createChildPath(constants::k_FaceData);
   DataPath faceEnsemblePath = triangleDataContainerPath.createChildPath(k_FaceEnsembleDataPath);
 
-  DataPath faceLabels = faceDataGroup.createChildPath(Constants::k_FaceLabels);
-  DataPath faceNormals = faceDataGroup.createChildPath(Constants::k_FaceNormals);
-  DataPath faceAreas = faceDataGroup.createChildPath(Constants::k_FaceAreas);
+  DataPath faceLabels = faceDataGroup.createChildPath(constants::k_FaceLabels);
+  DataPath faceNormals = faceDataGroup.createChildPath(constants::k_FaceNormals);
+  DataPath faceAreas = faceDataGroup.createChildPath(constants::k_FaceAreas);
 
-  DataPath gbcdArrayPath = triangleDataContainerPath.createChildPath("FaceEnsembleData").createChildPath(Constants::k_GBCD_Name);
+  DataPath gbcdArrayPath = triangleDataContainerPath.createChildPath("FaceEnsembleData").createChildPath(constants::k_GbcdName);
 
   DataPath nxPoleFigureSigma3({"NX GBCD Pole Figure [Sigma 3]"});
   DataPath nxPoleFigureSigma9({"NX GBCD Pole Figure [Sigma 9]"});
@@ -80,17 +80,17 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
     ComputeGBCDPoleFigureFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_PhaseOfInterest_Key, std::make_any<Int32Parameter::ValueType>(1));
-    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>({60.0F, 1.0F, 1.0F, 1.0F}));
+    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_PhaseOfInterest_Key, std::make_any<Int32ParameterType::ValueType>(1));
+    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32ParameterType::ValueType>({60.0F, 1.0F, 1.0F, 1.0F}));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_OutputImageDimension_Key, std::make_any<int32>(k_Dimension));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_GBCDArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(gbcdArrayPath));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(crystalStructurePath));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_ImageGeometryName_Key, std::make_any<DataGroupCreationParameter::ValueType>(nxPoleFigureSigma3));
-    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CellAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(Constants::k_CellData));
+    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CellAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(constants::k_CellData));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CellIntensityArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_Sigma3));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -99,10 +99,10 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
   }
 
   {
-    const DataPath k_GeneratedDataPath = nxPoleFigureSigma3.createChildPath(Constants::k_CellData).createChildPath(k_Sigma3);
-    const DataPath k_ExemplarArrayPath({k_PoleFigureSigma3, k_ExemplarCellData, k_MRD});
+    const DataPath kGeneratedDataPath = nxPoleFigureSigma3.createChildPath(constants::k_CellData).createChildPath(k_Sigma3);
+    const DataPath kExemplarArrayPath({k_PoleFigureSigma3, k_ExemplarCellData, k_MRD});
 
-    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, k_ExemplarArrayPath, k_GeneratedDataPath);
+    unit_test::CompareFloatArraysWithNans<float64>(dataStructure, kExemplarArrayPath, kGeneratedDataPath);
   }
 
   // Sigma 9 uses a 39-degree rotation about [110].
@@ -110,17 +110,17 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
     ComputeGBCDPoleFigureFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_PhaseOfInterest_Key, std::make_any<Int32Parameter::ValueType>(1));
-    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>({39.0F, 1.0F, 1.0F, 0.0F}));
+    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_PhaseOfInterest_Key, std::make_any<Int32ParameterType::ValueType>(1));
+    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32ParameterType::ValueType>({39.0F, 1.0F, 1.0F, 0.0F}));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_OutputImageDimension_Key, std::make_any<int32>(k_Dimension));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_GBCDArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(gbcdArrayPath));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(crystalStructurePath));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_ImageGeometryName_Key, std::make_any<DataGroupCreationParameter::ValueType>(nxPoleFigureSigma9));
-    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CellAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(Constants::k_CellData));
+    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CellAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(constants::k_CellData));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CellIntensityArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_Sigma9));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -129,10 +129,10 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
   }
 
   {
-    const DataPath k_GeneratedDataPath = nxPoleFigureSigma9.createChildPath(Constants::k_CellData).createChildPath(k_Sigma9);
-    const DataPath k_ExemplarArrayPath({k_PoleFigureSigma9, k_ExemplarCellData, k_MRD});
+    const DataPath kGeneratedDataPath = nxPoleFigureSigma9.createChildPath(constants::k_CellData).createChildPath(k_Sigma9);
+    const DataPath kExemplarArrayPath({k_PoleFigureSigma9, k_ExemplarCellData, k_MRD});
 
-    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, k_ExemplarArrayPath, k_GeneratedDataPath);
+    unit_test::CompareFloatArraysWithNans<float64>(dataStructure, kExemplarArrayPath, kGeneratedDataPath);
   }
 
   // Sigma 11 uses a 50.5-degree rotation about [110].
@@ -140,17 +140,17 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
     ComputeGBCDPoleFigureFilter filter;
     Arguments args;
 
-    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_PhaseOfInterest_Key, std::make_any<Int32Parameter::ValueType>(1));
-    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>({50.5F, 1.0F, 1.0F, 0.0F}));
+    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_PhaseOfInterest_Key, std::make_any<Int32ParameterType::ValueType>(1));
+    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32ParameterType::ValueType>({50.5F, 1.0F, 1.0F, 0.0F}));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_OutputImageDimension_Key, std::make_any<int32>(k_Dimension));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_GBCDArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(gbcdArrayPath));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(crystalStructurePath));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_ImageGeometryName_Key, std::make_any<DataGroupCreationParameter::ValueType>(nxPoleFigureSigma11));
-    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CellAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(Constants::k_CellData));
+    args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CellAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(constants::k_CellData));
     args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CellIntensityArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_Sigma11));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -159,24 +159,24 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter", "[OrientationAnaly
   }
 
   {
-    const DataPath k_GeneratedDataPath = nxPoleFigureSigma11.createChildPath(Constants::k_CellData).createChildPath(k_Sigma11);
-    const DataPath k_ExemplarArrayPath({k_PoleFigureSigma11, k_ExemplarCellData, k_MRD});
+    const DataPath kGeneratedDataPath = nxPoleFigureSigma11.createChildPath(constants::k_CellData).createChildPath(k_Sigma11);
+    const DataPath kExemplarArrayPath({k_PoleFigureSigma11, k_ExemplarCellData, k_MRD});
 
-    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, k_ExemplarArrayPath, k_GeneratedDataPath);
+    unit_test::CompareFloatArraysWithNans<float64>(dataStructure, kExemplarArrayPath, kGeneratedDataPath);
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/gbcd_pole_figure.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeGBCDPoleFigureFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -189,22 +189,22 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: SIMPL Backwards Com
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeGBCDPoleFigureFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeGBCDPoleFigureFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       if(label == "SIMPL 6.5 (UUID)")
       {
         CHECK(args.value<int32>(ComputeGBCDPoleFigureFilter::k_OutputImageDimension_Key) == 5);
@@ -222,27 +222,27 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: SIMPL Backwards Com
 
 TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: Phase and Laue Index Bounds", "[OrientationAnalysis][ComputeGBCDPoleFigureFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
+  const unit_test::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
   const fs::path inputFile = fs::path(unit_test::k_TestFilesDir.view()) / "6_6_Small_IN100_GBCD" / "6_6_Small_IN100_GBCD.dream3d";
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFile);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFile);
 
-  const DataPath triangleDataContainerPath({Constants::k_TriangleDataContainerName});
-  const DataPath gbcdArrayPath = triangleDataContainerPath.createChildPath("FaceEnsembleData").createChildPath(Constants::k_GBCD_Name);
-  const DataPath crystalStructuresPath = DataPath({Constants::k_SmallIN100}).createChildPath(Constants::k_Phase_Data).createChildPath(Constants::k_CrystalStructures);
+  const DataPath triangleDataContainerPath({constants::k_TriangleDataContainerName});
+  const DataPath gbcdArrayPath = triangleDataContainerPath.createChildPath("FaceEnsembleData").createChildPath(constants::k_GbcdName);
+  const DataPath crystalStructuresPath = DataPath({constants::k_SmallIN100}).createChildPath(constants::k_PhaseData).createChildPath(constants::k_CrystalStructures);
   const DataPath shortCrystalStructuresPath({"Short Crystal Structures"});
-  auto* shortCrystalStructuresArrayPtr = UnitTest::CreateTestDataArray<uint32>(dataStructure, shortCrystalStructuresPath.getTargetName(), {1}, {1});
+  auto* shortCrystalStructuresArrayPtr = unit_test::CreateTestDataArray<uint32>(dataStructure, shortCrystalStructuresPath.getTargetName(), {1}, {1});
   (*shortCrystalStructuresArrayPtr)[0] = 999U;
 
   ComputeGBCDPoleFigureFilter filter;
   Arguments args = filter.getDefaultArguments();
   args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_PhaseOfInterest_Key, std::make_any<int32>(1));
-  args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32Parameter::ValueType>({60.0F, 1.0F, 1.0F, 1.0F}));
+  args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_MisorientationRotation_Key, std::make_any<VectorFloat32ParameterType::ValueType>({60.0F, 1.0F, 1.0F, 1.0F}));
   args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_OutputImageDimension_Key, std::make_any<int32>(4));
   args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_GBCDArrayPath_Key, std::make_any<DataPath>(gbcdArrayPath));
   args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresPath));
@@ -260,15 +260,15 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: Phase and Laue Inde
 
   SECTION("Invalid Laue index returns an error")
   {
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(crystalStructuresPath));
-    auto& crystalStructuresArrayRef = dataStructure.getDataRefAs<UInt32Array>(crystalStructuresPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(crystalStructuresPath));
+    auto& crystalStructuresArrayRef = dataStructure.getDataRefAs<UInt32ArrayType>(crystalStructuresPath);
     crystalStructuresArrayRef.getDataStoreRef()[1] = 999U;
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors()[0].code == -34644);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: Invalid GBCD Component Shape", "[OrientationAnalysis][ComputeGBCDPoleFigureFilter][ComponentShape]")
@@ -280,10 +280,10 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: Invalid GBCD Compon
   DataStructure dataStructure;
   const DataPath gbcdPath({"Malformed GBCD"});
   const DataPath crystalStructuresPath({"Crystal Structures"});
-  auto* gbcd = UnitTest::CreateTestDataArray<float64>(dataStructure, gbcdPath.getTargetName(), {2}, componentShape);
-  REQUIRE(gbcd != nullptr);
-  auto* crystalStructures = UnitTest::CreateTestDataArray<uint32>(dataStructure, crystalStructuresPath.getTargetName(), {2}, {1});
-  REQUIRE(crystalStructures != nullptr);
+  auto* gbcdPtr = unit_test::CreateTestDataArray<float64>(dataStructure, gbcdPath.getTargetName(), {2}, componentShape);
+  REQUIRE(gbcdPtr != nullptr);
+  auto* crystalStructuresPtr = unit_test::CreateTestDataArray<uint32>(dataStructure, crystalStructuresPath.getTargetName(), {2}, {1});
+  REQUIRE(crystalStructuresPtr != nullptr);
 
   ComputeGBCDPoleFigureFilter filter;
   Arguments args = filter.getDefaultArguments();
@@ -292,7 +292,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDPoleFigureFilter: Invalid GBCD Compon
   args.insertOrAssign(ComputeGBCDPoleFigureFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -34645);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -34645);
 }

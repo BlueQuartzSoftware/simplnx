@@ -30,42 +30,42 @@ constexpr int32 k_NonScalarInput = -8540;
 //     with an observed count of 0. The case is therefore a plain ForceInCore in-memory correctness check.
 TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: Independent oracle (in-memory)", "[NXImageProcessing][AdaptiveHistogramEqualizationImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize dimX = 24;
-  constexpr usize dimY = 20;
-  constexpr usize dimZ = 16;
+  constexpr usize k_DimX = 24;
+  constexpr usize k_DimY = 20;
+  constexpr usize k_DimZ = 16;
   const std::vector<uint32> radius = {1, 1, 1};
-  constexpr float32 alpha = 0.3f;
-  constexpr float32 beta = 0.3f;
+  constexpr float32 k_Alpha = 0.3f;
+  constexpr float32 k_Beta = 0.3f;
 
-  DataStructure ds;
-  const DataPath inputPath = aht::BuildAheImage<uint8>(ds, dimX, dimY, dimZ);
+  DataStructure dataStructure;
+  const DataPath inputPath = aht::BuildAheImage<uint8>(dataStructure, k_DimX, k_DimY, k_DimZ);
 
   AdaptiveHistogramEqualizationImageFilter filter;
-  aht::RunAheFilter<AdaptiveHistogramEqualizationImageFilter>(filter, ds, inputPath, alpha, beta, radius);
+  aht::RunAheFilter<AdaptiveHistogramEqualizationImageFilter>(filter, dataStructure, inputPath, k_Alpha, k_Beta, radius);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<uint8>>(outputPath).getDataStoreRef();
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<uint8>>(outputPath).getDataStoreRef();
   std::vector<uint8> actual(outStore.getSize());
   for(usize i = 0; i < actual.size(); ++i)
   {
     actual[i] = outStore.getValue(i);
   }
 
-  const std::vector<uint8> input = aht::MakeAhePattern<uint8>(dimX, dimY, dimZ);
-  const std::vector<uint8> expected = aht::AdaptiveHistogramEqualizationOracle<uint8>(input, dimX, dimY, dimZ, {1, 1, 1}, alpha, beta);
+  const std::vector<uint8> input = aht::MakeAhePattern<uint8>(k_DimX, k_DimY, k_DimZ);
+  const std::vector<uint8> expected = aht::AdaptiveHistogramEqualizationOracle<uint8>(input, k_DimX, k_DimY, k_DimZ, {1, 1, 1}, k_Alpha, k_Beta);
   aht::RequireAheClose<uint8>(actual, expected, /*atol=*/0.0, /*rtol=*/0.0, /*maxDiffFraction=*/0.005);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // (3) Preflight: multi-component input is rejected (scalar-only); a valid scalar input preflights cleanly and
 //     an unsupported (non-numeric) type is rejected by the shared type-membership guard.
 TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: Preflight scalar/type guard", "[NXImageProcessing][AdaptiveHistogramEqualizationImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   AdaptiveHistogramEqualizationImageFilter filter;
 
@@ -74,7 +74,7 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: Prefligh
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{5, 5, 5}));
+    args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Radius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{5, 5, 5}));
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Alpha_Key, std::make_any<float32>(0.3f));
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Beta_Key, std::make_any<float32>(0.3f));
     return args;
@@ -82,25 +82,25 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: Prefligh
 
   SECTION("scalar input preflights cleanly")
   {
-    DataStructure ds;
-    const DataPath inputPath = aht::BuildAheImage<uint8>(ds, 8, 8, 8);
-    auto result = filter.preflight(ds, makeArgs(inputPath));
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    DataStructure dataStructure;
+    const DataPath inputPath = aht::BuildAheImage<uint8>(dataStructure, 8, 8, 8);
+    auto result = filter.preflight(dataStructure, makeArgs(inputPath));
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
 
   SECTION("multi-component input is rejected")
   {
     // Build a 2-component array under the geometry and point the filter at it.
-    DataStructure ds;
-    const DataPath scalarPath = aht::BuildAheImage<uint8>(ds, 8, 8, 8); // creates the geometry + CellData
+    DataStructure dataStructure;
+    const DataPath scalarPath = aht::BuildAheImage<uint8>(dataStructure, 8, 8, 8); // creates the geometry + CellData
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<uint8>(ds, vecPath, {8, 8, 8}, {2});
-    const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
-    DataArray<uint8>::Create(ds, "Vec", vecStore, cellAM.getId());
+    auto vecStore = data_store_utilities::CreateDataStore<uint8>(dataStructure, vecPath, {8, 8, 8}, {2});
+    const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
+    DataArray<uint8>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
 
-    auto result = filter.preflight(ds, makeArgs(vecPath));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_NonScalarInput);
+    auto result = filter.preflight(dataStructure, makeArgs(vecPath));
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_NonScalarInput);
   }
 }
 
@@ -125,9 +125,9 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: FromSIMP
 namespace
 {
 // Materialize a uint8 scalar array into a flat vector (the AHE golden case is ForceInCore).
-std::vector<uint8> MaterializeUint8(DataStructure& ds, const DataPath& path)
+std::vector<uint8> MaterializeUint8(DataStructure& dataStructure, const DataPath& path)
 {
-  const auto& store = ds.getDataRefAs<DataArray<uint8>>(path).getDataStoreRef();
+  const auto& store = dataStructure.getDataRefAs<DataArray<uint8>>(path).getDataStoreRef();
   std::vector<uint8> out(store.getSize());
   for(usize i = 0; i < out.size(); ++i)
   {
@@ -158,22 +158,22 @@ void ReportDivergence(const std::string& tag, const std::vector<uint8>& a, const
 // Runs the SimplnxCore ColorToGrayScale filter (luminosity algorithm, ITK RGB weights) on the input array,
 // exactly as the legacy ITKAdaptiveHistogramEqualizationImageTest does: sf4.png is a palette/RGB image and AHE
 // runs on the grayscale. Returns the created grayscale array path <cellData>/GrayScale_<inputName>.
-DataPath RunColorToGrayScale(DataStructure& ds, const DataPath& inputDataPath)
+DataPath RunColorToGrayScale(DataStructure& dataStructure, const DataPath& inputDataPath)
 {
-  const Uuid k_ColorToGrayScaleUuid = *Uuid::FromString("d938a2aa-fee2-4db9-aa2f-2c34a9736580");
-  IFilter::UniquePointer filter = Application::Instance()->getFilterList()->createFilter(k_ColorToGrayScaleUuid);
+  const Uuid kColorToGrayScaleUuid = *Uuid::FromString("d938a2aa-fee2-4db9-aa2f-2c34a9736580");
+  IFilter::UniquePointerType filter = Application::Instance()->getFilterList()->createFilter(kColorToGrayScaleUuid);
   REQUIRE(filter != nullptr);
 
   Arguments args;
   args.insertOrAssign("conversion_algorithm_index", std::make_any<ChoicesParameter::ValueType>(0ULL));
-  args.insertOrAssign("color_weights", std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.2125f, 0.7154f, 0.0721f}));
-  args.insertOrAssign("color_channel", std::make_any<Int32Parameter::ValueType>(0));
+  args.insertOrAssign("color_weights", std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{0.2125f, 0.7154f, 0.0721f}));
+  args.insertOrAssign("color_channel", std::make_any<Int32ParameterType::ValueType>(0));
   args.insertOrAssign("input_data_array_paths", std::make_any<MultiArraySelectionParameter::ValueType>({inputDataPath}));
   args.insertOrAssign("output_array_prefix", std::make_any<StringParameter::ValueType>("GrayScale_"));
 
-  auto preflightResult = filter->preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter->execute(ds, args);
+  auto preflightResult = filter->preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  auto executeResult = filter->execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   return inputDataPath.getParent().createChildPath(fmt::format("GrayScale_{}", inputDataPath.getTargetName()));
@@ -188,25 +188,25 @@ DataPath RunColorToGrayScale(DataStructure& ds, const DataPath& inputDataPath)
 // ColorToGrayScale filter the ITK test uses. The whole case is ForceInCore.
 void RunAheItkGolden(const std::string& baselineFile, float32 alpha, float32 beta, const std::vector<uint32>& radius, double aMaxDiffFraction)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath cellData = geom.createChildPath("CellData");
   const DataPath rgbInput = cellData.createChildPath("Input");
 
   // --- read sf4.png (palette/RGB) and convert to grayscale, exactly as the ITK test ---
-  DataStructure ds;
-  const Result<> readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath("sf4.png"), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const Result<> readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath("sf4.png"), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
-  const DataPath grayInput = RunColorToGrayScale(ds, rgbInput);
+  const DataPath grayInput = RunColorToGrayScale(dataStructure, rgbInput);
 
   const auto makeArgs = [&](const std::string& outputName) {
     Arguments args;
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geom));
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(grayInput));
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-    args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(radius));
+    args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Radius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(radius));
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Alpha_Key, std::make_any<float32>(alpha));
     args.insertOrAssign(AdaptiveHistogramEqualizationImageFilter::k_Beta_Key, std::make_any<float32>(beta));
     return args;
@@ -216,25 +216,25 @@ void RunAheItkGolden(const std::string& baselineFile, float32 alpha, float32 bet
   {
     AdaptiveHistogramEqualizationImageFilter filter;
     const Arguments args = makeArgs("Output");
-    auto preflightResult = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    auto executeResult = filter.execute(ds, args);
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
   const DataPath output = cellData.createChildPath("Output");
 
   // --- (A) DURABLE golden: tolerant compare vs the committed .png baseline ---
   const DataPath bGeom({"Baseline Geometry"});
-  const Result<> readBaseline = ip_golden::ReadInputImage(ds, ip_golden::BaselinePath(baselineFile), bGeom, "CellData", "Baseline");
+  const Result<> readBaseline = ip_golden::ReadInputImage(dataStructure, ip_golden::BaselinePath(baselineFile), bGeom, "CellData", "Baseline");
   SIMPLNX_RESULT_REQUIRE_VALID(readBaseline);
   const DataPath baseline = bGeom.createChildPath("CellData").createChildPath("Baseline");
-  const std::vector<uint8> ourOut = MaterializeUint8(ds, output);
-  const std::vector<uint8> baselineData = MaterializeUint8(ds, baseline);
+  const std::vector<uint8> ourOut = MaterializeUint8(dataStructure, output);
+  const std::vector<uint8> baselineData = MaterializeUint8(dataStructure, baseline);
   REQUIRE(ourOut.size() == baselineData.size());
   ReportDivergence(fmt::format("AHE (A) baseline='{}'", baselineFile), ourOut, baselineData, aMaxDiffFraction);
   aht::RequireAheClose<uint8>(ourOut, baselineData, /*atol=*/0.0, /*rtol=*/0.0, /*maxDiffFraction=*/aMaxDiffFraction);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
@@ -255,7 +255,7 @@ template <class T>
 void CheckHugeRadiusFilter(usize dimX, usize dimY, usize dimZ, const std::vector<uint32>& hugeRadius, const std::vector<uint32>& coveringRadius)
 {
   const auto application = Application::GetOrCreateInstance();
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, 0);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, 0);
   std::array<std::vector<T>, 2> outputs;
   const std::array<std::vector<uint32>, 2> radii = {coveringRadius, hugeRadius};
   for(usize run = 0; run < radii.size(); ++run)
@@ -271,7 +271,7 @@ void CheckHugeRadiusFilter(usize dimX, usize dimY, usize dimZ, const std::vector
     outputs[run].resize(outputStore.getSize());
     const Result<> copyResult = outputStore.copyIntoBuffer(0, nonstd::span<T>(outputs[run].data(), outputs[run].size()));
     SIMPLNX_RESULT_REQUIRE_VALID(copyResult);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
   REQUIRE(outputs[0] == outputs[1]);
 }
@@ -290,6 +290,6 @@ TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: generic 
 
 TEST_CASE("NXImageProcessing::AdaptiveHistogramEqualizationImageFilter: LUT huge-radius clipped neighborhood", "[NXImageProcessing][AdaptiveHistogramEqualizationImageFilter]")
 {
-  constexpr uint32 huge = std::numeric_limits<uint32>::max();
-  CheckHugeRadiusFilter<uint16>(3, 3, 2, {huge, huge, huge}, {2, 2, 1});
+  constexpr uint32 k_Huge = std::numeric_limits<uint32>::max();
+  CheckHugeRadiusFilter<uint16>(3, 3, 2, {k_Huge, k_Huge, k_Huge}, {2, 2, 1});
 }

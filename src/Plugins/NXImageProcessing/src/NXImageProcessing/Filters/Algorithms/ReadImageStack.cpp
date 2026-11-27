@@ -32,22 +32,22 @@ namespace nx::core
 Arguments BuildReadImageFilterArgs(const ReadImageSubFilterConfig& config)
 {
   Arguments args;
-  args.insertOrAssign(ReadImageFilter::k_FileName_Key, std::make_any<fs::path>(config.filePath));
-  args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(config.imageGeometryPath));
-  args.insertOrAssign(ReadImageFilter::k_CellDataName_Key, std::make_any<DataObjectNameParameter::ValueType>(config.cellDataName));
-  args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, std::make_any<DataObjectNameParameter::ValueType>(config.imageDataArrayName));
+  args.insertOrAssign(ReadImageFilter::k_FileName_Key, std::make_any<fs::path>(config.file_path));
+  args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, std::make_any<DataPath>(config.image_geometry_path));
+  args.insertOrAssign(ReadImageFilter::k_CellDataName_Key, std::make_any<DataObjectNameParameter::ValueType>(config.cell_data_name));
+  args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, std::make_any<DataObjectNameParameter::ValueType>(config.image_data_array_name));
   args.insertOrAssign(ReadImageFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(IGeometry::LengthUnit::Micrometer)));
-  args.insertOrAssign(ReadImageFilter::k_ChangeDataType_Key, std::make_any<BoolParameter::ValueType>(config.changeDataType));
-  args.insertOrAssign(ReadImageFilter::k_ImageDataType_Key, std::make_any<ChoicesParameter::ValueType>(ImageDataTypeToChoice(config.imageDataType)));
-  const bool forwardOrigin = config.changeOrigin;
-  const bool forwardSpacing = config.changeSpacing;
+  args.insertOrAssign(ReadImageFilter::k_ChangeDataType_Key, std::make_any<BoolParameter::ValueType>(config.change_data_type));
+  args.insertOrAssign(ReadImageFilter::k_ImageDataType_Key, std::make_any<ChoicesParameter::ValueType>(ImageDataTypeToChoice(config.image_data_type)));
+  const bool forwardOrigin = config.change_origin;
+  const bool forwardSpacing = config.change_spacing;
   args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, std::make_any<BoolParameter::ValueType>(forwardOrigin));
   args.insertOrAssign(ReadImageFilter::k_CenterOrigin_Key, std::make_any<BoolParameter::ValueType>(false));
-  args.insertOrAssign(ReadImageFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(config.origin));
+  args.insertOrAssign(ReadImageFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>(config.origin));
   args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, std::make_any<BoolParameter::ValueType>(forwardSpacing));
-  args.insertOrAssign(ReadImageFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(config.spacing));
-  args.insertOrAssign(ReadImageFilter::k_OriginSpacingProcessing_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(config.originSpacingProcessing)));
-  args.insertOrAssign(ReadImageFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(config.croppingOptions));
+  args.insertOrAssign(ReadImageFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>(config.spacing));
+  args.insertOrAssign(ReadImageFilter::k_OriginSpacingProcessing_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(config.origin_spacing_processing)));
+  args.insertOrAssign(ReadImageFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(config.cropping_options));
   return args;
 }
 
@@ -67,12 +67,12 @@ const ChoicesParameter::ValueType k_ExactDimensionsModeIndex = 2;
 Result<> ExecuteResample(DataStructure& dataStructure, const ResampleImageGeomInputValues& inputValues, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   IFilter::PreflightResult preflightResult = PreflightImageGeometryResample(dataStructure, inputValues);
-  if(preflightResult.outputActions.invalid())
+  if(preflightResult.output_actions.invalid())
   {
-    return ConvertResult(std::move(preflightResult.outputActions));
+    return ConvertResult(std::move(preflightResult.output_actions));
   }
 
-  OutputActions outputActions = std::move(preflightResult.outputActions.value());
+  OutputActions outputActions = std::move(preflightResult.output_actions.value());
   Result<> regularResult = outputActions.applyRegular(dataStructure, IDataAction::Mode::Execute);
   if(regularResult.invalid())
   {
@@ -92,12 +92,12 @@ Result<> ExecuteResample(DataStructure& dataStructure, const ResampleImageGeomIn
 Result<> ExecuteGrayscale(DataStructure& dataStructure, const ConvertColorToGrayScaleInputValues& inputValues, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   IFilter::PreflightResult preflightResult = PreflightColorToGrayScale(dataStructure, inputValues);
-  if(preflightResult.outputActions.invalid())
+  if(preflightResult.output_actions.invalid())
   {
-    return ConvertResult(std::move(preflightResult.outputActions));
+    return ConvertResult(std::move(preflightResult.output_actions));
   }
 
-  OutputActions outputActions = std::move(preflightResult.outputActions.value());
+  OutputActions outputActions = std::move(preflightResult.output_actions.value());
   Result<> regularResult = outputActions.applyRegular(dataStructure, IDataAction::Mode::Execute);
   if(regularResult.invalid())
   {
@@ -223,24 +223,24 @@ Result<> FlipAboutXAxis(DataArray<T>& dataArray, const Vec3<usize>& dims)
 template <class T>
 Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackInputValues& inputValues, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
-  const DataPath& imageGeomPath = inputValues.imageGeometryPath;
-  const std::string& cellDataName = inputValues.cellDataName;
-  const std::string& imageArrayName = inputValues.imageDataArrayName;
-  const std::vector<std::string>& files = inputValues.fileList;
-  const ImageFlipTransform transformType = inputValues.imageTransform;
-  const bool convertToGrayscale = inputValues.convertToGrayScale;
-  const VectorFloat32Parameter::ValueType& luminosityValues = inputValues.colorWeights;
-  const ChoicesParameter::ValueType resample = inputValues.resampleImagesChoice;
+  const DataPath& imageGeomPath = inputValues.image_geometry_path;
+  const std::string& cellDataName = inputValues.cell_data_name;
+  const std::string& imageArrayName = inputValues.image_data_array_name;
+  const std::vector<std::string>& files = inputValues.file_list;
+  const ImageFlipTransform transformType = inputValues.image_transform;
+  const bool convertToGrayscale = inputValues.convert_to_gray_scale;
+  const VectorFloat32ParameterType::ValueType& luminosityValues = inputValues.color_weights;
+  const ChoicesParameter::ValueType resample = inputValues.resample_images_choice;
   const float32 scalingFactor = inputValues.scaling;
-  const VectorUInt64Parameter::ValueType& exactDims = inputValues.exactXYDimensions;
-  const bool changeDataType = inputValues.changeDataType;
-  const DataType destType = inputValues.imageDataType;
-  const CropGeometryParameter::ValueType& croppingOptions = inputValues.croppingOptions;
-  const bool shouldChangeOrigin = inputValues.changeOrigin;
-  const VectorFloat32Parameter::ValueType& origin = inputValues.origin;
-  const bool shouldChangeSpacing = inputValues.changeSpacing;
-  const VectorFloat32Parameter::ValueType& spacing = inputValues.spacing;
-  const OriginSpacingProcessing originSpacingProcessing = inputValues.originSpacingProcessing;
+  const VectorUInt64ParameterType::ValueType& exactDims = inputValues.exact_xy_dimensions;
+  const bool changeDataType = inputValues.change_data_type;
+  const DataType destType = inputValues.image_data_type;
+  const CropGeometryParameter::ValueType& croppingOptions = inputValues.cropping_options;
+  const bool shouldChangeOrigin = inputValues.change_origin;
+  const VectorFloat32ParameterType::ValueType& origin = inputValues.origin;
+  const bool shouldChangeSpacing = inputValues.change_spacing;
+  const VectorFloat32ParameterType::ValueType& spacing = inputValues.spacing;
+  const OriginSpacingProcessing originSpacingProcessing = inputValues.origin_spacing_processing;
 
   if(files.empty())
   {
@@ -259,7 +259,7 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
   const auto& zRange = zRangeResult.value();
 
   usize slice = 0;
-  for(usize i = zRange.zMin; i <= zRange.zMax; i++)
+  for(usize i = zRange.z_min; i <= zRange.z_max; i++)
   {
     const std::string& filePath = files[i];
     messageHandler.sendInfoMessage(fmt::format("Importing: {}", filePath));
@@ -273,18 +273,18 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
       imageReader.setReadSinglePageOnly(true);
 
       ReadImageSubFilterConfig subConfig{};
-      subConfig.filePath = filePath;
-      subConfig.imageGeometryPath = imageGeomPath;
-      subConfig.cellDataName = cellDataName;
-      subConfig.imageDataArrayName = imageArrayName;
-      subConfig.changeOrigin = shouldChangeOrigin;
-      subConfig.changeSpacing = shouldChangeSpacing;
+      subConfig.file_path = filePath;
+      subConfig.image_geometry_path = imageGeomPath;
+      subConfig.cell_data_name = cellDataName;
+      subConfig.image_data_array_name = imageArrayName;
+      subConfig.change_origin = shouldChangeOrigin;
+      subConfig.change_spacing = shouldChangeSpacing;
       subConfig.origin = origin;
       subConfig.spacing = spacing;
-      subConfig.originSpacingProcessing = originSpacingProcessing;
-      subConfig.changeDataType = changeDataType;
-      subConfig.imageDataType = destType;
-      subConfig.croppingOptions = croppingOptions;
+      subConfig.origin_spacing_processing = originSpacingProcessing;
+      subConfig.change_data_type = changeDataType;
+      subConfig.image_data_type = destType;
+      subConfig.cropping_options = croppingOptions;
 
       IFilter::ExecuteResult executeResult = imageReader.execute(importedDataStructure, BuildReadImageFilterArgs(subConfig));
       if(executeResult.result.invalid())
@@ -313,11 +313,11 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
         if(scalingFactor != 100.0f)
         {
           ResampleImageGeomInputValues resampleInputValues{};
-          resampleInputValues.SelectedImageGeometryPath = imageGeomPath;
-          resampleInputValues.RemoveOriginalImageGeom = true;
-          resampleInputValues.ResamplingMode = 1;
-          resampleInputValues.Spacing = {1.0F, 1.0F, 1.0F};
-          resampleInputValues.Scaling = {scalingFactor, scalingFactor, 100.0F};
+          resampleInputValues.selected_image_geometry_path = imageGeomPath;
+          resampleInputValues.remove_original_image_geom = true;
+          resampleInputValues.resampling_mode = 1;
+          resampleInputValues.spacing = {1.0F, 1.0F, 1.0F};
+          resampleInputValues.scaling = {scalingFactor, scalingFactor, 100.0F};
           Result<> result = ExecuteResample(importedDataStructure, resampleInputValues, messageHandler, shouldCancel);
           if(result.invalid())
           {
@@ -328,11 +328,11 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
       else
       {
         ResampleImageGeomInputValues resampleInputValues{};
-        resampleInputValues.SelectedImageGeometryPath = imageGeomPath;
-        resampleInputValues.RemoveOriginalImageGeom = true;
-        resampleInputValues.ResamplingMode = 2;
-        resampleInputValues.Spacing = {1.0F, 1.0F, 1.0F};
-        resampleInputValues.ExactDimensions = {exactDims[0], exactDims[1], 1};
+        resampleInputValues.selected_image_geometry_path = imageGeomPath;
+        resampleInputValues.remove_original_image_geom = true;
+        resampleInputValues.resampling_mode = 2;
+        resampleInputValues.spacing = {1.0F, 1.0F, 1.0F};
+        resampleInputValues.exact_dimensions = {exactDims[0], exactDims[1], 1};
         Result<> result = ExecuteResample(importedDataStructure, resampleInputValues, messageHandler, shouldCancel);
         if(result.invalid())
         {
@@ -349,11 +349,11 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
     if(convertToGrayscale && validInputForGrayScaleConversion)
     {
       ConvertColorToGrayScaleInputValues grayscaleInputValues;
-      grayscaleInputValues.ConversionAlgorithm = 0;
-      grayscaleInputValues.ColorWeights = luminosityValues;
-      grayscaleInputValues.ColorChannel = 0;
-      grayscaleInputValues.InputDataArrayPaths = {srcImageDataPath};
-      grayscaleInputValues.OutputArrayPrefix = "gray";
+      grayscaleInputValues.conversion_algorithm = 0;
+      grayscaleInputValues.color_weights = luminosityValues;
+      grayscaleInputValues.color_channel = 0;
+      grayscaleInputValues.input_data_array_paths = {srcImageDataPath};
+      grayscaleInputValues.output_array_prefix = "gray";
       Result<> result = ExecuteGrayscale(importedDataStructure, grayscaleInputValues, messageHandler, shouldCancel);
       if(result.invalid())
       {
@@ -375,16 +375,17 @@ Result<> ReadImageStackImpl(DataStructure& dataStructure, const ReadImageStackIn
     else if(convertToGrayscale && !validInputForGrayScaleConversion)
     {
       outputResult.warnings().emplace_back(
-          Warning{-74320, fmt::format("The array ({}) resulting from reading the input image file is not a UInt8Array. The input image will not be converted to grayscale.",
-                                      srcImageDataPath.getTargetName())});
+          Warning{.code = -74320,
+                  .message = fmt::format("The array ({}) resulting from reading the input image file is not a UInt8Array. The input image will not be converted to grayscale.",
+                                         srcImageDataPath.getTargetName())});
     }
 
     auto& destImageGeom = dataStructure.getDataRefAs<ImageGeom>(destImageGeomPath);
-    SizeVec3 destDims = destImageGeom.getDimensions();
+    SizeVec3Type destDims = destImageGeom.getDimensions();
     const usize destTuplesPerSlice = destDims[0] * destDims[1];
 
     const auto& importedImageGeom = importedDataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-    SizeVec3 importedDims = importedImageGeom.getDimensions();
+    SizeVec3Type importedDims = importedImageGeom.getDimensions();
     if(destDims[0] != importedDims[0] || destDims[1] != importedDims[1])
     {
       return MakeErrorResult(-64510, fmt::format("Slice {} image dimensions are different than expected dimensions.\n  Expected Slice Dims are:  {} x {}\n  Received Slice Dims are: {} x {}\n", slice,
@@ -467,13 +468,11 @@ ReadImageStack::ReadImageStack(DataStructure& dataStructure, const IFilter::Mess
 {
 }
 
-ReadImageStack::~ReadImageStack() noexcept = default;
-
 Result<> ReadImageStack::operator()()
 {
-  const std::string& imageArrayName = m_InputValues.imageDataArrayName;
-  const std::string& cellDataName = m_InputValues.cellDataName;
-  DataPath destImageGeomPath = m_InputValues.imageGeometryPath;
+  const std::string& imageArrayName = m_InputValues.image_data_array_name;
+  const std::string& cellDataName = m_InputValues.cell_data_name;
+  DataPath destImageGeomPath = m_InputValues.image_geometry_path;
   DataPath destImageDataPath = destImageGeomPath.createChildPath(cellDataName).createChildPath(imageArrayName);
 
   auto& destArray = m_DataStructure.getDataRefAs<IDataArray>(destImageDataPath);

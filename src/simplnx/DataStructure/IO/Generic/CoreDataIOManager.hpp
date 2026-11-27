@@ -6,13 +6,12 @@
  * @namespace nx::core
  * @brief Contains simplnx core types and functions.
  */
-namespace nx::core
-{
+
 /**
  * @namespace nx::core::Generic
  * @brief Contains core generic data I/O implementations.
  */
-namespace Generic
+namespace nx::core::generic
 {
 
 /**
@@ -59,7 +58,6 @@ private:
    */
   void addListStoreFnc();
 
-  factory_collection m_FactoryCollection;
+  FactoryCollectionType m_FactoryCollection;
 };
-} // namespace Generic
-} // namespace nx::core
+} // namespace nx::core::generic

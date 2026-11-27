@@ -24,11 +24,11 @@ public:
   ConvertColorToGrayScaleFilter& operator=(ConvertColorToGrayScaleFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_ConversionAlgorithm_Key = "conversion_algorithm_index";
-  static constexpr StringLiteral k_ColorWeights_Key = "color_weights";
-  static constexpr StringLiteral k_ColorChannel_Key = "color_channel";
-  static constexpr StringLiteral k_InputDataArrayPath_Key = "input_data_array_paths";
-  static constexpr StringLiteral k_OutputArrayPrefix_Key = "output_array_prefix";
+  static constexpr StringLiteralType k_ConversionAlgorithm_Key = "conversion_algorithm_index";
+  static constexpr StringLiteralType k_ColorWeights_Key = "color_weights";
+  static constexpr StringLiteralType k_ColorChannel_Key = "color_channel";
+  static constexpr StringLiteralType k_InputDataArrayPath_Key = "input_data_array_paths";
+  static constexpr StringLiteralType k_OutputArrayPrefix_Key = "output_array_prefix";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -85,7 +85,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

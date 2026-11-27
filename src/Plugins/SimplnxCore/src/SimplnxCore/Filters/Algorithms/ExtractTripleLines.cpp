@@ -46,16 +46,16 @@ constexpr int32 k_EmptyLabel = std::numeric_limits<int32>::min();
 template <usize Capacity>
 struct FeatureSet
 {
-  std::array<int32, Capacity> Features;
+  std::array<int32, Capacity> features;
 
   FeatureSet()
   {
-    Features.fill(k_EmptyLabel);
+    features.fill(k_EmptyLabel);
   }
 
   void insert(int32 featureId)
   {
-    for(auto& storedLabel : Features)
+    for(auto& storedLabel : features)
     {
       if(storedLabel == featureId)
       {
@@ -71,7 +71,7 @@ struct FeatureSet
 
   uint8 count() const
   {
-    return static_cast<uint8>(std::count_if(Features.begin(), Features.end(), [](int32 label) { return label != k_EmptyLabel; }));
+    return static_cast<uint8>(std::count_if(features.begin(), features.end(), [](int32 label) { return label != k_EmptyLabel; }));
   }
 };
 static_assert(sizeof(FeatureSet<3>) == 12);
@@ -99,8 +99,8 @@ constexpr uint64 MakeEdgeKey(uint64 vertex0, uint64 vertex1)
  * @return The first transfer error, admission/allocation error, or accumulated warnings.
  * @pre Indices refer to source tuples. Node Types pointers are paired and have compatible extents.
  */
-Result<> copyTripleLineVertices(const Float32AbstractDataStore& source, Float32AbstractDataStore& destination, nonstd::span<const uint64> indices, const Int8AbstractDataStore* sourceNodes,
-                                Int8AbstractDataStore* destinationNodes, const std::atomic_bool& shouldCancel, ThrottledMessageHandler& progress)
+Result<> CopyTripleLineVertices(const Float32AbstractDataStoreType& source, Float32AbstractDataStoreType& destination, nonstd::span<const uint64> indices, const Int8AbstractDataStoreType* sourceNodes,
+                                Int8AbstractDataStoreType* destinationNodes, const std::atomic_bool& shouldCancel, ThrottledMessageHandler& progress)
 {
   if(indices.empty() || shouldCancel)
   {
@@ -114,7 +114,7 @@ Result<> copyTripleLineVertices(const Float32AbstractDataStore& source, Float32A
     return MakeErrorResult(-57407, "Triple line vertex transfer sizes exceed addressable memory. Reduce the mesh size before extracting triple lines.");
   }
   const usize requestedBytes = indices.size() * bytesPerVertex;
-  auto reservation = CacheMemoryBudgetManager::instance().reserveWorkingMemory(requestedBytes);
+  auto reservation = CacheMemoryBudgetManager::Instance().reserveWorkingMemory(requestedBytes);
   const usize capacity = static_cast<usize>(std::min<uint64>(reservation.sizeBytes() / bytesPerVertex, indices.size()));
   if(capacity == 0)
   {
@@ -149,7 +149,7 @@ Result<> copyTripleLineVertices(const Float32AbstractDataStore& source, Float32A
           pageEnd = pageBegin + pageCount;
           // Keep accumulated diagnostics until both the transfer and its merge succeed.
           auto readResult = source.copyIntoBuffer(pageBegin * 3, {page->data(), pageCount * 3});
-          result = MeshingUtilities::detail::MergeTransferResultCopy(result, std::move(readResult));
+          result = meshing_utilities::detail::MergeTransferResultCopy(result, std::move(readResult));
           if(result.invalid() || shouldCancel)
           {
             return result;
@@ -157,7 +157,7 @@ Result<> copyTripleLineVertices(const Float32AbstractDataStore& source, Float32A
           if(copyNodes)
           {
             auto nodeReadResult = sourceNodes->copyIntoBuffer(pageBegin, {nodePage->data(), pageCount});
-            result = MeshingUtilities::detail::MergeTransferResultCopy(result, std::move(nodeReadResult));
+            result = meshing_utilities::detail::MergeTransferResultCopy(result, std::move(nodeReadResult));
             if(result.invalid() || shouldCancel)
             {
               return result;
@@ -179,7 +179,7 @@ Result<> copyTripleLineVertices(const Float32AbstractDataStore& source, Float32A
         return result;
       }
       auto writeResult = destination.copyFromBuffer(begin * 3, {output->data(), count * 3});
-      result = MeshingUtilities::detail::MergeTransferResultCopy(result, std::move(writeResult));
+      result = meshing_utilities::detail::MergeTransferResultCopy(result, std::move(writeResult));
       if(result.invalid() || shouldCancel)
       {
         return result;
@@ -187,7 +187,7 @@ Result<> copyTripleLineVertices(const Float32AbstractDataStore& source, Float32A
       if(copyNodes)
       {
         auto nodeWriteResult = destinationNodes->copyFromBuffer(begin, {nodeOutput->data(), count});
-        result = MeshingUtilities::detail::MergeTransferResultCopy(result, std::move(nodeWriteResult));
+        result = meshing_utilities::detail::MergeTransferResultCopy(result, std::move(nodeWriteResult));
         if(result.invalid() || shouldCancel)
         {
           return result;
@@ -217,28 +217,28 @@ Result<> copyTripleLineVertices(const Float32AbstractDataStore& source, Float32A
  * @param progress Receives completed block progress.
  * @return The first transfer error, admission/allocation error, or accumulated warnings.
  */
-Result<> writeTripleLineEdges(AbstractDataStore<IGeometry::MeshIndexType>& destination, Int8AbstractDataStore& counts, nonstd::span<const std::pair<uint64, uint8>> edges,
+Result<> WriteTripleLineEdges(AbstractDataStore<IGeometry::MeshIndexType>& destination, Int8AbstractDataStoreType& counts, nonstd::span<const std::pair<uint64, uint8>> edges,
                               const std::vector<uint64>& indices, const std::atomic_bool& shouldCancel, ThrottledMessageHandler& progress)
 {
   if(edges.empty() || shouldCancel)
   {
     return {};
   }
-  constexpr usize bytesPerEdge = (2 * sizeof(IGeometry::MeshIndexType)) + sizeof(int8);
-  if(edges.size() > std::numeric_limits<usize>::max() / bytesPerEdge)
+  constexpr usize k_BytesPerEdge = (2 * sizeof(IGeometry::MeshIndexType)) + sizeof(int8);
+  if(edges.size() > std::numeric_limits<usize>::max() / k_BytesPerEdge)
   {
     return MakeErrorResult(-57411, "Triple line edge transfer sizes exceed addressable memory. Reduce the mesh size before extracting triple lines.");
   }
-  const usize requestedBytes = edges.size() * bytesPerEdge;
-  auto reservation = CacheMemoryBudgetManager::instance().reserveWorkingMemory(requestedBytes);
-  const usize capacity = static_cast<usize>(std::min<uint64>(reservation.sizeBytes() / bytesPerEdge, edges.size()));
+  const usize requestedBytes = edges.size() * k_BytesPerEdge;
+  auto reservation = CacheMemoryBudgetManager::Instance().reserveWorkingMemory(requestedBytes);
+  const usize capacity = static_cast<usize>(std::min<uint64>(reservation.sizeBytes() / k_BytesPerEdge, edges.size()));
   if(capacity == 0)
   {
     return MakeErrorResult(-57409, fmt::format("Triple line edge writing requested {} working bytes and received {}. At least {} bytes are required. Increase the cache memory budget or finish "
                                                "other processing before retrying.",
-                                               requestedBytes, reservation.sizeBytes(), bytesPerEdge));
+                                               requestedBytes, reservation.sizeBytes(), k_BytesPerEdge));
   }
-  reservation.shrinkTo(capacity * bytesPerEdge);
+  reservation.shrinkTo(capacity * k_BytesPerEdge);
   Result<> result;
   try
   {
@@ -264,13 +264,13 @@ Result<> writeTripleLineEdges(AbstractDataStore<IGeometry::MeshIndexType>& desti
       }
       // Copy the accumulator so a throwing merge cannot consume its earlier diagnostics.
       auto writeResult = destination.copyFromBuffer(begin * 2, {endpoints->data(), count * 2});
-      result = MeshingUtilities::detail::MergeTransferResultCopy(result, std::move(writeResult));
+      result = meshing_utilities::detail::MergeTransferResultCopy(result, std::move(writeResult));
       if(result.invalid() || shouldCancel)
       {
         return result;
       }
       auto countWriteResult = counts.copyFromBuffer(begin, {regionCounts->data(), count});
-      result = MeshingUtilities::detail::MergeTransferResultCopy(result, std::move(countWriteResult));
+      result = meshing_utilities::detail::MergeTransferResultCopy(result, std::move(countWriteResult));
       if(result.invalid() || shouldCancel)
       {
         return result;
@@ -299,16 +299,14 @@ ExtractTripleLines::ExtractTripleLines(DataStructure& dataStructure, const IFilt
 {
 }
 
-ExtractTripleLines::~ExtractTripleLines() noexcept = default;
-
 Result<> ExtractTripleLines::operator()()
 {
-  if((m_InputValues->SourceNodeTypes == nullptr) != (m_InputValues->DestinationNodeTypes == nullptr))
+  if((m_InputValues->source_node_types == nullptr) != (m_InputValues->destination_node_types == nullptr))
   {
     return MakeErrorResult(-57401, fmt::format("Triple line Node Types copy requires both source and destination stores, or neither. Source supplied: {}; destination supplied: {}.",
-                                               m_InputValues->SourceNodeTypes != nullptr, m_InputValues->DestinationNodeTypes != nullptr));
+                                               m_InputValues->source_node_types != nullptr, m_InputValues->destination_node_types != nullptr));
   }
-  if(m_InputValues->VertexBatchSize == 0)
+  if(m_InputValues->vertex_batch_size == 0)
   {
     return MakeErrorResult(-57404, "Triple line vertex batch size must be greater than zero. Set VertexBatchSize to a positive vertex count.");
   }
@@ -316,10 +314,10 @@ Result<> ExtractTripleLines::operator()()
   {
     return {};
   }
-  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
-  auto& tripleLineGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->TripleLineGeometryPath);
-  const auto& faceLabelsRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FaceLabelsPath).getDataStoreRef();
-  auto& numFeaturesRef = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NumFeaturesPath).getDataStoreRef();
+  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_geometry_path);
+  auto& tripleLineGeom = m_DataStructure.getDataRefAs<EdgeGeom>(m_InputValues->triple_line_geometry_path);
+  const auto& faceLabelsRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->face_labels_path).getDataStoreRef();
+  auto& numFeaturesRef = m_DataStructure.getDataRefAs<Int8ArrayType>(m_InputValues->num_features_path).getDataStoreRef();
   const usize numVertices = triangleGeom.getNumberOfVertices();
   if(numVertices > k_MaxVertexCount)
   {
@@ -334,7 +332,7 @@ Result<> ExtractTripleLines::operator()()
   {
     // Vertex candidates reject ordinary boundary edges before they require hash nodes.
     std::vector<bool> candidateVertices(numVertices, false);
-    const usize batchSize = m_InputValues->VertexBatchSize;
+    const usize batchSize = m_InputValues->vertex_batch_size;
     const usize numBatches = numVertices / batchSize + (numVertices % batchSize != 0 ? 1 : 0);
     for(usize begin = 0, batchIndex = 0; begin < numVertices; batchIndex++)
     {
@@ -365,7 +363,7 @@ Result<> ExtractTripleLines::operator()()
           auto& featureSet = vertexFeatures[vertexIndex - begin];
           for(const int32 label : labels)
           {
-            if(m_InputValues->IncludeExteriorLines || label >= 0)
+            if(m_InputValues->include_exterior_lines || label >= 0)
             {
               featureSet.insert(label);
             }
@@ -406,7 +404,7 @@ Result<> ExtractTripleLines::operator()()
         auto& featureSet = edgeMap[MakeEdgeKey(vertex0, vertex1)];
         for(const int32 label : labels)
         {
-          if(m_InputValues->IncludeExteriorLines || label >= 0)
+          if(m_InputValues->include_exterior_lines || label >= 0)
           {
             featureSet.insert(label);
           }
@@ -478,13 +476,13 @@ Result<> ExtractTripleLines::operator()()
   const auto& sourceVertsRef = triangleGeom.getVertices()->getDataStoreRef();
   auto& destVertsRef = tripleLineGeom.getVertices()->getDataStoreRef();
   const bool copyVerticesInBlocks = sourceVertsRef.getStoreType() == IDataStore::StoreType::OutOfCore || destVertsRef.getStoreType() == IDataStore::StoreType::OutOfCore ||
-                                    (m_InputValues->SourceNodeTypes != nullptr && (m_InputValues->SourceNodeTypes->getStoreType() == IDataStore::StoreType::OutOfCore ||
-                                                                                   m_InputValues->DestinationNodeTypes->getStoreType() == IDataStore::StoreType::OutOfCore));
+                                    (m_InputValues->source_node_types != nullptr && (m_InputValues->source_node_types->getStoreType() == IDataStore::StoreType::OutOfCore ||
+                                                                                     m_InputValues->destination_node_types->getStoreType() == IDataStore::StoreType::OutOfCore));
   Result<> publicationResult;
   if(copyVerticesInBlocks)
   {
-    publicationResult = copyTripleLineVertices(sourceVertsRef, destVertsRef, {compactToOriginal.data(), compactToOriginal.size()}, m_InputValues->SourceNodeTypes, m_InputValues->DestinationNodeTypes,
-                                               m_ShouldCancel, progressThrottle);
+    publicationResult = CopyTripleLineVertices(sourceVertsRef, destVertsRef, {compactToOriginal.data(), compactToOriginal.size()}, m_InputValues->source_node_types,
+                                               m_InputValues->destination_node_types, m_ShouldCancel, progressThrottle);
     if(publicationResult.invalid() || m_ShouldCancel)
     {
       return publicationResult;
@@ -504,9 +502,9 @@ Result<> ExtractTripleLines::operator()()
       {
         destVertsRef[vertexIdx * 3 + compIdx] = sourceVertsRef[originalVertex * 3 + compIdx];
       }
-      if(m_InputValues->SourceNodeTypes != nullptr && m_InputValues->DestinationNodeTypes != nullptr)
+      if(m_InputValues->source_node_types != nullptr && m_InputValues->destination_node_types != nullptr)
       {
-        (*m_InputValues->DestinationNodeTypes)[vertexIdx] = (*m_InputValues->SourceNodeTypes)[originalVertex];
+        (*m_InputValues->destination_node_types)[vertexIdx] = (*m_InputValues->source_node_types)[originalVertex];
       }
       progressThrottle.updatePercent(vertexIdx + 1);
     }
@@ -516,8 +514,8 @@ Result<> ExtractTripleLines::operator()()
   auto& destEdgesRef = tripleLineGeom.getEdges()->getDataStoreRef();
   if(destEdgesRef.getStoreType() == IDataStore::StoreType::OutOfCore || numFeaturesRef.getStoreType() == IDataStore::StoreType::OutOfCore)
   {
-    publicationResult = MeshingUtilities::detail::MergeTransferResult(
-        publicationResult, writeTripleLineEdges(destEdgesRef, numFeaturesRef, {keptEdges.data(), keptEdges.size()}, compactToOriginal, m_ShouldCancel, progressThrottle));
+    publicationResult = meshing_utilities::detail::MergeTransferResult(
+        publicationResult, WriteTripleLineEdges(destEdgesRef, numFeaturesRef, {keptEdges.data(), keptEdges.size()}, compactToOriginal, m_ShouldCancel, progressThrottle));
     if(publicationResult.invalid() || m_ShouldCancel)
     {
       return publicationResult;
@@ -547,7 +545,7 @@ Result<> ExtractTripleLines::operator()()
     return MakeWarningVoidResult(
         -57405, fmt::format("No edge borders three or more Features (Include Exterior Triple Lines: {}). If this mesh should contain triple lines, check that its triangles share vertices. "
                             "A mesh with duplicated vertices, such as an imported STL, has no shared edges; merge coincident vertices first.",
-                            m_InputValues->IncludeExteriorLines));
+                            m_InputValues->include_exterior_lines));
   }
   return publicationResult;
 }

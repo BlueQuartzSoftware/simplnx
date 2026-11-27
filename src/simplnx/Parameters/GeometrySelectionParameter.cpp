@@ -8,14 +8,14 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
-GeometrySelectionParameter::GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                       const AllowedTypes& allowedTypes)
+GeometrySelectionParameter::GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypeSetType allowedTypes)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
-, m_DefaultValue(defaultValue)
-, m_AllowedTypes(allowedTypes)
+, m_DefaultValue(std::move(defaultValue))
+, m_AllowedTypes(std::move(allowedTypes))
 {
 }
 
@@ -24,7 +24,7 @@ Uuid GeometrySelectionParameter::uuid() const
   return ParameterTraits<GeometrySelectionParameter>::uuid;
 }
 
-IParameter::AcceptedTypes GeometrySelectionParameter::acceptedTypes() const
+IParameter::AcceptedTypesType GeometrySelectionParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -42,23 +42,23 @@ nlohmann::json GeometrySelectionParameter::toJsonImpl(const std::any& value) con
   return json;
 }
 
-Result<std::any> GeometrySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> GeometrySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'GeometrySelectionParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'GeometrySelectionParameter' JSON Error: ";
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a string", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix, name()));
   }
   auto string = json.get<std::string>();
   std::optional<DataPath> path = DataPath::FromString(string);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), string));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotValueType, fmt::format("{}Failed to parse '{}' as DataPath", k_Prefix.view(), string));
   }
   return {{std::move(*path)}};
 }
 
-IParameter::UniquePointer GeometrySelectionParameter::clone() const
+IParameter::UniquePointerType GeometrySelectionParameter::clone() const
 {
   return std::make_unique<GeometrySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes);
 }
@@ -68,7 +68,7 @@ std::any GeometrySelectionParameter::defaultValue() const
   return defaultPath();
 }
 
-const GeometrySelectionParameter::AllowedTypes& GeometrySelectionParameter::allowedTypes() const
+const GeometrySelectionParameter::AllowedTypeSetType& GeometrySelectionParameter::allowedTypes() const
 {
   return m_AllowedTypes;
 }
@@ -91,42 +91,42 @@ Result<> GeometrySelectionParameter::validatePath(const DataStructure& dataStruc
 
   if(value.empty())
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}Geometry Path cannot be empty", prefix));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateEmptyValue, fmt::format("{}Geometry Path cannot be empty", prefix));
   }
 
-  const DataObject* object = dataStructure.getData(value);
-  if(object == nullptr)
+  const DataObject* objectPtr = dataStructure.getData(value);
+  if(objectPtr == nullptr)
   {
-    return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
+    return nx::core::MakeErrorResult<>(nx::core::filter_parameter::constants::k_ValidateDoesNotExist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
-  const IGeometry* geometry = dynamic_cast<const IGeometry*>(object);
-  if(geometry == nullptr)
+  const IGeometry* geometryPtr = dynamic_cast<const IGeometry*>(objectPtr);
+  if(geometryPtr == nullptr)
   {
     return MakeErrorResult(-3, fmt::format("Object at path '{}' is not a subclass of IGeometry.", value.toString()));
   }
 
   // Look for the actual geometry type that the user selected in the allowed set
-  if(m_AllowedTypes.count(geometry->getGeomType()) > 0)
+  if(m_AllowedTypes.contains(geometryPtr->getGeomType()))
   {
     return {};
   }
 
   return nx::core::MakeErrorResult(
-      nx::core::FilterParameter::Constants::k_Validate_AllowedType_Error,
-      fmt::format("{}Geometry at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), geometry->getTypeName(), IGeometry::StringListFromGeometryType(m_AllowedTypes)));
+      nx::core::filter_parameter::constants::k_ValidateAllowedTypeError,
+      fmt::format("{}Geometry at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), geometryPtr->getTypeName(), IGeometry::StringListFromGeometryType(m_AllowedTypes)));
 }
 
 Result<std::any> GeometrySelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
-  IGeometry* object = dataStructure.getDataAs<IGeometry>(path);
-  return {{object}};
+  IGeometry* objectPtr = dataStructure.getDataAs<IGeometry>(path);
+  return {{objectPtr}};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
-Result<DataArraySelectionToGeometrySelectionFilterParameterConverter::ValueType> DataArraySelectionToGeometrySelectionFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataArraySelectionToGeometrySelectionFilterParameterConverter::ValueType> DataArraySelectionToGeometrySelectionFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   // 6.5 compatibility
   if(json.is_string())
@@ -144,5 +144,5 @@ Result<DataArraySelectionToGeometrySelectionFilterParameterConverter::ValueType>
 
   return {std::move(dataPath)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

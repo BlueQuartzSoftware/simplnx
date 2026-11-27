@@ -54,14 +54,14 @@ Parameters CropVertexGeometryFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedVertexGeometryPath_Key, "Vertex Geometry to Crop", "DataPath to target VertexGeom", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedVertexGeometryPath_Key, "Cropped Vertex Geometry", "Created VertexGeom path", DataPath{}));
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_VertexAttributeMatrixName_Key, "Vertex Data Name", "Name of the vertex data AttributeMatrix", INodeGeometry0D::k_VertexAttributeMatrixName));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_MinPos_Key, "Min Pos", "Minimum vertex position", std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<std::string>{"X", "Y", "Z"}));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_MaxPos_Key, "Max Pos", "Maximum vertex position", std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_MinPos_Key, "Min Pos", "Minimum vertex position", std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_MaxPos_Key, "Max Pos", "Maximum vertex position", std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_TargetArrayPaths_Key, "Vertex Data Arrays to crop", "The complete path to all the vertex data arrays to crop", std::vector<DataPath>(),
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
   return params;
 }
 
@@ -72,14 +72,14 @@ IFilter::VersionType CropVertexGeometryFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CropVertexGeometryFilter::clone() const
+IFilter::UniquePointerType CropVertexGeometryFilter::clone() const
 {
   return std::make_unique<CropVertexGeometryFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto vertexGeomPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
   auto croppedGeomPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
@@ -107,21 +107,21 @@ IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStruc
     if(xDimError)
     {
       std::string ss = fmt::format("X Max ({}) is equal to X Min ({}). There would be no points remaining in the geometry.", xMax, xMin);
-      errors.push_back(Error{-58550, std::move(ss)});
+      errors.push_back(Error{.code = -58550, .message = std::move(ss)});
     }
     if(yDimError)
     {
       std::string ss = fmt::format("Y Max ({}) is equal to Y Min ({}). There would be no points remaining in the geometry.", yMax, yMin);
-      errors.push_back(Error{-58551, std::move(ss)});
+      errors.push_back(Error{.code = -58551, .message = std::move(ss)});
     }
     if(zDimError)
     {
       std::string ss = fmt::format("Z Max ({}) is equal to Z Min ({}). There would be no points remaining in the geometry.", zMax, zMin);
-      errors.push_back(Error{-58552, std::move(ss)});
+      errors.push_back(Error{.code = -58552, .message = std::move(ss)});
     }
     if(xDimError || yDimError || zDimError)
     {
-      return PreflightResult{{nonstd::make_unexpected(errors)}};
+      return PreflightResult{.output_actions = {nonstd::make_unexpected(errors)}};
     }
   }
 
@@ -133,30 +133,31 @@ IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStruc
     if(xDimError)
     {
       std::string ss = fmt::format("X Max ({}) less than X Min ({})", xMax, xMin);
-      errors.push_back(Error{-58553, std::move(ss)});
+      errors.push_back(Error{.code = -58553, .message = std::move(ss)});
     }
     if(yDimError)
     {
       std::string ss = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin);
-      errors.push_back(Error{-58554, std::move(ss)});
+      errors.push_back(Error{.code = -58554, .message = std::move(ss)});
     }
     if(zDimError)
     {
       std::string ss = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin);
-      errors.push_back(Error{-58555, std::move(ss)});
+      errors.push_back(Error{.code = -58555, .message = std::move(ss)});
     }
     if(xDimError || yDimError || zDimError)
     {
-      return PreflightResult{{nonstd::make_unexpected(errors)}};
+      return PreflightResult{.output_actions = {nonstd::make_unexpected(errors)}};
     }
   }
 
-  auto* vertexAM = vertexGeom.getVertexAttributeMatrix();
-  if(vertexAM == nullptr)
+  const auto* vertexAmPtr = vertexGeom.getVertexAttributeMatrix();
+  if(vertexAmPtr == nullptr)
   {
-    return {MakeErrorResult<OutputActions>(-58556, fmt::format("Could not find vertex data AttributeMatrix in Vertex Geometry at path '{}'.", vertexGeomPath.toString())), {}};
+    return {.output_actions = MakeErrorResult<OutputActions>(-58556, fmt::format("Could not find vertex data AttributeMatrix in Vertex Geometry at path '{}'.", vertexGeomPath.toString())),
+            .output_values = {}};
   }
-  auto tupleShape = vertexAM->getShape();
+  auto tupleShape = vertexAmPtr->getShape();
   usize numTuples = std::accumulate(tupleShape.cbegin(), tupleShape.cend(), static_cast<usize>(1), std::multiplies<>());
   auto action = std::make_unique<CreateVertexGeometryAction>(croppedGeomPath, numTuples, vertexDataName, VertexGeom::k_SharedVertexListName);
   DataPath croppedVertexDataPath = action->getVertexDataPath();
@@ -164,7 +165,7 @@ IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStruc
 
   for(auto&& targetArrayPath : targetArrays)
   {
-    auto& targetArray = dataStructure.getDataRefAs<IDataArray>(targetArrayPath);
+    const auto& targetArray = dataStructure.getDataRefAs<IDataArray>(targetArrayPath);
 
     DataType type = targetArray.getDataType();
     auto tDims = targetArray.getNumberOfTuples();
@@ -177,33 +178,33 @@ IFilter::PreflightResult CropVertexGeometryFilter::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> CropVertexGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> CropVertexGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CropVertexGeometryInputValues inputValues;
-  inputValues.InputVertexGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedVertexGeometryPath_Key);
-  inputValues.OutputVertexGeometryPath = filterArgs.value<DataGroupCreationParameter::ValueType>(k_CreatedVertexGeometryPath_Key);
-  inputValues.MinPos = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MinPos_Key);
-  inputValues.MaxPos = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MaxPos_Key);
-  inputValues.TargetArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_TargetArrayPaths_Key);
-  inputValues.VertexAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
+  inputValues.input_vertex_geometry_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedVertexGeometryPath_Key);
+  inputValues.output_vertex_geometry_path = filterArgs.value<DataGroupCreationParameter::ValueType>(k_CreatedVertexGeometryPath_Key);
+  inputValues.min_pos = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MinPos_Key);
+  inputValues.max_pos = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MaxPos_Key);
+  inputValues.target_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_TargetArrayPaths_Key);
+  inputValues.vertex_attribute_matrix_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
 
   return CropVertexGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_XMinKey = "XMin";
-constexpr StringLiteral k_YMinKey = "YMin";
-constexpr StringLiteral k_ZMinKey = "ZMin";
-constexpr StringLiteral k_XMaxKey = "XMax";
-constexpr StringLiteral k_YMaxKey = "YMax";
-constexpr StringLiteral k_ZMaxKey = "ZMax";
-constexpr StringLiteral k_CroppedDataContainerNameKey = "CroppedDataContainerName";
-} // namespace SIMPL
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_XMinKey = "XMin";
+constexpr StringLiteralType k_YMinKey = "YMin";
+constexpr StringLiteralType k_ZMinKey = "ZMin";
+constexpr StringLiteralType k_XMaxKey = "XMax";
+constexpr StringLiteralType k_YMaxKey = "YMax";
+constexpr StringLiteralType k_ZMaxKey = "ZMax";
+constexpr StringLiteralType k_CroppedDataContainerNameKey = "CroppedDataContainerName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CropVertexGeometryFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -213,10 +214,10 @@ Result<Arguments> CropVertexGeometryFilter::FromSIMPLJson(const nlohmann::json& 
   std::vector<Result<>> results;
 
   // Convert 3 numeric inputs into Vec3 inputs
-  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::FloatToVec3FilterParameterConverter>(args, json, SIMPL::k_XMinKey, SIMPL::k_YMinKey, SIMPL::k_ZMinKey, k_MinPos_Key));
-  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::FloatToVec3FilterParameterConverter>(args, json, SIMPL::k_XMaxKey, SIMPL::k_YMaxKey, SIMPL::k_ZMaxKey, k_MaxPos_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_SelectedVertexGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_CroppedDataContainerNameKey, k_CreatedVertexGeometryPath_Key));
+  results.push_back(simpl_conversion::Convert3Parameters<simpl_conversion::FloatToVec3FilterParameterConverterType>(args, json, simpl::k_XMinKey, simpl::k_YMinKey, simpl::k_ZMinKey, k_MinPos_Key));
+  results.push_back(simpl_conversion::Convert3Parameters<simpl_conversion::FloatToVec3FilterParameterConverterType>(args, json, simpl::k_XMaxKey, simpl::k_YMaxKey, simpl::k_ZMaxKey, k_MaxPos_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_SelectedVertexGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_CroppedDataContainerNameKey, k_CreatedVertexGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -17,12 +17,10 @@ ComputeBoundaryCellsDirect::ComputeBoundaryCellsDirect(DataStructure& dataStruct
 {
 }
 
-ComputeBoundaryCellsDirect::~ComputeBoundaryCellsDirect() noexcept = default;
-
 Result<> ComputeBoundaryCellsDirect::operator()()
 {
-  const auto& imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  const SizeVec3 udims = imageGeometry.getDimensions();
+  const auto& imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
+  const SizeVec3Type udims = imageGeometry.getDimensions();
   std::array<int64, 3> dims = {
       static_cast<int64>(udims[0]),
       static_cast<int64>(udims[1]),
@@ -31,13 +29,13 @@ Result<> ComputeBoundaryCellsDirect::operator()()
 
   // These operator[] calls can reach a disk-backed output because dispatch does
   // not include BoundaryCells.
-  auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
-  auto& boundaryCellsStore = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsArrayName)->getDataStoreRef();
+  auto& featureIdsStore = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path)->getDataStoreRef();
+  auto& boundaryCellsStore = m_DataStructure.getDataAs<Int8ArrayType>(m_InputValues->boundary_cells_array_name)->getDataStoreRef();
 
   // Precompute flat offsets for the six face-neighbor directions.
-  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
-  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3DType>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = InitializeFaceNeighborOffsets(dims);
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> k_FaceNeighborInternalIdx = InitializeFaceNeighborInternalIdx();
 
   int32 feature = 0;
   int8 onSurf = 0;
@@ -45,7 +43,7 @@ Result<> ComputeBoundaryCellsDirect::operator()()
 
   // The lower bound excludes feature zero only when requested.
   int ignoreFeatureZeroVal = 0;
-  if(!m_InputValues->IgnoreFeatureZero)
+  if(!m_InputValues->ignore_feature_zero)
   {
     ignoreFeatureZeroVal = -1;
   }
@@ -72,7 +70,7 @@ Result<> ComputeBoundaryCellsDirect::operator()()
         {
           // Count volume faces only for axes with more than two cells.
           // Feature zero receives no volume-boundary contribution.
-          if(m_InputValues->IncludeVolumeBoundary)
+          if(m_InputValues->include_volume_boundary)
           {
             if(dims[0] > 2 && (xIdx == 0 || xIdx == dims[0] - 1))
             {
@@ -93,8 +91,8 @@ Result<> ComputeBoundaryCellsDirect::operator()()
             }
           }
 
-          const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
-          for(const auto& faceIndex : faceNeighborInternalIdx)
+          const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = ComputeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+          for(const auto& faceIndex : k_FaceNeighborInternalIdx)
           {
             if(!isValidFaceNeighbor[faceIndex])
             {

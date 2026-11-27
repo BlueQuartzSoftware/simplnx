@@ -8,14 +8,14 @@
 
 #include <string_view>
 
-namespace nx::core::SIMPLConversion
+namespace nx::core::simpl_conversion
 {
 struct OEMEbsdScanSelectionFilterParameterConverter
 {
   using ParameterType = OEMEbsdScanSelectionParameter;
   using ValueType = typename ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2)
+  static Result<ValueType> Convert(const nlohmann::json& json1, const nlohmann::json& json2)
   {
     static const std::string x = "x";
     static const std::string y = "y";
@@ -31,10 +31,10 @@ struct OEMEbsdScanSelectionFilterParameterConverter
     }
 
     ValueType value;
-    value.inputFilePath = json1.get<std::string>();
-    value.scanNames = json2.get<std::list<std::string>>();
+    value.input_file_path = json1.get<std::string>();
+    value.scan_names = json2.get<std::list<std::string>>();
 
     return {std::move(value)};
   }
 };
-} // namespace nx::core::SIMPLConversion
+} // namespace nx::core::simpl_conversion

@@ -18,7 +18,7 @@ namespace nx::core
 class SIMPLNX_EXPORT DataReparentedMessage : public AbstractDataStructureMessage
 {
 public:
-  static const MessageType MsgType = 4;
+  static const MessageType k_MsgType = 4;
 
   /**
    * @brief Constructs a DataReparentedMessage, specifying the target DataObject,

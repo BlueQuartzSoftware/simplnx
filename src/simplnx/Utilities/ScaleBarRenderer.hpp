@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace nx::core::ScaleBarRenderer
+namespace nx::core::scale_bar_renderer
 {
 /**
  * @brief Picks the physical length of a scale bar for an image: the largest
@@ -50,4 +50,4 @@ SIMPLNX_EXPORT usize ComputeBandHeight(usize imageHeightPixels);
  * @return RGB pixel buffer of size imageWidthPixels * ComputeBandHeight(imageHeightPixels) * 3
  */
 SIMPLNX_EXPORT std::vector<uint8> RenderScaleBarBandRgb(usize imageWidthPixels, usize imageHeightPixels, float64 unitsPerPixel, IGeometry::LengthUnit unit);
-} // namespace nx::core::ScaleBarRenderer
+} // namespace nx::core::scale_bar_renderer

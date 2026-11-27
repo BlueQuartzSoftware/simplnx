@@ -16,11 +16,11 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT NearestPointFuseRegularGridsInputValues
 {
-  DataPath ReferenceGeometryPath;
-  DataPath SamplingGeometryPath;
-  DataPath ReferenceCellAttributeMatrixPath;
-  DataPath SamplingCellAttributeMatrixPath;
-  float64 fillValue;
+  DataPath reference_geometry_path;
+  DataPath sampling_geometry_path;
+  DataPath reference_cell_attribute_matrix_path;
+  DataPath sampling_cell_attribute_matrix_path;
+  float64 fill_value{};
 };
 
 /**
@@ -45,7 +45,7 @@ public:
   /**
    * @brief Destroys the non-owning dispatcher.
    */
-  ~NearestPointFuseRegularGrids() noexcept;
+  ~NearestPointFuseRegularGrids() noexcept = default;
 
   NearestPointFuseRegularGrids(const NearestPointFuseRegularGrids&) = delete;
   NearestPointFuseRegularGrids(NearestPointFuseRegularGrids&&) noexcept = delete;

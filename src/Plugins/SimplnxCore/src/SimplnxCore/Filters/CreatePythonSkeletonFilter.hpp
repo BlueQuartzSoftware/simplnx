@@ -24,12 +24,12 @@ public:
   CreatePythonSkeletonFilter& operator=(CreatePythonSkeletonFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_UseExistingPlugin_Key = "use_existing_plugin";
-  static constexpr StringLiteral k_PluginName_Key = "plugin_name";
-  static constexpr StringLiteral k_PluginHumanName_Key = "plugin_human_name";
-  static constexpr StringLiteral k_PluginInputDirectory_Key = "plugin_input_directory";
-  static constexpr StringLiteral k_PluginOutputDirectory_Key = "plugin_output_directory";
-  static constexpr StringLiteral k_PluginFilterNames = "filter_names";
+  static constexpr StringLiteralType k_UseExistingPlugin_Key = "use_existing_plugin";
+  static constexpr StringLiteralType k_PluginName_Key = "plugin_name";
+  static constexpr StringLiteralType k_PluginHumanName_Key = "plugin_human_name";
+  static constexpr StringLiteralType k_PluginInputDirectory_Key = "plugin_input_directory";
+  static constexpr StringLiteralType k_PluginOutputDirectory_Key = "plugin_output_directory";
+  static constexpr StringLiteralType k_PluginFilterNames = "filter_names";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -86,7 +86,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

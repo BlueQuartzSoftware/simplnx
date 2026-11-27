@@ -24,11 +24,11 @@ public:
   ComputeLargestCrossSectionsFilter& operator=(ComputeLargestCrossSectionsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_Plane_Key = "plane_index";
-  static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
-  static constexpr StringLiteral k_LargestCrossSectionsArrayName_Key = "largest_cross_sections_array_name";
-  static constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
+  static constexpr StringLiteralType k_Plane_Key = "plane_index";
+  static constexpr StringLiteralType k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
+  static constexpr StringLiteralType k_LargestCrossSectionsArrayName_Key = "largest_cross_sections_array_name";
+  static constexpr StringLiteralType k_ImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -85,7 +85,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

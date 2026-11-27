@@ -10,39 +10,39 @@ namespace nx::core
 {
 
 template <typename T>
-T* createGeom(DataStructure& dataStructure)
+T* CreateGeom(DataStructure& dataStructure)
 {
-  auto geom = T::Create(dataStructure, "Geom");
-  T* output = dynamic_cast<T*>(geom);
-  REQUIRE(output != nullptr);
-  return output;
+  auto geomPtr = T::Create(dataStructure, "Geom");
+  T* outputPtr = dynamic_cast<T*>(geomPtr);
+  REQUIRE(outputPtr != nullptr);
+  return outputPtr;
 }
 
-static const IGeometry::SharedVertexList* createVertexList(IGeometry* geom)
+static const IGeometry::SharedVertexListType* CreateVertexList(IGeometry* geom)
 {
-  auto dataStructure = geom->getDataStructure();
+  auto* dataStructurePtr = geom->getDataStructure();
   auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{0}, std::vector<usize>{3}, 0.0f);
-  auto dataArr = IGeometry::SharedVertexList::Create(*dataStructure, "Vertices", std::move(dataStore), geom->getId());
-  REQUIRE(dataArr != nullptr);
-  return dynamic_cast<const IGeometry::SharedVertexList*>(dataArr);
+  auto* dataArrPtr = IGeometry::SharedVertexListType::Create(*dataStructurePtr, "Vertices", std::move(dataStore), geom->getId());
+  REQUIRE(dataArrPtr != nullptr);
+  return dynamic_cast<const IGeometry::SharedVertexListType*>(dataArrPtr);
 }
 
-static const IGeometry::SharedEdgeList* createEdgeList(IGeometry* geom)
+static const IGeometry::SharedEdgeListType* CreateEdgeList(IGeometry* geom)
 {
-  auto dataStructure = geom->getDataStructure();
+  auto* dataStructurePtr = geom->getDataStructure();
   auto dataStore = std::make_unique<DataStore<IGeometry::MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
-  auto dataArr = IGeometry::SharedEdgeList::Create(*dataStructure, "Edges", std::move(dataStore), geom->getId());
-  REQUIRE(dataArr != nullptr);
-  return dynamic_cast<const IGeometry::SharedEdgeList*>(dataArr);
+  auto* dataArrPtr = IGeometry::SharedEdgeListType::Create(*dataStructurePtr, "Edges", std::move(dataStore), geom->getId());
+  REQUIRE(dataArrPtr != nullptr);
+  return dynamic_cast<const IGeometry::SharedEdgeListType*>(dataArrPtr);
 }
 
-static const IGeometry::SharedFaceList* createFaceList(IGeometry* geom)
+static const IGeometry::SharedFaceListType* CreateFaceList(IGeometry* geom)
 {
-  auto dataStructure = geom->getDataStructure();
+  auto* dataStructurePtr = geom->getDataStructure();
   auto dataStore = std::make_unique<DataStore<IGeometry::MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{4}, 0);
-  auto dataArr = IGeometry::SharedFaceList::Create(*dataStructure, "Faces", std::move(dataStore), geom->getId());
-  REQUIRE(dataArr != nullptr);
-  return dynamic_cast<const IGeometry::SharedFaceList*>(dataArr);
+  auto* dataArrPtr = IGeometry::SharedFaceListType::Create(*dataStructurePtr, "Faces", std::move(dataStore), geom->getId());
+  REQUIRE(dataArrPtr != nullptr);
+  return dynamic_cast<const IGeometry::SharedFaceListType*>(dataArrPtr);
 }
 
 } // namespace nx::core

@@ -13,9 +13,9 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT WriteLAMMPSFileInputValues
 {
-  FileSystemPathParameter::ValueType OutputFile;
-  DataPath VertexGeomPath;
-  DataPath AtomLabelsPath;
+  FileSystemPathParameter::ValueType output_file;
+  DataPath vertex_geom_path;
+  DataPath atom_labels_path;
 };
 
 /**
@@ -25,7 +25,7 @@ class SIMPLNXCORE_EXPORT WriteLAMMPSFile
 {
 public:
   WriteLAMMPSFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteLAMMPSFileInputValues* inputValues);
-  ~WriteLAMMPSFile() noexcept;
+  ~WriteLAMMPSFile() noexcept = default;
 
   WriteLAMMPSFile(const WriteLAMMPSFile&) = delete;
   WriteLAMMPSFile(WriteLAMMPSFile&&) noexcept = delete;

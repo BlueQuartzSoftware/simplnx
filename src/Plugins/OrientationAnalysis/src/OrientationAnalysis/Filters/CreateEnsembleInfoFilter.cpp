@@ -74,14 +74,14 @@ IFilter::VersionType CreateEnsembleInfoFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CreateEnsembleInfoFilter::clone() const
+IFilter::UniquePointerType CreateEnsembleInfoFilter::clone() const
 {
   return std::make_unique<CreateEnsembleInfoFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CreateEnsembleInfoFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult CreateEnsembleInfoFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pEnsembleValue = filterArgs.value<EnsembleInfoParameter::ValueType>(k_Ensemble_Key);
   auto pCellEnsembleAttributeMatrixNameValue = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixPath_Key);
@@ -111,30 +111,30 @@ IFilter::PreflightResult CreateEnsembleInfoFilter::preflightImpl(const DataStruc
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateEnsembleInfoFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> CreateEnsembleInfoFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CreateEnsembleInfoInputValues inputValues;
-  inputValues.Ensemble = filterArgs.value<EnsembleInfoParameter::ValueType>(k_Ensemble_Key);
-  inputValues.CellEnsembleAttributeMatrixName = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixPath_Key);
-  inputValues.CrystalStructuresArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CrystalStructuresArrayName_Key);
-  inputValues.PhaseTypesArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_PhaseTypesArrayName_Key);
-  inputValues.PhaseNamesArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_PhaseNamesArrayName_Key);
+  inputValues.ensemble = filterArgs.value<EnsembleInfoParameter::ValueType>(k_Ensemble_Key);
+  inputValues.cell_ensemble_attribute_matrix_name = filterArgs.value<DataPath>(k_CellEnsembleAttributeMatrixPath_Key);
+  inputValues.crystal_structures_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_CrystalStructuresArrayName_Key);
+  inputValues.phase_types_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_PhaseTypesArrayName_Key);
+  inputValues.phase_names_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_PhaseNamesArrayName_Key);
 
   return CreateEnsembleInfo(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_EnsembleKey = "Ensemble";
-constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
-constexpr StringLiteral k_CrystalStructuresArrayNameKey = "CrystalStructuresArrayName";
-constexpr StringLiteral k_PhaseTypesArrayNameKey = "PhaseTypesArrayName";
-constexpr StringLiteral k_PhaseNamesArrayNameKey = "PhaseNamesArrayName";
-} // namespace SIMPL
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_EnsembleKey = "Ensemble";
+constexpr StringLiteralType k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
+constexpr StringLiteralType k_CrystalStructuresArrayNameKey = "CrystalStructuresArrayName";
+constexpr StringLiteralType k_PhaseTypesArrayNameKey = "PhaseTypesArrayName";
+constexpr StringLiteralType k_PhaseNamesArrayNameKey = "PhaseNamesArrayName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CreateEnsembleInfoFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -145,13 +145,13 @@ Result<Arguments> CreateEnsembleInfoFilter::FromSIMPLJson(const nlohmann::json& 
 
   // Data Container Name parameter is not applicable in NX
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::EnsembleInfoFilterParameterConverter>(args, json, SIMPL::k_EnsembleKey, k_Ensemble_Key));
-  results.push_back(SIMPLConversion::Convert2Parameters<SIMPLConversion::AMPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, SIMPL::k_CellEnsembleAttributeMatrixNameKey,
-                                                                                                                k_CellEnsembleAttributeMatrixPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::EnsembleInfoFilterParameterConverter>(args, json, simpl::k_EnsembleKey, k_Ensemble_Key));
+  results.push_back(simpl_conversion::Convert2Parameters<simpl_conversion::AMPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey,
+                                                                                                                  simpl::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CrystalStructuresArrayNameKey, k_CrystalStructuresArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_PhaseTypesArrayNameKey, k_PhaseTypesArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_PhaseNamesArrayNameKey, k_PhaseNamesArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayNameKey, k_CrystalStructuresArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_PhaseTypesArrayNameKey, k_PhaseTypesArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_PhaseNamesArrayNameKey, k_PhaseNamesArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

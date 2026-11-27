@@ -32,7 +32,7 @@ TEST_CASE("ErrorWarningFilter::Instantiate Filter", "[ErrorWarningFilter]")
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   }
 
   // Preflight Warning enabled
@@ -48,9 +48,9 @@ TEST_CASE("ErrorWarningFilter::Instantiate Filter", "[ErrorWarningFilter]")
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
-    const std::vector<Warning>& warnings = preflightResult.outputActions.warnings();
+    const std::vector<Warning>& warnings = preflightResult.output_actions.warnings();
     REQUIRE(warnings.size() == 1);
     REQUIRE(warnings[0].code == k_PreflightWarning);
   }
@@ -68,9 +68,9 @@ TEST_CASE("ErrorWarningFilter::Instantiate Filter", "[ErrorWarningFilter]")
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
 
-    const std::vector<Error>& errors = preflightResult.outputActions.errors();
+    const std::vector<Error>& errors = preflightResult.output_actions.errors();
     REQUIRE(errors.size() == 1);
     REQUIRE(errors[0].code == k_PreflightError);
   }
@@ -115,5 +115,5 @@ TEST_CASE("ErrorWarningFilter::Instantiate Filter", "[ErrorWarningFilter]")
     REQUIRE(errors[0].code == k_ExecuteError);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

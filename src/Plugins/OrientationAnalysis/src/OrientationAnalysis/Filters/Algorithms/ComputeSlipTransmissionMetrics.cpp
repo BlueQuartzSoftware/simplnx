@@ -21,7 +21,6 @@ ComputeSlipTransmissionMetrics::ComputeSlipTransmissionMetrics(DataStructure& da
 }
 
 // -----------------------------------------------------------------------------
-ComputeSlipTransmissionMetrics::~ComputeSlipTransmissionMetrics() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeSlipTransmissionMetrics::getCancel()
@@ -34,21 +33,21 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
 {
   const std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
-  const auto& avgQuatsArrayRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath);
-  const auto& featurePhasesArrayRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
-  const auto& crystalStructuresArrayRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  const auto& avgQuatsArrayRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->avg_quats_array_path);
+  const auto& featurePhasesArrayRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_phases_array_path);
+  const auto& crystalStructuresArrayRef = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
 
   const usize totalFeatures = featurePhasesArrayRef.getNumberOfTuples();
   const usize numCrystalStructures = crystalStructuresArrayRef.getNumberOfTuples();
 
-  auto& neighborList = m_DataStructure.getDataRefAs<Int32NeighborList>(m_InputValues->NeighborListArrayPath);
+  auto& neighborList = m_DataStructure.getDataRefAs<Int32NeighborListType>(m_InputValues->neighbor_list_array_path);
 
-  std::vector<std::vector<float32>> F1Lists(totalFeatures);
-  std::vector<std::vector<float32>> F1sPtLists(totalFeatures);
-  std::vector<std::vector<float32>> F7Lists(totalFeatures);
+  std::vector<std::vector<float32>> f1Lists(totalFeatures);
+  std::vector<std::vector<float32>> f1sPtLists(totalFeatures);
+  std::vector<std::vector<float32>> f7Lists(totalFeatures);
   std::vector<std::vector<float32>> mPrimeLists(totalFeatures);
 
-  float64 LD[3] = {0.0, 0.0, 1.0};
+  float64 ld[3] = {0.0, 0.0, 1.0};
 
   bool emitLaueClassWarning = false;
 
@@ -60,9 +59,9 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
     }
 
     const usize listLength = neighborList[featureIdx].size();
-    F1Lists[featureIdx].assign(listLength, 0.0F);
-    F1sPtLists[featureIdx].assign(listLength, 0.0F);
-    F7Lists[featureIdx].assign(listLength, 0.0F);
+    f1Lists[featureIdx].assign(listLength, 0.0F);
+    f1sPtLists[featureIdx].assign(listLength, 0.0F);
+    f7Lists[featureIdx].assign(listLength, 0.0F);
     mPrimeLists[featureIdx].assign(listLength, 0.0F);
     for(usize neighborIdx = 0; neighborIdx < listLength; neighborIdx++)
     {
@@ -75,9 +74,9 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
       const int32 neighborFeaturePhaseIdx = featurePhasesArrayRef[neighborFeatureIdx];
 
       float32 mPrime = 0.0F;
-      float32 F1 = 0.0F;
-      float32 F1sPt = 0.0F;
-      float32 F7 = 0.0F;
+      float32 f1 = 0.0F;
+      float32 f1sPt = 0.0F;
+      float32 f7 = 0.0F;
 
       // Positive phase indices must be valid before the crystal structures are read.
       if(currentPhaseIdx > 0 || neighborFeaturePhaseIdx > 0)
@@ -86,7 +85,7 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
         {
           return MakeErrorResult(
               -94742, fmt::format("Feature Phases array '{}' has value {} at Feature index {}, but Crystal Structures array '{}' contains {} tuples. Valid positive Phase indices are in [1, {}).",
-                                  m_InputValues->FeaturePhasesArrayPath.toString(), currentPhaseIdx, featureIdx, m_InputValues->CrystalStructuresArrayPath.toString(), numCrystalStructures,
+                                  m_InputValues->feature_phases_array_path.toString(), currentPhaseIdx, featureIdx, m_InputValues->crystal_structures_array_path.toString(), numCrystalStructures,
                                   numCrystalStructures));
         }
         if(neighborFeaturePhaseIdx > 0 && static_cast<usize>(neighborFeaturePhaseIdx) >= numCrystalStructures)
@@ -94,8 +93,8 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
           return MakeErrorResult(
               -94742,
               fmt::format("Feature Phases array '{}' has value {} at neighbor Feature index {}, but Crystal Structures array '{}' contains {} tuples. Valid positive Phase indices are in [1, {}).",
-                          m_InputValues->FeaturePhasesArrayPath.toString(), neighborFeaturePhaseIdx, neighborFeatureIdx, m_InputValues->CrystalStructuresArrayPath.toString(), numCrystalStructures,
-                          numCrystalStructures));
+                          m_InputValues->feature_phases_array_path.toString(), neighborFeaturePhaseIdx, neighborFeatureIdx, m_InputValues->crystal_structures_array_path.toString(),
+                          numCrystalStructures, numCrystalStructures));
         }
       }
 
@@ -106,14 +105,14 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
         if(currentLaueIndex == neighborLaueIndex && currentLaueIndex >= orientationOps.size())
         {
           return MakeErrorResult(-94743, fmt::format("Crystal Structures array '{}' has value {} at Phase index {}, but only {} Laue operations are available. Valid Laue indices are in [0, {}).",
-                                                     m_InputValues->CrystalStructuresArrayPath.toString(), currentLaueIndex, currentPhaseIdx, orientationOps.size(), orientationOps.size()));
+                                                     m_InputValues->crystal_structures_array_path.toString(), currentLaueIndex, currentPhaseIdx, orientationOps.size(), orientationOps.size()));
         }
         if(currentLaueIndex == ebsdlib::CrystalStructure::Cubic_High && neighborLaueIndex == ebsdlib::CrystalStructure::Cubic_High)
         {
-          mPrime = static_cast<float32>(orientationOps[currentLaueIndex]->getmPrime(q1, q2, LD));
-          F1 = static_cast<float32>(orientationOps[currentLaueIndex]->getF1(q1, q2, LD, true));
-          F1sPt = static_cast<float32>(orientationOps[currentLaueIndex]->getF1spt(q1, q2, LD, true));
-          F7 = static_cast<float32>(orientationOps[currentLaueIndex]->getF7(q1, q2, LD, true));
+          mPrime = static_cast<float32>(orientationOps[currentLaueIndex]->getmPrime(q1, q2, ld));
+          f1 = static_cast<float32>(orientationOps[currentLaueIndex]->getF1(q1, q2, ld, true));
+          f1sPt = static_cast<float32>(orientationOps[currentLaueIndex]->getF1spt(q1, q2, ld, true));
+          f7 = static_cast<float32>(orientationOps[currentLaueIndex]->getF7(q1, q2, ld, true));
         }
         else
         {
@@ -121,20 +120,20 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
         }
       }
       mPrimeLists[featureIdx][neighborIdx] = mPrime;
-      F1Lists[featureIdx][neighborIdx] = F1;
-      F1sPtLists[featureIdx][neighborIdx] = F1sPt;
-      F7Lists[featureIdx][neighborIdx] = F7;
+      f1Lists[featureIdx][neighborIdx] = f1;
+      f1sPtLists[featureIdx][neighborIdx] = f1sPt;
+      f7Lists[featureIdx][neighborIdx] = f7;
     }
   }
 
-  auto& F1L = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->F1ListArrayName);
-  auto& F1sptL = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->F1sptListArrayName);
-  auto& F7L = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->F7ListArrayName);
-  auto& mPrimeL = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->mPrimeListArrayName);
+  auto& f1L = m_DataStructure.getDataRefAs<Float32NeighborListType>(m_InputValues->f1_list_array_name);
+  auto& f1sptL = m_DataStructure.getDataRefAs<Float32NeighborListType>(m_InputValues->f1spt_list_array_name);
+  auto& f7L = m_DataStructure.getDataRefAs<Float32NeighborListType>(m_InputValues->f7_list_array_name);
+  auto& mPrimeL = m_DataStructure.getDataRefAs<Float32NeighborListType>(m_InputValues->m_prime_list_array_name);
 
-  F1L.setLists(F1Lists);
-  F1sptL.setLists(F1sPtLists);
-  F7L.setLists(F7Lists);
+  f1L.setLists(f1Lists);
+  f1sptL.setLists(f1sPtLists);
+  f7L.setLists(f7Lists);
   mPrimeL.setLists(mPrimeLists);
 
   // for(usize i = 1; i < totalFeatures; i++)

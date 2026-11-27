@@ -26,13 +26,13 @@ public:
   ComputeFeatureSizesFilter& operator=(ComputeFeatureSizesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_SaveElementSizes_Key = "save_element_sizes";
-  static constexpr StringLiteral k_GeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
-  static constexpr StringLiteral k_VolumesName_Key = "volumes_name";
-  static constexpr StringLiteral k_EquivalentDiametersName_Key = "equivalent_diameters_name";
-  static constexpr StringLiteral k_NumElementsName_Key = "num_elements_name";
+  static constexpr StringLiteralType k_SaveElementSizes_Key = "save_element_sizes";
+  static constexpr StringLiteralType k_GeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteralType k_CellFeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
+  static constexpr StringLiteralType k_VolumesName_Key = "volumes_name";
+  static constexpr StringLiteralType k_EquivalentDiametersName_Key = "equivalent_diameters_name";
+  static constexpr StringLiteralType k_NumElementsName_Key = "num_elements_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -89,7 +89,7 @@ public:
    * @brief Creates and returns a copy of the filter.
    * @return IFilter::UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

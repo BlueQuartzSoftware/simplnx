@@ -29,15 +29,15 @@ public:
   ReadRawBinaryFilter& operator=(ReadRawBinaryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_InputFile_Key = "input_file";
-  static constexpr StringLiteral k_ScalarType_Key = "scalar_type_index";
-  static constexpr StringLiteral k_AdvancedOptions_Key = "set_tuple_dimensions";
-  static constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
-  static constexpr StringLiteral k_CompDims_Key = "component_dimensions";
-  static constexpr StringLiteral k_Endian_Key = "endian_index";
-  static constexpr StringLiteral k_SkipHeaderBytes_Key = "skip_header_bytes";
-  static constexpr StringLiteral k_AllowPartialFilling_Key = "allow_partial_filling";
-  static constexpr StringLiteral k_CreatedAttributeArrayPath_Key = "created_attribute_array_path";
+  static constexpr StringLiteralType k_InputFile_Key = "input_file";
+  static constexpr StringLiteralType k_ScalarType_Key = "scalar_type_index";
+  static constexpr StringLiteralType k_AdvancedOptions_Key = "set_tuple_dimensions";
+  static constexpr StringLiteralType k_TupleDims_Key = "tuple_dimensions";
+  static constexpr StringLiteralType k_CompDims_Key = "component_dimensions";
+  static constexpr StringLiteralType k_Endian_Key = "endian_index";
+  static constexpr StringLiteralType k_SkipHeaderBytes_Key = "skip_header_bytes";
+  static constexpr StringLiteralType k_AllowPartialFilling_Key = "allow_partial_filling";
+  static constexpr StringLiteralType k_CreatedAttributeArrayPath_Key = "created_attribute_array_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -101,7 +101,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

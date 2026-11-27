@@ -30,7 +30,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   ComputeKMeansScanline(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ComputeKMeansInputValues* inputValues);
-  ~ComputeKMeansScanline() noexcept;
+  ~ComputeKMeansScanline() noexcept = default;
 
   ComputeKMeansScanline(const ComputeKMeansScanline&) = delete;
   ComputeKMeansScanline(ComputeKMeansScanline&&) noexcept = delete;

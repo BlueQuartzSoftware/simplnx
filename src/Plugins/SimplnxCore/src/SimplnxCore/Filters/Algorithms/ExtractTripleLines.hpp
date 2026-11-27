@@ -18,14 +18,14 @@ struct SIMPLNXCORE_EXPORT ExtractTripleLinesInputValues
 {
   static constexpr usize k_DefaultVertexBatchSize = 8 * 1024 * 1024;
 
-  usize VertexBatchSize = k_DefaultVertexBatchSize;
-  DataPath TriangleGeometryPath;
-  DataPath FaceLabelsPath;
-  DataPath TripleLineGeometryPath;
-  DataPath NumFeaturesPath;
-  const Int8AbstractDataStore* SourceNodeTypes = nullptr;
-  Int8AbstractDataStore* DestinationNodeTypes = nullptr;
-  bool IncludeExteriorLines = false;
+  usize vertex_batch_size = k_DefaultVertexBatchSize;
+  DataPath triangle_geometry_path;
+  DataPath face_labels_path;
+  DataPath triple_line_geometry_path;
+  DataPath num_features_path;
+  const Int8AbstractDataStoreType* source_node_types = nullptr;
+  Int8AbstractDataStoreType* destination_node_types = nullptr;
+  bool include_exterior_lines = false;
 };
 
 /**
@@ -55,7 +55,7 @@ public:
    * and one tuple per triangle. Node Types, if supplied, have one tuple per source vertex.
    */
   ExtractTripleLines(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, ExtractTripleLinesInputValues* inputValues);
-  ~ExtractTripleLines() noexcept;
+  ~ExtractTripleLines() noexcept = default;
 
   ExtractTripleLines(const ExtractTripleLines&) = delete;
   ExtractTripleLines(ExtractTripleLines&&) noexcept = delete;

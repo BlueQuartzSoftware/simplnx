@@ -75,29 +75,29 @@ Parameters KeepRemoveRankedFeaturesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ChoicesParameter>(k_Operation_Key, "Operation", "Whether the ranked Features are the ones to [0] keep or the ones to [1] remove", to_underlying(RankOperation::Keep),
-                                                   ChoicesParameter::Choices{"Keep Selected Features", "Remove Selected Features"}));
+                                                   ChoicesParameter::ChoicesType{"Keep Selected Features", "Remove Selected Features"}));
   params.insert(std::make_unique<ChoicesParameter>(k_RankFrom_Key, "Rank From", "Whether to rank from the [0] largest or [1] smallest value of the ranking array",
-                                                   to_underlying(RankDirection::Largest), ChoicesParameter::Choices{"Largest", "Smallest"}));
+                                                   to_underlying(RankDirection::Largest), ChoicesParameter::ChoicesType{"Largest", "Smallest"}));
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(
       k_Criterion_Key, "Selection Criterion", "How many Features to select: [0] an exact count, [1] a percentage of the Feature count, or [2] a percentage of the summed ranking value",
-      to_underlying(RankCriterion::FeatureCount), ChoicesParameter::Choices{"Feature Count", "Percent of Feature Count", "Percent of Summed Value"}));
+      to_underlying(RankCriterion::FeatureCount), ChoicesParameter::ChoicesType{"Feature Count", "Percent of Feature Count", "Percent of Summed Value"}));
   params.insert(std::make_unique<NumberParameter<uint64>>(k_NumFeatures_Key, "Number of Features", "The exact number of Features to select", 10ULL));
   params.insert(std::make_unique<NumberParameter<float64>>(k_Percent_Key, "Percent", "The percentage to select, in the range (0, 100]", 10.0));
   params.insert(std::make_unique<BoolParameter>(k_FillRemovedFeatures_Key, "Fill-in Removed Features", "Whether or not to fill in the gaps left by the removed Features", false));
 
   params.insertSeparator(Parameters::Separator{"Input Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which Feature each Cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_RankingArrayPath_Key, "Feature Ranking Array", "The scalar Feature level array used to rank the Features", DataPath{},
-                                                          nx::core::GetAllNumericTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          nx::core::GetAllNumericTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_IgnoredDataArrayPaths_Key, "Attribute Arrays to Ignore", "The list of arrays to ignore when removing Features",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
                                                                nx::core::GetAllDataTypes()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
@@ -115,14 +115,14 @@ IFilter::VersionType KeepRemoveRankedFeaturesFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer KeepRemoveRankedFeaturesFilter::clone() const
+IFilter::UniquePointerType KeepRemoveRankedFeaturesFilter::clone() const
 {
   return std::make_unique<KeepRemoveRankedFeaturesFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pRankingArrayPathValue = filterArgs.value<DataPath>(k_RankingArrayPath_Key);
@@ -137,7 +137,7 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
   auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, imageGeometryPath, pFeatureIdsArrayPathValue, -78125, "Cell Feature Ids");
   if(featureIdsResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
   }
 
   if(fillRemovedFeatures)
@@ -145,7 +145,7 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
     auto ignoredArraysResult = ValidateArraysInGeometryCellData(dataStructure, imageGeometryPath, ignoredDataArrayPaths, -78126, "Attribute Arrays to Ignore");
     if(ignoredArraysResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(ignoredArraysResult), {})};
     }
   }
 
@@ -153,7 +153,7 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
       ValidateFeatureAttributeMatrixInGeometry(dataStructure, imageGeometryPath, pRankingArrayPathValue.getParent(), -78127, "Feature Ranking Array", pRankingArrayPathValue);
   if(featureAttributeMatrixResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
   }
 
   // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path for Feature Ids.
@@ -168,10 +168,10 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
   const usize numTuples = rankingArray.getNumberOfTuples();
   if(numTuples < 2)
   {
-    return {MakeErrorResult<OutputActions>(k_NotEnoughFeatures,
-                                           fmt::format("The Feature Attribute Matrix at path '{}' holds {} tuple(s), but at least 2 are required. Tuple 0 is the unused dummy feature, so there "
-                                                       "must be at least one real Feature to rank.",
-                                                       featureAttributeMatrixPath.toString(), numTuples))};
+    return {.output_actions = MakeErrorResult<OutputActions>(
+                k_NotEnoughFeatures, fmt::format("The Feature Attribute Matrix at path '{}' holds {} tuple(s), but at least 2 are required. Tuple 0 is the unused dummy feature, so there "
+                                                 "must be at least one real Feature to rank.",
+                                                 featureAttributeMatrixPath.toString(), numTuples))};
   }
   const usize numFeatures = numTuples - 1;
 
@@ -182,8 +182,9 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
   const usize amTupleCount = std::accumulate(amShape.cbegin(), amShape.cend(), static_cast<usize>(1), std::multiplies<>());
   if(numTuples != amTupleCount)
   {
-    return {MakeErrorResult<OutputActions>(k_TupleCountMismatch, fmt::format("The Feature Ranking Array at path '{}' has {} tuples but its parent Attribute Matrix '{}' has {}. They must match.",
-                                                                             pRankingArrayPathValue.toString(), numTuples, featureAttributeMatrixPath.toString(), amTupleCount))};
+    return {.output_actions =
+                MakeErrorResult<OutputActions>(k_TupleCountMismatch, fmt::format("The Feature Ranking Array at path '{}' has {} tuples but its parent Attribute Matrix '{}' has {}. They must match.",
+                                                                                 pRankingArrayPathValue.toString(), numTuples, featureAttributeMatrixPath.toString(), amTupleCount))};
   }
 
   // Resolve the selected count wherever it is knowable without reading the data, so the user sees
@@ -195,13 +196,13 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
   {
     if(pNumFeaturesValue == 0)
     {
-      return {MakeErrorResult<OutputActions>(k_ZeroNumFeatures, "'Number of Features' is 0, which would select no Features. Enter a value of 1 or greater.")};
+      return {.output_actions = MakeErrorResult<OutputActions>(k_ZeroNumFeatures, "'Number of Features' is 0, which would select no Features. Enter a value of 1 or greater.")};
     }
     resolvedCount = static_cast<usize>(pNumFeaturesValue);
     if(resolvedCount > numFeatures)
     {
-      resultOutputActions.m_Warnings.push_back(
-          Warning{k_NumFeaturesClamped, fmt::format("'Number of Features' is {}, but only {} Features exist. Clamping the selection to {}.", pNumFeaturesValue, numFeatures, numFeatures)});
+      resultOutputActions.m_warnings.push_back(Warning{
+          .code = k_NumFeaturesClamped, .message = fmt::format("'Number of Features' is {}, but only {} Features exist. Clamping the selection to {}.", pNumFeaturesValue, numFeatures, numFeatures)});
       resolvedCount = numFeatures;
     }
   }
@@ -209,14 +210,15 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
   {
     if(pPercentValue <= 0.0 || pPercentValue > 100.0)
     {
-      return {MakeErrorResult<OutputActions>(k_PercentOutOfRange, fmt::format("'Percent' is {}, which is outside the allowed range (0, 100].", pPercentValue))};
+      return {.output_actions = MakeErrorResult<OutputActions>(k_PercentOutOfRange, fmt::format("'Percent' is {}, which is outside the allowed range (0, 100].", pPercentValue))};
     }
     if(pCriterionValue == to_underlying(RankCriterion::PercentOfCount))
     {
       resolvedCount = static_cast<usize>(std::llround(pPercentValue / 100.0 * static_cast<float64>(numFeatures)));
       if(resolvedCount == 0)
       {
-        resultOutputActions.m_Warnings.push_back(Warning{k_PercentRoundedToZero, fmt::format("{}% of {} Features rounds to 0. Selecting 1 Feature instead.", pPercentValue, numFeatures)});
+        resultOutputActions.m_warnings.push_back(
+            Warning{.code = k_PercentRoundedToZero, .message = fmt::format("{}% of {} Features rounds to 0. Selecting 1 Feature instead.", pPercentValue, numFeatures)});
         resolvedCount = 1;
       }
     }
@@ -234,53 +236,54 @@ IFilter::PreflightResult KeepRemoveRankedFeaturesFilter::preflightImpl(const Dat
     const usize flaggedCount = keep ? numFeatures - resolvedCount : resolvedCount;
     if(flaggedCount == 0)
     {
-      resultOutputActions.m_Warnings.push_back(
-          Warning{k_NothingFlagged, fmt::format("The current settings leave all {} Features surviving, so no Features will be removed and this filter will do nothing.", numFeatures)});
+      resultOutputActions.m_warnings.push_back(Warning{
+          .code = k_NothingFlagged, .message = fmt::format("The current settings leave all {} Features surviving, so no Features will be removed and this filter will do nothing.", numFeatures)});
     }
     else if(flaggedCount == numFeatures)
     {
-      resultOutputActions.m_Warnings.push_back(
-          Warning{k_EverythingFlagged, fmt::format("The current settings flag all {} Features for removal, which would leave nothing behind. This filter will fail during execute.", numFeatures)});
+      resultOutputActions.m_warnings.push_back(
+          Warning{.code = k_EverythingFlagged,
+                  .message = fmt::format("The current settings flag all {} Features for removal, which would leave nothing behind. This filter will fail during execute.", numFeatures)});
     }
   }
 
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataPath, {});
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pRankingArrayPathValue.getParent(), {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, cellDataPath, {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, pRankingArrayPathValue.getParent(), {});
 
   std::vector<PreflightValue> preflightUpdatedValues;
   nx::core::AppendStaleFeatureArraysPreflightValue(dataStructure, featureAttributeMatrixPath, pFeatureIdsArrayPathValue, preflightUpdatedValues);
 
   // This section will warn the user about the removal of NeighborLists
   auto result = nx::core::NeighborListRemovalPreflightCode(dataStructure, pFeatureIdsArrayPathValue, pRankingArrayPathValue, resultOutputActions);
-  if(result.outputActions.invalid())
+  if(result.output_actions.invalid())
   {
     return result;
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> KeepRemoveRankedFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> KeepRemoveRankedFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   KeepRemoveRankedFeaturesInputValues inputValues;
 
-  inputValues.Operation = filterArgs.value<ChoicesParameter::ValueType>(k_Operation_Key);
-  inputValues.RankFrom = filterArgs.value<ChoicesParameter::ValueType>(k_RankFrom_Key);
-  inputValues.Criterion = filterArgs.value<ChoicesParameter::ValueType>(k_Criterion_Key);
-  inputValues.NumFeatures = filterArgs.value<uint64>(k_NumFeatures_Key);
-  inputValues.Percent = filterArgs.value<float64>(k_Percent_Key);
-  inputValues.FillRemovedFeatures = filterArgs.value<bool>(k_FillRemovedFeatures_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.RankingArrayPath = filterArgs.value<DataPath>(k_RankingArrayPath_Key);
-  inputValues.IgnoredDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
+  inputValues.operation = filterArgs.value<ChoicesParameter::ValueType>(k_Operation_Key);
+  inputValues.rank_from = filterArgs.value<ChoicesParameter::ValueType>(k_RankFrom_Key);
+  inputValues.criterion = filterArgs.value<ChoicesParameter::ValueType>(k_Criterion_Key);
+  inputValues.num_features = filterArgs.value<uint64>(k_NumFeatures_Key);
+  inputValues.percent = filterArgs.value<float64>(k_Percent_Key);
+  inputValues.fill_removed_features = filterArgs.value<bool>(k_FillRemovedFeatures_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.ranking_array_path = filterArgs.value<DataPath>(k_RankingArrayPath_Key);
+  inputValues.ignored_data_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_IgnoredDataArrayPaths_Key);
 
   // The algorithm compares DataPaths and finds the Cell arrays through the parent of Feature Ids. Use the geometry's Cell Attribute Matrix path for Feature Ids and each ignored array.
-  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.ImageGeometryPath).getCellDataPath();
-  inputValues.FeatureIdsArrayPath = MapToGeometryCellDataPath(cellDataPath, inputValues.FeatureIdsArrayPath);
-  inputValues.IgnoredDataArrayPaths = MapToGeometryCellDataPath(cellDataPath, inputValues.IgnoredDataArrayPaths);
+  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.image_geometry_path).getCellDataPath();
+  inputValues.feature_ids_array_path = MapToGeometryCellDataPath(cellDataPath, inputValues.feature_ids_array_path);
+  inputValues.ignored_data_array_paths = MapToGeometryCellDataPath(cellDataPath, inputValues.ignored_data_array_paths);
 
   return KeepRemoveRankedFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -16,10 +16,10 @@ using namespace nx::core;
 
 namespace
 {
-constexpr int32_t k_RBR_FILE_NOT_OPEN = -1000;
-constexpr int32_t k_RBR_READ_EOF = -1030;
-constexpr int32_t k_RBR_READ_ERROR = 1040;
-constexpr int32_t k_RBR_FILE_NOT_EXIST = 1050;
+constexpr int32_t k_RbrFileNotOpen = -1000;
+constexpr int32_t k_RbrReadEof = -1030;
+constexpr int32_t k_RbrReadError = 1040;
+constexpr int32_t k_RbrFileNotExist = 1050;
 
 constexpr size_t k_BufferSize = 10000;
 
@@ -55,35 +55,33 @@ ReadStringDataArray::ReadStringDataArray(DataStructure& dataStructure, const IFi
 {
 }
 
-ReadStringDataArray::~ReadStringDataArray() noexcept = default;
-
 Result<> ReadStringDataArray::operator()()
 {
-  auto& data = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->outputArrayPath);
-  char delimiter = nx::core::CsvParser::IndexToDelimiter(m_InputValues->delimiterIndex);
+  auto& data = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->output_array_path);
+  char delimiter = nx::core::csv_parser::IndexToDelimiter(m_InputValues->delimiter_index);
 
-  if(!std::filesystem::exists(m_InputValues->inputFileValue))
+  if(!std::filesystem::exists(m_InputValues->input_file_value))
   {
-    return MakeErrorResult(k_RBR_FILE_NOT_EXIST, fmt::format("Input file does not exist: {}", m_InputValues->inputFileValue.string()));
+    return MakeErrorResult(k_RbrFileNotExist, fmt::format("Input file does not exist: {}", m_InputValues->input_file_value.string()));
   }
 
-  std::ifstream in(m_InputValues->inputFileValue.c_str(), std::ios_base::in | std::ios_base::binary);
+  std::ifstream in(m_InputValues->input_file_value.c_str(), std::ios_base::in | std::ios_base::binary);
   if(!in.is_open())
   {
-    return MakeErrorResult(k_RBR_FILE_NOT_OPEN, fmt::format("Could not open file for reading: {}", m_InputValues->inputFileValue.string()));
+    return MakeErrorResult(k_RbrFileNotOpen, fmt::format("Could not open file for reading: {}", m_InputValues->input_file_value.string()));
   }
 
-  in.imbue(std::locale(std::locale(), new nx::core::CsvParser::DelimiterType(delimiter)));
+  in.imbue(std::locale(std::locale(), new nx::core::csv_parser::DelimiterType(delimiter)));
 
   std::string headerLine;
   // Skip some header line by just reading those bytes into the pointer knowing that the next
   // thing we are going to do it over write those bytes with the real data that we are after.
-  for(int i = 0; i < m_InputValues->skipLineCount; i++)
+  for(int i = 0; i < m_InputValues->skip_line_count; i++)
   {
     std::getline(in, headerLine);
     if(in.fail())
     {
-      return MakeErrorResult(k_RBR_READ_ERROR, fmt::format("Could not read data from file while skipping header lines: {}", m_InputValues->inputFileValue.string()));
+      return MakeErrorResult(k_RbrReadError, fmt::format("Could not read data from file while skipping header lines: {}", m_InputValues->input_file_value.string()));
     }
   }
 
@@ -91,7 +89,7 @@ Result<> ReadStringDataArray::operator()()
   usize scalarNumComp = data.getNumberOfComponents();
 
   usize totalSize = numTuples * scalarNumComp;
-  usize lineNum = m_InputValues->skipLineCount;
+  usize lineNum = m_InputValues->skip_line_count;
   usize tupleIndex = 0;
   Result<> result;
   for(size_t i = 0; i < totalSize; ++i)
@@ -103,8 +101,8 @@ Result<> ReadStringDataArray::operator()()
 
     std::string line;
     std::getline(in, line);
-    line = StringUtilities::replace(line, "\r", "");
-    std::vector<std::string> tokens = StringUtilities::split(line, ConvertDelimiterIndexToString(m_InputValues->delimiterIndex), false);
+    line = string_utilities::Replace(line, "\r", "");
+    std::vector<std::string> tokens = string_utilities::Split(line, ConvertDelimiterIndexToString(m_InputValues->delimiter_index), false);
     if(tokens.empty())
     {
       // This is an empty line in the middle of the CSV file, which just shouldn't happen
@@ -117,7 +115,8 @@ Result<> ReadStringDataArray::operator()()
       if(tupleIndex == totalSize)
       {
         result.warnings().push_back(Warning{
-            -76510, fmt::format("Line #{} holds more values than the array's {} values (tuples x components). The extra values were ignored. Check the tuple dimensions.", lineNum + 1, totalSize)});
+            .code = -76510,
+            .message = fmt::format("Line #{} holds more values than the array's {} values (tuples x components). The extra values were ignored. Check the tuple dimensions.", lineNum + 1, totalSize)});
         break;
       }
       data[tupleIndex++] = value;

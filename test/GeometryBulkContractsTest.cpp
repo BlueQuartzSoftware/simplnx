@@ -40,11 +40,11 @@ class FailingResidentStore : public DataStore<T>
 public:
   using DataStore<T>::DataStore;
 
-  bool rejectResize = false;
-  usize failingReadCall = 0;
-  usize failingWriteCall = 0;
-  mutable usize readCalls = 0;
-  usize writeCalls = 0;
+  bool reject_resize = false;
+  usize failing_read_call = 0;
+  usize failing_write_call = 0;
+  mutable usize read_calls = 0;
+  usize write_calls = 0;
 
   /**
    * @brief Returns a selected resize failure without changing resident values.
@@ -53,7 +53,7 @@ public:
    */
   Result<> resizeTuples(const ShapeType& shape) override
   {
-    return rejectResize ? MakeErrorResult(k_InjectedStoreError, "Injected resident resize failure") : DataStore<T>::resizeTuples(shape);
+    return reject_resize ? MakeErrorResult(k_InjectedStoreError, "Injected resident resize failure") : DataStore<T>::resizeTuples(shape);
   }
 
   /**
@@ -64,8 +64,8 @@ public:
    */
   Result<> copyIntoBuffer(usize startIndex, nonstd::span<T> buffer) const override
   {
-    ++readCalls;
-    return readCalls == failingReadCall ? MakeErrorResult(k_InjectedStoreError, "Injected resident read failure") : DataStore<T>::copyIntoBuffer(startIndex, buffer);
+    ++read_calls;
+    return read_calls == failing_read_call ? MakeErrorResult(k_InjectedStoreError, "Injected resident read failure") : DataStore<T>::copyIntoBuffer(startIndex, buffer);
   }
 
   /**
@@ -76,8 +76,8 @@ public:
    */
   Result<> copyFromBuffer(usize startIndex, nonstd::span<const T> buffer) override
   {
-    ++writeCalls;
-    return writeCalls == failingWriteCall ? MakeErrorResult(k_InjectedStoreError, "Injected resident write failure") : DataStore<T>::copyFromBuffer(startIndex, buffer);
+    ++write_calls;
+    return write_calls == failing_write_call ? MakeErrorResult(k_InjectedStoreError, "Injected resident write failure") : DataStore<T>::copyFromBuffer(startIndex, buffer);
   }
 };
 
@@ -86,13 +86,13 @@ public:
 struct MeshCase
 {
   IGeometry::Type type;
-  usize vertexCount;
+  usize vertex_count;
   std::vector<std::vector<uint64>> cells;
-  std::vector<std::vector<uint64>> incidentCells;
+  std::vector<std::vector<uint64>> incident_cells;
   std::set<std::vector<uint64>> edges;
-  std::set<std::vector<uint64>> sharedEdges;
+  std::set<std::vector<uint64>> shared_edges;
   std::set<std::vector<uint64>> faces;
-  std::set<std::vector<uint64>> sharedFaces;
+  std::set<std::vector<uint64>> shared_faces;
 };
 
 /**
@@ -105,30 +105,43 @@ MeshCase MakeMeshCase(IGeometry::Type type)
   switch(type)
   {
   case IGeometry::Type::Edge:
-    return {type, 6, {{0, 1}, {1, 2}, {3, 4}}, {{0}, {0, 1}, {1}, {2}, {2}, {}}, {}, {}, {}, {}};
+    return {.type = type, .vertex_count = 6, .cells = {{0, 1}, {1, 2}, {3, 4}}, .incident_cells = {{0}, {0, 1}, {1}, {2}, {2}, {}}, .edges = {}, .shared_edges = {}, .faces = {}, .shared_faces = {}};
   case IGeometry::Type::Triangle:
-    return {type, 7, {{0, 1, 2}, {1, 3, 2}, {0, 4, 5}}, {{0, 2}, {0, 1}, {0, 1}, {1}, {2}, {2}, {}}, {{0, 1}, {0, 2}, {1, 2}, {1, 3}, {2, 3}}, {{1, 2}}, {}, {}};
+    return {.type = type,
+            .vertex_count = 7,
+            .cells = {{0, 1, 2}, {1, 3, 2}, {0, 4, 5}},
+            .incident_cells = {{0, 2}, {0, 1}, {0, 1}, {1}, {2}, {2}, {}},
+            .edges = {{0, 1}, {0, 2}, {1, 2}, {1, 3}, {2, 3}},
+            .shared_edges = {{1, 2}},
+            .faces = {},
+            .shared_faces = {}};
   case IGeometry::Type::Quad:
-    return {type, 10, {{0, 1, 2, 3}, {1, 4, 5, 2}, {0, 6, 7, 8}}, {{0, 2}, {0, 1}, {0, 1}, {0}, {1}, {1}, {2}, {2}, {2}, {}}, {{0, 1}, {0, 3}, {1, 2}, {2, 3}, {1, 4}, {4, 5}, {2, 5}}, {{1, 2}},
-            {},   {}};
+    return {.type = type,
+            .vertex_count = 10,
+            .cells = {{0, 1, 2, 3}, {1, 4, 5, 2}, {0, 6, 7, 8}},
+            .incident_cells = {{0, 2}, {0, 1}, {0, 1}, {0}, {1}, {1}, {2}, {2}, {2}, {}},
+            .edges = {{0, 1}, {0, 3}, {1, 2}, {2, 3}, {1, 4}, {4, 5}, {2, 5}},
+            .shared_edges = {{1, 2}},
+            .faces = {},
+            .shared_faces = {}};
   case IGeometry::Type::Tetrahedral:
-    return {type,
-            9,
-            {{0, 1, 2, 3}, {0, 2, 1, 4}, {0, 5, 6, 7}},
-            {{0, 1, 2}, {0, 1}, {0, 1}, {0}, {1}, {2}, {2}, {2}, {}},
-            {{0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3}, {0, 4}, {1, 4}, {2, 4}},
-            {{0, 1}, {0, 2}, {1, 2}},
-            {{0, 1, 2}, {0, 1, 3}, {0, 2, 3}, {1, 2, 3}, {0, 1, 4}, {0, 2, 4}, {1, 2, 4}},
-            {{0, 1, 2}}};
+    return {.type = type,
+            .vertex_count = 9,
+            .cells = {{0, 1, 2, 3}, {0, 2, 1, 4}, {0, 5, 6, 7}},
+            .incident_cells = {{0, 1, 2}, {0, 1}, {0, 1}, {0}, {1}, {2}, {2}, {2}, {}},
+            .edges = {{0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3}, {0, 4}, {1, 4}, {2, 4}},
+            .shared_edges = {{0, 1}, {0, 2}, {1, 2}},
+            .faces = {{0, 1, 2}, {0, 1, 3}, {0, 2, 3}, {1, 2, 3}, {0, 1, 4}, {0, 2, 4}, {1, 2, 4}},
+            .shared_faces = {{0, 1, 2}}};
   case IGeometry::Type::Hexahedral:
-    return {type,
-            20,
-            {{0, 1, 2, 3, 4, 5, 6, 7}, {1, 8, 9, 2, 5, 10, 11, 6}, {0, 12, 13, 14, 15, 16, 17, 18}},
-            {{0, 2}, {0, 1}, {0, 1}, {0}, {0}, {0, 1}, {0, 1}, {0}, {1}, {1}, {1}, {1}, {2}, {2}, {2}, {2}, {2}, {2}, {2}, {}},
-            {{0, 1}, {1, 2}, {2, 3}, {0, 3}, {0, 4}, {1, 5}, {2, 6}, {3, 7}, {4, 5}, {5, 6}, {6, 7}, {4, 7}, {1, 8}, {8, 9}, {2, 9}, {8, 10}, {9, 11}, {5, 10}, {10, 11}, {6, 11}},
-            {{1, 2}, {1, 5}, {2, 6}, {5, 6}},
-            {{0, 1, 4, 5}, {1, 2, 5, 6}, {2, 3, 6, 7}, {0, 3, 4, 7}, {0, 1, 2, 3}, {4, 5, 6, 7}, {1, 5, 8, 10}, {8, 9, 10, 11}, {2, 6, 9, 11}, {1, 2, 8, 9}, {5, 6, 10, 11}},
-            {{1, 2, 5, 6}}};
+    return {.type = type,
+            .vertex_count = 20,
+            .cells = {{0, 1, 2, 3, 4, 5, 6, 7}, {1, 8, 9, 2, 5, 10, 11, 6}, {0, 12, 13, 14, 15, 16, 17, 18}},
+            .incident_cells = {{0, 2}, {0, 1}, {0, 1}, {0}, {0}, {0, 1}, {0, 1}, {0}, {1}, {1}, {1}, {1}, {2}, {2}, {2}, {2}, {2}, {2}, {2}, {}},
+            .edges = {{0, 1}, {1, 2}, {2, 3}, {0, 3}, {0, 4}, {1, 5}, {2, 6}, {3, 7}, {4, 5}, {5, 6}, {6, 7}, {4, 7}, {1, 8}, {8, 9}, {2, 9}, {8, 10}, {9, 11}, {5, 10}, {10, 11}, {6, 11}},
+            .shared_edges = {{1, 2}, {1, 5}, {2, 6}, {5, 6}},
+            .faces = {{0, 1, 4, 5}, {1, 2, 5, 6}, {2, 3, 6, 7}, {0, 3, 4, 7}, {0, 1, 2, 3}, {4, 5, 6, 7}, {1, 5, 8, 10}, {8, 9, 10, 11}, {2, 6, 9, 11}, {1, 2, 8, 9}, {5, 6, 10, 11}},
+            .shared_faces = {{1, 2, 5, 6}}};
   default:
     FAIL("Unsupported analytical mesh fixture");
     return {};
@@ -166,7 +179,7 @@ INodeGeometry1D* CreateMesh(DataStructure& dataStructure, const MeshCase& fixtur
     FAIL("Unsupported analytical mesh fixture");
   }
   REQUIRE(geometryPtr != nullptr);
-  auto* verticesPtr = Float32Array::Create(dataStructure, "Vertices", std::make_shared<DataStore<float32>>(ShapeType{fixture.vertexCount}, ShapeType{3}, 0.0F), geometryPtr->getId());
+  auto* verticesPtr = Float32ArrayType::Create(dataStructure, "Vertices", std::make_shared<DataStore<float32>>(ShapeType{fixture.vertex_count}, ShapeType{3}, 0.0F), geometryPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   geometryPtr->setVertices(*verticesPtr);
 
@@ -179,7 +192,7 @@ INodeGeometry1D* CreateMesh(DataStructure& dataStructure, const MeshCase& fixtur
       connectivityStore->setValue(cellIndex * components + componentIndex, fixture.cells[cellIndex][componentIndex]);
     }
   }
-  auto* connectivityPtr = UInt64Array::Create(dataStructure, "Connectivity", connectivityStore, geometryPtr->getId());
+  auto* connectivityPtr = UInt64ArrayType::Create(dataStructure, "Connectivity", connectivityStore, geometryPtr->getId());
   REQUIRE(connectivityPtr != nullptr);
   if(auto* volumePtr = dynamic_cast<INodeGeometry3D*>(geometryPtr); volumePtr != nullptr)
   {
@@ -201,7 +214,7 @@ INodeGeometry1D* CreateMesh(DataStructure& dataStructure, const MeshCase& fixtur
  * @param listsPtr Actual incidence or neighbor lists.
  * @param expected Hand-derived element IDs in ascending order.
  */
-void RequireLists(const INodeGeometry1D::ElementDynamicList* listsPtr, const std::vector<std::vector<uint64>>& expected)
+void RequireLists(const INodeGeometry1D::ElementDynamicListType* listsPtr, const std::vector<std::vector<uint64>>& expected)
 {
   REQUIRE(listsPtr != nullptr);
   REQUIRE(listsPtr->size() == expected.size());
@@ -213,9 +226,9 @@ void RequireLists(const INodeGeometry1D::ElementDynamicList* listsPtr, const std
     std::vector<uint64> actual;
     if(count > 0)
     {
-      const auto* values = listsPtr->getElementListPointer(listIndex);
-      REQUIRE(values != nullptr);
-      actual.assign(values, values + count);
+      const auto* valuesPtr = listsPtr->getElementListPointer(listIndex);
+      REQUIRE(valuesPtr != nullptr);
+      actual.assign(valuesPtr, valuesPtr + count);
     }
     std::sort(actual.begin(), actual.end());
     CHECK(actual == expected[listIndex]);
@@ -227,7 +240,7 @@ void RequireLists(const INodeGeometry1D::ElementDynamicList* listsPtr, const std
  * @param arrayPtr Extracted edge or face array.
  * @param expected Hand-derived canonical records.
  */
-void RequireTopology(const UInt64Array* arrayPtr, const std::set<std::vector<uint64>>& expected)
+void RequireTopology(const UInt64ArrayType* arrayPtr, const std::set<std::vector<uint64>>& expected)
 {
   REQUIRE(arrayPtr != nullptr);
   REQUIRE(arrayPtr->getNumberOfTuples() == expected.size());
@@ -260,14 +273,14 @@ RectGridGeom* CreateRectGrid(DataStructure& dataStructure)
   auto* geometryPtr = RectGridGeom::Create(dataStructure, "Grid");
   REQUIRE(geometryPtr != nullptr);
   geometryPtr->setDimensions({2, 2, 2});
-  std::array<Float32Array*, 3> bounds{};
+  std::array<Float32ArrayType*, 3> bounds{};
   const std::array<std::string, 3> names = {"X", "Y", "Z"};
   for(usize axisIndex = 0; axisIndex < bounds.size(); ++axisIndex)
   {
     auto store = std::make_shared<FailingResidentStore<float32>>(ShapeType{3}, ShapeType{1}, 0.0F);
     store->setValue(1, 1.0F);
     store->setValue(2, 3.0F);
-    bounds[axisIndex] = Float32Array::Create(dataStructure, names[axisIndex], store, geometryPtr->getId());
+    bounds[axisIndex] = Float32ArrayType::Create(dataStructure, names[axisIndex], store, geometryPtr->getId());
     REQUIRE(bounds[axisIndex] != nullptr);
   }
   REQUIRE(geometryPtr->setBounds(bounds[0], bounds[1], bounds[2]).valid());
@@ -290,8 +303,8 @@ TEST_CASE("Geometry list resize preserves resident failures and context", "[simp
   if(listKind == 0)
   {
     auto store = std::make_shared<FailingResidentStore<float32>>(ShapeType{2}, ShapeType{3}, 13.0F);
-    store->rejectResize = true;
-    auto* arrayPtr = Float32Array::Create(dataStructure, "Vertices", store, geometryPtr->getId());
+    store->reject_resize = true;
+    auto* arrayPtr = Float32ArrayType::Create(dataStructure, "Vertices", store, geometryPtr->getId());
     REQUIRE(arrayPtr != nullptr);
     geometryPtr->setVertices(*arrayPtr);
     result = geometryPtr->resizeVertexList(k_TargetTuples);
@@ -306,8 +319,8 @@ TEST_CASE("Geometry list resize preserves resident failures and context", "[simp
   {
     const usize components = listKind == 1 ? 2 : (listKind == 2 ? 4 : 8);
     auto store = std::make_shared<FailingResidentStore<uint64>>(ShapeType{2}, ShapeType{components}, uint64{13});
-    store->rejectResize = true;
-    auto* arrayPtr = UInt64Array::Create(dataStructure, "Indices", store, geometryPtr->getId());
+    store->reject_resize = true;
+    auto* arrayPtr = UInt64ArrayType::Create(dataStructure, "Indices", store, geometryPtr->getId());
     REQUIRE(arrayPtr != nullptr);
     if(listKind == 1)
     {
@@ -335,7 +348,7 @@ TEST_CASE("Geometry list resize preserves resident failures and context", "[simp
   CHECK(result.errors().front().message.find("Resize Geometry") != std::string::npos);
   CHECK(result.errors().front().message.find(listNames[listKind]) != std::string::npos);
   CHECK(result.errors().front().message.find("19") != std::string::npos);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("Geometry connectivity computes exact incidence and complete-boundary neighbors", "[simplnx][GeometryBulkContracts]")
@@ -347,10 +360,10 @@ TEST_CASE("Geometry connectivity computes exact incidence and complete-boundary 
   DataStructure dataStructure;
   auto* geometryPtr = CreateMesh(dataStructure, fixture, empty ? 0 : fixture.cells.size());
   REQUIRE(geometryPtr->findElementsContainingVert(false).valid());
-  RequireLists(geometryPtr->getElementsContainingVert(), empty ? std::vector<std::vector<uint64>>(fixture.vertexCount) : fixture.incidentCells);
+  RequireLists(geometryPtr->getElementsContainingVert(), empty ? std::vector<std::vector<uint64>>(fixture.vertex_count) : fixture.incident_cells);
   REQUIRE(geometryPtr->findElementNeighbors(false).valid());
   RequireLists(geometryPtr->getElementNeighbors(), empty ? std::vector<std::vector<uint64>>{} : std::vector<std::vector<uint64>>{{1}, {0}, {}});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("Geometry extraction computes exact unique and unshared topology", "[simplnx][GeometryBulkContracts]")
@@ -370,7 +383,7 @@ TEST_CASE("Geometry extraction computes exact unique and unshared topology", "[s
   REQUIRE(geometryPtr->findEdges(false).valid());
   RequireTopology(geometryPtr->getEdges(), fixture.edges);
   REQUIRE(geometryPtr->findUnsharedEdges(false).valid());
-  for(const auto& edge : fixture.sharedEdges)
+  for(const auto& edge : fixture.shared_edges)
   {
     fixture.edges.erase(edge);
   }
@@ -381,13 +394,13 @@ TEST_CASE("Geometry extraction computes exact unique and unshared topology", "[s
     REQUIRE(volumePtr->findFaces(false).valid());
     RequireTopology(volumePtr->getFaces(), fixture.faces);
     REQUIRE(volumePtr->findUnsharedFaces(false).valid());
-    for(const auto& face : fixture.sharedFaces)
+    for(const auto& face : fixture.shared_faces)
     {
       fixture.faces.erase(face);
     }
     RequireTopology(volumePtr->getUnsharedFaces(), fixture.faces);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("Geometry incidence and neighbors clear cached IDs after bulk-read failures", "[simplnx][GeometryBulkContracts]")
@@ -400,12 +413,12 @@ TEST_CASE("Geometry incidence and neighbors clear cached IDs after bulk-read fai
   REQUIRE(geometryPtr->findElementNeighbors(false).valid());
   REQUIRE(geometryPtr->getElementContainingVertId().has_value());
   REQUIRE(geometryPtr->getElementNeighborsId().has_value());
-  UInt64Array* connectivityPtr = nullptr;
-  REQUIRE_NOTHROW(connectivityPtr = &dataStructure.getDataRefAs<UInt64Array>(DataPath({"Mesh", "Connectivity"})));
+  UInt64ArrayType* connectivityPtr = nullptr;
+  REQUIRE_NOTHROW(connectivityPtr = &dataStructure.getDataRefAs<UInt64ArrayType>(DataPath({"Mesh", "Connectivity"})));
   auto* storePtr = dynamic_cast<FailingResidentStore<uint64>*>(connectivityPtr->getDataStore());
   REQUIRE(storePtr != nullptr);
-  storePtr->readCalls = 0;
-  storePtr->failingReadCall = failingRead;
+  storePtr->read_calls = 0;
+  storePtr->failing_read_call = failingRead;
   RequireInjectedError(geometryPtr->findElementNeighbors(true), "read");
   CHECK_FALSE(geometryPtr->getElementNeighborsId().has_value());
   if(failingRead < 3)
@@ -416,7 +429,7 @@ TEST_CASE("Geometry incidence and neighbors clear cached IDs after bulk-read fai
   {
     CHECK(geometryPtr->getElementContainingVertId().has_value());
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("Geometry extraction clears cached IDs after output-resize failures", "[simplnx][GeometryBulkContracts]")
@@ -433,10 +446,10 @@ TEST_CASE("Geometry extraction clears cached IDs after output-resize failures", 
     REQUIRE((unshared ? geometryPtr->findUnsharedEdges(false) : geometryPtr->findEdges(false)).valid());
     const auto* outputPtr = unshared ? geometryPtr->getUnsharedEdges() : geometryPtr->getEdges();
     REQUIRE(outputPtr != nullptr);
-    auto* mutableOutputPtr = dataStructure.getDataAs<UInt64Array>(outputPtr->getId());
+    auto* mutableOutputPtr = dataStructure.getDataAs<UInt64ArrayType>(outputPtr->getId());
     REQUIRE(mutableOutputPtr != nullptr);
     auto store = std::make_shared<FailingResidentStore<uint64>>(outputPtr->getTupleShape(), outputPtr->getComponentShape(), uint64{77});
-    store->rejectResize = true;
+    store->reject_resize = true;
     auto setDataStoreResult3 = mutableOutputPtr->setDataStore(store);
     SIMPLNX_RESULT_REQUIRE_VALID(setDataStoreResult3);
     RequireInjectedError(unshared ? geometryPtr->findUnsharedEdges(true) : geometryPtr->findEdges(true), "resize");
@@ -454,10 +467,10 @@ TEST_CASE("Geometry extraction clears cached IDs after output-resize failures", 
       REQUIRE((unshared ? volumePtr->findUnsharedFaces(false) : volumePtr->findFaces(false)).valid());
       const auto* outputPtr = unshared ? volumePtr->getUnsharedFaces() : volumePtr->getFaces();
       REQUIRE(outputPtr != nullptr);
-      auto* mutableOutputPtr = dataStructure.getDataAs<UInt64Array>(outputPtr->getId());
+      auto* mutableOutputPtr = dataStructure.getDataAs<UInt64ArrayType>(outputPtr->getId());
       REQUIRE(mutableOutputPtr != nullptr);
       auto store = std::make_shared<FailingResidentStore<uint64>>(outputPtr->getTupleShape(), outputPtr->getComponentShape(), uint64{77});
-      store->rejectResize = true;
+      store->reject_resize = true;
       auto setDataStoreResult2 = mutableOutputPtr->setDataStore(store);
       SIMPLNX_RESULT_REQUIRE_VALID(setDataStoreResult2);
       RequireInjectedError(unshared ? volumePtr->findUnsharedFaces(true) : volumePtr->findFaces(true), "resize");
@@ -468,7 +481,7 @@ TEST_CASE("Geometry extraction clears cached IDs after output-resize failures", 
       }
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("RectGrid element sizes clear cached IDs after invalid bounds", "[simplnx][GeometryBulkContracts]")
@@ -477,7 +490,7 @@ TEST_CASE("RectGrid element sizes clear cached IDs after invalid bounds", "[simp
   CAPTURE(axisIndex);
   DataStructure dataStructure;
   auto* geometryPtr = CreateRectGrid(dataStructure);
-  const std::array<Float32Array*, 3> bounds = {geometryPtr->getXBounds(), geometryPtr->getYBounds(), geometryPtr->getZBounds()};
+  const std::array<Float32ArrayType*, 3> bounds = {geometryPtr->getXBounds(), geometryPtr->getYBounds(), geometryPtr->getZBounds()};
   auto* boundsPtr = bounds[axisIndex];
   REQUIRE(boundsPtr != nullptr);
   int32 expectedError = -1833;
@@ -501,7 +514,7 @@ TEST_CASE("RectGrid element sizes clear cached IDs after invalid bounds", "[simp
   REQUIRE(result.errors().size() == 1);
   CHECK(result.errors().front().code == expectedError);
   CHECK_FALSE(geometryPtr->getElementSizesId().has_value());
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("RectGrid element sizes return bulk failures and clear cached IDs", "[simplnx][GeometryBulkContracts]")
@@ -512,21 +525,21 @@ TEST_CASE("RectGrid element sizes return bulk failures and clear cached IDs", "[
   {
     const usize axisIndex = GENERATE(0, 1, 2);
     CAPTURE(axisIndex);
-    const std::array<Float32Array*, 3> bounds = {geometryPtr->getXBounds(), geometryPtr->getYBounds(), geometryPtr->getZBounds()};
+    const std::array<Float32ArrayType*, 3> bounds = {geometryPtr->getXBounds(), geometryPtr->getYBounds(), geometryPtr->getZBounds()};
     auto* storePtr = dynamic_cast<FailingResidentStore<float32>*>(bounds[axisIndex]->getDataStore());
     REQUIRE(storePtr != nullptr);
-    storePtr->readCalls = 0;
-    storePtr->failingReadCall = 1;
+    storePtr->read_calls = 0;
+    storePtr->failing_read_call = 1;
     RequireInjectedError(geometryPtr->findElementSizes(true), "read");
   }
   SECTION("Sizes write")
   {
     const usize failingWrite = GENERATE(1, 2);
     CAPTURE(failingWrite);
-    auto* sizesPtr = dataStructure.getDataAs<Float32Array>(*geometryPtr->getElementSizesId());
+    auto* sizesPtr = dataStructure.getDataAs<Float32ArrayType>(*geometryPtr->getElementSizesId());
     REQUIRE(sizesPtr != nullptr);
     auto store = std::make_shared<FailingResidentStore<float32>>(sizesPtr->getTupleShape(), sizesPtr->getComponentShape(), -77.0F);
-    store->failingWriteCall = failingWrite;
+    store->failing_write_call = failingWrite;
     auto setDataStoreResult = sizesPtr->setDataStore(store);
     SIMPLNX_RESULT_REQUIRE_VALID(setDataStoreResult);
     RequireInjectedError(geometryPtr->findElementSizes(true), "write");
@@ -537,17 +550,17 @@ TEST_CASE("RectGrid element sizes return bulk failures and clear cached IDs", "[
     }
   }
   CHECK_FALSE(geometryPtr->getElementSizesId().has_value());
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("GeometryUtilities computes triangle normals with float arithmetic", "[simplnx][GeometryBulkContracts][GeometryUtilities]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool preCancelled = GENERATE(false, true);
   CAPTURE(scenario, preCancelled);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   const DataPath geometryPath({"NormalMesh"});
   const DataPath verticesPath = geometryPath.createChildPath("Vertices");
@@ -557,15 +570,15 @@ TEST_CASE("GeometryUtilities computes triangle normals with float arithmetic", "
   auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, geometryPath.getTargetName());
   REQUIRE(triangleGeomPtr != nullptr);
 
-  auto verticesStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, verticesPath, {6}, {3});
-  auto facesStore = DataStoreUtilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, facesPath, {4}, {3});
-  auto normalsStore = DataStoreUtilities::CreateDataStore<float64>(dataStructure, normalsPath, {4}, {3});
+  auto verticesStore = data_store_utilities::CreateDataStore<float32>(dataStructure, verticesPath, {6}, {3});
+  auto facesStore = data_store_utilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, facesPath, {4}, {3});
+  auto normalsStore = data_store_utilities::CreateDataStore<float64>(dataStructure, normalsPath, {4}, {3});
   REQUIRE(verticesStore != nullptr);
   REQUIRE(facesStore != nullptr);
   REQUIRE(normalsStore != nullptr);
-  auto* verticesPtr = Float32Array::Create(dataStructure, verticesPath.getTargetName(), verticesStore, triangleGeomPtr->getId());
+  auto* verticesPtr = Float32ArrayType::Create(dataStructure, verticesPath.getTargetName(), verticesStore, triangleGeomPtr->getId());
   auto* facesPtr = DataArray<IGeometry::MeshIndexType>::Create(dataStructure, facesPath.getTargetName(), facesStore, triangleGeomPtr->getId());
-  auto* normalsPtr = Float64Array::Create(dataStructure, normalsPath.getTargetName(), normalsStore, triangleGeomPtr->getId());
+  auto* normalsPtr = Float64ArrayType::Create(dataStructure, normalsPath.getTargetName(), normalsStore, triangleGeomPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   REQUIRE(facesPtr != nullptr);
   REQUIRE(normalsPtr != nullptr);
@@ -586,7 +599,7 @@ TEST_CASE("GeometryUtilities computes triangle normals with float arithmetic", "
   normalsStore->fill(k_OutputSentinel);
 
   const std::atomic_bool shouldCancel{preCancelled};
-  auto result = algorithmTestScope.execute([&] { return GeometryUtilities::ComputeTriangleNormals(triangleGeomPtr, *normalsStore, shouldCancel); });
+  auto result = algorithmTestScope.execute([&] { return geometry_utilities::ComputeTriangleNormals(triangleGeomPtr, *normalsStore, shouldCancel); });
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   REQUIRE(triangleGeomPtr->getVertices() == verticesPtr);
@@ -619,5 +632,5 @@ TEST_CASE("GeometryUtilities computes triangle normals with float arithmetic", "
     CAPTURE(valueIndex);
     CHECK(actualNormals[valueIndex] == (preCancelled ? k_OutputSentinel : expectedNormals[valueIndex]));
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -9,9 +9,9 @@
 #include <catch2/catch.hpp>
 
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
-namespace ComputeTriangleGeomSizesFilterTest
+namespace compute_triangle_geom_sizes_filter_test
 {
 const std::string k_TriangleGeometryName = "TriangleDataContainer";
 const std::string k_FaceLabelsName = "FaceLabels";
@@ -23,15 +23,15 @@ const DataPath k_GeometryPath = DataPath({k_TriangleGeometryName});
 const DataPath k_FeatureAttributeMatrixPath = k_GeometryPath.createChildPath(k_FaceFeatureName);
 const DataPath k_FaceLabelsPath = k_GeometryPath.createChildPath(k_FaceAttributeMatrixName).createChildPath(k_FaceLabelsName);
 
-} // namespace ComputeTriangleGeomSizesFilterTest
+} // namespace compute_triangle_geom_sizes_filter_test
 
-using namespace ComputeTriangleGeomSizesFilterTest;
+using namespace compute_triangle_geom_sizes_filter_test;
 
 TEST_CASE("SimplnxCore::ComputeTriangleGeomSizes", "[SimplnxCore][ComputeTriangleGeomSizes]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "12_IN625_GBCD.tar.gz", "12_IN625_GBCD");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "12_IN625_GBCD.tar.gz", "12_IN625_GBCD");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/12_IN625_GBCD/12_IN625_GBCD.dream3d", unit_test::k_TestFilesDir));
@@ -51,7 +51,7 @@ TEST_CASE("SimplnxCore::ComputeTriangleGeomSizes", "[SimplnxCore][ComputeTriangl
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -68,7 +68,7 @@ TEST_CASE("SimplnxCore::ComputeTriangleGeomSizes", "[SimplnxCore][ComputeTriangl
     // The corrected version of the filter ensures there are no negative values. instead of
     // uploading a new test file, we can just safely ensure the same applies to the
     // exemplar data.
-    auto& exemplarData = dataStructure.getDataRefAs<Float32Array>(kExemplarArrayPath);
+    auto& exemplarData = dataStructure.getDataRefAs<Float32ArrayType>(kExemplarArrayPath);
     auto& resultStore = exemplarData.getIDataStoreRefAs<AbstractDataStore<float32>>();
     for(auto valueProxy : resultStore)
     {
@@ -86,5 +86,5 @@ TEST_CASE("SimplnxCore::ComputeTriangleGeomSizes", "[SimplnxCore][ComputeTriangl
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_triangle_geom_sizes.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

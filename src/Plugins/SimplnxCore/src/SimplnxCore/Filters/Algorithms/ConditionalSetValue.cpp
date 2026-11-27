@@ -46,13 +46,13 @@ struct ReplaceValueInArrayDirectFunctor
   {
     auto& dataStore = workingArray.template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
 
-    const ScalarType removeVal = StringInterpretationUtilities::Convert<ScalarType>(removeValue).value();
-    const ScalarType replaceVal = StringInterpretationUtilities::Convert<ScalarType>(replaceValue).value();
+    const ScalarType removeVal = string_interpretation_utilities::Convert<ScalarType>(removeValue).value();
+    const ScalarType replaceVal = string_interpretation_utilities::Convert<ScalarType>(replaceValue).value();
     const usize size = dataStore.getNumberOfTuples() * dataStore.getNumberOfComponents();
 
-    if(auto* contiguousStore = dynamic_cast<DataStore<ScalarType>*>(&dataStore); contiguousStore != nullptr)
+    if(auto* contiguousStorePtr = dynamic_cast<DataStore<ScalarType>*>(&dataStore); contiguousStorePtr != nullptr)
     {
-      ScalarType* values = contiguousStore->data();
+      ScalarType* valuesPtr = contiguousStorePtr->data();
       for(usize offset = 0; offset < size; offset += k_TargetChunkValues)
       {
         if(shouldCancel)
@@ -63,9 +63,9 @@ struct ReplaceValueInArrayDirectFunctor
         const usize end = std::min(offset + k_TargetChunkValues, size);
         for(usize index = offset; index < end; index++)
         {
-          if(values[index] == removeVal)
+          if(valuesPtr[index] == removeVal)
           {
-            values[index] = replaceVal;
+            valuesPtr[index] = replaceVal;
           }
         }
       }
@@ -118,12 +118,12 @@ struct ConditionalReplaceValueDirectFunctor
       auto& targetStore = targetDataArray.getDataStoreRef();
       const auto& conditionalStore = conditionalDataArray.getDataStoreRef();
 
-      auto* contiguousTargetStore = dynamic_cast<DataStore<TargetType>*>(&targetStore);
-      const auto* contiguousConditionalStore = dynamic_cast<const DataStore<ConditionalType>*>(&conditionalStore);
-      if(contiguousTargetStore != nullptr && contiguousConditionalStore != nullptr)
+      auto* contiguousTargetStorePtr = dynamic_cast<DataStore<TargetType>*>(&targetStore);
+      const auto* contiguousConditionalStorePtr = dynamic_cast<const DataStore<ConditionalType>*>(&conditionalStore);
+      if(contiguousTargetStorePtr != nullptr && contiguousConditionalStorePtr != nullptr)
       {
-        TargetType* targetValues = contiguousTargetStore->data();
-        const ConditionalType* conditionalValues = contiguousConditionalStore->data();
+        TargetType* targetValuesPtr = contiguousTargetStorePtr->data();
+        const ConditionalType* conditionalValuesPtr = contiguousConditionalStorePtr->data();
         if(numComps == 1)
         {
           for(usize tupleOffset = 0; tupleOffset < numTuples; tupleOffset += chunkTuples)
@@ -136,9 +136,9 @@ struct ConditionalReplaceValueDirectFunctor
             const usize tupleEnd = std::min(tupleOffset + chunkTuples, numTuples);
             for(usize tupleIndex = tupleOffset; tupleIndex < tupleEnd; tupleIndex++)
             {
-              if(static_cast<bool>(conditionalValues[tupleIndex]) != invertMask)
+              if(static_cast<bool>(conditionalValuesPtr[tupleIndex]) != invertMask)
               {
-                targetValues[tupleIndex] = replaceValue;
+                targetValuesPtr[tupleIndex] = replaceValue;
               }
             }
           }
@@ -155,9 +155,9 @@ struct ConditionalReplaceValueDirectFunctor
           const usize tupleEnd = std::min(tupleOffset + chunkTuples, numTuples);
           for(usize tupleIndex = tupleOffset; tupleIndex < tupleEnd; tupleIndex++)
           {
-            if(static_cast<bool>(conditionalValues[tupleIndex]) != invertMask)
+            if(static_cast<bool>(conditionalValuesPtr[tupleIndex]) != invertMask)
             {
-              std::fill_n(targetValues + tupleIndex * numComps, numComps, replaceValue);
+              std::fill_n(targetValuesPtr + tupleIndex * numComps, numComps, replaceValue);
             }
           }
         }
@@ -196,7 +196,7 @@ struct ConditionalReplaceValueDirectTargetFunctor
   template <typename TargetType>
   Result<> operator()(IDataArray& targetArray, const IDataArray& conditionalArray, const std::string& replaceValue, bool invertMask, const std::atomic_bool& shouldCancel) const
   {
-    Result<TargetType> conversionResult = StringInterpretationUtilities::Convert<TargetType>(replaceValue);
+    Result<TargetType> conversionResult = string_interpretation_utilities::Convert<TargetType>(replaceValue);
     if(conversionResult.invalid())
     {
       return MakeErrorResult<>(-4000, "Input String Value could not be converted to the appropriate numeric type.");
@@ -216,8 +216,8 @@ struct ReplaceValueInArrayScanlineFunctor
   Result<> operator()(IDataArray& workingArray, const std::string& removeValue, const std::string& replaceValue, const std::atomic_bool& shouldCancel) const
   {
     auto& dataStore = workingArray.template getIDataStoreRefAs<AbstractDataStore<ScalarType>>();
-    const ScalarType removeVal = StringInterpretationUtilities::Convert<ScalarType>(removeValue).value();
-    const ScalarType replaceVal = StringInterpretationUtilities::Convert<ScalarType>(replaceValue).value();
+    const ScalarType removeVal = string_interpretation_utilities::Convert<ScalarType>(removeValue).value();
+    const ScalarType replaceVal = string_interpretation_utilities::Convert<ScalarType>(replaceValue).value();
     const usize numTuples = dataStore.getNumberOfTuples();
     const usize numComps = dataStore.getNumberOfComponents();
     const usize chunkTuples = std::max<usize>(1, k_TargetChunkValues / numComps);
@@ -346,7 +346,7 @@ struct ConditionalReplaceValueScanlineTargetFunctor
   template <typename TargetType>
   Result<> operator()(IDataArray& targetArray, const IDataArray& conditionalArray, const std::string& replaceValue, bool invertMask, const std::atomic_bool& shouldCancel) const
   {
-    Result<TargetType> conversionResult = StringInterpretationUtilities::Convert<TargetType>(replaceValue);
+    Result<TargetType> conversionResult = string_interpretation_utilities::Convert<TargetType>(replaceValue);
     if(conversionResult.invalid())
     {
       return MakeErrorResult<>(-4000, "Input String Value could not be converted to the appropriate numeric type.");
@@ -385,15 +385,15 @@ public:
    */
   Result<> operator()()
   {
-    auto& targetArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedArrayPath);
-    if(m_InputValues->UseConditional)
+    auto& targetArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->selected_array_path);
+    if(m_InputValues->use_conditional)
     {
-      const auto& conditionalArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ConditionalArrayPath);
-      return ExecuteDataFunction(ConditionalReplaceValueDirectTargetFunctor{}, targetArray.getDataType(), targetArray, conditionalArray, m_InputValues->ReplaceValue, m_InputValues->InvertMask,
+      const auto& conditionalArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->conditional_array_path);
+      return ExecuteDataFunction(ConditionalReplaceValueDirectTargetFunctor{}, targetArray.getDataType(), targetArray, conditionalArray, m_InputValues->replace_value, m_InputValues->invert_mask,
                                  m_ShouldCancel);
     }
 
-    return ExecuteDataFunction(ReplaceValueInArrayDirectFunctor{}, targetArray.getDataType(), targetArray, m_InputValues->RemoveValue, m_InputValues->ReplaceValue, m_ShouldCancel);
+    return ExecuteDataFunction(ReplaceValueInArrayDirectFunctor{}, targetArray.getDataType(), targetArray, m_InputValues->remove_value, m_InputValues->replace_value, m_ShouldCancel);
   }
 
 private:
@@ -431,15 +431,15 @@ public:
    */
   Result<> operator()()
   {
-    auto& targetArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedArrayPath);
-    if(m_InputValues->UseConditional)
+    auto& targetArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->selected_array_path);
+    if(m_InputValues->use_conditional)
     {
-      const auto& conditionalArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ConditionalArrayPath);
-      return ExecuteDataFunction(ConditionalReplaceValueScanlineTargetFunctor{}, targetArray.getDataType(), targetArray, conditionalArray, m_InputValues->ReplaceValue, m_InputValues->InvertMask,
+      const auto& conditionalArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->conditional_array_path);
+      return ExecuteDataFunction(ConditionalReplaceValueScanlineTargetFunctor{}, targetArray.getDataType(), targetArray, conditionalArray, m_InputValues->replace_value, m_InputValues->invert_mask,
                                  m_ShouldCancel);
     }
 
-    return ExecuteDataFunction(ReplaceValueInArrayScanlineFunctor{}, targetArray.getDataType(), targetArray, m_InputValues->RemoveValue, m_InputValues->ReplaceValue, m_ShouldCancel);
+    return ExecuteDataFunction(ReplaceValueInArrayScanlineFunctor{}, targetArray.getDataType(), targetArray, m_InputValues->remove_value, m_InputValues->replace_value, m_ShouldCancel);
   }
 
 private:
@@ -457,14 +457,12 @@ ConditionalSetValue::ConditionalSetValue(DataStructure& dataStructure, const IFi
 {
 }
 
-ConditionalSetValue::~ConditionalSetValue() noexcept = default;
-
 Result<> ConditionalSetValue::operator()()
 {
-  auto& targetArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedArrayPath);
-  if(m_InputValues->UseConditional)
+  auto& targetArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->selected_array_path);
+  if(m_InputValues->use_conditional)
   {
-    const auto& conditionalArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ConditionalArrayPath);
+    const auto& conditionalArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->conditional_array_path);
     return DispatchAlgorithm<ConditionalSetValueDirect, ConditionalSetValueScanline>({&targetArray, &conditionalArray}, m_DataStructure, m_ShouldCancel, m_InputValues);
   }
 

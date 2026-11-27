@@ -56,14 +56,14 @@ Parameters IterativeClosestPointFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<UInt64Parameter>(k_NumIterations_Key, "Number of Iterations", "The number of times to run the algorithm [more increases accuracy]", 1));
+  params.insert(std::make_unique<UInt64ParameterType>(k_NumIterations_Key, "Number of Iterations", "The number of times to run the algorithm [more increases accuracy]", 1));
   params.insert(std::make_unique<BoolParameter>(k_ApplyTransformation_Key, "Apply Transformation to Moving Geometry", "If checked, geometry will be updated implicitly", false));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_MovingVertexPath_Key, "Moving Vertex Geometry", "The geometry to align [mutable]", DataPath(),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex}));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TargetVertexPath_Key, "Target Vertex Geometry", "The geometry to be matched against [immutable]", DataPath(),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_TransformArrayPath_Key, "Output Transform Array", "This is the array to store the transform matrix in", DataPath()));
@@ -77,14 +77,14 @@ IFilter::VersionType IterativeClosestPointFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer IterativeClosestPointFilter::clone() const
+IFilter::UniquePointerType IterativeClosestPointFilter::clone() const
 {
   return std::make_unique<IterativeClosestPointFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto movingVertexPath = filterArgs.value<DataPath>(k_MovingVertexPath_Key);
   auto numIterations = filterArgs.value<uint64>(k_NumIterations_Key);
@@ -93,7 +93,7 @@ IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataSt
   if(numIterations < 1)
   {
     auto ss = fmt::format("Must perform at least 1 iteration. Current value: {}", numIterations);
-    return {MakeErrorResult<OutputActions>(k_BadNumIterations, ss)};
+    return {.output_actions = MakeErrorResult<OutputActions>(k_BadNumIterations, ss)};
   }
 
   auto action = std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{4, 4}, std::vector<usize>{1}, transformArrayPath);
@@ -105,37 +105,37 @@ IFilter::PreflightResult IterativeClosestPointFilter::preflightImpl(const DataSt
   auto applyTransformation = filterArgs.value<bool>(k_ApplyTransformation_Key);
   if(applyTransformation)
   {
-    nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, movingVertexPath, {});
+    nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, movingVertexPath, {});
   }
 
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> IterativeClosestPointFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> IterativeClosestPointFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   IterativeClosestPointInputValues inputValues;
 
-  inputValues.ApplyTransformation = filterArgs.value<bool>(k_ApplyTransformation_Key);
-  inputValues.NumIterations = filterArgs.value<uint64>(k_NumIterations_Key);
-  inputValues.MovingVertexPath = filterArgs.value<DataPath>(k_MovingVertexPath_Key);
-  inputValues.TargetVertexPath = filterArgs.value<DataPath>(k_TargetVertexPath_Key);
-  inputValues.TransformArrayPath = filterArgs.value<DataPath>(k_TransformArrayPath_Key);
+  inputValues.apply_transformation = filterArgs.value<bool>(k_ApplyTransformation_Key);
+  inputValues.num_iterations = filterArgs.value<uint64>(k_NumIterations_Key);
+  inputValues.moving_vertex_path = filterArgs.value<DataPath>(k_MovingVertexPath_Key);
+  inputValues.target_vertex_path = filterArgs.value<DataPath>(k_TargetVertexPath_Key);
+  inputValues.transform_array_path = filterArgs.value<DataPath>(k_TransformArrayPath_Key);
 
   return IterativeClosestPoint(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_MovingVertexGeometryKey = "MovingVertexGeometry";
-constexpr StringLiteral k_TargetVertexGeometryKey = "TargetVertexGeometry";
-constexpr StringLiteral k_IterationsKey = "Iterations";
-constexpr StringLiteral k_ApplyTransformKey = "ApplyTransform";
-constexpr StringLiteral k_TransformArrayNameKey = "TransformArrayName";
-} // namespace SIMPL
+constexpr StringLiteralType k_MovingVertexGeometryKey = "MovingVertexGeometry";
+constexpr StringLiteralType k_TargetVertexGeometryKey = "TargetVertexGeometry";
+constexpr StringLiteralType k_IterationsKey = "Iterations";
+constexpr StringLiteralType k_ApplyTransformKey = "ApplyTransform";
+constexpr StringLiteralType k_TransformArrayNameKey = "TransformArrayName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> IterativeClosestPointFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -144,12 +144,12 @@ Result<Arguments> IterativeClosestPointFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_MovingVertexGeometryKey, k_MovingVertexPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_TargetVertexGeometryKey, k_TargetVertexPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_IterationsKey, k_NumIterations_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_ApplyTransformKey, k_ApplyTransformation_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_MovingVertexGeometryKey, k_MovingVertexPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_TargetVertexGeometryKey, k_TargetVertexPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_IterationsKey, k_NumIterations_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_ApplyTransformKey, k_ApplyTransformation_Key));
   // Transform attribute matrix parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringToDataPathFilterParameterConverter>(args, json, SIMPL::k_TransformArrayNameKey, k_TransformArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_TransformArrayNameKey, k_TransformArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

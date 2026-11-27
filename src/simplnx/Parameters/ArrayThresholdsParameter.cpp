@@ -6,14 +6,14 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
-ArrayThresholdsParameter::ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                   AllowedComponentShapes requiredComps)
+ArrayThresholdsParameter::ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedComponentShapesType requiredComps)
 : MutableDataParameter(name, humanName, helpText, Category::Created)
-, m_DefaultValue(defaultValue)
-, m_RequiredComponentShapes(requiredComps)
+, m_DefaultValue(std::move(defaultValue))
+, m_RequiredComponentShapes(std::move(requiredComps))
 {
 }
 
@@ -22,7 +22,7 @@ Uuid ArrayThresholdsParameter::uuid() const
   return ParameterTraits<ArrayThresholdsParameter>::uuid;
 }
 
-IParameter::AcceptedTypes ArrayThresholdsParameter::acceptedTypes() const
+IParameter::AcceptedTypesType ArrayThresholdsParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -40,18 +40,18 @@ nlohmann::json ArrayThresholdsParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> ArrayThresholdsParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> ArrayThresholdsParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'ArrayThresholdsParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'ArrayThresholdsParameter' JSON Error: ";
   auto thresholds = ArrayThresholdSet::FromJson(json);
   if(thresholds == nullptr)
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as ArrayThresholdSet", prefix.view(), name()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotValueType, fmt::format("{}Failed to parse '{}' as ArrayThresholdSet", k_Prefix.view(), name()));
   }
   return {{std::move(*thresholds)}};
 }
 
-IParameter::UniquePointer ArrayThresholdsParameter::clone() const
+IParameter::UniquePointerType ArrayThresholdsParameter::clone() const
 {
   return std::make_unique<ArrayThresholdsParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -66,7 +66,7 @@ typename ArrayThresholdsParameter::ValueType ArrayThresholdsParameter::defaultPa
   return m_DefaultValue;
 }
 
-ArrayThresholdsParameter::AllowedComponentShapes ArrayThresholdsParameter::requiredComponentShapes() const
+ArrayThresholdsParameter::AllowedComponentShapesType ArrayThresholdsParameter::requiredComponentShapes() const
 {
   return m_RequiredComponentShapes;
 }
@@ -84,18 +84,18 @@ Result<> ArrayThresholdsParameter::validatePath(const DataStructure& dataStructu
 
   if(dataPath.empty())
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateEmptyValue, fmt::format("{}DataPath cannot be empty", prefix));
   }
-  const DataObject* object = dataStructure.getData(dataPath);
-  if(object == nullptr)
+  const DataObject* objectPtr = dataStructure.getData(dataPath);
+  if(objectPtr == nullptr)
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_ExistingValue, fmt::format("{}Object does not exist at path '{}'", prefix, dataPath.toString()));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateExistingValue, fmt::format("{}Object does not exist at path '{}'", prefix, dataPath.toString()));
   }
 
-  const auto* dataArray = dynamic_cast<const IDataArray*>(object);
-  if(dataArray == nullptr)
+  const auto* dataArrayPtr = dynamic_cast<const IDataArray*>(objectPtr);
+  if(dataArrayPtr == nullptr)
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, dataPath.toString()));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateTypeError, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, dataPath.toString()));
   }
 
   if(!m_RequiredComponentShapes.empty())
@@ -104,22 +104,22 @@ Result<> ArrayThresholdsParameter::validatePath(const DataStructure& dataStructu
     bool foundMatch = false;
     for(const auto& compShape : m_RequiredComponentShapes)
     {
-      if(compShape == dataArray->getComponentShape())
+      if(compShape == dataArrayPtr->getComponentShape())
       {
         foundMatch = true;
         break;
       }
-      compStr += StringUtilities::number(compShape[0]);
+      compStr += string_utilities::Number(compShape[0]);
       for(usize i = 1; i < compShape.size(); ++i)
       {
-        compStr += " x " + StringUtilities::number(compShape[i]);
+        compStr += " x " + string_utilities::Number(compShape[i]);
       }
       compStr += " or ";
     }
     if(!foundMatch)
     {
       compStr.erase(compStr.size() - 4); // Remove trailing " or "
-      return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_TupleShapeValue,
+      return nx::core::MakeErrorResult<>(nx::core::filter_parameter::constants::k_ValidateTupleShapeValue,
                                          fmt::format("{}Object at path '{}' must have a component shape of {}.", prefix, dataPath.toString(), compStr));
     }
   }
@@ -142,27 +142,27 @@ Result<> ArrayThresholdsParameter::validatePaths(const DataStructure& dataStruct
   return {};
 }
 
-Result<std::any> ArrayThresholdsParameter::resolve(DataStructure& dataStructure, const std::any& value) const
+Result<std::any> ArrayThresholdsParameter::resolve(DataStructure& /*dataStructure*/, const std::any& /*value*/) const
 {
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 namespace
 {
-constexpr StringLiteral k_DataArrayNameKey = "Attribute Array Name";
-constexpr StringLiteral k_AttributeMatrixNameKey = "Attribute Matrix Name";
-constexpr StringLiteral k_DataContainerNameKey = "Data Container Name";
-constexpr StringLiteral k_ComparisonValueKey = "Comparison Value";
-constexpr StringLiteral k_ComparisonOperatorKey = "Comparison Operator";
-constexpr StringLiteral k_ThresholdValuesKey = "Comparison Values";
-constexpr StringLiteral k_UnionOperatorKey = "Union Operator";
-constexpr StringLiteral k_ThresholdsKey = "Thresholds";
-constexpr StringLiteral k_InvertedKey = "Invert Comparison";
+constexpr StringLiteralType k_DataArrayNameKey = "Attribute Array Name";
+constexpr StringLiteralType k_AttributeMatrixNameKey = "Attribute Matrix Name";
+constexpr StringLiteralType k_DataContainerNameKey = "Data Container Name";
+constexpr StringLiteralType k_ComparisonValueKey = "Comparison Value";
+constexpr StringLiteralType k_ComparisonOperatorKey = "Comparison Operator";
+constexpr StringLiteralType k_ThresholdValuesKey = "Comparison Values";
+constexpr StringLiteralType k_UnionOperatorKey = "Union Operator";
+constexpr StringLiteralType k_ThresholdsKey = "Thresholds";
+constexpr StringLiteralType k_InvertedKey = "Invert Comparison";
 } // namespace
 
-Result<ComparisonSelectionFilterParameterConverter::ValueType> ComparisonSelectionFilterParameterConverter::convert(const nlohmann::json& json)
+Result<ComparisonSelectionFilterParameterConverter::ValueType> ComparisonSelectionFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_array())
   {
@@ -204,12 +204,12 @@ Result<ComparisonSelectionFilterParameterConverter::ValueType> ComparisonSelecti
 
 namespace
 {
-bool isArrayThreshold(const nlohmann::json& json)
+bool IsArrayThreshold(const nlohmann::json& json)
 {
   return !json.contains(k_ThresholdValuesKey);
 }
 
-std::shared_ptr<ArrayThreshold> convertArrayThreshold(const DataPath& amPath, const nlohmann::json& json)
+std::shared_ptr<ArrayThreshold> ConvertArrayThreshold(const DataPath& amPath, const nlohmann::json& json)
 {
   auto comparisonType = static_cast<ArrayThreshold::ComparisonType>(json[k_ComparisonOperatorKey].get<int32>());
   if(comparisonType == ArrayThreshold::ComparisonType::LessThan)
@@ -236,7 +236,7 @@ std::shared_ptr<ArrayThreshold> convertArrayThreshold(const DataPath& amPath, co
   return value;
 }
 
-std::shared_ptr<ArrayThresholdSet> convertSetThreshold(const DataPath& amPath, const nlohmann::json& json)
+std::shared_ptr<ArrayThresholdSet> ConvertSetThreshold(const DataPath& amPath, const nlohmann::json& json)
 {
   ArrayThresholdsParameter::ValueType::CollectionType thresholdSet;
 
@@ -244,13 +244,13 @@ std::shared_ptr<ArrayThresholdSet> convertSetThreshold(const DataPath& amPath, c
 
   for(const auto& iter : arrayThresholdsJson)
   {
-    if(isArrayThreshold(iter))
+    if(IsArrayThreshold(iter))
     {
-      thresholdSet.push_back(convertArrayThreshold(amPath, iter));
+      thresholdSet.push_back(ConvertArrayThreshold(amPath, iter));
     }
     else
     {
-      thresholdSet.push_back(convertSetThreshold(amPath, iter));
+      thresholdSet.push_back(ConvertSetThreshold(amPath, iter));
     }
   }
 
@@ -265,7 +265,7 @@ std::shared_ptr<ArrayThresholdSet> convertSetThreshold(const DataPath& amPath, c
 }
 } // namespace
 
-Result<ComparisonSelectionAdvancedFilterParameterConverter::ValueType> ComparisonSelectionAdvancedFilterParameterConverter::convert(const nlohmann::json& json)
+Result<ComparisonSelectionAdvancedFilterParameterConverter::ValueType> ComparisonSelectionAdvancedFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_object())
   {
@@ -285,15 +285,15 @@ Result<ComparisonSelectionAdvancedFilterParameterConverter::ValueType> Compariso
   // ArrayThreshold;
   for(const auto& iter : json[k_ThresholdsKey])
   {
-    if(isArrayThreshold(iter))
+    if(IsArrayThreshold(iter))
     {
-      thresholdSet.push_back(convertArrayThreshold(amPath, iter));
+      thresholdSet.push_back(ConvertArrayThreshold(amPath, iter));
     }
     else
     {
       // Preserve the nested set. SIMPLNX evaluates ArrayThresholdSet trees directly, so flattening here
       // would discard the AND/OR grouping the legacy pipeline encoded.
-      thresholdSet.push_back(convertSetThreshold(amPath, iter));
+      thresholdSet.push_back(ConvertSetThreshold(amPath, iter));
     }
   }
 
@@ -302,5 +302,5 @@ Result<ComparisonSelectionAdvancedFilterParameterConverter::ValueType> Compariso
 
   return {std::move(value)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

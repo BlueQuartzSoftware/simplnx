@@ -1,29 +1,31 @@
 #include "simplnx/Filter/Actions/CreateGridMontageAction.hpp"
+
 #include "simplnx/DataStructure/Montage/GridMontage.hpp"
+#include <utility>
 
 namespace nx::core
 {
-CreateGridMontageAction::CreateGridMontageAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing)
+CreateGridMontageAction::CreateGridMontageAction(const DataPath& path, DimensionType dims, OriginType origin, SpacingType spacing)
 : IDataCreationAction(path)
-, m_Dims(dims)
-, m_Origin(origin)
-, m_Spacing(spacing)
+, m_Dims(std::move(dims))
+, m_Origin(std::move(origin))
+, m_Spacing(std::move(spacing))
 {
 }
 
-Result<> CreateGridMontageAction::apply(DataStructure& dataStructure, Mode mode) const
+Result<> CreateGridMontageAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
-  static constexpr StringLiteral prefix = "CreateGridMontageAction: ";
+  static constexpr StringLiteralType k_Prefix = "CreateGridMontageAction: ";
   // Check for empty Geometry DataPath
   if(getCreatedPath().empty())
   {
-    return MakeErrorResult(-5901, fmt::format("{}Geometry Path cannot be empty", prefix));
+    return MakeErrorResult(-5901, fmt::format("{}Geometry Path cannot be empty", k_Prefix));
   }
   // Check if the Geometry Path already exists
-  auto* parentObject = dataStructure.getDataAs<BaseGroup>(getCreatedPath());
-  if(parentObject != nullptr)
+  auto* parentObjectPtr = dataStructure.getDataAs<BaseGroup>(getCreatedPath());
+  if(parentObjectPtr != nullptr)
   {
-    return MakeErrorResult(-5902, fmt::format("{}DataObject already exists at path '{}'", prefix, getCreatedPath().toString()));
+    return MakeErrorResult(-5902, fmt::format("{}DataObject already exists at path '{}'", k_Prefix, getCreatedPath().toString()));
   }
   DataPath parentPath = getCreatedPath().getParent();
   if(!parentPath.empty())
@@ -31,26 +33,26 @@ Result<> CreateGridMontageAction::apply(DataStructure& dataStructure, Mode mode)
     Result<LinkedPath> geomPath = dataStructure.makePath(parentPath);
     if(geomPath.invalid())
     {
-      return MakeErrorResult(-5903, fmt::format("{}Geometry could not be created at path:'{}'", prefix, getCreatedPath().toString()));
+      return MakeErrorResult(-5903, fmt::format("{}Geometry could not be created at path:'{}'", k_Prefix, getCreatedPath().toString()));
     }
   }
   // Get the Parent ID
   if(!dataStructure.getId(parentPath).has_value())
   {
-    return MakeErrorResult(-5904, fmt::format("{}Parent Id was not available for path:'{}'", prefix, parentPath.toString()));
+    return MakeErrorResult(-5904, fmt::format("{}Parent Id was not available for path:'{}'", k_Prefix, parentPath.toString()));
   }
 
   // Create the grid montage
-  GridMontage* gridMontage = GridMontage::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath));
-  if(gridMontage == nullptr)
+  GridMontage* gridMontagePtr = GridMontage::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath));
+  if(gridMontagePtr == nullptr)
   {
-    return MakeErrorResult(-5905, fmt::format("{}Failed to create GridMontage:'{}'", prefix, getCreatedPath().toString()));
+    return MakeErrorResult(-5905, fmt::format("{}Failed to create GridMontage:'{}'", k_Prefix, getCreatedPath().toString()));
   }
 
   return {};
 }
 
-IDataAction::UniquePointer CreateGridMontageAction::clone() const
+IDataAction::UniquePointerType CreateGridMontageAction::clone() const
 {
   return std::make_unique<CreateGridMontageAction>(getCreatedPath(), m_Dims, m_Origin, m_Spacing);
 }

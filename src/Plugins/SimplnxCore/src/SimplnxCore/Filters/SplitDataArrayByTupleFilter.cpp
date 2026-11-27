@@ -33,16 +33,16 @@ namespace
 {
 struct ConvertHexGridToSquareGridFilterCache
 {
-  std::vector<DataPath> outputArrayPaths;
-  std::vector<std::vector<usize>> outputTupleShapes;
+  std::vector<DataPath> output_array_paths;
+  std::vector<std::vector<usize>> output_tuple_shapes;
 };
 
-std::atomic_int32_t s_InstanceId = 0;
-std::map<int32, ConvertHexGridToSquareGridFilterCache> s_HeaderCache;
+std::atomic_int32_t SInstanceId = 0;
+std::map<int32, ConvertHexGridToSquareGridFilterCache> SHeaderCache;
 
 constexpr usize k_MaxDisplayPaths = 5; // (must be >= 3 to show ellipsis)
 
-std::vector<std::string> dataPathsToStrings(const std::vector<DataPath>& dataPaths)
+std::vector<std::string> DataPathsToStrings(const std::vector<DataPath>& dataPaths)
 {
   std::vector<std::string> dataPathsStrs;
   std::transform(dataPaths.cbegin(), dataPaths.cend(), std::back_inserter(dataPathsStrs), [](const DataPath& dp) { return dp.toString(); });
@@ -50,15 +50,15 @@ std::vector<std::string> dataPathsToStrings(const std::vector<DataPath>& dataPat
 }
 
 template <typename T>
-std::string valuesToString(const std::vector<T>& values, const std::string& token = " x ")
+std::string ValuesToString(const std::vector<T>& values, const std::string& token = " x ")
 {
   std::vector<std::string> shapeStrs;
   std::transform(values.cbegin(), values.cend(), std::back_inserter(shapeStrs), [](T val) { return std::to_string(val); });
   std::vector<std::string_view> shapeStrViews(shapeStrs.begin(), shapeStrs.end());
-  return StringUtilities::join(shapeStrViews, token);
+  return string_utilities::Join(shapeStrViews, token);
 }
 
-std::vector<std::string> createDisplayPaths(const std::vector<std::string>& paths, const std::vector<std::vector<usize>>& tupleShapes)
+std::vector<std::string> CreateDisplayPaths(const std::vector<std::string>& paths, const std::vector<std::vector<usize>>& tupleShapes)
 {
   std::vector<std::string> displayPaths;
   const usize totalPaths = paths.size();
@@ -69,31 +69,31 @@ std::vector<std::string> createDisplayPaths(const std::vector<std::string>& path
     displayPaths.reserve(k_MaxDisplayPaths);
     for(usize i = 0; i < headCount; ++i)
     {
-      displayPaths.push_back(fmt::format("{} ({})", paths[i], valuesToString(tupleShapes[i])));
+      displayPaths.push_back(fmt::format("{} ({})", paths[i], ValuesToString(tupleShapes[i])));
     }
     displayPaths.emplace_back("...");
     for(usize i = totalPaths - tailCount; i < totalPaths; ++i)
     {
-      displayPaths.push_back(fmt::format("{} ({})", paths[i], valuesToString(tupleShapes[i])));
+      displayPaths.push_back(fmt::format("{} ({})", paths[i], ValuesToString(tupleShapes[i])));
     }
   }
   else
   {
     for(usize i = 0; i < paths.size(); ++i)
     {
-      displayPaths.push_back(fmt::format("{} ({})", paths[i], valuesToString(tupleShapes[i])));
+      displayPaths.push_back(fmt::format("{} ({})", paths[i], ValuesToString(tupleShapes[i])));
     }
   }
 
   return displayPaths;
 }
 
-Result<usize> commonMultiplier(const std::vector<usize>& dividend, const std::vector<usize>& divisor, usize dim)
+Result<usize> CommonMultiplier(const std::vector<usize>& dividend, const std::vector<usize>& divisor, usize dim)
 {
   // 1) Basic sanity
   if(dividend.empty() || divisor.empty())
   {
-    return MakeErrorResult<usize>(-1000, fmt::format("The input array tuple shape ({}) or the selected tuple shape ({}) is empty.", valuesToString(dividend), valuesToString(divisor)));
+    return MakeErrorResult<usize>(-1000, fmt::format("The input array tuple shape ({}) or the selected tuple shape ({}) is empty.", ValuesToString(dividend), ValuesToString(divisor)));
   }
   if(dividend.size() != divisor.size())
   {
@@ -119,7 +119,7 @@ Result<usize> commonMultiplier(const std::vector<usize>& dividend, const std::ve
                                                        "Requested tuple shape = {}\n"
                                                        "Chosen Split Dimension = {}\n"
                                                        "Mismatch at dimension {}: got {} but expected {}.",
-                                                       valuesToString(dividend), valuesToString(divisor), dim, i, dividend[i], divisor[i]));
+                                                       ValuesToString(dividend), ValuesToString(divisor), dim, i, dividend[i], divisor[i]));
     }
   }
 
@@ -139,8 +139,8 @@ Result<usize> commonMultiplier(const std::vector<usize>& dividend, const std::ve
   return {v / d};
 }
 
-Result<> preflightDataGroupOutput(SplitDataArrayByTuple::OutputContainer outputContainer, const DataPath& inputArrayPath, const DataPath& newDataGroupPath, const DataPath& existingDataGroupPath,
-                                  const std::vector<usize>& inputArrayTupleShape, const std::vector<std::vector<float64>> splitDimensionCounts, usize splitDimension,
+Result<> PreflightDataGroupOutput(SplitDataArrayByTuple::OutputContainer outputContainer, const DataPath& inputArrayPath, const DataPath& newDataGroupPath, const DataPath& existingDataGroupPath,
+                                  const std::vector<usize>& inputArrayTupleShape, const std::vector<std::vector<float64>>& splitDimensionCounts, usize splitDimension,
                                   std::vector<std::vector<usize>>& splitArrayTupleShapes, std::vector<DataPath>& arrayPaths, std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
 {
   splitArrayTupleShapes = std::vector<std::vector<usize>>(splitDimensionCounts.size(), inputArrayTupleShape);
@@ -156,7 +156,7 @@ Result<> preflightDataGroupOutput(SplitDataArrayByTuple::OutputContainer outputC
     {
       return MakeErrorResult(
           to_underlying(SplitDataArrayByTuple::ErrorCodes::MultiDimensionalSplitCount),
-          fmt::format("Split Array {} contains a multi-dimensional split dimension count ({}).  The split dimension count should be a single dimension.", i, valuesToString(row, "x")));
+          fmt::format("Split Array {} contains a multi-dimensional split dimension count ({}).  The split dimension count should be a single dimension.", i, ValuesToString(row, "x")));
     }
 
     auto dimensions = ConvertDimensions(row, fmt::format("Split Array {} tuple", i), ZeroDimensionPolicy::Reject, LegacyDimensionCheck::NonPositive,
@@ -175,8 +175,9 @@ Result<> preflightDataGroupOutput(SplitDataArrayByTuple::OutputContainer outputC
     const usize splitCount = splitDimensionCountsUSize[index];
     if(splitCount > std::numeric_limits<usize>::max() - splitCountsTotal)
     {
-      return MakeErrorResult(DimensionConversion::k_SplitSumOverflow, fmt::format("Split count {} at row {} plus preceding count {} exceeds {}. Use split counts whose sum equals the input extent {}.",
-                                                                                  splitCount, index, splitCountsTotal, std::numeric_limits<usize>::max(), inputArrayTupleShape[splitDimension]));
+      return MakeErrorResult(dimension_conversion::k_SplitSumOverflow,
+                             fmt::format("Split count {} at row {} plus preceding count {} exceeds {}. Use split counts whose sum equals the input extent {}.", splitCount, index, splitCountsTotal,
+                                         std::numeric_limits<usize>::max(), inputArrayTupleShape[splitDimension]));
     }
     splitCountsTotal += splitCount;
   }
@@ -185,7 +186,7 @@ Result<> preflightDataGroupOutput(SplitDataArrayByTuple::OutputContainer outputC
   {
     return MakeErrorResult(to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitCountSumNotEqual),
                            fmt::format("The sum of your Split Dimension Counts ({} = {}) does not equal the input array's tuple count for dimension {} ({}).",
-                                       valuesToString(splitDimensionCountsUSize, "+"), splitCountsTotal, splitDimension, inputArrayTupleShape[splitDimension]));
+                                       ValuesToString(splitDimensionCountsUSize, "+"), splitCountsTotal, splitDimension, inputArrayTupleShape[splitDimension]));
   }
 
   arrayPaths.reserve(splitArrayTupleShapes.size());
@@ -195,7 +196,7 @@ Result<> preflightDataGroupOutput(SplitDataArrayByTuple::OutputContainer outputC
   {
     const auto& splitArrayTupleShape = splitArrayTupleShapes[i];
 
-    std::string arrayName = inputArrayPath.getTargetName() + "_" + StringUtilities::GenerateIndexString(static_cast<int32>(i) + 1, static_cast<int32>(splitArrayTupleShapes.size()));
+    std::string arrayName = inputArrayPath.getTargetName() + "_" + string_utilities::GenerateIndexString(static_cast<int32>(i) + 1, static_cast<int32>(splitArrayTupleShapes.size()));
     if(outputContainer == SplitDataArrayByTuple::OutputContainer::NewDataGroup)
     {
       arrayPaths.push_back(newDataGroupPath.createChildPath(arrayName));
@@ -206,19 +207,19 @@ Result<> preflightDataGroupOutput(SplitDataArrayByTuple::OutputContainer outputC
     }
 
     // Build up the tuple shape string and add it to the overall tuple shapes output string
-    tupleShapesOutputStr += fmt::format("({})\n", valuesToString(splitArrayTupleShape));
+    tupleShapesOutputStr += fmt::format("({})\n", ValuesToString(splitArrayTupleShape));
   }
   tupleShapesOutputStr.pop_back(); // Remove unneeded newline character
 
   // Output array paths to preflight updated values
-  auto arrayPathsStrs = dataPathsToStrings(arrayPaths);
-  std::vector<std::string> displayPaths = createDisplayPaths(arrayPathsStrs, splitArrayTupleShapes);
+  auto arrayPathsStrs = DataPathsToStrings(arrayPaths);
+  std::vector<std::string> displayPaths = CreateDisplayPaths(arrayPathsStrs, splitArrayTupleShapes);
   std::vector<std::string_view> displayPathsViews(displayPaths.begin(), displayPaths.end());
-  preflightUpdatedValues.push_back({fmt::format("Created Split Arrays ({}): ", displayPaths.size()), fmt::format("{}", StringUtilities::join(displayPathsViews, "\n"))});
+  preflightUpdatedValues.push_back({fmt::format("Created Split Arrays ({}): ", displayPaths.size()), fmt::format("{}", string_utilities::Join(displayPathsViews, "\n"))});
   return {};
 }
 
-Result<> preflightAttrMatrixOutput(SplitDataArrayByTuple::OutputContainer outputContainer, const DataPath& inputArrayPath, const DataPath& newAttrMatrixPath, const DataPath& existingAttrMatrixPath,
+Result<> PreflightAttrMatrixOutput(SplitDataArrayByTuple::OutputContainer outputContainer, const DataPath& inputArrayPath, const DataPath& newAttrMatrixPath, const DataPath& existingAttrMatrixPath,
                                    const std::vector<usize>& inputArrayTupleShape, const std::vector<float64>& newAttrMatrixTupleShape, usize splitDimension, const DataStructure& dataStructure,
                                    std::vector<DataPath>& arrayPaths, std::vector<std::vector<usize>>& tupleShapes, std::vector<IFilter::PreflightValue>& preflightUpdatedValues)
 {
@@ -239,13 +240,13 @@ Result<> preflightAttrMatrixOutput(SplitDataArrayByTuple::OutputContainer output
     tupleShape = existingAttrMatrix.getShape();
   }
 
-  auto result = commonMultiplier(inputArrayTupleShape, tupleShape, static_cast<usize>(splitDimension));
+  auto result = CommonMultiplier(inputArrayTupleShape, tupleShape, splitDimension);
   if(result.invalid())
   {
     return MakeErrorResult(to_underlying(SplitDataArrayByTuple::ErrorCodes::AttrMatrixTupleShapeNoCommonMultiplier),
                            fmt::format("The selected tuple shape ({0}) cannot cleanly split the input array '{1}' tuple shape ({2}) along dimension {3}.\n\n"
                                        "{4}",
-                                       valuesToString(tupleShape), inputArrayPath.toString(), valuesToString(inputArrayTupleShape), splitDimension, result.errors()[0].message));
+                                       ValuesToString(tupleShape), inputArrayPath.toString(), ValuesToString(inputArrayTupleShape), splitDimension, result.errors()[0].message));
   }
   usize numOfAttrMatrixSplitArrays = result.value();
 
@@ -253,7 +254,7 @@ Result<> preflightAttrMatrixOutput(SplitDataArrayByTuple::OutputContainer output
   tupleShapes.reserve(numOfAttrMatrixSplitArrays);
   for(usize i = 0; i < numOfAttrMatrixSplitArrays; i++)
   {
-    std::string arrayName = inputArrayPath.getTargetName() + "_" + StringUtilities::GenerateIndexString(static_cast<int32>(i) + 1, static_cast<int32>(numOfAttrMatrixSplitArrays));
+    std::string arrayName = inputArrayPath.getTargetName() + "_" + string_utilities::GenerateIndexString(static_cast<int32>(i) + 1, static_cast<int32>(numOfAttrMatrixSplitArrays));
     if(outputContainer == SplitDataArrayByTuple::OutputContainer::NewAttrMatrix)
     {
       arrayPaths.push_back(newAttrMatrixPath.createChildPath(arrayName));
@@ -267,10 +268,10 @@ Result<> preflightAttrMatrixOutput(SplitDataArrayByTuple::OutputContainer output
   tupleShapes = std::vector<std::vector<usize>>(numOfAttrMatrixSplitArrays, tupleShape);
 
   // Output array paths to preflight updated values
-  auto arrayPathsStrs = dataPathsToStrings(arrayPaths);
-  std::vector<std::string> displayPaths = createDisplayPaths(arrayPathsStrs, tupleShapes);
+  auto arrayPathsStrs = DataPathsToStrings(arrayPaths);
+  std::vector<std::string> displayPaths = CreateDisplayPaths(arrayPathsStrs, tupleShapes);
   std::vector<std::string_view> displayPathsViews(displayPaths.begin(), displayPaths.end());
-  preflightUpdatedValues.push_back({fmt::format("Created Split Arrays ({}): ", displayPaths.size()), fmt::format("{}", StringUtilities::join(displayPathsViews, "\n"))});
+  preflightUpdatedValues.push_back({fmt::format("Created Split Arrays ({}): ", displayPaths.size()), fmt::format("{}", string_utilities::Join(displayPathsViews, "\n"))});
   return {};
 }
 } // namespace
@@ -279,15 +280,15 @@ namespace nx::core
 {
 //------------------------------------------------------------------------------
 SplitDataArrayByTupleFilter::SplitDataArrayByTupleFilter()
-: m_InstanceId(s_InstanceId.fetch_add(1))
+: m_InstanceId(SInstanceId.fetch_add(1))
 {
-  s_HeaderCache[m_InstanceId] = {};
+  SHeaderCache[m_InstanceId] = {};
 }
 
 //------------------------------------------------------------------------------
 SplitDataArrayByTupleFilter::~SplitDataArrayByTupleFilter() noexcept
 {
-  s_HeaderCache.erase(m_InstanceId);
+  SHeaderCache.erase(m_InstanceId);
 }
 
 //------------------------------------------------------------------------------
@@ -329,7 +330,7 @@ Parameters SplitDataArrayByTupleFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_DataArrayPath_Key, "Data Array", "The data array to split by tuples.", DataPath{}, GetAllDataTypes()));
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_OutputContainer, "Output Container", "Set the output container where the output split arrays will be stored.",
                                                                     static_cast<ChoicesParameter::ValueType>(SplitDataArrayByTuple::OutputContainer::NewDataGroup),
-                                                                    ChoicesParameter::Choices{"New Data Group", "Existing Data Group", "New Attribute Matrix", "Existing Attribute Matrix"}));
+                                                                    ChoicesParameter::ChoicesType{"New Data Group", "Existing Data Group", "New Attribute Matrix", "Existing Attribute Matrix"}));
   params.insert(std::make_unique<BoolParameter>(k_DeleteOriginal_Key, "Remove Original Array", "Whether or not to remove the original data array after splitting", false));
 
   params.insert(std::make_unique<NumberParameter<uint64>>(k_SplitDimension_Key, "Split Dimension", "The tuple shape dimension to split the arrays from the input data array.", 0));
@@ -355,7 +356,7 @@ Parameters SplitDataArrayByTupleFilter::parameters() const
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewDataGroupPath, "New Data Group", "The path to the newly created data group where the output split arrays will be stored.",
                                                              DataPath({"Split Arrays"})));
   params.insert(std::make_unique<DataGroupSelectionParameter>(k_ExistingDataGroupPath, "Existing Data Group", "The path to the existing data group where the output split arrays will be stored.",
-                                                              DataPath{}, DataGroupSelectionParameter::AllowedTypes{BaseGroup::GroupType::DataGroup}));
+                                                              DataPath{}, DataGroupSelectionParameter::AllowedTypeSetType{BaseGroup::GroupType::DataGroup}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_NewAttributeMatrixPath, "New Attribute Matrix",
                                                              "The path to the newly created attribute matrix where the output split arrays will be stored.", DataPath({"Split Arrays"})));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_ExistingAttributeMatrixPath, "Existing Attribute Matrix",
@@ -385,14 +386,14 @@ IFilter::VersionType SplitDataArrayByTupleFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer SplitDataArrayByTupleFilter::clone() const
+IFilter::UniquePointerType SplitDataArrayByTupleFilter::clone() const
 {
   return std::make_unique<SplitDataArrayByTupleFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pInputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_DataArrayPath_Key);
   auto pRemoveOriginal = filterArgs.value<bool>(k_DeleteOriginal_Key);
@@ -412,21 +413,22 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
   const auto& inputArray = dataStructure.getDataRefAs<IArray>(pInputArrayPath);
 
   // Output input array's tuple shape to preflight updated values
-  std::vector<std::string> displayPaths = createDisplayPaths({pInputArrayPath.toString()}, {inputArray.getTupleShape()});
+  std::vector<std::string> displayPaths = CreateDisplayPaths({pInputArrayPath.toString()}, {inputArray.getTupleShape()});
   std::vector<std::string_view> displayPathsViews(displayPaths.begin(), displayPaths.end());
-  preflightUpdatedValues.push_back({"Input Array", StringUtilities::join(displayPathsViews, "\n")});
+  preflightUpdatedValues.push_back({"Input Array", string_utilities::Join(displayPathsViews, "\n")});
 
   std::vector<DataPath> arrayPaths;
   std::vector<std::vector<usize>> tupleShapes;
 
   if(pSplitDimension >= inputArray.getTupleShape().size())
   {
-    return {MakeErrorResult<OutputActions>(to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitDimOutOfRange),
-                                           fmt::format("The chosen Split Dimension ({}) is not a dimension of the input array '{}', which has tuple shape ({}). {}", pSplitDimension,
-                                                       pInputArrayPath.toString(), valuesToString(inputArray.getTupleShape()),
-                                                       inputArray.getTupleShape().empty() ? "Select an input array with at least one tuple dimension." :
-                                                                                            fmt::format("Enter a Split Dimension from 0 to {}.", inputArray.getTupleShape().size() - 1))),
-            preflightUpdatedValues};
+    return {.output_actions =
+                MakeErrorResult<OutputActions>(to_underlying(SplitDataArrayByTuple::ErrorCodes::SplitDimOutOfRange),
+                                               fmt::format("The chosen Split Dimension ({}) is not a dimension of the input array '{}', which has tuple shape ({}). {}", pSplitDimension,
+                                                           pInputArrayPath.toString(), ValuesToString(inputArray.getTupleShape()),
+                                                           inputArray.getTupleShape().empty() ? "Select an input array with at least one tuple dimension." :
+                                                                                                fmt::format("Enter a Split Dimension from 0 to {}.", inputArray.getTupleShape().size() - 1))),
+            .output_values = preflightUpdatedValues};
   }
 
   auto splitDimension = static_cast<usize>(pSplitDimension);
@@ -434,11 +436,11 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
   if(pOutputContainer == SplitDataArrayByTuple::OutputContainer::NewDataGroup || pOutputContainer == SplitDataArrayByTuple::OutputContainer::ExistingDataGroup)
   {
     // Outputting to data group
-    auto result = preflightDataGroupOutput(pOutputContainer, pInputArrayPath, pNewDataGroupPath, pExistingDataGroupPath, inputArray.getTupleShape(), pSplitDimensionCounts, splitDimension, tupleShapes,
+    auto result = PreflightDataGroupOutput(pOutputContainer, pInputArrayPath, pNewDataGroupPath, pExistingDataGroupPath, inputArray.getTupleShape(), pSplitDimensionCounts, splitDimension, tupleShapes,
                                            arrayPaths, preflightUpdatedValues);
     if(result.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(result), {}), preflightUpdatedValues};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(result), {}), .output_values = preflightUpdatedValues};
     }
 
     if(pOutputContainer == SplitDataArrayByTuple::OutputContainer::NewDataGroup)
@@ -449,11 +451,11 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
   else
   {
     // Outputting to attribute matrix
-    auto result = preflightAttrMatrixOutput(pOutputContainer, pInputArrayPath, pNewAttrMatrixPath, pExistingAttrMatrixPath, inputArray.getTupleShape(), pNewAttrMatrixTupleShape[0], splitDimension,
+    auto result = PreflightAttrMatrixOutput(pOutputContainer, pInputArrayPath, pNewAttrMatrixPath, pExistingAttrMatrixPath, inputArray.getTupleShape(), pNewAttrMatrixTupleShape[0], splitDimension,
                                             dataStructure, arrayPaths, tupleShapes, preflightUpdatedValues);
     if(result.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(result), {}), preflightUpdatedValues};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(result), {}), .output_values = preflightUpdatedValues};
     }
 
     if(pOutputContainer == SplitDataArrayByTuple::OutputContainer::NewAttrMatrix)
@@ -468,14 +470,14 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
     switch(inputArray.getArrayType())
     {
     case IArray::ArrayType::DataArray: {
-      auto iInputDataArray = dynamic_cast<const IDataArray*>(&inputArray);
-      ShapeType cDims = iInputDataArray->getComponentShape();
-      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(iInputDataArray->getDataType(), tupleShapes[i], cDims, arrayPaths[i]));
+      const auto* iInputDataArrayPtr = dynamic_cast<const IDataArray*>(&inputArray);
+      ShapeType cDims = iInputDataArrayPtr->getComponentShape();
+      resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(iInputDataArrayPtr->getDataType(), tupleShapes[i], cDims, arrayPaths[i]));
       break;
     }
     case IArray::ArrayType::NeighborListArray: {
-      auto iInputNeighborList = dynamic_cast<const INeighborList*>(&inputArray);
-      resultOutputActions.value().appendAction(std::make_unique<CreateNeighborListAction>(iInputNeighborList->getDataType(), tupleShapes[i], arrayPaths[i]));
+      const auto* iInputNeighborListPtr = dynamic_cast<const INeighborList*>(&inputArray);
+      resultOutputActions.value().appendAction(std::make_unique<CreateNeighborListAction>(iInputNeighborListPtr->getDataType(), tupleShapes[i], arrayPaths[i]));
       break;
     }
     case IArray::ArrayType::StringArray: {
@@ -483,15 +485,16 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
       break;
     }
     case IArray::ArrayType::Any: {
-      return {MakeErrorResult<OutputActions>(to_underlying(SplitDataArrayByTuple::ErrorCodes::AnyArrayType),
-                                             fmt::format("The input array '{}' has array type 'Any'.  This SHOULD NOT be possible, so please contact the developers.", pInputArrayPath.toString())),
-              preflightUpdatedValues};
+      return {.output_actions =
+                  MakeErrorResult<OutputActions>(to_underlying(SplitDataArrayByTuple::ErrorCodes::AnyArrayType),
+                                                 fmt::format("The input array '{}' has array type 'Any'.  This SHOULD NOT be possible, so please contact the developers.", pInputArrayPath.toString())),
+              .output_values = preflightUpdatedValues};
     }
     default: {
-      return {MakeErrorResult<OutputActions>(
+      return {.output_actions = MakeErrorResult<OutputActions>(
                   to_underlying(SplitDataArrayByTuple::ErrorCodes::UnsupportedArrayType),
                   fmt::format("The input array '{}' has an array type that is currently not supported by this filter, so please contact the developers.", pInputArrayPath.toString())),
-              preflightUpdatedValues};
+              .output_values = preflightUpdatedValues};
     }
     }
   }
@@ -502,20 +505,20 @@ IFilter::PreflightResult SplitDataArrayByTupleFilter::preflightImpl(const DataSt
     resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pInputArrayPath, DeleteDataAction::DeleteType::JustObject));
   }
 
-  s_HeaderCache[m_InstanceId].outputArrayPaths = arrayPaths;
-  s_HeaderCache[m_InstanceId].outputTupleShapes = tupleShapes;
+  SHeaderCache[m_InstanceId].output_array_paths = arrayPaths;
+  SHeaderCache[m_InstanceId].output_tuple_shapes = tupleShapes;
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> SplitDataArrayByTupleFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> SplitDataArrayByTupleFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   SplitDataArrayByTupleInputValues inputValues;
-  inputValues.InputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_DataArrayPath_Key);
-  inputValues.OutputArrayPaths = s_HeaderCache[m_InstanceId].outputArrayPaths;
-  inputValues.SplitDimension = filterArgs.value<NumberParameter<uint64>::ValueType>(k_SplitDimension_Key);
+  inputValues.input_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_DataArrayPath_Key);
+  inputValues.output_array_paths = SHeaderCache[m_InstanceId].output_array_paths;
+  inputValues.split_dimension = filterArgs.value<NumberParameter<uint64>::ValueType>(k_SplitDimension_Key);
   return SplitDataArrayByTuple(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace nx::core

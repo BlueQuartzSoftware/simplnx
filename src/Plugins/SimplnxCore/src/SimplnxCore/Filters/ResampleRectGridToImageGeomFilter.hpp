@@ -24,11 +24,11 @@ public:
   ResampleRectGridToImageGeomFilter& operator=(ResampleRectGridToImageGeomFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_RectilinearGridPath_Key = "rectilinear_grid_path";
-  static constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
-  static constexpr StringLiteral k_Dimensions_Key = "dimensions";
-  static constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_ImageGeomCellAttributeMatrixName_Key = "image_geom_cell_attribute_matrix_name";
+  static constexpr StringLiteralType k_RectilinearGridPath_Key = "rectilinear_grid_path";
+  static constexpr StringLiteralType k_SelectedDataArrayPaths_Key = "input_data_array_paths";
+  static constexpr StringLiteralType k_Dimensions_Key = "dimensions";
+  static constexpr StringLiteralType k_ImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_ImageGeomCellAttributeMatrixName_Key = "image_geom_cell_attribute_matrix_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -85,7 +85,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

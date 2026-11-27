@@ -54,7 +54,7 @@ Parameters ExtractComponentAsArrayFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Int32Parameter>(k_CompNumber_Key, "Component Index to Extract", "The index of the component in each tuple to be removed", 0));
+  params.insert(std::make_unique<Int32ParameterType>(k_CompNumber_Key, "Component Index to Extract", "The index of the component in each tuple to be removed", 0));
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_MoveComponentsToNewArray_Key, "Move Extracted Components to New Array", "If true the extracted components will be placed in a new array", false));
   params.insert(std::make_unique<BoolParameter>(k_RemoveComponentsFromArray_Key, "Remove Extracted Components from Old Array", "If true the extracted components will be deleted", false));
@@ -79,14 +79,14 @@ IFilter::VersionType ExtractComponentAsArrayFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ExtractComponentAsArrayFilter::clone() const
+IFilter::UniquePointerType ExtractComponentAsArrayFilter::clone() const
 {
   return std::make_unique<ExtractComponentAsArrayFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                      const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pMoveComponentsToNewArrayValue = filterArgs.value<bool>(k_MoveComponentsToNewArray_Key);
   auto pRemoveComponentsFromArrayValue = filterArgs.value<bool>(k_RemoveComponentsFromArray_Key);
@@ -103,12 +103,13 @@ IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const Data
   const usize selectedArrayComp = selectedArray.getNumberOfComponents();
   if(selectedArrayComp < 2)
   {
-    return {MakeErrorResult<OutputActions>(-45630, fmt::format("The array component count must be more than 1, this component count is: {} ", selectedArrayComp))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-45630, fmt::format("The array component count must be more than 1, this component count is: {} ", selectedArrayComp))};
   }
   if(selectedArrayComp < pCompNumberValue)
   {
-    return {MakeErrorResult<OutputActions>(
-        -45631, fmt::format("The component index '{}' is larger than the total number of components. Valid values are between {} and {} inclusive. ", pCompNumberValue, 0, (selectedArrayComp - 1)))};
+    return {.output_actions =
+                MakeErrorResult<OutputActions>(-45631, fmt::format("The component index '{}' is larger than the total number of components. Valid values are between {} and {} inclusive. ",
+                                                                   pCompNumberValue, 0, (selectedArrayComp - 1)))};
   }
 
   if(pMoveComponentsToNewArrayValue)
@@ -140,38 +141,38 @@ IFilter::PreflightResult ExtractComponentAsArrayFilter::preflightImpl(const Data
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ExtractComponentAsArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ExtractComponentAsArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ExtractComponentAsArrayInputValues inputValues;
 
-  inputValues.MoveComponentsToNewArray = filterArgs.value<bool>(k_MoveComponentsToNewArray_Key);
-  inputValues.RemoveComponentsFromArray = filterArgs.value<bool>(k_RemoveComponentsFromArray_Key);
-  inputValues.CompNumber = filterArgs.value<int32>(k_CompNumber_Key);
+  inputValues.move_components_to_new_array = filterArgs.value<bool>(k_MoveComponentsToNewArray_Key);
+  inputValues.remove_components_from_array = filterArgs.value<bool>(k_RemoveComponentsFromArray_Key);
+  inputValues.comp_number = filterArgs.value<int32>(k_CompNumber_Key);
   // This is the original array if remove components is true OR  move components is false
-  inputValues.TempArrayPath = DataPath::FromString(filterArgs.value<DataPath>(k_SelectedArrayPath_Key).toString() + "Temp", '/').value();
+  inputValues.temp_array_path = DataPath::FromString(filterArgs.value<DataPath>(k_SelectedArrayPath_Key).toString() + "Temp", '/').value();
   // This is the array on the original array path whether it's removed or not
-  inputValues.BaseArrayPath = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
+  inputValues.base_array_path = filterArgs.value<DataPath>(k_SelectedArrayPath_Key);
   // If move components to new array is true this is a valid path
-  inputValues.NewArrayPath = inputValues.BaseArrayPath.replaceName(filterArgs.value<std::string>(k_NewArrayName_Key));
+  inputValues.new_array_path = inputValues.base_array_path.replaceName(filterArgs.value<std::string>(k_NewArrayName_Key));
 
   return ExtractComponentAsArray(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_CompNumberKey = "CompNumber";
-constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
-constexpr StringLiteral k_NewArrayArrayNameKey = "NewArrayArrayName";
-constexpr StringLiteral k_ReducedArrayArrayNameKey = "ReducedArrayArrayName";
-constexpr StringLiteral k_SaveRemovedComponentKey = "SaveRemovedComponent";
-} // namespace SIMPL
+constexpr StringLiteralType k_CompNumberKey = "CompNumber";
+constexpr StringLiteralType k_SelectedArrayPathKey = "SelectedArrayPath";
+constexpr StringLiteralType k_NewArrayArrayNameKey = "NewArrayArrayName";
+constexpr StringLiteralType k_ReducedArrayArrayNameKey = "ReducedArrayArrayName";
+constexpr StringLiteralType k_SaveRemovedComponentKey = "SaveRemovedComponent";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ExtractComponentAsArrayFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -180,14 +181,14 @@ Result<Arguments> ExtractComponentAsArrayFilter::FromSIMPLJson(const nlohmann::j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_CompNumberKey, k_CompNumber_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_NewArrayArrayNameKey, k_NewArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_CompNumberKey, k_CompNumber_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NewArrayArrayNameKey, k_NewArrayName_Key));
 
-  if(json.contains(SIMPL::k_ReducedArrayArrayNameKey.str()))
+  if(json.contains(simpl::k_ReducedArrayArrayNameKey.str()))
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_ReducedArrayArrayNameKey, "@SIMPLNX_PARAMETER_KEY@"));
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_SaveRemovedComponentKey, "@SIMPLNX_PARAMETER_KEY@"));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ReducedArrayArrayNameKey, "@SIMPLNX_PARAMETER_KEY@"));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_SaveRemovedComponentKey, "@SIMPLNX_PARAMETER_KEY@"));
   }
 
   Result<> conversionResult = MergeResults(std::move(results));

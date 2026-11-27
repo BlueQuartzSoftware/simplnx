@@ -13,15 +13,15 @@ using namespace nx::core;
 
 TEST_CASE("InMemoryFormatResolver always returns in-memory", "[Core][FormatResolver]")
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   const InMemoryFormatResolver resolver;
   // Direct (concrete-type) dispatch: always in-core, even for a 1 TB array.
-  REQUIRE(resolver.resolveFormat(ds, DataPath({"Foo"}), DataType::float32, 1ULL << 40).empty());
+  REQUIRE(resolver.resolveFormat(dataStructure, DataPath({"Foo"}), DataType::float32, 1ULL << 40).empty());
   // Through the interface pointer (the way it is actually used): virtual dispatch still yields in-core.
   const IDataStoreFormatResolver& asBase = resolver;
-  REQUIRE(asBase.resolveFormat(ds, DataPath({"Foo"}), DataType::float32, 1ULL << 40).empty());
+  REQUIRE(asBase.resolveFormat(dataStructure, DataPath({"Foo"}), DataType::float32, 1ULL << 40).empty());
   // Unknown size (e.g. an unpopulated NeighborList) is still in-core.
-  REQUIRE(asBase.resolveFormat(ds, DataPath({"Foo"}), DataType::int32, 0).empty());
+  REQUIRE(asBase.resolveFormat(dataStructure, DataPath({"Foo"}), DataType::int32, 0).empty());
 }
 
 namespace
@@ -34,7 +34,8 @@ public:
   : m_Fmt(std::move(fmt))
   {
   }
-  std::string resolveFormat(const nx::core::DataStructure&, const nx::core::DataPath&, nx::core::DataType, nx::core::uint64) const override
+  std::string resolveFormat(const nx::core::DataStructure& /*dataStructure*/, const nx::core::DataPath& /*arrayPath*/, nx::core::DataType /*numericType*/,
+                            nx::core::uint64 /*dataSizeBytes*/) const override
   {
     return m_Fmt;
   }
@@ -62,27 +63,27 @@ TEST_CASE("DataStructure resolver: per-instance policies remain isolated and cop
 
 TEST_CASE("ResolveStorageFormat consults the resolver for every geometry parent", "[Core][FormatResolver]")
 {
-  DataStructure ds;
-  ds.setFormatResolver(std::make_shared<FixedResolver>("RESOLVED"));
+  DataStructure dataStructure;
+  dataStructure.setFormatResolver(std::make_shared<FixedResolver>("RESOLVED"));
 
-  auto* image = ImageGeom::Create(ds, "Image");
-  AttributeMatrix::Create(ds, "CellData", ShapeType{10}, image->getId());
+  auto* imagePtr = ImageGeom::Create(dataStructure, "Image");
+  AttributeMatrix::Create(dataStructure, "CellData", ShapeType{10}, imagePtr->getId());
   const DataPath imgArrayPath({"Image", "CellData", "arr"});
 
-  auto* tri = TriangleGeom::Create(ds, "Tri");
-  AttributeMatrix::Create(ds, "VertexData", ShapeType{5}, tri->getId());
+  auto* triPtr = TriangleGeom::Create(dataStructure, "Tri");
+  AttributeMatrix::Create(dataStructure, "VertexData", ShapeType{5}, triPtr->getId());
   const DataPath triArrayPath({"Tri", "VertexData", "arr"});
 
-  DataGroup::Create(ds, "Group");
+  DataGroup::Create(dataStructure, "Group");
   const DataPath grpArrayPath({"Group", "arr"});
 
-  auto* rectGrid = RectGridGeom::Create(ds, "RectGrid");
-  AttributeMatrix::Create(ds, "CellData2", ShapeType{8}, rectGrid->getId());
+  auto* rectGridPtr = RectGridGeom::Create(dataStructure, "RectGrid");
+  AttributeMatrix::Create(dataStructure, "CellData2", ShapeType{8}, rectGridPtr->getId());
   const DataPath rectArrayPath({"RectGrid", "CellData2", "arr"});
 
   for(const DataPath& path : {imgArrayPath, triArrayPath, grpArrayPath, rectArrayPath})
   {
-    CHECK(ArrayCreationUtilities::ResolveStorageFormat(ds, path, DataType::float32, 40, "") == "RESOLVED");
-    CHECK(ArrayCreationUtilities::ResolveStorageFormat(ds, path, DataType::float32, 40, "EXPLICIT") == "EXPLICIT");
+    CHECK(array_creation_utilities::ResolveStorageFormat(dataStructure, path, DataType::float32, 40, "") == "RESOLVED");
+    CHECK(array_creation_utilities::ResolveStorageFormat(dataStructure, path, DataType::float32, 40, "EXPLICIT") == "EXPLICIT");
   }
 }

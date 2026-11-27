@@ -12,7 +12,7 @@ namespace nx::core
 class SIMPLNX_EXPORT IDataArray : public IArray
 {
 public:
-  static inline constexpr StringLiteral k_TypeName = "IDataArray";
+  static constexpr StringLiteralType k_TypeName = "IDataArray";
 
   ~IDataArray() override = default;
 
@@ -59,12 +59,12 @@ public:
    */
   IDataStore& getIDataStoreRef()
   {
-    IDataStore* store = getIDataStore();
-    if(store == nullptr)
+    IDataStore* storePtr = getIDataStore();
+    if(storePtr == nullptr)
     {
       throw std::runtime_error("IDataArray: Null IDataStore");
     }
-    return *store;
+    return *storePtr;
   }
 
   /**
@@ -73,12 +73,12 @@ public:
    */
   const IDataStore& getIDataStoreRef() const
   {
-    const IDataStore* store = getIDataStore();
-    if(store == nullptr)
+    const IDataStore* storePtr = getIDataStore();
+    if(storePtr == nullptr)
     {
       throw std::runtime_error("IDataArray: Null IDataStore");
     }
-    return *store;
+    return *storePtr;
   }
 
   /**

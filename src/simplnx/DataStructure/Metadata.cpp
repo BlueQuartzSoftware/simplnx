@@ -46,22 +46,22 @@ Metadata::ValueType& Metadata::operator[](const KeyType& key)
   return m_Map[key];
 }
 
-Metadata::Iterator Metadata::begin()
+Metadata::iterator Metadata::begin()
 {
   return m_Map.begin();
 }
 
-Metadata::Iterator Metadata::end()
+Metadata::iterator Metadata::end()
 {
   return m_Map.end();
 }
 
-Metadata::ConstIterator Metadata::begin() const
+Metadata::const_iterator Metadata::begin() const
 {
   return m_Map.begin();
 }
 
-Metadata::ConstIterator Metadata::end() const
+Metadata::const_iterator Metadata::end() const
 {
   return m_Map.end();
 }

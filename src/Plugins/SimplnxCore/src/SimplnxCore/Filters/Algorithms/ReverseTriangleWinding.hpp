@@ -12,7 +12,7 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ReverseTriangleWindingInputValues
 {
-  GeometrySelectionParameter::ValueType InputTriangleGeometryPath;
+  GeometrySelectionParameter::ValueType input_triangle_geometry_path;
 };
 
 /**
@@ -24,7 +24,7 @@ class SIMPLNXCORE_EXPORT ReverseTriangleWinding
 {
 public:
   ReverseTriangleWinding(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReverseTriangleWindingInputValues* inputValues);
-  ~ReverseTriangleWinding() noexcept;
+  ~ReverseTriangleWinding() noexcept = default;
 
   ReverseTriangleWinding(const ReverseTriangleWinding&) = delete;
   ReverseTriangleWinding(ReverseTriangleWinding&&) noexcept = delete;

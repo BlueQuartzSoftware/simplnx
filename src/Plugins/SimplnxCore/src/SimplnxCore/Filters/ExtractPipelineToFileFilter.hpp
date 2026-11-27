@@ -27,8 +27,8 @@ public:
   ExtractPipelineToFileFilter& operator=(ExtractPipelineToFileFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_ImportFileData = "input_file_path";
-  static constexpr StringLiteral k_OutputFile = "output_file_path";
+  static constexpr StringLiteralType k_ImportFileData = "input_file_path";
+  static constexpr StringLiteralType k_OutputFile = "output_file_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -85,7 +85,7 @@ public:
    * @brief Returns a copy of the filter as a std::unique_ptr.
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

@@ -21,7 +21,7 @@ struct SIMPLNX_EXPORT Error
   std::string message;
 };
 
-using ErrorCollection = std::vector<Error>;
+using ErrorCollectionType = std::vector<Error>;
 
 /**
  * @brief Warning is a simple struct of a warning code and message.
@@ -33,7 +33,7 @@ struct SIMPLNX_EXPORT Warning
   std::string message;
 };
 
-using WarningCollection = std::vector<Warning>;
+using WarningCollectionType = std::vector<Warning>;
 
 namespace detail
 {
@@ -46,7 +46,7 @@ struct ResultBase
    */
   T& value()
   {
-    return m_Expected.value();
+    return expected.value();
   }
 
   /**
@@ -55,19 +55,19 @@ struct ResultBase
    */
   const T& value() const
   {
-    return m_Expected.value();
+    return expected.value();
   }
 
-  nonstd::expected<T, std::vector<Error>> m_Expected;
+  nonstd::expected<T, std::vector<Error>> expected;
 };
 
 struct SIMPLNX_EXPORT ResultVoid
 {
-  nonstd::expected<void, std::vector<Error>> m_Expected;
+  nonstd::expected<void, std::vector<Error>> expected;
 };
 
 template <class T>
-using ResultBaseT = std::conditional_t<std::is_same_v<T, void>, detail::ResultVoid, detail::ResultBase<T>>;
+using ResultBaseTType = std::conditional_t<std::is_same_v<T, void>, detail::ResultVoid, detail::ResultBase<T>>;
 } // namespace detail
 
 /**
@@ -76,7 +76,7 @@ using ResultBaseT = std::conditional_t<std::is_same_v<T, void>, detail::ResultVo
  * @tparam T Contained type. May be void.
  */
 template <class T = void>
-struct Result : public detail::ResultBaseT<T>
+struct Result : public detail::ResultBaseTType<T>
 {
   /**
    * @brief Returns true if there are no errors, i.e. it is valid to access the contained type.
@@ -84,7 +84,7 @@ struct Result : public detail::ResultBaseT<T>
    */
   bool valid() const
   {
-    return detail::ResultBaseT<T>::m_Expected.has_value();
+    return detail::ResultBaseTType<T>::expected.has_value();
   }
 
   /**
@@ -102,7 +102,7 @@ struct Result : public detail::ResultBaseT<T>
    */
   std::vector<Error>& errors()
   {
-    return detail::ResultBaseT<T>::m_Expected.error();
+    return detail::ResultBaseTType<T>::expected.error();
   }
 
   /**
@@ -111,7 +111,7 @@ struct Result : public detail::ResultBaseT<T>
    */
   const std::vector<Error>& errors() const
   {
-    return detail::ResultBaseT<T>::m_Expected.error();
+    return detail::ResultBaseTType<T>::expected.error();
   }
 
   /**
@@ -120,7 +120,7 @@ struct Result : public detail::ResultBaseT<T>
    */
   std::vector<Warning>& warnings()
   {
-    return m_Warnings;
+    return m_warnings;
   }
 
   /**
@@ -129,10 +129,10 @@ struct Result : public detail::ResultBaseT<T>
    */
   const std::vector<Warning>& warnings() const
   {
-    return m_Warnings;
+    return m_warnings;
   }
 
-  std::vector<Warning> m_Warnings;
+  std::vector<Warning> m_warnings;
 };
 
 /**
@@ -147,7 +147,7 @@ Result<> ConvertResult(Result<T>&& result)
   Result<> voidResult;
   if(!result.valid())
   {
-    voidResult.m_Expected = nonstd::make_unexpected(std::move(result.errors()));
+    voidResult.expected = nonstd::make_unexpected(std::move(result.errors()));
   }
   voidResult.warnings() = std::move(result.warnings());
   return voidResult;
@@ -164,7 +164,7 @@ Result<T> ConvertResultTo(Result<>&& fromResult, T&& value)
   else
   {
     // Place errors from 'result' into outputActions
-    convertedResult.m_Expected = nonstd::make_unexpected(std::move(fromResult.errors()));
+    convertedResult.expected = nonstd::make_unexpected(std::move(fromResult.errors()));
   }
   // Always move the warnings AFTER the other check above...
   convertedResult.warnings() = std::move(fromResult.warnings());
@@ -182,7 +182,8 @@ Result<ToT> ConvertInvalidResult(Result<FromT>&& result)
 }
 
 template <class ToT, class FromT>
-std::enable_if_t<std::is_convertible_v<FromT, ToT>, Result<ToT>> ConvertResultTo(Result<FromT>&& from)
+Result<ToT> ConvertResultTo(Result<FromT>&& from)
+requires(std::is_convertible_v<FromT, ToT>)
 {
   if(from.invalid())
   {
@@ -207,7 +208,7 @@ std::enable_if_t<std::is_convertible_v<FromT, ToT>, Result<ToT>> ConvertResultTo
 template <class T = void>
 Result<T> MakeErrorResult(int32 code, std::string message)
 {
-  return {{nonstd::make_unexpected(std::vector<Error>{{code, std::move(message)}})}};
+  return {{nonstd::make_unexpected(std::vector<Error>{{.code = code, .message = std::move(message)}})}};
 }
 
 /**
@@ -219,7 +220,7 @@ Result<T> MakeErrorResult(int32 code, std::string message)
 inline Result<> MakeWarningVoidResult(int32 code, std::string message)
 {
   Result<> result;
-  result.warnings().push_back(Warning{code, std::move(message)});
+  result.warnings().push_back(Warning{.code = code, .message = std::move(message)});
   return result;
 }
 
@@ -287,14 +288,14 @@ inline Result<T> MergeResults(Result<T> first, Result<T> second)
 
   Result<T> result = errors.empty() ? Result<T>{} : Result<T>{{nonstd::make_unexpected(std::move(errors))}};
 
-  result.m_Warnings.reserve(first.warnings().size() + second.warnings().size());
+  result.m_warnings.reserve(first.warnings().size() + second.warnings().size());
   for(auto&& warning : first.warnings())
   {
-    result.m_Warnings.push_back(std::move(warning));
+    result.m_warnings.push_back(std::move(warning));
   }
   for(auto&& warning : second.warnings())
   {
-    result.m_Warnings.push_back(std::move(warning));
+    result.m_warnings.push_back(std::move(warning));
   }
 
   return result;

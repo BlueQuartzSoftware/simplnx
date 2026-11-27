@@ -46,7 +46,7 @@ public:
   /**
    * @brief Destroys the scanline feature-neighbor algorithm.
    */
-  ~ComputeFeatureNeighborsScanline() noexcept;
+  ~ComputeFeatureNeighborsScanline() noexcept = default;
 
   ComputeFeatureNeighborsScanline(const ComputeFeatureNeighborsScanline&) = delete;
   ComputeFeatureNeighborsScanline(ComputeFeatureNeighborsScanline&&) noexcept = delete;

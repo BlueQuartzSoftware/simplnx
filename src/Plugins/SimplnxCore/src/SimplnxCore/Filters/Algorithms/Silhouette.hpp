@@ -18,12 +18,12 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT SilhouetteInputValues
 {
-  ClusterUtilities::DistanceMetric DistanceMetric;
-  bool UseMask = false;
-  DataPath ClusteringArrayPath;
-  DataPath MaskArrayPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath SilhouetteArrayPath;
+  cluster_utilities::DistanceMetric distance_metric;
+  bool use_mask = false;
+  DataPath clustering_array_path;
+  DataPath mask_array_path;
+  DataPath feature_ids_array_path;
+  DataPath silhouette_array_path;
 };
 
 /**
@@ -57,7 +57,7 @@ public:
   /**
    * @brief Destroys the silhouette dispatcher.
    */
-  ~Silhouette() noexcept;
+  ~Silhouette() noexcept = default;
 
   Silhouette(const Silhouette&) = delete;
   Silhouette(Silhouette&&) noexcept = delete;

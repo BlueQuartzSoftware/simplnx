@@ -5,9 +5,9 @@
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 
+#include <algorithm>
 #include <nonstd/span.hpp>
 
-#include <algorithm>
 #include <atomic>
 #include <cmath>
 #include <cstring>
@@ -23,13 +23,13 @@ struct Histogram
   std::vector<usize> counts;
   float64 min = 0.0;
   float64 max = 0.0;
-  float64 binWidth = 0.0;
+  float64 bin_width = 0.0;
 };
 
 struct HistogramScanOptions
 {
   static constexpr usize k_DefaultTargetBytes = 64ULL * 1024ULL * 1024ULL;
-  usize targetBytes = k_DefaultTargetBytes;
+  usize target_bytes = k_DefaultTargetBytes;
 };
 
 namespace detail
@@ -55,11 +55,11 @@ HistogramScanBuffer<T> ReserveHistogramScanBuffer(const AbstractDataStore<T>& st
   }
   if(store.getStoreType() != IDataStore::StoreType::OutOfCore)
   {
-    const usize bytes = options.targetBytes == HistogramScanOptions::k_DefaultTargetBytes ? HistogramScanOptions::k_DefaultTargetBytes : options.targetBytes;
+    const usize bytes = options.target_bytes == HistogramScanOptions::k_DefaultTargetBytes ? HistogramScanOptions::k_DefaultTargetBytes : options.target_bytes;
     return {{}, std::max<usize>(1, std::min(totalValues, bytes / sizeof(T)))};
   }
   const uint64 preferredBytes =
-      options.targetBytes == HistogramScanOptions::k_DefaultTargetBytes ? ResolveWorkingMemoryFractionBytes(usefulBytes, 1, 4, HistogramScanOptions::k_DefaultTargetBytes) : options.targetBytes;
+      options.target_bytes == HistogramScanOptions::k_DefaultTargetBytes ? ResolveWorkingMemoryFractionBytes(usefulBytes, 1, 4, HistogramScanOptions::k_DefaultTargetBytes) : options.target_bytes;
   auto reservation = ReserveWorkingMemory(preferredBytes, usefulBytes);
   const usize grantedBytes = static_cast<usize>(std::min<uint64>(reservation.sizeBytes(), std::numeric_limits<usize>::max()));
   return {std::move(reservation), std::max<usize>(1, std::min(totalValues, grantedBytes / sizeof(T)))};
@@ -79,7 +79,7 @@ inline Histogram InitializeHistogram(usize numBins, float64 min, float64 max)
  */
 inline void ConfigureHistogramBinning(Histogram& histogram)
 {
-  histogram.binWidth = 0.0;
+  histogram.bin_width = 0.0;
   const float64 range = histogram.max - histogram.min;
   if(range > 0.0)
   {
@@ -90,7 +90,7 @@ inline void ConfigureHistogramBinning(Histogram& histogram)
     // continuous-intensity data (the lower bound stays == min).
     constexpr float64 k_MarginalScale = 100.0;
     const float64 upper = histogram.max + range / (static_cast<float64>(histogram.counts.size()) * k_MarginalScale);
-    histogram.binWidth = (upper - histogram.min) / static_cast<float64>(histogram.counts.size());
+    histogram.bin_width = (upper - histogram.min) / static_cast<float64>(histogram.counts.size());
   }
 }
 
@@ -105,14 +105,8 @@ inline void AccumulateHistogramValue(Histogram& histogram, float64 value, float6
   }
 
   int64 bin = static_cast<int64>((value - histogram.min) * invBinWidth);
-  if(bin < 0)
-  {
-    bin = 0;
-  }
-  if(bin > maxBin)
-  {
-    bin = maxBin;
-  }
+  bin = std::max<nx::core::types::int64>(bin, 0);
+  bin = std::min(bin, maxBin);
   histogram.counts[static_cast<usize>(bin)] += frequency;
 }
 
@@ -122,11 +116,11 @@ using UnsignedIntegralType = std::make_unsigned_t<T>;
 template <class T>
 constexpr UnsignedIntegralType<T> IntegralMonotonicKey(T value) noexcept
 {
-  using Key = UnsignedIntegralType<T>;
-  Key key = static_cast<Key>(value);
+  using KeyType = UnsignedIntegralType<T>;
+  KeyType key = static_cast<KeyType>(value);
   if constexpr(std::is_signed_v<T>)
   {
-    constexpr Key k_SignBit = Key{1} << (std::numeric_limits<Key>::digits - 1);
+    constexpr KeyType k_SignBit = KeyType{1} << (std::numeric_limits<KeyType>::digits - 1);
     key ^= k_SignBit;
   }
   return key;
@@ -135,10 +129,10 @@ constexpr UnsignedIntegralType<T> IntegralMonotonicKey(T value) noexcept
 template <class T>
 float64 IntegralKeyAsFloat64(UnsignedIntegralType<T> key) noexcept
 {
-  using Key = UnsignedIntegralType<T>;
+  using KeyType = UnsignedIntegralType<T>;
   if constexpr(std::is_signed_v<T>)
   {
-    constexpr Key k_SignBit = Key{1} << (std::numeric_limits<Key>::digits - 1);
+    constexpr KeyType k_SignBit = KeyType{1} << (std::numeric_limits<KeyType>::digits - 1);
     if(key < k_SignBit)
     {
       return -static_cast<float64>(k_SignBit - key);
@@ -166,12 +160,12 @@ Result<Histogram> ComputeHistogram(const AbstractDataStore<T>& store, usize numB
     return {h};
   }
   detail::ConfigureHistogramBinning(h);
-  if(h.binWidth <= 0.0)
+  if(h.bin_width <= 0.0)
   {
     h.counts[0] = total; // degenerate range (min==max): all mass goes to bin 0
     return {h};
   }
-  const float64 invBinWidth = 1.0 / h.binWidth; // hoist: multiply per value, don't divide
+  const float64 invBinWidth = 1.0 / h.bin_width; // hoist: multiply per value, don't divide
   const int64 maxBin = static_cast<int64>(numBins) - 1;
 
   auto scanBuffer = detail::ReserveHistogramScanBuffer<T>(store, total, options);
@@ -219,12 +213,12 @@ template <class T>
 Result<Histogram> ComputeIntegralHistogram(const AbstractDataStore<T>& store, usize numBins, const std::atomic_bool& shouldCancel, const HistogramScanOptions& options = {})
 {
   static_assert(std::is_integral_v<T> && !std::is_same_v<T, bool>, "ComputeIntegralHistogram requires a non-boolean integral type");
-  using Key = detail::UnsignedIntegralType<T>;
+  using KeyType = detail::UnsignedIntegralType<T>;
 
   constexpr usize k_RingSize = 65536;
   struct FrequencyEntry
   {
-    Key key{};
+    KeyType key{};
     usize count = 0;
   };
 
@@ -240,8 +234,8 @@ Result<Histogram> ComputeIntegralHistogram(const AbstractDataStore<T>& store, us
   bool compactRange = true;
   T minValue{};
   T maxValue{};
-  Key minKey{};
-  Key maxKey{};
+  KeyType minKey{};
+  KeyType maxKey{};
 
   auto scanBuffer = detail::ReserveHistogramScanBuffer<T>(store, total, options);
   {
@@ -270,7 +264,7 @@ Result<Histogram> ComputeIntegralHistogram(const AbstractDataStore<T>& store, us
         for(usize i = blockStart; i < blockEnd; ++i)
         {
           const T value = buffer[i];
-          const Key key = detail::IntegralMonotonicKey(value);
+          const KeyType key = detail::IntegralMonotonicKey(value);
           if(first)
           {
             minValue = value;
@@ -295,11 +289,11 @@ Result<Histogram> ComputeIntegralHistogram(const AbstractDataStore<T>& store, us
 
           if(compactRange)
           {
-            constexpr Key k_MaxCompactSpan = static_cast<Key>(k_RingSize - 1);
+            constexpr KeyType k_MaxCompactSpan = static_cast<KeyType>(k_RingSize - 1);
             compactRange = (maxKey - minKey) <= k_MaxCompactSpan;
             if(compactRange)
             {
-              constexpr Key k_RingMask = static_cast<Key>(k_RingSize - 1);
+              constexpr KeyType k_RingMask = static_cast<KeyType>(k_RingSize - 1);
               FrequencyEntry& entry = frequencies[static_cast<usize>(key & k_RingMask)];
               if(entry.count == 0)
               {
@@ -325,7 +319,7 @@ Result<Histogram> ComputeIntegralHistogram(const AbstractDataStore<T>& store, us
   histogram.min = static_cast<float64>(minValue);
   histogram.max = static_cast<float64>(maxValue);
   detail::ConfigureHistogramBinning(histogram);
-  if(histogram.binWidth <= 0.0)
+  if(histogram.bin_width <= 0.0)
   {
     histogram.counts[0] = total;
     return {histogram};
@@ -337,7 +331,7 @@ Result<Histogram> ComputeIntegralHistogram(const AbstractDataStore<T>& store, us
     return ComputeHistogram(store, numBins, histogram.min, histogram.max, shouldCancel, options);
   }
 
-  const float64 invBinWidth = 1.0 / histogram.binWidth;
+  const float64 invBinWidth = 1.0 / histogram.bin_width;
   const int64 maxBin = static_cast<int64>(numBins) - 1;
   for(usize i = 0; i < k_RingSize; ++i)
   {
@@ -360,9 +354,9 @@ namespace detail
 inline bool FloatAlmostEqual(float64 x1, float64 x2, int64 maxUlps = 1)
 {
   // Close-to-zero guard (ITK default maxAbsoluteDifference = 0.1 * epsilon).
-  constexpr float64 maxAbsoluteDifference = 0.1 * std::numeric_limits<float64>::epsilon();
+  constexpr float64 k_MaxAbsoluteDifference = 0.1 * std::numeric_limits<float64>::epsilon();
   const float64 absDifference = std::abs(x1 - x2);
-  if(absDifference <= maxAbsoluteDifference)
+  if(absDifference <= k_MaxAbsoluteDifference)
   {
     return true;
   }
@@ -422,7 +416,7 @@ inline std::vector<float64> OtsuMultipleThresholds(const Histogram& h, usize num
   }
 
   // Per-bin measurement value == bin midpoint (ITK Histogram::GetMeasurementVector(bin)[0]).
-  auto measurement = [&](usize bin) -> float64 { return h.min + (static_cast<float64>(bin) + 0.5) * h.binWidth; };
+  auto measurement = [&](usize bin) -> float64 { return h.min + (static_cast<float64>(bin) + 0.5) * h.bin_width; };
   auto frequency = [&](usize bin) -> float64 { return static_cast<float64>(h.counts[bin]); };
 
   const usize numberOfClasses = numThresholds + 1;
@@ -589,7 +583,7 @@ inline std::vector<float64> OtsuMultipleThresholds(const Histogram& h, usize num
   for(usize t = 0; t < numThresholds; ++t)
   {
     const float64 offset = returnBinMidpoint ? 0.5 : 1.0;
-    thresholds[t] = h.min + (static_cast<float64>(maxVarThresholdIndexes[t]) + offset) * h.binWidth;
+    thresholds[t] = h.min + (static_cast<float64>(maxVarThresholdIndexes[t]) + offset) * h.bin_width;
   }
   return thresholds;
 }

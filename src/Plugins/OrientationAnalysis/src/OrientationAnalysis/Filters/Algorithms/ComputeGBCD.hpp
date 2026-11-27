@@ -22,14 +22,14 @@ struct SizeGBCD
 
   void initializeBinsWithValue(int32 value);
 
-  std::vector<float32> m_GbcdDeltas;
-  std::vector<float32> m_GbcdLimits;
-  std::vector<int32> m_GbcdSizes;
-  std::vector<int32> m_GbcdBins;
-  std::vector<bool> m_GbcdHemiCheck;
+  std::vector<float32> m_gbcd_deltas;
+  std::vector<float32> m_gbcd_limits;
+  std::vector<int32> m_gbcd_sizes;
+  std::vector<int32> m_gbcd_bins;
+  std::vector<bool> m_gbcd_hemi_check;
 
-  usize m_FaceChunkSize;
-  usize m_NumMisoReps;
+  usize m_face_chunk_size;
+  usize m_num_miso_reps;
 };
 
 /**
@@ -40,16 +40,16 @@ struct SizeGBCD
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeGBCDInputValues
 {
-  float32 GBCDRes;
-  DataPath TriangleGeometryPath;
-  DataPath SurfaceMeshFaceLabelsArrayPath;
-  DataPath SurfaceMeshFaceNormalsArrayPath;
-  DataPath SurfaceMeshFaceAreasArrayPath;
-  DataPath FeatureEulerAnglesArrayPath;
-  DataPath FeaturePhasesArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath FaceEnsembleAttributeMatrixName;
-  DataPath GBCDArrayName;
+  float32 gbcd_res{};
+  DataPath triangle_geometry_path;
+  DataPath surface_mesh_face_labels_array_path;
+  DataPath surface_mesh_face_normals_array_path;
+  DataPath surface_mesh_face_areas_array_path;
+  DataPath feature_euler_angles_array_path;
+  DataPath feature_phases_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath face_ensemble_attribute_matrix_name;
+  DataPath gbcd_array_name;
 };
 
 /**
@@ -77,7 +77,7 @@ public:
   /**
    * @brief Destroys the GBCD executor.
    */
-  ~ComputeGBCD() noexcept;
+  ~ComputeGBCD() noexcept = default;
 
   ComputeGBCD(const ComputeGBCD&) = delete;
   ComputeGBCD(ComputeGBCD&&) noexcept = delete;

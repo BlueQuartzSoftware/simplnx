@@ -11,12 +11,12 @@ struct ConvertFunctor
   template <typename T>
   Result<> operator()(const std::string& value)
   {
-    return ConvertResult(StringInterpretationUtilities::Convert<T>(value));
+    return ConvertResult(string_interpretation_utilities::Convert<T>(value));
   }
 };
 } // namespace
 
-Result<> StringInterpretationUtilities::CheckValueConverts(DataType type, const std::string& value)
+Result<> string_interpretation_utilities::CheckValueConverts(DataType type, const std::string& value)
 {
   return ExecuteDataFunction(ConvertFunctor{}, type, value);
 }

@@ -26,7 +26,7 @@ public:
   ReadHDF5DatasetFilter& operator=(ReadHDF5DatasetFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_ImportHDF5File_Key = "import_hdf5_object";
+  static constexpr StringLiteralType k_ImportHDF5File_Key = "import_hdf5_object";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -83,7 +83,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

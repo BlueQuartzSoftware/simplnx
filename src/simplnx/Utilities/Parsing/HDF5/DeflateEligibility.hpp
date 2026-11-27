@@ -5,14 +5,14 @@
 
 #include <H5Ipublic.h>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 
 /**
  * @brief Tests the host byte order at runtime.
  * @return True when the host stores the least-significant byte first.
  */
-SIMPLNX_EXPORT bool hostIsLittleEndian();
+SIMPLNX_EXPORT bool HostIsLittleEndian();
 
 /**
  * @brief Tests whether raw deflate chunk I/O can bypass the HDF5 filter pipeline.
@@ -36,6 +36,6 @@ SIMPLNX_EXPORT bool hostIsLittleEndian();
  * Eligible reads use positional raw I/O and inflate. Eligible writes use compression
  * followed by H5Dwrite_chunk.
  */
-SIMPLNX_EXPORT bool probeSingleDeflateEligibility(hid_t datasetId, usize elementSize, hid_t memoryTypeId, int32* deflateLevelOut);
+SIMPLNX_EXPORT bool ProbeSingleDeflateEligibility(hid_t datasetId, usize elementSize, hid_t memoryTypeId, int32* deflateLevelOut);
 
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

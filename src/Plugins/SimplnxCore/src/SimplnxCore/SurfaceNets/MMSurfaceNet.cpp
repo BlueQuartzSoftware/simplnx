@@ -14,16 +14,16 @@
 #include <set>
 #include <string>
 
-#include <time.h>
+#include <ctime>
 
-MMSurfaceNet::MMSurfaceNet(TriangleGeom::SharedVertexList::store_type& verticesStore, Int32Array* labels, size_t arraySize[3], float voxelSize[3])
+MMSurfaceNet::MMSurfaceNet(TriangleGeom::SharedVertexListType::StoreType& verticesStore, Int32ArrayType* labels, size_t arraySize[3], float voxelSize[3])
 {
-  m_cellMap = std::make_shared<MMCellMap>(verticesStore, labels, arraySize, voxelSize);
-  if(!m_cellMap->valid())
+  m_CellMap = std::make_shared<MMCellMap>(verticesStore, labels, arraySize, voxelSize);
+  if(!m_CellMap->valid())
   {
     return;
   }
-  m_InitializationResult = m_cellMap->init();
+  m_InitializationResult = m_CellMap->init();
 }
 
 MMSurfaceNet::~MMSurfaceNet() = default;
@@ -31,9 +31,11 @@ MMSurfaceNet::~MMSurfaceNet() = default;
 // Surface smoothing (relaxation)
 void MMSurfaceNet::relax(const RelaxAttrs& relaxAttrs) const
 {
-  if(!m_cellMap)
+  if(!m_CellMap)
+  {
     return;
-  m_cellMap->relax(relaxAttrs);
+  }
+  m_CellMap->relax(relaxAttrs);
 }
 
 #if 0

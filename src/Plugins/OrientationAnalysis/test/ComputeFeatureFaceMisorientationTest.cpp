@@ -25,8 +25,8 @@ namespace fs = std::filesystem;
 
 namespace
 {
-constexpr StringLiteral k_NXFaceMisorientationColors("NXFaceMisorientationColors");
-constexpr StringLiteral k_AvgQuats("AvgQuats");
+constexpr StringLiteralType k_NXFaceMisorientationColors("NXFaceMisorientationColors");
+constexpr StringLiteralType k_AvgQuats("AvgQuats");
 
 bool CompareFloats(const float32 generated, const float32 expected)
 {
@@ -43,19 +43,19 @@ constexpr Uuid k_ChangeAngleRepresentationFilterId = *Uuid::FromString("565e06e2
 constexpr Uuid k_SimplnxCorePluginId = *Uuid::FromString("05cc618b-781f-4ac0-b9ac-43f26ce1854f");
 const FilterHandle k_ChangeAngleRepresentationFilterHandle(k_ChangeAngleRepresentationFilterId, k_SimplnxCorePluginId);
 
-constexpr StringLiteral k_TriGeomName = "triangle_geom";
+constexpr StringLiteralType k_TriGeomName = "triangle_geom";
 const DataPath k_TriGeomPath({k_TriGeomName});
 
-const DataPath k_FaceDataPath = k_TriGeomPath.createChildPath(Constants::k_FaceData);
-const DataPath k_FaceLabelsPath = k_FaceDataPath.createChildPath(Constants::k_FaceLabels);
+const DataPath k_FaceDataPath = k_TriGeomPath.createChildPath(constants::k_FaceData);
+const DataPath k_FaceLabelsPath = k_FaceDataPath.createChildPath(constants::k_FaceLabels);
 
-const DataPath k_FeatureDataPath = k_TriGeomPath.createChildPath(Constants::k_Grain_Data);
-const DataPath k_AvgEulerAnglesPath = k_FeatureDataPath.createChildPath(Constants::k_AvgEulerAngles);
-const DataPath k_FeaturePhasesPath = k_FeatureDataPath.createChildPath(Constants::k_Phases);
+const DataPath k_FeatureDataPath = k_TriGeomPath.createChildPath(constants::k_GrainDataWithSpaces);
+const DataPath k_AvgEulerAnglesPath = k_FeatureDataPath.createChildPath(constants::k_AvgEulerAngles);
+const DataPath k_FeaturePhasesPath = k_FeatureDataPath.createChildPath(constants::k_Phases);
 const DataPath k_AvgQuatsPath = k_FeatureDataPath.createChildPath(k_AvgQuats);
 
-const DataPath k_PhaseDataPath = k_TriGeomPath.createChildPath(Constants::k_Phase_Data);
-const DataPath k_CrystalStructurePath = k_PhaseDataPath.createChildPath(Constants::k_CrystalStructures);
+const DataPath k_PhaseDataPath = k_TriGeomPath.createChildPath(constants::k_PhaseData);
+const DataPath k_CrystalStructurePath = k_PhaseDataPath.createChildPath(constants::k_CrystalStructures);
 
 /**
  * @brief Creates the hand-curated feature-face misorientation fixture.
@@ -65,12 +65,12 @@ DataStructure CreateTestDataStructure()
 {
   DataStructure dataStructure = {};
 
-  TriangleGeom* geom = TriangleGeom::Create(dataStructure, k_TriGeomName);
+  TriangleGeom* geomPtr = TriangleGeom::Create(dataStructure, k_TriGeomName);
 
   // Make Shared Vertex List
   {
     // clang-format off
-    std::unique_ptr<TriangleGeom::SharedVertexList::value_type[]> sharedVertexListBuffer(new TriangleGeom::SharedVertexList::value_type[] {
+    std::unique_ptr<TriangleGeom::SharedVertexListType::value_type[]> sharedVertexListBuffer(new TriangleGeom::SharedVertexListType::value_type[] {
       0.0f,0.0f,0.0f,
       1.0f,0.0f,0.0f,
       0.0f,1.0f,0.0f,
@@ -186,17 +186,17 @@ DataStructure CreateTestDataStructure()
     });
     // clang-format on
 
-    const TriangleGeom::SharedVertexList* sharedVerts =
-        TriangleGeom::SharedVertexList::Create(dataStructure, TriangleGeom::k_SharedVertexListName,
-                                               std::make_shared<DataStore<TriangleGeom::SharedVertexList::value_type>>(std::move(sharedVertexListBuffer), ShapeType{111}, ShapeType{3}), geom->getId());
+    const TriangleGeom::SharedVertexListType* sharedVertsPtr = TriangleGeom::SharedVertexListType::Create(
+        dataStructure, TriangleGeom::k_SharedVertexListName,
+        std::make_shared<DataStore<TriangleGeom::SharedVertexListType::value_type>>(std::move(sharedVertexListBuffer), ShapeType{111}, ShapeType{3}), geomPtr->getId());
 
-    geom->setVertexListId(sharedVerts->getId());
+    geomPtr->setVertexListId(sharedVertsPtr->getId());
   }
 
   // Create Shared Triangles List
   {
     // clang-format off
-    std::unique_ptr<TriangleGeom::SharedFaceList::value_type[]> sharedFaceListBuffer(new TriangleGeom::SharedFaceList::value_type[] {
+    std::unique_ptr<TriangleGeom::SharedFaceListType::value_type[]> sharedFaceListBuffer(new TriangleGeom::SharedFaceListType::value_type[] {
       0,1,2,
       3,4,5,
       6,7,8,
@@ -238,14 +238,14 @@ DataStructure CreateTestDataStructure()
     });
     // clang-format on
 
-    const TriangleGeom::SharedFaceList* sharedFaces =
-        TriangleGeom::SharedFaceList::Create(dataStructure, TriangleGeom::k_SharedFacesListName,
-                                             std::make_shared<DataStore<TriangleGeom::SharedFaceList::value_type>>(std::move(sharedFaceListBuffer), ShapeType{37}, ShapeType{3}), geom->getId());
+    const TriangleGeom::SharedFaceListType* sharedFacesPtr = TriangleGeom::SharedFaceListType::Create(
+        dataStructure, TriangleGeom::k_SharedFacesListName, std::make_shared<DataStore<TriangleGeom::SharedFaceListType::value_type>>(std::move(sharedFaceListBuffer), ShapeType{37}, ShapeType{3}),
+        geomPtr->getId());
 
-    geom->setFaceListId(sharedFaces->getId());
+    geomPtr->setFaceListId(sharedFacesPtr->getId());
   }
 
-  AttributeMatrix* faceDataAM = AttributeMatrix::Create(dataStructure, k_FaceDataPath.getTargetName(), ShapeType{37}, geom->getId());
+  AttributeMatrix* faceDataAmPtr = AttributeMatrix::Create(dataStructure, k_FaceDataPath.getTargetName(), ShapeType{37}, geomPtr->getId());
 
   // Make Face Labels
   {
@@ -292,10 +292,11 @@ DataStructure CreateTestDataStructure()
     });
     // clang-format on
 
-    DataArray<int32>::Create(dataStructure, k_FaceLabelsPath.getTargetName(), std::make_shared<Int32DataStore>(std::move(faceLabelsBuffer), faceDataAM->getShape(), ShapeType{2}), faceDataAM->getId());
+    DataArray<int32>::Create(dataStructure, k_FaceLabelsPath.getTargetName(), std::make_shared<Int32DataStoreType>(std::move(faceLabelsBuffer), faceDataAmPtr->getShape(), ShapeType{2}),
+                             faceDataAmPtr->getId());
   }
 
-  AttributeMatrix* featureDataAM = AttributeMatrix::Create(dataStructure, k_FeatureDataPath.getTargetName(), ShapeType{45}, geom->getId());
+  AttributeMatrix* featureDataAmPtr = AttributeMatrix::Create(dataStructure, k_FeatureDataPath.getTargetName(), ShapeType{45}, geomPtr->getId());
 
   // Create AvgEulers
   {
@@ -350,8 +351,8 @@ DataStructure CreateTestDataStructure()
     });
     // clang-format on
 
-    DataArray<float32>::Create(dataStructure, k_AvgEulerAnglesPath.getTargetName(), std::make_shared<Float32DataStore>(std::move(avgEulerAnglesBuffer), featureDataAM->getShape(), ShapeType{3}),
-                               featureDataAM->getId());
+    DataArray<float32>::Create(dataStructure, k_AvgEulerAnglesPath.getTargetName(), std::make_shared<Float32DataStoreType>(std::move(avgEulerAnglesBuffer), featureDataAmPtr->getShape(), ShapeType{3}),
+                               featureDataAmPtr->getId());
   }
 
   // Create Phases
@@ -407,11 +408,11 @@ DataStructure CreateTestDataStructure()
     });
     // clang-format on
 
-    DataArray<int32>::Create(dataStructure, k_FeaturePhasesPath.getTargetName(), std::make_shared<Int32DataStore>(std::move(phasesBuffer), featureDataAM->getShape(), ShapeType{1}),
-                             featureDataAM->getId());
+    DataArray<int32>::Create(dataStructure, k_FeaturePhasesPath.getTargetName(), std::make_shared<Int32DataStoreType>(std::move(phasesBuffer), featureDataAmPtr->getShape(), ShapeType{1}),
+                             featureDataAmPtr->getId());
   }
 
-  AttributeMatrix* phaseDataAM = AttributeMatrix::Create(dataStructure, k_PhaseDataPath.getTargetName(), ShapeType{13}, geom->getId());
+  AttributeMatrix* phaseDataAmPtr = AttributeMatrix::Create(dataStructure, k_PhaseDataPath.getTargetName(), ShapeType{13}, geomPtr->getId());
 
   // Create CrystalStructures
   {
@@ -434,8 +435,8 @@ DataStructure CreateTestDataStructure()
     });
     // clang-format on
 
-    DataArray<uint32>::Create(dataStructure, k_CrystalStructurePath.getTargetName(), std::make_shared<UInt32DataStore>(std::move(crystalStructBuffer), phaseDataAM->getShape(), ShapeType{1}),
-                              phaseDataAM->getId());
+    DataArray<uint32>::Create(dataStructure, k_CrystalStructurePath.getTargetName(), std::make_shared<UInt32DataStoreType>(std::move(crystalStructBuffer), phaseDataAmPtr->getShape(), ShapeType{1}),
+                              phaseDataAmPtr->getId());
   }
 
   return dataStructure;
@@ -453,29 +454,29 @@ Arguments BuildPhaseBoundsFixture(DataStructure& dataStructure)
   auto* dataGroupPtr = DataGroup::Create(dataStructure, "Bounds Data");
   REQUIRE(dataGroupPtr != nullptr);
 
-  auto faceLabelsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_BoundsFaceLabelsPath, {1}, {2});
-  auto* faceLabelsArrayPtr = Int32Array::Create(dataStructure, k_BoundsFaceLabelsPath.getTargetName(), faceLabelsStore, dataGroupPtr->getId());
+  auto faceLabelsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_BoundsFaceLabelsPath, {1}, {2});
+  auto* faceLabelsArrayPtr = Int32ArrayType::Create(dataStructure, k_BoundsFaceLabelsPath.getTargetName(), faceLabelsStore, dataGroupPtr->getId());
   REQUIRE(faceLabelsArrayPtr != nullptr);
   (*faceLabelsStore)[0] = 1;
   (*faceLabelsStore)[1] = 2;
 
-  auto avgQuatsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_BoundsAvgQuatsPath, {3}, {4});
-  auto* avgQuatsArrayPtr = Float32Array::Create(dataStructure, k_BoundsAvgQuatsPath.getTargetName(), avgQuatsStore, dataGroupPtr->getId());
+  auto avgQuatsStore = data_store_utilities::CreateDataStore<float32>(dataStructure, k_BoundsAvgQuatsPath, {3}, {4});
+  auto* avgQuatsArrayPtr = Float32ArrayType::Create(dataStructure, k_BoundsAvgQuatsPath.getTargetName(), avgQuatsStore, dataGroupPtr->getId());
   REQUIRE(avgQuatsArrayPtr != nullptr);
   for(usize featureIdx = 0; featureIdx < 3; featureIdx++)
   {
     avgQuatsStore->setComponent(featureIdx, 3, 1.0F);
   }
 
-  auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_BoundsFeaturePhasesPath, {3}, {1});
-  auto* featurePhasesArrayPtr = Int32Array::Create(dataStructure, k_BoundsFeaturePhasesPath.getTargetName(), featurePhasesStore, dataGroupPtr->getId());
+  auto featurePhasesStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_BoundsFeaturePhasesPath, {3}, {1});
+  auto* featurePhasesArrayPtr = Int32ArrayType::Create(dataStructure, k_BoundsFeaturePhasesPath.getTargetName(), featurePhasesStore, dataGroupPtr->getId());
   REQUIRE(featurePhasesArrayPtr != nullptr);
   (*featurePhasesStore)[0] = 0;
   (*featurePhasesStore)[1] = 2;
   (*featurePhasesStore)[2] = 2;
 
-  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, k_BoundsCrystalStructuresPath, {2}, {1});
-  auto* crystalStructuresArrayPtr = UInt32Array::Create(dataStructure, k_BoundsCrystalStructuresPath.getTargetName(), crystalStructuresStore, dataGroupPtr->getId());
+  auto crystalStructuresStore = data_store_utilities::CreateDataStore<uint32>(dataStructure, k_BoundsCrystalStructuresPath, {2}, {1});
+  auto* crystalStructuresArrayPtr = UInt32ArrayType::Create(dataStructure, k_BoundsCrystalStructuresPath.getTargetName(), crystalStructuresStore, dataGroupPtr->getId());
   REQUIRE(crystalStructuresArrayPtr != nullptr);
   (*crystalStructuresStore)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
   (*crystalStructuresStore)[1] = ebsdlib::CrystalStructure::Cubic_High;
@@ -494,18 +495,18 @@ Arguments BuildPhaseBoundsFixture(DataStructure& dataStructure)
 TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Curated Data", "[OrientationAnalysis][ComputeFeatureFaceMisorientationFilter]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure = curated::CreateTestDataStructure();
 
   // Convert the EulerAngles to radians
   {
-    auto filter = filterList->createFilter(curated::k_ChangeAngleRepresentationFilterHandle);
+    auto filter = filterListPtr->createFilter(curated::k_ChangeAngleRepresentationFilterHandle);
     REQUIRE(nullptr != filter);
 
     Arguments args;
@@ -515,7 +516,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Curated 
 
     // Preflight the filter and check result
     auto preflightResult = filter->preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter->execute(dataStructure, args);
@@ -563,7 +564,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Curated 
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
@@ -574,7 +575,7 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Curated 
   scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(curated::k_FaceDataPath.createChildPath(::k_NXFaceMisorientationColors)));
 
   // Validate Computed Misorientations
-  const auto& faceMisorientations = dataStructure.getDataRefAs<Float32Array>(curated::k_FaceDataPath.createChildPath(::k_NXFaceMisorientationColors));
+  const auto& faceMisorientations = dataStructure.getDataRefAs<Float32ArrayType>(curated::k_FaceDataPath.createChildPath(::k_NXFaceMisorientationColors));
 
   // Outputs were validated by Mike Jackson
   REQUIRE(::CompareFloats(faceMisorientations[0], 15.0f));
@@ -627,27 +628,27 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Curated 
   REQUIRE(::CompareFloats(faceMisorientations[35], 30.0f)); // F41 (phi1=0) <-> F43 (phi1=90)
   REQUIRE(::CompareFloats(faceMisorientations[36], 60.0f)); // F41 (phi1=0) <-> F44 (phi1=180)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: working headroom applies only to OOC computation", "[OrientationAnalysis][ComputeFeatureFaceMisorientationFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   Arguments args = BuildPhaseBoundsFixture(dataStructure);
-  Int32Array* phasesPtr = nullptr;
-  REQUIRE_NOTHROW(phasesPtr = &dataStructure.getDataRefAs<Int32Array>(k_BoundsFeaturePhasesPath));
+  Int32ArrayType* phasesPtr = nullptr;
+  REQUIRE_NOTHROW(phasesPtr = &dataStructure.getDataRefAs<Int32ArrayType>(k_BoundsFeaturePhasesPath));
   (*phasesPtr)[1] = 1;
   (*phasesPtr)[2] = 1;
-  auto& budget = CacheMemoryBudgetManager::instance();
+  auto& budget = CacheMemoryBudgetManager::Instance();
   REQUIRE(budget.reservedWorkingMemoryBytes() == 0);
   auto pressure = budget.reserveWorkingMemory(budget.maximumWorkingMemoryBytes());
   REQUIRE(pressure.sizeBytes() == budget.maximumWorkingMemoryBytes());
   ComputeFeatureFaceMisorientationFilter filter;
   auto result = scope.executeFilter(filter, dataStructure, args);
-  if(scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore)
+  if(scenario == unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore)
   {
     SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
     REQUIRE(result.result.errors()[0].code == -98425);
@@ -655,28 +656,28 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: working 
   else
   {
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-    const Float32Array* anglesPtr = nullptr;
-    REQUIRE_NOTHROW(anglesPtr = &dataStructure.getDataRefAs<Float32Array>(k_BoundsMisorientationsPath));
+    const Float32ArrayType* anglesPtr = nullptr;
+    REQUIRE_NOTHROW(anglesPtr = &dataStructure.getDataRefAs<Float32ArrayType>(k_BoundsMisorientationsPath));
     REQUIRE((*anglesPtr)[0] == 0.0F);
   }
   CHECK(budget.reservedWorkingMemoryBytes() == pressure.sizeBytes());
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Phase Index Bounds", "[OrientationAnalysis][ComputeFeatureFaceMisorientationFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
   DataStructure dataStructure;
   Arguments args = BuildPhaseBoundsFixture(dataStructure);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_BoundsFeaturePhasesPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_BoundsFaceLabelsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_BoundsFeaturePhasesPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_BoundsFaceLabelsPath));
 
   if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
   {
-    REQUIRE(dataStructure.getDataRefAs<Int32Array>(k_BoundsFeaturePhasesPath).getDataStoreRef().getDataFormat() == "HDF5-OOC");
-    REQUIRE(dataStructure.getDataRefAs<Int32Array>(k_BoundsFaceLabelsPath).getDataStoreRef().getDataFormat() == "HDF5-OOC");
+    REQUIRE(dataStructure.getDataRefAs<Int32ArrayType>(k_BoundsFeaturePhasesPath).getDataStoreRef().getDataFormat() == "HDF5-OOC");
+    REQUIRE(dataStructure.getDataRefAs<Int32ArrayType>(k_BoundsFaceLabelsPath).getDataStoreRef().getDataFormat() == "HDF5-OOC");
   }
 
   ComputeFeatureFaceMisorientationFilter filter;
@@ -688,21 +689,21 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Phase In
     REQUIRE(executeResult.result.errors()[0].code == -98412);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Mismatched Phase resident scenarios", "[OrientationAnalysis][ComputeFeatureFaceMisorientationFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
   Arguments args = BuildPhaseBoundsFixture(dataStructure);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_BoundsFeaturePhasesPath));
-  auto& featurePhasesStore = dataStructure.getDataRefAs<Int32Array>(k_BoundsFeaturePhasesPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_BoundsFeaturePhasesPath));
+  auto& featurePhasesStore = dataStructure.getDataRefAs<Int32ArrayType>(k_BoundsFeaturePhasesPath).getDataStoreRef();
   featurePhasesStore[2] = 1;
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(k_BoundsFaceLabelsPath));
@@ -720,17 +721,17 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: Mismatch
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(k_BoundsMisorientationsPath));
   scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(k_BoundsMisorientationsPath));
-  const auto& misorientationsArrayRef = dataStructure.getDataRefAs<Float32Array>(k_BoundsMisorientationsPath);
+  const auto& misorientationsArrayRef = dataStructure.getDataRefAs<Float32ArrayType>(k_BoundsMisorientationsPath);
   REQUIRE(std::isnan(misorientationsArrayRef[0]));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeFeatureFaceMisorientationFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -743,22 +744,22 @@ TEST_CASE("OrientationAnalysis::ComputeFeatureFaceMisorientationFilter: SIMPL Ba
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeFeatureFaceMisorientationFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeFeatureFaceMisorientationFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(ComputeFeatureFaceMisorientationFilter::k_SurfaceMeshFaceLabelsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ComputeFeatureFaceMisorientationFilter::k_AvgQuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ComputeFeatureFaceMisorientationFilter::k_FeaturePhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));

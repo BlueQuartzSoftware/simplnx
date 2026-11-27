@@ -13,21 +13,21 @@
 #include <limits>
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace fs = std::filesystem;
 
-namespace CreateImageGeometryUnitTest
+namespace create_image_geometry_unit_test
 {
 
 const fs::path k_DataDir = "test/data";
 const fs::path k_TestFile = "CreateImageGeometry_Test.dream3d";
 
-} // namespace CreateImageGeometryUnitTest
+} // namespace create_image_geometry_unit_test
 
 TEST_CASE("SimplnxCore::CreateImageGeometryFilter", "[SimplnxCore]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
 
@@ -35,25 +35,25 @@ TEST_CASE("SimplnxCore::CreateImageGeometryFilter", "[SimplnxCore]")
   std::vector<float32> imageSpacing = {0.10F, 2.0F, 33.0F};
   std::vector<float32> imageOrigin = {0.0F, 22.0F, 77.0F};
 
-  VectorUInt64Parameter::ValueType inputDims = {imageDims[0], imageDims[1], imageDims[2]};
+  VectorUInt64ParameterType::ValueType inputDims = {imageDims[0], imageDims[1], imageDims[2]};
 
-  DataStructure dataStructure = nx::core::UnitTest::CreateAllPrimitiveTypes(imageDims);
+  DataStructure dataStructure = nx::core::unit_test::CreateAllPrimitiveTypes(imageDims);
   //  DataGroup* levelZeroGroup = DataGroup::Create(dataStructure, Complexk_LevelZero);
   //  DataGroup* levelOneGroup = DataGroup::Create(dataStructure, Complexk_LevelOne, levelZeroGroup->getId());
-  const std::string k_ImageGeometryName("[Image Geometry]");
-  DataPath selectedDataGroupPath({k_LevelZero, k_LevelOne, k_ImageGeometryName});
+  const std::string kImageGeometryName("[Image Geometry]");
+  DataPath selectedDataGroupPath({k_LevelZero, k_LevelOne, kImageGeometryName});
   Arguments args;
   // Create default Parameters for the filter.
   args.insertOrAssign(CreateImageGeometryFilter::k_GeometryDataPath_Key, std::make_any<DataPath>(selectedDataGroupPath));
   args.insertOrAssign(CreateImageGeometryFilter::k_Dimensions_Key, std::make_any<std::vector<uint64_t>>(inputDims));
-  args.insertOrAssign(CreateImageGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(imageOrigin));
-  args.insertOrAssign(CreateImageGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(imageSpacing));
+  args.insertOrAssign(CreateImageGeometryFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>(imageOrigin));
+  args.insertOrAssign(CreateImageGeometryFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>(imageSpacing));
 
   CreateImageGeometryFilter filter;
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -77,14 +77,14 @@ TEST_CASE("SimplnxCore::CreateImageGeometryFilter", "[SimplnxCore]")
   REQUIRE(err >= 0);
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CreateImageGeometryFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CreateImageGeometryFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -97,22 +97,22 @@ TEST_CASE("SimplnxCore::CreateImageGeometryFilter: SIMPL Backwards Compatibility
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<CreateImageGeometryFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<CreateImageGeometryFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(CreateImageGeometryFilter::k_GeometryDataPath_Key) == DataPath({"DataContainer"}));
       // Complex type (UInt64Vec3FilterParameterConverter) - verified by successful pipeline loading
       // Complex type (FloatVec3FilterParameterConverter) - verified by successful pipeline loading
@@ -125,19 +125,19 @@ TEST_CASE("SimplnxCore::CreateImageGeometryFilter: Numeric domain regression", "
 {
   const auto row = GENERATE(0, 1, 2, 3);
   CAPTURE(row);
-  DataStructure ds;
+  DataStructure dataStructure;
   CreateImageGeometryFilter filter;
   auto args = filter.getDefaultArguments();
-  args.insertOrAssign(CreateImageGeometryFilter::k_Dimensions_Key, VectorUInt64Parameter::ValueType{2, 2, 2});
+  args.insertOrAssign(CreateImageGeometryFilter::k_Dimensions_Key, VectorUInt64ParameterType::ValueType{2, 2, 2});
   args.insertOrAssign(CreateImageGeometryFilter::k_GeometryDataPath_Key, DataPath({"Created"}));
 
   const float32 nan = std::numeric_limits<float32>::quiet_NaN();
-  const std::vector<VectorFloat32Parameter::ValueType> spacings = {{0, 1, 1}, {1, -1, 1}, {1, 1, nan}, {1, 1, 1}};
+  const std::vector<VectorFloat32ParameterType::ValueType> spacings = {{0, 1, 1}, {1, -1, 1}, {1, 1, nan}, {1, 1, 1}};
   args.insertOrAssign(CreateImageGeometryFilter::k_Spacing_Key, spacings[row]);
-  args.insertOrAssign(CreateImageGeometryFilter::k_Origin_Key, VectorFloat32Parameter::ValueType{0, row == 3 ? std::numeric_limits<float32>::infinity() : 0, 0});
-  auto result = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors()[0].code == (row == 3 ? -86010 : -86009));
-  CHECK(result.outputActions.errors()[0].message.find(row == 3 ? "Origin" : "Spacing") != std::string::npos);
-  CHECK(result.outputActions.errors()[0].message.find(row == 0 ? "X" : row == 2 ? "Z" : "Y") != std::string::npos);
+  args.insertOrAssign(CreateImageGeometryFilter::k_Origin_Key, VectorFloat32ParameterType::ValueType{0, row == 3 ? std::numeric_limits<float32>::infinity() : 0, 0});
+  auto result = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors()[0].code == (row == 3 ? -86010 : -86009));
+  CHECK(result.output_actions.errors()[0].message.find(row == 3 ? "Origin" : "Spacing") != std::string::npos);
+  CHECK(result.output_actions.errors()[0].message.find(row == 0 ? "X" : row == 2 ? "Z" : "Y") != std::string::npos);
 }

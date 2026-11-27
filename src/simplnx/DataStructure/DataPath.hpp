@@ -122,7 +122,7 @@ public:
    * @param name The name of the child to append to the path
    * @return New DataPath with the child name appended
    */
-  DataPath createChildPath(std::string name) const;
+  DataPath createChildPath(const std::string& name) const;
 
   /**
    * @brief Creates and returns a DataPath by replacing the specified symbol with

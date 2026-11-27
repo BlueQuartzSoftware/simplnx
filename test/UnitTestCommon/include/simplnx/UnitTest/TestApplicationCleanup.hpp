@@ -6,7 +6,7 @@
 #include <exception>
 #include <memory>
 
-namespace nx::core::UnitTest
+namespace nx::core::unit_test
 {
 /**
  * @brief Checks the existing Application save, deletes the singleton, and checks for retained owners.
@@ -65,4 +65,4 @@ inline bool FinishTestApplication() noexcept
   }
   return successful;
 }
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test

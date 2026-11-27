@@ -9,8 +9,6 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
-#include "simplnx/UnitTest/UnitTestCommon.hpp"
-
 #include <catch2/catch.hpp>
 
 #include <fstream>
@@ -20,8 +18,8 @@ namespace fs = std::filesystem;
 #include <limits>
 
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -31,18 +29,18 @@ const std::vector<std::string> k_InputNames = {"comma", "semi_colon", "space", "
 TEST_CASE("SimplnxCore::ReadStringDataArrayFilter: Valid filter execution", "[SimplnxCore][ReadStringDataArrayFilter]")
 {
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_ReadStringArray.tar.gz", "7_ReadStringArray");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_ReadStringArray.tar.gz", "7_ReadStringArray");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/7_ReadStringArray/7_read_string_array.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
 
   {
-    const usize k_InputIndex = 0;
-    const DataPath k_CreatedDataArrayPath({fmt::format("computed_{}", k_InputNames[k_InputIndex])});
-    const DataPath k_ExemplarDataArrayPath({fmt::format("exemplar_{}", k_InputNames[k_InputIndex])});
+    const usize kInputIndex = 0;
+    const DataPath kCreatedDataArrayPath({fmt::format("computed_{}", k_InputNames[kInputIndex])});
+    const DataPath kExemplarDataArrayPath({fmt::format("exemplar_{}", k_InputNames[kInputIndex])});
 
-    auto inputFilePath = fs::path(fmt::format("{}/7_ReadStringArray/{}", unit_test::k_TestFilesDir, fmt::format("random_words_{}.csv", k_InputNames[k_InputIndex])));
+    auto inputFilePath = fs::path(fmt::format("{}/7_ReadStringArray/{}", unit_test::k_TestFilesDir, fmt::format("random_words_{}.csv", k_InputNames[kInputIndex])));
     // Instantiate the filter and an Arguments Object
     Arguments args;
 
@@ -50,27 +48,27 @@ TEST_CASE("SimplnxCore::ReadStringDataArrayFilter: Valid filter execution", "[Si
     args.insertOrAssign(ReadStringDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(fs::path(inputFilePath)));
     args.insertOrAssign(ReadStringDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{100}}));
     args.insertOrAssign(ReadStringDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(ReadStringDataArrayFilter::k_DelimiterChoice_Key, std::make_any<uint64>(k_InputIndex));
-    args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_CreatedDataArrayPath));
+    args.insertOrAssign(ReadStringDataArrayFilter::k_DelimiterChoice_Key, std::make_any<uint64>(kInputIndex));
+    args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(kCreatedDataArrayPath));
     args.insertOrAssign(ReadStringDataArrayFilter::k_DataFormat_Key, std::make_any<std::string>(""));
     args.insertOrAssign(ReadStringDataArrayFilter::k_SetTupleDimensions, std::make_any<bool>(true));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    nx::core::UnitTest::CompareStringArrays(dataStructure, k_ExemplarDataArrayPath, k_CreatedDataArrayPath);
+    nx::core::unit_test::CompareStringArrays(dataStructure, kExemplarDataArrayPath, kCreatedDataArrayPath);
   }
 
   {
-    const usize k_InputIndex = 1;
-    const DataPath k_CreatedDataArrayPath({fmt::format("computed_{}", k_InputNames[k_InputIndex])});
-    const DataPath k_ExemplarDataArrayPath({fmt::format("exemplar_{}", k_InputNames[k_InputIndex])});
-    auto inputFilePath = fs::path(fmt::format("{}/7_ReadStringArray/{}", unit_test::k_TestFilesDir, fmt::format("random_words_{}.csv", k_InputNames[k_InputIndex])));
+    const usize kInputIndex = 1;
+    const DataPath kCreatedDataArrayPath({fmt::format("computed_{}", k_InputNames[kInputIndex])});
+    const DataPath kExemplarDataArrayPath({fmt::format("exemplar_{}", k_InputNames[kInputIndex])});
+    auto inputFilePath = fs::path(fmt::format("{}/7_ReadStringArray/{}", unit_test::k_TestFilesDir, fmt::format("random_words_{}.csv", k_InputNames[kInputIndex])));
     // Instantiate the filter and an Arguments Object
     Arguments args;
 
@@ -78,27 +76,27 @@ TEST_CASE("SimplnxCore::ReadStringDataArrayFilter: Valid filter execution", "[Si
     args.insertOrAssign(ReadStringDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(fs::path(inputFilePath)));
     args.insertOrAssign(ReadStringDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{100}}));
     args.insertOrAssign(ReadStringDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(ReadStringDataArrayFilter::k_DelimiterChoice_Key, std::make_any<uint64>(k_InputIndex));
-    args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_CreatedDataArrayPath));
+    args.insertOrAssign(ReadStringDataArrayFilter::k_DelimiterChoice_Key, std::make_any<uint64>(kInputIndex));
+    args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(kCreatedDataArrayPath));
     args.insertOrAssign(ReadStringDataArrayFilter::k_DataFormat_Key, std::make_any<std::string>(""));
     args.insertOrAssign(ReadStringDataArrayFilter::k_SetTupleDimensions, std::make_any<bool>(true));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    nx::core::UnitTest::CompareStringArrays(dataStructure, k_ExemplarDataArrayPath, k_CreatedDataArrayPath);
+    nx::core::unit_test::CompareStringArrays(dataStructure, kExemplarDataArrayPath, kCreatedDataArrayPath);
   }
 
   {
-    const usize k_InputIndex = 3;
-    const DataPath k_CreatedDataArrayPath({fmt::format("computed_{}", k_InputNames[k_InputIndex])});
-    const DataPath k_ExemplarDataArrayPath({fmt::format("exemplar_{}", k_InputNames[k_InputIndex])});
-    auto inputFilePath = fs::path(fmt::format("{}/7_ReadStringArray/{}", unit_test::k_TestFilesDir, fmt::format("random_words_{}.csv", k_InputNames[k_InputIndex])));
+    const usize kInputIndex = 3;
+    const DataPath kCreatedDataArrayPath({fmt::format("computed_{}", k_InputNames[kInputIndex])});
+    const DataPath kExemplarDataArrayPath({fmt::format("exemplar_{}", k_InputNames[kInputIndex])});
+    auto inputFilePath = fs::path(fmt::format("{}/7_ReadStringArray/{}", unit_test::k_TestFilesDir, fmt::format("random_words_{}.csv", k_InputNames[kInputIndex])));
     // Instantiate the filter and an Arguments Object
     Arguments args;
 
@@ -106,27 +104,27 @@ TEST_CASE("SimplnxCore::ReadStringDataArrayFilter: Valid filter execution", "[Si
     args.insertOrAssign(ReadStringDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(fs::path(inputFilePath)));
     args.insertOrAssign(ReadStringDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{100}}));
     args.insertOrAssign(ReadStringDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(ReadStringDataArrayFilter::k_DelimiterChoice_Key, std::make_any<uint64>(k_InputIndex));
-    args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_CreatedDataArrayPath));
+    args.insertOrAssign(ReadStringDataArrayFilter::k_DelimiterChoice_Key, std::make_any<uint64>(kInputIndex));
+    args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(kCreatedDataArrayPath));
     args.insertOrAssign(ReadStringDataArrayFilter::k_DataFormat_Key, std::make_any<std::string>(""));
     args.insertOrAssign(ReadStringDataArrayFilter::k_SetTupleDimensions, std::make_any<bool>(true));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    nx::core::UnitTest::CompareStringArrays(dataStructure, k_ExemplarDataArrayPath, k_CreatedDataArrayPath);
+    nx::core::unit_test::CompareStringArrays(dataStructure, kExemplarDataArrayPath, kCreatedDataArrayPath);
   }
 
   {
-    const usize k_InputIndex = 4;
-    const DataPath k_CreatedDataArrayPath({fmt::format("computed_{}", k_InputNames[k_InputIndex])});
-    const DataPath k_ExemplarDataArrayPath({fmt::format("exemplar_{}", k_InputNames[k_InputIndex])});
-    auto inputFilePath = fs::path(fmt::format("{}/7_ReadStringArray/{}", unit_test::k_TestFilesDir, fmt::format("random_words_{}.csv", k_InputNames[k_InputIndex])));
+    const usize kInputIndex = 4;
+    const DataPath kCreatedDataArrayPath({fmt::format("computed_{}", k_InputNames[kInputIndex])});
+    const DataPath kExemplarDataArrayPath({fmt::format("exemplar_{}", k_InputNames[kInputIndex])});
+    auto inputFilePath = fs::path(fmt::format("{}/7_ReadStringArray/{}", unit_test::k_TestFilesDir, fmt::format("random_words_{}.csv", k_InputNames[kInputIndex])));
     // Instantiate the filter and an Arguments Object
     Arguments args;
 
@@ -134,27 +132,27 @@ TEST_CASE("SimplnxCore::ReadStringDataArrayFilter: Valid filter execution", "[Si
     args.insertOrAssign(ReadStringDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(fs::path(inputFilePath)));
     args.insertOrAssign(ReadStringDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{100}}));
     args.insertOrAssign(ReadStringDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(ReadStringDataArrayFilter::k_DelimiterChoice_Key, std::make_any<uint64>(k_InputIndex));
-    args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_CreatedDataArrayPath));
+    args.insertOrAssign(ReadStringDataArrayFilter::k_DelimiterChoice_Key, std::make_any<uint64>(kInputIndex));
+    args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(kCreatedDataArrayPath));
     args.insertOrAssign(ReadStringDataArrayFilter::k_DataFormat_Key, std::make_any<std::string>(""));
     args.insertOrAssign(ReadStringDataArrayFilter::k_SetTupleDimensions, std::make_any<bool>(true));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    nx::core::UnitTest::CompareStringArrays(dataStructure, k_ExemplarDataArrayPath, k_CreatedDataArrayPath);
+    nx::core::unit_test::CompareStringArrays(dataStructure, kExemplarDataArrayPath, kCreatedDataArrayPath);
   }
 
   {
-    const usize k_InputIndex = 5;
-    const DataPath k_CreatedDataArrayPath({fmt::format("computed_{}", k_InputNames[k_InputIndex])});
-    const DataPath k_ExemplarDataArrayPath({fmt::format("exemplar_{}", k_InputNames[k_InputIndex])});
-    auto inputFilePath = fs::path(fmt::format("{}/7_ReadStringArray/{}", unit_test::k_TestFilesDir, fmt::format("random_words_{}.csv", k_InputNames[k_InputIndex])));
+    const usize kInputIndex = 5;
+    const DataPath kCreatedDataArrayPath({fmt::format("computed_{}", k_InputNames[kInputIndex])});
+    const DataPath kExemplarDataArrayPath({fmt::format("exemplar_{}", k_InputNames[kInputIndex])});
+    auto inputFilePath = fs::path(fmt::format("{}/7_ReadStringArray/{}", unit_test::k_TestFilesDir, fmt::format("random_words_{}.csv", k_InputNames[kInputIndex])));
     // Instantiate the filter and an Arguments Object
     Arguments args;
 
@@ -162,23 +160,23 @@ TEST_CASE("SimplnxCore::ReadStringDataArrayFilter: Valid filter execution", "[Si
     args.insertOrAssign(ReadStringDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(fs::path(inputFilePath)));
     args.insertOrAssign(ReadStringDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{100}}));
     args.insertOrAssign(ReadStringDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(ReadStringDataArrayFilter::k_DelimiterChoice_Key, std::make_any<uint64>(k_InputIndex));
-    args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_CreatedDataArrayPath));
+    args.insertOrAssign(ReadStringDataArrayFilter::k_DelimiterChoice_Key, std::make_any<uint64>(kInputIndex));
+    args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(kCreatedDataArrayPath));
     args.insertOrAssign(ReadStringDataArrayFilter::k_DataFormat_Key, std::make_any<std::string>(""));
     args.insertOrAssign(ReadStringDataArrayFilter::k_SetTupleDimensions, std::make_any<bool>(true));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    nx::core::UnitTest::CompareStringArrays(dataStructure, k_ExemplarDataArrayPath, k_CreatedDataArrayPath);
+    nx::core::unit_test::CompareStringArrays(dataStructure, kExemplarDataArrayPath, kCreatedDataArrayPath);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadStringDataArrayFilter: Extra values on a line are ignored with a warning", "[SimplnxCore][ReadStringDataArrayFilter]")
@@ -224,7 +222,7 @@ TEST_CASE("SimplnxCore::ReadStringDataArrayFilter: Extra values on a line are ig
   args.insertOrAssign(ReadStringDataArrayFilter::k_SetTupleDimensions, std::make_any<bool>(true));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -240,22 +238,22 @@ TEST_CASE("SimplnxCore::ReadStringDataArrayFilter: Extra values on a line are ig
     REQUIRE(arr[tupleIdx] == expected[tupleIdx]);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadStringDataArrayFilter: Invalid filter execution", "[SimplnxCore][ReadStringDataArrayFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_ReadStringArray.tar.gz", "7_ReadStringArray");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "7_ReadStringArray.tar.gz", "7_ReadStringArray");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/7_ReadStringArray/7_read_string_array.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
 
   {
-    const usize k_InputIndex = 5;
-    const DataPath k_CreatedDataArrayPath({fmt::format("computed_{}", k_InputNames[k_InputIndex])});
-    const DataPath k_ExemplarDataArrayPath({fmt::format("exemplar_{}", k_InputNames[k_InputIndex])});
-    auto inputFilePath = fs::path(fmt::format("{}/7_ReadStringArray/{}", unit_test::k_TestFilesDir, fmt::format("random_words_{}.csv", k_InputNames[k_InputIndex])));
+    const usize kInputIndex = 5;
+    const DataPath kCreatedDataArrayPath({fmt::format("computed_{}", k_InputNames[kInputIndex])});
+    const DataPath kExemplarDataArrayPath({fmt::format("exemplar_{}", k_InputNames[kInputIndex])});
+    auto inputFilePath = fs::path(fmt::format("{}/7_ReadStringArray/{}", unit_test::k_TestFilesDir, fmt::format("random_words_{}.csv", k_InputNames[kInputIndex])));
     // Instantiate the filter and an Arguments Object
     Arguments args;
 
@@ -263,23 +261,23 @@ TEST_CASE("SimplnxCore::ReadStringDataArrayFilter: Invalid filter execution", "[
     args.insertOrAssign(ReadStringDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(fs::path(inputFilePath)));
     args.insertOrAssign(ReadStringDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{0}));
     args.insertOrAssign(ReadStringDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(1));
-    args.insertOrAssign(ReadStringDataArrayFilter::k_DelimiterChoice_Key, std::make_any<uint64>(k_InputIndex));
-    args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_CreatedDataArrayPath));
+    args.insertOrAssign(ReadStringDataArrayFilter::k_DelimiterChoice_Key, std::make_any<uint64>(kInputIndex));
+    args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(kCreatedDataArrayPath));
     args.insertOrAssign(ReadStringDataArrayFilter::k_DataFormat_Key, std::make_any<std::string>(""));
     args.insertOrAssign(ReadStringDataArrayFilter::k_SetTupleDimensions, std::make_any<bool>(true));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadStringDataArray: Dimension RED fractional", "[SimplnxCore][ReadStringDataArray][DimensionRed]")
 {
   ReadStringDataArrayFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   auto args = filter.getDefaultArguments();
   const fs::path input = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadStringDataArrayDimensions.txt";
   {
@@ -290,9 +288,9 @@ TEST_CASE("SimplnxCore::ReadStringDataArray: Dimension RED fractional", "[Simpln
   args.insertOrAssign(ReadStringDataArrayFilter::k_SetTupleDimensions, std::make_any<bool>(true));
   args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath({"Dimensions"})));
   args.insertOrAssign(ReadStringDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1.5}}));
-  auto result = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors()[0].code == -79000);
+  auto result = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors()[0].code == -79000);
 }
 
 TEST_CASE("SimplnxCore::ReadStringDataArray: Dimension fixed-only tuples and inherited shapes", "[SimplnxCore][ReadStringDataArray]")
@@ -302,7 +300,7 @@ TEST_CASE("SimplnxCore::ReadStringDataArray: Dimension fixed-only tuples and inh
   {
     const float64 value = GENERATE(-1.0, std::numeric_limits<float64>::quiet_NaN(), std::numeric_limits<float64>::infinity(), std::ldexp(1.0, 64), 0.0, 1.5);
     CAPTURE(value);
-    DataStructure ds;
+    DataStructure dataStructure;
     auto args = filter.getDefaultArguments();
     const fs::path input = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadStringDataArrayDimensionsBoundary.txt";
     {
@@ -314,18 +312,18 @@ TEST_CASE("SimplnxCore::ReadStringDataArray: Dimension fixed-only tuples and inh
     args.insertOrAssign(ReadStringDataArrayFilter::k_SetTupleDimensions, std::make_any<bool>(true));
     args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath({"Dimensions"})));
     args.insertOrAssign(ReadStringDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{value}}));
-    auto result = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors()[0].code == (value == 0 ? -78603 : -79000));
-    REQUIRE(result.outputActions.errors()[0].message.find("index 0") != std::string::npos);
-    REQUIRE(result.outputActions.errors()[0].message.find("finite whole numbers") != std::string::npos);
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors()[0].code == (value == 0 ? -78603 : -79000));
+    REQUIRE(result.output_actions.errors()[0].message.find("index 0") != std::string::npos);
+    REQUIRE(result.output_actions.errors()[0].message.find("finite whole numbers") != std::string::npos);
   }
   SECTION("Invalid ignored table, including an inherited empty matrix")
   {
     const usize count = GENERATE(usize{0}, usize{2});
     const bool useDimensions = GENERATE(false, true);
-    DataStructure ds;
-    REQUIRE(AttributeMatrix::Create(ds, "Parent", {count}) != nullptr);
+    DataStructure dataStructure;
+    REQUIRE(AttributeMatrix::Create(dataStructure, "Parent", {count}) != nullptr);
     auto args = filter.getDefaultArguments();
     const fs::path input = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadStringDataArrayDimensionsBoundary.txt";
     {
@@ -338,20 +336,20 @@ TEST_CASE("SimplnxCore::ReadStringDataArray: Dimension fixed-only tuples and inh
     args.insertOrAssign(ReadStringDataArrayFilter::k_SetTupleDimensions, std::make_any<bool>(useDimensions));
     args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(path));
     args.insertOrAssign(ReadStringDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{-1}}));
-    auto result = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-    auto applied = result.outputActions.value().applyAll(ds, IDataAction::Mode::Preflight);
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+    auto applied = result.output_actions.value().applyAll(dataStructure, IDataAction::Mode::Preflight);
     SIMPLNX_RESULT_REQUIRE_VALID(applied);
-    REQUIRE_NOTHROW(ds.getDataRefAs<IArray>(path));
-    REQUIRE(ds.getDataRefAs<IArray>(path).getTupleShape() == ShapeType{count});
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IArray>(path));
+    REQUIRE(dataStructure.getDataRefAs<IArray>(path).getTupleShape() == ShapeType{count});
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::ReadStringDataArray: Dimension tuple product overflow", "[SimplnxCore][ReadStringDataArray]")
 {
   ReadStringDataArrayFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   auto args = filter.getDefaultArguments();
   const fs::path input = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadStringDataArrayDimensionsBoundary.txt";
   {
@@ -362,8 +360,8 @@ TEST_CASE("SimplnxCore::ReadStringDataArray: Dimension tuple product overflow", 
   args.insertOrAssign(ReadStringDataArrayFilter::k_SetTupleDimensions, std::make_any<bool>(true));
   args.insertOrAssign(ReadStringDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath({"Overflow"})));
   args.insertOrAssign(ReadStringDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{4294967296.0, 4294967296.0}}));
-  auto result = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors()[0].code == -79001);
-  REQUIRE(result.outputActions.errors()[0].message.find("product") != std::string::npos);
+  auto result = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors()[0].code == -79001);
+  REQUIRE(result.output_actions.errors()[0].message.find("product") != std::string::npos);
 }

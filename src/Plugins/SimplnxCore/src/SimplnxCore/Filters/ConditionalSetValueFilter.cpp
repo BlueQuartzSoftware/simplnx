@@ -61,7 +61,7 @@ Parameters ConditionalSetValueFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_InvertMask_Key, "Invert Mask", "This makes the filter replace values that are marked FALSE in the conditional array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_ConditionalArrayPath_Key, "Conditional Array", "The complete path to the conditional array that will determine which values/entries will be replaced if index is TRUE", DataPath{},
-      ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8, DataType::int8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+      ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8, DataType::int8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<StringParameter>(k_RemoveValue_Key, "Value To Replace", "The numerical value that will be replaced in the array", "0"));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
@@ -81,13 +81,13 @@ IFilter::VersionType ConditionalSetValueFilter::parametersVersion() const
   return 1;
 }
 
-IFilter::UniquePointer ConditionalSetValueFilter::clone() const
+IFilter::UniquePointerType ConditionalSetValueFilter::clone() const
 {
   return std::make_unique<ConditionalSetValueFilter>();
 }
 
-IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                  const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto useConditionalValue = filterArgs.value<bool>(k_UseConditional_Key);
   auto removeValueString = filterArgs.value<std::string>(k_RemoveValue_Key);
@@ -109,24 +109,24 @@ IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStru
   if(useConditionalValue)
   {
     // Validate that the Conditional Array is of the correct type
-    const auto* dataObject = dataStructure.getDataAs<IDataArray>(pConditionalPath);
+    const auto* dataObjectPtr = dataStructure.getDataAs<IDataArray>(pConditionalPath);
 
-    if(dataObject->getDataType() != nx::core::DataType::boolean && dataObject->getDataType() != nx::core::DataType::uint8 && dataObject->getDataType() != nx::core::DataType::int8)
+    if(dataObjectPtr->getDataType() != nx::core::DataType::boolean && dataObjectPtr->getDataType() != nx::core::DataType::uint8 && dataObjectPtr->getDataType() != nx::core::DataType::int8)
     {
       return MakePreflightErrorResult(::k_IncorrectInputArrayType,
-                                      fmt::format("Conditional Array must be of type [Bool|UInt8|Int8]. The object at path '{}' is '{}'", pConditionalPath.toString(), dataObject->getTypeName()));
+                                      fmt::format("Conditional Array must be of type [Bool|UInt8|Int8]. The object at path '{}' is '{}'", pConditionalPath.toString(), dataObjectPtr->getTypeName()));
     }
   }
 
   // Sanity check all the inputs here
-  Result<> result = StringInterpretationUtilities::CheckValueConverts(inputDataObject->getDataType(), replaceValueString);
+  Result<> result = string_interpretation_utilities::CheckValueConverts(inputDataObject->getDataType(), replaceValueString);
   if(result.invalid())
   {
     return MakePreflightErrorResult(::k_ConvertReplaceValueTypeError, fmt::format("{}({}): Function {}: Error. Cannot convert replace value {} to the type {}.", "ReplaceValueInArrayFunctor", __FILE__,
                                                                                   __LINE__, replaceValueString, fmt::underlying(inputDataObject->getDataObjectType())));
   }
 
-  result = StringInterpretationUtilities::CheckValueConverts(inputDataObject->getDataType(), removeValueString);
+  result = string_interpretation_utilities::CheckValueConverts(inputDataObject->getDataType(), removeValueString);
   if(result.invalid())
   {
     return MakePreflightErrorResult(::k_ConvertRemoveValueTypeError, fmt::format("{}({}): Function {}: Error. Cannot convert remove value {} to the type {}.", "ReplaceValueInArrayFunctor", __FILE__,
@@ -138,33 +138,33 @@ IFilter::PreflightResult ConditionalSetValueFilter::preflightImpl(const DataStru
   // Inform users that the following arrays are going to be modified in place
   nx::core::MarkDataPathModified(dataStructure, resultOutputActions, selectedArrayPath);
 
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
-Result<> ConditionalSetValueFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ConditionalSetValueFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ConditionalSetValueInputValues inputValues;
-  inputValues.ConditionalArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_ConditionalArrayPath_Key);
-  inputValues.InvertMask = filterArgs.value<BoolParameter::ValueType>(k_InvertMask_Key);
-  inputValues.RemoveValue = filterArgs.value<StringParameter::ValueType>(k_RemoveValue_Key);
-  inputValues.ReplaceValue = filterArgs.value<StringParameter::ValueType>(k_ReplaceValue_Key);
-  inputValues.SelectedArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_SelectedArrayPath_Key);
-  inputValues.UseConditional = filterArgs.value<BoolParameter::ValueType>(k_UseConditional_Key);
+  inputValues.conditional_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_ConditionalArrayPath_Key);
+  inputValues.invert_mask = filterArgs.value<BoolParameter::ValueType>(k_InvertMask_Key);
+  inputValues.remove_value = filterArgs.value<StringParameter::ValueType>(k_RemoveValue_Key);
+  inputValues.replace_value = filterArgs.value<StringParameter::ValueType>(k_ReplaceValue_Key);
+  inputValues.selected_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_SelectedArrayPath_Key);
+  inputValues.use_conditional = filterArgs.value<BoolParameter::ValueType>(k_UseConditional_Key);
 
   return ConditionalSetValue(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_RemoveValueKey = "RemoveValue";
-constexpr StringLiteral k_ReplaceValueKey = "ReplaceValue";
-constexpr StringLiteral k_SelectedArrayKey = "SelectedArray";
-constexpr StringLiteral k_ConditionalArrayPathKey = "ConditionalArrayPath";
-constexpr StringLiteral k_SelectedArrayPathKey = "SelectedArrayPath";
-} // namespace SIMPL
+constexpr StringLiteralType k_RemoveValueKey = "RemoveValue";
+constexpr StringLiteralType k_ReplaceValueKey = "ReplaceValue";
+constexpr StringLiteralType k_SelectedArrayKey = "SelectedArray";
+constexpr StringLiteralType k_ConditionalArrayPathKey = "ConditionalArrayPath";
+constexpr StringLiteralType k_SelectedArrayPathKey = "SelectedArrayPath";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ConditionalSetValueFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -173,17 +173,17 @@ Result<Arguments> ConditionalSetValueFilter::FromSIMPLJson(const nlohmann::json&
 
   std::vector<Result<>> results;
 
-  if(json.contains(SIMPL::k_RemoveValueKey))
+  if(json.contains(simpl::k_RemoveValueKey))
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleToStringFilterParameterConverter>(args, json, SIMPL::k_RemoveValueKey, k_RemoveValue_Key));
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayKey, k_SelectedArrayPath_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleToStringFilterParameterConverterType>(args, json, simpl::k_RemoveValueKey, k_RemoveValue_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayKey, k_SelectedArrayPath_Key));
   }
   else
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_ConditionalArrayPathKey, k_ConditionalArrayPath_Key));
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ConditionalArrayPathKey, k_ConditionalArrayPath_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, k_SelectedArrayPath_Key));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleToStringFilterParameterConverter>(args, json, SIMPL::k_ReplaceValueKey, k_ReplaceValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleToStringFilterParameterConverterType>(args, json, simpl::k_ReplaceValueKey, k_ReplaceValue_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

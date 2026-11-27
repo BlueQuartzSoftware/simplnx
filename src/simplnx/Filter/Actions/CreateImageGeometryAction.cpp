@@ -3,41 +3,42 @@
 
 #include <fmt/core.h>
 
+#include <utility>
+
 using namespace nx::core;
 
 namespace nx::core
 {
-CreateImageGeometryAction::CreateImageGeometryAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing, const std::string& cellAttributeMatrixName,
-                                                     IGeometry::LengthUnit units)
+CreateImageGeometryAction::CreateImageGeometryAction(const DataPath& path, DimensionType dims, OriginType origin, SpacingType spacing, std::string cellAttributeMatrixName, IGeometry::LengthUnit units)
 : IDataCreationAction(path)
-, m_Dims(dims)
-, m_Origin(origin)
-, m_Spacing(spacing)
+, m_Dims(std::move(dims))
+, m_Origin(std::move(origin))
+, m_Spacing(std::move(spacing))
 , m_Units(units)
-, m_CellDataName(cellAttributeMatrixName)
+, m_CellDataName(std::move(cellAttributeMatrixName))
 {
 }
 
 CreateImageGeometryAction::~CreateImageGeometryAction() noexcept = default;
 
-Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode mode) const
+Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
-  static constexpr StringLiteral prefix = "CreateImageGeometryAction: ";
+  static constexpr StringLiteralType k_Prefix = "CreateImageGeometryAction: ";
   // Check for empty Geometry DataPath
   if(getCreatedPath().empty())
   {
-    return MakeErrorResult(-5701, fmt::format("{}Geometry Path cannot be empty", prefix));
+    return MakeErrorResult(-5701, fmt::format("{}Geometry Path cannot be empty", k_Prefix));
   }
   // Check if the Geometry Path already exists
-  BaseGroup* parentObject = dataStructure.getDataAs<BaseGroup>(getCreatedPath());
-  if(parentObject != nullptr)
+  BaseGroup* parentObjectPtr = dataStructure.getDataAs<BaseGroup>(getCreatedPath());
+  if(parentObjectPtr != nullptr)
   {
-    return MakeErrorResult(-5702, fmt::format("{}DataObject already exists at path '{}'", prefix, getCreatedPath().toString()));
+    return MakeErrorResult(-5702, fmt::format("{}DataObject already exists at path '{}'", k_Prefix, getCreatedPath().toString()));
   }
   const auto addGeometryPath = [&](Result<> result) {
     for(auto& error : result.errors())
     {
-      error.message = fmt::format("{}Geometry at '{}': {}", prefix, getCreatedPath().toString(), error.message);
+      error.message = fmt::format("{}Geometry at '{}': {}", k_Prefix, getCreatedPath().toString(), error.message);
     }
     return result;
   };
@@ -47,8 +48,8 @@ Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode mod
     return MakeErrorResult(k_MissingMetadataComponents, fmt::format("Image geometry at '{}' requires three origin and spacing components. Received {} origin and {} spacing components.",
                                                                     getCreatedPath().toString(), m_Origin.size(), m_Spacing.size()));
   }
-  const FloatVec3 origin = m_Origin;
-  const FloatVec3 spacing = m_Spacing;
+  const FloatVec3Type origin = m_Origin;
+  const FloatVec3Type spacing = m_Spacing;
   if(auto result = ImageGeom::ValidateOrigin(origin); result.invalid())
   {
     return addGeometryPath(std::move(result));
@@ -64,45 +65,45 @@ Result<> CreateImageGeometryAction::apply(DataStructure& dataStructure, Mode mod
     Result<LinkedPath> geomPath = dataStructure.makePath(parentPath);
     if(geomPath.invalid())
     {
-      return MakeErrorResult(-5703, fmt::format("{}Geometry could not be created at path:'{}'", prefix, getCreatedPath().toString()));
+      return MakeErrorResult(-5703, fmt::format("{}Geometry could not be created at path:'{}'", k_Prefix, getCreatedPath().toString()));
     }
   }
   // Get the Parent ID
   if(!dataStructure.getId(parentPath).has_value())
   {
-    return MakeErrorResult(-5704, fmt::format("{}Parent Id was not available for path:'{}'", prefix, parentPath.toString()));
+    return MakeErrorResult(-5704, fmt::format("{}Parent Id was not available for path:'{}'", k_Prefix, parentPath.toString()));
   }
 
   // Create the ImageGeometry
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath));
-  if(imageGeom == nullptr)
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, getCreatedPath().getTargetName(), dataStructure.getId(parentPath));
+  if(imageGeomPtr == nullptr)
   {
-    return MakeErrorResult(-5705, fmt::format("{}Failed to create ImageGeometry:'{}'", prefix, getCreatedPath().toString()));
+    return MakeErrorResult(-5705, fmt::format("{}Failed to create ImageGeometry:'{}'", k_Prefix, getCreatedPath().toString()));
   }
-  imageGeom->setDimensions(m_Dims);
-  if(auto result = imageGeom->setOrigin(origin); result.invalid())
-  {
-    return addGeometryPath(std::move(result));
-  }
-  if(auto result = imageGeom->setSpacing(spacing); result.invalid())
+  imageGeomPtr->setDimensions(m_Dims);
+  if(auto result = imageGeomPtr->setOrigin(origin); result.invalid())
   {
     return addGeometryPath(std::move(result));
   }
-  imageGeom->setUnits(m_Units);
+  if(auto result = imageGeomPtr->setSpacing(spacing); result.invalid())
+  {
+    return addGeometryPath(std::move(result));
+  }
+  imageGeomPtr->setUnits(m_Units);
 
   const DimensionType reversedDims(m_Dims.rbegin(), m_Dims.rend());
-  auto* attributeMatrix = AttributeMatrix::Create(dataStructure, m_CellDataName, reversedDims, imageGeom->getId());
-  if(attributeMatrix == nullptr)
+  auto* attributeMatrixPtr = AttributeMatrix::Create(dataStructure, m_CellDataName, reversedDims, imageGeomPtr->getId());
+  if(attributeMatrixPtr == nullptr)
   {
-    return MakeErrorResult(-5706, fmt::format("{}Failed to create ImageGeometry: '{}'", prefix, getCreatedPath().createChildPath(m_CellDataName).toString()));
+    return MakeErrorResult(-5706, fmt::format("{}Failed to create ImageGeometry: '{}'", k_Prefix, getCreatedPath().createChildPath(m_CellDataName).toString()));
   }
 
-  imageGeom->setCellData(*attributeMatrix);
+  imageGeomPtr->setCellData(*attributeMatrixPtr);
 
   return {};
 }
 
-IDataAction::UniquePointer CreateImageGeometryAction::clone() const
+IDataAction::UniquePointerType CreateImageGeometryAction::clone() const
 {
   return std::make_unique<CreateImageGeometryAction>(getCreatedPath(), m_Dims, m_Origin, m_Spacing, m_CellDataName, m_Units);
 }

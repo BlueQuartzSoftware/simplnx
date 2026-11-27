@@ -152,21 +152,22 @@ set(PLUGIN_EXTRA_SOURCES
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/NrrdUtilities.cpp"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/NiftiUtilities.hpp"
   "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/NiftiUtilities.cpp"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nifti1.h"
 )
 
 set(OLESS_SOURCES
-  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless/oless/oless_common.hpp"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless/oless/oless.cpp"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless/oless/oless.h"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless/oless/pole.cpp"
-  "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless/oless/pole.h"
+  "${SIMPLNX_THIRD_PARTY_DIR}/oless/oless/oless_common.hpp"
+  "${SIMPLNX_THIRD_PARTY_DIR}/oless/oless/oless.cpp"
+  "${SIMPLNX_THIRD_PARTY_DIR}/oless/oless/oless.h"
+  "${SIMPLNX_THIRD_PARTY_DIR}/oless/oless/pole.cpp"
+  "${SIMPLNX_THIRD_PARTY_DIR}/oless/oless/pole.h"
 )
 
-target_sources(${PLUGIN_NAME} PRIVATE ${PLUGIN_EXTRA_SOURCES} ${OLESS_SOURCES})
-target_include_directories(${PLUGIN_NAME} PRIVATE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/oless")
+set(NIFTI_HEADER "${SIMPLNX_THIRD_PARTY_DIR}/nifti/nifti1.h")
+
+target_sources(${PLUGIN_NAME} PRIVATE ${PLUGIN_EXTRA_SOURCES} ${OLESS_SOURCES} "${NIFTI_HEADER}")
+target_include_directories(${PLUGIN_NAME} SYSTEM PRIVATE "${SIMPLNX_THIRD_PARTY_DIR}/oless")
 source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME} FILES ${PLUGIN_EXTRA_SOURCES})
-source_group(TREE "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}" PREFIX ${PLUGIN_NAME} FILES ${OLESS_SOURCES})
+source_group(TREE "${SIMPLNX_THIRD_PARTY_DIR}" PREFIX "3rdParty" FILES ${OLESS_SOURCES} "${NIFTI_HEADER}")
 
 set(${PLUGIN_NAME}_TUTORIAL_PIPELINE_NAMES
   "05_AM_XCT_Porosity_Segmentation"

@@ -12,8 +12,6 @@
 #include <filesystem>
 #include <fstream>
 
-namespace fs = std::filesystem;
-
 using namespace nx::core;
 
 namespace
@@ -27,7 +25,7 @@ namespace
  * @return Abaqus node IDs in the writer's local corner order.
  * @pre pDims contains three values and all index products fit int64.
  */
-std::array<int64, 8> getNodeIds(usize x, usize y, usize z, const usize* pDims)
+std::array<int64, 8> GetNodeIds(usize x, usize y, usize z, const usize* pDims)
 {
   std::array<int64, 8> nodeId{};
 
@@ -71,26 +69,26 @@ std::array<int64, 8> getNodeIds(usize x, usize y, usize z, const usize* pDims)
  *
  * C stdio return values are not inspected. Cancellation is checked per Z plane.
  */
-int32 writeNodes(ThrottledMessageHandler& progressThrottle, const std::string& fileName, usize* cDims, const float32* origin, const float32* spacing, const std::atomic_bool& shouldCancel,
+int32 WriteNodes(ThrottledMessageHandler& progressThrottle, const std::string& fileName, usize* cDims, const float32* origin, const float32* spacing, const std::atomic_bool& shouldCancel,
                  bool writeDummyNode)
 {
   usize pDims[3] = {cDims[0] + 1, cDims[1] + 1, cDims[2] + 1};
   usize nodeIndex = 1;
 
   int32 err = 0;
-  FILE* f = fopen(fileName.c_str(), "wb");
-  if(nullptr == f)
+  FILE* fPtr = fopen(fileName.c_str(), "wb");
+  if(nullptr == fPtr)
   {
     return -1;
   }
 
   progressThrottle.reset(pDims[2], "Writing Nodes (File 1/5)");
-  fprintf(f, "** ----------------------------------------------------------------\n**\n*Node\n");
+  fprintf(fPtr, "** ----------------------------------------------------------------\n**\n*Node\n");
   for(usize z = 0; z < pDims[2]; z++)
   {
     if(shouldCancel)
     {
-      fclose(f);
+      fclose(fPtr);
       return 1;
     }
     for(usize y = 0; y < pDims[1]; y++)
@@ -100,7 +98,7 @@ int32 writeNodes(ThrottledMessageHandler& progressThrottle, const std::string& f
         const float64 xCoord = static_cast<float64>(origin[0]) + static_cast<float64>(x) * static_cast<float64>(spacing[0]);
         const float64 yCoord = static_cast<float64>(origin[1]) + static_cast<float64>(y) * static_cast<float64>(spacing[1]);
         const float64 zCoord = static_cast<float64>(origin[2]) + static_cast<float64>(z) * static_cast<float64>(spacing[2]);
-        fmt::print(f, "{}, {:.9g}, {:.9g}, {:.9g}\n", nodeIndex, xCoord, yCoord, zCoord);
+        fmt::print(fPtr, "{}, {:.9g}, {:.9g}, {:.9g}\n", nodeIndex, xCoord, yCoord, zCoord);
 
         ++nodeIndex;
       }
@@ -111,11 +109,11 @@ int32 writeNodes(ThrottledMessageHandler& progressThrottle, const std::string& f
   if(writeDummyNode)
   {
     // The dummy node supports stress-strain curve workflows.
-    fprintf(f, "%llu, %f, %f, %f\n", static_cast<unsigned long long int>(nodeIndex), 0.0f, 0.0f, 0.0f);
+    fprintf(fPtr, "%llu, %f, %f, %f\n", static_cast<unsigned long long int>(nodeIndex), 0.0f, 0.0f, 0.0f);
   }
-  fprintf(f, "**\n** ----------------------------------------------------------------\n**\n");
+  fprintf(fPtr, "**\n** ----------------------------------------------------------------\n**\n");
 
-  fclose(f);
+  fclose(fPtr);
   return err;
 }
 
@@ -132,36 +130,36 @@ int32 writeNodes(ThrottledMessageHandler& progressThrottle, const std::string& f
  *
  * C stdio return values are not inspected. Cancellation is checked per Z plane.
  */
-int32 writeElems(ThrottledMessageHandler& progressThrottle, const std::string& fileName, const usize* cDims, usize* pDims, const std::atomic_bool& shouldCancel, bool useReducedIntegration)
+int32 WriteElems(ThrottledMessageHandler& progressThrottle, const std::string& fileName, const usize* cDims, usize* pDims, const std::atomic_bool& shouldCancel, bool useReducedIntegration)
 {
 
   int32 err = 0;
-  FILE* f = fopen(fileName.c_str(), "wb");
-  if(nullptr == f)
+  FILE* fPtr = fopen(fileName.c_str(), "wb");
+  if(nullptr == fPtr)
   {
     return -1;
   }
 
   // Keep the format casts consistent across platforms.
-  using _lli_t_ = long long int;
+  using LliTType = long long int;
 
   progressThrottle.reset(cDims[2], "Writing Elements (File 2/5)");
   usize index = 1;
-  fprintf(f, "** ----------------------------------------------------------------\n**\n*Element, type=%s\n", useReducedIntegration ? "C3D8R" : "C3D8");
+  fprintf(fPtr, "** ----------------------------------------------------------------\n**\n*Element, type=%s\n", useReducedIntegration ? "C3D8R" : "C3D8");
   for(usize z = 0; z < cDims[2]; z++)
   {
     if(shouldCancel)
     {
-      fclose(f);
+      fclose(fPtr);
       return 1;
     }
     for(usize y = 0; y < cDims[1]; y++)
     {
       for(usize x = 0; x < cDims[0]; x++)
       {
-        const std::array<int64, 8> nodeId = getNodeIds(x, y, z, pDims);
-        fprintf(f, "%llu, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld\n", (_lli_t_)index, (_lli_t_)nodeId[5], (_lli_t_)nodeId[1], (_lli_t_)nodeId[0], (_lli_t_)nodeId[4], (_lli_t_)nodeId[7],
-                (_lli_t_)nodeId[3], (_lli_t_)nodeId[2], (_lli_t_)nodeId[6]);
+        const std::array<int64, 8> nodeId = GetNodeIds(x, y, z, pDims);
+        fprintf(fPtr, "%llu, %lld, %lld, %lld, %lld, %lld, %lld, %lld, %lld\n", (LliTType)index, (LliTType)nodeId[5], (LliTType)nodeId[1], (LliTType)nodeId[0], (LliTType)nodeId[4],
+                (LliTType)nodeId[7], (LliTType)nodeId[3], (LliTType)nodeId[2], (LliTType)nodeId[6]);
 
         ++index;
       }
@@ -169,9 +167,9 @@ int32 writeElems(ThrottledMessageHandler& progressThrottle, const std::string& f
     progressThrottle.updateCount(z + 1);
   }
 
-  fprintf(f, "**\n** ----------------------------------------------------------------\n**\n");
+  fprintf(fPtr, "**\n** ----------------------------------------------------------------\n**\n");
 
-  fclose(f);
+  fclose(fPtr);
   return err;
 }
 
@@ -188,7 +186,7 @@ int32 writeElems(ThrottledMessageHandler& progressThrottle, const std::string& f
  *
  * The function checks stream errors before cancellation. A valid cancellation result leaves a partial temporary file.
  */
-Result<> writeElset(ThrottledMessageHandler& progressThrottle, const std::string& fileName, size_t totalPoints, const Int32AbstractDataStore& featureIdsRef, int32 maxGrainId, bool useOocAlgorithm,
+Result<> WriteElset(ThrottledMessageHandler& progressThrottle, const std::string& fileName, size_t totalPoints, const Int32AbstractDataStoreType& featureIdsRef, int32 maxGrainId, bool useOocAlgorithm,
                     const std::atomic_bool& shouldCancel)
 {
   std::ofstream output(fileName, std::ios::binary);
@@ -199,8 +197,8 @@ Result<> writeElset(ThrottledMessageHandler& progressThrottle, const std::string
   output << "** ----------------------------------------------------------------\n**\n** The element sets\n"
          << "*Elset, elset=cube, generate\n"
          << fmt::format("1, {}, 1\n", totalPoints) << "**\n** Each Grain is made up of multiple elements\n**";
-  Result<> result =
-      AbaqusElementSets::write(progressThrottle, output, [](int32 grainId) { return fmt::format("\n*Elset, elset=Grain{}_set\n", grainId); }, featureIdsRef, maxGrainId, useOocAlgorithm, shouldCancel);
+  Result<> result = abaqus_element_sets::Write(
+      progressThrottle, output, [](int32 grainId) { return fmt::format("\n*Elset, elset=Grain{}_set\n", grainId); }, featureIdsRef, maxGrainId, useOocAlgorithm, shouldCancel);
   if(result.valid())
   {
     output << "\n**\n** ----------------------------------------------------------------\n**\n";
@@ -222,27 +220,27 @@ Result<> writeElset(ThrottledMessageHandler& progressThrottle, const std::string
  *
  * C stdio return values are not inspected.
  */
-int32 writeMaster(const std::string& file, const std::string& jobName, const std::string& filePrefix)
+int32 WriteMaster(const std::string& file, const std::string& jobName, const std::string& filePrefix)
 {
   int32 err = 0;
-  FILE* f = fopen(file.c_str(), "wb");
-  if(nullptr == f)
+  FILE* fPtr = fopen(file.c_str(), "wb");
+  if(nullptr == fPtr)
   {
     return -1;
   }
 
-  fprintf(f, "*Heading\n");
-  fprintf(f, "%s\n", jobName.c_str());
-  fprintf(f, "** Job name : %s\n", jobName.c_str());
-  fprintf(f, "*Preprint, echo = NO, model = NO, history = NO, contact = NO\n");
-  fprintf(f, "**\n** ----------------------------Geometry----------------------------\n**\n");
-  fprintf(f, "*Include, Input = %s\n", (filePrefix + "_nodes.inp").c_str());
-  fprintf(f, "*Include, Input = %s\n", (filePrefix + "_elems.inp").c_str());
-  fprintf(f, "*Include, Input = %s\n", (filePrefix + "_elset.inp").c_str());
-  fprintf(f, "*Include, Input = %s\n", (filePrefix + "_sects.inp").c_str());
-  fprintf(f, "**\n** ----------------------------------------------------------------\n**\n");
+  fprintf(fPtr, "*Heading\n");
+  fprintf(fPtr, "%s\n", jobName.c_str());
+  fprintf(fPtr, "** Job name : %s\n", jobName.c_str());
+  fprintf(fPtr, "*Preprint, echo = NO, model = NO, history = NO, contact = NO\n");
+  fprintf(fPtr, "**\n** ----------------------------Geometry----------------------------\n**\n");
+  fprintf(fPtr, "*Include, Input = %s\n", (filePrefix + "_nodes.inp").c_str());
+  fprintf(fPtr, "*Include, Input = %s\n", (filePrefix + "_elems.inp").c_str());
+  fprintf(fPtr, "*Include, Input = %s\n", (filePrefix + "_elset.inp").c_str());
+  fprintf(fPtr, "*Include, Input = %s\n", (filePrefix + "_sects.inp").c_str());
+  fprintf(fPtr, "**\n** ----------------------------------------------------------------\n**\n");
 
-  fclose(f);
+  fclose(fPtr);
   return err;
 }
 
@@ -256,32 +254,32 @@ int32 writeMaster(const std::string& file, const std::string& jobName, const std
  *
  * C stdio return values are not inspected.
  */
-int32 writeSects(const std::string& file, int32 maxGrainId, bool useReducedIntegration, int32 hourglassStiffness)
+int32 WriteSects(const std::string& file, int32 maxGrainId, bool useReducedIntegration, int32 hourglassStiffness)
 {
   int32 err = 0;
-  FILE* f = fopen(file.c_str(), "wb");
-  if(nullptr == f)
+  FILE* fPtr = fopen(file.c_str(), "wb");
+  if(nullptr == fPtr)
   {
     return -1;
   }
-  fprintf(f, "** ----------------------------------------------------------------\n**\n** Each section is a separate grain\n");
+  fprintf(fPtr, "** ----------------------------------------------------------------\n**\n** Each section is a separate grain\n");
 
   // Emit sections for IDs that can include gaps in the input Feature IDs.
   int32 grain = 1;
   while(grain <= maxGrainId)
   {
-    fprintf(f, "** Section: Grain%d\n", grain);
-    fprintf(f, "*Solid Section, elset=Grain%d_set, material=Grain_Mat%d\n", grain, grain);
+    fprintf(fPtr, "** Section: Grain%d\n", grain);
+    fprintf(fPtr, "*Solid Section, elset=Grain%d_set, material=Grain_Mat%d\n", grain, grain);
     if(useReducedIntegration)
     {
-      fprintf(f, "*Hourglass Stiffness\n%d\n", hourglassStiffness);
+      fprintf(fPtr, "*Hourglass Stiffness\n%d\n", hourglassStiffness);
     }
-    fprintf(f, "** --------------------------------------\n");
+    fprintf(fPtr, "** --------------------------------------\n");
     grain++;
   }
-  fprintf(f, "**\n** ----------------------------------------------------------------\n**\n");
+  fprintf(fPtr, "**\n** ----------------------------------------------------------------\n**\n");
 
-  fclose(f);
+  fclose(fPtr);
   return err;
 }
 
@@ -312,8 +310,6 @@ WriteAbaqusHexahedron::WriteAbaqusHexahedron(DataStructure& dataStructure, const
 {
 }
 
-WriteAbaqusHexahedron::~WriteAbaqusHexahedron() noexcept = default;
-
 const std::atomic_bool& WriteAbaqusHexahedron::getCancel()
 {
   return m_ShouldCancel;
@@ -321,15 +317,15 @@ const std::atomic_bool& WriteAbaqusHexahedron::getCancel()
 
 Result<> WriteAbaqusHexahedron::operator()()
 {
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  auto& featureIdsRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
+  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
+  auto& featureIdsRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getDataStoreRef();
   Vec3<usize> cDims = imageGeom.getDimensions();
   usize pDims[3] = {cDims[0] + 1, cDims[1] + 1, cDims[2] + 1};
   Vec3<float32> origin = imageGeom.getOrigin();
   Vec3<float32> spacing = imageGeom.getSpacing();
   usize totalPoints = imageGeom.getNumberOfCells();
 
-  Result<int32> maxGrainResult = AbaqusElementSets::findMaximumGrainId(featureIdsRef, getCancel());
+  Result<int32> maxGrainResult = abaqus_element_sets::FindMaximumGrainId(featureIdsRef, getCancel());
   if(maxGrainResult.invalid())
   {
     return ConvertResult(std::move(maxGrainResult));
@@ -345,11 +341,11 @@ Result<> WriteAbaqusHexahedron::operator()()
 
   // Each output gets a separate recoverable temporary path.
   std::vector<Result<AtomicFile>> fileList;
-  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}_nodes.inp", m_InputValues->FilePrefix)));
-  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}_elems.inp", m_InputValues->FilePrefix)));
-  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}_sects.inp", m_InputValues->FilePrefix)));
-  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}_elset.inp", m_InputValues->FilePrefix)));
-  fileList.push_back(AtomicFile::Create(m_InputValues->OutputPath / fmt::format("{}.inp", m_InputValues->FilePrefix)));
+  fileList.push_back(AtomicFile::Create(m_InputValues->output_path / fmt::format("{}_nodes.inp", m_InputValues->file_prefix)));
+  fileList.push_back(AtomicFile::Create(m_InputValues->output_path / fmt::format("{}_elems.inp", m_InputValues->file_prefix)));
+  fileList.push_back(AtomicFile::Create(m_InputValues->output_path / fmt::format("{}_sects.inp", m_InputValues->file_prefix)));
+  fileList.push_back(AtomicFile::Create(m_InputValues->output_path / fmt::format("{}_elset.inp", m_InputValues->file_prefix)));
+  fileList.push_back(AtomicFile::Create(m_InputValues->output_path / fmt::format("{}.inp", m_InputValues->file_prefix)));
 
   for(auto& file : fileList)
   {
@@ -360,7 +356,7 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
 
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
-  int32 err = writeNodes(progressThrottle, fileList[0].value().tempFilePath().string(), cDims.data(), origin.data(), spacing.data(), getCancel(), m_InputValues->WriteDummyNode);
+  int32 err = WriteNodes(progressThrottle, fileList[0].value().tempFilePath().string(), cDims.data(), origin.data(), spacing.data(), getCancel(), m_InputValues->write_dummy_node);
   progressThrottle.flush();
   if(err < 0)
   {
@@ -373,7 +369,7 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
   m_MessageHandler.sendInfoMessage("Wrote Nodes (File 1/5)");
 
-  err = writeElems(progressThrottle, fileList[1].value().tempFilePath().string(), cDims.data(), pDims, getCancel(), m_InputValues->UseReducedIntegration);
+  err = WriteElems(progressThrottle, fileList[1].value().tempFilePath().string(), cDims.data(), pDims, getCancel(), m_InputValues->use_reduced_integration);
   progressThrottle.flush();
   if(err < 0)
   {
@@ -386,7 +382,7 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
   m_MessageHandler.sendInfoMessage("Wrote Elements (File 2/5)");
 
-  err = writeSects(fileList[2].value().tempFilePath().string(), maxGrainId, m_InputValues->UseReducedIntegration, m_InputValues->HourglassStiffness); // Sections file
+  err = WriteSects(fileList[2].value().tempFilePath().string(), maxGrainId, m_InputValues->use_reduced_integration, m_InputValues->hourglass_stiffness); // Sections file
   if(err < 0)
   {
     return MakeErrorResult(-1115, fmt::format("Error writing output sects file '{}'", fileList[2].value().tempFilePath().string()));
@@ -398,7 +394,7 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
   m_MessageHandler.sendInfoMessage("Wrote Sections (File 3/5)");
 
-  Result<> elsetResult = writeElset(progressThrottle, fileList[3].value().tempFilePath().string(), totalPoints, featureIdsRef, maxGrainId, useOocAlgorithm, getCancel());
+  Result<> elsetResult = WriteElset(progressThrottle, fileList[3].value().tempFilePath().string(), totalPoints, featureIdsRef, maxGrainId, useOocAlgorithm, getCancel());
   progressThrottle.flush();
   if(elsetResult.invalid())
   {
@@ -412,7 +408,7 @@ Result<> WriteAbaqusHexahedron::operator()()
   }
   m_MessageHandler.sendInfoMessage("Wrote Element Sets (File 4/5)");
 
-  err = writeMaster(fileList[4].value().tempFilePath().string(), m_InputValues->JobName, m_InputValues->FilePrefix);
+  err = WriteMaster(fileList[4].value().tempFilePath().string(), m_InputValues->job_name, m_InputValues->file_prefix);
   if(err < 0)
   {
     return MakeErrorResult(-1117, fmt::format("Error writing output master file '{}'", fileList[4].value().tempFilePath().string()));

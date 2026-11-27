@@ -30,7 +30,7 @@ public:
    * @pre All arguments outlive this executor.
    */
   ComputeBoundingBoxStatsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ComputeBoundingBoxStatsInputValues* inputValues);
-  ~ComputeBoundingBoxStatsDirect() noexcept;
+  ~ComputeBoundingBoxStatsDirect() noexcept = default;
 
   ComputeBoundingBoxStatsDirect(const ComputeBoundingBoxStatsDirect&) = delete;
   ComputeBoundingBoxStatsDirect(ComputeBoundingBoxStatsDirect&&) noexcept = delete;

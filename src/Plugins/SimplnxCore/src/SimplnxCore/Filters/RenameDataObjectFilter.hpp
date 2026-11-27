@@ -25,9 +25,9 @@ public:
   RenameDataObjectFilter& operator=(RenameDataObjectFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_AllowOverwrite_Key = "allow_overwrite";
-  static constexpr StringLiteral k_SourceDataObjectPath_Key = "source_data_object_path";
-  static constexpr StringLiteral k_NewName_Key = "new_name";
+  static constexpr StringLiteralType k_AllowOverwrite_Key = "allow_overwrite";
+  static constexpr StringLiteralType k_SourceDataObjectPath_Key = "source_data_object_path";
+  static constexpr StringLiteralType k_NewName_Key = "new_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -84,7 +84,7 @@ public:
    * @brief
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

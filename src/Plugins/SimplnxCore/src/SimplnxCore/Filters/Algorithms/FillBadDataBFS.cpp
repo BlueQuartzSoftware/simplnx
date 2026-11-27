@@ -9,6 +9,8 @@
 
 #include <fmt/format.h>
 
+#include <algorithm>
+
 using namespace nx::core;
 
 namespace
@@ -24,7 +26,7 @@ namespace
  * become a source before its complete tuple state has been copied.
  */
 template <typename T>
-void FillBadDataUpdateTuples(const Int32AbstractDataStore& featureIds, AbstractDataStore<T>& outputDataStore, const std::vector<int64>& neighbors)
+void FillBadDataUpdateTuples(const Int32AbstractDataStoreType& featureIds, AbstractDataStore<T>& outputDataStore, const std::vector<int64>& neighbors)
 {
   usize start = 0;
   usize stop = outputDataStore.getNumberOfTuples();
@@ -52,7 +54,7 @@ void FillBadDataUpdateTuples(const Int32AbstractDataStore& featureIds, AbstractD
 struct FillBadDataUpdateTuplesFunctor
 {
   template <typename T>
-  void operator()(const Int32AbstractDataStore& featureIds, IDataArray* outputIDataArray, const std::vector<int64>& neighbors)
+  void operator()(const Int32AbstractDataStoreType& featureIds, IDataArray* outputIDataArray, const std::vector<int64>& neighbors)
   {
     auto& outputStore = outputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     FillBadDataUpdateTuples(featureIds, outputStore, neighbors);
@@ -70,11 +72,10 @@ FillBadDataBFS::FillBadDataBFS(DataStructure& dataStructure, const IFilter::Mess
 }
 
 // -----------------------------------------------------------------------------
-FillBadDataBFS::~FillBadDataBFS() noexcept = default;
 
 Result<> FillBadDataBFS::operator()()
 {
-  auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->featureIdsArrayPath)->getDataStoreRef();
+  auto& featureIdsStore = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path)->getDataStoreRef();
   const usize totalPoints = featureIdsStore.getNumberOfTuples();
 
   // O(N) allocations: one int32 per voxel for neighbor mapping, one bit per
@@ -82,14 +83,14 @@ Result<> FillBadDataBFS::operator()()
   std::vector<int64> neighbors(totalPoints, -1);
   std::vector<bool> alreadyChecked(totalPoints, false);
 
-  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->inputImageGeometry);
-  const SizeVec3 udims = selectedImageGeom.getDimensions();
+  const auto& selectedImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->input_image_geometry);
+  const SizeVec3Type udims = selectedImageGeom.getDimensions();
 
-  Int32Array* cellPhasesPtr = nullptr;
+  Int32ArrayType* cellPhasesPtr = nullptr;
 
-  if(m_InputValues->storeAsNewPhase)
+  if(m_InputValues->store_as_new_phase)
   {
-    cellPhasesPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
+    cellPhasesPtr = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
   }
 
   std::array<int64, 3> dims = {
@@ -115,14 +116,11 @@ Result<> FillBadDataBFS::operator()()
 
   // Optionally find the maximum phase so large void regions can be assigned
   // to (maxPhase + 1), creating a distinct phase for visualization.
-  if(m_InputValues->storeAsNewPhase)
+  if(m_InputValues->store_as_new_phase)
   {
     for(usize i = 0; i < totalPoints; i++)
     {
-      if((*cellPhasesPtr)[i] > maxPhase)
-      {
-        maxPhase = (*cellPhasesPtr)[i];
-      }
+      maxPhase = std::max<nx::core::types::usize>((*cellPhasesPtr)[i], maxPhase);
     }
   }
 
@@ -201,12 +199,12 @@ Result<> FillBadDataBFS::operator()()
       // Classify this region by size:
       // Large regions (>= threshold): keep as voids (featureId = 0),
       // optionally assign to a new phase for visualization.
-      if(currentVisitedList.size() >= static_cast<usize>(m_InputValues->minAllowedDefectSizeValue))
+      if(currentVisitedList.size() >= static_cast<usize>(m_InputValues->min_allowed_defect_size_value))
       {
         for(const auto& currentIndex : currentVisitedList)
         {
           featureIdsStore[currentIndex] = 0;
-          if(m_InputValues->storeAsNewPhase)
+          if(m_InputValues->store_as_new_phase)
           {
             (*cellPhasesPtr)[currentIndex] = static_cast<int32>(maxPhase) + 1;
           }
@@ -214,7 +212,7 @@ Result<> FillBadDataBFS::operator()()
       }
       // Small regions (< threshold): mark with -1 to indicate they should
       // be filled in Step 3 by copying data from neighboring good features.
-      if(currentVisitedList.size() < static_cast<usize>(m_InputValues->minAllowedDefectSizeValue))
+      if(currentVisitedList.size() < static_cast<usize>(m_InputValues->min_allowed_defect_size_value))
       {
         for(const auto& currentIndex : currentVisitedList)
         {
@@ -231,7 +229,8 @@ Result<> FillBadDataBFS::operator()()
 
   // Collect all cell data arrays that need updating when a voxel is filled
   // (excludes user-specified ignored arrays)
-  std::optional<std::vector<DataPath>> allChildArrays = GetAllChildDataPaths(m_DataStructure, selectedImageGeom.getCellDataPath(), DataObject::Type::DataArray, m_InputValues->ignoredDataArrayPaths);
+  std::optional<std::vector<DataPath>> allChildArrays =
+      GetAllChildDataPaths(m_DataStructure, selectedImageGeom.getCellDataPath(), DataObject::Type::DataArray, m_InputValues->ignored_data_array_paths);
   std::vector<DataPath> voxelArrayNames;
   if(allChildArrays.has_value())
   {
@@ -349,8 +348,9 @@ Result<> FillBadDataBFS::operator()()
 
     if(count != 0 && !madeAssignment)
     {
-      m_MessageHandler.sendMessage({IFilter::Message::Type::Warning,
-                                    fmt::format("{} bad-data voxel(s) could not be filled because they have no adjacent good-data neighbor. Stopping after {} iteration(s).", count, iteration)});
+      m_MessageHandler.sendMessage(
+          {.type = IFilter::Message::Type::Warning,
+           .message = fmt::format("{} bad-data voxel(s) could not be filled because they have no adjacent good-data neighbor. Stopping after {} iteration(s).", count, iteration)});
       break;
     }
 
@@ -358,13 +358,13 @@ Result<> FillBadDataBFS::operator()()
     // all components from the winning neighbor to the bad voxel.
     for(const auto& cellArrayPath : voxelArrayNames)
     {
-      if(cellArrayPath == m_InputValues->featureIdsArrayPath)
+      if(cellArrayPath == m_InputValues->feature_ids_array_path)
       {
         continue;
       }
-      auto* oldCellArray = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
+      auto* oldCellArrayPtr = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
 
-      ExecuteDataFunction(FillBadDataUpdateTuplesFunctor{}, oldCellArray->getDataType(), featureIdsStore, oldCellArray, neighbors);
+      ExecuteDataFunction(FillBadDataUpdateTuplesFunctor{}, oldCellArrayPtr->getDataType(), featureIdsStore, oldCellArrayPtr, neighbors);
     }
 
     // Update FeatureIds LAST: the FillBadDataUpdateTuples calls above rely

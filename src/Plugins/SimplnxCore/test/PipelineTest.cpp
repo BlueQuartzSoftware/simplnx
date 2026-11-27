@@ -79,8 +79,8 @@ public:
 
   Uuid uuid() const override
   {
-    static constexpr Uuid uuid = *Uuid::FromString("907b9eb7-c48e-4666-9d9d-21cc70f426f1");
-    return uuid;
+    static constexpr Uuid k_Uuid = *Uuid::FromString("907b9eb7-c48e-4666-9d9d-21cc70f426f1");
+    return k_Uuid;
   }
 
   std::string humanName() const override
@@ -98,14 +98,14 @@ public:
     return 1;
   }
 
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     return std::make_unique<DeferredActionTestFilter>();
   }
 
 protected:
-  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                const ExecutionContext& executionContext) const override
+  PreflightResult preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const MessageHandler& /*messageHandler*/, const std::atomic_bool& /*shouldCancel*/,
+                                const ExecutionContext& /*executionContext*/) const override
   {
     OutputActions outputActions;
     outputActions.appendAction(std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{10}, std::vector<usize>{1}, k_DeferredActionPath));
@@ -113,8 +113,8 @@ protected:
     return {std::move(outputActions)};
   }
 
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                       const ExecutionContext& executionContext) const override
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const override
   {
     // object should exist because the delete should happen after execute
     if(dataStructure.getData(k_DeferredActionPath) == nullptr)
@@ -129,46 +129,46 @@ protected:
 TEST_CASE("PipelineTest:Execute Pipeline")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
-  const AbstractPlugin* test1Plugin = app->getPlugin(k_Test1PluginId);
-  REQUIRE(test1Plugin != nullptr);
-  auto testFilter1 = filterList->createFilter(k_Test1FilterHandle);
+  const AbstractPlugin* test1PluginPtr = app->getPlugin(k_Test1PluginId);
+  REQUIRE(test1PluginPtr != nullptr);
+  auto testFilter1 = filterListPtr->createFilter(k_Test1FilterHandle);
   REQUIRE(testFilter1 != nullptr);
-  FilterHandle tf1Handle(testFilter1->uuid(), test1Plugin->getId());
+  FilterHandle tf1Handle(testFilter1->uuid(), test1PluginPtr->getId());
 
-  const AbstractPlugin* test2Plugin = app->getPlugin(k_Test2PluginId);
-  REQUIRE(test2Plugin != nullptr);
-  auto testFilter2 = filterList->createFilter(k_Test2FilterHandle);
+  const AbstractPlugin* test2PluginPtr = app->getPlugin(k_Test2PluginId);
+  REQUIRE(test2PluginPtr != nullptr);
+  auto testFilter2 = filterListPtr->createFilter(k_Test2FilterHandle);
   REQUIRE(testFilter2 != nullptr);
-  FilterHandle tf2Handle(testFilter2->uuid(), test2Plugin->getId());
+  FilterHandle tf2Handle(testFilter2->uuid(), test2PluginPtr->getId());
 
   Pipeline pipeline;
   REQUIRE(pipeline.execute());
   REQUIRE(pipeline.push_front(tf1Handle));
 
-  PipelineFilter* filterNode = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-  REQUIRE(filterNode != nullptr);
+  PipelineFilter* filterNodePtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+  REQUIRE(filterNodePtr != nullptr);
 
   Arguments args;
   GeneratedFileListParameter::ValueType defaultValue;
-  defaultValue.startIndex = 0;
-  defaultValue.endIndex = 1;
-  defaultValue.filePrefix = "test_";
-  defaultValue.fileExtension = ".txt";
-  defaultValue.inputPath = nx::core::unit_test::k_BinaryTestOutputDir;
+  defaultValue.start_index = 0;
+  defaultValue.end_index = 1;
+  defaultValue.file_prefix = "test_";
+  defaultValue.file_extension = ".txt";
+  defaultValue.input_path = nx::core::unit_test::k_BinaryTestOutputDir;
 
   const std::vector<std::string> fileList = defaultValue.generate();
   // We need to actually have files available for the test to pass so generate some files
   for(const auto& filepath : fileList)
   {
     std::fstream file(filepath, std::ios_base::out);
-    file << "TEST" << std::endl;
+    file << "TEST" << '\n';
   }
 
   args.insert("param3", std::move(defaultValue));
-  filterNode->setArguments(args);
+  filterNodePtr->setArguments(args);
 
   REQUIRE(pipeline.execute());
   REQUIRE(pipeline.push_back(tf2Handle));
@@ -177,17 +177,17 @@ TEST_CASE("PipelineTest:Execute Pipeline")
 TEST_CASE("PipelineTest:Simplnx Pipeline")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  auto filterList = app->getFilterList();
-  REQUIRE(filterList->size() != 0);
+  auto* filterListPtr = app->getFilterList();
+  REQUIRE(filterListPtr->size() != 0);
 
-  const AbstractPlugin* test1Plugin = app->getPlugin(k_Test1PluginId);
-  REQUIRE(test1Plugin != nullptr);
+  const AbstractPlugin* test1PluginPtr = app->getPlugin(k_Test1PluginId);
+  REQUIRE(test1PluginPtr != nullptr);
 
-  auto testFilter1 = filterList->createFilter(k_Test1FilterHandle);
+  auto testFilter1 = filterListPtr->createFilter(k_Test1FilterHandle);
   REQUIRE(testFilter1 != nullptr);
-  FilterHandle tf1Handle(testFilter1->uuid(), test1Plugin->getId());
+  FilterHandle tf1Handle(testFilter1->uuid(), test1PluginPtr->getId());
 
   Pipeline pipeline;
   std::unique_ptr<PipelineFilter> node = PipelineFilter::Create(tf1Handle);
@@ -203,27 +203,27 @@ TEST_CASE("PipelineTest:Simplnx Pipeline")
 
   // Test Moving nodex
   {
-    constexpr Pipeline::index_type fromIndex = 1;
-    constexpr Pipeline::index_type toIndex = 3;
+    constexpr Pipeline::index_type k_FromIndex = 1;
+    constexpr Pipeline::index_type k_ToIndex = 3;
 
-    auto movedNode = pipeline.at(fromIndex);
+    auto* movedNodePtr = pipeline.at(k_FromIndex);
 
-    REQUIRE(pipeline.move(fromIndex, toIndex));
+    REQUIRE(pipeline.move(k_FromIndex, k_ToIndex));
 
     // Check node index
     {
-      auto nodeIter = pipeline.find(movedNode);
+      auto nodeIter = pipeline.find(movedNodePtr);
       const auto nodeIndex = nodeIter - pipeline.begin();
-      REQUIRE(nodeIndex == toIndex);
+      REQUIRE(nodeIndex == k_ToIndex);
     }
 
-    REQUIRE(pipeline.move(toIndex, fromIndex));
+    REQUIRE(pipeline.move(k_ToIndex, k_FromIndex));
 
     // Check node index
     {
-      auto nodeIter = pipeline.find(movedNode);
+      auto nodeIter = pipeline.find(movedNodePtr);
       const auto nodeIndex = nodeIter - pipeline.begin();
-      REQUIRE(nodeIndex == fromIndex);
+      REQUIRE(nodeIndex == k_FromIndex);
     }
   }
 }
@@ -231,7 +231,7 @@ TEST_CASE("PipelineTest:Simplnx Pipeline")
 TEST_CASE("PipelineTest:PipelineJson")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   Pipeline pipeline("test");
 
@@ -260,21 +260,21 @@ TEST_CASE("PipelineTest:PipelineJson")
   usize size = pipeline2.size();
   for(usize i = 0; i < size; i++)
   {
-    const auto* originalNode = dynamic_cast<const PipelineFilter*>(pipeline.at(i));
+    const auto* originalNodePtr = dynamic_cast<const PipelineFilter*>(pipeline.at(i));
 
-    const AbstractPipelineNode* node = pipeline2.at(i);
-    REQUIRE(node != nullptr);
-    const auto* pipelineFilter = dynamic_cast<const PipelineFilter*>(node);
-    REQUIRE(pipelineFilter != nullptr);
-    const IFilter* filter = pipelineFilter->getFilter();
-    REQUIRE(filter != nullptr);
+    const AbstractPipelineNode* nodePtr = pipeline2.at(i);
+    REQUIRE(nodePtr != nullptr);
+    const auto* pipelineFilterPtr = dynamic_cast<const PipelineFilter*>(nodePtr);
+    REQUIRE(pipelineFilterPtr != nullptr);
+    const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+    REQUIRE(filterPtr != nullptr);
 
-    Uuid expectedUuid = originalNode->getFilter()->uuid();
-    REQUIRE(filter->uuid() == expectedUuid);
+    Uuid expectedUuid = originalNodePtr->getFilter()->uuid();
+    REQUIRE(filterPtr->uuid() == expectedUuid);
 
-    Arguments expectedArgs = originalNode->getArguments();
+    Arguments expectedArgs = originalNodePtr->getArguments();
 
-    Arguments args = pipelineFilter->getArguments();
+    Arguments args = pipelineFilterPtr->getArguments();
 
     REQUIRE(args.size() == expectedArgs.size());
 
@@ -295,7 +295,7 @@ TEST_CASE("PipelineTest:PipelineJson")
 TEST_CASE("PipelineTest:Rename Output")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   std::string group1Name = "Foo";
   std::string group2Name = "Bar";
@@ -317,18 +317,18 @@ TEST_CASE("PipelineTest:Rename Output")
     group1Name = "Bizz";
     args1.insertOrAssign("data_object_path", std::make_any<DataPath>(DataPath({group1Name})));
 
-    auto* filterNode = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-    REQUIRE(filterNode != nullptr);
-    filterNode->setArguments(args1);
+    auto* filterNodePtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+    REQUIRE(filterNodePtr != nullptr);
+    filterNodePtr->setArguments(args1);
   }
 
   REQUIRE(pipeline.preflight(false, true));
 
   // Check Node 2 arguments
   {
-    auto* filterNode2 = dynamic_cast<PipelineFilter*>(pipeline.at(1));
-    REQUIRE(filterNode2 != nullptr);
-    auto args2Alt = filterNode2->getArguments();
+    auto* filterNode2Ptr = dynamic_cast<PipelineFilter*>(pipeline.at(1));
+    REQUIRE(filterNode2Ptr != nullptr);
+    auto args2Alt = filterNode2Ptr->getArguments();
     const auto& inPath = std::any_cast<DataPath>(args2Alt.at("data_object_path"));
     DataPath targetPath({group1Name, group2Name});
     REQUIRE(inPath == targetPath);
@@ -338,7 +338,7 @@ TEST_CASE("PipelineTest:Rename Output")
 TEST_CASE("PipelineTest:Not Renaming")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   std::string group1Name = "Foo";
   std::string group2Name = "Bar";
@@ -360,18 +360,18 @@ TEST_CASE("PipelineTest:Not Renaming")
     group1Name = "Bizz";
     args1.insertOrAssign("data_object_path", std::make_any<DataPath>(DataPath({group1Name})));
 
-    auto* filterNode = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-    REQUIRE(filterNode != nullptr);
-    filterNode->setArguments(args1);
+    auto* filterNodePtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+    REQUIRE(filterNodePtr != nullptr);
+    filterNodePtr->setArguments(args1);
   }
 
   REQUIRE(pipeline.preflight(false, false));
 
   // Check Node 2 arguments
   {
-    auto* filterNode2 = dynamic_cast<PipelineFilter*>(pipeline.at(1));
-    REQUIRE(filterNode2 != nullptr);
-    auto args2Alt = filterNode2->getArguments();
+    auto* filterNode2Ptr = dynamic_cast<PipelineFilter*>(pipeline.at(1));
+    REQUIRE(filterNode2Ptr != nullptr);
+    auto args2Alt = filterNode2Ptr->getArguments();
     const auto& inPath = std::any_cast<DataPath>(args2Alt.at("data_object_path"));
     DataPath targetPath({group1Name, group2Name});
     REQUIRE(inPath != targetPath);
@@ -389,15 +389,15 @@ TEST_CASE("PipelineTest:PipelineDeferredActionTest")
   REQUIRE(pipeline.preflight(dataStructure, false));
 
   // should be deleted in preflight
-  DataObject* preflightObject = dataStructure.getData(k_DeferredActionPath);
-  REQUIRE(preflightObject == nullptr);
+  DataObject* preflightObjectPtr = dataStructure.getData(k_DeferredActionPath);
+  REQUIRE(preflightObjectPtr == nullptr);
 
   // DeferredActionTestFilter checks the k_DeferredActionPath hasn't been deleted until after execute
   REQUIRE(pipeline.execute(dataStructure, false));
 
   // after execute the object will be deleted
-  DataObject* executeObject = dataStructure.getData(k_DeferredActionPath);
-  REQUIRE(executeObject == nullptr);
+  DataObject* executeObjectPtr = dataStructure.getData(k_DeferredActionPath);
+  REQUIRE(executeObjectPtr == nullptr);
 }
 
 TEST_CASE("SimplnxCore::Pipeline persistent state: write extract replay", "[SimplnxCore][PipelineCopyState]")
@@ -438,7 +438,7 @@ TEST_CASE("SimplnxCore::Pipeline persistent state: write extract replay", "[Simp
   REQUIRE_FALSE(fs::exists(missingInput));
   CHECK(dataStructure.getAllDataPaths().empty());
 
-  auto embeddedResult = DREAM3D::ImportPipelineJsonFromFile(writtenFile);
+  auto embeddedResult = dream3d::ImportPipelineJsonFromFile(writtenFile);
   SIMPLNX_RESULT_REQUIRE_VALID(embeddedResult);
   const auto& embeddedRef = embeddedResult.value();
   REQUIRE(embeddedRef.at("pipeline").size() == 2);
@@ -452,13 +452,13 @@ TEST_CASE("SimplnxCore::Pipeline persistent state: write extract replay", "[Simp
   extractorArgs.insertOrAssign(ExtractPipelineToFileFilter::k_ImportFileData, writtenFile);
   extractorArgs.insertOrAssign(ExtractPipelineToFileFilter::k_OutputFile, extractedFile);
   auto extractPreflightResult = extractor.preflight(dataStructure, extractorArgs);
-  SIMPLNX_RESULT_REQUIRE_VALID(extractPreflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(extractPreflightResult.output_actions);
   auto extractResult = extractor.execute(dataStructure, extractorArgs);
   SIMPLNX_RESULT_REQUIRE_VALID(extractResult.result);
   REQUIRE(fs::exists(extractedFile));
 
   // Loading the extracted pipeline resolves filter UUIDs through the plugin registry.
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto replayResult = Pipeline::FromFile(extractedFile);
   SIMPLNX_RESULT_REQUIRE_VALID(replayResult);
   auto& replayRef = replayResult.value();
@@ -490,6 +490,6 @@ TEST_CASE("SimplnxCore::Pipeline persistent state: write extract replay", "[Simp
   CHECK(readerPtr->getComments() == "Skip the missing reader during replay.");
   CHECK(writerPtr->getComments() == "Keep the writer comment in the embedded pipeline.");
   CHECK(writerPtr->getArguments().value<FileSystemPathParameter::ValueType>(WriteDREAM3DFilter::k_ExportFilePath) == writtenFile);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-  UnitTest::CheckArraysInheritTupleDims(replayDataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(replayDataStructure);
 }

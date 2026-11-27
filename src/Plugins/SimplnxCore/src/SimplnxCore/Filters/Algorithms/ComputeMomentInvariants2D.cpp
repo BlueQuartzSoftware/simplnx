@@ -241,9 +241,9 @@ public:
    * @param reportSkipped Reports a feature that is not strictly 2D.
    * @param shouldCancel Stops later feature work when true.
    */
-  ComputeMomentInvariants2DImpl(const Int32AbstractDataStore& featureIds, const UInt32AbstractDataStore& featureRect, Float32AbstractDataStore& omega1, Float32AbstractDataStore& omega2,
-                                Float32Array* centralMoments, const SizeVec3& volDims, const bool normalizeMomentInvariants, const std::function<void(usize)>& reportProgress,
-                                const std::function<void(usize)>& reportSkipped, const std::atomic_bool& shouldCancel)
+  ComputeMomentInvariants2DImpl(const Int32AbstractDataStoreType& featureIds, const UInt32AbstractDataStoreType& featureRect, Float32AbstractDataStoreType& omega1,
+                                Float32AbstractDataStoreType& omega2, Float32ArrayType* centralMoments, const SizeVec3Type& volDims, const bool normalizeMomentInvariants,
+                                const std::function<void(usize)>& reportProgress, const std::function<void(usize)>& reportSkipped, const std::atomic_bool& shouldCancel)
   : m_FeatureIds(featureIds)
   , m_FeatureRect(featureRect)
   , m_Omega1(omega1)
@@ -265,7 +265,7 @@ public:
    *
    * Empty and non-XY features keep zero moment outputs. The worker continues with the next feature.
    */
-  void convert(usize start, usize end, Float32AbstractDataStore& centralMoments) const
+  void convert(usize start, usize end, Float32AbstractDataStoreType& centralMoments) const
   {
     const usize numRectComponents = m_FeatureRect.getNumberOfComponents();
     for(usize featureId = start; featureId < end; featureId++)
@@ -278,7 +278,7 @@ public:
       const auto featureIdRectIndex = featureId * numRectComponents;
       std::array<uint32, 6> corner = {m_FeatureRect[featureIdRectIndex],     m_FeatureRect[featureIdRectIndex + 1], m_FeatureRect[featureIdRectIndex + 2],
                                       m_FeatureRect[featureIdRectIndex + 3], m_FeatureRect[featureIdRectIndex + 4], m_FeatureRect[featureIdRectIndex + 5]};
-      constexpr usize maxOrder = 2;
+      constexpr usize k_MaxOrder = 2;
 
       if(corner[0] > corner[3])
       {
@@ -324,7 +324,7 @@ public:
       }
 
       const usize inputDims[2] = {dim, dim};
-      ComputeMomentInvariants2D::DoubleMatrixType m2D = ::ComputeMomentInvariants(input2D, inputDims, maxOrder);
+      ComputeMomentInvariants2D::DoubleMatrixType m2D = ::ComputeMomentInvariants(input2D, inputDims, k_MaxOrder);
       // compute the second order moment invariants
       double omega1 = 2.0 * (m2D(0, 0) * m2D(0, 0)) / (m2D(0, 2) + m2D(2, 0));
       double omega2 = std::pow(m2D(0, 0), 4) / (m2D(2, 0) * m2D(0, 2) - std::pow(m2D(1, 1), 2));
@@ -332,17 +332,17 @@ public:
       if(m_NormalizeMomentInvariants)
       {
         // normalize the invariants by those of the circle
-        constexpr double circleOmega[2] = {4.0 * numbers::pi, 16.0 * numbers::pi * numbers::pi};
-        omega1 /= circleOmega[0];
-        omega2 /= circleOmega[1];
+        constexpr double k_CircleOmega[2] = {4.0 * numbers::k_Pi, 16.0 * numbers::k_Pi * numbers::k_Pi};
+        omega1 /= k_CircleOmega[0];
+        omega2 /= k_CircleOmega[1];
       }
       m_Omega1[featureId] = static_cast<float32>(omega1);
       m_Omega2[featureId] = static_cast<float32>(omega2);
 
-      const double* m2DInternal = m2D.array().data();
+      const double* m2DInternalPtr = m2D.array().data();
       for(usize comp = 0; comp < 9; comp++)
       {
-        centralMoments[static_cast<usize>(featureId) * 9UL + comp] = static_cast<float32>(m2DInternal[comp]);
+        centralMoments[featureId * 9UL + comp] = static_cast<float32>(m2DInternalPtr[comp]);
       }
 
       m_ReportProgress(1);
@@ -369,7 +369,7 @@ public:
       const auto featureIdRectIndex = featureId * numRectComponents;
       std::array<uint32, 6> corner = {m_FeatureRect[featureIdRectIndex],     m_FeatureRect[featureIdRectIndex + 1], m_FeatureRect[featureIdRectIndex + 2],
                                       m_FeatureRect[featureIdRectIndex + 3], m_FeatureRect[featureIdRectIndex + 4], m_FeatureRect[featureIdRectIndex + 5]};
-      constexpr usize maxOrder = 2;
+      constexpr usize k_MaxOrder = 2;
 
       if(corner[0] > corner[3])
       {
@@ -415,7 +415,7 @@ public:
       }
 
       const usize inputDims[2] = {dim, dim};
-      ComputeMomentInvariants2D::DoubleMatrixType m2D = ::ComputeMomentInvariants(input2D, inputDims, maxOrder);
+      ComputeMomentInvariants2D::DoubleMatrixType m2D = ::ComputeMomentInvariants(input2D, inputDims, k_MaxOrder);
       // compute the second order moment invariants
       double omega1 = 2.0 * (m2D(0, 0) * m2D(0, 0)) / (m2D(0, 2) + m2D(2, 0));
       double omega2 = std::pow(m2D(0, 0), 4) / (m2D(2, 0) * m2D(0, 2) - std::pow(m2D(1, 1), 2));
@@ -423,9 +423,9 @@ public:
       if(m_NormalizeMomentInvariants)
       {
         // Circle values make the selected invariants dimensionless.
-        constexpr double circleOmega[2] = {4.0 * numbers::pi, 16.0 * numbers::pi * numbers::pi};
-        omega1 /= circleOmega[0];
-        omega2 /= circleOmega[1];
+        constexpr double k_CircleOmega[2] = {4.0 * numbers::k_Pi, 16.0 * numbers::k_Pi * numbers::k_Pi};
+        omega1 /= k_CircleOmega[0];
+        omega2 /= k_CircleOmega[1];
       }
       m_Omega1[featureId] = static_cast<float32>(omega1);
       m_Omega2[featureId] = static_cast<float32>(omega2);
@@ -465,12 +465,12 @@ public:
   }
 
 private:
-  const Int32AbstractDataStore& m_FeatureIds;
-  const UInt32AbstractDataStore& m_FeatureRect;
-  Float32AbstractDataStore& m_Omega1;
-  Float32AbstractDataStore& m_Omega2;
-  Float32Array* m_CentralMoments = nullptr;
-  const SizeVec3& m_VolDims;
+  const Int32AbstractDataStoreType& m_FeatureIds;
+  const UInt32AbstractDataStoreType& m_FeatureRect;
+  Float32AbstractDataStoreType& m_Omega1;
+  Float32AbstractDataStoreType& m_Omega2;
+  Float32ArrayType* m_CentralMoments = nullptr;
+  const SizeVec3Type& m_VolDims;
   const bool m_NormalizeMomentInvariants = true;
   const std::atomic_bool& m_ShouldCancel;
   const std::function<void(usize)>& m_ReportProgress;
@@ -500,9 +500,9 @@ public:
    * @param reportSkipped Reports a feature that is not strictly 2D.
    * @param shouldCancel Stops later feature work when true.
    */
-  ComputeMomentInvariants2DScanline(const Int32AbstractDataStore& featureIds, const UInt32AbstractDataStore& featureRect, Float32AbstractDataStore& omega1, Float32AbstractDataStore& omega2,
-                                    Float32Array* centralMoments, const SizeVec3& volDims, const bool normalizeMomentInvariants, const std::function<void(usize)>& reportProgress,
-                                    const std::function<void(usize)>& reportSkipped, const std::atomic_bool& shouldCancel)
+  ComputeMomentInvariants2DScanline(const Int32AbstractDataStoreType& featureIds, const UInt32AbstractDataStoreType& featureRect, Float32AbstractDataStoreType& omega1,
+                                    Float32AbstractDataStoreType& omega2, Float32ArrayType* centralMoments, const SizeVec3Type& volDims, const bool normalizeMomentInvariants,
+                                    const std::function<void(usize)>& reportProgress, const std::function<void(usize)>& reportSkipped, const std::atomic_bool& shouldCancel)
   : m_FeatureIds(featureIds)
   , m_FeatureRect(featureRect)
   , m_Omega1(omega1)
@@ -570,14 +570,14 @@ public:
         }
 
         const usize featureId = static_cast<usize>(featureIdValue);
-        const auto* rect = featureRects.get() + featureId * numRectComponents;
-        if(rect[0] > rect[3])
+        const auto* rectPtr = featureRects.get() + featureId * numRectComponents;
+        if(rectPtr[0] > rectPtr[3])
         {
           continue;
         }
-        const uint32 xDim = rect[3] - rect[0] + 1;
-        const uint32 yDim = rect[4] - rect[1] + 1;
-        if(rect[5] - rect[2] + 1 != 1)
+        const uint32 xDim = rectPtr[3] - rectPtr[0] + 1;
+        const uint32 yDim = rectPtr[4] - rectPtr[1] + 1;
+        if(rectPtr[5] - rectPtr[2] + 1 != 1)
         {
           continue;
         }
@@ -585,14 +585,14 @@ public:
         const usize cellIndex = cellOffset + localIndex;
         const usize x = cellIndex % m_VolDims[0];
         const usize y = (cellIndex / m_VolDims[0]) % m_VolDims[1];
-        if(x < rect[0] || x > rect[3] || y < rect[1] || y > rect[4])
+        if(x < rectPtr[0] || x > rectPtr[3] || y < rectPtr[1] || y > rectPtr[4])
         {
           continue;
         }
 
         const usize dim = std::max(static_cast<usize>(xDim), static_cast<usize>(yDim));
-        const auto xBasis = getBasis(x - rect[0], dim);
-        const auto yBasis = getBasis(y - rect[1], dim);
+        const auto xBasis = GetBasis(x - rectPtr[0], dim);
+        const auto yBasis = GetBasis(y - rectPtr[1], dim);
         auto& featureMoments = rawMoments[featureId];
         for(usize row = 0; row < k_MatrixDimension; row++)
         {
@@ -623,18 +623,18 @@ public:
         return {};
       }
 
-      const auto* rect = featureRects.get() + featureId * numRectComponents;
-      if(rect[0] > rect[3])
+      const auto* rectPtr = featureRects.get() + featureId * numRectComponents;
+      if(rectPtr[0] > rectPtr[3])
       {
         continue;
       }
-      if(rect[5] - rect[2] + 1 != 1)
+      if(rectPtr[5] - rectPtr[2] + 1 != 1)
       {
         m_ReportSkipped(featureId);
         continue;
       }
 
-      const usize dim = std::max(static_cast<usize>(rect[3] - rect[0] + 1), static_cast<usize>(rect[4] - rect[1] + 1));
+      const usize dim = std::max(static_cast<usize>(rectPtr[3] - rectPtr[0] + 1), static_cast<usize>(rectPtr[4] - rectPtr[1] + 1));
       ComputeMomentInvariants2D::DoubleMatrixType moments(k_MatrixDimension, k_MatrixDimension);
       for(usize row = 0; row < k_MatrixDimension; row++)
       {
@@ -649,7 +649,7 @@ public:
       double omega2 = std::pow(centralMoments(0, 0), 4) / (centralMoments(2, 0) * centralMoments(0, 2) - std::pow(centralMoments(1, 1), 2));
       if(m_NormalizeMomentInvariants)
       {
-        constexpr std::array<double, 2> k_CircleOmega = {4.0 * numbers::pi, 16.0 * numbers::pi * numbers::pi};
+        constexpr std::array<double, 2> k_CircleOmega = {4.0 * numbers::k_Pi, 16.0 * numbers::k_Pi * numbers::k_Pi};
         omega1 /= k_CircleOmega[0];
         omega2 /= k_CircleOmega[1];
       }
@@ -658,11 +658,11 @@ public:
       omega2Values[featureId] = static_cast<float32>(omega2);
       if(centralMomentValues != nullptr)
       {
-        const double* centralMomentsData = centralMoments.array().data();
+        const double* centralMomentsDataPtr = centralMoments.array().data();
         const usize centralMomentsOffset = featureId * k_MatrixDimension * k_MatrixDimension;
         for(usize component = 0; component < k_MatrixDimension * k_MatrixDimension; component++)
         {
-          centralMomentValues[centralMomentsOffset + component] = static_cast<float32>(centralMomentsData[component]);
+          centralMomentValues[centralMomentsOffset + component] = static_cast<float32>(centralMomentsDataPtr[component]);
         }
       }
 
@@ -698,7 +698,7 @@ private:
    * @param dim Specifies the square feature-image dimension.
    * @return Basis terms through second order.
    */
-  static std::array<double, 3> getBasis(usize coordinate, usize dim)
+  static std::array<double, 3> GetBasis(usize coordinate, usize dim)
   {
     std::array<double, 3> basis = {};
     const double normalization = static_cast<double>(dim - 1) / 2.0;
@@ -716,12 +716,12 @@ private:
     return basis;
   }
 
-  const Int32AbstractDataStore& m_FeatureIds;
-  const UInt32AbstractDataStore& m_FeatureRect;
-  Float32AbstractDataStore& m_Omega1;
-  Float32AbstractDataStore& m_Omega2;
-  Float32Array* m_CentralMoments = nullptr;
-  const SizeVec3& m_VolDims;
+  const Int32AbstractDataStoreType& m_FeatureIds;
+  const UInt32AbstractDataStoreType& m_FeatureRect;
+  Float32AbstractDataStoreType& m_Omega1;
+  Float32AbstractDataStoreType& m_Omega2;
+  Float32ArrayType* m_CentralMoments = nullptr;
+  const SizeVec3Type& m_VolDims;
   const bool m_NormalizeMomentInvariants = true;
   const std::function<void(usize)>& m_ReportProgress;
   const std::function<void(usize)>& m_ReportSkipped;
@@ -737,8 +737,6 @@ ComputeMomentInvariants2D::ComputeMomentInvariants2D(DataStructure& dataStructur
 {
 }
 
-ComputeMomentInvariants2D::~ComputeMomentInvariants2D() noexcept = default;
-
 const std::atomic_bool& ComputeMomentInvariants2D::getCancel()
 {
   return m_ShouldCancel;
@@ -746,21 +744,21 @@ const std::atomic_bool& ComputeMomentInvariants2D::getCancel()
 
 Result<> ComputeMomentInvariants2D::operator()()
 {
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  const SizeVec3 volDims = imageGeom.getDimensions();
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
+  const SizeVec3Type volDims = imageGeom.getDimensions();
 
-  const auto& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  const auto& featureRectArray = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->FeatureRectArrayPath);
-  auto& omega1Array = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->Omega1ArrayPath);
-  auto& omega2Array = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->Omega2ArrayPath);
+  const auto& featureIdsArray = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
+  const auto& featureRectArray = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->feature_rect_array_path);
+  auto& omega1Array = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->omega1_array_path);
+  auto& omega2Array = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->omega2_array_path);
   const auto& featureIds = featureIdsArray.getDataStoreRef();
   const auto& featureRect = featureRectArray.getDataStoreRef();
   auto& omega1 = omega1Array.getDataStoreRef();
   auto& omega2 = omega2Array.getDataStoreRef();
-  Float32Array* centralMoments = nullptr;
-  if(m_InputValues->SaveCentralMoments)
+  Float32ArrayType* centralMomentsPtr = nullptr;
+  if(m_InputValues->save_central_moments)
   {
-    centralMoments = &m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CentralMomentsArrayPath);
+    centralMomentsPtr = &m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->central_moments_array_path);
   }
 
   const usize numFeatures = featureRect.getNumberOfTuples();
@@ -776,7 +774,7 @@ Result<> ComputeMomentInvariants2D::operator()()
     progressThrottle.queueMessage("Feature {} is NOT strictly 2D in the XY plane. Skipping this feature.", featureId);
   };
 
-  return DispatchAlgorithm<ComputeMomentInvariants2DImpl, ComputeMomentInvariants2DScanline>({&featureIdsArray, &featureRectArray, &omega1Array, &omega2Array, centralMoments}, featureIds, featureRect,
-                                                                                             omega1, omega2, centralMoments, volDims, m_InputValues->NormalizeMomentInvariants, reportProgress,
-                                                                                             reportSkipped, m_ShouldCancel);
+  return DispatchAlgorithm<ComputeMomentInvariants2DImpl, ComputeMomentInvariants2DScanline>({&featureIdsArray, &featureRectArray, &omega1Array, &omega2Array, centralMomentsPtr}, featureIds,
+                                                                                             featureRect, omega1, omega2, centralMomentsPtr, volDims, m_InputValues->normalize_moment_invariants,
+                                                                                             reportProgress, reportSkipped, m_ShouldCancel);
 }

@@ -304,7 +304,7 @@ std::optional<usize> FindFirstNonBinaryValue(nonstd::span<const T> values, T fg,
   // The block OR-reduction has no data-dependent exit, so compilers can vectorize it.
   // The first-violation search runs only in the first block of each range that contains a violation.
   // The per-block check bounds unused work after another range publishes a smaller index.
-  const T* const data = values.data();
+  const T* const dataPtr = values.data();
   ParallelDataAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(0, values.size());
   parallelAlgorithm.execute([&](const Range& range) {
@@ -326,13 +326,13 @@ std::optional<usize> FindFirstNonBinaryValue(nonstd::span<const T> values, T fg,
       uint32 invalidMask = 0;
       for(usize i = blockBegin; i < blockEnd; ++i)
       {
-        invalidMask |= static_cast<uint32>(data[i] != foreground) & static_cast<uint32>(data[i] != background);
+        invalidMask |= static_cast<uint32>(dataPtr[i] != foreground) & static_cast<uint32>(dataPtr[i] != background);
       }
       if(invalidMask != 0)
       {
         for(usize i = blockBegin; i < blockEnd; ++i)
         {
-          if(data[i] != foreground && data[i] != background)
+          if(dataPtr[i] != foreground && dataPtr[i] != background)
           {
             PublishSmallerIndex(firstInvalid, i);
             return;
@@ -423,7 +423,7 @@ inline std::array<usize, 3> SERadius(const StructuringElement& se)
  *        SE radius -- clamping it would introduce a new divergence. The reported bug is only the Z axis of a 2D
  *        image, and that is all this clamps.
  */
-inline std::array<usize, 3> SafeBorderPadRadius(const StructuringElement& se, const SizeVec3& dims)
+inline std::array<usize, 3> SafeBorderPadRadius(const StructuringElement& se, const SizeVec3Type& dims)
 {
   const std::array<usize, 3> r = SERadius(se);
   return {r[0], r[1], dims[2] == 1 ? usize{0} : r[2]};
@@ -437,7 +437,7 @@ inline std::array<usize, 3> SafeBorderPadRadius(const StructuringElement& se, co
  *        morphology passes.
  */
 template <class T>
-Result<> PadIntoStore(const AbstractDataStore<T>& in, AbstractDataStore<T>& padded, const SizeVec3& dims, const std::array<usize, 3>& r, T padValue, const std::atomic_bool& shouldCancel)
+Result<> PadIntoStore(const AbstractDataStore<T>& in, AbstractDataStore<T>& padded, const SizeVec3Type& dims, const std::array<usize, 3>& r, T padValue, const std::atomic_bool& shouldCancel)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
@@ -486,7 +486,7 @@ Result<> PadIntoStore(const AbstractDataStore<T>& in, AbstractDataStore<T>& padd
  *        ITK's SafeBorder CropImageFilter step (crop by the kernel radius) after the two morphology passes.
  */
 template <class T>
-Result<> CropFromStore(const AbstractDataStore<T>& padded, AbstractDataStore<T>& out, const SizeVec3& dims, const std::array<usize, 3>& r, const std::atomic_bool& shouldCancel)
+Result<> CropFromStore(const AbstractDataStore<T>& padded, AbstractDataStore<T>& out, const SizeVec3Type& dims, const std::array<usize, 3>& r, const std::atomic_bool& shouldCancel)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
@@ -541,7 +541,7 @@ enum class CropSubtractOrder
 /// @pre Padded has that tuple shape plus twice @p r on the corresponding axes.
 /// @pre @p padded does not alias @p original or @p out.
 template <class T>
-Result<> CropSubtractFromStore(const AbstractDataStore<T>& padded, const AbstractDataStore<T>& original, AbstractDataStore<T>& out, const SizeVec3& dims, const std::array<usize, 3>& r,
+Result<> CropSubtractFromStore(const AbstractDataStore<T>& padded, const AbstractDataStore<T>& original, AbstractDataStore<T>& out, const SizeVec3Type& dims, const std::array<usize, 3>& r,
                                CropSubtractOrder order, const std::atomic_bool& shouldCancel)
 {
   if(shouldCancel)
@@ -578,20 +578,20 @@ Result<> CropSubtractFromStore(const AbstractDataStore<T>& padded, const Abstrac
     for(usize y = 0; y < dimY; ++y)
     {
       const usize py = y + r[1];
-      const T* croppedRow = paddedPlane.get() + py * pdimX + r[0];
-      T* outputRow = originalPlane.get() + y * dimX;
+      const T* croppedRowPtr = paddedPlane.get() + py * pdimX + r[0];
+      T* outputRowPtr = originalPlane.get() + y * dimX;
       if(order == CropSubtractOrder::OriginalMinusCropped)
       {
         for(usize x = 0; x < dimX; ++x)
         {
-          outputRow[x] = static_cast<T>(outputRow[x] - croppedRow[x]);
+          outputRowPtr[x] = static_cast<T>(outputRowPtr[x] - croppedRowPtr[x]);
         }
       }
       else
       {
         for(usize x = 0; x < dimX; ++x)
         {
-          outputRow[x] = static_cast<T>(croppedRow[x] - outputRow[x]);
+          outputRowPtr[x] = static_cast<T>(croppedRowPtr[x] - outputRowPtr[x]);
         }
       }
     }
@@ -622,7 +622,8 @@ Result<> CropSubtractFromStore(const AbstractDataStore<T>& padded, const Abstrac
  * @pre @p markerStore has the same tuple/element layout as @p inStore (X fastest). @tparam T scalar type.
  */
 template <class T>
-Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& markerStore, const SizeVec3& dims, ReconMarker kind, float64 height, const std::atomic_bool& shouldCancel)
+Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& markerStore, const SizeVec3Type& dims, ReconMarker kind, float64 height,
+                                   const std::atomic_bool& shouldCancel)
 {
   if(kind == ReconMarker::MinusHeight || kind == ReconMarker::PlusHeight)
   {
@@ -671,15 +672,15 @@ Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, Abstract
   const T interiorFill = (kind == ReconMarker::FillholeMaxBorder) ? statsResult.value().max : statsResult.value().min;
 
   const int64 nX = static_cast<int64>(dims[0]);
-  const int64 nY = static_cast<int64>(dims[1]);
-  const int64 nZ = static_cast<int64>(dims[2]);
-  if(nX <= 0 || nY <= 0 || nZ <= 0)
+  const int64 ny = static_cast<int64>(dims[1]);
+  const int64 nz = static_cast<int64>(dims[2]);
+  if(nX <= 0 || ny <= 0 || nz <= 0)
   {
     return {};
   }
   const usize dimX = static_cast<usize>(nX);
-  const usize dimY = static_cast<usize>(nY);
-  const usize dimZ = static_cast<usize>(nZ);
+  const usize dimY = static_cast<usize>(ny);
+  const usize dimZ = static_cast<usize>(nz);
   if(inStore.getStoreType() != IDataStore::StoreType::OutOfCore && markerStore.getStoreType() != IDataStore::StoreType::OutOfCore)
   {
     const usize planeSize = dimX * dimY;
@@ -781,8 +782,8 @@ inline constexpr int32 k_RelabelComponentInsufficientWorkingMemory = -8591;
  */
 struct RelabelChunkSlabPlan
 {
-  usize slabValues = 0;
-  usize slabBytes = 0;
+  usize slab_values = 0;
+  usize slab_bytes = 0;
 };
 
 /**
@@ -832,7 +833,7 @@ inline std::optional<RelabelChunkSlabPlan> CreateRelabelChunkSlabPlan(const Shap
   {
     return std::nullopt;
   }
-  return RelabelChunkSlabPlan{.slabValues = *slabValues, .slabBytes = *slabBytes};
+  return RelabelChunkSlabPlan{.slab_values = *slabValues, .slab_bytes = *slabBytes};
 }
 
 /**
@@ -854,15 +855,15 @@ inline usize SelectRelabelStagingValues(usize numValues, uint64 grantedBytes, us
 
   const usize grantedValues = static_cast<usize>(std::min<uint64>(grantedBytes / valueBytes, std::numeric_limits<usize>::max()));
   const usize fallbackValues = std::min(numValues, grantedValues);
-  if(!slabPlan.has_value() || grantedBytes < slabPlan->slabBytes)
+  if(!slabPlan.has_value() || grantedBytes < slabPlan->slab_bytes)
   {
     return fallbackValues;
   }
 
-  const usize fullSlabs = numValues / slabPlan->slabValues;
-  const usize grantSlabs = static_cast<usize>(std::min<uint64>(grantedBytes / slabPlan->slabBytes, std::numeric_limits<usize>::max()));
+  const usize fullSlabs = numValues / slabPlan->slab_values;
+  const usize grantSlabs = static_cast<usize>(std::min<uint64>(grantedBytes / slabPlan->slab_bytes, std::numeric_limits<usize>::max()));
   const usize stagingSlabs = std::min(fullSlabs, grantSlabs);
-  return stagingSlabs == 0 ? fallbackValues : stagingSlabs * slabPlan->slabValues;
+  return stagingSlabs == 0 ? fallbackValues : stagingSlabs * slabPlan->slab_values;
 }
 
 } // namespace detail

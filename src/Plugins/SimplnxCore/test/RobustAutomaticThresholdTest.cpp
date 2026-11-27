@@ -23,7 +23,7 @@
 #include <string>
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 namespace fs = std::filesystem;
 
 namespace
@@ -31,7 +31,7 @@ namespace
 class ThresholdPlanManager : public IDataIOManager
 {
 public:
-  static inline constexpr StringLiteral k_Format = "threshold-plan-test";
+  static constexpr StringLiteralType k_Format = "threshold-plan-test";
 
   ThresholdPlanManager()
   {
@@ -80,10 +80,10 @@ public:
 
 TEST_CASE("SimplnxCore::RobustAutomaticThresholdFilter: Missing/Empty DataPaths", "[RobustAutomaticThresholdFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   RobustAutomaticThresholdFilter filter;
-  DataStructure dataStructure = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = unit_test::CreateDataStructure();
   Arguments args;
 
   DataPath inputPath({k_SmallIN100, k_EbsdScanData, "Phases"});
@@ -91,37 +91,37 @@ TEST_CASE("SimplnxCore::RobustAutomaticThresholdFilter: Missing/Empty DataPaths"
 
   {
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
   }
   args.insertOrAssign(RobustAutomaticThresholdFilter::k_InputArrayPath_Key, std::make_any<DataPath>(inputPath));
 
   {
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
   }
   args.insertOrAssign(RobustAutomaticThresholdFilter::k_GradientMagnitudePath_Key, std::make_any<DataPath>(gradientMagnitudePath));
 
   {
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
-    UnitTest::RequireAutomaticCreateArrayActions(preflightResult.outputActions, 1);
-    UnitTest::RequireAutomaticCreateArrayActions(preflightResult.outputActions, std::vector<DataPath>{inputPath.replaceName("mask")});
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
+    unit_test::RequireAutomaticCreateArrayActions(preflightResult.output_actions, 1);
+    unit_test::RequireAutomaticCreateArrayActions(preflightResult.output_actions, std::vector<DataPath>{inputPath.replaceName("mask")});
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("StorageFormatPlan: threshold output policy uses output bytes", "[RobustAutomaticThresholdFilter][StorageFormatPlan][T23][T24]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::GetOrCreateInstance()->getIOCollection().addIOManager(std::make_shared<ThresholdPlanManager>()).valid());
   constexpr usize k_Tuples = 2ULL * 1024 * 1024 * 1024;
   DataStructure dataStructure;
   auto resolver = std::make_shared<ThresholdResolver>();
   dataStructure.setFormatResolver(resolver);
-  auto inputResult = Float32Array::CreatePlanned(dataStructure, "Input", {k_Tuples}, {1}, ThresholdPlanManager::k_Format.str());
+  auto inputResult = Float32ArrayType::CreatePlanned(dataStructure, "Input", {k_Tuples}, {1}, ThresholdPlanManager::k_Format.str());
   SIMPLNX_RESULT_REQUIRE_VALID(inputResult);
-  auto gradientResult = Float32Array::CreatePlanned(dataStructure, "Gradient", {k_Tuples}, {1}, ThresholdPlanManager::k_Format.str());
+  auto gradientResult = Float32ArrayType::CreatePlanned(dataStructure, "Gradient", {k_Tuples}, {1}, ThresholdPlanManager::k_Format.str());
   SIMPLNX_RESULT_REQUIRE_VALID(gradientResult);
 
   RobustAutomaticThresholdFilter filter;
@@ -130,22 +130,22 @@ TEST_CASE("StorageFormatPlan: threshold output policy uses output bytes", "[Robu
   args.insertOrAssign(RobustAutomaticThresholdFilter::k_GradientMagnitudePath_Key, std::make_any<DataPath>(DataPath({"Gradient"})));
   args.insertOrAssign(RobustAutomaticThresholdFilter::k_ArrayCreationName_Key, std::make_any<std::string>("MaskLarge"));
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  UnitTest::RequireAutomaticCreateArrayActions(preflight.outputActions, std::vector<DataPath>{DataPath({"MaskLarge"})});
-  const auto* create = dynamic_cast<const CreateArrayAction*>(preflight.outputActions.value().actions.front().get());
-  REQUIRE(create != nullptr);
-  CHECK(create->type() == DataType::boolean);
-  CHECK(create->dims() == ShapeType{k_Tuples});
-  CHECK(create->componentDims() == ShapeType{1});
-  CHECK(create->dataFormat().empty());
-  auto applyResult = preflight.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
+  unit_test::RequireAutomaticCreateArrayActions(preflight.output_actions, std::vector<DataPath>{DataPath({"MaskLarge"})});
+  const auto* createPtr = dynamic_cast<const CreateArrayAction*>(preflight.output_actions.value().actions.front().get());
+  REQUIRE(createPtr != nullptr);
+  CHECK(createPtr->type() == DataType::boolean);
+  CHECK(createPtr->dims() == ShapeType{k_Tuples});
+  CHECK(createPtr->componentDims() == ShapeType{1});
+  CHECK(createPtr->dataFormat().empty());
+  auto applyResult = preflight.output_actions.value().applyAll(dataStructure, IDataAction::Mode::Preflight);
   SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(DataPath({"MaskLarge"})));
-  const auto& mask = dataStructure.getDataRefAs<BoolArray>(DataPath({"MaskLarge"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArrayType>(DataPath({"MaskLarge"})));
+  const auto& mask = dataStructure.getDataRefAs<BoolArrayType>(DataPath({"MaskLarge"}));
   CHECK(mask.getStoreType() == IDataStore::StoreType::Empty);
   CHECK(mask.getDataFormat().empty());
   CHECK(mask.getIDataStore()->getPlannedStoreType() == IDataStore::StoreType::InMemory);
-  CHECK(dataStructure.getDataRefAs<Float32Array>(DataPath({"Input"})).getDataFormat() == ThresholdPlanManager::k_Format.str());
+  CHECK(dataStructure.getDataRefAs<Float32ArrayType>(DataPath({"Input"})).getDataFormat() == ThresholdPlanManager::k_Format.str());
   REQUIRE_FALSE(resolver->paths.empty());
   CHECK(resolver->paths.back() == DataPath({"MaskLarge"}));
   CHECK(resolver->bytes.back() == 2ULL * 1024 * 1024 * 1024);
@@ -159,33 +159,33 @@ TEST_CASE("StorageFormatPlan: output policy covers inverse size and forced modes
   dataStructure.setFormatResolver(resolver);
 
   resolver->mode = ThresholdResolver::Mode::Adaptive;
-  auto smallResult = UInt8Array::CreatePlanned(dataStructure, "AdaptiveSmall", {1024}, {1}, "");
+  auto smallResult = UInt8ArrayType::CreatePlanned(dataStructure, "AdaptiveSmall", {1024}, {1}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(smallResult);
   CHECK(smallResult.value()->getDataFormat().empty());
-  auto largeResult = UInt8Array::CreatePlanned(dataStructure, "AdaptiveLarge", {5ULL * 1024 * 1024 * 1024}, {1}, "");
+  auto largeResult = UInt8ArrayType::CreatePlanned(dataStructure, "AdaptiveLarge", {5ULL * 1024 * 1024 * 1024}, {1}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(largeResult);
   CHECK(largeResult.value()->getDataFormat() == ThresholdPlanManager::k_Format.str());
 
   resolver->mode = ThresholdResolver::Mode::ForceInCore;
-  auto forcedMemory = UInt8Array::CreatePlanned(dataStructure, "ForcedMemory", {5ULL * 1024 * 1024 * 1024}, {1}, "");
+  auto forcedMemory = UInt8ArrayType::CreatePlanned(dataStructure, "ForcedMemory", {5ULL * 1024 * 1024 * 1024}, {1}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(forcedMemory);
   CHECK(forcedMemory.value()->getDataFormat().empty());
 
   resolver->mode = ThresholdResolver::Mode::ForceOutOfCore;
-  auto forcedOoc = UInt8Array::CreatePlanned(dataStructure, "ForcedOoc", {1024}, {1}, "");
+  auto forcedOoc = UInt8ArrayType::CreatePlanned(dataStructure, "ForcedOoc", {1024}, {1}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(forcedOoc);
   CHECK(forcedOoc.value()->getDataFormat() == ThresholdPlanManager::k_Format.str());
 }
 
 TEST_CASE("SimplnxCore::RobustAutomaticThresholdFilter: Test Algorithm", "[RobustAutomaticThresholdFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope algorithmTestScope(scenario);
+  unit_test::AlgorithmTestScope algorithmTestScope(scenario);
 
   RobustAutomaticThresholdFilter filter;
-  DataStructure dataStructure = UnitTest::CreateDataStructure();
+  DataStructure dataStructure = unit_test::CreateDataStructure();
   Arguments args;
 
   DataPath inputPath({k_SmallIN100, k_EbsdScanData, "Phases"});
@@ -196,21 +196,21 @@ TEST_CASE("SimplnxCore::RobustAutomaticThresholdFilter: Test Algorithm", "[Robus
   args.insertOrAssign(RobustAutomaticThresholdFilter::k_ArrayCreationName_Key, std::make_any<std::string>("Created Array"));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
   auto executeResult = algorithmTestScope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
   algorithmTestScope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath.replaceName("Created Array")));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RobustAutomaticThresholdFilter: SIMPL Backwards Compatibility", "[SimplnxCore][RobustAutomaticThresholdFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -223,22 +223,22 @@ TEST_CASE("SimplnxCore::RobustAutomaticThresholdFilter: SIMPL Backwards Compatib
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<RobustAutomaticThresholdFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<RobustAutomaticThresholdFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(RobustAutomaticThresholdFilter::k_InputArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(RobustAutomaticThresholdFilter::k_GradientMagnitudePath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<std::string>(RobustAutomaticThresholdFilter::k_ArrayCreationName_Key) == "TestArray");

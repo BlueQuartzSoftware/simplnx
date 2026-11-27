@@ -2,7 +2,7 @@
 
 #include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 /**
  * @brief The HDF5::DataIOManager class stores and returns the corresponding IO class for HDF5.
@@ -28,6 +28,6 @@ private:
    */
   void addCoreFactories();
 
-  factory_collection m_FactoryCollection;
+  FactoryCollectionType m_FactoryCollection;
 };
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

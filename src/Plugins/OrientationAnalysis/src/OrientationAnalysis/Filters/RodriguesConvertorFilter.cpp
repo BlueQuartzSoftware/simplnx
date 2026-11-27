@@ -57,7 +57,7 @@ Parameters RodriguesConvertorFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_RodriguesDataArrayPath_Key, "Input Rodrigues Vectors", "Specifies the Rodrigues data to convert", DataPath({"Cell Data", "rodrigues"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
   params.insertSeparator(Parameters::Separator{"Output Data"});
   params.insert(
       std::make_unique<DataObjectNameParameter>(k_OutputDataArrayName_Key, "Converted Rodrigues Data Array", "The DataArray name of the converted Rodrigues vectors", "rodrigues [Converted]"));
@@ -72,14 +72,14 @@ IFilter::VersionType RodriguesConvertorFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer RodriguesConvertorFilter::clone() const
+IFilter::UniquePointerType RodriguesConvertorFilter::clone() const
 {
   return std::make_unique<RodriguesConvertorFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RodriguesConvertorFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult RodriguesConvertorFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pRodriguesDataArrayPathValue = filterArgs.value<DataPath>(k_RodriguesDataArrayPath_Key);
   auto pOutputDataArrayPathValue = pRodriguesDataArrayPathValue.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
@@ -87,7 +87,7 @@ IFilter::PreflightResult RodriguesConvertorFilter::preflightImpl(const DataStruc
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto& quats = dataStructure.getDataRefAs<Float32Array>(pRodriguesDataArrayPathValue);
+  const auto& quats = dataStructure.getDataRefAs<Float32ArrayType>(pRodriguesDataArrayPathValue);
 
   {
     auto createConvertedQuatAction = std::make_unique<CreateArrayAction>(DataType::float32, quats.getTupleShape(), std::vector<usize>{4}, pOutputDataArrayPathValue);
@@ -102,30 +102,30 @@ IFilter::PreflightResult RodriguesConvertorFilter::preflightImpl(const DataStruc
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> RodriguesConvertorFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> RodriguesConvertorFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   RodriguesConvertorInputValues inputValues;
 
-  inputValues.RodriguesDataArrayPath = filterArgs.value<DataPath>(k_RodriguesDataArrayPath_Key);
-  inputValues.OutputDataArrayPath = inputValues.RodriguesDataArrayPath.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
-  inputValues.DeleteOriginalData = filterArgs.value<bool>(k_DeleteOriginalData_Key);
+  inputValues.rodrigues_data_array_path = filterArgs.value<DataPath>(k_RodriguesDataArrayPath_Key);
+  inputValues.output_data_array_path = inputValues.rodrigues_data_array_path.replaceName(filterArgs.value<std::string>(k_OutputDataArrayName_Key));
+  inputValues.delete_original_data = filterArgs.value<bool>(k_DeleteOriginalData_Key);
 
   return RodriguesConvertor(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_RodriguesDataArrayPathKey = "RodriguesDataArrayPath";
-constexpr StringLiteral k_OutputDataArrayPathKey = "OutputDataArrayPath";
-constexpr StringLiteral k_DeleteOriginalDataKey = "DeleteOriginalData";
-} // namespace SIMPL
+constexpr StringLiteralType k_RodriguesDataArrayPathKey = "RodriguesDataArrayPath";
+constexpr StringLiteralType k_OutputDataArrayPathKey = "OutputDataArrayPath";
+constexpr StringLiteralType k_DeleteOriginalDataKey = "DeleteOriginalData";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> RodriguesConvertorFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -134,10 +134,10 @@ Result<Arguments> RodriguesConvertorFilter::FromSIMPLJson(const nlohmann::json& 
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_RodriguesDataArrayPathKey, k_RodriguesDataArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_RodriguesDataArrayPathKey, k_RodriguesDataArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_OutputDataArrayPathKey, k_OutputDataArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_DeleteOriginalDataKey, k_DeleteOriginalData_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_OutputDataArrayPathKey, k_OutputDataArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_DeleteOriginalDataKey, k_DeleteOriginalData_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

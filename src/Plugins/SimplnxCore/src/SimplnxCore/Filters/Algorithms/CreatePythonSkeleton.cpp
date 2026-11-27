@@ -16,7 +16,6 @@ CreatePythonSkeleton::CreatePythonSkeleton(DataStructure& dataStructure, const I
 }
 
 // -----------------------------------------------------------------------------
-CreatePythonSkeleton::~CreatePythonSkeleton() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& CreatePythonSkeleton::getCancel()
@@ -27,10 +26,10 @@ const std::atomic_bool& CreatePythonSkeleton::getCancel()
 // -----------------------------------------------------------------------------
 Result<> CreatePythonSkeleton::operator()()
 {
-  if(m_InputValues->useExistingPlugin)
+  if(m_InputValues->use_existing_plugin)
   {
-    return nx::core::WritePythonFiltersToPlugin(m_InputValues->pluginInputDir, m_InputValues->filterNames);
+    return nx::core::WritePythonFiltersToPlugin(m_InputValues->plugin_input_dir, m_InputValues->filter_names);
   }
 
-  return nx::core::WritePythonPluginFiles(m_InputValues->pluginOutputDir, m_InputValues->pluginName, m_InputValues->pluginHumanName, "Description", m_InputValues->filterNames);
+  return nx::core::WritePythonPluginFiles(m_InputValues->plugin_output_dir, m_InputValues->plugin_name, m_InputValues->plugin_human_name, "Description", m_InputValues->filter_names);
 }

@@ -22,8 +22,8 @@ namespace fs = std::filesystem;
 
 namespace
 {
-DataPath ebsdPath = DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData});
-DataPath eulerAnglesPath = ebsdPath.createChildPath(Constants::k_EulerAngles);
+DataPath EbsdPath = DataPath({constants::k_SmallIN100, constants::k_EbsdScanData});
+DataPath EulerAnglesPath = EbsdPath.createChildPath(constants::k_EulerAngles);
 const std::string k_VecColorsNX = "Vector Colors";
 } // namespace
 
@@ -31,8 +31,8 @@ TEST_CASE("SimplnxCore::ComputeVectorColorsFilter: Rounded full-turn trend stays
 {
   DataStructure dataStructure;
   const DataPath vectorsPath({"Vectors"});
-  auto vectorsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, vectorsPath, {1}, {3});
-  REQUIRE(Float32Array::Create(dataStructure, vectorsPath.getTargetName(), vectorsStore) != nullptr);
+  auto vectorsStore = data_store_utilities::CreateDataStore<float32>(dataStructure, vectorsPath, {1}, {3});
+  REQUIRE(Float32ArrayType::Create(dataStructure, vectorsPath.getTargetName(), vectorsStore) != nullptr);
   const std::array<float32, 3> vectors = {1.0f, -1.0e-8f, 0.0f};
   const auto writeResult = vectorsStore->copyFromBuffer(0, nonstd::span<const float32>(vectors.data(), vectors.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
@@ -43,7 +43,7 @@ TEST_CASE("SimplnxCore::ComputeVectorColorsFilter: Rounded full-turn trend stays
   args.insertOrAssign(ComputeVectorColorsFilter::k_VectorsArrayPath_Key, std::make_any<DataPath>(vectorsPath));
   args.insertOrAssign(ComputeVectorColorsFilter::k_CellVectorColorsArrayName_Key, std::make_any<std::string>(k_VecColorsNX));
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -51,23 +51,23 @@ TEST_CASE("SimplnxCore::ComputeVectorColorsFilter: Rounded full-turn trend stays
   // Adding 360 rounds to exactly 360 in float32, equivalent to trend 0.
   // With Z=0, plunge is 90 degrees: the red endpoint is RGB (255, 0, 0).
   const std::array<uint8, 3> expectedColors = {255, 0, 0};
-  const auto* colors = dataStructure.getDataAs<UInt8Array>(DataPath({k_VecColorsNX}));
-  REQUIRE(colors != nullptr);
+  const auto* colorsPtr = dataStructure.getDataAs<UInt8ArrayType>(DataPath({k_VecColorsNX}));
+  REQUIRE(colorsPtr != nullptr);
   std::array<uint8, 3> actualColors = {};
-  const auto readResult = colors->getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint8>(actualColors.data(), actualColors.size()));
+  const auto readResult = colorsPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint8>(actualColors.data(), actualColors.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(readResult);
   CHECK(actualColors == expectedColors);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeVectorColorsFilter: Repeated unmasked execution creates only colors", "[SimplnxCore][ComputeVectorColorsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   const DataPath vectorsPath({"Vectors"});
-  auto vectorsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, vectorsPath, {2}, {3});
-  REQUIRE(Float32Array::Create(dataStructure, vectorsPath.getTargetName(), vectorsStore) != nullptr);
+  auto vectorsStore = data_store_utilities::CreateDataStore<float32>(dataStructure, vectorsPath, {2}, {3});
+  REQUIRE(Float32ArrayType::Create(dataStructure, vectorsPath.getTargetName(), vectorsStore) != nullptr);
   const std::array<float32, 6> vectors = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
   const auto writeResult = vectorsStore->copyFromBuffer(0, nonstd::span<const float32>(vectors.data(), vectors.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
@@ -86,7 +86,7 @@ TEST_CASE("SimplnxCore::ComputeVectorColorsFilter: Repeated unmasked execution c
     args.insertOrAssign(ComputeVectorColorsFilter::k_CellVectorColorsArrayName_Key, std::make_any<std::string>(outputName));
 
     const auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     const auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -99,50 +99,50 @@ TEST_CASE("SimplnxCore::ComputeVectorColorsFilter: Repeated unmasked execution c
       CHECK(dataStructure.getData(path) != nullptr);
     }
 
-    const auto* colors = dataStructure.getDataAs<UInt8Array>(colorsPath);
-    REQUIRE(colors != nullptr);
-    CHECK(colors->getTupleShape() == ShapeType{2});
-    CHECK(colors->getComponentShape() == ShapeType{3});
+    const auto* colorsPtr = dataStructure.getDataAs<UInt8ArrayType>(colorsPath);
+    REQUIRE(colorsPtr != nullptr);
+    CHECK(colorsPtr->getTupleShape() == ShapeType{2});
+    CHECK(colorsPtr->getComponentShape() == ShapeType{3});
     std::array<uint8, 6> actualColors = {};
-    const auto readResult = colors->getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint8>(actualColors.data(), actualColors.size()));
+    const auto readResult = colorsPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint8>(actualColors.data(), actualColors.size()));
     SIMPLNX_RESULT_REQUIRE_VALID(readResult);
     CHECK(actualColors == expectedColors);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::ComputeVectorColorsFilter: Valid Filter Execution", "[SimplnxCore][ComputeVectorColorsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "generate_vector_colors.tar.gz", "generate_vector_colors");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/generate_vector_colors/6_6_generate_vector_colors.dream3d", unit_test::k_TestFilesDir)));
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "generate_vector_colors.tar.gz", "generate_vector_colors");
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/generate_vector_colors/6_6_generate_vector_colors.dream3d", unit_test::k_TestFilesDir)));
   {
     // Create the filter arguments for the calculation.
     ComputeVectorColorsFilter filter;
     Arguments args;
 
     args.insertOrAssign(ComputeVectorColorsFilter::k_UseMask_Key, std::make_any<bool>(false));
-    args.insertOrAssign(ComputeVectorColorsFilter::k_VectorsArrayPath_Key, std::make_any<DataPath>(eulerAnglesPath));
+    args.insertOrAssign(ComputeVectorColorsFilter::k_VectorsArrayPath_Key, std::make_any<DataPath>(EulerAnglesPath));
     args.insertOrAssign(ComputeVectorColorsFilter::k_CellVectorColorsArrayName_Key, std::make_any<std::string>(k_VecColorsNX));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  UnitTest::CompareArrays<uint8>(dataStructure, ebsdPath.createChildPath("VectorColor"), ebsdPath.createChildPath(k_VecColorsNX));
+  unit_test::CompareArrays<uint8>(dataStructure, EbsdPath.createChildPath("VectorColor"), EbsdPath.createChildPath(k_VecColorsNX));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeVectorColorsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeVectorColorsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -155,22 +155,22 @@ TEST_CASE("SimplnxCore::ComputeVectorColorsFilter: SIMPL Backwards Compatibility
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeVectorColorsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeVectorColorsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<bool>(ComputeVectorColorsFilter::k_UseMask_Key) == true);
       CHECK(args.value<DataPath>(ComputeVectorColorsFilter::k_VectorsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ComputeVectorColorsFilter::k_MaskArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));

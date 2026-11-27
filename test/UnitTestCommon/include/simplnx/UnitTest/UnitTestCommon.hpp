@@ -2,6 +2,7 @@
 
 #include "simplnx/UnitTest/AlgorithmTestScope.hpp"
 
+#include "MD5/MD5.hpp"
 #include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/StringLiteral.hpp"
 #include "simplnx/Core/Application.hpp"
@@ -32,7 +33,6 @@
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Utilities/DataGroupUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
-#include "simplnx/Utilities/MD5.hpp"
 #include "simplnx/Utilities/Parsing/DREAM3D/Dream3dIO.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
@@ -58,13 +58,14 @@ using namespace nx::core;
 namespace nx::core
 {
 template <class>
-inline constexpr bool IsResult_v = false;
+inline constexpr bool k_IsResultV = false;
 
 template <class T>
-inline constexpr bool IsResult_v<Result<T>> = true;
-} // namespace nx::core
+inline constexpr bool k_IsResultV<Result<T>> = true;
 
-#define NX_IS_LVALUE_RESULT(value) (IsResult_v<std::remove_cvref_t<decltype(value)>> && std::is_lvalue_reference_v<decltype((value))>)
+template <class T>
+inline constexpr bool k_IsLvalueResult = k_IsResultV<std::remove_cvref_t<T>> && std::is_lvalue_reference_v<T>;
+} // namespace nx::core
 
 /**
  * @def SIMPLNX_RESULT_CATCH_PRINT
@@ -96,7 +97,7 @@ inline constexpr bool IsResult_v<Result<T>> = true;
 #define SIMPLNX_RESULT_REQUIRE_VALID(result)                                                                                                                                                           \
   do                                                                                                                                                                                                   \
   {                                                                                                                                                                                                    \
-    static_assert(NX_IS_LVALUE_RESULT(result), "SIMPLNX_RESULT_REQUIRE_VALID requires an lvalue Result<T>");                                                                                           \
+    static_assert(nx::core::k_IsLvalueResult<decltype((result))>, "SIMPLNX_RESULT_REQUIRE_VALID requires an lvalue Result<T>");                                                                        \
     auto&& simplnxCheckedResult = (result);                                                                                                                                                            \
     SIMPLNX_RESULT_CATCH_PRINT(simplnxCheckedResult);                                                                                                                                                  \
     REQUIRE(simplnxCheckedResult.valid());                                                                                                                                                             \
@@ -110,7 +111,7 @@ inline constexpr bool IsResult_v<Result<T>> = true;
 #define SIMPLNX_RESULT_REQUIRE_INVALID(result)                                                                                                                                                         \
   do                                                                                                                                                                                                   \
   {                                                                                                                                                                                                    \
-    static_assert(NX_IS_LVALUE_RESULT(result), "SIMPLNX_RESULT_REQUIRE_INVALID requires an lvalue Result<T>");                                                                                         \
+    static_assert(nx::core::k_IsLvalueResult<decltype((result))>, "SIMPLNX_RESULT_REQUIRE_INVALID requires an lvalue Result<T>");                                                                      \
     auto&& simplnxCheckedResult = (result);                                                                                                                                                            \
     SIMPLNX_RESULT_CATCH_PRINT(simplnxCheckedResult);                                                                                                                                                  \
     REQUIRE(simplnxCheckedResult.invalid());                                                                                                                                                           \
@@ -122,126 +123,125 @@ namespace nx::core
  * @namespace nx::core::Constants
  * @brief Provides common names and paths for simplnx unit tests.
  */
-namespace Constants
+namespace constants
 {
-inline constexpr StringLiteral k_DataContainer("DataContainer");
-inline constexpr StringLiteral k_CellData("CellData");
-inline constexpr StringLiteral k_Cell_Data("Cell Data");
-inline constexpr StringLiteral k_GrainData("GrainData");
-inline constexpr StringLiteral k_Grain_Data("Grain Data");
-inline constexpr StringLiteral k_FeatureData("FeatureData");
-inline constexpr StringLiteral k_CellFeatureData("CellFeatureData");
-inline constexpr StringLiteral k_CellEnsembleData("CellEnsembleData");
-inline constexpr StringLiteral k_Cell_Ensemble_Data("Cell Ensemble Data");
-inline constexpr StringLiteral k_Phase_Data("Phase Data");
+inline constexpr StringLiteralType k_DataContainer("DataContainer");
+inline constexpr StringLiteralType k_CellData("CellData");
+inline constexpr StringLiteralType k_CellDataWithSpaces("Cell Data");
+inline constexpr StringLiteralType k_GrainData("GrainData");
+inline constexpr StringLiteralType k_GrainDataWithSpaces("Grain Data");
+inline constexpr StringLiteralType k_FeatureData("FeatureData");
+inline constexpr StringLiteralType k_CellFeatureData("CellFeatureData");
+inline constexpr StringLiteralType k_CellEnsembleData("CellEnsembleData");
+inline constexpr StringLiteralType k_CellEnsembleDataWithSpaces("Cell Ensemble Data");
 
-inline constexpr StringLiteral k_TriangleDataContainerName("TriangleDataContainer");
-inline constexpr StringLiteral k_VertexDataContainerName("VertexDataContainer");
-inline constexpr StringLiteral k_PointCloudContainerName("Point Cloud");
-inline constexpr StringLiteral k_FaceData("FaceData");
-inline constexpr StringLiteral k_Face_Data("Face Data");
-inline constexpr StringLiteral k_FaceFeatureData("FaceFeatureData");
-inline constexpr StringLiteral k_VertexData("VertexData");
-inline constexpr StringLiteral k_Vertex_Data("Vertex Data");
-inline constexpr StringLiteral k_Edge_Data("Edge Data");
-inline constexpr StringLiteral k_GBCD_Name("GBCD");
+inline constexpr StringLiteralType k_TriangleDataContainerName("TriangleDataContainer");
+inline constexpr StringLiteralType k_VertexDataContainerName("VertexDataContainer");
+inline constexpr StringLiteralType k_PointCloudContainerName("Point Cloud");
+inline constexpr StringLiteralType k_FaceData("FaceData");
+inline constexpr StringLiteralType k_FaceDataWithSpaces("Face Data");
+inline constexpr StringLiteralType k_FaceFeatureData("FaceFeatureData");
+inline constexpr StringLiteralType k_VertexData("VertexData");
+inline constexpr StringLiteralType k_VertexDataWithSpaces("Vertex Data");
+inline constexpr StringLiteralType k_EdgeDataWithSpaces("Edge Data");
+inline constexpr StringLiteralType k_GbcdName("GBCD");
 
-inline constexpr StringLiteral k_Centroids("Centroids");
-inline constexpr StringLiteral k_EnsembleAttributeMatrix("CellEnsembleData");
-inline constexpr StringLiteral k_ExemplarDataContainer("Exemplar Data");
-inline constexpr StringLiteral k_CrystalStructures("CrystalStructures");
-inline constexpr StringLiteral k_Fit("Fit");
-inline constexpr StringLiteral k_SEMSignal("SEM Signal");
+inline constexpr StringLiteralType k_Centroids("Centroids");
+inline constexpr StringLiteralType k_EnsembleAttributeMatrix("CellEnsembleData");
+inline constexpr StringLiteralType k_ExemplarDataContainer("Exemplar Data");
+inline constexpr StringLiteralType k_CrystalStructures("CrystalStructures");
+inline constexpr StringLiteralType k_Fit("Fit");
+inline constexpr StringLiteralType k_SEMSignal("SEM Signal");
 
-inline constexpr StringLiteral k_SmallIN1002("Small IN100 2D");
-inline constexpr StringLiteral k_SmallIN100("Small IN100");
-inline constexpr StringLiteral k_EbsdScanData("EBSD Scan Data");
-inline constexpr StringLiteral k_ImageGeometry("Image Geometry");
-inline constexpr StringLiteral k_VertexGeometry("Vertex Geometry");
-inline constexpr StringLiteral k_Confidence_Index("Confidence Index");
-inline constexpr StringLiteral k_ConfidenceIndex("ConfidenceIndex");
-inline constexpr StringLiteral k_CalculatedShifts("Calculated Shifts");
-inline constexpr StringLiteral k_FaceLabels("FaceLabels");
-inline constexpr StringLiteral k_FaceNormals("FaceNormals");
-inline constexpr StringLiteral k_FaceAreas("FaceAreas");
+inline constexpr StringLiteralType k_SmallIN1002("Small IN100 2D");
+inline constexpr StringLiteralType k_SmallIN100("Small IN100");
+inline constexpr StringLiteralType k_EbsdScanData("EBSD Scan Data");
+inline constexpr StringLiteralType k_ImageGeometry("Image Geometry");
+inline constexpr StringLiteralType k_VertexGeometry("Vertex Geometry");
+inline constexpr StringLiteralType k_ConfidenceIndexWithSpaces("Confidence Index");
+inline constexpr StringLiteralType k_ConfidenceIndex("ConfidenceIndex");
+inline constexpr StringLiteralType k_CalculatedShifts("Calculated Shifts");
+inline constexpr StringLiteralType k_FaceLabels("FaceLabels");
+inline constexpr StringLiteralType k_FaceNormals("FaceNormals");
+inline constexpr StringLiteralType k_FaceAreas("FaceAreas");
 
-inline constexpr StringLiteral k_EulerAngles("EulerAngles");
-inline constexpr StringLiteral k_AxisAngles("AxisAngles");
-inline constexpr StringLiteral k_AvgQuats("AvgQuats");
-inline constexpr StringLiteral k_Quats("Quats");
-inline constexpr StringLiteral k_Mask("Mask");
-inline constexpr StringLiteral k_FZQuats("FZQuats");
-inline constexpr StringLiteral k_FeatureGroupName("Feature Data");
-inline constexpr StringLiteral k_ActiveName("Active");
-inline constexpr StringLiteral k_NumElements("NumElements");
-inline constexpr StringLiteral k_SlipVector("SlipVector");
-inline constexpr StringLiteral k_AvgEulerAngles("AvgEulerAngles");
-inline constexpr StringLiteral k_SurfaceFeatures("SurfaceFeatures");
-inline constexpr StringLiteral k_RectCoords("RectCoords");
-inline constexpr StringLiteral k_Omega1("Omega1");
-inline constexpr StringLiteral k_Omega2("Omega2");
-inline constexpr StringLiteral k_CentralMoments("CentralMoments");
+inline constexpr StringLiteralType k_EulerAngles("EulerAngles");
+inline constexpr StringLiteralType k_AxisAngles("AxisAngles");
+inline constexpr StringLiteralType k_AvgQuats("AvgQuats");
+inline constexpr StringLiteralType k_Quats("Quats");
+inline constexpr StringLiteralType k_Mask("Mask");
+inline constexpr StringLiteralType k_FZQuats("FZQuats");
+inline constexpr StringLiteralType k_FeatureGroupName("Feature Data");
+inline constexpr StringLiteralType k_ActiveName("Active");
+inline constexpr StringLiteralType k_NumElements("NumElements");
+inline constexpr StringLiteralType k_SlipVector("SlipVector");
+inline constexpr StringLiteralType k_AvgEulerAngles("AvgEulerAngles");
+inline constexpr StringLiteralType k_SurfaceFeatures("SurfaceFeatures");
+inline constexpr StringLiteralType k_RectCoords("RectCoords");
+inline constexpr StringLiteralType k_Omega1("Omega1");
+inline constexpr StringLiteralType k_Omega2("Omega2");
+inline constexpr StringLiteralType k_CentralMoments("CentralMoments");
 
-inline constexpr StringLiteral k_FeatureIds("FeatureIds");
-inline constexpr StringLiteral k_Image_Quality("Image Quality");
-inline constexpr StringLiteral k_ImageQuality("ImageQuality");
-inline constexpr StringLiteral k_Phases("Phases");
-inline constexpr StringLiteral k_Ipf_Colors("IPF Colors");
-inline constexpr StringLiteral k_IPFColors("IPFColors");
-inline constexpr StringLiteral k_PhaseData("Phase Data");
-inline constexpr StringLiteral k_LaueClass("Laue Class");
-inline constexpr StringLiteral k_SmallIn100ImageGeom("[Image Geometry]");
+inline constexpr StringLiteralType k_FeatureIds("FeatureIds");
+inline constexpr StringLiteralType k_ImageQualityWithSpaces("Image Quality");
+inline constexpr StringLiteralType k_ImageQuality("ImageQuality");
+inline constexpr StringLiteralType k_Phases("Phases");
+inline constexpr StringLiteralType k_IpfColors("IPF Colors");
+inline constexpr StringLiteralType k_IPFColors("IPFColors");
+inline constexpr StringLiteralType k_PhaseData("Phase Data");
+inline constexpr StringLiteralType k_LaueClass("Laue Class");
+inline constexpr StringLiteralType k_SmallIn100ImageGeom("[Image Geometry]");
 
-inline constexpr StringLiteral k_TriangleGeometryName("[Triangle Geometry]");
-inline constexpr StringLiteral k_VertexDataGroupName("Vertex Data");
-inline constexpr StringLiteral k_NodeTypeArrayName("Node Type");
-inline constexpr StringLiteral k_FaceDataGroupName("Face Data");
-inline constexpr StringLiteral k_Face_Labels("Face Labels");
-inline constexpr StringLiteral k_NormalsLabels("Normals");
-inline constexpr StringLiteral k_TriangleAreas("Triangle Areas");
-inline constexpr StringLiteral k_VoxelIndices = "VoxelIndices";
-inline constexpr StringLiteral k_NodeType("NodeType");
-inline constexpr StringLiteral k_AlignmentAMName("Alignment Shifts Data");
-inline constexpr StringLiteral k_SlicesArrayName("Slice Indices");
-inline constexpr StringLiteral k_RelativeShiftsArrayName("Relative Shifts");
-inline constexpr StringLiteral k_CumulativeShiftsArrayName("Cumulative Shifts");
+inline constexpr StringLiteralType k_TriangleGeometryName("[Triangle Geometry]");
+inline constexpr StringLiteralType k_VertexDataGroupName("Vertex Data");
+inline constexpr StringLiteralType k_NodeTypeArrayName("Node Type");
+inline constexpr StringLiteralType k_FaceDataGroupName("Face Data");
+inline constexpr StringLiteralType k_FaceLabelsWithSpaces("Face Labels");
+inline constexpr StringLiteralType k_NormalsLabels("Normals");
+inline constexpr StringLiteralType k_TriangleAreas("Triangle Areas");
+inline constexpr StringLiteralType k_VoxelIndices = "VoxelIndices";
+inline constexpr StringLiteralType k_NodeType("NodeType");
+inline constexpr StringLiteralType k_AlignmentAMName("Alignment Shifts Data");
+inline constexpr StringLiteralType k_SlicesArrayName("Slice Indices");
+inline constexpr StringLiteralType k_RelativeShiftsArrayName("Relative Shifts");
+inline constexpr StringLiteralType k_CumulativeShiftsArrayName("Cumulative Shifts");
 
-inline constexpr StringLiteral k_LevelZero("ZERO");
-inline constexpr StringLiteral k_LevelOne("ONE");
-inline constexpr StringLiteral k_LevelTwo("TWO");
+inline constexpr StringLiteralType k_LevelZero("ZERO");
+inline constexpr StringLiteralType k_LevelOne("ONE");
+inline constexpr StringLiteralType k_LevelTwo("TWO");
 
-inline constexpr StringLiteral k_Int8DataSet("int8 DataSet");
-inline constexpr StringLiteral k_Uint8DataSet("uint8 DataSet");
+inline constexpr StringLiteralType k_Int8DataSet("int8 DataSet");
+inline constexpr StringLiteralType k_Uint8DataSet("uint8 DataSet");
 
-inline constexpr StringLiteral k_Int16DataSet("int16 DataSet");
-inline constexpr StringLiteral k_Uint16DataSet("uint16 DataSet");
+inline constexpr StringLiteralType k_Int16DataSet("int16 DataSet");
+inline constexpr StringLiteralType k_Uint16DataSet("uint16 DataSet");
 
-inline constexpr StringLiteral k_Int32DataSet("int32 DataSet");
-inline constexpr StringLiteral k_Uint32DataSet("uint32 DataSet");
+inline constexpr StringLiteralType k_Int32DataSet("int32 DataSet");
+inline constexpr StringLiteralType k_Uint32DataSet("uint32 DataSet");
 
-inline constexpr StringLiteral k_Int64DataSet("int64 DataSet");
-inline constexpr StringLiteral k_Uint64DataSet("uint64 DataSet");
+inline constexpr StringLiteralType k_Int64DataSet("int64 DataSet");
+inline constexpr StringLiteralType k_Uint64DataSet("uint64 DataSet");
 
-inline constexpr StringLiteral k_Float32DataSet("float32 DataSet");
-inline constexpr StringLiteral k_Float64DataSet("float64 DataSet");
+inline constexpr StringLiteralType k_Float32DataSet("float32 DataSet");
+inline constexpr StringLiteralType k_Float64DataSet("float64 DataSet");
 
-inline constexpr StringLiteral k_ConditionalArray("Conditional [bool]");
-inline constexpr StringLiteral k_ReducedGeometry("Reduced Geometry");
+inline constexpr StringLiteralType k_ConditionalArray("Conditional [bool]");
+inline constexpr StringLiteralType k_ReducedGeometry("Reduced Geometry");
 
-inline constexpr StringLiteral k_GroupAName("A");
-inline constexpr StringLiteral k_GroupBName("B");
-inline constexpr StringLiteral k_GroupCName("C");
-inline constexpr StringLiteral k_GroupDName("D");
-inline constexpr StringLiteral k_GroupEName("E");
-inline constexpr StringLiteral k_GroupFName("F");
-inline constexpr StringLiteral k_GroupGName("G");
-inline constexpr StringLiteral k_GroupHName("H");
-inline constexpr StringLiteral k_ArrayIName("I");
-inline constexpr StringLiteral k_ArrayJName("J");
-inline constexpr StringLiteral k_ArrayKName("K");
-inline constexpr StringLiteral k_ArrayLName("L");
-inline constexpr StringLiteral k_ArrayMName("M");
-inline constexpr StringLiteral k_ArrayNName("N");
+inline constexpr StringLiteralType k_GroupAName("A");
+inline constexpr StringLiteralType k_GroupBName("B");
+inline constexpr StringLiteralType k_GroupCName("C");
+inline constexpr StringLiteralType k_GroupDName("D");
+inline constexpr StringLiteralType k_GroupEName("E");
+inline constexpr StringLiteralType k_GroupFName("F");
+inline constexpr StringLiteralType k_GroupGName("G");
+inline constexpr StringLiteralType k_GroupHName("H");
+inline constexpr StringLiteralType k_ArrayIName("I");
+inline constexpr StringLiteralType k_ArrayJName("J");
+inline constexpr StringLiteralType k_ArrayKName("K");
+inline constexpr StringLiteralType k_ArrayLName("L");
+inline constexpr StringLiteralType k_ArrayMName("M");
+inline constexpr StringLiteralType k_ArrayNName("N");
 
 // These paths select the common test data container and its child objects.
 inline const DataPath k_DataContainerPath({k_DataContainer});
@@ -251,8 +251,8 @@ inline const DataPath k_EulersArrayPath = k_CellAttributeMatrix.createChildPath(
 inline const DataPath k_QuatsArrayPath = k_CellAttributeMatrix.createChildPath(k_Quats);
 inline const DataPath k_PhasesArrayPath = k_CellAttributeMatrix.createChildPath(k_Phases);
 inline const DataPath k_FeatureIdsArrayPath = k_CellAttributeMatrix.createChildPath(k_FeatureIds);
-inline const DataPath k_ConfidenceIndexArrayPath = k_CellAttributeMatrix.createChildPath(k_Confidence_Index);
-inline const DataPath k_ImageQualityArrayPath = k_CellAttributeMatrix.createChildPath(k_Image_Quality);
+inline const DataPath k_ConfidenceIndexArrayPath = k_CellAttributeMatrix.createChildPath(k_ConfidenceIndexWithSpaces);
+inline const DataPath k_ImageQualityArrayPath = k_CellAttributeMatrix.createChildPath(k_ImageQualityWithSpaces);
 inline const DataPath k_MaskArrayPath = k_CellAttributeMatrix.createChildPath(k_Mask);
 inline const DataPath k_FitArrayPath = k_CellAttributeMatrix.createChildPath(k_Fit);
 inline const DataPath k_SEMSignalArrayPath = k_CellAttributeMatrix.createChildPath(k_SEMSignal);
@@ -260,7 +260,7 @@ inline const DataPath k_SEMSignalArrayPath = k_CellAttributeMatrix.createChildPa
 inline const DataPath k_CellEnsembleAttributeMatrixPath = k_DataContainerPath.createChildPath(k_EnsembleAttributeMatrix);
 inline const DataPath k_CrystalStructuresArrayPath = k_CellEnsembleAttributeMatrixPath.createChildPath(k_CrystalStructures);
 
-inline const DataPath k_CellFeatureAttributeMatrix = k_DataContainerPath.createChildPath(k_Grain_Data);
+inline const DataPath k_CellFeatureAttributeMatrix = k_DataContainerPath.createChildPath(k_GrainDataWithSpaces);
 inline const DataPath k_NumCellsPath = k_CellFeatureAttributeMatrix.createChildPath(k_NumElements);
 inline const DataPath k_FeaturePhasesPath = k_CellFeatureAttributeMatrix.createChildPath(k_Phases);
 
@@ -269,13 +269,13 @@ inline const DataPath k_CellFeatureDataPath = k_DataContainerPath.createChildPat
 // This path selects the top-level exemplar data container.
 inline const DataPath k_ExemplarDataContainerPath({k_ExemplarDataContainer});
 
-} // namespace Constants
+} // namespace constants
 
 /**
  * @namespace nx::core::UnitTest
  * @brief Provides common data builders and assertions for simplnx unit tests.
  */
-namespace UnitTest
+namespace unit_test
 {
 #ifdef _WIN32
 /** @brief Queries the POSIX unlink/rename capability of the volume containing an existing directory. */
@@ -329,7 +329,7 @@ void RequireAutomaticCreateArrayActions(const Result<OutputActions>& outputActio
 /**
  * @brief Default absolute tolerance for unit-test comparisons.
  */
-inline constexpr float32 EPSILON = 0.0001;
+inline constexpr float32 k_Epsilon = 0.0001;
 
 /**
  * @brief Computes an MD5 digest from a vector's object representation.
@@ -455,7 +455,7 @@ private:
  * @return True if `abs(a - b) < epsilon`.
  */
 template <typename K>
-bool CloseEnough(const K& a, const K& b, const K& epsilon = EPSILON)
+bool CloseEnough(const K& a, const K& b, const K& epsilon = k_Epsilon)
 {
   return (epsilon > fabs(a - b));
 }
@@ -469,7 +469,7 @@ bool CloseEnough(const K& a, const K& b, const K& epsilon = EPSILON)
  * @return True if `abs(abs(a) - abs(b)) < epsilon`.
  */
 template <typename K>
-bool CloseEnoughAbs(const K& a, const K& b, const K& epsilon = EPSILON)
+bool CloseEnoughAbs(const K& a, const K& b, const K& epsilon = k_Epsilon)
 {
   return (epsilon > std::abs(std::abs(a) - std::abs(b)));
 }
@@ -576,7 +576,7 @@ void CompareDataArrays(const IDataArray& left, const IDataArray& right, usize st
             continue;
           }
           float32 diff = std::fabs(static_cast<float32>(oldVal - newVal));
-          if(diff <= EPSILON)
+          if(diff <= k_Epsilon)
           {
             continue;
           }
@@ -663,7 +663,7 @@ void CompareDataArraysByComponent(const IDataArray& left, const IDataArray& righ
         if constexpr(std::is_floating_point_v<T>)
         {
           float32 diff = std::fabs(static_cast<float32>(oldVal - newVal));
-          if(diff <= EPSILON)
+          if(diff <= k_Epsilon)
           {
             continue;
           }
@@ -728,7 +728,7 @@ void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplary
       if(oldBuf[i] != newBuf[i])
       {
         float32 diff = std::fabs(static_cast<float32>(oldBuf[i] - newBuf[i]));
-        if(diff >= EPSILON)
+        if(diff >= k_Epsilon)
         {
           failed = true;
           failIndex = offset + i;
@@ -751,7 +751,7 @@ void CompareArrays(const DataStructure& dataStructure, const DataPath& exemplary
  * @namespace FloatArrayComparisonDetail
  * @brief Contains internal test comparison support.
  */
-namespace FloatArrayComparisonDetail
+namespace float_array_comparison_detail
 {
 /**
  * @struct FloatArrayComparison
@@ -764,11 +764,11 @@ struct FloatArrayComparison
   static_assert(std::is_floating_point_v<T>);
 
   bool matches = false;
-  T maximumDifference = 0;
-  usize maximumDifferenceIndex = 0;
-  std::optional<usize> firstNanMismatchIndex;
-  T exemplaryNanMismatchValue = {};
-  T generatedNanMismatchValue = {};
+  T maximum_difference = 0;
+  usize maximum_difference_index = 0;
+  std::optional<usize> first_nan_mismatch_index;
+  T exemplary_nan_mismatch_value = {};
+  T generated_nan_mismatch_value = {};
 };
 
 /**
@@ -819,14 +819,14 @@ Result<FloatArrayComparison<T>> EvaluateFloatArraysWithNans(const DataArray<T>& 
     result.warnings().insert(result.warnings().end(), oldStoreReadResult.warnings().begin(), oldStoreReadResult.warnings().end());
     if(oldStoreReadResult.invalid())
     {
-      result.m_Expected = nonstd::make_unexpected(std::move(oldStoreReadResult.errors()));
+      result.expected = nonstd::make_unexpected(std::move(oldStoreReadResult.errors()));
       return result;
     }
     auto newStoreReadResult = newStore.copyIntoBuffer(offset, nonstd::span<T>(newBuf.get(), count));
     result.warnings().insert(result.warnings().end(), newStoreReadResult.warnings().begin(), newStoreReadResult.warnings().end());
     if(newStoreReadResult.invalid())
     {
-      result.m_Expected = nonstd::make_unexpected(std::move(newStoreReadResult.errors()));
+      result.expected = nonstd::make_unexpected(std::move(newStoreReadResult.errors()));
       return result;
     }
 
@@ -838,11 +838,11 @@ Result<FloatArrayComparison<T>> EvaluateFloatArraysWithNans(const DataArray<T>& 
       const bool newIsNan = std::isnan(newVal);
       if(oldIsNan || newIsNan)
       {
-        if(checkNans && oldIsNan != newIsNan && !comparison.firstNanMismatchIndex.has_value())
+        if(checkNans && oldIsNan != newIsNan && !comparison.first_nan_mismatch_index.has_value())
         {
-          comparison.firstNanMismatchIndex = offset + valueIndex;
-          comparison.exemplaryNanMismatchValue = oldVal;
-          comparison.generatedNanMismatchValue = newVal;
+          comparison.first_nan_mismatch_index = offset + valueIndex;
+          comparison.exemplary_nan_mismatch_value = oldVal;
+          comparison.generated_nan_mismatch_value = newVal;
         }
         // Paired NaNs represent the same missing result. A one-sided NaN does not stop the full diagnostic scan.
         continue;
@@ -850,18 +850,18 @@ Result<FloatArrayComparison<T>> EvaluateFloatArraysWithNans(const DataArray<T>& 
       if(oldVal != newVal)
       {
         const T difference = std::fabs(static_cast<T>(oldVal - newVal));
-        if(difference > comparison.maximumDifference)
+        if(difference > comparison.maximum_difference)
         {
-          comparison.maximumDifference = difference;
-          comparison.maximumDifferenceIndex = offset + valueIndex;
+          comparison.maximum_difference = difference;
+          comparison.maximum_difference_index = offset + valueIndex;
         }
       }
     }
   }
-  comparison.matches = !comparison.firstNanMismatchIndex.has_value() && comparison.maximumDifference < epsilon;
+  comparison.matches = !comparison.first_nan_mismatch_index.has_value() && comparison.maximum_difference < epsilon;
   return result;
 }
-} // namespace FloatArrayComparisonDetail
+} // namespace float_array_comparison_detail
 
 /**
  * @brief Compares two floating-point DataArray objects and reports their largest difference.
@@ -873,7 +873,7 @@ Result<FloatArrayComparison<T>> EvaluateFloatArraysWithNans(const DataArray<T>& 
  * @param checkNans True to compare NaN positions; false to omit values where either array has NaN.
  */
 template <typename T>
-void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, const T& epsilon = EPSILON, bool checkNans = true)
+void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, const T& epsilon = k_Epsilon, bool checkNans = true)
 {
   static_assert(std::is_floating_point_v<T>);
   INFO(fmt::format("Input Data Array: '{}'  Output DataArray: '{}'", exemplaryDataPath.toString(), computedPath.toString()));
@@ -881,14 +881,14 @@ void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPa
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(computedPath));
   const auto& exemplaryDataArray = dataStructure.getDataRefAs<DataArray<T>>(exemplaryDataPath);
   const auto& generatedDataArray = dataStructure.getDataRefAs<DataArray<T>>(computedPath);
-  auto evaluation = FloatArrayComparisonDetail::EvaluateFloatArraysWithNans(exemplaryDataArray, generatedDataArray, epsilon, checkNans);
+  auto evaluation = float_array_comparison_detail::EvaluateFloatArraysWithNans(exemplaryDataArray, generatedDataArray, epsilon, checkNans);
   SIMPLNX_RESULT_REQUIRE_VALID(evaluation);
   const auto& comparison = evaluation.value();
-  INFO(fmt::format("Maximum difference of {} occurs at index {} (epsilon = {})", comparison.maximumDifference, comparison.maximumDifferenceIndex, epsilon));
-  if(comparison.firstNanMismatchIndex.has_value())
+  INFO(fmt::format("Maximum difference of {} occurs at index {} (epsilon = {})", comparison.maximum_difference, comparison.maximum_difference_index, epsilon));
+  if(comparison.first_nan_mismatch_index.has_value())
   {
-    UNSCOPED_INFO(
-        fmt::format("NaN positions differ at index {}: exemplar {}, computed {}.", *comparison.firstNanMismatchIndex, comparison.exemplaryNanMismatchValue, comparison.generatedNanMismatchValue));
+    UNSCOPED_INFO(fmt::format("NaN positions differ at index {}: exemplar {}, computed {}.", *comparison.first_nan_mismatch_index, comparison.exemplary_nan_mismatch_value,
+                              comparison.generated_nan_mismatch_value));
   }
   REQUIRE(comparison.matches);
 }
@@ -903,7 +903,7 @@ void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPa
  * @param checkNans True to compare NaN positions; false to omit values where either list has NaN.
  */
 template <typename T>
-void CompareNeighborListFloatArraysWithNans(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, const T& epsilon = EPSILON, bool checkNans = true)
+void CompareNeighborListFloatArraysWithNans(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, const T& epsilon = k_Epsilon, bool checkNans = true)
 {
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<T>>(exemplaryDataPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<T>>(computedPath));
@@ -965,10 +965,10 @@ void CompareNeighborLists(const INeighborList* exemplaryData, const INeighborLis
   }
   else
   {
-    const auto* generatedListArray = dynamic_cast<const NeighborList<T>*>(computedData);
-    const auto* exemplarListArray = dynamic_cast<const NeighborList<T>*>(exemplaryData);
-    const auto& computedList = *generatedListArray;
-    const auto& exemplaryList = *exemplarListArray;
+    const auto* generatedListArrayPtr = dynamic_cast<const NeighborList<T>*>(computedData);
+    const auto* exemplarListArrayPtr = dynamic_cast<const NeighborList<T>*>(exemplaryData);
+    const auto& computedList = *generatedListArrayPtr;
+    const auto& exemplaryList = *exemplarListArrayPtr;
 
     REQUIRE(computedList.getNumberOfTuples() == exemplaryList.getNumberOfTuples());
 
@@ -992,7 +992,7 @@ void CompareNeighborLists(const INeighborList* exemplaryData, const INeighborLis
                              exemplary.size(), computedList.getDataPaths()[0].toString(), computed.size()));
             INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal))
 
-            REQUIRE(diff < EPSILON);
+            REQUIRE(diff < k_Epsilon);
             break;
           }
         }
@@ -1039,7 +1039,7 @@ void CompareNeighborLists(const DataStructure& dataStructure, const DataPath& ex
           float32 diff = std::fabs(static_cast<float32>(exemplaryVal - computedVal));
           INFO(fmt::format("  NeighborList {}, Index {} Exemplary Value: {} Computed Value: {}", i, j, exemplaryVal, computedVal));
 
-          REQUIRE(diff < EPSILON);
+          REQUIRE(diff < k_Epsilon);
           break;
         }
       }
@@ -1107,12 +1107,12 @@ void CompareDynamicListArrays(const DataStructure& dataStructure, const DataPath
   {
     auto oldEltList = exemplaryArray.getElementList(i);
     auto newEltList = generatedArray.getElementList(i);
-    T oldNumCells = oldEltList.numCells;
-    T newNumCells = newEltList.numCells;
+    T oldNumCells = oldEltList.num_cells;
+    T newNumCells = newEltList.num_cells;
     if(oldNumCells != newNumCells)
     {
       float32 diff = std::fabs(static_cast<float32>(oldNumCells - newNumCells));
-      REQUIRE(diff < EPSILON);
+      REQUIRE(diff < k_Epsilon);
     }
     for(T j = 0; j < oldNumCells; ++j)
     {
@@ -1121,7 +1121,7 @@ void CompareDynamicListArrays(const DataStructure& dataStructure, const DataPath
       if(oldVal != newVal)
       {
         float32 diff = std::fabs(static_cast<float32>(oldVal - newVal));
-        REQUIRE(diff < EPSILON);
+        REQUIRE(diff < k_Epsilon);
       }
     }
   }
@@ -1143,47 +1143,47 @@ void CompareArrays(const IArray* generatedArray, const IArray* exemplarArray)
   {
     std::cout << fmt::format("Generated array {} and exemplar array {} do not have the same array type: {} vs {}. Data Will not be compared.", generatedArray->getName(), exemplarArray->getName(),
                              fmt::underlying(arrayType), fmt::underlying(exemplarArrayType))
-              << std::endl;
+              << '\n';
     return;
   }
 
   DataType type;
   if(arrayType == IArray::ArrayType::DataArray)
   {
-    const auto* generatedDataArray = dynamic_cast<const IDataArray*>(generatedArray);
-    const auto* exemplarDataArray = dynamic_cast<const IDataArray*>(exemplarArray);
-    type = generatedDataArray->getDataType();
-    DataType exemplarType = exemplarDataArray->getDataType();
+    const auto* generatedDataArrayPtr = dynamic_cast<const IDataArray*>(generatedArray);
+    const auto* exemplarDataArrayPtr = dynamic_cast<const IDataArray*>(exemplarArray);
+    type = generatedDataArrayPtr->getDataType();
+    DataType exemplarType = exemplarDataArrayPtr->getDataType();
 
     if(type != exemplarType)
     {
-      std::cout << fmt::format("DataArray {} and {} do not have the same type: {} vs {}. Data Will not be compared.", generatedDataArray->getName(), exemplarDataArray->getName(),
+      std::cout << fmt::format("DataArray {} and {} do not have the same type: {} vs {}. Data Will not be compared.", generatedDataArrayPtr->getName(), exemplarDataArrayPtr->getName(),
                                fmt::underlying(type), fmt::underlying(exemplarType))
-                << std::endl;
+                << '\n';
       return;
     }
-    CompareDataArrays<T>(*exemplarDataArray, *generatedDataArray);
+    CompareDataArrays<T>(*exemplarDataArrayPtr, *generatedDataArrayPtr);
   }
   if(arrayType == IArray::ArrayType::NeighborListArray)
   {
-    const auto* generatedDataArray = dynamic_cast<const INeighborList*>(generatedArray);
-    const auto* exemplarDataArray = dynamic_cast<const INeighborList*>(exemplarArray);
-    type = generatedDataArray->getDataType();
-    DataType exemplarType = exemplarDataArray->getDataType();
+    const auto* generatedDataArrayPtr = dynamic_cast<const INeighborList*>(generatedArray);
+    const auto* exemplarDataArrayPtr = dynamic_cast<const INeighborList*>(exemplarArray);
+    type = generatedDataArrayPtr->getDataType();
+    DataType exemplarType = exemplarDataArrayPtr->getDataType();
     if(type != exemplarType)
     {
-      std::cout << fmt::format("NeighborList {} and {} do not have the same type: {} vs {}. Data Will not be compared.", generatedDataArray->getName(), exemplarDataArray->getName(),
+      std::cout << fmt::format("NeighborList {} and {} do not have the same type: {} vs {}. Data Will not be compared.", generatedDataArrayPtr->getName(), exemplarDataArrayPtr->getName(),
                                fmt::underlying(type), fmt::underlying(exemplarType))
-                << std::endl;
+                << '\n';
       return;
     }
-    CompareNeighborLists<T>(exemplarDataArray, generatedDataArray);
+    CompareNeighborLists<T>(exemplarDataArrayPtr, generatedDataArrayPtr);
   }
   if(arrayType == IArray::ArrayType::StringArray)
   {
-    const auto* generatedDataArray = dynamic_cast<const StringArray*>(generatedArray);
-    const auto* exemplarDataArray = dynamic_cast<const StringArray*>(exemplarArray);
-    CompareStringArrays(*exemplarDataArray, *generatedDataArray);
+    const auto* generatedDataArrayPtr = dynamic_cast<const StringArray*>(generatedArray);
+    const auto* exemplarDataArrayPtr = dynamic_cast<const StringArray*>(exemplarArray);
+    CompareStringArrays(*exemplarDataArrayPtr, *generatedDataArrayPtr);
   }
 }
 
@@ -1214,9 +1214,9 @@ DataArray<T>* CreateTestDataArray(DataStructure& dataStructure, const std::strin
   using DataStoreType = DataStore<T>;
   using ArrayType = DataArray<T>;
 
-  ArrayType* dataArray = ArrayType::template CreateWithStore<DataStoreType>(dataStructure, name, tupleShape, componentShape, parentId);
-  dataArray->fill(static_cast<T>(0.0));
-  return dataArray;
+  ArrayType* dataArrayPtr = ArrayType::template CreateWithStore<DataStoreType>(dataStructure, name, tupleShape, componentShape, parentId);
+  dataArrayPtr->fill(static_cast<T>(0.0));
+  return dataArrayPtr;
 }
 
 /**
@@ -1232,8 +1232,8 @@ template <typename T>
 NeighborList<T>* CreateTestNeighborList(DataStructure& dataStructure, const std::string& name, usize numTuples, DataObject::IdType parentId)
 {
   using NeighborListType = NeighborList<T>;
-  auto* neighborList = NeighborListType::Create(dataStructure, name, {numTuples}, parentId);
-  return neighborList;
+  auto* neighborListPtr = NeighborListType::Create(dataStructure, name, {numTuples}, parentId);
+  return neighborListPtr;
 }
 
 /**
@@ -1258,7 +1258,7 @@ DataStructure CreateAllPrimitiveTypes(const ShapeType& tupleShape);
  * @param dataGroup Parent group for the ImageGeom.
  * @throws std::runtime_error If the ImageGeom cannot be created.
  */
-void AddImageGeometry(DataStructure& dataStructure, const SizeVec3& imageGeomDims, const FloatVec3& spacing, const FloatVec3& origin, const DataGroup& dataGroup);
+void AddImageGeometry(DataStructure& dataStructure, const SizeVec3Type& imageGeomDims, const FloatVec3Type& spacing, const FloatVec3Type& origin, const DataGroup& dataGroup);
 
 /**
  * @brief Compares arrays in corresponding exemplar and computed AttributeMatrix objects.
@@ -1325,7 +1325,7 @@ void CheckArraysInheritTupleDims(const DataStructure& dataStructure, const std::
  * @namespace nx::core::UnitTest::Cropping
  * @brief Provides input generators and labels for crop-geometry tests.
  */
-namespace Cropping
+namespace cropping
 {
 /**
  * @brief Converts a Boolean value to the title-case text used in test labels.
@@ -1347,12 +1347,12 @@ std::string CropTypeToString(CropGeometryParameter::CropValues::TypeEnum t);
  */
 struct AxisBoundsChoices
 {
-  std::vector<SizeVec2> voxelX;
-  std::vector<SizeVec2> voxelY;
-  std::vector<SizeVec2> voxelZ;
-  std::vector<FloatVec2Type> physX;
-  std::vector<FloatVec2Type> physY;
-  std::vector<FloatVec2Type> physZ;
+  std::vector<SizeVec2Type> voxel_x;
+  std::vector<SizeVec2Type> voxel_y;
+  std::vector<SizeVec2Type> voxel_z;
+  std::vector<FloatVec2Type> phys_x;
+  std::vector<FloatVec2Type> phys_y;
+  std::vector<FloatVec2Type> phys_z;
 };
 
 /**
@@ -1362,9 +1362,9 @@ struct AxisBoundsChoices
  * @return Crop values in deterministic flag and bounds order.
  */
 std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBoundsChoices& C, bool is2D = false);
-} // namespace Cropping
+} // namespace cropping
 
-} // namespace UnitTest
+} // namespace unit_test
 
 /**
  * @var k_SimplnxCorePluginId
@@ -1398,7 +1398,7 @@ inline const FilterHandle k_IdentifySampleFilterHandle(k_IdentifySampleFilterId,
  * @namespace SmallIn100
  * @brief Provides compatibility helpers for the Small IN100 exemplar data.
  */
-namespace SmallIn100
+namespace small_in100
 {
 /**
  * @brief Paths omitted from tuple-shape checks for the legacy Small IN100 exemplar.
@@ -1450,4 +1450,4 @@ void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const FilterList
  * @param filterList Creates the filter instance.
  */
 void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList& filterList);
-} // namespace SmallIn100
+} // namespace small_in100

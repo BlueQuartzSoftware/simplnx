@@ -6,12 +6,13 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
-CreateColorMapParameter::CreateColorMapParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+CreateColorMapParameter::CreateColorMapParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -20,7 +21,7 @@ Uuid CreateColorMapParameter::uuid() const
   return ParameterTraits<CreateColorMapParameter>::uuid;
 }
 
-IParameter::AcceptedTypes CreateColorMapParameter::acceptedTypes() const
+IParameter::AcceptedTypesType CreateColorMapParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -38,18 +39,18 @@ nlohmann::json CreateColorMapParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> CreateColorMapParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> CreateColorMapParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'CreateColorMapParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'CreateColorMapParameter' JSON Error: ";
   if(!json.empty() && !json.is_string())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an object", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an object", k_Prefix, name()));
   }
 
   return {{std::make_any<ValueType>(json.get<ValueType>())}};
 }
 
-IParameter::UniquePointer CreateColorMapParameter::clone() const
+IParameter::UniquePointerType CreateColorMapParameter::clone() const
 {
   return std::make_unique<CreateColorMapParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -70,16 +71,16 @@ Result<> CreateColorMapParameter::validate(const std::any& value) const
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 namespace
 {
-constexpr StringLiteral k_SelectedPresetKey = "SelectedPresetName";
-constexpr StringLiteral k_PresetNameKey = "Name";
-constexpr StringLiteral k_RGBPointsKey = "RGBPoints";
+constexpr StringLiteralType k_SelectedPresetKey = "SelectedPresetName";
+constexpr StringLiteralType k_PresetNameKey = "Name";
+constexpr StringLiteralType k_RGBPointsKey = "RGBPoints";
 } // namespace
 
-Result<CreateColorMapFilterParameterConverter::ValueType> CreateColorMapFilterParameterConverter::convert(const nlohmann::json& json1, const nlohmann::json& json2)
+Result<CreateColorMapFilterParameterConverter::ValueType> CreateColorMapFilterParameterConverter::Convert(const nlohmann::json& json1, const nlohmann::json& json2)
 {
   if(!json1.is_string())
   {
@@ -99,5 +100,5 @@ Result<CreateColorMapFilterParameterConverter::ValueType> CreateColorMapFilterPa
 
   return {std::move(value)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

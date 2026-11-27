@@ -53,8 +53,8 @@ Parameters WriteNodesAndElementsFilesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedGeometry, "Geometry To Write", "The Geometry that will be written to the output file(s).", DataPath(),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Quad,
-                                                                                                      IGeometry::Type::Tetrahedral, IGeometry::Type::Hexahedral}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Triangle,
+                                                                                                            IGeometry::Type::Quad, IGeometry::Type::Tetrahedral, IGeometry::Type::Hexahedral}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_WriteNodeFile, "Write Node File", "Whether or not to write the node information out to a file.", true));
   params.insert(std::make_unique<BoolParameter>(k_NumberNodes, "Number Nodes", "Whether or not to number each node in the node information output file.", true));
   params.insert(std::make_unique<BoolParameter>(k_IncludeNodeFileHeader, "Include Node File Header", "Whether or not to include the node file header in the node output file.", true));
@@ -86,14 +86,14 @@ IFilter::VersionType WriteNodesAndElementsFilesFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer WriteNodesAndElementsFilesFilter::clone() const
+IFilter::UniquePointerType WriteNodesAndElementsFilesFilter::clone() const
 {
   return std::make_unique<WriteNodesAndElementsFilesFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteNodesAndElementsFilesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult WriteNodesAndElementsFilesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   DataPath selectedGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometry);
   bool writeNodeFile = filterArgs.value<BoolParameter::ValueType>(k_WriteNodeFile);
@@ -105,36 +105,36 @@ IFilter::PreflightResult WriteNodesAndElementsFilesFilter::preflightImpl(const D
 
   if(!writeNodeFile && !writeElementFile)
   {
-    return {MakeErrorResult<OutputActions>(to_underlying(WriteNodesAndElementsFiles::ErrorCodes::NoFileWriterChosen),
-                                           "Neither 'Write Node File' nor 'Write Element/Cell File' have been chosen.  Please choose at least one of these options.")};
+    return {.output_actions = MakeErrorResult<OutputActions>(to_underlying(WriteNodesAndElementsFiles::ErrorCodes::NoFileWriterChosen),
+                                                             "Neither 'Write Node File' nor 'Write Element/Cell File' have been chosen.  Please choose at least one of these options.")};
   }
 
-  auto& selectedGeometry = dataStructure.getDataRefAs<IGeometry>(selectedGeometryPath);
+  const auto& selectedGeometry = dataStructure.getDataRefAs<IGeometry>(selectedGeometryPath);
   if(selectedGeometry.getGeomType() == IGeometry::Type::Vertex && writeElementFile)
   {
-    return {MakeErrorResult<OutputActions>(
-        to_underlying(WriteNodesAndElementsFiles::ErrorCodes::VertexGeomHasNoElements),
-        "The selected geometry is a vertex geometry, so an element file cannot be written.  Please turn off 'Write Element/Cell File' or select a different geometry with a type other than Vertex.")};
+    return {.output_actions = MakeErrorResult<OutputActions>(to_underlying(WriteNodesAndElementsFiles::ErrorCodes::VertexGeomHasNoElements),
+                                                             "The selected geometry is a vertex geometry, so an element file cannot be written.  Please turn off 'Write Element/Cell File' or select a "
+                                                             "different geometry with a type other than Vertex.")};
   }
 
   return {};
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteNodesAndElementsFilesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> WriteNodesAndElementsFilesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   WriteNodesAndElementsFilesInputValues inputValues;
 
-  inputValues.SelectedGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometry);
-  inputValues.WriteNodeFile = filterArgs.value<BoolParameter::ValueType>(k_WriteNodeFile);
-  inputValues.NumberNodes = filterArgs.value<BoolParameter::ValueType>(k_NumberNodes);
-  inputValues.IncludeNodeFileHeader = filterArgs.value<BoolParameter::ValueType>(k_IncludeNodeFileHeader);
-  inputValues.NodeFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_NodeFilePath);
-  inputValues.WriteElementFile = filterArgs.value<BoolParameter::ValueType>(k_WriteElementFile);
-  inputValues.NumberElements = filterArgs.value<BoolParameter::ValueType>(k_NumberElements);
-  inputValues.IncludeElementFileHeader = filterArgs.value<BoolParameter::ValueType>(k_IncludeElementFileHeader);
-  inputValues.ElementFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_ElementFilePath);
+  inputValues.selected_geometry_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometry);
+  inputValues.write_node_file = filterArgs.value<BoolParameter::ValueType>(k_WriteNodeFile);
+  inputValues.number_nodes = filterArgs.value<BoolParameter::ValueType>(k_NumberNodes);
+  inputValues.include_node_file_header = filterArgs.value<BoolParameter::ValueType>(k_IncludeNodeFileHeader);
+  inputValues.node_file_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_NodeFilePath);
+  inputValues.write_element_file = filterArgs.value<BoolParameter::ValueType>(k_WriteElementFile);
+  inputValues.number_elements = filterArgs.value<BoolParameter::ValueType>(k_NumberElements);
+  inputValues.include_element_file_header = filterArgs.value<BoolParameter::ValueType>(k_IncludeElementFileHeader);
+  inputValues.element_file_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_ElementFilePath);
 
   return WriteNodesAndElementsFiles(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

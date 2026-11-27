@@ -23,7 +23,7 @@ VertexGeom::VertexGeom(DataStructure& dataStructure, std::string name, IdType im
 
 VertexGeom::VertexGeom(const VertexGeom&) = default;
 
-VertexGeom::VertexGeom(VertexGeom&&) = default;
+VertexGeom::VertexGeom(VertexGeom&&) noexcept = default;
 
 VertexGeom::~VertexGeom() noexcept = default;
 
@@ -90,19 +90,19 @@ std::shared_ptr<DataObject> VertexGeom::deepCopy(const DataPath& copyPath)
 
 Result<> VertexGeom::findElementSizes(bool recalculate)
 {
-  auto* vertexSizes = getDataStructureRef().getDataAsUnsafe<Float32Array>(m_ElementSizesId);
-  if(vertexSizes != nullptr && !recalculate)
+  auto* vertexSizesPtr = getDataStructureRef().getDataAsUnsafe<Float32ArrayType>(m_ElementSizesId);
+  if(vertexSizesPtr != nullptr && !recalculate)
   {
     return {};
   }
 
   // Vertices are 0-dimensional (they have no getSize),
   // so simply splat 0 over the sizes array
-  if(vertexSizes == nullptr)
+  if(vertexSizesPtr == nullptr)
   {
     auto dataStore = std::make_unique<DataStore<float32>>(std::vector<usize>{getNumberOfCells()}, std::vector<usize>{1}, 0.0f);
-    vertexSizes = DataArray<float32>::Create(getDataStructureRef(), k_VoxelSizes, std::move(dataStore), getId());
-    if(vertexSizes == nullptr)
+    vertexSizesPtr = DataArray<float32>::Create(getDataStructureRef(), k_VoxelSizes, std::move(dataStore), getId());
+    if(vertexSizesPtr == nullptr)
     {
       m_ElementSizesId.reset();
       // Used to be error code `-1`
@@ -110,18 +110,18 @@ Result<> VertexGeom::findElementSizes(bool recalculate)
     }
   }
 
-  m_ElementSizesId = vertexSizes->getId();
+  m_ElementSizesId = vertexSizesPtr->getId();
 
   // Used to be error code `1`
   return {};
 }
 
-Point3D<float64> VertexGeom::getParametricCenter() const
+Vec3<float64> VertexGeom::getParametricCenter() const
 {
   return {0.0, 0.0, 0.0};
 }
 
-void VertexGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>& pCoords, float64* shape) const
+void VertexGeom::getShapeFunctions([[maybe_unused]] const Vec3<float64>& pCoords, float64* shape) const
 {
   shape[0] = 0.0;
   shape[1] = 0.0;

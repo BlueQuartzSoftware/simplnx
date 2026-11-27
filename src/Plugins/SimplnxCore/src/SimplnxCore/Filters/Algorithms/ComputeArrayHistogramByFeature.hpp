@@ -18,18 +18,18 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeArrayHistogramByFeatureInputValues
 {
-  bool UserDefinedRange = false;
-  int32 NumberOfBins = 0;
-  float64 MinRange = 0.0;
-  float64 MaxRange = 0.0;
-  MultiArraySelectionParameter::ValueType SelectedArrayPaths = {};
-  MultiArraySelectionParameter::ValueType CreatedBinRangeDataPaths = {};
-  MultiArraySelectionParameter::ValueType CreatedHistogramCountsDataPaths = {};
-  MultiArraySelectionParameter::ValueType CreatedBinMostPopulatedDataPaths = {};
-  std::optional<MultiArraySelectionParameter::ValueType> CreatedBinModalRangesDataPaths;
-  DataPath FeatureIdsArrayPath;
-  bool UseMask;
-  DataPath MaskArrayPath;
+  bool user_defined_range = false;
+  int32 number_of_bins = 0;
+  float64 min_range = 0.0;
+  float64 max_range = 0.0;
+  MultiArraySelectionParameter::ValueType selected_array_paths;
+  MultiArraySelectionParameter::ValueType created_bin_range_data_paths;
+  MultiArraySelectionParameter::ValueType created_histogram_counts_data_paths;
+  MultiArraySelectionParameter::ValueType created_bin_most_populated_data_paths;
+  std::optional<MultiArraySelectionParameter::ValueType> created_bin_modal_ranges_data_paths;
+  DataPath feature_ids_array_path;
+  bool use_mask{};
+  DataPath mask_array_path;
 };
 
 /**
@@ -80,7 +80,7 @@ private:
   const ComputeArrayHistogramByFeatureInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-  mutable std::mutex m_ProgressMessage_Mutex;
+  mutable std::mutex m_ProgressMessageMutex;
   ThrottledMessageHandler m_Throttle;
 };
 } // namespace nx::core

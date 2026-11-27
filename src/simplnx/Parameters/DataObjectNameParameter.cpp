@@ -7,12 +7,13 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
-DataObjectNameParameter::DataObjectNameParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+DataObjectNameParameter::DataObjectNameParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -21,7 +22,7 @@ Uuid DataObjectNameParameter::uuid() const
   return ParameterTraits<DataObjectNameParameter>::uuid;
 }
 
-IParameter::AcceptedTypes DataObjectNameParameter::acceptedTypes() const
+IParameter::AcceptedTypesType DataObjectNameParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -39,18 +40,18 @@ nlohmann::json DataObjectNameParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> DataObjectNameParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> DataObjectNameParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'DataObjectNameParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'DataObjectNameParameter' JSON Error: ";
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a string", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix, name()));
   }
   auto string = json.get<ValueType>();
   return {{string}};
 }
 
-IParameter::UniquePointer DataObjectNameParameter::clone() const
+IParameter::UniquePointerType DataObjectNameParameter::clone() const
 {
   return std::make_unique<DataObjectNameParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -77,19 +78,19 @@ Result<> DataObjectNameParameter::validateName(const std::string& value) const
 
   if(value.empty())
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataObjectName cannot be empty", prefix));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateEmptyValue, fmt::format("{}DataObjectName cannot be empty", prefix));
   }
 
   if(!DataObject::IsValidName(value))
   {
-    return MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_InvalidDataObjectName, fmt::format("{}'{}' is not a valid DataObject name", prefix, value));
+    return MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateInvalidDataObjectName, fmt::format("{}'{}' is not a valid DataObject name", prefix, value));
   }
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
-Result<LinkedPathCreationFilterParameterConverter::ValueType> LinkedPathCreationFilterParameterConverter::convert(const nlohmann::json& json)
+Result<LinkedPathCreationFilterParameterConverter::ValueType> LinkedPathCreationFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_string())
   {
@@ -101,7 +102,7 @@ Result<LinkedPathCreationFilterParameterConverter::ValueType> LinkedPathCreation
   return {std::move(value)};
 }
 
-Result<DataArrayCreationToDataObjectNameFilterParameterConverter::ValueType> DataArrayCreationToDataObjectNameFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataArrayCreationToDataObjectNameFilterParameterConverter::ValueType> DataArrayCreationToDataObjectNameFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   auto dataArrayNameResult = ReadDataArrayName(json, "DataArrayCreationFilterParameter");
   if(dataArrayNameResult.invalid())
@@ -112,7 +113,7 @@ Result<DataArrayCreationToDataObjectNameFilterParameterConverter::ValueType> Dat
   return {std::move(dataArrayNameResult.value())};
 }
 
-Result<DataContainerNameFilterParameterConverter::ValueType> DataContainerNameFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataContainerNameFilterParameterConverter::ValueType> DataContainerNameFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   // 6.5 compatibility
   if(json.is_string())
@@ -129,7 +130,7 @@ Result<DataContainerNameFilterParameterConverter::ValueType> DataContainerNameFi
   return {std::move(dataContainerNameResult.value())};
 }
 
-Result<AttributeMatrixNameFilterParameterConverter::ValueType> AttributeMatrixNameFilterParameterConverter::convert(const nlohmann::json& json)
+Result<AttributeMatrixNameFilterParameterConverter::ValueType> AttributeMatrixNameFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_string())
   {
@@ -141,7 +142,7 @@ Result<AttributeMatrixNameFilterParameterConverter::ValueType> AttributeMatrixNa
   return {attributeMatrixName};
 }
 
-Result<DataArrayNameFilterParameterConverter::ValueType> DataArrayNameFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataArrayNameFilterParameterConverter::ValueType> DataArrayNameFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_string())
   {
@@ -152,5 +153,5 @@ Result<DataArrayNameFilterParameterConverter::ValueType> DataArrayNameFilterPara
 
   return {dataArrayName};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

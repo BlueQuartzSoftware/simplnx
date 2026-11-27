@@ -1,10 +1,12 @@
 #include "DataRemovedMessage.hpp"
 
+#include <utility>
+
 using namespace nx::core;
 
-DataRemovedMessage::DataRemovedMessage(const DataStructure* dataStructure, DataObject::IdType identifier, const std::string& name)
+DataRemovedMessage::DataRemovedMessage(const DataStructure* dataStructure, DataObject::IdType identifier, std::string name)
 : AbstractDataStructureMessage(dataStructure)
-, m_Name(name)
+, m_Name(std::move(name))
 , m_Id(identifier)
 {
 }
@@ -19,7 +21,7 @@ DataRemovedMessage::DataRemovedMessage(const DataRemovedMessage& other)
 DataRemovedMessage::DataRemovedMessage(DataRemovedMessage&& other) noexcept
 : AbstractDataStructureMessage(other)
 , m_Name(std::move(other.m_Name))
-, m_Id(std::move(other.m_Id))
+, m_Id(other.m_Id)
 {
 }
 
@@ -27,7 +29,7 @@ DataRemovedMessage::~DataRemovedMessage() = default;
 
 AbstractDataStructureMessage::MessageType DataRemovedMessage::getMsgType() const
 {
-  return MsgType;
+  return k_MsgType;
 }
 
 DataObject::IdType DataRemovedMessage::getId() const

@@ -32,19 +32,19 @@ public:
   // Parameter Keys — match ITKImportFijiMontageFilter verbatim so a FUTURE retirement redirect
   // (deferred to the ITK-removal phase; no getFilterReplacementMap entry exists yet) can be
   // parameter-lossless.
-  static constexpr StringLiteral k_InputFile_Key = "input_file";
-  static constexpr StringLiteral k_DataGroupName_Key = "data_group_name";
-  static constexpr StringLiteral k_LengthUnit_Key = "length_unit_index";
-  static constexpr StringLiteral k_ChangeOrigin_Key = "change_origin";
-  static constexpr StringLiteral k_Origin_Key = "origin";
-  static constexpr StringLiteral k_ChangeDataType_Key = "change_image_data_type";
-  static constexpr StringLiteral k_ImageDataType_Key = "image_data_type_index";
-  static constexpr StringLiteral k_ParentDataGroup_Key = "parent_data_group";
-  static constexpr StringLiteral k_ConvertToGrayScale_Key = "convert_to_gray_scale";
-  static constexpr StringLiteral k_ColorWeights_Key = "color_weights";
-  static constexpr StringLiteral k_DataContainerPath_Key = "data_container_path"; // image-geometry prefix
-  static constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
-  static constexpr StringLiteral k_ImageDataArrayName_Key = "image_data_array_name";
+  static constexpr StringLiteralType k_InputFile_Key = "input_file";
+  static constexpr StringLiteralType k_DataGroupName_Key = "data_group_name";
+  static constexpr StringLiteralType k_LengthUnit_Key = "length_unit_index";
+  static constexpr StringLiteralType k_ChangeOrigin_Key = "change_origin";
+  static constexpr StringLiteralType k_Origin_Key = "origin";
+  static constexpr StringLiteralType k_ChangeDataType_Key = "change_image_data_type";
+  static constexpr StringLiteralType k_ImageDataType_Key = "image_data_type_index";
+  static constexpr StringLiteralType k_ParentDataGroup_Key = "parent_data_group";
+  static constexpr StringLiteralType k_ConvertToGrayScale_Key = "convert_to_gray_scale";
+  static constexpr StringLiteralType k_ColorWeights_Key = "color_weights";
+  static constexpr StringLiteralType k_DataContainerPath_Key = "data_container_path"; // image-geometry prefix
+  static constexpr StringLiteralType k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteralType k_ImageDataArrayName_Key = "image_data_array_name";
 
   std::string name() const override;
   std::string className() const override;
@@ -53,7 +53,7 @@ public:
   std::vector<std::string> defaultTags() const override;
   Parameters parameters() const override;
   VersionType parametersVersion() const override;
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
@@ -76,12 +76,12 @@ private:
    */
   struct MetadataCache
   {
-    std::filesystem::path inputFile;
-    std::filesystem::file_time_type timeStamp;
-    std::vector<fiji::FijiTile> rawTiles; ///< Parsed straight from the config (no prefix, no rebase).
-    std::vector<ImageMetadata> metadata;  ///< Parallel to rawTiles; populated only when metadataValid.
-    bool tilesValid = false;
-    bool metadataValid = false;
+    std::filesystem::path input_file;
+    std::filesystem::file_time_type time_stamp;
+    std::vector<fiji::FijiTile> raw_tiles; ///< Parsed straight from the config (no prefix, no rebase).
+    std::vector<ImageMetadata> metadata;   ///< Parallel to rawTiles; populated only when metadataValid.
+    bool tiles_valid = false;
+    bool metadata_valid = false;
   };
   mutable MetadataCache m_Cache;
 

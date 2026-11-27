@@ -43,7 +43,7 @@ constexpr uint32_t k_RightFrontEdgeCrossingBit = 1 << 25;
 uint32_t FaceCrossingTypeAsBits(int32_t c0, int32_t c1, int32_t c2, int32_t c3)
 {
   int32_t numUniqueTypes = 0;
-  std::array<int32_t, 4> uniqueTypes;
+  std::array<int32_t, 4> uniqueTypes{};
   uniqueTypes[numUniqueTypes++] = c0;
   if(c1 != uniqueTypes[0])
   {

@@ -86,7 +86,7 @@ private:
   fs::perms m_OriginalPermissions = fs::perms::unknown;
 };
 
-void requireFile(const fs::path& path)
+void RequireFile(const fs::path& path)
 {
   std::ofstream stream(path);
   REQUIRE(stream.is_open());
@@ -111,7 +111,7 @@ TEST_CASE("FileUtilities::CreateOutputDirectories reports the full creation erro
 {
   const PathFixture fixture;
   const auto filePath = fixture.path() / "file";
-  requireFile(filePath);
+  RequireFile(filePath);
   const auto outputPath = filePath / "out";
   std::error_code expectedError;
   REQUIRE_FALSE(fs::create_directories(outputPath, expectedError));
@@ -135,7 +135,7 @@ TEST_CASE("FileUtilities::ValidateDirectoryWritePermission checks writable ances
   const auto existingDirectory = fixture.path() / "existing";
   REQUIRE(fs::create_directory(existingDirectory));
   const auto existingFile = existingDirectory / "file";
-  requireFile(existingFile);
+  RequireFile(existingFile);
   const auto missingDirectory = existingDirectory / "new" / "deep";
   const auto missingFile = missingDirectory / "out.txt";
 
@@ -144,7 +144,7 @@ TEST_CASE("FileUtilities::ValidateDirectoryWritePermission checks writable ances
   for(const auto& [inputPath, isFile] : cases)
   {
     CAPTURE(inputPath, isFile);
-    const auto result = FileUtilities::ValidateDirectoryWritePermission(inputPath, isFile);
+    const auto result = file_utilities::ValidateDirectoryWritePermission(inputPath, isFile);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
   }
   REQUIRE_FALSE(fs::exists(existingDirectory / "new"));
@@ -197,7 +197,7 @@ TEST_CASE("FileUtilities::ValidateDirectoryWritePermission returns a status erro
   SECTION("Directory input")
   {
     Result<> result;
-    REQUIRE_NOTHROW(result = FileUtilities::ValidateDirectoryWritePermission(directoryPath, false));
+    REQUIRE_NOTHROW(result = file_utilities::ValidateDirectoryWritePermission(directoryPath, false));
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().size() == 1);
     CHECK(result.errors()[0].code == -4092);
@@ -208,7 +208,7 @@ TEST_CASE("FileUtilities::ValidateDirectoryWritePermission returns a status erro
   {
     const auto filePath = directoryPath / "out.txt";
     Result<> result;
-    REQUIRE_NOTHROW(result = FileUtilities::ValidateDirectoryWritePermission(filePath, true));
+    REQUIRE_NOTHROW(result = file_utilities::ValidateDirectoryWritePermission(filePath, true));
     SIMPLNX_RESULT_REQUIRE_INVALID(result);
     REQUIRE(result.errors().size() == 1);
     CHECK(result.errors()[0].code == -4092);
@@ -257,7 +257,7 @@ TEST_CASE("FileUtilities returns a Windows status error for a Unicode path", "[s
   {
     const auto filePath = outputPath / "out.txt";
     Result<> result;
-    REQUIRE_NOTHROW(result = FileUtilities::ValidateDirectoryWritePermission(filePath, true));
+    REQUIRE_NOTHROW(result = file_utilities::ValidateDirectoryWritePermission(filePath, true));
     checkStatusError(result, -4092);
     CHECK(result.errors()[0].message.find("out.txt") != std::string::npos);
   }

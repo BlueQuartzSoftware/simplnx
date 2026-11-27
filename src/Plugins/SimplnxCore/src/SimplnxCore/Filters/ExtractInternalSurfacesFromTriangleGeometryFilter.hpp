@@ -21,16 +21,16 @@ public:
   ExtractInternalSurfacesFromTriangleGeometryFilter& operator=(ExtractInternalSurfacesFromTriangleGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_SelectedTriangleGeometryPath_Key = "input_triangle_geometry_path";
-  static constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "output_triangle_geometry_path";
-  static constexpr StringLiteral k_NodeTypesPath_Key = "node_types_path";
-  static constexpr StringLiteral k_CopyVertexPaths_Key = "copy_vertex_array_paths";
-  static constexpr StringLiteral k_CopyTrianglePaths_Key = "copy_triangle_array_paths";
-  static constexpr StringLiteral k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
-  static constexpr StringLiteral k_TriangleAttributeMatrixName_Key = "triangle_attribute_matrix_name";
-  static constexpr StringLiteral k_NodeTypeRange_Key = "node_type_range";
-  static constexpr StringLiteral k_CriterionMode_Key = "internal_surface_criterion_index";
-  static constexpr StringLiteral k_FaceLabelsPath_Key = "face_labels_path";
+  static constexpr StringLiteralType k_SelectedTriangleGeometryPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteralType k_CreatedTriangleGeometryPath_Key = "output_triangle_geometry_path";
+  static constexpr StringLiteralType k_NodeTypesPath_Key = "node_types_path";
+  static constexpr StringLiteralType k_CopyVertexPaths_Key = "copy_vertex_array_paths";
+  static constexpr StringLiteralType k_CopyTrianglePaths_Key = "copy_triangle_array_paths";
+  static constexpr StringLiteralType k_VertexAttributeMatrixName_Key = "vertex_attribute_matrix_name";
+  static constexpr StringLiteralType k_TriangleAttributeMatrixName_Key = "triangle_attribute_matrix_name";
+  static constexpr StringLiteralType k_NodeTypeRange_Key = "node_type_range";
+  static constexpr StringLiteralType k_CriterionMode_Key = "internal_surface_criterion_index";
+  static constexpr StringLiteralType k_FaceLabelsPath_Key = "face_labels_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -87,7 +87,7 @@ public:
    * @brief Creates and returns a copy of the filter.
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

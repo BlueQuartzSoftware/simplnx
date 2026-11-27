@@ -25,9 +25,9 @@ public:
   ComputeDifferencesMapFilter& operator=(ComputeDifferencesMapFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_FirstInputArrayPath_Key = "first_input_array_path";
-  static constexpr StringLiteral k_SecondInputArrayPath_Key = "second_input_array_path";
-  static constexpr StringLiteral k_DifferenceMapArrayPath_Key = "difference_map_array_path";
+  static constexpr StringLiteralType k_FirstInputArrayPath_Key = "first_input_array_path";
+  static constexpr StringLiteralType k_SecondInputArrayPath_Key = "second_input_array_path";
+  static constexpr StringLiteralType k_DifferenceMapArrayPath_Key = "difference_map_array_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -84,7 +84,7 @@ public:
    * @brief Creates a copy of the filter.
    * @return IFilter::UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

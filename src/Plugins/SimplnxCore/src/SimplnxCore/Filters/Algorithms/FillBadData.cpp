@@ -21,7 +21,6 @@ FillBadData::FillBadData(DataStructure& dataStructure, const IFilter::MessageHan
 }
 
 // -----------------------------------------------------------------------------
-FillBadData::~FillBadData() noexcept = default;
 
 Result<> FillBadData::operator()()
 {
@@ -32,15 +31,15 @@ Result<> FillBadData::operator()()
       targets.push_back(array);
     }
   };
-  append(m_DataStructure.getDataAs<IDataArray>(m_InputValues->featureIdsArrayPath));
-  if(m_InputValues->storeAsNewPhase)
+  append(m_DataStructure.getDataAs<IDataArray>(m_InputValues->feature_ids_array_path));
+  if(m_InputValues->store_as_new_phase)
   {
-    append(m_DataStructure.getDataAs<IDataArray>(m_InputValues->cellPhasesArrayPath));
+    append(m_DataStructure.getDataAs<IDataArray>(m_InputValues->cell_phases_array_path));
   }
-  const auto* imageGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->inputImageGeometry);
-  if(imageGeom != nullptr && imageGeom->getCellData() != nullptr)
+  const auto* imageGeomPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->input_image_geometry);
+  if(imageGeomPtr != nullptr && imageGeomPtr->getCellData() != nullptr)
   {
-    for(const auto& [name, object] : *imageGeom->getCellData())
+    for(const auto& [name, object] : *imageGeomPtr->getCellData())
     {
       append(dynamic_cast<const IDataArray*>(object.get()));
     }

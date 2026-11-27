@@ -26,9 +26,9 @@ constexpr int32 k_BadFeatureCount = -78231;
 // NumElements stores int32 values.
 constexpr uint64 k_MaxVoxelCount = std::numeric_limits<int32>::max();
 // Equivalent spherical diameter uses d = 2*cbrt(V/(4*pi/3)).
-constexpr float64 k_ESDVolumeDenominator = (4.0 * nx::core::numbers::pi_v<float64>) / 3.0;
+constexpr float64 k_ESDVolumeDenominator = (4.0 * nx::core::numbers::k_PiV<float64>) / 3.0;
 // Equivalent circular diameter uses d = 2*sqrt(A/pi).
-constexpr float64 k_ECDAreaDenominator = nx::core::numbers::pi_v<float64>;
+constexpr float64 k_ECDAreaDenominator = nx::core::numbers::k_PiV<float64>;
 
 /**
  * @brief Validates Feature ID bounds observed during a scanline pass.
@@ -73,8 +73,8 @@ Result<> ValidateFeatureIdsInScanlinePass(const std::string& featureIdsName, con
 
  */
 Result<> WriteFeatureOutputBlock(usize featureStart, usize featureCount, const std::vector<int32>& numElementsBuffer, const std::vector<float32>& volumesBuffer,
-                                 const std::vector<float32>& equivalentDiametersBuffer, Int32AbstractDataStore& numElements, Float32AbstractDataStore& volumes,
-                                 Float32AbstractDataStore& equivalentDiameters)
+                                 const std::vector<float32>& equivalentDiametersBuffer, Int32AbstractDataStoreType& numElements, Float32AbstractDataStoreType& volumes,
+                                 Float32AbstractDataStoreType& equivalentDiameters)
 {
   if(featureCount == 0)
   {
@@ -120,8 +120,8 @@ Result<> WriteFeatureOutputBlock(usize featureStart, usize featureCount, const s
  */
 template <typename FeatureSizeFunctorT, typename EquivalentDiameterFunctorT>
 Result<> StoreFeatureOutputs(usize numFeatures, const std::vector<uint64>& featureVoxelCounts, FeatureSizeFunctorT&& featureSizeFunctor, EquivalentDiameterFunctorT&& equivalentDiameterFunctor,
-                             Int32AbstractDataStore& numElements, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, ThrottledMessageHandler& progressThrottle,
-                             const std::atomic_bool& shouldCancel)
+                             Int32AbstractDataStoreType& numElements, Float32AbstractDataStoreType& volumes, Float32AbstractDataStoreType& equivalentDiameters,
+                             ThrottledMessageHandler& progressThrottle, const std::atomic_bool& shouldCancel)
 {
   std::vector<int32> numElementsBuffer(k_ChunkTuples);
   std::vector<float32> volumesBuffer(k_ChunkTuples);
@@ -193,8 +193,8 @@ Result<> StoreFeatureOutputs(usize numFeatures, const std::vector<uint64>& featu
  *
  * The scan traverses global raster order and returns the first Feature ID bulk-I/O error.
  */
-Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, Int32AbstractDataStore& numElements,
-                          const Int32AbstractDataStore& featureIds, const std::string& featureIdsName, const DataPath& featureAttributeMatrixPath, const bool saveElementSizes,
+Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStoreType& volumes, Float32AbstractDataStoreType& equivalentDiameters, Int32AbstractDataStoreType& numElements,
+                          const Int32AbstractDataStoreType& featureIds, const std::string& featureIdsName, const DataPath& featureAttributeMatrixPath, const bool saveElementSizes,
                           const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   ThrottledMessageHandler progressThrottle(messageHandler);
@@ -240,7 +240,7 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
     return validateResult;
   }
 
-  const FloatVec3 spacing = imageGeom.getSpacing();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
 
   const usize xDimSize = imageGeom.getNumXCells();
   const usize yDimSize = imageGeom.getNumYCells();
@@ -306,8 +306,8 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
  *
  * Feature IDs and element sizes use matching chunks. The function returns the first bulk-I/O error.
  */
-Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, Int32AbstractDataStore& numElements,
-                             const Int32AbstractDataStore& featureIds, const std::string& featureIdsName, const DataPath& featureAttributeMatrixPath, const bool saveElementSizes,
+Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStoreType& volumes, Float32AbstractDataStoreType& equivalentDiameters, Int32AbstractDataStoreType& numElements,
+                             const Int32AbstractDataStoreType& featureIds, const std::string& featureIdsName, const DataPath& featureAttributeMatrixPath, const bool saveElementSizes,
                              const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   ThrottledMessageHandler progressThrottle(messageHandler);
@@ -322,7 +322,7 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
     return result;
   }
 
-  const Float32AbstractDataStore& elemSizes = rectGridGeom.getElementSizes()->getDataStoreRef();
+  const Float32AbstractDataStoreType& elemSizes = rectGridGeom.getElementSizes()->getDataStoreRef();
 
   std::vector<uint64> featureVoxelCounts(numFeatures, 0);
   std::vector<float64> featureVolumes(numFeatures, 0.0);
@@ -404,30 +404,28 @@ ComputeFeatureSizesScanline::ComputeFeatureSizesScanline(DataStructure& dataStru
 {
 }
 
-ComputeFeatureSizesScanline::~ComputeFeatureSizesScanline() noexcept = default;
-
 Result<> ComputeFeatureSizesScanline::operator()()
 {
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;
 
-  const bool saveElementSizes = m_InputValues->SaveElementSizes;
+  const bool saveElementSizes = m_InputValues->save_element_sizes;
 
   messageHandler.sendInfoMessage("Validating Feature Ids and Feature Attribute Matrix...");
-  const DataPath featureIdsArrayPath = m_InputValues->FeatureIdsPath;
-  const auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(featureIdsArrayPath);
+  const DataPath featureIdsArrayPath = m_InputValues->feature_ids_path;
+  const auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32ArrayType>(featureIdsArrayPath);
 
-  const DataPath geomPath = m_InputValues->InputImageGeometryPath;
+  const DataPath geomPath = m_InputValues->input_image_geometry_path;
   auto& geom = m_DataStructure.getDataRefAs<IGeometry>(geomPath);
   const auto& featureIds = featureIdsArrayPtr->getDataStoreRef();
 
-  const DataPath featureAttributeMatrixPath = m_InputValues->FeatureAttributeMatrixPath;
-  const DataPath volumesPath = featureAttributeMatrixPath.createChildPath(m_InputValues->VolumesName);
-  const DataPath equivDiamPath = featureAttributeMatrixPath.createChildPath(m_InputValues->EquivalentDiametersName);
-  const DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(m_InputValues->NumElementsName);
+  const DataPath featureAttributeMatrixPath = m_InputValues->feature_attribute_matrix_path;
+  const DataPath volumesPath = featureAttributeMatrixPath.createChildPath(m_InputValues->volumes_name);
+  const DataPath equivDiamPath = featureAttributeMatrixPath.createChildPath(m_InputValues->equivalent_diameters_name);
+  const DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(m_InputValues->num_elements_name);
 
-  auto& volumes = m_DataStructure.getDataAs<Float32Array>(volumesPath)->getDataStoreRef();
-  auto& equivalentDiameters = m_DataStructure.getDataAs<Float32Array>(equivDiamPath)->getDataStoreRef();
-  auto& numElements = m_DataStructure.getDataAs<Int32Array>(numElementsPath)->getDataStoreRef();
+  auto& volumes = m_DataStructure.getDataAs<Float32ArrayType>(volumesPath)->getDataStoreRef();
+  auto& equivalentDiameters = m_DataStructure.getDataAs<Float32ArrayType>(equivDiamPath)->getDataStoreRef();
+  auto& numElements = m_DataStructure.getDataAs<Int32ArrayType>(numElementsPath)->getDataStoreRef();
 
   const IGeometry::Type geomType = geom.getGeomType();
   if(geomType == IGeometry::Type::Image)

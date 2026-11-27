@@ -1,5 +1,6 @@
 #include "DataIOCollection.hpp"
 
+#include <algorithm>
 #include <cassert>
 
 #include "simplnx/Core/Preferences.hpp"
@@ -9,23 +10,22 @@
 #include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
 
 #include "simplnx/DataStructure/IO/HDF5/DataIOManager.hpp"
-#include <algorithm>
 
 namespace nx::core
 {
 DataIOCollection::DataIOCollection()
 {
   // Only the built-in CoreDataIOManager can use the reserved in-memory format name.
-  auto coreManager = std::make_shared<nx::core::Generic::CoreDataIOManager>();
+  auto coreManager = std::make_shared<nx::core::generic::CoreDataIOManager>();
   m_ManagerMap[coreManager->formatName()] = coreManager;
 
-  (void)addIOManager(std::make_shared<nx::core::HDF5::DataIOManager>());
+  (void)addIOManager(std::make_shared<nx::core::hdf5::DataIOManager>());
 
   // Optional managers register through plugins so core remains storage-format neutral.
 }
 DataIOCollection::~DataIOCollection() noexcept = default;
 
-Result<> DataIOCollection::addIOManager(std::shared_ptr<IDataIOManager> manager)
+Result<> DataIOCollection::addIOManager(const std::shared_ptr<IDataIOManager>& manager)
 {
   if(manager == nullptr)
   {
@@ -192,7 +192,7 @@ bool DataIOCollection::anyManagerFinalizesImport() const
   return false;
 }
 
-std::optional<Result<>> DataIOCollection::onImportFinalize(DataStructure& dataStructure, const std::vector<DataPath>& paths, const nx::core::HDF5::FileIO& fileReader)
+std::optional<Result<>> DataIOCollection::onImportFinalize(DataStructure& dataStructure, const std::vector<DataPath>& paths, const nx::core::hdf5::FileIO& fileReader)
 {
   for(const auto& [ioType, ioManager] : m_ManagerMap)
   {
@@ -204,7 +204,7 @@ std::optional<Result<>> DataIOCollection::onImportFinalize(DataStructure& dataSt
   return std::nullopt;
 }
 
-std::optional<Result<>> DataIOCollection::onRecoveryWrite(nx::core::HDF5::DataStructureWriter& writer, const DataObject* dataObject, nx::core::HDF5::GroupIO& parentGroup)
+std::optional<Result<>> DataIOCollection::onRecoveryWrite(nx::core::hdf5::DataStructureWriter& writer, const DataObject* dataObject, nx::core::hdf5::GroupIO& parentGroup)
 {
   for(const auto& [ioType, ioManager] : m_ManagerMap)
   {
@@ -270,8 +270,8 @@ std::string DataIOCollection::generateManagerListString() const
   // Collect rows before formatting so labels align in the error-message table.
   struct Row
   {
-    std::string displayName;
-    std::string capabilityList;
+    std::string display_name;
+    std::string capability_list;
   };
   std::vector<Row> rows;
   rows.reserve(m_ManagerMap.size());
@@ -323,10 +323,7 @@ std::string DataIOCollection::generateManagerListString() const
       capList = "(no factories registered)";
     }
 
-    if(displayName.size() > maxNameWidth)
-    {
-      maxNameWidth = displayName.size();
-    }
+    maxNameWidth = std::max(displayName.size(), maxNameWidth);
     rows.push_back({std::move(displayName), std::move(capList)});
   }
 
@@ -334,7 +331,7 @@ std::string DataIOCollection::generateManagerListString() const
   std::string result = "Registered IO managers and their capabilities:";
   for(const auto& row : rows)
   {
-    result += fmt::format("\n  {:<{}} : {}", row.displayName, maxNameWidth, row.capabilityList);
+    result += fmt::format("\n  {:<{}} : {}", row.display_name, maxNameWidth, row.capability_list);
   }
   return result;
 }

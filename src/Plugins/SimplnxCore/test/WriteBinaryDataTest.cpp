@@ -109,7 +109,7 @@ public:
     // double for loop for each choice possibility
     for(uint64 fValue = 0; fValue < k_EndianessElements; fValue++)
     {
-      Test(fValue);
+      test(fValue);
     }
   }
 
@@ -177,7 +177,7 @@ private:
     m_FillValue = std::vector<T>{a, b, c};
   }
 
-  std::vector<char> readIn(fs::path filePath)
+  std::vector<char> readIn(const fs::path& filePath)
   {
     std::ifstream file(filePath.string(), std::ios_base::binary);
 
@@ -198,7 +198,7 @@ private:
     return {};
   }
 
-  void CompareResults(IDataArray& selectedArray) // compare hash of both file strings
+  void compareResults(IDataArray& selectedArray) // compare hash of both file strings
   {
     fs::path writtenFilePath = fs::path(k_TestOutput.string() + "/" + selectedArray.getName() + ".bin");
     REQUIRE(fs::exists(writtenFilePath));
@@ -209,7 +209,7 @@ private:
     REQUIRE(readIn(writtenFilePath) == readIn(exemplarFilePath));
   }
 
-  void Test(uint64 endianess)
+  void test(uint64 endianess)
   {
     // create data set
     m_DataStructure.clear();
@@ -219,9 +219,9 @@ private:
       using DataStoreType = DataStore<T>;
       using ArrayType = DataArray<T>;
 
-      ArrayType* dataArray = ArrayType::template CreateWithStore<DataStoreType>(m_DataStructure, std::to_string(endianess) + "_" + "array_" + std::to_string(index),
-                                                                                {static_cast<usize>(k_NumOfTuples)}, {static_cast<usize>(k_NumComponents)});
-      dataArray->fill(m_FillValue[index]);
+      ArrayType* dataArrayPtr = ArrayType::template CreateWithStore<DataStoreType>(m_DataStructure, std::to_string(endianess) + "_" + "array_" + std::to_string(index),
+                                                                                   {static_cast<usize>(k_NumOfTuples)}, {static_cast<usize>(k_NumComponents)});
+      dataArrayPtr->fill(m_FillValue[index]);
     }
     std::vector<DataPath> daps1 = m_DataStructure.getAllDataPaths();
 
@@ -237,25 +237,25 @@ private:
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(m_DataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(m_DataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     // read the file(s) back in
-    for(int32 i = 0; i < daps1.size(); i++)
+    for(const auto& i : daps1)
     {
-      CompareResults(m_DataStructure.getDataRefAs<IDataArray>(daps1[i]));
+      compareResults(m_DataStructure.getDataRefAs<IDataArray>(i));
     }
   }
 };
 
 TEST_CASE("SimplnxCore::WriteBinaryData: Valid filter execution")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "export_files_test.tar.gz", "export_files_test");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "export_files_test.tar.gz", "export_files_test");
 
   DataStructure dataStructure;
   DataStructure& dsRef = dataStructure;
@@ -271,7 +271,7 @@ TEST_CASE("SimplnxCore::WriteBinaryData: Valid filter execution")
   RunBinaryTest<float32>(dsRef).execute();
   RunBinaryTest<float64>(dsRef).execute();
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 } // end of test case
 
 //
@@ -280,7 +280,7 @@ TEST_CASE("SimplnxCore::WriteBinaryData: Valid filter execution")
 // definitely would NOT happen macOS. Linux is iffy.
 TEST_CASE("SimplnxCore::WriteBinaryData:Invalid Filter Execution")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // We are just going to generate a big number so that we can use that in the output
   // file path. This tests the creation of intermediate directories that the filter
@@ -295,9 +295,9 @@ TEST_CASE("SimplnxCore::WriteBinaryData:Invalid Filter Execution")
     using DataStoreType = DataStore<int32>;
     using ArrayType = DataArray<int32>;
 
-    ArrayType* dataArray = ArrayType::template CreateWithStore<DataStoreType>(dataStructure, std::to_string(0) + "_" + "array_" + std::to_string(index), {static_cast<usize>(k_NumOfTuples)},
-                                                                              {static_cast<usize>(k_NumComponents)});
-    dataArray->fill(123123);
+    ArrayType* dataArrayPtr = ArrayType::template CreateWithStore<DataStoreType>(dataStructure, std::to_string(0) + "_" + "array_" + std::to_string(index), {static_cast<usize>(k_NumOfTuples)},
+                                                                                 {static_cast<usize>(k_NumComponents)});
+    dataArrayPtr->fill(123123);
   }
   std::vector<DataPath> daps1 = dataStructure.getAllDataPaths();
 
@@ -326,7 +326,7 @@ TEST_CASE("SimplnxCore::WriteBinaryData:Invalid Filter Execution")
   std::string invalidPath = fmt::format("/{}", millisFromEpoch);
 #endif
 
-  std::cout << "InvalidPath: '" << invalidPath << "'" << std::endl;
+  std::cout << "InvalidPath: '" << invalidPath << "'" << '\n';
   // Create default Parameters for the filter.
   args.insertOrAssign(WriteBinaryDataFilter::k_Endianess_Key, std::make_any<ChoicesParameter::ValueType>(0)); // uint64 0 and 1
   args.insertOrAssign(WriteBinaryDataFilter::k_OutputPath_Key, std::make_any<fs::path>(invalidPath));
@@ -335,7 +335,7 @@ TEST_CASE("SimplnxCore::WriteBinaryData:Invalid Filter Execution")
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

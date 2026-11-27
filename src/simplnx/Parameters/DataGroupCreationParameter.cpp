@@ -5,12 +5,13 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
-DataGroupCreationParameter::DataGroupCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+DataGroupCreationParameter::DataGroupCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : MutableDataParameter(name, humanName, helpText, Category::Created)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -19,7 +20,7 @@ Uuid DataGroupCreationParameter::uuid() const
   return ParameterTraits<DataGroupCreationParameter>::uuid;
 }
 
-IParameter::AcceptedTypes DataGroupCreationParameter::acceptedTypes() const
+IParameter::AcceptedTypesType DataGroupCreationParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -37,25 +38,25 @@ nlohmann::json DataGroupCreationParameter::toJsonImpl(const std::any& value) con
   return json;
 }
 
-Result<std::any> DataGroupCreationParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> DataGroupCreationParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'DataGroupCreationParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'DataGroupCreationParameter' JSON Error: ";
 
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}The JSON data entry for key '{}' is not a string.", prefix.view(), name()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString, fmt::format("{}The JSON data entry for key '{}' is not a string.", k_Prefix.view(), name()));
   }
 
   auto valueString = json.get<std::string>();
   std::optional<DataPath> path = DataPath::FromString(valueString);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath for key '{}'.", prefix.view(), valueString, name()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotValueType, fmt::format("{}Failed to parse '{}' as DataPath for key '{}'.", k_Prefix.view(), valueString, name()));
   }
   return {{std::move(*path)}};
 }
 
-IParameter::UniquePointer DataGroupCreationParameter::clone() const
+IParameter::UniquePointerType DataGroupCreationParameter::clone() const
 {
   return std::make_unique<DataGroupCreationParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -83,12 +84,12 @@ Result<> DataGroupCreationParameter::validatePath(const DataStructure& dataStruc
 
   if(value.empty())
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateEmptyValue, fmt::format("{}DataPath cannot be empty", prefix));
   }
-  const DataObject* object = dataStructure.getData(value);
-  if(object != nullptr)
+  const DataObject* objectPtr = dataStructure.getData(value);
+  if(objectPtr != nullptr)
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_ExistingValue, fmt::format("{}Object exists at path '{}'", prefix, value.toString()));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateExistingValue, fmt::format("{}Object exists at path '{}'", prefix, value.toString()));
   }
 
   return {};
@@ -97,13 +98,13 @@ Result<> DataGroupCreationParameter::validatePath(const DataStructure& dataStruc
 Result<std::any> DataGroupCreationParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
-  DataObject* object = dataStructure.getData(path);
-  return {{object}};
+  DataObject* objectPtr = dataStructure.getData(path);
+  return {{objectPtr}};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
-Result<DataContainerCreationFilterParameterConverter::ValueType> DataContainerCreationFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataContainerCreationFilterParameterConverter::ValueType> DataContainerCreationFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_string())
   {
@@ -115,7 +116,7 @@ Result<DataContainerCreationFilterParameterConverter::ValueType> DataContainerCr
   return {std::move(dataPath)};
 }
 
-Result<StringToDataPathFilterParameterConverter::ValueType> StringToDataPathFilterParameterConverter::convert(const nlohmann::json& json)
+Result<StringToDataPathFilterParameterConverter::ValueType> StringToDataPathFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_string())
   {
@@ -127,7 +128,7 @@ Result<StringToDataPathFilterParameterConverter::ValueType> StringToDataPathFilt
   return {std::move(dataPath)};
 }
 
-Result<StringsToDataPathFilterParameterConverter::ValueType> StringsToDataPathFilterParameterConverter::convert(const nlohmann::json& json1, const nlohmann::json& json2)
+Result<StringsToDataPathFilterParameterConverter::ValueType> StringsToDataPathFilterParameterConverter::Convert(const nlohmann::json& json1, const nlohmann::json& json2)
 {
   if(!json1.is_string())
   {
@@ -143,7 +144,7 @@ Result<StringsToDataPathFilterParameterConverter::ValueType> StringsToDataPathFi
   return {std::move(dataPath)};
 }
 
-Result<AMPathBuilderFilterParameterConverter::ValueType> AMPathBuilderFilterParameterConverter::convert(const nlohmann::json& json1, const nlohmann::json& json2)
+Result<AMPathBuilderFilterParameterConverter::ValueType> AMPathBuilderFilterParameterConverter::Convert(const nlohmann::json& json1, const nlohmann::json& json2)
 {
   std::string dcName;
   std::string amName;
@@ -181,7 +182,7 @@ Result<AMPathBuilderFilterParameterConverter::ValueType> AMPathBuilderFilterPara
   return {std::move(dataPath)};
 }
 
-Result<DAPathBuilderFilterParameterConverter::ValueType> DAPathBuilderFilterParameterConverter::convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3)
+Result<DAPathBuilderFilterParameterConverter::ValueType> DAPathBuilderFilterParameterConverter::Convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3)
 {
   std::string dcName;
   std::string amName;
@@ -234,7 +235,7 @@ Result<DAPathBuilderFilterParameterConverter::ValueType> DAPathBuilderFilterPara
   return {std::move(dataPath)};
 }
 
-Result<DCPathBuilderFilterParameterConverter::ValueType> DCPathBuilderFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DCPathBuilderFilterParameterConverter::ValueType> DCPathBuilderFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   std::string dcName;
 
@@ -257,7 +258,7 @@ Result<DCPathBuilderFilterParameterConverter::ValueType> DCPathBuilderFilterPara
   return {std::move(dataPath)};
 }
 
-Result<AttributeMatrixCreationFilterParameterConverter::ValueType> AttributeMatrixCreationFilterParameterConverter::convert(const nlohmann::json& json)
+Result<AttributeMatrixCreationFilterParameterConverter::ValueType> AttributeMatrixCreationFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   auto dataContainerNameResult = ReadDataContainerName(json, "AttributeMatrixCreationFilterParameter");
   if(dataContainerNameResult.invalid())
@@ -275,5 +276,5 @@ Result<AttributeMatrixCreationFilterParameterConverter::ValueType> AttributeMatr
 
   return {std::move(dataPath)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

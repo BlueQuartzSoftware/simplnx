@@ -16,8 +16,6 @@ Silhouette::Silhouette(DataStructure& dataStructure, const IFilter::MessageHandl
 {
 }
 
-Silhouette::~Silhouette() noexcept = default;
-
 const std::atomic_bool& Silhouette::getCancel()
 {
   return m_ShouldCancel;
@@ -25,13 +23,13 @@ const std::atomic_bool& Silhouette::getCancel()
 
 Result<> Silhouette::operator()()
 {
-  const auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  const auto& featureIdsArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
-  const auto& outputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SilhouetteArrayPath);
+  const auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->clustering_array_path);
+  const auto& featureIdsArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->feature_ids_array_path);
+  const auto& outputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->silhouette_array_path);
   // Every participating store drives dispatch because any one can require bulk I/O.
-  if(m_InputValues->UseMask)
+  if(m_InputValues->use_mask)
   {
-    const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
+    const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->mask_array_path);
     return DispatchAlgorithm<SilhouetteDirect, SilhouetteScanline>({&clusteringArray, &featureIdsArray, &maskArray, &outputArray}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
   }
   return DispatchAlgorithm<SilhouetteDirect, SilhouetteScanline>({&clusteringArray, &featureIdsArray, &outputArray}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);

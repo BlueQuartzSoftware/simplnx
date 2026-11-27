@@ -5,13 +5,15 @@
 
 #include <fmt/core.h>
 
+#include <utility>
+
 using namespace nx::core;
 
 namespace nx::core
 {
-CopyDataObjectAction::CopyDataObjectAction(const DataPath& path, const DataPath& newPath, const std::vector<DataPath> allCreatedPaths)
+CopyDataObjectAction::CopyDataObjectAction(DataPath path, const DataPath& newPath, const std::vector<DataPath>& allCreatedPaths)
 : IDataCreationAction(newPath)
-, m_Path(path)
+, m_Path(std::move(path))
 , m_NewPath(newPath)
 , m_AllCreatedPaths(allCreatedPaths)
 {
@@ -19,35 +21,35 @@ CopyDataObjectAction::CopyDataObjectAction(const DataPath& path, const DataPath&
 
 CopyDataObjectAction::~CopyDataObjectAction() noexcept = default;
 
-std::shared_ptr<DataObject> CopyDataObjectAction::copyData(DataStructure& dataStructure, const DataPath& sourcePath, const DataPath& destPath)
+std::shared_ptr<DataObject> CopyDataObjectAction::CopyData(DataStructure& dataStructure, const DataPath& sourcePath, const DataPath& destPath)
 {
-  auto* data = dataStructure.getData(sourcePath);
-  std::shared_ptr<DataObject> copy = data->deepCopy(destPath);
+  auto* dataPtr = dataStructure.getData(sourcePath);
+  std::shared_ptr<DataObject> copy = dataPtr->deepCopy(destPath);
   return copy;
 }
 
-Result<> CopyDataObjectAction::apply(DataStructure& dataStructure, Mode mode) const
+Result<> CopyDataObjectAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
-  static constexpr StringLiteral prefix = "CopyDataObjectAction: ";
+  static constexpr StringLiteralType k_Prefix = "CopyDataObjectAction: ";
 
   if(dataStructure.getData(path()) == nullptr)
   {
-    return MakeErrorResult(-5100, fmt::format("{}Cannot find data object at path '{}'", prefix, path().toString()));
+    return MakeErrorResult(-5100, fmt::format("{}Cannot find data object at path '{}'", k_Prefix, path().toString()));
   }
   if(dataStructure.getData(newPath()) != nullptr)
   {
-    return MakeErrorResult(-5101, fmt::format("{}Data already exists at path '{}'", prefix, newPath().toString()));
+    return MakeErrorResult(-5101, fmt::format("{}Data already exists at path '{}'", k_Prefix, newPath().toString()));
   }
 
-  if(copyData(dataStructure, path(), newPath()) == nullptr)
+  if(CopyData(dataStructure, path(), newPath()) == nullptr)
   {
-    return MakeErrorResult(-5102, fmt::format("{}Failed to copy data from '{}' to '{}'", prefix, path().toString(), newPath().toString()));
+    return MakeErrorResult(-5102, fmt::format("{}Failed to copy data from '{}' to '{}'", k_Prefix, path().toString(), newPath().toString()));
   }
 
   return {};
 }
 
-IDataAction::UniquePointer CopyDataObjectAction::clone() const
+IDataAction::UniquePointerType CopyDataObjectAction::clone() const
 {
   return std::make_unique<CopyDataObjectAction>(path(), newPath(), getAllCreatedPaths());
 }

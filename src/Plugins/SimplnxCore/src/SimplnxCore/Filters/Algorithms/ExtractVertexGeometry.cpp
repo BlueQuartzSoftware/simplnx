@@ -144,9 +144,9 @@ struct CopyDataFunctor
         {
           continue;
         }
-        const T* srcTuple = inBuffer.get() + i * numComps;
-        T* dstTuple = outBuffer.get() + outTuples * numComps;
-        std::copy(srcTuple, srcTuple + numComps, dstTuple);
+        const T* srcTuplePtr = inBuffer.get() + i * numComps;
+        T* dstTuplePtr = outBuffer.get() + outTuples * numComps;
+        std::copy(srcTuplePtr, srcTuplePtr + numComps, dstTuplePtr);
         outTuples++;
         if(outTuples == k_ChunkTuples)
         {
@@ -174,7 +174,6 @@ ExtractVertexGeometry::ExtractVertexGeometry(DataStructure& dataStructure, const
 }
 
 // -----------------------------------------------------------------------------
-ExtractVertexGeometry::~ExtractVertexGeometry() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ExtractVertexGeometry::getCancel()
@@ -185,26 +184,26 @@ const std::atomic_bool& ExtractVertexGeometry::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ExtractVertexGeometry::operator()()
 {
-  const auto& inputGeometry = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->InputGeometryPath);
-  auto& vertexGeometry = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->VertexGeometryPath);
+  const auto& inputGeometry = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->input_geometry_path);
+  auto& vertexGeometry = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->vertex_geometry_path);
 
-  SizeVec3 dims = inputGeometry.getDimensions();
+  SizeVec3Type dims = inputGeometry.getDimensions();
   const usize cellCount = std::accumulate(dims.begin(), dims.end(), static_cast<usize>(1), std::multiplies<>());
   usize totalCells = cellCount;
   usize vertexCount = cellCount;
   DataPath vertexAttributeMatrixDataPath = vertexGeometry.getVertexAttributeMatrixDataPath();
 
-  DataPath maskArrayPath = m_InputValues->MaskArrayPath;
+  DataPath maskArrayPath = m_InputValues->mask_array_path;
   // Resolve a mask that filter actions placed under the vertex AttributeMatrix.
-  if(m_InputValues->UseMask && !m_DataStructure.containsData(m_InputValues->MaskArrayPath))
+  if(m_InputValues->use_mask && !m_DataStructure.containsData(m_InputValues->mask_array_path))
   {
-    if(!m_InputValues->IncludedDataArrayPaths.empty() && m_InputValues->UseMask)
+    if(!m_InputValues->included_data_array_paths.empty() && m_InputValues->use_mask)
     {
-      for(const auto& dataPath : m_InputValues->IncludedDataArrayPaths)
+      for(const auto& dataPath : m_InputValues->included_data_array_paths)
       {
-        if(dataPath == m_InputValues->MaskArrayPath)
+        if(dataPath == m_InputValues->mask_array_path)
         {
-          maskArrayPath = vertexAttributeMatrixDataPath.createChildPath(m_InputValues->MaskArrayPath.getTargetName());
+          maskArrayPath = vertexAttributeMatrixDataPath.createChildPath(m_InputValues->mask_array_path.getTargetName());
         }
       }
     }
@@ -214,8 +213,8 @@ Result<> ExtractVertexGeometry::operator()()
 
   // Stream the mask for counting, coordinates, and each included array.
   // Repeated reads avoid a cell-sized keep bitmap.
-  const IDataArray* maskIDataArray = nullptr;
-  if(m_InputValues->UseMask)
+  const IDataArray* maskIDataArrayPtr = nullptr;
+  if(m_InputValues->use_mask)
   {
     if(m_ShouldCancel)
     {
@@ -225,14 +224,14 @@ Result<> ExtractVertexGeometry::operator()()
     try
     {
       // Validate the mask path and type. Streaming does not use the returned adapter.
-      MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, maskArrayPath);
+      mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, maskArrayPath);
     } catch(const std::out_of_range&)
     {
       // Direct algorithm calls can bypass filter preflight.
       return MakeErrorResult(-53900, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", maskArrayPath.toString()));
     }
 
-    maskIDataArray = m_DataStructure.getDataAs<IDataArray>(maskArrayPath);
+    maskIDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(maskArrayPath);
 
     // Count selected tuples with one bounded flag chunk.
     const usize chunkTuples = std::min(totalCells, k_ChunkTuples);
@@ -245,7 +244,7 @@ Result<> ExtractVertexGeometry::operator()()
         return {};
       }
       const usize count = std::min(k_ChunkTuples, totalCells - chunkStart);
-      Result<> maskResult = ExecuteDataFunction(MaskChunkFunctor{}, maskIDataArray->getDataType(), maskIDataArray, chunkStart, count, nonstd::span<bool>(flagBuffer.get(), count));
+      Result<> maskResult = ExecuteDataFunction(MaskChunkFunctor{}, maskIDataArrayPtr->getDataType(), maskIDataArrayPtr, chunkStart, count, nonstd::span<bool>(flagBuffer.get(), count));
       if(maskResult.invalid())
       {
         return maskResult;
@@ -274,9 +273,9 @@ Result<> ExtractVertexGeometry::operator()()
   // setTuple() writes follow selected source order. A mask requires another pass.
   m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Generating vertex geometry"));
 
-  IGeometry::SharedVertexList& vertices = vertexGeometry.getVerticesRef();
+  IGeometry::SharedVertexListType& vertices = vertexGeometry.getVerticesRef();
   auto& verticesDataStore = vertices.getDataStoreRef();
-  if(m_InputValues->UseMask)
+  if(m_InputValues->use_mask)
   {
     const usize chunkTuples = std::min(totalCells, k_ChunkTuples);
     auto flagBuffer = std::make_unique<bool[]>(chunkTuples);
@@ -288,7 +287,7 @@ Result<> ExtractVertexGeometry::operator()()
         return {};
       }
       const usize count = std::min(k_ChunkTuples, totalCells - chunkStart);
-      Result<> maskResult = ExecuteDataFunction(MaskChunkFunctor{}, maskIDataArray->getDataType(), maskIDataArray, chunkStart, count, nonstd::span<bool>(flagBuffer.get(), count));
+      Result<> maskResult = ExecuteDataFunction(MaskChunkFunctor{}, maskIDataArrayPtr->getDataType(), maskIDataArrayPtr, chunkStart, count, nonstd::span<bool>(flagBuffer.get(), count));
       if(maskResult.invalid())
       {
         return maskResult;
@@ -297,7 +296,7 @@ Result<> ExtractVertexGeometry::operator()()
       {
         if(flagBuffer[i])
         {
-          const Point3D<float32> coords = inputGeometry.getCoordsf(chunkStart + i);
+          const Vec3<float32> coords = inputGeometry.getCoordsf(chunkStart + i);
           verticesDataStore.setTuple(vertIdx, coords.toArray());
           vertIdx++;
         }
@@ -308,7 +307,7 @@ Result<> ExtractVertexGeometry::operator()()
   {
     for(usize idx = 0; idx < totalCells; idx++)
     {
-      const Point3D<float32> coords = inputGeometry.getCoordsf(idx);
+      const Vec3<float32> coords = inputGeometry.getCoordsf(idx);
       verticesDataStore.setTuple(idx, coords.toArray());
     }
   }
@@ -323,17 +322,17 @@ Result<> ExtractVertexGeometry::operator()()
     return resizeResult;
   }
 
-  for(const auto& dataArrayPath : m_InputValues->IncludedDataArrayPaths)
+  for(const auto& dataArrayPath : m_InputValues->included_data_array_paths)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
 
-    const auto* srcIDataArray = m_DataStructure.getDataAs<IDataArray>(dataArrayPath);
-    DataPath destDataArrayPath = vertexAttributeMatrixDataPath.createChildPath(srcIDataArray->getName());
-    auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destDataArrayPath);
-    Result<> copyResult = ExecuteDataFunction(CopyDataFunctor{}, srcIDataArray->getDataType(), srcIDataArray, destDataArray, maskIDataArray);
+    const auto* srcIDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(dataArrayPath);
+    DataPath destDataArrayPath = vertexAttributeMatrixDataPath.createChildPath(srcIDataArrayPtr->getName());
+    auto* destDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(destDataArrayPath);
+    Result<> copyResult = ExecuteDataFunction(CopyDataFunctor{}, srcIDataArrayPtr->getDataType(), srcIDataArrayPtr, destDataArrayPtr, maskIDataArrayPtr);
     if(copyResult.invalid())
     {
       return copyResult;

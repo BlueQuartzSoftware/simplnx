@@ -16,10 +16,10 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeLargestCrossSectionsInputValues
 {
-  ChoicesParameter::ValueType Plane;
-  DataPath ImageGeometryPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath LargestCrossSectionsArrayPath;
+  ChoicesParameter::ValueType plane{};
+  DataPath image_geometry_path;
+  DataPath feature_ids_array_path;
+  DataPath largest_cross_sections_array_path;
 };
 
 /**
@@ -42,7 +42,7 @@ public:
   /**
    * @brief Destroys the non-owning dispatcher.
    */
-  ~ComputeLargestCrossSections() noexcept;
+  ~ComputeLargestCrossSections() noexcept = default;
 
   ComputeLargestCrossSections(const ComputeLargestCrossSections&) = delete;
   ComputeLargestCrossSections(ComputeLargestCrossSections&&) noexcept = delete;

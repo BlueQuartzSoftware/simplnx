@@ -49,13 +49,13 @@ IFilter::VersionType CreateDataGroupFilter::parametersVersion() const
   return 1;
 }
 
-IFilter::UniquePointer CreateDataGroupFilter::clone() const
+IFilter::UniquePointerType CreateDataGroupFilter::clone() const
 {
   return std::make_unique<CreateDataGroupFilter>();
 }
 
-IFilter::PreflightResult CreateDataGroupFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult CreateDataGroupFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                              const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   DataPath dataObjectPath = filterArgs.value<DataPath>(k_DataObjectPath);
 
@@ -67,21 +67,21 @@ IFilter::PreflightResult CreateDataGroupFilter::preflightImpl(const DataStructur
   return {std::move(actions)};
 }
 
-Result<> CreateDataGroupFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> CreateDataGroupFilter::executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                                            const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   return {};
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
 // 6.5
-constexpr StringLiteral k_CreatedDataContainerKey = "CreatedDataContainer";
+constexpr StringLiteralType k_CreatedDataContainerKey = "CreatedDataContainer";
 // 6.6
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-} // namespace SIMPL
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CreateDataGroupFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -90,11 +90,11 @@ Result<Arguments> CreateDataGroupFilter::FromSIMPLJson(const nlohmann::json& jso
 
   std::vector<Result<>> results;
 
-  Result<> dcResult = SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_DataObjectPath);
+  Result<> dcResult = simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_DataObjectPath);
   if(dcResult.invalid())
   {
     // Key renamed at some point (some 6.5 pipelines have this key, others have new one)
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_CreatedDataContainerKey, k_DataObjectPath));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_CreatedDataContainerKey, k_DataObjectPath));
   }
   else
   {

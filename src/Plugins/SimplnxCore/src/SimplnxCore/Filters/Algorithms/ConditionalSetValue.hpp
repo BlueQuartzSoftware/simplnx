@@ -18,12 +18,12 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ConditionalSetValueInputValues
 {
-  ArraySelectionParameter::ValueType ConditionalArrayPath;
-  BoolParameter::ValueType InvertMask;
-  StringParameter::ValueType RemoveValue;
-  StringParameter::ValueType ReplaceValue;
-  ArraySelectionParameter::ValueType SelectedArrayPath;
-  BoolParameter::ValueType UseConditional;
+  ArraySelectionParameter::ValueType conditional_array_path;
+  BoolParameter::ValueType invert_mask{};
+  StringParameter::ValueType remove_value;
+  StringParameter::ValueType replace_value;
+  ArraySelectionParameter::ValueType selected_array_path;
+  BoolParameter::ValueType use_conditional{};
 };
 
 /**
@@ -50,7 +50,7 @@ public:
   /**
    * @brief Destroys the non-owning dispatcher.
    */
-  ~ConditionalSetValue() noexcept;
+  ~ConditionalSetValue() noexcept = default;
 
   ConditionalSetValue(const ConditionalSetValue&) = delete;
   ConditionalSetValue(ConditionalSetValue&&) noexcept = delete;

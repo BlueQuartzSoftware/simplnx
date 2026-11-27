@@ -37,7 +37,7 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -63,8 +63,8 @@ public:
     std::error_code errorCode;
     fs::remove(m_Path, errorCode);
 
-    using TiffHandle = std::unique_ptr<TIFF, decltype(&TIFFClose)>;
-    TiffHandle tiff(TIFFOpen(m_Path.string().c_str(), "w"), TIFFClose);
+    using TiffHandleType = std::unique_ptr<TIFF, decltype(&TIFFClose)>;
+    TiffHandleType tiff(TIFFOpen(m_Path.string().c_str(), "w"), TIFFClose);
     REQUIRE(tiff != nullptr);
     REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGEWIDTH, k_Width) == 1);
     REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGELENGTH, k_Height) == 1);
@@ -127,7 +127,7 @@ private:
 TEST_CASE("NXImageProcessing::ReadImageFilter: Tiled_Tiff_Photometric_Orientation", "[NXImageProcessing][ReadImageFilter]")
 {
   TemporaryTiledFilterFixture fixture;
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   ReadImageFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -143,13 +143,13 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Tiled_Tiff_Photometric_Orientatio
   args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, false);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const DataPath pixelPath = imageGeometryPath.createChildPath(cellDataName).createChildPath(imageDataName);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(pixelPath));
-  const auto& pixels = dataStructure.getDataRefAs<UInt8Array>(pixelPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(pixelPath));
+  const auto& pixels = dataStructure.getDataRefAs<UInt8ArrayType>(pixelPath).getDataStoreRef();
   REQUIRE(pixels.getSize() == static_cast<usize>(TemporaryTiledFilterFixture::k_Width) * TemporaryTiledFilterFixture::k_Height);
   for(usize outputY = 0; outputY < TemporaryTiledFilterFixture::k_Height; ++outputY)
   {
@@ -165,9 +165,9 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Tiled_Tiff_Photometric_Orientatio
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: Read_Basic", "[NXImageProcessing][ReadImageFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   ReadImageFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -182,40 +182,40 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Read_Basic", "[NXImageProcessing]
   args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, false);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   // Compare against exemplar
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath));
   const auto& generatedGeom = dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<ImageGeom>(DataPath({"Read_Basic"})));
   const auto& exemplarGeom = exemplarDS.getDataRefAs<ImageGeom>(DataPath({"Read_Basic"}));
-  UnitTest::CompareImageGeometry(&exemplarGeom, &generatedGeom);
+  unit_test::CompareImageGeometry(&exemplarGeom, &generatedGeom);
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Read_Basic", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath exemplarDataPath = DataPath({"Read_Basic", constants::k_CellDataWithSpaces, k_ImageDataName});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: Override_Origin", "[NXImageProcessing][ReadImageFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   ReadImageFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
-  std::vector<float32> k_Origin{-32.0, -32.0, 0.0};
+  std::vector<float32> kOrigin{-32.0, -32.0, 0.0};
 
   const DataPath inputGeometryPath({k_ImageGeometryName});
 
@@ -224,39 +224,39 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Override_Origin", "[NXImageProces
   args.insertOrAssign(ReadImageFilter::k_CellDataName_Key, static_cast<DataObjectNameParameter::ValueType>(k_ImageCellDataName));
   args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, static_cast<DataObjectNameParameter::ValueType>(k_ImageDataName));
   args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_Origin_Key, k_Origin);
+  args.insertOrAssign(ReadImageFilter::k_Origin_Key, kOrigin);
   args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, false);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   // Compare against exemplar
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath));
   const auto& generatedGeom = dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<ImageGeom>(DataPath({"Override_Origin"})));
   const auto& exemplarGeom = exemplarDS.getDataRefAs<ImageGeom>(DataPath({"Override_Origin"}));
-  UnitTest::CompareImageGeometry(&exemplarGeom, &generatedGeom);
+  unit_test::CompareImageGeometry(&exemplarGeom, &generatedGeom);
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Override_Origin", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath exemplarDataPath = DataPath({"Override_Origin", constants::k_CellDataWithSpaces, k_ImageDataName});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: Centering_Origin", "[NXImageProcessing][ReadImageFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   ReadImageFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -272,40 +272,40 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Centering_Origin", "[NXImageProce
   args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, false);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   // Compare against exemplar
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath));
   const auto& generatedGeom = dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<ImageGeom>(DataPath({"Centering_Origin"})));
   const auto& exemplarGeom = exemplarDS.getDataRefAs<ImageGeom>(DataPath({"Centering_Origin"}));
-  UnitTest::CompareImageGeometry(&exemplarGeom, &generatedGeom);
+  unit_test::CompareImageGeometry(&exemplarGeom, &generatedGeom);
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Centering_Origin", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath exemplarDataPath = DataPath({"Centering_Origin", constants::k_CellDataWithSpaces, k_ImageDataName});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: Override_Spacing", "[NXImageProcessing][ReadImageFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   ReadImageFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
-  std::vector<float32> k_Spacing{2.5, 3.0, 1.0};
+  std::vector<float32> kSpacing{2.5, 3.0, 1.0};
 
   const DataPath inputGeometryPath({k_ImageGeometryName});
 
@@ -315,161 +315,161 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Override_Spacing", "[NXImageProce
   args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, static_cast<DataObjectNameParameter::ValueType>(k_ImageDataName));
   args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, false);
   args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_Spacing_Key, k_Spacing);
+  args.insertOrAssign(ReadImageFilter::k_Spacing_Key, kSpacing);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   // Compare against exemplar
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath));
   const auto& generatedGeom = dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<ImageGeom>(DataPath({"Override_Spacing"})));
   const auto& exemplarGeom = exemplarDS.getDataRefAs<ImageGeom>(DataPath({"Override_Spacing"}));
-  UnitTest::CompareImageGeometry(&exemplarGeom, &generatedGeom);
+  unit_test::CompareImageGeometry(&exemplarGeom, &generatedGeom);
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Override_Spacing", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath exemplarDataPath = DataPath({"Override_Spacing", constants::k_CellDataWithSpaces, k_ImageDataName});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: OriginSpacing_Preprocessed", "[NXImageProcessing][ReadImageFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   ReadImageFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
-  std::vector<float32> k_Origin{10.0, 20.0, 0.0};
-  std::vector<float32> k_Spacing{2.0, 2.0, 1.0};
+  std::vector<float32> kOrigin{10.0, 20.0, 0.0};
+  std::vector<float32> kSpacing{2.0, 2.0, 1.0};
 
   const DataPath inputGeometryPath({k_ImageGeometryName});
 
   auto cropOptions = CropGeometryParameter::ValueType();
   cropOptions.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
-  cropOptions.cropX = true;
-  cropOptions.cropY = true;
-  cropOptions.cropZ = false;
-  cropOptions.xBoundVoxels = {50, 150};
-  cropOptions.yBoundVoxels = {50, 150};
+  cropOptions.crop_x = true;
+  cropOptions.crop_y = true;
+  cropOptions.crop_z = false;
+  cropOptions.x_bound_voxels = {50, 150};
+  cropOptions.y_bound_voxels = {50, 150};
 
   args.insertOrAssign(ReadImageFilter::k_FileName_Key, k_InputImageFile);
   args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, inputGeometryPath);
   args.insertOrAssign(ReadImageFilter::k_CellDataName_Key, static_cast<DataObjectNameParameter::ValueType>(k_ImageCellDataName));
   args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, static_cast<DataObjectNameParameter::ValueType>(k_ImageDataName));
   args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_Origin_Key, k_Origin);
+  args.insertOrAssign(ReadImageFilter::k_Origin_Key, kOrigin);
   args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_Spacing_Key, k_Spacing);
+  args.insertOrAssign(ReadImageFilter::k_Spacing_Key, kSpacing);
   args.insertOrAssign(ReadImageFilter::k_OriginSpacingProcessing_Key, k_Preprocessed);
   args.insertOrAssign(ReadImageFilter::k_CroppingOptions_Key, cropOptions);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   // Compare against exemplar
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath));
   const auto& generatedGeom = dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<ImageGeom>(DataPath({"OriginSpacing_Preprocessed"})));
   const auto& exemplarGeom = exemplarDS.getDataRefAs<ImageGeom>(DataPath({"OriginSpacing_Preprocessed"}));
-  UnitTest::CompareImageGeometry(&exemplarGeom, &generatedGeom);
+  unit_test::CompareImageGeometry(&exemplarGeom, &generatedGeom);
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"OriginSpacing_Preprocessed", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath exemplarDataPath = DataPath({"OriginSpacing_Preprocessed", constants::k_CellDataWithSpaces, k_ImageDataName});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: OriginSpacing_Postprocessed", "[NXImageProcessing][ReadImageFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   ReadImageFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
-  std::vector<float32> k_Origin{10.0, 20.0, 0.0};
-  std::vector<float32> k_Spacing{2.0, 2.0, 1.0};
+  std::vector<float32> kOrigin{10.0, 20.0, 0.0};
+  std::vector<float32> kSpacing{2.0, 2.0, 1.0};
 
   const DataPath inputGeometryPath({k_ImageGeometryName});
 
   auto cropOptions = CropGeometryParameter::ValueType();
   cropOptions.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
-  cropOptions.cropX = true;
-  cropOptions.cropY = true;
-  cropOptions.cropZ = false;
-  cropOptions.xBoundVoxels = {50, 150};
-  cropOptions.yBoundVoxels = {50, 150};
+  cropOptions.crop_x = true;
+  cropOptions.crop_y = true;
+  cropOptions.crop_z = false;
+  cropOptions.x_bound_voxels = {50, 150};
+  cropOptions.y_bound_voxels = {50, 150};
 
   args.insertOrAssign(ReadImageFilter::k_FileName_Key, k_InputImageFile);
   args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, inputGeometryPath);
   args.insertOrAssign(ReadImageFilter::k_CellDataName_Key, static_cast<DataObjectNameParameter::ValueType>(k_ImageCellDataName));
   args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, static_cast<DataObjectNameParameter::ValueType>(k_ImageDataName));
   args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_Origin_Key, k_Origin);
+  args.insertOrAssign(ReadImageFilter::k_Origin_Key, kOrigin);
   args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_Spacing_Key, k_Spacing);
+  args.insertOrAssign(ReadImageFilter::k_Spacing_Key, kSpacing);
   args.insertOrAssign(ReadImageFilter::k_OriginSpacingProcessing_Key, k_Postprocessed);
   args.insertOrAssign(ReadImageFilter::k_CroppingOptions_Key, cropOptions);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   // Compare against exemplar
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath));
   const auto& generatedGeom = dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<ImageGeom>(DataPath({"OriginSpacing_Postprocessed"})));
   const auto& exemplarGeom = exemplarDS.getDataRefAs<ImageGeom>(DataPath({"OriginSpacing_Postprocessed"}));
-  UnitTest::CompareImageGeometry(&exemplarGeom, &generatedGeom);
+  unit_test::CompareImageGeometry(&exemplarGeom, &generatedGeom);
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"OriginSpacing_Postprocessed", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath exemplarDataPath = DataPath({"OriginSpacing_Postprocessed", constants::k_CellDataWithSpaces, k_ImageDataName});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
+  unit_test::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: DataType_Conversion", "[NXImageProcessing][ReadImageFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   ReadImageFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
   const DataPath inputGeometryPath({k_ImageGeometryName});
 
-  const uint64_t k_DataTypeUInt16 = 1;
+  const uint64_t kDataTypeUInt16 = 1;
 
   args.insertOrAssign(ReadImageFilter::k_FileName_Key, k_InputImageFile);
   args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, inputGeometryPath);
@@ -478,38 +478,38 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: DataType_Conversion", "[NXImagePr
   args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, false);
   args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, false);
   args.insertOrAssign(ReadImageFilter::k_ChangeDataType_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_ImageDataType_Key, k_DataTypeUInt16);
+  args.insertOrAssign(ReadImageFilter::k_ImageDataType_Key, kDataTypeUInt16);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   // Compare against exemplar
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath));
   const auto& generatedGeom = dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<ImageGeom>(DataPath({"DataType_Conversion"})));
   const auto& exemplarGeom = exemplarDS.getDataRefAs<ImageGeom>(DataPath({"DataType_Conversion"}));
-  UnitTest::CompareImageGeometry(&exemplarGeom, &generatedGeom);
+  unit_test::CompareImageGeometry(&exemplarGeom, &generatedGeom);
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"DataType_Conversion", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath exemplarDataPath = DataPath({"DataType_Conversion", constants::k_CellDataWithSpaces, k_ImageDataName});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint16_t>(exemplarArray, generatedArray);
+  unit_test::CompareDataArrays<uint16_t>(exemplarArray, generatedArray);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: Interaction_Crop_DataType", "[NXImageProcessing][ReadImageFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   ReadImageFilter filter;
   DataStructure dataStructure;
   Arguments args;
@@ -518,13 +518,13 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Interaction_Crop_DataType", "[NXI
 
   auto cropOptions = CropGeometryParameter::ValueType();
   cropOptions.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
-  cropOptions.cropX = true;
-  cropOptions.cropY = true;
-  cropOptions.cropZ = false;
-  cropOptions.xBoundVoxels = {50, 150};
-  cropOptions.yBoundVoxels = {50, 150};
+  cropOptions.crop_x = true;
+  cropOptions.crop_y = true;
+  cropOptions.crop_z = false;
+  cropOptions.x_bound_voxels = {50, 150};
+  cropOptions.y_bound_voxels = {50, 150};
 
-  const uint64_t k_DataTypeUInt32 = 2;
+  const uint64_t kDataTypeUInt32 = 2;
 
   args.insertOrAssign(ReadImageFilter::k_FileName_Key, k_InputImageFile);
   args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, inputGeometryPath);
@@ -534,92 +534,92 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Interaction_Crop_DataType", "[NXI
   args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, false);
   args.insertOrAssign(ReadImageFilter::k_CroppingOptions_Key, cropOptions);
   args.insertOrAssign(ReadImageFilter::k_ChangeDataType_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_ImageDataType_Key, k_DataTypeUInt32);
+  args.insertOrAssign(ReadImageFilter::k_ImageDataType_Key, kDataTypeUInt32);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   // Compare against exemplar
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath));
   const auto& generatedGeom = dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<ImageGeom>(DataPath({"Interaction_Crop_DataType"})));
   const auto& exemplarGeom = exemplarDS.getDataRefAs<ImageGeom>(DataPath({"Interaction_Crop_DataType"}));
-  UnitTest::CompareImageGeometry(&exemplarGeom, &generatedGeom);
+  unit_test::CompareImageGeometry(&exemplarGeom, &generatedGeom);
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Interaction_Crop_DataType", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath exemplarDataPath = DataPath({"Interaction_Crop_DataType", constants::k_CellDataWithSpaces, k_ImageDataName});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint32_t>(exemplarArray, generatedArray);
+  unit_test::CompareDataArrays<uint32_t>(exemplarArray, generatedArray);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: Interaction_All", "[NXImageProcessing][ReadImageFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "itk_image_reader_test_v3.tar.gz", k_TestDataDirName, true, true);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   ReadImageFilter filter;
   DataStructure dataStructure;
   Arguments args;
 
-  std::vector<float32> k_Origin{5.0, 10.0, 0.0};
-  std::vector<float32> k_Spacing{2.0, 2.0, 1.0};
+  std::vector<float32> kOrigin{5.0, 10.0, 0.0};
+  std::vector<float32> kSpacing{2.0, 2.0, 1.0};
   const DataPath inputGeometryPath({k_ImageGeometryName});
 
   auto cropOptions = CropGeometryParameter::ValueType();
   cropOptions.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
-  cropOptions.cropX = true;
-  cropOptions.cropY = true;
-  cropOptions.cropZ = false;
-  cropOptions.xBoundVoxels = {50, 150};
-  cropOptions.yBoundVoxels = {50, 150};
+  cropOptions.crop_x = true;
+  cropOptions.crop_y = true;
+  cropOptions.crop_z = false;
+  cropOptions.x_bound_voxels = {50, 150};
+  cropOptions.y_bound_voxels = {50, 150};
 
-  const uint64_t k_DataTypeUInt16 = 1;
+  const uint64_t kDataTypeUInt16 = 1;
 
   args.insertOrAssign(ReadImageFilter::k_FileName_Key, k_InputImageFile);
   args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, inputGeometryPath);
   args.insertOrAssign(ReadImageFilter::k_CellDataName_Key, static_cast<DataObjectNameParameter::ValueType>(k_ImageCellDataName));
   args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, static_cast<DataObjectNameParameter::ValueType>(k_ImageDataName));
   args.insertOrAssign(ReadImageFilter::k_ChangeOrigin_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_Origin_Key, k_Origin);
+  args.insertOrAssign(ReadImageFilter::k_Origin_Key, kOrigin);
   args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_Spacing_Key, k_Spacing);
+  args.insertOrAssign(ReadImageFilter::k_Spacing_Key, kSpacing);
   args.insertOrAssign(ReadImageFilter::k_OriginSpacingProcessing_Key, k_Preprocessed);
   args.insertOrAssign(ReadImageFilter::k_CroppingOptions_Key, cropOptions);
   args.insertOrAssign(ReadImageFilter::k_ChangeDataType_Key, true);
-  args.insertOrAssign(ReadImageFilter::k_ImageDataType_Key, k_DataTypeUInt16);
+  args.insertOrAssign(ReadImageFilter::k_ImageDataType_Key, kDataTypeUInt16);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   // Compare against exemplar
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath));
   const auto& generatedGeom = dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<ImageGeom>(DataPath({"Interaction_Crop_OriginSpacing_Preprocessed_DataType"})));
   const auto& exemplarGeom = exemplarDS.getDataRefAs<ImageGeom>(DataPath({"Interaction_Crop_OriginSpacing_Preprocessed_DataType"}));
-  UnitTest::CompareImageGeometry(&exemplarGeom, &generatedGeom);
+  unit_test::CompareImageGeometry(&exemplarGeom, &generatedGeom);
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Interaction_Crop_OriginSpacing_Preprocessed_DataType", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath exemplarDataPath = DataPath({"Interaction_Crop_OriginSpacing_Preprocessed_DataType", constants::k_CellDataWithSpaces, k_ImageDataName});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
   const auto& exemplarArray = exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath);
-  UnitTest::CompareDataArrays<uint16_t>(exemplarArray, generatedArray);
+  unit_test::CompareDataArrays<uint16_t>(exemplarArray, generatedArray);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -639,32 +639,32 @@ fs::path ReadImageOutputDir()
 // pagePixels[p] is row-major (top-to-bottom), size == width*height.
 void WriteMultiPageTiff(const fs::path& path, uint32_t width, uint32_t height, const std::vector<std::vector<uint8_t>>& pagePixels, std::optional<double> xResolution = {})
 {
-  TIFF* tif = TIFFOpen(path.string().c_str(), "w");
-  REQUIRE(tif != nullptr);
+  TIFF* tifPtr = TIFFOpen(path.string().c_str(), "w");
+  REQUIRE(tifPtr != nullptr);
   for(const auto& pixels : pagePixels)
   {
     REQUIRE(pixels.size() == static_cast<size_t>(width) * height);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, width) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGELENGTH, height) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_IMAGEWIDTH, width) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_IMAGELENGTH, height) != 0);
     if(xResolution.has_value())
     {
-      REQUIRE(TIFFSetField(tif, TIFFTAG_XRESOLUTION, *xResolution) != 0);
+      REQUIRE(TIFFSetField(tifPtr, TIFFTAG_XRESOLUTION, *xResolution) != 0);
     }
-    REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, static_cast<uint16_t>(1)) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, 8) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tif, 0)) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_SAMPLESPERPIXEL, static_cast<uint16_t>(1)) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_BITSPERSAMPLE, 8) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tifPtr, 0)) != 0);
     for(uint32_t row = 0; row < height; ++row)
     {
       // TIFFWriteScanline takes a non-const void* but does not modify the buffer.
-      REQUIRE(TIFFWriteScanline(tif, const_cast<uint8_t*>(pixels.data() + static_cast<size_t>(row) * width), row, 0) >= 0);
+      REQUIRE(TIFFWriteScanline(tifPtr, const_cast<uint8_t*>(pixels.data() + static_cast<size_t>(row) * width), row, 0) >= 0);
     }
-    REQUIRE(TIFFWriteDirectory(tif) != 0);
+    REQUIRE(TIFFWriteDirectory(tifPtr) != 0);
   }
-  TIFFClose(tif);
+  TIFFClose(tifPtr);
 }
 
 // Writes an attached NRRD: ASCII header lines, a blank line, then raw data bytes.
@@ -686,16 +686,16 @@ void WriteNrrdRaw(const fs::path& path, const std::vector<std::string>& headerLi
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: MultiPage_TIFF_ZStack", "[NXImageProcessing][ReadImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  constexpr uint32_t width = 5;
-  constexpr uint32_t height = 4;
-  constexpr usize numPages = 3;
+  constexpr uint32_t k_Width = 5;
+  constexpr uint32_t k_Height = 4;
+  constexpr usize k_NumPages = 3;
 
   // Each pixel encodes its page and in-plane position so both the Z ordering and the X-fastest
   // in-plane ordering can be verified: pixel(page p, row y, col x) = p*100 + (y*width + x).
-  std::vector<std::vector<uint8_t>> pagePixels(numPages, std::vector<uint8_t>(static_cast<size_t>(width) * height));
-  for(usize p = 0; p < numPages; ++p)
+  std::vector<std::vector<uint8_t>> pagePixels(k_NumPages, std::vector<uint8_t>(static_cast<size_t>(k_Width) * k_Height));
+  for(usize p = 0; p < k_NumPages; ++p)
   {
     for(size_t i = 0; i < pagePixels[p].size(); ++i)
     {
@@ -704,7 +704,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: MultiPage_TIFF_ZStack", "[NXImage
   }
 
   const fs::path tiffPath = ReadImageOutputDir() / "three_page_zstack.tif";
-  WriteMultiPageTiff(tiffPath, width, height, pagePixels);
+  WriteMultiPageTiff(tiffPath, k_Width, k_Height, pagePixels);
 
   ReadImageFilter filter;
   DataStructure dataStructure;
@@ -719,24 +719,24 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: MultiPage_TIFF_ZStack", "[NXImage
   args.insertOrAssign(ReadImageFilter::k_ChangeSpacing_Key, false);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const auto& geom = dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
-  REQUIRE(geom.getDimensions()[0] == width);
-  REQUIRE(geom.getDimensions()[1] == height);
-  REQUIRE(geom.getDimensions()[2] == numPages);
+  REQUIRE(geom.getDimensions()[0] == k_Width);
+  REQUIRE(geom.getDimensions()[1] == k_Height);
+  REQUIRE(geom.getDimensions()[2] == k_NumPages);
 
   const DataPath arrayPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
   const auto& store = dataStructure.getDataRefAs<DataArray<uint8_t>>(arrayPath).getDataStoreRef();
-  REQUIRE(store.getNumberOfTuples() == static_cast<usize>(width) * height * numPages);
-  for(usize z = 0; z < numPages; ++z)
+  REQUIRE(store.getNumberOfTuples() == static_cast<usize>(k_Width) * k_Height * k_NumPages);
+  for(usize z = 0; z < k_NumPages; ++z)
   {
-    for(usize i = 0; i < static_cast<usize>(width) * height; ++i)
+    for(usize i = 0; i < static_cast<usize>(k_Width) * k_Height; ++i)
     {
-      const usize flatIndex = z * width * height + i;
+      const usize flatIndex = z * k_Width * k_Height + i;
       REQUIRE(store.getValue(flatIndex) == pagePixels[z][i]);
     }
   }
@@ -747,15 +747,15 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: MultiPage_TIFF_RGB_Then_Grayscale
   const bool convertData = GENERATE(false, true);
   CAPTURE(convertData);
   const fs::path tiffPath = ReadImageOutputDir() / "rgb_then_grayscale.tif";
-  constexpr uint32_t width = 3;
-  constexpr uint32_t height = 2;
+  constexpr uint32_t k_Width = 3;
+  constexpr uint32_t k_Height = 2;
   {
     std::unique_ptr<TIFF, decltype(&TIFFClose)> tiff(TIFFOpen(tiffPath.string().c_str(), "w"), TIFFClose);
     REQUIRE(tiff != nullptr);
     for(const uint16_t components : {uint16_t{3}, uint16_t{1}})
     {
-      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGEWIDTH, width) == 1);
-      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGELENGTH, height) == 1);
+      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGEWIDTH, k_Width) == 1);
+      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_IMAGELENGTH, k_Height) == 1);
       REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_BITSPERSAMPLE, 8) == 1);
       REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) == 1);
       REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_SAMPLESPERPIXEL, components) == 1);
@@ -763,9 +763,9 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: MultiPage_TIFF_RGB_Then_Grayscale
       REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) == 1);
       REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) == 1);
       REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_COMPRESSION, COMPRESSION_NONE) == 1);
-      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_ROWSPERSTRIP, height) == 1);
-      std::vector<uint8_t> row(width * components, components == 3 ? uint8_t{255} : uint8_t{127});
-      for(uint32_t y = 0; y < height; ++y)
+      REQUIRE(TIFFSetField(tiff.get(), TIFFTAG_ROWSPERSTRIP, k_Height) == 1);
+      std::vector<uint8_t> row(k_Width * components, components == 3 ? uint8_t{255} : uint8_t{127});
+      for(uint32_t y = 0; y < k_Height; ++y)
       {
         REQUIRE(TIFFWriteScanline(tiff.get(), row.data(), y, 0) == 1);
       }
@@ -787,12 +787,12 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: MultiPage_TIFF_RGB_Then_Grayscale
   ReadImageFilter filter;
   DataStructure dataStructure;
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   IFilter::ExecuteResult execute;
   REQUIRE_NOTHROW(execute = filter.execute(dataStructure, args));
   SIMPLNX_RESULT_REQUIRE_INVALID(execute.result);
   REQUIRE(execute.result.errors()[0].code == -2007); // The page-layout check must reject page 1, not another error path.
-  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(geomPath).getDimensions() == SizeVec3{width, height, 2});
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(geomPath).getDimensions() == SizeVec3Type{k_Width, k_Height, 2});
 
   // Oracle: page 0 has 3*2*3 = 18 white components (255, or 65535 after conversion).
   // Page 1 supplies only 3 bytes per row, but the RGB destination needs 3*3 = 9.
@@ -808,22 +808,22 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: MultiPage_TIFF_RGB_Then_Grayscale
   };
   if(convertData)
   {
-    checkPixels(dataStructure.getDataRefAs<UInt16Array>(arrayPath), uint16_t{65535});
+    checkPixels(dataStructure.getDataRefAs<UInt16ArrayType>(arrayPath), uint16_t{65535});
   }
   else
   {
-    checkPixels(dataStructure.getDataRefAs<UInt8Array>(arrayPath), uint8_t{255});
+    checkPixels(dataStructure.getDataRefAs<UInt8ArrayType>(arrayPath), uint8_t{255});
   }
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: Nrrd_Scalar3D", "[NXImageProcessing][ReadImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  constexpr usize X = 4;
-  constexpr usize Y = 3;
-  constexpr usize Z = 2;
-  std::vector<int16_t> fileValues(X * Y * Z);
+  constexpr usize k_X = 4;
+  constexpr usize k_Y = 3;
+  constexpr usize k_Z = 2;
+  std::vector<int16_t> fileValues(k_X * k_Y * k_Z);
   for(usize i = 0; i < fileValues.size(); ++i)
   {
     fileValues[i] = static_cast<int16_t>(i) - 5;
@@ -845,19 +845,19 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Nrrd_Scalar3D", "[NXImageProcessi
   args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, static_cast<DataObjectNameParameter::ValueType>(k_ImageDataName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const auto& geom = dataStructure.getDataRefAs<ImageGeom>(inputGeometryPath);
-  REQUIRE(geom.getDimensions()[0] == X);
-  REQUIRE(geom.getDimensions()[1] == Y);
-  REQUIRE(geom.getDimensions()[2] == Z);
+  REQUIRE(geom.getDimensions()[0] == k_X);
+  REQUIRE(geom.getDimensions()[1] == k_Y);
+  REQUIRE(geom.getDimensions()[2] == k_Z);
 
   const DataPath arrayPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
   const auto& store = dataStructure.getDataRefAs<DataArray<int16_t>>(arrayPath).getDataStoreRef();
-  REQUIRE(store.getNumberOfTuples() == X * Y * Z);
+  REQUIRE(store.getNumberOfTuples() == k_X * k_Y * k_Z);
   // No cropping => destination tuple order equals file order, so store[i] == fileValues[i].
   for(usize i = 0; i < fileValues.size(); ++i)
   {
@@ -920,10 +920,10 @@ Arguments MakeReadImageNrrdArgs(const fs::path& inputFile, const DataPath& geomP
 }
 
 template <typename T>
-void RequireNrrdArrayEquals(const DataStructure& ds, const DataPath& arrPath, const std::vector<T>& expected)
+void RequireNrrdArrayEquals(const DataStructure& dataStructure, const DataPath& arrPath, const std::vector<T>& expected)
 {
-  REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(arrPath));
-  const auto& store = ds.getDataRefAs<DataArray<T>>(arrPath).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(arrPath));
+  const auto& store = dataStructure.getDataRefAs<DataArray<T>>(arrPath).getDataStoreRef();
   REQUIRE(store.getSize() == expected.size());
   for(usize i = 0; i < expected.size(); i++)
   {
@@ -938,7 +938,7 @@ void RequireNrrdArrayEquals(const DataStructure& ds, const DataPath& arrPath, co
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD scalar 3D round trip (raw + gzip)", "[NXImageProcessing][ReadImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::array<usize, 3> dims = {4, 3, 2}; // X,Y,Z
   const usize numVoxels = dims[0] * dims[1] * dims[2];
@@ -964,29 +964,29 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD scalar 3D round trip (raw + 
                     "endian: little", gzip ? "encoding: gzip" : "encoding: raw", "space origin: (-1,2,3.5)"},
                    gzip ? GzipCompress(raw) : raw);
 
-      DataStructure ds;
+      DataStructure dataStructure;
       ReadImageFilter filter;
       const Arguments args = MakeReadImageNrrdArgs(p, geomPath, amName, arrName);
-      const auto preflight = filter.preflight(ds, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-      const auto execute = filter.execute(ds, args);
+      const auto preflight = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
+      const auto execute = filter.execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
-      const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+      const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
       REQUIRE(geom.getDimensions()[0] == 4);
       REQUIRE(geom.getDimensions()[1] == 3);
       REQUIRE(geom.getDimensions()[2] == 2);
       REQUIRE(geom.getSpacing()[0] == Approx(0.5f));
       REQUIRE(geom.getOrigin()[2] == Approx(3.5f));
-      RequireNrrdArrayEquals<int16_t>(ds, arrPath, voxels);
-      UnitTest::CheckArraysInheritTupleDims(ds);
+      RequireNrrdArrayEquals<int16_t>(dataStructure, arrPath, voxels);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD big-endian uint16_t round trip", "[NXImageProcessing][ReadImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const std::array<usize, 3> dims = {3, 3, 2};
   const usize n = dims[0] * dims[1] * dims[2];
   std::vector<uint16_t> voxels(n);
@@ -998,31 +998,32 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD big-endian uint16_t round tr
   std::vector<uint16_t> swapped = voxels;
   for(auto& v : swapped)
   {
-    v = nx::core::byteswap(v);
+    v = nx::core::Byteswap(v);
   }
   const fs::path p = ReadImageOutputDir() / "rt_be_uint16.nrrd";
   WriteNrrdRaw(p, {"NRRD0004", "type: ushort", "dimension: 3", "sizes: 3 3 2", "kinds: domain domain domain", "endian: big", "encoding: raw"}, ToBytes(swapped));
 
   const DataPath geomPath({"NRRD BE"});
   const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath("ImageData");
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadImageFilter filter;
   const Arguments args = MakeReadImageNrrdArgs(p, geomPath, "Cell Data", "ImageData");
   // Bind results to locals: SIMPLNX_RESULT_REQUIRE_VALID evaluates its argument
   // multiple times, and preflight()/execute() mutate `ds` (they apply their
   // create-actions), so passing the calls inline would re-run them.
-  const auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  RequireNrrdArrayEquals<uint16_t>(ds, arrPath, voxels);
+  RequireNrrdArrayEquals<uint16_t>(dataStructure, arrPath, voxels);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD RGB (uint8_t x3) round trip", "[NXImageProcessing][ReadImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const usize X = 4, Y = 3; // 2D image, 3 components
-  std::vector<uint8_t> voxels(X * Y * 3);
+  unit_test::LoadPlugins();
+  const usize x = 4;
+  const usize y = 3; // 2D image, 3 components
+  std::vector<uint8_t> voxels(x * y * 3);
   for(usize i = 0; i < voxels.size(); i++)
   {
     voxels[i] = static_cast<uint8_t>(i);
@@ -1035,38 +1036,38 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD RGB (uint8_t x3) round trip"
 
   const DataPath geomPath({"NRRD RGB"});
   const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath("ImageData");
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadImageFilter filter;
   const Arguments args = MakeReadImageNrrdArgs(p, geomPath, "Cell Data", "ImageData");
-  const auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  const auto& arr = ds.getDataRefAs<DataArray<uint8_t>>(arrPath);
+  const auto& arr = dataStructure.getDataRefAs<DataArray<uint8_t>>(arrPath);
   REQUIRE(arr.getNumberOfComponents() == 3);
-  const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+  const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
   REQUIRE(geom.getDimensions()[0] == 4);
   REQUIRE(geom.getDimensions()[1] == 3);
   REQUIRE(geom.getDimensions()[2] == 1);
-  RequireNrrdArrayEquals<uint8_t>(ds, arrPath, voxels);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  RequireNrrdArrayEquals<uint8_t>(dataStructure, arrPath, voxels);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD permuted directions emits warning -35750", "[NXImageProcessing][ReadImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const fs::path p = ReadImageOutputDir() / "rt_permuted.nrrd";
   WriteNrrdRaw(p,
                {"NRRD0004", "type: unsigned char", "dimension: 3", "space: left-posterior-superior", "sizes: 2 2 2", "space directions: (0,-2,0) (0,0,-2) (2.5,0,0)", "kinds: domain domain domain",
                 "encoding: raw", "space origin: (0,0,0)"},
                std::vector<uint8_t>(8, 0));
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadImageFilter filter;
   const Arguments args = MakeReadImageNrrdArgs(p, DataPath({"NRRD Perm"}), "Cell Data", "ImageData");
-  const auto preflight = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   bool found = false;
-  for(const auto& w : preflight.outputActions.warnings())
+  for(const auto& w : preflight.output_actions.warnings())
   {
     if(w.code == -35750)
     {
@@ -1078,9 +1079,11 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD permuted directions emits wa
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD VoxelSubvolume crop", "[NXImageProcessing][ReadImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const usize X = 6, Y = 5, Z = 4;
-  std::vector<uint16_t> voxels(X * Y * Z);
+  unit_test::LoadPlugins();
+  const usize x = 6;
+  const usize y = 5;
+  const usize z = 4;
+  std::vector<uint16_t> voxels(x * y * z);
   for(usize i = 0; i < voxels.size(); i++)
   {
     voxels[i] = static_cast<uint16_t>(i);
@@ -1090,22 +1093,22 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD VoxelSubvolume crop", "[NXIm
 
   CropGeometryParameter::ValueType crop;
   crop.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
-  crop.cropX = crop.cropY = crop.cropZ = true;
-  crop.xBoundVoxels = {1, 3};
-  crop.yBoundVoxels = {1, 3};
-  crop.zBoundVoxels = {1, 2};
+  crop.crop_x = crop.crop_y = crop.crop_z = true;
+  crop.x_bound_voxels = {1, 3};
+  crop.y_bound_voxels = {1, 3};
+  crop.z_bound_voxels = {1, 2};
 
   const DataPath geomPath({"NRRD Crop"});
   const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath("ImageData");
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadImageFilter filter;
   const Arguments args = MakeReadImageNrrdArgs(p, geomPath, "Cell Data", "ImageData", crop);
-  const auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+  const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
   REQUIRE(geom.getDimensions()[0] == 3);
   REQUIRE(geom.getDimensions()[1] == 3);
   REQUIRE(geom.getDimensions()[2] == 2);
@@ -1116,12 +1119,12 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD VoxelSubvolume crop", "[NXIm
     {
       for(usize dx = 0; dx < 3; dx++)
       {
-        const usize src = (1 + dz) * Y * X + (1 + dy) * X + (1 + dx);
+        const usize src = (1 + dz) * y * x + (1 + dy) * x + (1 + dx);
         expected.push_back(static_cast<uint16_t>(src));
       }
     }
   }
-  RequireNrrdArrayEquals<uint16_t>(ds, arrPath, expected);
+  RequireNrrdArrayEquals<uint16_t>(dataStructure, arrPath, expected);
 }
 
 // PhysicalSubvolume crop path. This is the one place preflight (delegating to
@@ -1132,9 +1135,11 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD VoxelSubvolume crop", "[NXIm
 // mid-voxel so both the float64 (preflight) and float32 (execute) floors agree.
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop", "[NXImageProcessing][ReadImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  constexpr usize X = 6, Y = 5, Z = 4;
-  std::vector<uint16_t> voxels(X * Y * Z);
+  unit_test::LoadPlugins();
+  constexpr usize k_X = 6;
+  constexpr usize k_Y = 5;
+  constexpr usize k_Z = 4;
+  std::vector<uint16_t> voxels(k_X * k_Y * k_Z);
   std::iota(voxels.begin(), voxels.end(), static_cast<uint16_t>(0)); // value == flat file position (X-fastest)
 
   // spacing {2,3,4}, origin {10,20,30} via axis-aligned space directions + space origin.
@@ -1151,22 +1156,22 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop", "[N
   // => voxel subrange x:1..3, y:1..3, z:1..2, i.e. dims (3,3,2).
   CropGeometryParameter::ValueType crop;
   crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
-  crop.cropX = crop.cropY = crop.cropZ = true;
-  crop.xBoundPhysical = {13.0f, 17.0f};
-  crop.yBoundPhysical = {24.5f, 30.5f};
-  crop.zBoundPhysical = {36.0f, 40.0f};
+  crop.crop_x = crop.crop_y = crop.crop_z = true;
+  crop.x_bound_physical = {13.0f, 17.0f};
+  crop.y_bound_physical = {24.5f, 30.5f};
+  crop.z_bound_physical = {36.0f, 40.0f};
 
   const DataPath geomPath({"NRRD PhysCrop"});
   const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath("ImageData");
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadImageFilter filter;
   const Arguments args = MakeReadImageNrrdArgs(p, geomPath, "Cell Data", "ImageData", crop);
-  const auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+  const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
   REQUIRE(geom.getDimensions()[0] == 3);
   REQUIRE(geom.getDimensions()[1] == 3);
   REQUIRE(geom.getDimensions()[2] == 2);
@@ -1182,11 +1187,11 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop", "[N
     {
       for(usize dx = 1; dx <= 3; dx++)
       {
-        expected.push_back(static_cast<uint16_t>((dz * Y + dy) * X + dx));
+        expected.push_back(static_cast<uint16_t>((dz * k_Y + dy) * k_X + dx));
       }
     }
   }
-  RequireNrrdArrayEquals<uint16_t>(ds, arrPath, expected);
+  RequireNrrdArrayEquals<uint16_t>(dataStructure, arrPath, expected);
 }
 
 // Regression for the physical-crop preflight/execute divergence: an out-of-range physical
@@ -1195,9 +1200,11 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop", "[N
 // an OOB coordinate). Execute now clamps identically, so preflight and execute agree.
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop clamps out-of-range bounds", "[NXImageProcessing][ReadImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  constexpr usize X = 6, Y = 5, Z = 4;
-  std::vector<uint16_t> voxels(X * Y * Z);
+  unit_test::LoadPlugins();
+  constexpr usize k_X = 6;
+  constexpr usize k_Y = 5;
+  constexpr usize k_Z = 4;
+  std::vector<uint16_t> voxels(k_X * k_Y * k_Z);
   std::iota(voxels.begin(), voxels.end(), static_cast<uint16_t>(0)); // value == flat file position (X-fastest)
 
   // spacing {2,3,4}, origin {10,20,30}; far corner = origin + dims*spacing = {22,35,46}.
@@ -1212,46 +1219,46 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD PhysicalSubvolume crop clamp
   // ends clamp to the full extent -> the whole 6x5x4 volume is read.
   CropGeometryParameter::ValueType crop;
   crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
-  crop.cropX = crop.cropY = crop.cropZ = true;
-  crop.xBoundPhysical = {-100.0f, 1000.0f};
-  crop.yBoundPhysical = {-100.0f, 1000.0f};
-  crop.zBoundPhysical = {-100.0f, 1000.0f};
+  crop.crop_x = crop.crop_y = crop.crop_z = true;
+  crop.x_bound_physical = {-100.0f, 1000.0f};
+  crop.y_bound_physical = {-100.0f, 1000.0f};
+  crop.z_bound_physical = {-100.0f, 1000.0f};
 
   const DataPath geomPath({"NRRD PhysCropOOB"});
   const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath("ImageData");
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadImageFilter filter;
   const Arguments args = MakeReadImageNrrdArgs(p, geomPath, "Cell Data", "ImageData", crop);
-  const auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
-  REQUIRE(geom.getDimensions()[0] == X);
-  REQUIRE(geom.getDimensions()[1] == Y);
-  REQUIRE(geom.getDimensions()[2] == Z);
-  RequireNrrdArrayEquals<uint16_t>(ds, arrPath, voxels);
+  const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
+  REQUIRE(geom.getDimensions()[0] == k_X);
+  REQUIRE(geom.getDimensions()[1] == k_Y);
+  REQUIRE(geom.getDimensions()[2] == k_Z);
+  RequireNrrdArrayEquals<uint16_t>(dataStructure, arrPath, voxels);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD rejects missing file and bad encoding", "[NXImageProcessing][ReadImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   SECTION("missing file")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     ReadImageFilter filter;
     const Arguments args = MakeReadImageNrrdArgs(ReadImageOutputDir() / "does_not_exist_987.nrrd", DataPath({"X"}), "Cell Data", "ImageData");
-    REQUIRE(filter.preflight(ds, args).outputActions.invalid());
+    REQUIRE(filter.preflight(dataStructure, args).output_actions.invalid());
   }
   SECTION("ascii encoding")
   {
     const fs::path p = ReadImageOutputDir() / "bad_ascii.nrrd";
     WriteNrrdRaw(p, {"NRRD0004", "type: short", "dimension: 2", "sizes: 2 2", "encoding: ascii"}, {});
-    DataStructure ds;
+    DataStructure dataStructure;
     ReadImageFilter filter;
     const Arguments args = MakeReadImageNrrdArgs(p, DataPath({"X"}), "Cell Data", "ImageData");
-    REQUIRE(filter.preflight(ds, args).outputActions.invalid());
+    REQUIRE(filter.preflight(dataStructure, args).output_actions.invalid());
   }
 }
 
@@ -1273,12 +1280,12 @@ fs::path ItkJsonFiltersDir()
 }
 
 // ITKImageReaderFilter param-key STRINGS (hard-coded to avoid linking the ITK plugin).
-constexpr StringLiteral k_ITK_FileName = "file_name";
-constexpr StringLiteral k_ITK_GeometryPath = "output_geometry_path";
-constexpr StringLiteral k_ITK_ArrayName = "image_data_array_name";
-constexpr StringLiteral k_ITK_CellDataName = "cell_attribute_matrix_name";
-constexpr StringLiteral k_ITK_ChangeOrigin = "change_origin";
-constexpr StringLiteral k_ITK_ChangeSpacing = "change_spacing";
+constexpr StringLiteralType k_ItkFileName = "file_name";
+constexpr StringLiteralType k_ItkGeometryPath = "output_geometry_path";
+constexpr StringLiteralType k_ItkArrayName = "image_data_array_name";
+constexpr StringLiteralType k_ItkCellDataName = "cell_attribute_matrix_name";
+constexpr StringLiteralType k_ItkChangeOrigin = "change_origin";
+constexpr StringLiteralType k_ItkChangeSpacing = "change_spacing";
 
 template <class T>
 void RequireStoresEqual(const IDataArray& a, const IDataArray& b)
@@ -1348,21 +1355,23 @@ void RequireArraysIdentical(const IDataArray& ours, const IDataArray& itk)
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD multi-buffer gzip inflate refill", "[NXImageProcessing][ReadImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // 128^3 int32_t == 8 MiB decompressed. A splitmix64-mixed fill is effectively
   // incompressible, so the gzip stream stays above the 4 MiB compressed buffer.
-  const usize X = 128, Y = 128, Z = 128;
-  std::vector<int32_t> voxels(X * Y * Z);
+  constexpr usize k_X = 128;
+  constexpr usize k_Y = 128;
+  constexpr usize k_Z = 128;
+  std::vector<int32_t> voxels(k_X * k_Y * k_Z);
   uint64_t state = 0x9E3779B97F4A7C15ULL;
-  for(usize i = 0; i < voxels.size(); i++)
+  for(int& voxel : voxels)
   {
     state += 0x9E3779B97F4A7C15ULL;
     uint64_t z = state;
     z = (z ^ (z >> 30)) * 0xBF58476D1CE4E5B9ULL;
     z = (z ^ (z >> 27)) * 0x94D049BB133111EBULL;
     z = z ^ (z >> 31);
-    voxels[i] = static_cast<int32_t>(static_cast<uint32_t>(z));
+    voxel = static_cast<int32_t>(static_cast<uint32_t>(z));
   }
 
   const std::vector<uint8_t> raw = ToBytes(voxels);
@@ -1379,15 +1388,15 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD multi-buffer gzip inflate re
 
   const DataPath geomPath({"NRRD MultiBuf"});
   const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath("ImageData");
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadImageFilter filter;
   const Arguments args = MakeReadImageNrrdArgs(p, geomPath, "Cell Data", "ImageData");
-  const auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  RequireNrrdArrayEquals<int32_t>(ds, arrPath, voxels);
+  RequireNrrdArrayEquals<int32_t>(dataStructure, arrPath, voxels);
 }
 
 // =============================================================================
@@ -1415,34 +1424,34 @@ void WriteMultiPageTiffTyped(const fs::path& path, uint32_t width, uint32_t heig
   static_assert(std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t>, "WriteMultiPageTiffTyped supports only uint8_t/uint16_t sample types");
   const uint16_t bitsPerSample = static_cast<uint16_t>(sizeof(T) * 8);
   const uint16_t photometric = (numComponents == 1) ? PHOTOMETRIC_MINISBLACK : PHOTOMETRIC_RGB;
-  TIFF* tif = TIFFOpen(path.string().c_str(), "w");
-  REQUIRE(tif != nullptr);
+  TIFF* tifPtr = TIFFOpen(path.string().c_str(), "w");
+  REQUIRE(tifPtr != nullptr);
   for(const auto& pixels : pagePixels)
   {
     REQUIRE(pixels.size() == static_cast<size_t>(width) * height * numComponents);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGEWIDTH, width) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_IMAGELENGTH, height) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL, numComponents) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE, bitsPerSample) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_PHOTOMETRIC, photometric) != 0);
-    REQUIRE(TIFFSetField(tif, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tif, 0)) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_IMAGEWIDTH, width) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_IMAGELENGTH, height) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_SAMPLESPERPIXEL, numComponents) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_BITSPERSAMPLE, bitsPerSample) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_UINT) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_PHOTOMETRIC, photometric) != 0);
+    REQUIRE(TIFFSetField(tifPtr, TIFFTAG_ROWSPERSTRIP, TIFFDefaultStripSize(tifPtr, 0)) != 0);
     for(uint32_t row = 0; row < height; ++row)
     {
       // TIFFWriteScanline takes a non-const void* but does not modify the buffer.
-      REQUIRE(TIFFWriteScanline(tif, const_cast<T*>(pixels.data() + static_cast<size_t>(row) * width * numComponents), row, 0) >= 0);
+      REQUIRE(TIFFWriteScanline(tifPtr, const_cast<T*>(pixels.data() + static_cast<size_t>(row) * width * numComponents), row, 0) >= 0);
     }
-    REQUIRE(TIFFWriteDirectory(tif) != 0);
+    REQUIRE(TIFFWriteDirectory(tifPtr) != 0);
   }
-  TIFFClose(tif);
+  TIFFClose(tifPtr);
 }
 } // namespace
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: Raster_PhysicalCrop_MinBelowOrigin_Clamps", "[NXImageProcessing][ReadImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const fs::path filePath = ReadImageOutputDir() / "physical_min_below_origin.tif";
   WriteMultiPageTiff(filePath, 5, 4, {{0, 1, 2, 3, 4, 10, 11, 12, 13, 14, 20, 21, 22, 23, 24, 30, 31, 32, 33, 34}});
 
@@ -1450,11 +1459,11 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Raster_PhysicalCrop_MinBelowOrigi
   const DataPath pixelsPath = geomPath.createChildPath("Cell Data").createChildPath("Pixels");
   CropGeometryParameter::ValueType crop;
   crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
-  crop.cropX = true;
-  crop.cropY = true;
-  crop.cropZ = false;
-  crop.xBoundPhysical = {-2.0F, 2.0F};
-  crop.yBoundPhysical = {1.0F, 2.0F};
+  crop.crop_x = true;
+  crop.crop_y = true;
+  crop.crop_z = false;
+  crop.x_bound_physical = {-2.0F, 2.0F};
+  crop.y_bound_physical = {1.0F, 2.0F};
   Arguments args;
   args.insertOrAssign(ReadImageFilter::k_FileName_Key, filePath);
   args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, geomPath);
@@ -1466,47 +1475,47 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Raster_PhysicalCrop_MinBelowOrigi
   ReadImageFilter filter;
   DataStructure dataStructure;
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  const auto& warnings = preflight.outputActions.warnings();
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
+  const auto& warnings = preflight.output_actions.warnings();
   REQUIRE(std::any_of(warnings.begin(), warnings.end(), [](const auto& warning) { return warning.code == -50503; }));
   auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geomPath));
   const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
-  REQUIRE(geom.getDimensions() == SizeVec3{3, 2, 1});
-  REQUIRE(geom.getOrigin() == FloatVec3{0.0F, 1.0F, 0.0F});
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(pixelsPath));
-  const auto& pixels = dataStructure.getDataRefAs<UInt8Array>(pixelsPath);
+  REQUIRE(geom.getDimensions() == SizeVec3Type{3, 2, 1});
+  REQUIRE(geom.getOrigin() == FloatVec3Type{0.0F, 1.0F, 0.0F});
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(pixelsPath));
+  const auto& pixels = dataStructure.getDataRefAs<UInt8ArrayType>(pixelsPath);
   const std::vector<uint8_t> expected = {10, 11, 12, 20, 21, 22};
   REQUIRE(pixels.getNumberOfTuples() == expected.size());
   for(usize tupleIdx = 0; tupleIdx < expected.size(); ++tupleIdx)
   {
     REQUIRE(pixels[tupleIdx] == expected[tupleIdx]);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: Raster_PhysicalCrop_NaN_Rejected", "[NXImageProcessing][ReadImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const fs::path filePath = ReadImageOutputDir() / "physical_nan_rejected.tif";
   WriteMultiPageTiff(filePath, 5, 4, {{0, 1, 2, 3, 4, 10, 11, 12, 13, 14, 20, 21, 22, 23, 24, 30, 31, 32, 33, 34}});
 
   const DataPath geomPath({"Physical Crop"});
   CropGeometryParameter::ValueType crop;
   crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
-  crop.cropX = true;
-  crop.cropY = true;
-  crop.cropZ = false;
-  crop.xBoundPhysical = {-2.0F, 2.0F};
-  crop.yBoundPhysical = {1.0F, 2.0F};
+  crop.crop_x = true;
+  crop.crop_y = true;
+  crop.crop_z = false;
+  crop.x_bound_physical = {-2.0F, 2.0F};
+  crop.y_bound_physical = {1.0F, 2.0F};
   SECTION("NaN minimum")
   {
-    crop.xBoundPhysical = {std::numeric_limits<float32>::quiet_NaN(), 2.0F};
+    crop.x_bound_physical = {std::numeric_limits<float32>::quiet_NaN(), 2.0F};
   }
   SECTION("NaN maximum")
   {
-    crop.yBoundPhysical = {1.0F, std::numeric_limits<float32>::quiet_NaN()};
+    crop.y_bound_physical = {1.0F, std::numeric_limits<float32>::quiet_NaN()};
   }
 
   Arguments args;
@@ -1520,14 +1529,14 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Raster_PhysicalCrop_NaN_Rejected"
   ReadImageFilter filter;
   DataStructure dataStructure;
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
-  const auto& errors = preflight.outputActions.errors();
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.output_actions);
+  const auto& errors = preflight.output_actions.errors();
   REQUIRE(std::any_of(errors.begin(), errors.end(), [](const auto& error) { return error.code == -50561; }));
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: Raster_CenterGeometry_IgnoresInputOrigin", "[NXImageProcessing][ReadImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const fs::path filePath = ReadImageOutputDir() / "center_geometry.tif";
   WriteMultiPageTiff(filePath, 5, 4, {{0, 1, 2, 3, 4, 10, 11, 12, 13, 14, 20, 21, 22, 23, 24, 30, 31, 32, 33, 34}});
 
@@ -1546,15 +1555,15 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Raster_CenterGeometry_IgnoresInpu
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geomPath));
   const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
-  REQUIRE(geom.getDimensions() == SizeVec3{5, 4, 1});
-  REQUIRE(geom.getSpacing() == FloatVec3{2.0F, 3.0F, 4.0F});
-  REQUIRE(geom.getOrigin() == FloatVec3{-5.0F, -6.0F, -2.0F});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  REQUIRE(geom.getDimensions() == SizeVec3Type{5, 4, 1});
+  REQUIRE(geom.getSpacing() == FloatVec3Type{2.0F, 3.0F, 4.0F});
+  REQUIRE(geom.getOrigin() == FloatVec3Type{-5.0F, -6.0F, -2.0F});
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: Raster_PhysicalCrop_MaxAtBound", "[NXImageProcessing][ReadImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const fs::path filePath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadImage_physical_max_at_bound.tif";
   {
     std::unique_ptr<TIFF, decltype(&TIFFClose)> tiff(TIFFOpen(filePath.string().c_str(), "w"), TIFFClose);
@@ -1581,10 +1590,10 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Raster_PhysicalCrop_MaxAtBound", 
   const DataPath pixelsPath = geomPath.createChildPath("Cell Data").createChildPath("Pixels");
   CropGeometryParameter::ValueType crop;
   crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
-  crop.cropX = true;
-  crop.cropY = false;
-  crop.cropZ = false;
-  crop.xBoundPhysical = {1.0F, 5.0F};
+  crop.crop_x = true;
+  crop.crop_y = false;
+  crop.crop_z = false;
+  crop.x_bound_physical = {1.0F, 5.0F};
   Arguments args;
   args.insertOrAssign(ReadImageFilter::k_FileName_Key, filePath);
   args.insertOrAssign(ReadImageFilter::k_ImageGeometryPath_Key, geomPath);
@@ -1596,15 +1605,15 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Raster_PhysicalCrop_MaxAtBound", 
   ReadImageFilter filter;
   DataStructure dataStructure;
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geomPath));
   const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
-  REQUIRE(geom.getDimensions() == SizeVec3{4, 4, 1});
+  REQUIRE(geom.getDimensions() == SizeVec3Type{4, 4, 1});
   REQUIRE(geom.getOrigin()[0] == 1.0F);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(pixelsPath));
-  const auto& pixels = dataStructure.getDataRefAs<UInt8Array>(pixelsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(pixelsPath));
+  const auto& pixels = dataStructure.getDataRefAs<UInt8ArrayType>(pixelsPath);
   REQUIRE(pixels.getNumberOfTuples() == 16);
   for(usize y = 0; y < 4; ++y)
   {
@@ -1613,7 +1622,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Raster_PhysicalCrop_MaxAtBound", 
       REQUIRE(pixels[y * 4 + x] == 10 * y + x + 1);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadImageFilter: postprocessed override rescues physical cropping", "[NXImageProcessing][ReadImageFilter]")
@@ -1623,20 +1632,20 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: postprocessed override rescues ph
   const DataPath geometry({"Crop with Override"});
   CropGeometryParameter::ValueType crop;
   crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
-  crop.cropX = true;
-  crop.cropY = false;
-  crop.cropZ = false;
-  crop.xBoundPhysical = {2.1F, 3.9F};
+  crop.crop_x = true;
+  crop.crop_y = false;
+  crop.crop_z = false;
+  crop.x_bound_physical = {2.1F, 3.9F};
   auto args = MakeReadImageNrrdArgs(file, geometry, "Cell Data", "Pixels", crop);
   args.insertOrAssign(ReadImageFilter::k_OriginSpacingProcessing_Key, static_cast<ChoicesParameter::ValueType>(OriginSpacingProcessing::Postprocessed));
   const ReadImageFilter filter;
-  UnitTest::RequireBadReaderMetadata(filter, args, file, true);
-  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
-  DataStructure ds;
-  const auto result = filter.execute(ds, args);
+  unit_test::RequireBadReaderMetadata(filter, args, file, true);
+  unit_test::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  DataStructure dataStructure;
+  const auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  UnitTest::RequireReaderGeometry(ds, geometry, {4, -3, 8}, {2, 3, 4});
-  const auto& pixels = UnitTest::GetRequiredData<UInt8Array>(ds, geometry.createChildPath("Cell Data").createChildPath("Pixels"));
+  unit_test::RequireReaderGeometry(dataStructure, geometry, {4, -3, 8}, {2, 3, 4});
+  const auto& pixels = unit_test::GetRequiredData<UInt8ArrayType>(dataStructure, geometry.createChildPath("Cell Data").createChildPath("Pixels"));
   REQUIRE(pixels.getSize() == 1);
   CHECK(pixels[0] == 22);
 }
@@ -1653,13 +1662,13 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: NRRD unknown spacing uses one and
   auto args = MakeReadImageNrrdArgs(file, geometry, "Cell Data", "Pixels");
   if(usesDefault)
   {
-    UnitTest::RequireReaderGeometryExecution(filter, args, geometry, {0, 0, 0}, {2, 1, 4});
+    unit_test::RequireReaderGeometryExecution(filter, args, geometry, {0, 0, 0}, {2, 1, 4});
   }
   else
   {
-    UnitTest::RequireBadReaderMetadata(filter, args, file, true);
+    unit_test::RequireBadReaderMetadata(filter, args, file, true);
   }
 
-  UnitTest::SetReaderGeometryOverrides(args, {1, 2, 3}, {4, 5, 6});
-  UnitTest::RequireReaderGeometryExecution(filter, args, geometry, {1, 2, 3}, {4, 5, 6});
+  unit_test::SetReaderGeometryOverrides(args, {1, 2, 3}, {4, 5, 6});
+  unit_test::RequireReaderGeometryExecution(filter, args, geometry, {1, 2, 3}, {4, 5, 6});
 }

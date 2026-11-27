@@ -25,20 +25,20 @@ public:
 
   // Parameter Keys
 
-  static constexpr StringLiteral k_ComputationType_Key = "computation_type_index";
+  static constexpr StringLiteralType k_ComputationType_Key = "computation_type_index";
 
-  static constexpr StringLiteral k_InputOrientationArrayPath1_Key = "input_orientation_1_array_path";
-  static constexpr StringLiteral k_InputOrientationArrayPath2_Key = "input_orientation_2_array_path";
+  static constexpr StringLiteralType k_InputOrientationArrayPath1_Key = "input_orientation_1_array_path";
+  static constexpr StringLiteralType k_InputOrientationArrayPath2_Key = "input_orientation_2_array_path";
 
-  static constexpr StringLiteral k_PhasesArrayPath_Key = "input_phases_array_path";
-  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteralType k_PhasesArrayPath_Key = "input_phases_array_path";
+  static constexpr StringLiteralType k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
 
-  static constexpr StringLiteral k_ReferenceOrientation_Key = "reference_orientation";
+  static constexpr StringLiteralType k_ReferenceOrientation_Key = "reference_orientation";
 
-  static constexpr StringLiteral k_OutputMisorientationArrayName_Key = "output_orientation_array_name";
+  static constexpr StringLiteralType k_OutputMisorientationArrayName_Key = "output_orientation_array_name";
 
-  static constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteralType k_UseMask_Key = "use_mask";
+  static constexpr StringLiteralType k_MaskArrayPath_Key = "mask_array_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -95,7 +95,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

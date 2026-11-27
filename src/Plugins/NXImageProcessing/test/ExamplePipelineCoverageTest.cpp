@@ -236,7 +236,7 @@ void ValidateCompanionFiles(const fs::path& exampleDir, const std::string& pipel
 
 TEST_CASE("NXImageProcessing::Every registered filter has an enabled real-world example", "[NXImageProcessing][ExamplePipelines][Coverage]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path pluginSourceDir(unit_test::k_SourceDir.str());
   const fs::path exampleDir = pluginSourceDir / "pipelines";

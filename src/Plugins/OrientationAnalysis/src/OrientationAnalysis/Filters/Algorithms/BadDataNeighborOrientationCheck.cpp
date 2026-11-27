@@ -17,8 +17,6 @@ BadDataNeighborOrientationCheck::BadDataNeighborOrientationCheck(DataStructure& 
 {
 }
 
-BadDataNeighborOrientationCheck::~BadDataNeighborOrientationCheck() noexcept = default;
-
 const std::atomic_bool& BadDataNeighborOrientationCheck::getCancel()
 {
   return m_ShouldCancel;
@@ -28,10 +26,10 @@ Result<> BadDataNeighborOrientationCheck::operator()()
 {
   // Dispatch checks only storage residency. The selected executor performs
   // typed array access.
-  auto* quatsArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->QuatsArrayPath);
-  auto* maskArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);
-  auto* phasesArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->CellPhasesArrayPath);
+  auto* quatsArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->quats_array_path);
+  auto* maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path);
+  auto* phasesArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->cell_phases_array_path);
 
-  return DispatchAlgorithm<BadDataNeighborOrientationCheckWorklist, BadDataNeighborOrientationCheckScanline>({quatsArray, maskArray, phasesArray}, m_DataStructure, m_MessageHandler, m_ShouldCancel,
-                                                                                                             m_InputValues);
+  return DispatchAlgorithm<BadDataNeighborOrientationCheckWorklist, BadDataNeighborOrientationCheckScanline>({quatsArrayPtr, maskArrayPtr, phasesArrayPtr}, m_DataStructure, m_MessageHandler,
+                                                                                                             m_ShouldCancel, m_InputValues);
 }

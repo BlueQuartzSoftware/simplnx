@@ -81,7 +81,7 @@ Parameters ReadVtkStructuredPointsFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ReadCellData_Key, "Read Cell Data", "Determines whether or not the Cell Data will be read.", false));
 
   params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
-  ImageIO::InsertGeometryOverrideParameters(params);
+  image_io::InsertGeometryOverrideParameters(params);
 
   params.insertSeparator(Parameters::Separator{"Output Point Data"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedVertexGeometryPath_Key, "Data Container [Point Data]", "The data container for the Point Data.", DataPath({"VTK Point Data"})));
@@ -108,14 +108,14 @@ IFilter::VersionType ReadVtkStructuredPointsFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadVtkStructuredPointsFilter::clone() const
+IFilter::UniquePointerType ReadVtkStructuredPointsFilter::clone() const
 {
   return std::make_unique<ReadVtkStructuredPointsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadVtkStructuredPointsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ReadVtkStructuredPointsFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                      const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pInputFileValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
   auto pVertexGeometryPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
@@ -129,15 +129,15 @@ IFilter::PreflightResult ReadVtkStructuredPointsFilter::preflightImpl(const Data
   sw.start();
 
   ReadVtkStructuredPointsInputValues inputValues;
-  inputValues.GeometryOverrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
+  inputValues.geometry_overrides = image_io::GeometryOverrides::FromArguments(filterArgs);
 
-  inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
-  inputValues.ReadPointData = filterArgs.value<bool>(k_ReadPointData_Key);
-  inputValues.ReadCellData = filterArgs.value<bool>(k_ReadCellData_Key);
-  inputValues.PointGeomPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
-  inputValues.ImageGeomPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
-  inputValues.PointAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
-  inputValues.CellAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellAttributeMatrixName_Key);
+  inputValues.input_file = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
+  inputValues.read_point_data = filterArgs.value<bool>(k_ReadPointData_Key);
+  inputValues.read_cell_data = filterArgs.value<bool>(k_ReadCellData_Key);
+  inputValues.point_geom_path = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
+  inputValues.image_geom_path = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
+  inputValues.point_attribute_matrix_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
+  inputValues.cell_attribute_matrix_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellAttributeMatrixName_Key);
 
   resultOutputActions = ::PreflightFile(inputValues);
 
@@ -146,39 +146,39 @@ IFilter::PreflightResult ReadVtkStructuredPointsFilter::preflightImpl(const Data
   std::cout << "\n";
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadVtkStructuredPointsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ReadVtkStructuredPointsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadVtkStructuredPointsInputValues inputValues;
-  inputValues.GeometryOverrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
+  inputValues.geometry_overrides = image_io::GeometryOverrides::FromArguments(filterArgs);
 
-  inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
-  inputValues.ReadPointData = filterArgs.value<bool>(k_ReadPointData_Key);
-  inputValues.ReadCellData = filterArgs.value<bool>(k_ReadCellData_Key);
-  inputValues.PointGeomPath = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
-  inputValues.ImageGeomPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
-  inputValues.PointAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
-  inputValues.CellAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellAttributeMatrixName_Key);
+  inputValues.input_file = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
+  inputValues.read_point_data = filterArgs.value<bool>(k_ReadPointData_Key);
+  inputValues.read_cell_data = filterArgs.value<bool>(k_ReadCellData_Key);
+  inputValues.point_geom_path = filterArgs.value<DataPath>(k_CreatedVertexGeometryPath_Key);
+  inputValues.image_geom_path = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
+  inputValues.point_attribute_matrix_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_VertexAttributeMatrixName_Key);
+  inputValues.cell_attribute_matrix_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellAttributeMatrixName_Key);
 
   return ReadVtkStructuredPoints(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
-constexpr StringLiteral k_InputFileKey = "InputFile";
-constexpr StringLiteral k_ReadCellDataKey = "ReadCellData";
-constexpr StringLiteral k_ReadPointDataKey = "ReadPointData";
-constexpr StringLiteral k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
-constexpr StringLiteral k_VertexDataContainerNameKey = "VertexDataContainerName";
-constexpr StringLiteral k_VolumeDataContainerNameKey = "VolumeDataContainerName";
-} // namespace SIMPL
+constexpr StringLiteralType k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteralType k_InputFileKey = "InputFile";
+constexpr StringLiteralType k_ReadCellDataKey = "ReadCellData";
+constexpr StringLiteralType k_ReadPointDataKey = "ReadPointData";
+constexpr StringLiteralType k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
+constexpr StringLiteralType k_VertexDataContainerNameKey = "VertexDataContainerName";
+constexpr StringLiteralType k_VolumeDataContainerNameKey = "VolumeDataContainerName";
+} // namespace simpl
 } // namespace
 
 //------------------------------------------------------------------------------
@@ -188,13 +188,14 @@ Result<Arguments> ReadVtkStructuredPointsFilter::FromSIMPLJson(const nlohmann::j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_InputFileKey, k_InputFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_ReadCellDataKey, k_ReadCellData_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_ReadPointDataKey, k_ReadPointData_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixNameKey, k_VertexAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_VertexDataContainerNameKey, k_CreatedVertexGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_VolumeDataContainerNameKey, k_CreatedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::InputFileFilterParameterConverter>(args, json, simpl::k_InputFileKey, k_InputFile_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_ReadCellDataKey, k_ReadCellData_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_ReadPointDataKey, k_ReadPointData_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixNameKey, k_VertexAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_VertexDataContainerNameKey, k_CreatedVertexGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_VolumeDataContainerNameKey, k_CreatedImageGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

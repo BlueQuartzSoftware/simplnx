@@ -20,7 +20,7 @@ AbstractMontage::AbstractMontage(const AbstractMontage& other)
 {
 }
 
-AbstractMontage::AbstractMontage(AbstractMontage&& other)
+AbstractMontage::AbstractMontage(AbstractMontage&& other) noexcept
 : BaseGroup(std::move(other))
 , m_Collection(std::move(other.m_Collection))
 {
@@ -36,11 +36,11 @@ DataObject::Type AbstractMontage::getDataObjectType() const
 AbstractMontage::CollectionType AbstractMontage::getGeometries() const
 {
   CollectionType geometries;
-  for(auto geometry : m_Collection)
+  for(auto* geometryPtr : m_Collection)
   {
-    if(geometry != nullptr)
+    if(geometryPtr != nullptr)
     {
-      geometries.push_back(geometry);
+      geometries.push_back(geometryPtr);
     }
   }
   return geometries;
@@ -54,35 +54,35 @@ usize AbstractMontage::getTileCount() const
 std::vector<std::string> AbstractMontage::getGeometryNames() const
 {
   std::vector<std::string> names;
-  for(auto geometry : getGeometries())
+  for(auto* geometryPtr : getGeometries())
   {
-    names.push_back(geometry->getName());
+    names.push_back(geometryPtr->getName());
   }
   return names;
 }
 
-std::vector<LinkedPath> AbstractMontage::getLinkedPaths() const
+std::vector<LinkedPath> AbstractMontage::GetLinkedPaths()
 {
   std::vector<LinkedPath> linkedPaths;
   return linkedPaths;
 }
 
-AbstractMontage::Iterator AbstractMontage::begin()
+AbstractMontage::iterator AbstractMontage::begin()
 {
   return getCollection().begin();
 }
 
-AbstractMontage::Iterator AbstractMontage::end()
+AbstractMontage::iterator AbstractMontage::end()
 {
   return getCollection().end();
 }
 
-AbstractMontage::ConstIterator AbstractMontage::begin() const
+AbstractMontage::const_iterator AbstractMontage::begin() const
 {
   return getCollection().begin();
 }
 
-AbstractMontage::ConstIterator AbstractMontage::end() const
+AbstractMontage::const_iterator AbstractMontage::end() const
 {
   return getCollection().end();
 }
@@ -99,7 +99,7 @@ const AbstractMontage::CollectionType& AbstractMontage::getCollection() const
 
 bool AbstractMontage::canInsert(const DataObject* obj) const
 {
-  if(!dynamic_cast<const IGeometry*>(obj))
+  if(dynamic_cast<const IGeometry*>(obj) == nullptr)
   {
     return false;
   }

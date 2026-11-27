@@ -134,7 +134,7 @@ std::string TypeForPrimitive(const IFilter::MessageHandler& messageHandler)
   }
 
   messageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Error: TypeForPrimitive - Unknown Type: ", typeid(T).name()));
-  if(const char* name = typeid(T).name(); nullptr != name && name[0] == 'l')
+  if(const char* namePtr = typeid(T).name(); nullptr != namePtr && namePtr[0] == 'l')
   {
     messageHandler.sendMessage(
         IFilter::Message::Type::Info,
@@ -173,15 +173,15 @@ struct WriteVtkDataArrayFunctor
   template <typename T>
   Result<> operator()(FILE* outputFile, bool binary, DataStructure& dataStructure, const DataPath& arrayPath, const IFilter::MessageHandler& messageHandler)
   {
-    auto* dataArray = dataStructure.getDataAs<DataArray<T>>(arrayPath);
-    auto& dataStore = dataArray->getDataStoreRef();
+    auto* dataArrayPtr = dataStructure.getDataAs<DataArray<T>>(arrayPath);
+    auto& dataStore = dataArrayPtr->getDataStoreRef();
 
     messageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Writing Cell Data {}", arrayPath.getTargetName()));
 
     const usize totalElements = dataStore.getSize();
     const int numComps = static_cast<int>(dataStore.getNumberOfComponents());
     std::string dName = arrayPath.getTargetName();
-    dName = StringUtilities::replace(dName, " ", "_");
+    dName = string_utilities::Replace(dName, " ", "_");
 
     const std::string vtkTypeString = TypeForPrimitive<T>(messageHandler);
     bool useIntCast = false;
@@ -229,7 +229,7 @@ struct WriteVtkDataArrayFunctor
           {
             for(usize i = 0; i < count; i++)
             {
-              buf[i] = nx::core::byteswap(buf[i]);
+              buf[i] = nx::core::Byteswap(buf[i]);
             }
           }
           if(fwrite(buf.get(), sizeof(T), count, outputFile) != count)
@@ -371,7 +371,7 @@ struct WriteVtkDataFunctor
     auto& dataArrayRef = dynamic_cast<DataArrayType&>(iDataArray);
     const auto& dataStoreRef = dataArrayRef.getDataStoreRef();
 
-    std::string name = StringUtilities::replace(dataArrayRef.getName(), " ", "_");
+    std::string name = string_utilities::Replace(dataArrayRef.getName(), " ", "_");
 
     outStrm << "SCALARS " << name << " " << ConvertDataTypeToVtkDataType<T>() << " " << dataArrayRef.getNumberOfComponents() << "\n";
     outStrm << "LOOKUP_TABLE default\n";
@@ -397,7 +397,7 @@ struct WriteVtkDataFunctor
     }
     else
     {
-      const usize k_DefaultElementsPerLine = 10;
+      const usize kDefaultElementsPerLine = 10;
       auto numTuples = dataStoreRef.getSize();
       usize currentItemCount = 0;
       ThrottledMessageHandler progressThrottle(messageHandler);
@@ -422,7 +422,7 @@ struct WriteVtkDataFunctor
         {
           outStrm << dataArrayRef[idx];
         }
-        if(currentItemCount < k_DefaultElementsPerLine - 1)
+        if(currentItemCount < kDefaultElementsPerLine - 1)
         {
           outStrm << ' ';
           currentItemCount++;

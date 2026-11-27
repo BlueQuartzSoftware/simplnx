@@ -39,7 +39,7 @@ public:
   /**
    * @brief Destroys the scanline feature-bound algorithm.
    */
-  ~ComputeFeatureBoundsScanline() noexcept;
+  ~ComputeFeatureBoundsScanline() noexcept = default;
 
   ComputeFeatureBoundsScanline(const ComputeFeatureBoundsScanline&) = delete;
   ComputeFeatureBoundsScanline(ComputeFeatureBoundsScanline&&) noexcept = delete;

@@ -12,12 +12,6 @@
 
 using namespace nx::core;
 
-#define CX_DEFAULT_CONSTRUCTORS(className)                                                                                                                                                             \
-  className(const className&) = delete;                                                                                                                                                                \
-  className(className&&) noexcept = delete;                                                                                                                                                            \
-  className& operator=(const className&) = delete;                                                                                                                                                     \
-  className& operator=(className&&) noexcept = delete;
-
 namespace
 {
 constexpr int64 k_IncorrectInputArray = -600;
@@ -31,8 +25,11 @@ constexpr int64 k_MissingOrIncorrectGoodVoxelsArray = -602;
 class TSpecificCompareFunctorBool : public SegmentFeatures::CompareFunctor
 {
 public:
-  using DataArrayType = BoolArray;
-  CX_DEFAULT_CONSTRUCTORS(TSpecificCompareFunctorBool)
+  using DataArrayType = BoolArrayType;
+  TSpecificCompareFunctorBool(const TSpecificCompareFunctorBool&) = delete;
+  TSpecificCompareFunctorBool(TSpecificCompareFunctorBool&&) noexcept = delete;
+  TSpecificCompareFunctorBool& operator=(const TSpecificCompareFunctorBool&) = delete;
+  TSpecificCompareFunctorBool& operator=(TSpecificCompareFunctorBool&&) noexcept = delete;
 
   /**
    * @brief Initializes the resident Boolean comparator.
@@ -82,7 +79,10 @@ template <class T>
 class TSpecificCompareFunctor : public SegmentFeatures::CompareFunctor
 {
 public:
-  CX_DEFAULT_CONSTRUCTORS(TSpecificCompareFunctor)
+  TSpecificCompareFunctor(const TSpecificCompareFunctor&) = delete;
+  TSpecificCompareFunctor(TSpecificCompareFunctor&&) noexcept = delete;
+  TSpecificCompareFunctor& operator=(const TSpecificCompareFunctor&) = delete;
+  TSpecificCompareFunctor& operator=(TSpecificCompareFunctor&&) noexcept = delete;
 
   using DataArrayType = DataArray<T>;
   using DataStoreType = AbstractDataStore<T>;
@@ -198,97 +198,97 @@ ScalarSegmentFeatures::ScalarSegmentFeatures(DataStructure& dataStructure, Scala
 : SegmentFeatures(dataStructure, shouldCancel, mesgHandler)
 , m_InputValues(inputValues)
 {
-  m_IsPeriodic = inputValues->IsPeriodic;
+  m_IsPeriodic = inputValues->is_periodic;
 }
 
 ScalarSegmentFeatures::~ScalarSegmentFeatures() noexcept = default;
 
 Result<> ScalarSegmentFeatures::operator()()
 {
-  this->m_NeighborScheme = m_InputValues->NeighborScheme;
-  if(m_InputValues->UseMask)
+  this->m_NeighborScheme = m_InputValues->neighbor_scheme;
+  if(m_InputValues->use_mask)
   {
     try
     {
-      m_GoodVoxels = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+      m_GoodVoxels = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->mask_array_path);
     } catch(const std::out_of_range& exception)
     {
       // Direct algorithm callers can bypass filter path and type validation.
-      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
+      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->mask_array_path.toString());
       return MakeErrorResult(-54110, message);
     }
   }
 
-  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
+  auto* gridGeomPtr = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->image_geometry_path);
 
-  m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  m_FeatureIdsArray = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
 
-  auto* inputDataArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputDataPath);
-  m_InputDataArray = inputDataArray;
-  usize inDataPoints = inputDataArray->getNumberOfTuples();
-  nx::core::DataType dataType = inputDataArray->getDataType();
+  auto* inputDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->input_data_path);
+  m_InputDataArray = inputDataArrayPtr;
+  usize inDataPoints = inputDataArrayPtr->getNumberOfTuples();
+  nx::core::DataType dataType = inputDataArrayPtr->getDataType();
 
   switch(dataType)
   {
   case nx::core::DataType::int8: {
-    m_CompareFunctor = std::make_shared<::TSpecificCompareFunctor<int8>>(inputDataArray, inDataPoints, static_cast<int8>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<::TSpecificCompareFunctor<int8>>(inputDataArrayPtr, inDataPoints, static_cast<int8>(m_InputValues->scalar_tolerance));
     break;
   }
   case nx::core::DataType::uint8: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint8>>(inputDataArray, inDataPoints, static_cast<uint8>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint8>>(inputDataArrayPtr, inDataPoints, static_cast<uint8>(m_InputValues->scalar_tolerance));
     break;
   }
   case nx::core::DataType::boolean: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctorBool>(inputDataArray, inDataPoints);
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctorBool>(inputDataArrayPtr, inDataPoints);
     break;
   }
   case nx::core::DataType::int16: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<int16>>(inputDataArray, inDataPoints, static_cast<int16>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<int16>>(inputDataArrayPtr, inDataPoints, static_cast<int16>(m_InputValues->scalar_tolerance));
     break;
   }
   case nx::core::DataType::uint16: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint16>>(inputDataArray, inDataPoints, static_cast<uint16>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint16>>(inputDataArrayPtr, inDataPoints, static_cast<uint16>(m_InputValues->scalar_tolerance));
     break;
   }
   case nx::core::DataType::int32: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<int32>>(inputDataArray, inDataPoints, static_cast<int32>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<int32>>(inputDataArrayPtr, inDataPoints, static_cast<int32>(m_InputValues->scalar_tolerance));
     break;
   }
   case nx::core::DataType::uint32: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint32>>(inputDataArray, inDataPoints, static_cast<uint32>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint32>>(inputDataArrayPtr, inDataPoints, static_cast<uint32>(m_InputValues->scalar_tolerance));
     break;
   }
   case nx::core::DataType::int64: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<int64>>(inputDataArray, inDataPoints, static_cast<int64>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<int64>>(inputDataArrayPtr, inDataPoints, static_cast<int64>(m_InputValues->scalar_tolerance));
     break;
   }
   case nx::core::DataType::uint64: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint64>>(inputDataArray, inDataPoints, static_cast<uint64>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<uint64>>(inputDataArrayPtr, inDataPoints, static_cast<uint64>(m_InputValues->scalar_tolerance));
     break;
   }
   case nx::core::DataType::float32: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<float32>>(inputDataArray, inDataPoints, static_cast<float32>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<float32>>(inputDataArrayPtr, inDataPoints, static_cast<float32>(m_InputValues->scalar_tolerance));
     break;
   }
   case nx::core::DataType::float64: {
-    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<float64>>(inputDataArray, inDataPoints, static_cast<float64>(m_InputValues->ScalarTolerance));
+    m_CompareFunctor = std::make_shared<TSpecificCompareFunctor<float64>>(inputDataArrayPtr, inDataPoints, static_cast<float64>(m_InputValues->scalar_tolerance));
     break;
   }
   default:
     break;
   }
-  if(inputDataArray->getNumberOfComponents() != 1)
+  if(inputDataArrayPtr->getNumberOfComponents() != 1)
   {
     m_CompareFunctor = std::make_shared<SegmentFeatures::CompareFunctor>();
   }
 
-  SizeVec3 udims = gridGeom->getDimensions();
+  SizeVec3Type udims = gridGeomPtr->getDimensions();
   allocateSliceBuffers(static_cast<int64>(udims[0]), static_cast<int64>(udims[1]));
 
   auto& featureIdsStore = m_FeatureIdsArray->getDataStoreRef();
-  const auto* maskArray = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
-  const bool usesOutOfCoreInput = IsOutOfCore(*m_InputDataArray) || (maskArray != nullptr && IsOutOfCore(*maskArray));
-  Result<> segmentResult = executeCCL(gridGeom, featureIdsStore, usesOutOfCoreInput);
+  const auto* maskArrayPtr = m_InputValues->use_mask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path) : nullptr;
+  const bool usesOutOfCoreInput = IsOutOfCore(*m_InputDataArray) || (maskArrayPtr != nullptr && IsOutOfCore(*maskArrayPtr));
+  Result<> segmentResult = executeCCL(gridGeomPtr, featureIdsStore, usesOutOfCoreInput);
 
   deallocateSliceBuffers();
 
@@ -308,7 +308,7 @@ Result<> ScalarSegmentFeatures::operator()()
 
   // Final feature IDs include positive labels and the reserved zero tuple.
   ShapeType tDims = {static_cast<usize>(m_FoundFeatures + 1)};
-  auto& cellFeaturesAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
+  auto& cellFeaturesAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->cell_feature_attribute_matrix_path);
   Result<> resizeResult = cellFeaturesAM.resizeTuples(tDims);
   if(resizeResult.invalid())
   {
@@ -316,12 +316,12 @@ Result<> ScalarSegmentFeatures::operator()()
   }
 
   // Positive features start active. Feature zero remains reserved background.
-  auto* activeArray = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
-  activeArray->getDataStore()->fill(1);
-  (*activeArray)[0] = 0;
+  auto* activeArrayPtr = m_DataStructure.getDataAs<UInt8ArrayType>(m_InputValues->active_array_path);
+  activeArrayPtr->getDataStore()->fill(1);
+  (*activeArrayPtr)[0] = 0;
 
   // A deterministic permutation improves adjacent-feature color contrast.
-  if(m_InputValues->RandomizeFeatureIds)
+  if(m_InputValues->randomize_feature_ids)
   {
     Result<> randomizeResult = randomizeFeatureIds(m_FeatureIdsArray, m_FoundFeatures + 1);
     if(randomizeResult.invalid())
@@ -342,17 +342,13 @@ bool ScalarSegmentFeatures::isValidVoxel(int64 point) const
     if(slot >= 0)
     {
       const usize off = static_cast<usize>(slot) * static_cast<usize>(m_BufSliceSize) + static_cast<usize>(point - iz * m_BufSliceSize);
-      if(m_InputValues->UseMask && m_MaskBuffer[off] == 0)
-      {
-        return false;
-      }
-      return true;
+      return !(m_InputValues->use_mask && m_MaskBuffer[off] == 0);
     }
     return false;
   }
 
   // Direct fallback supports calls outside buffered CCL execution.
-  if(m_InputValues->UseMask && !m_GoodVoxels->isTrue(point))
+  if(m_InputValues->use_mask && !m_GoodVoxels->isTrue(point))
   {
     return false;
   }
@@ -375,7 +371,7 @@ bool ScalarSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) cons
       const usize off2 = static_cast<usize>(slot2) * sliceSize + static_cast<usize>(point2 - iz2 * m_BufSliceSize);
 
       // Similarity also requires the candidate neighbor to pass the mask.
-      if(m_InputValues->UseMask && m_MaskBuffer[off2] == 0)
+      if(m_InputValues->use_mask && m_MaskBuffer[off2] == 0)
       {
         return false;
       }
@@ -385,14 +381,14 @@ bool ScalarSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) cons
         const uint64 val1 = m_IntegerScalarBuffer[off1];
         const uint64 val2 = m_IntegerScalarBuffer[off2];
         const uint64 diff = val1 >= val2 ? val1 - val2 : val2 - val1;
-        return m_InputValues->ScalarTolerance >= 0 && diff <= static_cast<uint64>(m_InputValues->ScalarTolerance);
+        return m_InputValues->scalar_tolerance >= 0 && diff <= static_cast<uint64>(m_InputValues->scalar_tolerance);
       }
 
       // Other scalar types use the float64 buffer.
       float64 val1 = m_ScalarBuffer[off1];
       float64 val2 = m_ScalarBuffer[off2];
       float64 diff = val1 >= val2 ? (val1 - val2) : (val2 - val1);
-      return diff <= static_cast<float64>(m_InputValues->ScalarTolerance);
+      return diff <= static_cast<float64>(m_InputValues->scalar_tolerance);
     }
     return false;
   }
@@ -438,7 +434,7 @@ void ScalarSegmentFeatures::deallocateSliceBuffers()
   m_NextBufferUseSequence = 1;
 }
 
-Result<> ScalarSegmentFeatures::prepareForSlice(int64 iz, int64 dimX, int64 dimY, int64 dimZ)
+Result<> ScalarSegmentFeatures::prepareForSlice(int64 iz, int64 /*dimX*/, int64 /*dimY*/, int64 /*dimZ*/)
 {
   if(iz < 0)
   {
@@ -500,9 +496,9 @@ Result<> ScalarSegmentFeatures::prepareForSlice(int64 iz, int64 dimX, int64 dimY
   }
 
   // Cache mask values with the scalar slice.
-  if(m_InputValues->UseMask && m_GoodVoxels != nullptr)
+  if(m_InputValues->use_mask && m_GoodVoxels != nullptr)
   {
-    auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
+    auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->mask_array_path);
     if(maskArray.getDataType() == DataType::uint8)
     {
       auto& typedStore = maskArray.getIDataStoreRefAs<AbstractDataStore<uint8>>();

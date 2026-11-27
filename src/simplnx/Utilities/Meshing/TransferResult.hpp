@@ -8,7 +8,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace nx::core::MeshingUtilities::detail
+namespace nx::core::meshing_utilities::detail
 {
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
 SIMPLNX_EXPORT void SetTransferEnrichmentFailureCountdown(usize allocationsBeforeFailure);
@@ -21,8 +21,8 @@ SIMPLNX_EXPORT void CheckTransferEnrichmentAllocation();
 // void specialization moves only the error vector, without allocating. Vector
 // moves and the element moves used after reserve must not throw.
 static_assert(std::is_nothrow_move_assignable_v<Result<>>);
-static_assert(std::is_nothrow_move_constructible_v<ErrorCollection>);
-static_assert(std::is_nothrow_move_constructible_v<WarningCollection>);
+static_assert(std::is_nothrow_move_constructible_v<ErrorCollectionType>);
+static_assert(std::is_nothrow_move_constructible_v<WarningCollectionType>);
 static_assert(std::is_nothrow_move_constructible_v<Warning> && std::is_nothrow_move_assignable_v<Warning>);
 static_assert(std::is_nothrow_move_constructible_v<Error> && std::is_nothrow_move_assignable_v<Error>);
 
@@ -111,4 +111,4 @@ Result<> WithTransferFailureContext(Result<>&& failure, MakeContext&& makeContex
   AppendTransferFailureContext(failure, std::forward<MakeContext>(makeContext));
   return std::move(failure);
 }
-} // namespace nx::core::MeshingUtilities::detail
+} // namespace nx::core::meshing_utilities::detail

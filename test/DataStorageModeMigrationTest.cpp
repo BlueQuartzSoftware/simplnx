@@ -30,14 +30,14 @@ struct TemporaryPreferenceFiles
   }
 };
 
-void writeJson(const fs::path& path, const nlohmann::json& json)
+void WriteJson(const fs::path& path, const nlohmann::json& json)
 {
   std::ofstream stream(path);
   REQUIRE(stream.is_open());
   stream << json;
 }
 
-nlohmann::json readJson(const fs::path& path)
+nlohmann::json ReadJson(const fs::path& path)
 {
   std::ifstream stream(path);
   REQUIRE(stream.is_open());
@@ -83,7 +83,7 @@ TEST_CASE("DataStorageMode file migration normalizes legacy formats", "[Core][Pr
   TemporaryPreferenceFiles files;
 
   const auto verifyMigration = [&](const nlohmann::json& input, DataStorageMode expectedMode, bool expectsLegacyFormat) {
-    writeJson(files.input, input);
+    WriteJson(files.input, input);
 
     Preferences preferences;
     const Result<> loadResult = preferences.loadFromFile(files.input);
@@ -93,7 +93,7 @@ TEST_CASE("DataStorageMode file migration normalizes legacy formats", "[Core][Pr
 
     const Result<> saveResult = preferences.saveToFile(files.output);
     REQUIRE(saveResult.valid());
-    const nlohmann::json saved = readJson(files.output);
+    const nlohmann::json saved = ReadJson(files.output);
     REQUIRE(saved.contains(std::string(Preferences::k_PreferredLargeDataFormat_Key)) == expectsLegacyFormat);
 
     Preferences reloaded;
@@ -138,7 +138,7 @@ TEST_CASE("Cache memory budget preference migrates to the unambiguous key", "[Co
   TemporaryPreferenceFiles files;
 
   const auto verifyMigration = [&](const nlohmann::json& input, uint64 expectedBudget) {
-    writeJson(files.input, input);
+    WriteJson(files.input, input);
 
     Preferences preferences;
     const Result<> loadResult = preferences.loadFromFile(files.input);
@@ -149,7 +149,7 @@ TEST_CASE("Cache memory budget preference migrates to the unambiguous key", "[Co
 
     const Result<> saveResult = preferences.saveToFile(files.output);
     REQUIRE(saveResult.valid());
-    const nlohmann::json saved = readJson(files.output);
+    const nlohmann::json saved = ReadJson(files.output);
     REQUIRE(saved.at(std::string(Preferences::k_CacheMemoryBudgetBytes_Key)).get<uint64>() == expectedBudget);
     REQUIRE_FALSE(saved.contains(std::string(Preferences::k_LegacyMemoryBudgetBytes_Key)));
   };
@@ -216,7 +216,7 @@ struct ThresholdPreferenceFiles
 const std::array<std::string, 2> k_ThresholdKeys = {std::string(Preferences::k_LargeDataSize_Key), std::string(Preferences::k_LargeDataStructureSize_Key)};
 const std::array<std::string, 2> k_ThresholdLabels = {"Large Data Size", "Large Data Structure Size"};
 
-std::vector<nlohmann::json> invalidThresholdValues()
+std::vector<nlohmann::json> InvalidThresholdValues()
 {
   return {nlohmann::json(int64{-1}),
           nlohmann::json(1.25),
@@ -229,7 +229,7 @@ std::vector<nlohmann::json> invalidThresholdValues()
           nlohmann::json(18446744073709551616.0)};
 }
 
-void writeThresholdJson(const std::filesystem::path& path, const nlohmann::json& value)
+void WriteThresholdJson(const std::filesystem::path& path, const nlohmann::json& value)
 {
   std::ofstream stream(path);
   REQUIRE(stream.is_open());
@@ -238,7 +238,7 @@ void writeThresholdJson(const std::filesystem::path& path, const nlohmann::json&
   REQUIRE_FALSE(stream.fail());
 }
 
-nlohmann::json readThresholdJson(const std::filesystem::path& path)
+nlohmann::json ReadThresholdJson(const std::filesystem::path& path)
 {
   std::ifstream stream(path);
   REQUIRE(stream.is_open());
@@ -250,7 +250,7 @@ TEST_CASE("Preferences rejects invalid new OOC thresholds before mutation", "[Co
 {
   for(const auto& key : k_ThresholdKeys)
   {
-    for(const auto& invalidValue : invalidThresholdValues())
+    for(const auto& invalidValue : InvalidThresholdValues())
     {
       DYNAMIC_SECTION(key << "=" << invalidValue.dump())
       {
@@ -295,7 +295,7 @@ TEST_CASE("Preferences preserves valid OOC threshold values", "[Core][Preference
         const uint64 inputBytes = validValue.get<uint64>();
         const uint64 expectedBytes = inputBytes == 0 ? uint64{0} : (inputBytes == 37 ? uint64{10737418} : uint64{18446744073698814198ULL});
         const double expectedGB = inputBytes == 0 ? 0.0 : (inputBytes == 37 ? 0.01 : 17179869183.99);
-        const auto written = readThresholdJson(files.input);
+        const auto written = ReadThresholdJson(files.input);
         CHECK_FALSE(written.contains(key));
         REQUIRE(written.contains(gbKey));
         CHECK(written.at(gbKey).get<double>() == expectedGB);
@@ -310,7 +310,7 @@ TEST_CASE("Preferences preserves valid OOC threshold values", "[Core][Preference
         REQUIRE(loadedValue.is_number_unsigned());
         CHECK(loadedValue.get<uint64>() == expectedBytes);
         REQUIRE(loaded.saveToFile(files.output).valid());
-        const auto saved = readThresholdJson(files.output);
+        const auto saved = ReadThresholdJson(files.output);
         CHECK_FALSE(saved.contains(key));
         REQUIRE(saved.contains(gbKey));
         CHECK(saved.at(gbKey).get<double>() == expectedGB);
@@ -322,13 +322,13 @@ TEST_CASE("Preferences preserves valid OOC threshold values", "[Core][Preference
 TEST_CASE("Preferences preserves absent OOC threshold keys", "[Core][Preferences][OocThreshold]")
 {
   ThresholdPreferenceFiles files;
-  writeThresholdJson(files.input, nlohmann::json::object({{"plugins", nlohmann::json::object()}}));
+  WriteThresholdJson(files.input, nlohmann::json::object({{"plugins", nlohmann::json::object()}}));
   Preferences preferences;
   const auto result = preferences.loadFromFile(files.input);
   REQUIRE(result.valid());
   CHECK(result.warnings().empty());
   REQUIRE(preferences.saveToFile(files.output).valid());
-  const auto saved = readThresholdJson(files.output);
+  const auto saved = ReadThresholdJson(files.output);
   for(const auto& key : k_ThresholdKeys)
   {
     CHECK_FALSE(preferences.contains(key));
@@ -345,7 +345,7 @@ TEST_CASE("Preferences repairs only invalid saved OOC threshold fields", "[Core]
   {
     const auto& invalidKey = k_ThresholdKeys[keyIndex];
     const auto& validKey = k_ThresholdKeys[1 - keyIndex];
-    for(const auto& invalidValue : invalidThresholdValues())
+    for(const auto& invalidValue : InvalidThresholdValues())
     {
       DYNAMIC_SECTION(invalidKey << "=" << invalidValue.dump())
       {
@@ -356,7 +356,7 @@ TEST_CASE("Preferences repairs only invalid saved OOC threshold fields", "[Core]
                                                       {"plugins", {{"ThresholdTest", nested}}},
                                                       {"cache_memory_budget_bytes", uint64{123456}},
                                                       {"unrelated", "preserved"}});
-        writeThresholdJson(files.input, original);
+        WriteThresholdJson(files.input, original);
 
         Preferences preferences;
         const auto defaultBytes = preferences.defaultValueAs<uint64>(invalidKey);
@@ -381,7 +381,7 @@ TEST_CASE("Preferences repairs only invalid saved OOC threshold fields", "[Core]
         CHECK(preferences.pluginValue("ThresholdTest", "keep") == nested.at("keep"));
         CHECK(preferences.cacheMemoryBudgetBytes() == uint64{123456});
         CHECK(preferences.value("unrelated") == nlohmann::json("preserved"));
-        CHECK(readThresholdJson(files.input) == original);
+        CHECK(ReadThresholdJson(files.input) == original);
       }
     }
   }
@@ -395,7 +395,7 @@ TEST_CASE("Preferences rejects non-object documents without changing existing st
     DYNAMIC_SECTION(invalidRoot.dump())
     {
       ThresholdPreferenceFiles files;
-      writeThresholdJson(files.input, invalidRoot);
+      WriteThresholdJson(files.input, invalidRoot);
       Preferences preferences;
       preferences.setValue(Preferences::k_LargeDataSize_Key, uint64{19});
       preferences.setValue(Preferences::k_LargeDataStructureSize_Key, std::numeric_limits<uint64>::max());
@@ -416,7 +416,7 @@ TEST_CASE("Preferences validates OOC size values without mutation", "[Core][Pref
 {
   for(const auto& key : k_ThresholdKeys)
   {
-    for(const nlohmann::json value : {nlohmann::json(int64{0}), nlohmann::json(int64{17}), nlohmann::json(uint64{0}), nlohmann::json(uint64{17}), nlohmann::json(std::numeric_limits<uint64>::max())})
+    for(const nlohmann::json& value : {nlohmann::json(int64{0}), nlohmann::json(int64{17}), nlohmann::json(uint64{0}), nlohmann::json(uint64{17}), nlohmann::json(std::numeric_limits<uint64>::max())})
     {
       DYNAMIC_SECTION(key << "=" << value.dump() << " type=" << static_cast<int>(value.type()))
       {
@@ -425,7 +425,7 @@ TEST_CASE("Preferences validates OOC size values without mutation", "[Core][Pref
         CHECK(result.value() == value.get<uint64>());
       }
     }
-    for(const auto& value : invalidThresholdValues())
+    for(const auto& value : InvalidThresholdValues())
     {
       DYNAMIC_SECTION(key << "=" << value.dump() << " type=" << static_cast<int>(value.type()))
       {
@@ -452,8 +452,9 @@ TEST_CASE("Preferences names nonfinite OOC thresholds without changing values", 
     double number;
     const char* description;
   };
-  const std::array<NonfiniteCase, 3> values = {
-      {{std::numeric_limits<double>::quiet_NaN(), "NaN"}, {std::numeric_limits<double>::infinity(), "+Infinity"}, {-std::numeric_limits<double>::infinity(), "-Infinity"}}};
+  const std::array<NonfiniteCase, 3> values = {{{.number = std::numeric_limits<double>::quiet_NaN(), .description = "NaN"},
+                                                {.number = std::numeric_limits<double>::infinity(), .description = "+Infinity"},
+                                                {.number = -std::numeric_limits<double>::infinity(), .description = "-Infinity"}}};
   for(const auto& key : k_ThresholdKeys)
   {
     for(const auto& nonfinite : values)
@@ -487,7 +488,7 @@ TEST_CASE("Preferences repairs both invalid saved OOC fields and reloads cleanly
 {
   ThresholdPreferenceFiles files;
   const auto original = nlohmann::json::object({{k_ThresholdKeys[0], int64{-1}}, {k_ThresholdKeys[1], 1.25}, {"plugins", {{"ThresholdTest", {{"keep", "unchanged"}}}}}});
-  writeThresholdJson(files.input, original);
+  WriteThresholdJson(files.input, original);
   Preferences preferences;
   const auto expectedArray = preferences.defaultValueAs<uint64>(k_ThresholdKeys[0]);
   const auto expectedStructure = preferences.defaultValueAs<uint64>(k_ThresholdKeys[1]);
@@ -497,7 +498,7 @@ TEST_CASE("Preferences repairs both invalid saved OOC fields and reloads cleanly
   CHECK(preferences.valueAs<uint64>(k_ThresholdKeys[0]) == expectedArray);
   CHECK(preferences.valueAs<uint64>(k_ThresholdKeys[1]) == expectedStructure);
   CHECK(preferences.pluginValue("ThresholdTest", "keep") == nlohmann::json("unchanged"));
-  CHECK(readThresholdJson(files.input) == original);
+  CHECK(ReadThresholdJson(files.input) == original);
   REQUIRE(preferences.saveToFile(files.output).valid());
   Preferences reloaded;
   const auto reload = reloaded.loadFromFile(files.output);
@@ -514,7 +515,7 @@ TEST_CASE("Preferences bounds invalid saved OOC value diagnostics", "[Core][Pref
   for(const auto& invalidValue : values)
   {
     ThresholdPreferenceFiles files;
-    writeThresholdJson(files.input, nlohmann::json::object({{k_ThresholdKeys[0], invalidValue}}));
+    WriteThresholdJson(files.input, nlohmann::json::object({{k_ThresholdKeys[0], invalidValue}}));
     Preferences preferences;
     const auto result = preferences.loadFromFile(files.input);
     REQUIRE(result.valid());
@@ -538,7 +539,7 @@ TEST_CASE("Preferences bounds invalid saved OOC value diagnostics", "[Core][Pref
 TEST_CASE("Preferences threshold repair preserves cache and storage migrations", "[Core][Preferences][OocThreshold]")
 {
   ThresholdPreferenceFiles files;
-  writeThresholdJson(files.input, nlohmann::json::object({{std::string(Preferences::k_LargeDataSize_Key), int64{-1}},
+  WriteThresholdJson(files.input, nlohmann::json::object({{std::string(Preferences::k_LargeDataSize_Key), int64{-1}},
                                                           {"memory_budget_bytes", uint64{123456}},
                                                           {std::string(Preferences::k_PreferredLargeDataFormat_Key), "In-Memory"},
                                                           {"plugins", {{"ThresholdTest", {{"keep", "unchanged"}}}}}}));

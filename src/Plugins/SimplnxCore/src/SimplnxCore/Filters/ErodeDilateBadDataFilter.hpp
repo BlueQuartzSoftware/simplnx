@@ -26,14 +26,14 @@ public:
   ErodeDilateBadDataFilter& operator=(ErodeDilateBadDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_Operation_Key = "operation_index";
-  static constexpr StringLiteral k_NumIterations_Key = "num_iterations";
-  static constexpr StringLiteral k_XDirOn_Key = "x_dir_on";
-  static constexpr StringLiteral k_YDirOn_Key = "y_dir_on";
-  static constexpr StringLiteral k_ZDirOn_Key = "z_dir_on";
-  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
-  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_Operation_Key = "operation_index";
+  static constexpr StringLiteralType k_NumIterations_Key = "num_iterations";
+  static constexpr StringLiteralType k_XDirOn_Key = "x_dir_on";
+  static constexpr StringLiteralType k_YDirOn_Key = "y_dir_on";
+  static constexpr StringLiteralType k_ZDirOn_Key = "z_dir_on";
+  static constexpr StringLiteralType k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteralType k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
+  static constexpr StringLiteralType k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -90,7 +90,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

@@ -63,7 +63,7 @@ struct CheckInitializationFunctor
       float64 max = initRange.second;
       if(min > max)
       {
-        return Error{-5550, fmt::format("{}: Invalid initialization range.  Minimum value is larger than maximum value.", arrayName)};
+        return Error{.code = -5550, .message = fmt::format("{}: Invalid initialization range.  Minimum value is larger than maximum value.", arrayName)};
       }
       if(min < static_cast<double>(std::numeric_limits<T>().lowest()) || max > static_cast<double>(std::numeric_limits<T>().max()))
       {
@@ -71,7 +71,7 @@ struct CheckInitializationFunctor
       }
       if(min == max)
       {
-        return Error{-4002, fmt::format("{}: The initialization range must have differing values", arrayName)};
+        return Error{.code = -4002, .message = fmt::format("{}: The initialization range must have differing values", arrayName)};
       }
     }
 
@@ -124,23 +124,23 @@ Parameters InitializeImageGeomCellDataFilter::parameters() const
   params.insert(std::make_unique<DataObjectNameParameter>(k_SeedArrayName_Key, "Stored Seed Value Array Name", "Name of array holding the seed value", "InitializeImageGeomCellDataFilter SeedValue"));
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<VectorUInt64Parameter>(k_MinPoint_Key, "Min Point", "The minimum x, y, z bound in cells", std::vector<uint64>{0, 0, 0},
-                                                        std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
-  params.insert(std::make_unique<VectorUInt64Parameter>(k_MaxPoint_Key, "Max Point", "The maximum x, y, z bound in cells", std::vector<uint64>{0, 0, 0},
-                                                        std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
+  params.insert(std::make_unique<VectorUInt64ParameterType>(k_MinPoint_Key, "Min Point", "The minimum x, y, z bound in cells", std::vector<uint64>{0, 0, 0},
+                                                            std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
+  params.insert(std::make_unique<VectorUInt64ParameterType>(k_MaxPoint_Key, "Max Point", "The maximum x, y, z bound in cells", std::vector<uint64>{0, 0, 0},
+                                                            std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
   params.insertLinkableParameter(
-      std::make_unique<ChoicesParameter>(k_InitType_Key, "Initialization Type", "Tells how to initialize the data", 0, ChoicesParameter::Choices{"Manual", "Random", "Random With Range"}));
-  params.insert(std::make_unique<Float64Parameter>(k_InitValue_Key, "Initialization Value", "The initialization value if Manual Initialization Type is selected", 0.0f));
-  params.insert(std::make_unique<VectorFloat64Parameter>(k_InitRange_Key, "Initialization Range", "The initialization range if Random With Range Initialization Type is selected",
-                                                         VectorFloat64Parameter::ValueType{0.0, 0.0}));
+      std::make_unique<ChoicesParameter>(k_InitType_Key, "Initialization Type", "Tells how to initialize the data", 0, ChoicesParameter::ChoicesType{"Manual", "Random", "Random With Range"}));
+  params.insert(std::make_unique<Float64ParameterType>(k_InitValue_Key, "Initialization Value", "The initialization value if Manual Initialization Type is selected", 0.0f));
+  params.insert(std::make_unique<VectorFloat64ParameterType>(k_InitRange_Key, "Initialization Range", "The initialization range if Random With Range Initialization Type is selected",
+                                                             VectorFloat64ParameterType::ValueType{0.0, 0.0}));
   params.linkParameters(k_InitType_Key, k_InitValue_Key, std::make_any<ChoicesParameter::ValueType>(0));
   params.linkParameters(k_InitType_Key, k_InitRange_Key, std::make_any<ChoicesParameter::ValueType>(2));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CellArrayPaths_Key, "Cell Arrays", "The cell data arrays in which to initialize a sub-volume to zeros", std::vector<DataPath>{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The geometry containing the cell data for which to initialize", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseSeed_Key, k_SeedValue_Key, true);
@@ -155,14 +155,14 @@ IFilter::VersionType InitializeImageGeomCellDataFilter::parametersVersion() cons
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer InitializeImageGeomCellDataFilter::clone() const
+IFilter::UniquePointerType InitializeImageGeomCellDataFilter::clone() const
 {
   return std::make_unique<InitializeImageGeomCellDataFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                          const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto cellArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
@@ -175,7 +175,7 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
 
   if(auto result = ValidateCellTupleCount(dataStructure, imageGeomPath, cellArrayPaths, -3557); result.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(result), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(result), {})};
   }
 
   uint64 xMin = minPoint.at(0);
@@ -191,37 +191,37 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
 
   if(cellArrayPaths.empty())
   {
-    return {MakeErrorResult<OutputActions>(-3550, "At least one data array must be selected.")};
+    return {.output_actions = MakeErrorResult<OutputActions>(-3550, "At least one data array must be selected.")};
   }
 
   std::vector<Error> errors;
 
   if(xMax < xMin)
   {
-    errors.push_back(Error{-3551, fmt::format("X Max ({}) less than X Min ({})", xMax, xMin)});
+    errors.push_back(Error{.code = -3551, .message = fmt::format("X Max ({}) less than X Min ({})", xMax, xMin)});
   }
   if(yMax < yMin)
   {
-    errors.push_back(Error{-3552, fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin)});
+    errors.push_back(Error{.code = -3552, .message = fmt::format("Y Max ({}) less than Y Min ({})", yMax, yMin)});
   }
   if(zMax < zMin)
   {
-    errors.push_back(Error{-3553, fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin)});
+    errors.push_back(Error{.code = -3553, .message = fmt::format("Z Max ({}) less than Z Min ({})", zMax, zMin)});
   }
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
 
   if(xMax > (static_cast<int64>(imageGeom.getNumXCells()) - 1))
   {
-    errors.push_back(Error{-3554, fmt::format("The X Max you entered of {} is greater than your Max X Point of {}", xMax, static_cast<int64>(imageGeom.getNumXCells()) - 1)});
+    errors.push_back(Error{.code = -3554, .message = fmt::format("The X Max you entered of {} is greater than your Max X Point of {}", xMax, static_cast<int64>(imageGeom.getNumXCells()) - 1)});
   }
   if(yMax > (static_cast<int64>(imageGeom.getNumYCells()) - 1))
   {
-    errors.push_back(Error{-3555, fmt::format("The Y Max you entered of {} is greater than your Max Y Point of {}", yMax, static_cast<int64>(imageGeom.getNumYCells()) - 1)});
+    errors.push_back(Error{.code = -3555, .message = fmt::format("The Y Max you entered of {} is greater than your Max Y Point of {}", yMax, static_cast<int64>(imageGeom.getNumYCells()) - 1)});
   }
   if(zMax > (static_cast<int64>(imageGeom.getNumZCells()) - 1))
   {
-    errors.push_back(Error{-3556, fmt::format("The Z Max you entered of {} is greater than your Max Z Point of {}", zMax, static_cast<int64>(imageGeom.getNumZCells()) - 1)});
+    errors.push_back(Error{.code = -3556, .message = fmt::format("The Z Max you entered of {} is greater than your Max Z Point of {}", zMax, static_cast<int64>(imageGeom.getNumZCells()) - 1)});
   }
 
   for(const DataPath& path : cellArrayPaths)
@@ -252,43 +252,43 @@ IFilter::PreflightResult InitializeImageGeomCellDataFilter::preflightImpl(const 
     nx::core::MarkDataPathModified(dataStructure, resultOutputActions, path);
   }
 
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> InitializeImageGeomCellDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> InitializeImageGeomCellDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   InitializeImageGeomCellDataInputValues inputValues;
-  inputValues.CellArrays = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
-  inputValues.InputImageGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_ImageGeometryPath_Key);
-  inputValues.MinPoint = filterArgs.value<VectorUInt64Parameter::ValueType>(k_MinPoint_Key);
-  inputValues.MaxPoint = filterArgs.value<VectorUInt64Parameter::ValueType>(k_MaxPoint_Key);
-  inputValues.InitTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(k_InitType_Key);
-  inputValues.InitValue = filterArgs.value<Float64Parameter::ValueType>(k_InitValue_Key);
-  inputValues.InitRange = filterArgs.value<VectorFloat64Parameter::ValueType>(k_InitRange_Key);
-  inputValues.SeedValue = filterArgs.value<UInt64Parameter::ValueType>(k_SeedValue_Key);
-  inputValues.UseSeed = filterArgs.value<BoolParameter::ValueType>(k_UseSeed_Key);
-  inputValues.SeedArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_SeedArrayName_Key);
+  inputValues.cell_arrays = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_CellArrayPaths_Key);
+  inputValues.input_image_geometry_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_ImageGeometryPath_Key);
+  inputValues.min_point = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_MinPoint_Key);
+  inputValues.max_point = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_MaxPoint_Key);
+  inputValues.init_type_index = filterArgs.value<ChoicesParameter::ValueType>(k_InitType_Key);
+  inputValues.init_value = filterArgs.value<Float64ParameterType::ValueType>(k_InitValue_Key);
+  inputValues.init_range = filterArgs.value<VectorFloat64ParameterType::ValueType>(k_InitRange_Key);
+  inputValues.seed_value = filterArgs.value<UInt64ParameterType::ValueType>(k_SeedValue_Key);
+  inputValues.use_seed = filterArgs.value<BoolParameter::ValueType>(k_UseSeed_Key);
+  inputValues.seed_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_SeedArrayName_Key);
 
   return InitializeImageGeomCellData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_CellAttributeMatrixPathsKey = "CellAttributeMatrixPaths";
-constexpr StringLiteral k_XMinKey = "XMin";
-constexpr StringLiteral k_YMinKey = "YMin";
-constexpr StringLiteral k_ZMinKey = "ZMin";
-constexpr StringLiteral k_XMaxKey = "XMax";
-constexpr StringLiteral k_YMaxKey = "YMax";
-constexpr StringLiteral k_ZMaxKey = "ZMax";
-constexpr StringLiteral k_InitTypeKey = "InitType";
-constexpr StringLiteral k_InitValueKey = "InitValue";
-constexpr StringLiteral k_InitRangeKey = "InitRange";
-} // namespace SIMPL
+constexpr StringLiteralType k_CellAttributeMatrixPathsKey = "CellAttributeMatrixPaths";
+constexpr StringLiteralType k_XMinKey = "XMin";
+constexpr StringLiteralType k_YMinKey = "YMin";
+constexpr StringLiteralType k_ZMinKey = "ZMin";
+constexpr StringLiteralType k_XMaxKey = "XMax";
+constexpr StringLiteralType k_YMaxKey = "YMax";
+constexpr StringLiteralType k_ZMaxKey = "ZMax";
+constexpr StringLiteralType k_InitTypeKey = "InitType";
+constexpr StringLiteralType k_InitValueKey = "InitValue";
+constexpr StringLiteralType k_InitRangeKey = "InitRange";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> InitializeImageGeomCellDataFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -298,13 +298,13 @@ Result<Arguments> InitializeImageGeomCellDataFilter::FromSIMPLJson(const nlohman
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerFromMultiSelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathsKey, k_ImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathsKey, k_CellArrayPaths_Key));
-  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::UInt64ToVec3FilterParameterConverter>(args, json, SIMPL::k_XMinKey, SIMPL::k_YMinKey, SIMPL::k_ZMinKey, k_MinPoint_Key));
-  results.push_back(SIMPLConversion::Convert3Parameters<SIMPLConversion::UInt64ToVec3FilterParameterConverter>(args, json, SIMPL::k_XMaxKey, SIMPL::k_YMaxKey, SIMPL::k_ZMaxKey, k_MaxPoint_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedChoicesFilterParameterConverter>(args, json, SIMPL::k_InitTypeKey, k_InitType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_InitValueKey, k_InitValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::RangeFilterParameterConverter>(args, json, SIMPL::k_InitRangeKey, k_InitRange_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerFromMultiSelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathsKey, k_ImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathsKey, k_CellArrayPaths_Key));
+  results.push_back(simpl_conversion::Convert3Parameters<simpl_conversion::UInt64ToVec3FilterParameterConverterType>(args, json, simpl::k_XMinKey, simpl::k_YMinKey, simpl::k_ZMinKey, k_MinPoint_Key));
+  results.push_back(simpl_conversion::Convert3Parameters<simpl_conversion::UInt64ToVec3FilterParameterConverterType>(args, json, simpl::k_XMaxKey, simpl::k_YMaxKey, simpl::k_ZMaxKey, k_MaxPoint_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_InitTypeKey, k_InitType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_InitValueKey, k_InitValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::RangeFilterParameterConverter>(args, json, simpl::k_InitRangeKey, k_InitRange_Key));
   // Invert Data parameter is not applicable in NX
 
   Result<> conversionResult = MergeResults(std::move(results));

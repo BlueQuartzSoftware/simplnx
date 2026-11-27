@@ -9,20 +9,20 @@ namespace
 {
 // -----------------------------------------------------------------------------
 // Shared body for the two ITK-sourced real-image md5 golden cases below. Mirrors ITKBinaryThresholdImageTest.cpp:
-// read RA-Short.nrrd (int16) through OUR ITK-free reader, run OUR BinaryThresholdImageFilter (AlwaysUInt8 output)
+// read RA-Short.nrrd (int16) through OUR ITK-free reader, run OUR BinaryThresholdImageFilter (AlwaysUInt8Type output)
 // with the ITK case's params, then compare the output md5 with ITK's committed hash (plan Sec.4).
 // -----------------------------------------------------------------------------
 void RunBinaryThresholdItkGolden(const std::function<void(Arguments&)>& setParams, const std::string& committedMd5)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
   const DataPath output = geom.createChildPath("CellData").createChildPath("Output");
 
-  DataStructure ds;
-  const auto readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath("RA-Short.nrrd"), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const auto readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath("RA-Short.nrrd"), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
 
   Arguments args;
@@ -31,17 +31,17 @@ void RunBinaryThresholdItkGolden(const std::function<void(Arguments&)>& setParam
   args.insertOrAssign(BinaryThresholdImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   setParams(args);
   BinaryThresholdImageFilter filter;
-  auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // DURABLE golden: md5-validity-first (plan Sec.4).
-  const std::string ourMd5 = ip_golden::ComputeMd5Hash(ds, output);
+  const std::string ourMd5 = ip_golden::ComputeMd5Hash(dataStructure, output);
   INFO(fmt::format("BinaryThresholdImageFilter md5: ours='{}' committed='{}'", ourMd5, committedMd5));
   REQUIRE(ourMd5 == committedMd5);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
@@ -67,11 +67,11 @@ TEST_CASE("NXImageProcessing::BinaryThresholdImageFilter: ITK real-image golden 
 // ascending thresholds must preflight cleanly.
 TEST_CASE("NXImageProcessing::BinaryThresholdImageFilter: Preflight rejects Lower > Upper", "[NXImageProcessing][BinaryThresholdImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  const DataPath input = ip_test::BuildRampImage<float32>(ds, 4, 0.0, 1.0);
+  DataStructure dataStructure;
+  const DataPath input = ip_test::BuildRampImage<float32>(dataStructure, 4, 0.0, 1.0);
   const DataPath geom({"Image Geometry"});
 
   BinaryThresholdImageFilter filter;
@@ -88,10 +88,10 @@ TEST_CASE("NXImageProcessing::BinaryThresholdImageFilter: Preflight rejects Lowe
   };
 
   // Lower > Upper -> rejected at preflight.
-  REQUIRE_FALSE(filter.preflight(ds, makeArgs(500.0, 100.0)).outputActions.valid());
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(500.0, 100.0)).output_actions.valid());
   // Lower == Upper and Lower < Upper -> preflight cleanly.
-  auto equalThresholdResult = filter.preflight(ds, makeArgs(250.0, 250.0));
-  SIMPLNX_RESULT_REQUIRE_VALID(equalThresholdResult.outputActions);
-  auto orderedThresholdResult = filter.preflight(ds, makeArgs(100.0, 500.0));
-  SIMPLNX_RESULT_REQUIRE_VALID(orderedThresholdResult.outputActions);
+  auto equalThresholdResult = filter.preflight(dataStructure, makeArgs(250.0, 250.0));
+  SIMPLNX_RESULT_REQUIRE_VALID(equalThresholdResult.output_actions);
+  auto orderedThresholdResult = filter.preflight(dataStructure, makeArgs(100.0, 500.0));
+  SIMPLNX_RESULT_REQUIRE_VALID(orderedThresholdResult.output_actions);
 }

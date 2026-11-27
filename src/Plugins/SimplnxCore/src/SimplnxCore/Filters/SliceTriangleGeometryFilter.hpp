@@ -25,20 +25,20 @@ public:
 
   // Parameter Keys
   // static constexpr StringLiteral k_SliceDirection_Key = "slice_direction";
-  static constexpr StringLiteral k_SliceRange_Key = "slice_range_index";
-  static constexpr StringLiteral k_Zstart_Key = "z_start_value";
-  static constexpr StringLiteral k_Zend_Key = "z_end_value";
-  static constexpr StringLiteral k_SliceResolution_Key = "slice_spacing_value";
-  static constexpr StringLiteral k_HaveRegionIds_Key = "have_region_ids";
-  static constexpr StringLiteral k_RegionIdArrayPath_Key = "region_ids_array_path";
+  static constexpr StringLiteralType k_SliceRange_Key = "slice_range_index";
+  static constexpr StringLiteralType k_Zstart_Key = "z_start_value";
+  static constexpr StringLiteralType k_Zend_Key = "z_end_value";
+  static constexpr StringLiteralType k_SliceResolution_Key = "slice_spacing_value";
+  static constexpr StringLiteralType k_HaveRegionIds_Key = "have_region_ids";
+  static constexpr StringLiteralType k_RegionIdArrayPath_Key = "region_ids_array_path";
 
-  static constexpr StringLiteral k_TriangleGeometryDataPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteralType k_TriangleGeometryDataPath_Key = "input_triangle_geometry_path";
 
-  static constexpr StringLiteral k_OutputEdgeGeometryPath_Key = "output_edge_geometry_path";
-  static constexpr StringLiteral k_EdgeAttributeMatrixName_Key = "edge_attribute_matrix_name";
+  static constexpr StringLiteralType k_OutputEdgeGeometryPath_Key = "output_edge_geometry_path";
+  static constexpr StringLiteralType k_EdgeAttributeMatrixName_Key = "edge_attribute_matrix_name";
 
-  static constexpr StringLiteral k_SliceAttributeMatrixName_Key = "slice_attribute_matrix_name";
-  static constexpr StringLiteral k_SliceIdArrayName_Key = "slice_ids_array_name";
+  static constexpr StringLiteralType k_SliceAttributeMatrixName_Key = "slice_attribute_matrix_name";
+  static constexpr StringLiteralType k_SliceIdArrayName_Key = "slice_ids_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -95,7 +95,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

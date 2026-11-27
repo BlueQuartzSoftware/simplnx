@@ -26,7 +26,7 @@
  * @namespace nx::core::ArrayCreationUtilities
  * @brief Contains storage-aware array creation utilities.
  */
-namespace nx::core::ArrayCreationUtilities
+namespace nx::core::array_creation_utilities
 {
 /**
  * @brief Tests projected in-memory use against cached total physical memory.
@@ -79,7 +79,7 @@ SIMPLNX_EXPORT std::string ResolveStorageFormat(const DataStructure& dataStructu
  */
 template <class T>
 Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, const ShapeType& compShape, const DataPath& path, IDataAction::Mode mode, const std::string& dataFormat = "",
-                     std::string fillValue = "", const std::optional<ShapeType>& chunkShapeHint = {}, DataStoreInitializationMode initializationMode = DataStoreInitializationMode::Default)
+                     const std::string& fillValue = "", const std::optional<ShapeType>& chunkShapeHint = {}, DataStoreInitializationMode initializationMode = DataStoreInitializationMode::Default)
 {
   auto parentPath = path.getParent();
 
@@ -151,7 +151,7 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
     if(isInCore && !CheckMemoryRequirement(dataStructure, requiredMemory))
     {
       uint64 totalMemory = requiredMemory + dataStructure.memoryUsage();
-      uint64 availableMemory = Memory::GetTotalMemory();
+      uint64 availableMemory = memory_utilities::GetTotalMemory();
       return returnFailure(MakeErrorResult(-264, fmt::format("Cannot create array '{}': the DataStructure would require {} bytes total, "
                                                              "but only {} bytes of RAM are available. Consider enabling out-of-core "
                                                              "storage or lowering the size thresholds in Preferences so that large "
@@ -166,17 +166,18 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
     constexpr double k_BytesPerGiB = 1024.0 * 1024.0 * 1024.0;
     // One memory snapshot drives both the condition and its diagnostic values.
     // Clamp availability because operating-system reporting can briefly show used memory above total memory.
-    const Memory::SystemMemoryInfo info = Memory::GetSystemMemoryInfo();
-    const double availableGiB = std::max(0.0, info.totalGB - info.usedGB);
+    const memory_utilities::SystemMemoryInfo info = memory_utilities::GetSystemMemoryInfo();
+    const double availableGiB = std::max(0.0, info.total_gb - info.used_gb);
     const uint64 availableBytes = static_cast<uint64>(availableGiB * k_BytesPerGiB);
     if(isInCore && WouldExceedAvailableMemory(dataStructure.memoryUsage(), requiredMemory, availableBytes))
     {
       const double requiredGiB = static_cast<double>(requiredMemory) / k_BytesPerGiB;
       const double projectedGiB = (static_cast<double>(dataStructure.memoryUsage()) + static_cast<double>(requiredMemory)) / k_BytesPerGiB;
-      result.warnings().emplace_back(Warning{-271, fmt::format("Creating array '{}' (~{:.1f} GB) would bring in-core memory to ~{:.1f} GB, "
-                                                               "above this machine's currently-available ~{:.1f} GB. It may swap badly or "
-                                                               "fail. Consider out-of-core storage for this data.",
-                                                               path.toString(), requiredGiB, projectedGiB, availableGiB)});
+      result.warnings().emplace_back(Warning{.code = -271,
+                                             .message = fmt::format("Creating array '{}' (~{:.1f} GB) would bring in-core memory to ~{:.1f} GB, "
+                                                                    "above this machine's currently-available ~{:.1f} GB. It may swap badly or "
+                                                                    "fail. Consider out-of-core storage for this data.",
+                                                                    path.toString(), requiredGiB, projectedGiB, availableGiB)});
     }
   }
 
@@ -204,7 +205,7 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
     // OOC manager's disk-backed format) is served by its manager when that plugin is loaded.
     try
     {
-      store = DataStoreUtilities::GetIOCollection().createDataStoreWithType<T>(resolvedFormat, tupleShape, compShape, chunkShapeHint, effectiveInitializationMode);
+      store = data_store_utilities::GetIOCollection().createDataStoreWithType<T>(resolvedFormat, tupleShape, compShape, chunkShapeHint, effectiveInitializationMode);
     } catch(const std::bad_alloc&)
     {
       throw;
@@ -239,7 +240,7 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
   }
   if(!fillValue.empty())
   {
-    Result<T> conversionResult = StringInterpretationUtilities::Convert<T>(fillValue);
+    Result<T> conversionResult = string_interpretation_utilities::Convert<T>(fillValue);
 
     if(conversionResult.invalid())
     {
@@ -252,8 +253,8 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
     }
   }
 
-  auto dataArray = DataArray<T>::Create(dataStructure, name, store, dataObjectId);
-  if(dataArray == nullptr)
+  auto dataArrayPtr = DataArray<T>::Create(dataStructure, name, store, dataObjectId);
+  if(dataArrayPtr == nullptr)
   {
     if(dataStructure.getId(path).has_value())
     {
@@ -267,8 +268,8 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
     if(parentObjectPtr->getDataObjectType() == DataObject::Type::AttributeMatrix)
     {
       auto* attrMatrixPtr = dynamic_cast<AttributeMatrix*>(parentObjectPtr);
-      std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", StringUtilities::formatDimensions(attrMatrixPtr->getShape()));
-      std::string arrayShape = fmt::format("Data Array Tuple Shape: {}", StringUtilities::formatDimensions(store->getTupleShape()));
+      std::string amShape = fmt::format("Attribute Matrix Tuple Dims: {}", string_utilities::FormatDimensions(attrMatrixPtr->getShape()));
+      std::string arrayShape = fmt::format("Data Array Tuple Shape: {}", string_utilities::FormatDimensions(store->getTupleShape()));
       return returnFailure(
           MakeErrorResult(-268, fmt::format("CreateArray: Unable to create Data Array '{}' inside Attribute matrix '{}'. Mismatch of tuple dimensions. The created Data Array must have the same tuple "
                                             "dimensions or the same total number of tuples.\n{}\n{}",
@@ -280,4 +281,4 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
 
   return result;
 }
-} // namespace nx::core::ArrayCreationUtilities
+} // namespace nx::core::array_creation_utilities

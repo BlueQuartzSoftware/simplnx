@@ -24,15 +24,15 @@ public:
   ComputeGroupingDensityFilter& operator=(ComputeGroupingDensityFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_FeatureVolumesArrayPath_Key = "volumes_path";
-  static constexpr StringLiteral k_ContiguousNeighborListArrayPath_Key = "contiguous_neighbor_list_path";
-  static constexpr StringLiteral k_UseNonContiguousNeighbors_Key = "use_non_contiguous_neighbors";
-  static constexpr StringLiteral k_NonContiguousNeighborListArrayPath_Key = "non_contiguous_neighbor_list_path";
-  static constexpr StringLiteral k_ParentIdsPath_Key = "parent_ids_path";
-  static constexpr StringLiteral k_ParentVolumesPath_Key = "parent_volumes_path";
-  static constexpr StringLiteral k_FindCheckedFeatures_Key = "find_checked_features";
-  static constexpr StringLiteral k_CheckedFeaturesName_Key = "checked_features_name";
-  static constexpr StringLiteral k_GroupingDensitiesName_Key = "grouping_densities_name";
+  static constexpr StringLiteralType k_FeatureVolumesArrayPath_Key = "volumes_path";
+  static constexpr StringLiteralType k_ContiguousNeighborListArrayPath_Key = "contiguous_neighbor_list_path";
+  static constexpr StringLiteralType k_UseNonContiguousNeighbors_Key = "use_non_contiguous_neighbors";
+  static constexpr StringLiteralType k_NonContiguousNeighborListArrayPath_Key = "non_contiguous_neighbor_list_path";
+  static constexpr StringLiteralType k_ParentIdsPath_Key = "parent_ids_path";
+  static constexpr StringLiteralType k_ParentVolumesPath_Key = "parent_volumes_path";
+  static constexpr StringLiteralType k_FindCheckedFeatures_Key = "find_checked_features";
+  static constexpr StringLiteralType k_CheckedFeaturesName_Key = "checked_features_name";
+  static constexpr StringLiteralType k_GroupingDensitiesName_Key = "grouping_densities_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -89,7 +89,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

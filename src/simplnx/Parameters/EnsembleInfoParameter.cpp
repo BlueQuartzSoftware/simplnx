@@ -7,26 +7,25 @@
 #include <nlohmann/json.hpp>
 
 #include <filesystem>
-
-namespace fs = std::filesystem;
+#include <utility>
 
 namespace nx::core
 {
 namespace
 {
-constexpr StringLiteral k_InputFilePath = "input_file_path";
-constexpr StringLiteral k_StartSlice = "start_slice";
-constexpr StringLiteral k_EndSlice = "end_slice";
-constexpr StringLiteral k_UseRecommendedTransform = "use_recommended_transform";
-constexpr StringLiteral k_EulerRepresentation = "euler_representation";
-constexpr StringLiteral k_HDF5DataPaths = "hdf5_data_paths";
+constexpr StringLiteralType k_InputFilePath = "input_file_path";
+constexpr StringLiteralType k_StartSlice = "start_slice";
+constexpr StringLiteralType k_EndSlice = "end_slice";
+constexpr StringLiteralType k_UseRecommendedTransform = "use_recommended_transform";
+constexpr StringLiteralType k_EulerRepresentation = "euler_representation";
+constexpr StringLiteralType k_HDF5DataPaths = "hdf5_data_paths";
 
 } // namespace
 
 //-----------------------------------------------------------------------------
-EnsembleInfoParameter::EnsembleInfoParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+EnsembleInfoParameter::EnsembleInfoParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -37,7 +36,7 @@ Uuid EnsembleInfoParameter::uuid() const
 }
 
 //-----------------------------------------------------------------------------
-IParameter::AcceptedTypes EnsembleInfoParameter::acceptedTypes() const
+IParameter::AcceptedTypesType EnsembleInfoParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -56,7 +55,7 @@ nlohmann::json EnsembleInfoParameter::toJsonImpl(const std::any& value) const
   for(const auto& vector : table)
   {
     nlohmann::json cols;
-    for(auto cell : vector)
+    for(const auto& cell : vector)
     {
       cols.push_back(cell);
     }
@@ -66,13 +65,13 @@ nlohmann::json EnsembleInfoParameter::toJsonImpl(const std::any& value) const
 }
 
 //-----------------------------------------------------------------------------
-Result<std::any> EnsembleInfoParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> EnsembleInfoParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'EnsembleInfoParameter' Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'EnsembleInfoParameter' Error: ";
 
   if(!json.is_array() && !json.is_null())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}The JSON data entry for key '{}' is not an array.", prefix.view(), name()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonMissingEntry, fmt::format("{}The JSON data entry for key '{}' is not an array.", k_Prefix.view(), name()));
   }
 
   usize numRows = 0;
@@ -88,14 +87,14 @@ Result<std::any> EnsembleInfoParameter::fromJsonImpl(const nlohmann::json& json,
     const auto& rowJson = json[i];
     if(!rowJson.is_array())
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry, fmt::format("{}Row {} json is not an array", prefix.view(), i));
+      return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonMissingEntry, fmt::format("{}Row {} json is not an array", k_Prefix.view(), i));
     }
 
     usize numCols = rowJson.size();
     if(numCols != 3)
     {
-      return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Missing_Entry,
-                                       fmt::format("{}Row {} json array is not the correct size. Found {} values but expecting 3.", prefix.view(), i, numCols));
+      return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonMissingEntry,
+                                       fmt::format("{}Row {} json array is not the correct size. Found {} values but expecting 3.", k_Prefix.view(), i, numCols));
     }
     RowType row;
     for(usize j = 0; j < numCols; j++)
@@ -103,7 +102,7 @@ Result<std::any> EnsembleInfoParameter::fromJsonImpl(const nlohmann::json& json,
       const auto& value = rowJson[j];
       if(!value.is_string())
       {
-        return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}Element ({}, {}) is not a string", prefix.view(), i, j));
+        return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString, fmt::format("{}Element ({}, {}) is not a string", k_Prefix.view(), i, j));
       }
 
       row[j] = value.get<std::string>();
@@ -116,7 +115,7 @@ Result<std::any> EnsembleInfoParameter::fromJsonImpl(const nlohmann::json& json,
 }
 
 //-----------------------------------------------------------------------------
-IParameter::UniquePointer EnsembleInfoParameter::clone() const
+IParameter::UniquePointerType EnsembleInfoParameter::clone() const
 {
   return std::make_unique<EnsembleInfoParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -137,7 +136,7 @@ Result<> EnsembleInfoParameter::validate(const std::any& valueRef) const
   usize numRows = table.size();
   if(numRows == 0)
   {
-    return MakeErrorResult<>(FilterParameter::Constants::k_Validate_TupleShapeValue, "You must add at least one row (ensemble phase)");
+    return MakeErrorResult<>(filter_parameter::constants::k_ValidateTupleShapeValue, "You must add at least one row (ensemble phase)");
   }
   usize lastNumCols = table.front().size();
   for(usize i = 1; i < numRows; i++)
@@ -146,23 +145,23 @@ Result<> EnsembleInfoParameter::validate(const std::any& valueRef) const
     usize numCols = row.size();
     if(numCols != lastNumCols)
     {
-      return MakeErrorResult<>(FilterParameter::Constants::k_Validate_TupleShapeValue,
+      return MakeErrorResult<>(filter_parameter::constants::k_ValidateTupleShapeValue,
                                fmt::format("{}Row {} does not have the correct number of elements. Found {} values but expecting {}.", prefix, i, numCols, lastNumCols));
     }
   }
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 namespace
 {
-constexpr StringLiteral k_CrystalStructureKey = "CrystalStructure";
-constexpr StringLiteral k_PhaseNameKey = "PhaseName";
-constexpr StringLiteral k_PhaseTypeKey = "PhaseType";
+constexpr StringLiteralType k_CrystalStructureKey = "CrystalStructure";
+constexpr StringLiteralType k_PhaseNameKey = "PhaseName";
+constexpr StringLiteralType k_PhaseTypeKey = "PhaseType";
 } // namespace
 
-Result<EnsembleInfoFilterParameterConverter::ValueType> EnsembleInfoFilterParameterConverter::convert(const nlohmann::json& json)
+Result<EnsembleInfoFilterParameterConverter::ValueType> EnsembleInfoFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_array())
   {
@@ -201,5 +200,5 @@ Result<EnsembleInfoFilterParameterConverter::ValueType> EnsembleInfoFilterParame
 
   return {std::move(value)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

@@ -20,11 +20,11 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeFeatureCentroidsInputValues
 {
-  DataPath FeatureIdsArrayPath;
-  DataPath CentroidsArrayPath;
-  DataPath ImageGeometryPath;
-  DataPath FeatureAttributeMatrixPath;
-  bool IsPeriodic = false; ///< True to adjust features that wrap across periodic geometry faces.
+  DataPath feature_ids_array_path;
+  DataPath centroids_array_path;
+  DataPath image_geometry_path;
+  DataPath feature_attribute_matrix_path;
+  bool is_periodic = false; ///< True to adjust features that wrap across periodic geometry faces.
 };
 
 /**
@@ -52,7 +52,7 @@ public:
   /**
    * @brief Destroys the feature-centroid algorithm.
    */
-  ~ComputeFeatureCentroids() noexcept;
+  ~ComputeFeatureCentroids() noexcept = default;
 
   ComputeFeatureCentroids(const ComputeFeatureCentroids&) = delete;
   ComputeFeatureCentroids(ComputeFeatureCentroids&&) noexcept = delete;

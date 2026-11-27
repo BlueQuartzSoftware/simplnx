@@ -26,7 +26,7 @@ DataMap DataMap::deepCopy(const DataPath& parentCopyPath) const
   DataMap dataMap(*this);
 
   const auto keys = getKeys();
-  for(auto& key : keys)
+  for(const auto& key : keys)
   {
     const auto& dataObj = m_Map.at(key);
     const auto copy = dataObj->deepCopy(parentCopyPath.createChildPath(dataObj->getName()));
@@ -73,7 +73,7 @@ bool DataMap::remove(IdType identifier)
   return found;
 }
 
-bool DataMap::erase(const Iterator& iter)
+bool DataMap::erase(const iterator& iter)
 {
   if(iter == end())
   {
@@ -92,7 +92,7 @@ std::vector<DataMap::IdType> DataMap::getKeys() const
 {
   std::vector<IdType> keys(m_Map.size());
   usize index = 0;
-  for(auto& pair : m_Map)
+  for(const auto& pair : m_Map)
   {
     keys[index++] = pair.first;
   }
@@ -102,12 +102,12 @@ std::vector<DataMap::IdType> DataMap::getKeys() const
 std::vector<DataMap::IdType> DataMap::getAllKeys() const
 {
   std::vector<IdType> keys;
-  for(auto& pair : m_Map)
+  for(const auto& pair : m_Map)
   {
     keys.push_back(pair.first);
-    if(const BaseGroup* group = dynamic_cast<BaseGroup*>(pair.second.get()))
+    if(const BaseGroup* groupPtr = dynamic_cast<BaseGroup*>(pair.second.get()))
     {
-      auto childKeys = group->getDataMap().getAllKeys();
+      auto childKeys = groupPtr->getDataMap().getAllKeys();
       keys.insert(keys.end(), childKeys.begin(), childKeys.end());
     }
   }
@@ -117,12 +117,12 @@ std::vector<DataMap::IdType> DataMap::getAllKeys() const
 std::map<DataMap::IdType, std::weak_ptr<DataObject>> DataMap::getAllItems() const
 {
   std::map<IdType, std::weak_ptr<DataObject>> map;
-  for(auto& pair : m_Map)
+  for(const auto& pair : m_Map)
   {
     map[pair.first] = pair.second;
-    if(const BaseGroup* group = dynamic_cast<BaseGroup*>(pair.second.get()))
+    if(const BaseGroup* groupPtr = dynamic_cast<BaseGroup*>(pair.second.get()))
     {
-      map.merge(group->getDataMap().getAllItems());
+      map.merge(groupPtr->getDataMap().getAllItems());
     }
   }
   return map;
@@ -141,7 +141,7 @@ std::vector<std::string> DataMap::getNames() const
 
 bool DataMap::contains(const std::string& name) const
 {
-  for(auto& iter : m_Map)
+  for(const auto& iter : m_Map)
   {
     if(iter.second == nullptr)
     {
@@ -201,7 +201,7 @@ DataObject* DataMap::operator[](const std::string& name)
 
 const DataObject* DataMap::operator[](const std::string& name) const
 {
-  for(auto& iter : m_Map)
+  for(const auto& iter : m_Map)
   {
     if(iter.second->getName() == name)
     {
@@ -213,35 +213,35 @@ const DataObject* DataMap::operator[](const std::string& name) const
 
 DataObject& DataMap::at(const std::string& name)
 {
-  DataObject* object = (*this)[name];
-  if(object == nullptr)
+  DataObject* objectPtr = (*this)[name];
+  if(objectPtr == nullptr)
   {
     throw std::invalid_argument(fmt::format("DataMap::at: unable to find object with name '{}'", name));
   }
-  return *object;
+  return *objectPtr;
 }
 
 const DataObject& DataMap::at(const std::string& name) const
 {
-  const DataObject* object = (*this)[name];
-  if(object == nullptr)
+  const DataObject* objectPtr = (*this)[name];
+  if(objectPtr == nullptr)
   {
     throw std::invalid_argument(fmt::format("DataMap::at: unable to find object with name '{}'", name));
   }
-  return *object;
+  return *objectPtr;
 }
 
-DataMap::Iterator DataMap::find(IdType identifier)
+DataMap::iterator DataMap::find(IdType identifier)
 {
   return m_Map.find(identifier);
 }
 
-DataMap::ConstIterator DataMap::find(IdType identifier) const
+DataMap::const_iterator DataMap::find(IdType identifier) const
 {
   return m_Map.find(identifier);
 }
 
-DataMap::Iterator DataMap::find(const std::string& name)
+DataMap::iterator DataMap::find(const std::string& name)
 {
   for(auto iter = begin(); iter != end(); iter++)
   {
@@ -253,7 +253,7 @@ DataMap::Iterator DataMap::find(const std::string& name)
   return end();
 }
 
-DataMap::ConstIterator DataMap::find(const std::string& name) const
+DataMap::const_iterator DataMap::find(const std::string& name) const
 {
   for(auto iter = begin(); iter != end(); iter++)
   {
@@ -286,19 +286,19 @@ void DataMap::setDataStructure(DataStructure* dataStr)
   }
 }
 
-DataMap::Iterator DataMap::begin()
+DataMap::iterator DataMap::begin()
 {
   return m_Map.begin();
 }
-DataMap::Iterator DataMap::end()
+DataMap::iterator DataMap::end()
 {
   return m_Map.end();
 }
-DataMap::ConstIterator DataMap::begin() const
+DataMap::const_iterator DataMap::begin() const
 {
   return m_Map.begin();
 }
-DataMap::ConstIterator DataMap::end() const
+DataMap::const_iterator DataMap::end() const
 {
   return m_Map.end();
 }
@@ -309,8 +309,8 @@ DataMap& DataMap::operator=(const DataMap& rhs)
   auto keys = rhs.getKeys();
   for(auto& key : keys)
   {
-    DataObject* copy = rhs.m_Map.at(key)->shallowCopy();
-    m_Map[key] = std::shared_ptr<DataObject>(copy);
+    DataObject* copyPtr = rhs.m_Map.at(key)->shallowCopy();
+    m_Map[key] = std::shared_ptr<DataObject>(copyPtr);
   }
 
   return *this;
@@ -336,7 +336,7 @@ void DataMap::updateIds(const std::unordered_map<DataObject::IdType, DataObject:
 
     // Copy and remove updated values
     auto ptr = m_Map[updatedId.first];
-    movedValues.emplace_back(UpdatedValueType{updatedId.first, ptr});
+    movedValues.emplace_back(updatedId.first, ptr);
     m_Map.erase(updatedId.first);
   }
 

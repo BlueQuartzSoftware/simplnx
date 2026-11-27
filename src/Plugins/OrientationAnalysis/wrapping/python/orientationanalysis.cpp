@@ -8,7 +8,7 @@
 #include "OrientationAnalysis/OrientationAnalysisFilterBinding.hpp"
 
 using namespace nx::core;
-using namespace nx::core::NxPybind;
+using namespace nx::core::nx_pybind;
 namespace py = pybind11;
 
 using namespace pybind11::literals;
@@ -19,25 +19,25 @@ PYBIND11_MODULE(orientationanalysis, mod)
 
   auto& internals = Internals::Instance();
 
-  auto* plugin = internals.addPlugin<OrientationAnalysisPlugin>();
+  const auto* pluginPtr = internals.addPlugin<OrientationAnalysisPlugin>();
 
-  auto h5EbsdReaderParameter = SIMPLNX_PY_BIND_PARAMETER(mod, ReadH5EbsdFileParameter);
-  auto oemEbsdScanSelectionParameter = SIMPLNX_PY_BIND_PARAMETER(mod, OEMEbsdScanSelectionParameter);
+  auto h5EbsdReaderParameter = SIMPLNX_PY_BIND_PARAMETER(mod, ReadH5EbsdFileParameter, "ReadH5EbsdFileParameter");
+  auto oemEbsdScanSelectionParameter = SIMPLNX_PY_BIND_PARAMETER(mod, OEMEbsdScanSelectionParameter, "OEMEbsdScanSelectionParameter");
 
   py::class_<ReadH5EbsdFileParameter::ValueType> h5EbsdReaderValueType(h5EbsdReaderParameter, "ValueType");
   h5EbsdReaderValueType.def(py::init<>());
-  h5EbsdReaderValueType.def_readwrite("input_file_path", &ReadH5EbsdFileParameter::ValueType::inputFilePath);
-  h5EbsdReaderValueType.def_readwrite("start_slice", &ReadH5EbsdFileParameter::ValueType::startSlice);
-  h5EbsdReaderValueType.def_readwrite("end_slice", &ReadH5EbsdFileParameter::ValueType::endSlice);
-  h5EbsdReaderValueType.def_readwrite("euler_representation", &ReadH5EbsdFileParameter::ValueType::eulerRepresentation);
-  h5EbsdReaderValueType.def_readwrite("selected_array_names", &ReadH5EbsdFileParameter::ValueType::selectedArrayNames);
-  h5EbsdReaderValueType.def_readwrite("use_recommended_transform", &ReadH5EbsdFileParameter::ValueType::useRecommendedTransform);
+  h5EbsdReaderValueType.def_readwrite("input_file_path", &ReadH5EbsdFileParameter::ValueType::input_file_path);
+  h5EbsdReaderValueType.def_readwrite("start_slice", &ReadH5EbsdFileParameter::ValueType::start_slice);
+  h5EbsdReaderValueType.def_readwrite("end_slice", &ReadH5EbsdFileParameter::ValueType::end_slice);
+  h5EbsdReaderValueType.def_readwrite("euler_representation", &ReadH5EbsdFileParameter::ValueType::euler_representation);
+  h5EbsdReaderValueType.def_readwrite("selected_array_names", &ReadH5EbsdFileParameter::ValueType::selected_array_names);
+  h5EbsdReaderValueType.def_readwrite("use_recommended_transform", &ReadH5EbsdFileParameter::ValueType::use_recommended_transform);
 
   py::class_<OEMEbsdScanSelectionParameter::ValueType> oemEbsdScanSelectionValueType(oemEbsdScanSelectionParameter, "ValueType");
   oemEbsdScanSelectionValueType.def(py::init<>());
-  oemEbsdScanSelectionValueType.def_readwrite("input_file_path", &OEMEbsdScanSelectionParameter::ValueType::inputFilePath);
-  oemEbsdScanSelectionValueType.def_readwrite("stacking_order", &OEMEbsdScanSelectionParameter::ValueType::stackingOrder);
-  oemEbsdScanSelectionValueType.def_readwrite("scan_names", &OEMEbsdScanSelectionParameter::ValueType::scanNames);
+  oemEbsdScanSelectionValueType.def_readwrite("input_file_path", &OEMEbsdScanSelectionParameter::ValueType::input_file_path);
+  oemEbsdScanSelectionValueType.def_readwrite("stacking_order", &OEMEbsdScanSelectionParameter::ValueType::stacking_order);
+  oemEbsdScanSelectionValueType.def_readwrite("scan_names", &OEMEbsdScanSelectionParameter::ValueType::scan_names);
 
   py::enum_<OEMEbsdScanSelectionParameter::EbsdReaderType> oemEbsdScanSelectionEbsdReaderType(oemEbsdScanSelectionParameter, "EbsdReaderType");
   oemEbsdScanSelectionEbsdReaderType.value("Oim", OEMEbsdScanSelectionParameter::EbsdReaderType::Oim);

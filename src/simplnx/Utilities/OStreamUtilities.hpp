@@ -10,7 +10,7 @@
 #include "simplnx/DataStructure/StringArray.hpp"
 #include "simplnx/Filter/IFilter.hpp"
 
-namespace nx::core::OStreamUtilities
+namespace nx::core::o_stream_utilities
 {
 /**
  * @enum Delimiter
@@ -109,4 +109,4 @@ SIMPLNX_EXPORT void PrintSingleDataObject(std::ostream& outputStrm, const DataPa
 SIMPLNX_EXPORT void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataPath>& objectPaths, DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler,
                                               const std::atomic_bool& shouldCancel, const std::string& delimiter = "", bool includeIndex = false, bool includeHeaders = false,
                                               bool writeFirstIndex = true, const std::string& indexName = "Index", const std::vector<DataPath>& neighborLists = {}, bool writeNumOfFeatures = false);
-} // namespace nx::core::OStreamUtilities
+} // namespace nx::core::o_stream_utilities

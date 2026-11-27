@@ -28,18 +28,16 @@ ComputeSurfaceAreaToVolumeScanline::ComputeSurfaceAreaToVolumeScanline(DataStruc
 {
 }
 
-ComputeSurfaceAreaToVolumeScanline::~ComputeSurfaceAreaToVolumeScanline() noexcept = default;
-
 Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
 {
-  auto featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
   const auto& featureIdsStore = featureIdsArrayPtr->getDataStoreRef();
-  const auto& numCells = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NumCellsArrayPath)->getDataStoreRef();
-  auto& surfaceAreaVolumeRatio = m_DataStructure.getDataAs<Float32Array>(m_InputValues->SurfaceAreaVolumeRatioArrayName)->getDataStoreRef();
+  const auto& numCells = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->num_cells_array_path)->getDataStoreRef();
+  auto& surfaceAreaVolumeRatio = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->surface_area_volume_ratio_array_name)->getDataStoreRef();
 
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->input_image_geometry);
 
-  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->NumCellsArrayPath.getParent(), *featureIdsArrayPtr, false, m_MessageHandler);
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->num_cells_array_path.getParent(), *featureIdsArrayPtr, false, m_MessageHandler);
   if(validateNumFeatResult.invalid())
   {
     return validateNumFeatResult;
@@ -49,8 +47,8 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
   {
     return {};
   }
-  SizeVec3 dims = imageGeom.getDimensions();
-  FloatVec3 spacing = imageGeom.getSpacing();
+  SizeVec3Type dims = imageGeom.getDimensions();
+  FloatVec3Type spacing = imageGeom.getSpacing();
 
   auto xPoints = static_cast<int64>(dims[0]);
   auto yPoints = static_cast<int64>(dims[1]);
@@ -178,18 +176,18 @@ Result<> ComputeSurfaceAreaToVolumeScanline::operator()()
   // The slice buffers are released before these batches are allocated. The cap
   // gives paired count/result buffers a 512 KiB budget, not a feature-count limit.
   // For F >= 2, B <= F/2 also limits their combined payload to 4*F bytes.
-  constexpr usize maxBatchTuples = 65536;
-  const usize batchCapacity = std::min(maxBatchTuples, std::max(usize{1}, numFeatures / 2));
+  constexpr usize k_MaxBatchTuples = 65536;
+  const usize batchCapacity = std::min(k_MaxBatchTuples, std::max(usize{1}, numFeatures / 2));
   std::vector<int32> localNumCells(batchCapacity);
   std::vector<float32> localMetrics(batchCapacity);
 
   AbstractDataStore<float32>* sphericityPtr = nullptr;
-  if(m_InputValues->CalculateSphericity)
+  if(m_InputValues->calculate_sphericity)
   {
     m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Computing Sphericity"));
-    sphericityPtr = &m_DataStructure.getDataAs<Float32Array>(m_InputValues->SphericityArrayName)->getDataStoreRef();
+    sphericityPtr = &m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->sphericity_array_name)->getDataStoreRef();
   }
-  const float64 thirdRootPi = m_InputValues->CalculateSphericity ? std::cbrt(nx::core::Constants::k_PiD) : 0.0;
+  const float64 thirdRootPi = m_InputValues->calculate_sphericity ? std::cbrt(nx::core::constants::k_PiD) : 0.0;
   for(usize offset = 0; offset < numFeatures;)
   {
     const usize batchSize = std::min(batchCapacity, numFeatures - offset);

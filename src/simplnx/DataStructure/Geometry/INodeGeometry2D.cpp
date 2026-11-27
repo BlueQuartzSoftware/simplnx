@@ -19,17 +19,17 @@ const std::optional<INodeGeometry2D::IdType>& INodeGeometry2D::getFaceListDataAr
   return m_FaceListId;
 }
 
-INodeGeometry2D::OptionalId INodeGeometry2D::getFaceListId() const
+INodeGeometry2D::OptionalIdType INodeGeometry2D::getFaceListId() const
 {
   return m_FaceListId;
 }
 
-void INodeGeometry2D::setFaceListId(const OptionalId& facesId)
+void INodeGeometry2D::setFaceListId(const OptionalIdType& facesId)
 {
   m_FaceListId = facesId;
 }
 
-INodeGeometry2D::SharedFaceList* INodeGeometry2D::getFaces()
+INodeGeometry2D::SharedFaceListType* INodeGeometry2D::getFaces()
 {
   if(!m_FaceListId.has_value())
   {
@@ -40,10 +40,10 @@ INodeGeometry2D::SharedFaceList* INodeGeometry2D::getFaces()
   {
     return nullptr;
   }
-  return dataStructurePtr->getDataAs<SharedFaceList>(m_FaceListId);
+  return dataStructurePtr->getDataAs<SharedFaceListType>(m_FaceListId);
 }
 
-const INodeGeometry2D::SharedFaceList* INodeGeometry2D::getFaces() const
+const INodeGeometry2D::SharedFaceListType* INodeGeometry2D::getFaces() const
 {
   if(!m_FaceListId.has_value())
   {
@@ -54,10 +54,10 @@ const INodeGeometry2D::SharedFaceList* INodeGeometry2D::getFaces() const
   {
     return nullptr;
   }
-  return dataStructurePtr->getDataAs<SharedFaceList>(m_FaceListId);
+  return dataStructurePtr->getDataAs<SharedFaceListType>(m_FaceListId);
 }
 
-INodeGeometry2D::SharedFaceList& INodeGeometry2D::getFacesRef()
+INodeGeometry2D::SharedFaceListType& INodeGeometry2D::getFacesRef()
 {
   if(!m_FaceListId.has_value())
   {
@@ -70,10 +70,10 @@ INodeGeometry2D::SharedFaceList& INodeGeometry2D::getFacesRef()
     throw std::runtime_error(
         fmt::format("INodeGeometry2D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return dataStructurePtr->getDataRefAs<SharedFaceList>(m_FaceListId.value());
+  return dataStructurePtr->getDataRefAs<SharedFaceListType>(m_FaceListId.value());
 }
 
-const INodeGeometry2D::SharedFaceList& INodeGeometry2D::getFacesRef() const
+const INodeGeometry2D::SharedFaceListType& INodeGeometry2D::getFacesRef() const
 {
   if(!m_FaceListId.has_value())
   {
@@ -86,10 +86,10 @@ const INodeGeometry2D::SharedFaceList& INodeGeometry2D::getFacesRef() const
     throw std::runtime_error(
         fmt::format("INodeGeometry2D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return dataStructurePtr->getDataRefAs<SharedFaceList>(m_FaceListId.value());
+  return dataStructurePtr->getDataRefAs<SharedFaceListType>(m_FaceListId.value());
 }
 
-void INodeGeometry2D::setFaceList(const SharedFaceList& faces)
+void INodeGeometry2D::setFaceList(const SharedFaceListType& faces)
 {
   m_FaceListId = faces.getId();
 }
@@ -126,7 +126,7 @@ void INodeGeometry2D::setFacePointIds(usize faceId, nonstd::span<usize> vertexId
 
 void INodeGeometry2D::getFacePointIds(usize faceId, nonstd::span<usize> vertexIds) const
 {
-  auto& cells = getFacesRef();
+  const auto& cells = getFacesRef();
   const usize offset = faceId * getNumberOfVerticesPerFace();
   if(offset + getNumberOfVerticesPerFace() > cells.getSize())
   {
@@ -138,7 +138,7 @@ void INodeGeometry2D::getFacePointIds(usize faceId, nonstd::span<usize> vertexId
   }
 }
 
-void INodeGeometry2D::getFaceCoordinates(usize faceId, nonstd::span<Point3Df> coords) const
+void INodeGeometry2D::getFaceCoordinates(usize faceId, nonstd::span<FloatVec3Type> coords) const
 {
   std::vector<usize> verts(getNumberOfVerticesPerFace());
   getFacePointIds(faceId, verts);
@@ -159,19 +159,19 @@ const std::optional<INodeGeometry2D::IdType>& INodeGeometry2D::getUnsharedEdgesI
   return m_UnsharedEdgeListId;
 }
 
-void INodeGeometry2D::setUnsharedEdgesId(const OptionalId& unsharedEdgesId)
+void INodeGeometry2D::setUnsharedEdgesId(const OptionalIdType& unsharedEdgesId)
 {
   m_UnsharedEdgeListId = unsharedEdgesId;
 }
 
-const INodeGeometry2D::SharedEdgeList* INodeGeometry2D::getUnsharedEdges() const
+const INodeGeometry2D::SharedEdgeListType* INodeGeometry2D::getUnsharedEdges() const
 {
   const DataStructure* dataStructurePtr = getDataStructure();
   if(nullptr == dataStructurePtr)
   {
     return nullptr;
   }
-  return dataStructurePtr->getDataAs<SharedEdgeList>(m_UnsharedEdgeListId);
+  return dataStructurePtr->getDataAs<SharedEdgeListType>(m_UnsharedEdgeListId);
 }
 
 void INodeGeometry2D::deleteUnsharedEdges()
@@ -185,7 +185,7 @@ const std::optional<INodeGeometry2D::IdType>& INodeGeometry2D::getFaceAttributeM
   return m_FaceAttributeMatrixId;
 }
 
-void INodeGeometry2D::setFaceDataId(const OptionalId& faceDataId)
+void INodeGeometry2D::setFaceDataId(const OptionalIdType& faceDataId)
 {
   m_FaceAttributeMatrixId = faceDataId;
 }
@@ -259,11 +259,11 @@ void INodeGeometry2D::setFaceAttributeMatrix(const AttributeMatrix& attributeMat
 {
   m_FaceAttributeMatrixId = attributeMatrix.getId();
 }
-INodeGeometry2D::SharedEdgeList* INodeGeometry2D::createSharedEdgeList(usize numEdges)
+INodeGeometry2D::SharedEdgeListType* INodeGeometry2D::createSharedEdgeList(usize numEdges)
 {
   auto dataStore = std::make_unique<DataStore<MeshIndexType>>(std::vector<usize>{numEdges}, std::vector<usize>{2}, 0);
-  SharedEdgeList* edges = DataArray<MeshIndexType>::Create(*getDataStructure(), k_SharedEdgeListName, std::move(dataStore), getId());
-  return edges;
+  SharedEdgeListType* edgesPtr = DataArray<MeshIndexType>::Create(*getDataStructure(), k_SharedEdgeListName, std::move(dataStore), getId());
+  return edgesPtr;
 }
 
 void INodeGeometry2D::copyMembersInto(INodeGeometry2D& copy, const DataPath& copyPath)

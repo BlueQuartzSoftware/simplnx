@@ -19,8 +19,8 @@ class FilterList;
 class SIMPLNX_EXPORT PipelineFilter : public AbstractPipelineFilter
 {
 public:
-  using WarningsChangedSignal = nod::signal<void(std::vector<nx::core::Warning>)>;
-  using ErrorsChangedSignal = nod::signal<void(std::vector<nx::core::Error>)>;
+  using WarningsChangedSignalType = nod::signal<void(std::vector<nx::core::Warning>)>;
+  using ErrorsChangedSignalType = nod::signal<void(std::vector<nx::core::Error>)>;
 
   /**
    * @brief Attempts to construct a PipelineFilter based on the specified
@@ -63,7 +63,7 @@ public:
    * @param prefix The comment string prefix for each of the errors
    * @return The converted comment string containing all of the errors
    */
-  static std::string CreateErrorComments(const nx::core::ErrorCollection& errors, const std::string& prefix);
+  static std::string CreateErrorComments(const nx::core::ErrorCollectionType& errors, const std::string& prefix);
 
   /**
    * @brief Constructs a PipelineFilter with the provided filter and arguments.
@@ -73,7 +73,7 @@ public:
    * @param filter
    * @param args = {}
    */
-  PipelineFilter(IFilter::UniquePointer&& filter, const Arguments& args = {});
+  PipelineFilter(IFilter::UniquePointerType&& filter, Arguments args = {});
 
   ~PipelineFilter() noexcept override;
 
@@ -134,7 +134,7 @@ public:
    * @param renamedPaths Collection of renamed output paths.
    * @return bool
    */
-  bool preflight(DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming) override;
+  bool preflight(DataStructure& dataStructure, RenamedPathsType& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming) override;
 
   /**
    * @brief Attempts to execute the node using the provided DataStructure.
@@ -188,7 +188,7 @@ public:
    * @brief Adjusts arguments for renamed DataPaths.
    * @param renamedPaths
    */
-  void renamePathArgs(const RenamedPaths& renamedPaths);
+  void renamePathArgs(const RenamedPathsType& renamedPaths);
 
   /**
    * @brief Returns the type of filter of this node (filter or placeholder)
@@ -215,7 +215,7 @@ protected:
    * @brief Notifies observers to a set of renamed DataPaths.
    * @param renamedPathPairs
    */
-  void notifyRenamedPaths(const RenamedPaths& renamedPathPairs);
+  void notifyRenamedPaths(const RenamedPathsType& renamedPathPairs);
 
   /**
    * @brief Checks for the renaming of created DataPaths.
@@ -226,10 +226,10 @@ protected:
    * @param oldCreatedPaths
    * @return RenamedTypes
    */
-  RenamedPaths checkForRenamedPaths(std::vector<DataPath> oldCreatedPaths) const;
+  RenamedPathsType checkForRenamedPaths(std::vector<DataPath> oldCreatedPaths) const;
 
 private:
-  IFilter::UniquePointer m_Filter;
+  IFilter::UniquePointerType m_Filter;
   Arguments m_Arguments;
   std::string m_Comments;
   std::vector<nx::core::Warning> m_Warnings;

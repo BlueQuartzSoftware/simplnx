@@ -18,7 +18,7 @@ DataAddedMessage::DataAddedMessage(const DataAddedMessage& other)
 
 DataAddedMessage::DataAddedMessage(DataAddedMessage&& other) noexcept
 : AbstractDataStructureMessage(other)
-, m_Id(std::move(other.m_Id))
+, m_Id(other.m_Id)
 {
 }
 
@@ -26,7 +26,7 @@ DataAddedMessage::~DataAddedMessage() = default;
 
 AbstractDataStructureMessage::MessageType DataAddedMessage::getMsgType() const
 {
-  return DataAddedMessage::MsgType;
+  return DataAddedMessage::k_MsgType;
 }
 
 DataObject::IdType DataAddedMessage::getId() const

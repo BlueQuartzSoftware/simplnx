@@ -44,8 +44,8 @@ namespace nx::core
  * @param visitedIndex The index into the visited array
  * @return Either the original 'id' if this was already visited or the new 'id' if it was not visited already.
  */
-inline constexpr std::optional<DataObject::IdType> VisitDataStructureId(std::optional<DataObject::IdType>& originalId, const std::pair<DataObject::IdType, DataObject::IdType>& updatedId,
-                                                                        std::vector<bool>& visited, usize visitedIndex)
+constexpr std::optional<DataObject::IdType> VisitDataStructureId(std::optional<DataObject::IdType>& originalId, const std::pair<DataObject::IdType, DataObject::IdType>& updatedId,
+                                                                 std::vector<bool>& visited, usize visitedIndex)
 {
   if(originalId == updatedId.first && !visited[visitedIndex])
   {
@@ -60,7 +60,7 @@ inline constexpr std::optional<DataObject::IdType> VisitDataStructureId(std::opt
  * @param dataType
  * @return
  */
-inline constexpr StringLiteral GeometryTypeToString(IGeometry::Type geomType)
+constexpr StringLiteralType GeometryTypeToString(IGeometry::Type geomType)
 {
   switch(geomType)
   {
@@ -111,13 +111,13 @@ inline const std::vector<std::string>& GetAllGeometryTypesAsStrings()
  * @param geomTypeString
  * @return
  */
-inline constexpr IGeometry::Type StringToGeometryType(std::string_view geomTypeString)
+constexpr IGeometry::Type StringToGeometryType(std::string_view geomTypeString)
 {
   if(geomTypeString == GeometryTypeToString(IGeometry::Type::Image).view())
   {
     return IGeometry::Type::Image;
   }
-  else if(geomTypeString == GeometryTypeToString(IGeometry::Type::RectGrid).view())
+  if(geomTypeString == GeometryTypeToString(IGeometry::Type::RectGrid).view())
   {
     return IGeometry::Type::RectGrid;
   }
@@ -151,7 +151,7 @@ inline constexpr IGeometry::Type StringToGeometryType(std::string_view geomTypeS
   }
 }
 
-inline constexpr StringLiteral DataObjectTypeToString(DataObject::Type dataObjType)
+constexpr StringLiteralType DataObjectTypeToString(DataObject::Type dataObjType)
 {
   switch(dataObjType)
   {
@@ -210,22 +210,22 @@ inline constexpr StringLiteral DataObjectTypeToString(DataObject::Type dataObjTy
     return nx::core::IDataArray::k_TypeName;
   }
   case nx::core::DataObject::Type::DataArray: {
-    return nx::core::DataArrayConstants::k_TypeName;
+    return nx::core::data_array_constants::k_TypeName;
   }
   case nx::core::DataObject::Type::INeighborList: {
     return nx::core::INeighborList::k_TypeName;
   }
   case nx::core::DataObject::Type::NeighborList: {
-    return nx::core::NeighborListConstants::k_TypeName;
+    return nx::core::neighbor_list_constants::k_TypeName;
   }
   case nx::core::DataObject::Type::ScalarData: {
-    return nx::core::ScalarDataConstants::k_TypeName;
+    return nx::core::scalar_data_constants::k_TypeName;
   }
   case nx::core::DataObject::Type::StringArray: {
     return nx::core::StringArray::k_TypeName;
   }
   case nx::core::DataObject::Type::DynamicListArray: {
-    return nx::core::DynamicListArrayConstants::k_TypeName;
+    return nx::core::dynamic_list_array_constants::k_TypeName;
   }
   case nx::core::DataObject::Type::AbstractMontage: {
     return nx::core::AbstractMontage::k_TypeName;
@@ -247,7 +247,7 @@ inline constexpr StringLiteral DataObjectTypeToString(DataObject::Type dataObjTy
  * @param arrayType
  * @return
  */
-inline constexpr DataObject::Type ConvertArrayTypeToDataObjectType(IArray::ArrayType arrayType)
+constexpr DataObject::Type ConvertArrayTypeToDataObjectType(IArray::ArrayType arrayType)
 {
   switch(arrayType)
   {
@@ -274,7 +274,7 @@ inline constexpr DataObject::Type ConvertArrayTypeToDataObjectType(IArray::Array
  * @param dataObjectType
  * @return
  */
-inline constexpr std::optional<IArray::ArrayType> ConvertDataObjectTypeToArrayType(DataObject::Type dataObjectType) noexcept
+constexpr std::optional<IArray::ArrayType> ConvertDataObjectTypeToArrayType(DataObject::Type dataObjectType) noexcept
 {
   switch(dataObjectType)
   {

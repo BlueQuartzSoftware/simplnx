@@ -117,7 +117,7 @@ public:
    * @param index
    * @return reference
    */
-  inline reference operator[](size_type index)
+  reference operator[](size_type index)
   {
     return m_Array[index];
   }
@@ -127,7 +127,7 @@ public:
    * @param index
    * @return const_reference
    */
-  inline const_reference operator[](size_type index) const
+  const_reference operator[](size_type index) const
   {
     return m_Array[index];
   }
@@ -137,7 +137,7 @@ public:
    * @param index
    * @return reference
    */
-  inline reference at(size_type index)
+  reference at(size_type index)
   {
     assert(index < Dimensions);
     return m_Array.at(index);
@@ -148,7 +148,7 @@ public:
    * @param index
    * @return const_reference
    */
-  inline const_reference at(size_type index) const
+  const_reference at(size_type index) const
   {
     assert(index < Dimensions);
     return m_Array.at(index);
@@ -275,7 +275,7 @@ class Vec2 : public Array<T, 2>
   using ParentType = Array<T, 2>;
 
 public:
-  using tuple_type = std::tuple<T, T>;
+  using TupleType = std::tuple<T, T>;
 
   /**
    * @brief Copy constructor
@@ -348,7 +348,7 @@ public:
    * @brief Vec2 constructor copying X and Y values from the specified tuple.
    * @param data
    */
-  Vec2(const tuple_type& data)
+  Vec2(const TupleType& data)
   {
     (*this)[0] = std::get<0>(data);
     (*this)[1] = std::get<1>(data);
@@ -378,7 +378,7 @@ public:
    * @brief Returns the current X value.
    * @return value_type
    */
-  inline T getX() const
+  T getX() const
   {
     return ParentType::operator[](0);
   }
@@ -387,7 +387,7 @@ public:
    * @brief Returns the current Y value.
    * @return value_type
    */
-  inline T getY() const
+  T getY() const
   {
     return ParentType::operator[](1);
   }
@@ -396,7 +396,7 @@ public:
    * @brief Assigns a new X value.
    * @param x
    */
-  inline void setX(const T& x)
+  void setX(const T& x)
   {
     (*this)[0] = x;
   }
@@ -405,7 +405,7 @@ public:
    * @brief Assigns a new Y value.
    * @param y
    */
-  inline void setY(const T& y)
+  void setY(const T& y)
   {
     (*this)[1] = y;
   }
@@ -416,7 +416,7 @@ public:
    * @param x
    * @param y
    */
-  inline void setValues(const T& x, const T& y)
+  void setValues(const T& x, const T& y)
   {
     (*this)[0] = x;
     (*this)[1] = y;
@@ -426,7 +426,7 @@ public:
    * @brief Converts the internal data structure to a tuple_type.
    * @return tuple_type
    */
-  tuple_type toTuple() const
+  TupleType toTuple() const
   {
     return std::make_tuple(getX(), getY());
   }
@@ -445,7 +445,7 @@ public:
    * @brief Returns the dot product of this and an input Vec2
    * @return Vec2<T>
    */
-  inline T dot(const Vec2<T>& v) const
+  T dot(const Vec2<T>& v) const
   {
     return (*this)[0] * v[0] + (*this)[1] * v[1];
   }
@@ -454,7 +454,7 @@ public:
    * @brief Returns the sum of squares of this
    * @return T
    */
-  inline T sumOfSquares() const
+  T sumOfSquares() const
   {
     return (*this)[0] * (*this)[0] + (*this)[1] * (*this)[1];
   }
@@ -462,7 +462,7 @@ public:
   /**
    * @brief Returns the magnitude of the 3x1 vector
    */
-  inline T magnitude() const
+  T magnitude() const
   {
     return std::sqrt(sumOfSquares());
   }
@@ -472,7 +472,7 @@ public:
    * @param Vec2
    * @return new Vec2 instance with the result
    */
-  inline Vec2 elemMultiply(const Vec2& v) const
+  Vec2 elemMultiply(const Vec2& v) const
   {
     return Vec2((*this)[0] * v.x, (*this)[1] * v.y);
   }
@@ -482,7 +482,7 @@ public:
    * @param Vec2
    * @return new Vec2 instance with the result
    */
-  inline Vec2 elemDivide(const Vec2& v) const
+  Vec2 elemDivide(const Vec2& v) const
   {
     return Vec2((*this)[0] / v.x, (*this)[1] / v.y);
   }
@@ -492,7 +492,7 @@ public:
    * @param Vec2
    * @return new Vec2 instance with the result
    */
-  inline Vec2 operator+(const Vec2& v) const
+  Vec2 operator+(const Vec2& v) const
   {
     return Vec2((*this)[0] + v[0], (*this)[1] + v[1]);
   }
@@ -501,7 +501,7 @@ public:
    * @param Vec2
    * @return new Vec2 instance with the result
    */
-  inline Vec2 operator-(const Vec2& v) const
+  Vec2 operator-(const Vec2& v) const
   {
     return Vec2((*this)[0] - v[0], (*this)[1] - v[1]);
   }
@@ -510,7 +510,7 @@ public:
    * @param Vec2
    * @return new Vec2 instance with the result
    */
-  inline Vec2 operator-() const
+  Vec2 operator-() const
   {
     return Vec2(-(*this)[0], -(*this)[1]);
   }
@@ -519,7 +519,7 @@ public:
    * @param Vec2
    * @return new Vec2 instance with the result
    */
-  inline Vec2 operator*(const T r) const
+  Vec2 operator*(const T r) const
   {
     return Vec2((*this)[0] * r, (*this)[1] * r);
   }
@@ -528,7 +528,7 @@ public:
    * @param Vec2
    * @return new Vec2 instance with the result
    */
-  inline Vec2 operator/(const T r) const
+  Vec2 operator/(const T r) const
   {
     return Vec2((*this)[0] / r, (*this)[1] / r);
   }
@@ -537,7 +537,7 @@ public:
    * @param Vec2
    * @return Current Instance is returned
    */
-  inline Vec2& operator/=(const T r)
+  Vec2& operator/=(const T r)
   {
     (*this)[0] /= r;
     (*this)[1] /= r;
@@ -548,7 +548,7 @@ public:
    * @param Vec2
    * @return Current Instance is returned
    */
-  inline Vec2& operator*=(const T r)
+  Vec2& operator*=(const T r)
   {
     (*this)[0] *= r;
     (*this)[1] *= r;
@@ -558,7 +558,7 @@ public:
 
 using FloatVec2Type = Vec2<float32>;
 using IntVec2Type = Vec2<int32>;
-using SizeVec2 = Vec2<usize>;
+using SizeVec2Type = Vec2<usize>;
 
 // -----------------------------------------------------------------------------
 template <typename T>
@@ -567,7 +567,7 @@ class Vec3 : public Array<T, 3>
   using ParentType = Array<T, 3>;
 
 public:
-  using tuple_type = std::tuple<T, T, T>;
+  using TupleType = std::tuple<T, T, T>;
 
   /**
    * @brief Copy constructor
@@ -642,7 +642,7 @@ public:
    * @brief Constructs a Vec3 by copying values from the std::tuple.
    * @param data
    */
-  Vec3(const tuple_type& data)
+  Vec3(const TupleType& data)
   {
     (*this)[0] = std::get<0>(data);
     (*this)[1] = std::get<1>(data);
@@ -673,7 +673,7 @@ public:
    * @brief Returns the current X value.
    * @return value_type
    */
-  inline T getX() const
+  T getX() const
   {
     return ParentType::operator[](0);
   }
@@ -682,7 +682,7 @@ public:
    * @brief Returns the current Y value.
    * @return value_type
    */
-  inline T getY() const
+  T getY() const
   {
     return ParentType::operator[](1);
   }
@@ -691,7 +691,7 @@ public:
    * @brief Returns the current Z value.
    * @return value_type
    */
-  inline T getZ() const
+  T getZ() const
   {
     return ParentType::operator[](2);
   }
@@ -700,7 +700,7 @@ public:
    * @brief Assigns a new X value.
    * @param x
    */
-  inline void setX(const T& x)
+  void setX(const T& x)
   {
     (*this)[0] = x;
   }
@@ -709,7 +709,7 @@ public:
    * @brief Assigns a new Y value.
    * @param y
    */
-  inline void setY(const T& y)
+  void setY(const T& y)
   {
     (*this)[1] = y;
   }
@@ -718,7 +718,7 @@ public:
    * @brief Assigns a new Z value.
    * @param z
    */
-  inline void setZ(const T& z)
+  void setZ(const T& z)
   {
     (*this)[2] = z;
   }
@@ -730,7 +730,7 @@ public:
    * @param y
    * @param z
    */
-  inline void setValues(const T& x, const T& y, const T& z)
+  void setValues(const T& x, const T& y, const T& z)
   {
     (*this)[0] = x;
     (*this)[1] = y;
@@ -741,7 +741,7 @@ public:
    * @brief Converts the internal data structure to a tuple.
    * @return tuple_type
    */
-  tuple_type toTuple() const
+  TupleType toTuple() const
   {
     return std::make_tuple(getX(), getY(), getZ());
   }
@@ -761,7 +761,7 @@ public:
    * @brief Returns the cross product of this and an input Vec3
    * @return Vec3<T>
    */
-  inline Vec3 cross(const Vec3<T>& v) const
+  Vec3 cross(const Vec3<T>& v) const
   {
     return Vec3<T>((*this)[1] * v[2] - (*this)[2] * v[1], (*this)[2] * v[0] - (*this)[0] * v[2], (*this)[0] * v[1] - (*this)[1] * v[0]);
   }
@@ -770,7 +770,7 @@ public:
    * @brief Returns the dot product of this and an input Vec3
    * @return Vec3<T>
    */
-  inline T dot(const Vec3<T>& v) const
+  T dot(const Vec3<T>& v) const
   {
     return (*this)[0] * v[0] + (*this)[1] * v[1] + (*this)[2] * v[2];
   }
@@ -779,7 +779,7 @@ public:
    * @brief Returns the sum of squares of this
    * @return T
    */
-  inline T sumOfSquares() const
+  T sumOfSquares() const
   {
     return (*this)[0] * (*this)[0] + (*this)[1] * (*this)[1] + (*this)[2] * (*this)[2];
   }
@@ -787,7 +787,7 @@ public:
   /**
    * @brief Returns the magnitude of the 3x1 vector
    */
-  inline T magnitude() const
+  T magnitude() const
   {
     return std::sqrt(dot(*this));
   }
@@ -803,7 +803,7 @@ public:
    * @param Vec3
    * @return new Vec3 instance with the result
    */
-  inline Vec3 elemMultiply(const Vec3& v) const
+  Vec3 elemMultiply(const Vec3& v) const
   {
     return Vec3((*this)[0] * v.x, (*this)[1] * v.y, (*this)[2] * v.z);
   }
@@ -813,7 +813,7 @@ public:
    * @param Vec3
    * @return new Vec3 instance with the result
    */
-  inline Vec3 elemDivide(const Vec3& v) const
+  Vec3 elemDivide(const Vec3& v) const
   {
     return Vec3((*this)[0] / v.x, (*this)[1] / v.y, (*this)[2] / v.z);
   }
@@ -823,7 +823,7 @@ public:
    * @param Vec3
    * @return new Vec3 instance with the result
    */
-  inline Vec3 operator+(const Vec3& v) const
+  Vec3 operator+(const Vec3& v) const
   {
     return Vec3((*this)[0] + v[0], (*this)[1] + v[1], (*this)[2] + v[2]);
   }
@@ -832,7 +832,7 @@ public:
    * @param Vec3
    * @return new Vec3 instance with the result
    */
-  inline Vec3 operator-(const Vec3& v) const
+  Vec3 operator-(const Vec3& v) const
   {
     return Vec3((*this)[0] - v[0], (*this)[1] - v[1], (*this)[2] - v[2]);
   }
@@ -841,7 +841,7 @@ public:
    * @param Vec3
    * @return new Vec3 instance with the result
    */
-  inline Vec3 operator-() const
+  Vec3 operator-() const
   {
     return Vec3(-(*this)[0], -(*this)[1], -(*this)[2]);
   }
@@ -850,7 +850,7 @@ public:
    * @param Vec3
    * @return new Vec3 instance with the result
    */
-  inline Vec3 operator*(const T r) const
+  Vec3 operator*(const T r) const
   {
     return Vec3((*this)[0] * r, (*this)[1] * r, (*this)[2] * r);
   }
@@ -859,12 +859,12 @@ public:
    * @param Vec3
    * @return new Vec3 instance with the result
    */
-  inline Vec3 operator/(const T r) const
+  Vec3 operator/(const T r) const
   {
     return Vec3((*this)[0] / r, (*this)[1] / r, (*this)[2] / r);
   }
 
-  inline bool operator<(const Vec3& v) const
+  bool operator<(const Vec3& v) const
   {
     return dot(*this) < dot(v); // Ignore the square root of the value. Not needed for this function
   }
@@ -874,7 +874,7 @@ public:
    * @param Vec3
    * @return Current Instance is returned
    */
-  inline Vec3& operator/=(const T r)
+  Vec3& operator/=(const T r)
   {
     (*this)[0] /= r;
     (*this)[1] /= r;
@@ -886,7 +886,7 @@ public:
    * @param Vec3
    * @return Current Instance is returned
    */
-  inline Vec3& operator*=(const T r)
+  Vec3& operator*=(const T r)
   {
     (*this)[0] *= r;
     (*this)[1] *= r;
@@ -899,7 +899,7 @@ public:
    * @param scalar
    * @return new Vec3 instance with the result
    */
-  inline Vec3 operator+(T scalar) const
+  Vec3 operator+(T scalar) const
   {
     return Vec3((*this)[0] + scalar, (*this)[1] + scalar, (*this)[2] + scalar);
   }
@@ -908,7 +908,7 @@ public:
    * @brief Returns the dot product of this vector with itself (sum of squares)
    * @return T
    */
-  inline T dot() const
+  T dot() const
   {
     return (*this)[0] * (*this)[0] + (*this)[1] * (*this)[1] + (*this)[2] * (*this)[2];
   }
@@ -917,7 +917,7 @@ public:
    * @brief Returns a Vec3 containing the absolute value of each element
    * @return Vec3<T>
    */
-  inline Vec3 abs() const
+  Vec3 abs() const
   {
     return Vec3(std::abs((*this)[0]), std::abs((*this)[1]), std::abs((*this)[2]));
   }
@@ -978,7 +978,7 @@ class Vec4 : public Array<T, 4>
   using ParentType = Array<T, 4>;
 
 public:
-  using tuple_type = std::tuple<T, T, T, T>;
+  using TupleType = std::tuple<T, T, T, T>;
 
   /**
    * @brief Copy constructor
@@ -1055,7 +1055,7 @@ public:
    * @brief Constructs a Vec4 by copying values from a std::tuple.
    * @param data
    */
-  Vec4(const tuple_type& data)
+  Vec4(const TupleType& data)
   {
     (*this)[0] = std::get<0>(data);
     (*this)[1] = std::get<1>(data);
@@ -1087,7 +1087,7 @@ public:
    * @brief Returns the current X value.
    * @return value_type
    */
-  inline T getX() const
+  T getX() const
   {
     return ParentType::operator[](0);
   }
@@ -1096,7 +1096,7 @@ public:
    * @brief Returns the current Y value.
    * @return value_type
    */
-  inline T getY() const
+  T getY() const
   {
     return ParentType::operator[](1);
   }
@@ -1105,7 +1105,7 @@ public:
    * @brief Returns the current Z value.
    * @return value_type
    */
-  inline T getZ() const
+  T getZ() const
   {
     return ParentType::operator[](2);
   }
@@ -1114,7 +1114,7 @@ public:
    * @brief Returns the current W value.
    * @return value_type
    */
-  inline T getW() const
+  T getW() const
   {
     return ParentType::operator[](3);
   }
@@ -1123,7 +1123,7 @@ public:
    * @brief Assigns a new X value.
    * @param x
    */
-  inline void setX(const T& x)
+  void setX(const T& x)
   {
     (*this)[0] = x;
   }
@@ -1132,7 +1132,7 @@ public:
    * @brief Assigns a new Y value.
    * @param y
    */
-  inline void setY(const T& y)
+  void setY(const T& y)
   {
     (*this)[1] = y;
   }
@@ -1141,7 +1141,7 @@ public:
    * @brief Assigns a new Z value.
    * @param z
    */
-  inline void setZ(const T& z)
+  void setZ(const T& z)
   {
     (*this)[2] = z;
   }
@@ -1150,7 +1150,7 @@ public:
    * @brief Assigns a new W value.
    * @param w
    */
-  inline void setW(const T& w)
+  void setW(const T& w)
   {
     (*this)[3] = w;
   }
@@ -1163,7 +1163,7 @@ public:
    * @param z
    * @param w
    */
-  inline void setValues(const T& x, const T& y, const T& z, const T& w)
+  void setValues(const T& x, const T& y, const T& z, const T& w)
   {
     (*this)[0] = x;
     (*this)[1] = y;
@@ -1175,7 +1175,7 @@ public:
    * @brief Converts the internal data structure to a std::tuple.
    * @return tuple_type
    */
-  tuple_type toTuple() const
+  TupleType toTuple() const
   {
     return std::make_tuple(getX(), getY(), getZ(), getW());
   }
@@ -1198,7 +1198,7 @@ class Vec6 : public Array<T, 6>
   using ParentType = Array<T, 6>;
 
 public:
-  using tuple_type = std::tuple<T, T, T, T, T, T>;
+  using TupleType = std::tuple<T, T, T, T, T, T>;
 
   /**
    * @brief Copy constructor
@@ -1279,7 +1279,7 @@ public:
    * @brief Constructs a Vec6 by copying values from the provided std::tuple.
    * @param data
    */
-  Vec6(const tuple_type& data)
+  Vec6(const TupleType& data)
   {
     (*this)[0] = std::get<0>(data);
     (*this)[1] = std::get<1>(data);
@@ -1319,7 +1319,7 @@ public:
    * @param j
    * @param k
    */
-  inline void setValues(const T& x, const T& y, const T& z, const T& i, const T& j, const T& k)
+  void setValues(const T& x, const T& y, const T& z, const T& i, const T& j, const T& k)
   {
     (*this)[0] = x;
     (*this)[1] = y;
@@ -1333,7 +1333,7 @@ public:
    * @brief Converts the internal data structure to a std::tuple.
    * @return tuple_type
    */
-  tuple_type toTuple() const
+  TupleType toTuple() const
   {
     return std::make_tuple((*this)[0], (*this)[1], (*this)[2], (*this)[3], (*this)[4], (*this)[5]);
   }
@@ -1357,7 +1357,7 @@ class Vec7 : public Array<T, 7>
   using ParentType = Array<T, 7>;
 
 public:
-  using tuple_type = std::tuple<T, T, T, T, T, T, T>;
+  using TupleType = std::tuple<T, T, T, T, T, T, T>;
 
   /**
    * @brief Copy constructor
@@ -1440,7 +1440,7 @@ public:
    * @brief Constructs a Vec7 by copying values from the specified tuple.
    * @param data
    */
-  Vec7(const tuple_type& data)
+  Vec7(const TupleType& data)
   {
     (*this)[0] = std::get<0>(data);
     (*this)[1] = std::get<1>(data);
@@ -1497,7 +1497,7 @@ public:
    * @brief Converts the internal data structure to a std::tuple
    * @return tuple_type
    */
-  tuple_type toTuple() const
+  TupleType toTuple() const
   {
     return std::make_tuple((*this)[0], (*this)[1], (*this)[2], (*this)[3], (*this)[4], (*this)[5], (*this)[6]);
   }
@@ -1514,50 +1514,37 @@ public:
   }
 };
 
-using FloatVec3 = Vec3<float32>;
-using Float64Vec3 = Vec3<float64>;
-using IntVec3 = Vec3<int32>;
-using UIntVec3 = Vec3<uint32>;
-using SizeVec3 = Vec3<usize>;
-using UInt64Vec3 = Vec3<uint64>;
-using USizeVec3 = Vec3<usize>;
+using FloatVec3Type = Vec3<float32>;
+using Float64Vec3Type = Vec3<float64>;
+using IntVec3Type = Vec3<int32>;
+using UIntVec3Type = Vec3<uint32>;
+using SizeVec3Type = Vec3<usize>;
+using UInt64Vec3Type = Vec3<uint64>;
+using USizeVec3Type = Vec3<usize>;
 
-using FloatVec4 = Vec4<float32>;
-using IntVec4 = Vec4<int32>;
-using SizeVec4 = Vec4<usize>;
-using USizeVec4 = Vec4<usize>;
+using FloatVec4Type = Vec4<float32>;
+using IntVec4Type = Vec4<int32>;
+using SizeVec4Type = Vec4<usize>;
+using USizeVec4Type = Vec4<usize>;
 
-using FloatVec6 = Vec6<float32>;
-using IntVec6 = Vec6<int32>;
+using FloatVec6Type = Vec6<float32>;
+using IntVec6Type = Vec6<int32>;
 
-using FloatVec7 = Vec7<float32>;
-using IntVec7 = Vec7<int32>;
-
-// type aliasing to protect deprecated API
-template <typename T>
-using Point3D = Vec3<T>;
-
-using Point3Df = Vec3<float32>;
-using Point3Dd = Vec3<float64>;
-
-template <typename T>
-using Point2D = Vec2<T>;
-
-using Point2Df = Vec2<float32>;
-using Point2Dd = Vec2<float64>;
+using FloatVec7Type = Vec7<float32>;
+using IntVec7Type = Vec7<int32>;
 
 // type aliasing from Vec3<T> to Matrix3x1 so that existing code keeps working
 template <typename T>
-using Matrix3X1 = Vec3<T>;
+using Matrix3X1Type = Vec3<T>;
 
-using Matrix3X1f = Vec3<float32>;
-using Matrix3X1d = Vec3<float64>;
+using Matrix3X1fType = Vec3<float32>;
+using Matrix3X1dType = Vec3<float64>;
 
 // Free operator* functions for scalar * Vec3 with mixed types
 template <typename T1, typename T2>
-auto operator*(const T1& scalar, const Vec3<T2>& v) -> Vec3<typename std::common_type<T1, T2>::type>
+auto operator*(const T1& scalar, const Vec3<T2>& v) -> Vec3<std::common_type_t<T1, T2>>
 {
-  using ResultType = typename std::common_type<T1, T2>::type;
+  using ResultType = std::common_type_t<T1, T2>;
   return Vec3<ResultType>(static_cast<ResultType>(v[0]) * static_cast<ResultType>(scalar), static_cast<ResultType>(v[1]) * static_cast<ResultType>(scalar),
                           static_cast<ResultType>(v[2]) * static_cast<ResultType>(scalar));
 }

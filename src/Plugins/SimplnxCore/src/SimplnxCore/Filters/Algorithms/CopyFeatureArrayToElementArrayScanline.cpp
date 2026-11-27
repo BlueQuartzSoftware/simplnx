@@ -32,7 +32,7 @@ struct CopyFeatureToElementScanlineFunctor
    * @return Error from bulk I/O, or success after cancellation.
    */
   template <typename T>
-  Result<> operator()(const IDataArray* selectedFeatureArray, const Int32AbstractDataStore& featureIdsStore, IDataArray* createdArray, const std::atomic_bool& shouldCancel)
+  Result<> operator()(const IDataArray* selectedFeatureArray, const Int32AbstractDataStoreType& featureIdsStore, IDataArray* createdArray, const std::atomic_bool& shouldCancel)
   {
     const auto& selectedFeatureStore = selectedFeatureArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& createdStore = createdArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
@@ -107,36 +107,34 @@ CopyFeatureArrayToElementArrayScanline::CopyFeatureArrayToElementArrayScanline(D
 {
 }
 
-CopyFeatureArrayToElementArrayScanline::~CopyFeatureArrayToElementArrayScanline() noexcept = default;
-
 Result<> CopyFeatureArrayToElementArrayScanline::operator()()
 {
-  if(m_InputValues->SelectedFeatureArrayPaths.empty())
+  if(m_InputValues->selected_feature_array_paths.empty())
   {
     return {};
   }
 
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsPath);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_path);
 
-  auto validateResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->SelectedFeatureArrayPaths[0], featureIds, false, m_MessageHandler, &m_ShouldCancel);
+  auto validateResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->selected_feature_array_paths[0], featureIds, false, m_MessageHandler, &m_ShouldCancel);
   if(validateResult.invalid())
   {
     return validateResult;
   }
 
-  for(const auto& selectedFeatureArrayPath : m_InputValues->SelectedFeatureArrayPaths)
+  for(const auto& selectedFeatureArrayPath : m_InputValues->selected_feature_array_paths)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
 
-    DataPath createdArrayPath = m_InputValues->FeatureIdsPath.replaceName(selectedFeatureArrayPath.getTargetName() + m_InputValues->CreatedArraySuffix);
-    const auto* selectedFeatureArray = m_DataStructure.getDataAs<IDataArray>(selectedFeatureArrayPath);
+    DataPath createdArrayPath = m_InputValues->feature_ids_path.replaceName(selectedFeatureArrayPath.getTargetName() + m_InputValues->created_array_suffix);
+    const auto* selectedFeatureArrayPtr = m_DataStructure.getDataAs<IDataArray>(selectedFeatureArrayPath);
 
-    m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::ProgressMessage::Type::Info, fmt::format("Copying data into target array '{}'...", createdArrayPath.toString())});
+    m_MessageHandler.sendMessage(IFilter::ProgressMessageType{IFilter::ProgressMessageType::Type::Info, fmt::format("Copying data into target array '{}'...", createdArrayPath.toString())});
 
-    auto result = ExecuteDataFunction(CopyFeatureToElementScanlineFunctor{}, selectedFeatureArray->getDataType(), selectedFeatureArray, featureIds.getDataStoreRef(),
+    auto result = ExecuteDataFunction(CopyFeatureToElementScanlineFunctor{}, selectedFeatureArrayPtr->getDataType(), selectedFeatureArrayPtr, featureIds.getDataStoreRef(),
                                       m_DataStructure.getDataAs<IDataArray>(createdArrayPath), m_ShouldCancel);
     if(result.invalid())
     {

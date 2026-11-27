@@ -50,11 +50,11 @@ uint16 ExpectedValue(usize tupleIndex)
 
 TEST_CASE("SimplnxCore::WriteVtkStructuredPointsFilter: Binary correctness", "[SimplnxCore][WriteVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   constexpr usize k_DimX = 2;
   constexpr usize k_DimY = 2;
@@ -68,23 +68,23 @@ TEST_CASE("SimplnxCore::WriteVtkStructuredPointsFilter: Binary correctness", "[S
   const DataPath scalarsPath = cellDataPath.createChildPath(scalarsName);
 
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, geomName);
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({k_DimX, k_DimY, k_DimZ});
-  REQUIRE(imageGeom->setOrigin({-1.0F, 2.0F, 3.0F}).valid());
-  REQUIRE(imageGeom->setSpacing({0.5F, 1.5F, 2.0F}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, geomName);
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({k_DimX, k_DimY, k_DimZ});
+  REQUIRE(imageGeomPtr->setOrigin({-1.0F, 2.0F, 3.0F}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({0.5F, 1.5F, 2.0F}).valid());
 
   const ShapeType tupleShape = {k_DimZ, k_DimY, k_DimX};
-  auto* cellData = AttributeMatrix::Create(dataStructure, cellDataName, tupleShape, imageGeom->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeom->setCellData(*cellData);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, cellDataName, tupleShape, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
 
-  auto scalarsStore = DataStoreUtilities::CreateDataStore<uint16>(dataStructure, scalarsPath, tupleShape, {1});
-  auto* scalars = UInt16Array::Create(dataStructure, scalarsName, scalarsStore, cellData->getId());
-  REQUIRE(scalars != nullptr);
+  auto scalarsStore = data_store_utilities::CreateDataStore<uint16>(dataStructure, scalarsPath, tupleShape, {1});
+  auto* scalarsPtr = UInt16ArrayType::Create(dataStructure, scalarsName, scalarsStore, cellDataPtr->getId());
+  REQUIRE(scalarsPtr != nullptr);
   auto scalarsStoreWriteResult = scalarsStore->copyFromBuffer(0, nonstd::span<const uint16>(k_ExpectedValues.data(), k_ExpectedValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(scalarsStoreWriteResult);
-  scope.requireExpectedStore(*scalars);
+  scope.requireExpectedStore(*scalarsPtr);
 
   const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "WriteVtkStructuredPointsCorrectness.vtk";
   auto outputFileGuard = MakeScopeGuard([&outputPath]() noexcept {
@@ -115,10 +115,10 @@ TEST_CASE("SimplnxCore::WriteVtkStructuredPointsFilter: Binary correctness", "[S
                                                                  "SCALARS Small_Scalars unsigned_short 1",
                                                                  "LOOKUP_TABLE default"};
   std::string line;
-  for(const char* expectedLine : k_ExpectedHeaderLines)
+  for(const char* expectedLinePtr : k_ExpectedHeaderLines)
   {
     REQUIRE(std::getline(vtkFile, line));
-    REQUIRE(line == expectedLine);
+    REQUIRE(line == expectedLinePtr);
   }
 
   for(const uint16 expected : k_ExpectedValues)
@@ -134,16 +134,16 @@ TEST_CASE("SimplnxCore::WriteVtkStructuredPointsFilter: Binary correctness", "[S
   REQUIRE(vtkFile.get(terminator));
   REQUIRE(terminator == '\n');
   REQUIRE(vtkFile.peek() == std::ifstream::traits_type::eof());
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteVtkStructuredPointsFilter: cancellation leaves the existing output untouched", "[SimplnxCore][WriteVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   constexpr std::array<uint16, 4> k_Values = {1, 2, 3, 4};
   const std::string geomName = "Cancellation ImageGeom";
@@ -154,21 +154,21 @@ TEST_CASE("SimplnxCore::WriteVtkStructuredPointsFilter: cancellation leaves the 
   const DataPath scalarsPath = cellDataPath.createChildPath(scalarsName);
 
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, geomName);
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({2, 2, 1});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, geomName);
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({2, 2, 1});
 
   const ShapeType tupleShape = {1, 2, 2};
-  auto* cellData = AttributeMatrix::Create(dataStructure, cellDataName, tupleShape, imageGeom->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeom->setCellData(*cellData);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, cellDataName, tupleShape, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
 
-  auto scalarsStore = DataStoreUtilities::CreateDataStore<uint16>(dataStructure, scalarsPath, tupleShape, {1});
-  auto* scalars = UInt16Array::Create(dataStructure, scalarsName, scalarsStore, cellData->getId());
-  REQUIRE(scalars != nullptr);
+  auto scalarsStore = data_store_utilities::CreateDataStore<uint16>(dataStructure, scalarsPath, tupleShape, {1});
+  auto* scalarsPtr = UInt16ArrayType::Create(dataStructure, scalarsName, scalarsStore, cellDataPtr->getId());
+  REQUIRE(scalarsPtr != nullptr);
   auto scalarsStoreWriteResult = scalarsStore->copyFromBuffer(0, nonstd::span<const uint16>(k_Values.data(), k_Values.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(scalarsStoreWriteResult);
-  scope.requireExpectedStore(*scalars);
+  scope.requireExpectedStore(*scalarsPtr);
 
   const fs::path outputPath = fs::temp_directory_path() / "nx_cancel_vtk_writer.vtk";
   auto outputFileGuard = MakeScopeGuard([&outputPath]() noexcept {
@@ -203,11 +203,11 @@ TEST_CASE("SimplnxCore::WriteVtkStructuredPointsFilter: cancellation leaves the 
 
 TEST_CASE("SimplnxCore::WriteVtkStructuredPointsFilter: ASCII correctness", "[SimplnxCore][WriteVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  WriteVtkStructuredPointsTest::CheckAsciiOutput(scope, "");
+  unit_test::AlgorithmTestScope scope(scenario);
+  write_vtk_structured_points_test::CheckAsciiOutput(scope, "");
 }
 
 TEST_CASE("SimplnxCore::WriteVtkStructuredPointsFilter: Legacy scalar component limits", "[SimplnxCore][WriteVtkStructuredPointsFilter]")
@@ -216,16 +216,16 @@ TEST_CASE("SimplnxCore::WriteVtkStructuredPointsFilter: Legacy scalar component 
   const bool binary = GENERATE(false, true);
   CAPTURE(components, binary);
   DataStructure dataStructure;
-  auto* image = ImageGeom::Create(dataStructure, "Image");
-  REQUIRE(image != nullptr);
-  image->setDimensions({1, 1, 1});
-  auto* cells = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{1, 1, 1}, image->getId());
-  REQUIRE(cells != nullptr);
-  image->setCellData(*cells);
+  auto* imagePtr = ImageGeom::Create(dataStructure, "Image");
+  REQUIRE(imagePtr != nullptr);
+  imagePtr->setDimensions({1, 1, 1});
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "Cells", ShapeType{1, 1, 1}, imagePtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  imagePtr->setCellData(*cellsPtr);
   const DataPath arrayPath({"Image", "Cells", "Values"});
-  auto store = DataStoreUtilities::CreateDataStore<float32>(dataStructure, arrayPath, ShapeType{1, 1, 1}, ShapeType{components});
-  auto* values = Float32Array::Create(dataStructure, "Values", store, cells->getId());
-  REQUIRE(values != nullptr);
+  auto store = data_store_utilities::CreateDataStore<float32>(dataStructure, arrayPath, ShapeType{1, 1, 1}, ShapeType{components});
+  auto* valuesPtr = Float32ArrayType::Create(dataStructure, "Values", store, cellsPtr->getId());
+  REQUIRE(valuesPtr != nullptr);
 
   WriteVtkStructuredPointsFilter filter;
   auto args = filter.getDefaultArguments();
@@ -241,13 +241,13 @@ TEST_CASE("SimplnxCore::WriteVtkStructuredPointsFilter: Legacy scalar component 
   REQUIRE_NOTHROW(result = filter.preflight(dataStructure, args));
   if(components <= 4)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    REQUIRE(result.outputActions.errors()[0].code == -12074);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    REQUIRE(result.output_actions.errors()[0].code == -12074);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

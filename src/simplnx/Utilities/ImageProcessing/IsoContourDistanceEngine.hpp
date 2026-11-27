@@ -26,6 +26,7 @@
 #include <new>
 #include <optional>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace nx::core::ImageProcessing
@@ -44,9 +45,9 @@ using IsoRealType = std::conditional_t<std::is_same_v<T, float32>, float32, floa
 
 struct IsoContour2DBufferPlan
 {
-  usize coreRows = 0;
-  usize coreCols = 0;
-  usize residentBytes = 0;
+  usize core_rows = 0;
+  usize core_cols = 0;
+  usize resident_bytes = 0;
   bool valid = false;
   bool overflow = false;
 };
@@ -83,10 +84,10 @@ inline bool IsoContourCheckedMultiply(usize left, usize right, usize& result)
  */
 struct IsoContourSlabPlan
 {
-  usize corePlanes = 0;
-  usize inputPlanes = 0;
-  usize inputBytes = 0;
-  usize outputBytes = 0;
+  usize core_planes = 0;
+  usize input_planes = 0;
+  usize input_bytes = 0;
+  usize output_bytes = 0;
 };
 
 /**
@@ -96,7 +97,7 @@ struct IsoContourSlabPlan
  * @return The useful byte count, or error -8626 if the calculation overflows.
  */
 template <class T>
-inline Result<usize> IsoContourSlabUsefulBytes(const SizeVec3& dims)
+inline Result<usize> IsoContourSlabUsefulBytes(const SizeVec3Type& dims)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -111,7 +112,7 @@ inline Result<usize> IsoContourSlabUsefulBytes(const SizeVec3& dims)
      !IsoContourCheckedMultiply(volumeValues, bytesPerValue, requiredBytes))
   {
     return MakeErrorResult<usize>(-8626, fmt::format("Iso-contour distance dimensions ({}) and input element size ({} bytes) overflow while sizing complete input and float32 output buffers.",
-                                                     StringUtilities::formatDimensions3D(dims), sizeof(T)));
+                                                     string_utilities::FormatDimensions3D(dims), sizeof(T)));
   }
   return {requiredBytes};
 }
@@ -130,7 +131,7 @@ inline Result<usize> IsoContourSlabUsefulBytes(const SizeVec3& dims)
  * A grant for the complete buffers produces one slab and permits one input read and one output write.
  */
 template <class T>
-inline IsoContourSlabPlan PlanIsoContourSlab(const SizeVec3& dims, uint64 grantBytes)
+inline IsoContourSlabPlan PlanIsoContourSlab(const SizeVec3Type& dims, uint64 grantBytes)
 {
   const usize sliceValues = dims[0] * dims[1];
   const usize planeInputBytes = sliceValues * sizeof(T);
@@ -138,7 +139,7 @@ inline IsoContourSlabPlan PlanIsoContourSlab(const SizeVec3& dims, uint64 grantB
   const usize usefulBytes = dims[2] * (planeInputBytes + planeOutputBytes);
   if(grantBytes >= usefulBytes)
   {
-    return {dims[2], dims[2], dims[2] * planeInputBytes, dims[2] * planeOutputBytes};
+    return {.core_planes = dims[2], .input_planes = dims[2], .input_bytes = dims[2] * planeInputBytes, .output_bytes = dims[2] * planeOutputBytes};
   }
 
   const uint64 haloBytes = uint64{4} * planeInputBytes;
@@ -146,7 +147,7 @@ inline IsoContourSlabPlan PlanIsoContourSlab(const SizeVec3& dims, uint64 grantB
   const usize quotient = grantBytes > haloBytes ? static_cast<usize>((grantBytes - haloBytes) / bytesPerCorePlane) : 0;
   const usize corePlanes = std::clamp(std::max<usize>(1, quotient), usize{1}, dims[2] - 1);
   const usize inputPlanes = std::min(dims[2], corePlanes + 4);
-  return {corePlanes, inputPlanes, inputPlanes * planeInputBytes, corePlanes * planeOutputBytes};
+  return {.core_planes = corePlanes, .input_planes = inputPlanes, .input_bytes = inputPlanes * planeInputBytes, .output_bytes = corePlanes * planeOutputBytes};
 }
 
 /** @brief Gives the maximum value count in one direct-route plane group. */
@@ -176,14 +177,14 @@ template <class T, class Gather>
 inline void IsoContourRow(const T* previousPlaneRow, const T* previousRow, const T* row, const T* nextRow, const T* nextPlaneRow, float32* output, usize nx, IsoRealType<T> levelSet, float32 farValue,
                           float32 negativeFar, Gather&& gather)
 {
-  using RealT = IsoRealType<T>;
+  using RealTType = IsoRealType<T>;
   const usize lastX = nx - 1;
-  const auto classify = [levelSet](T value) -> uint32 { return static_cast<uint32>((static_cast<RealT>(value) - levelSet) > RealT{0}); };
+  const auto classify = [levelSet](T value) -> uint32 { return static_cast<uint32>((static_cast<RealTType>(value) - levelSet) > RealTType{0}); };
   for(usize x = 0; x < nx; ++x)
   {
     const usize previousX = x > 0 ? x - 1 : 0;
     const usize nextX = x < lastX ? x + 1 : lastX;
-    const RealT centerValue = static_cast<RealT>(row[x]);
+    const RealTType centerValue = static_cast<RealTType>(row[x]);
     const uint32 centerClass = classify(row[x]);
     uint32 classDifference = centerClass ^ classify(row[previousX]);
     classDifference |= centerClass ^ classify(row[nextX]);
@@ -210,13 +211,9 @@ inline bool IsoContour2DFullWidthPeak(usize columns, usize rows, usize inputByte
   usize input = 0;
   usize output = 0;
   usize total = 0;
-  if(!IsoContourCheckedAdd(rows, 4, inputRows) || !IsoContourCheckedMultiply(inputRows, columns, inputValues) || !IsoContourCheckedMultiply(rows, columns, outputValues) ||
-     !IsoContourCheckedMultiply(inputValues, inputBytes, input) || !IsoContourCheckedMultiply(outputValues, sizeof(float32), output) || !IsoContourCheckedAdd(input, output, total) ||
-     !IsoContourCheckedAdd(total, k_IsoContour2DFixedStateBytes, peak))
-  {
-    return false;
-  }
-  return true;
+  return !(!IsoContourCheckedAdd(rows, 4, inputRows) || !IsoContourCheckedMultiply(inputRows, columns, inputValues) || !IsoContourCheckedMultiply(rows, columns, outputValues) ||
+           !IsoContourCheckedMultiply(inputValues, inputBytes, input) || !IsoContourCheckedMultiply(outputValues, sizeof(float32), output) || !IsoContourCheckedAdd(input, output, total) ||
+           !IsoContourCheckedAdd(total, k_IsoContour2DFixedStateBytes, peak));
 }
 
 inline bool IsoContour2DTiledPeak(usize columns, usize inputBytes, usize& peak)
@@ -226,12 +223,8 @@ inline bool IsoContour2DTiledPeak(usize columns, usize inputBytes, usize& peak)
   usize input = 0;
   usize output = 0;
   usize total = 0;
-  if(!IsoContourCheckedAdd(columns, 4, haloColumns) || !IsoContourCheckedMultiply(haloColumns, 5, inputValues) || !IsoContourCheckedMultiply(columns, sizeof(float32), output) ||
-     !IsoContourCheckedMultiply(inputValues, inputBytes, input) || !IsoContourCheckedAdd(input, output, total) || !IsoContourCheckedAdd(total, k_IsoContour2DFixedStateBytes, peak))
-  {
-    return false;
-  }
-  return true;
+  return !(!IsoContourCheckedAdd(columns, 4, haloColumns) || !IsoContourCheckedMultiply(haloColumns, 5, inputValues) || !IsoContourCheckedMultiply(columns, sizeof(float32), output) ||
+           !IsoContourCheckedMultiply(inputValues, inputBytes, input) || !IsoContourCheckedAdd(input, output, total) || !IsoContourCheckedAdd(total, k_IsoContour2DFixedStateBytes, peak));
 }
 
 inline IsoContour2DBufferPlan BuildIsoContour2DBufferPlan(usize nx, usize ny, usize inputBytes, usize residentLimit = k_IsoContour2DResidentLimit)
@@ -280,9 +273,9 @@ inline IsoContour2DBufferPlan BuildIsoContour2DBufferPlan(usize nx, usize ny, us
   }
   if(oneFullRowPeak <= residentLimit)
   {
-    plan.coreCols = nx;
-    plan.coreRows = largestFitting(ny, [nx, inputBytes](usize rows, usize& candidatePeak) { return IsoContour2DFullWidthPeak(nx, rows, inputBytes, candidatePeak); });
-    if(!IsoContour2DFullWidthPeak(plan.coreCols, plan.coreRows, inputBytes, plan.residentBytes))
+    plan.core_cols = nx;
+    plan.core_rows = largestFitting(ny, [nx, inputBytes](usize rows, usize& candidatePeak) { return IsoContour2DFullWidthPeak(nx, rows, inputBytes, candidatePeak); });
+    if(!IsoContour2DFullWidthPeak(plan.core_cols, plan.core_rows, inputBytes, plan.resident_bytes))
     {
       plan.overflow = true;
       return plan;
@@ -290,15 +283,15 @@ inline IsoContour2DBufferPlan BuildIsoContour2DBufferPlan(usize nx, usize ny, us
   }
   else
   {
-    plan.coreCols = largestFitting(nx, [inputBytes](usize columns, usize& candidatePeak) { return IsoContour2DTiledPeak(columns, inputBytes, candidatePeak); });
-    plan.coreRows = 1;
-    if(!IsoContour2DTiledPeak(plan.coreCols, inputBytes, plan.residentBytes))
+    plan.core_cols = largestFitting(nx, [inputBytes](usize columns, usize& candidatePeak) { return IsoContour2DTiledPeak(columns, inputBytes, candidatePeak); });
+    plan.core_rows = 1;
+    if(!IsoContour2DTiledPeak(plan.core_cols, inputBytes, plan.resident_bytes))
     {
       plan.overflow = true;
       return plan;
     }
   }
-  plan.valid = plan.residentBytes <= residentLimit;
+  plan.valid = plan.resident_bytes <= residentLimit;
   return plan;
 }
 } // namespace detail
@@ -321,16 +314,16 @@ template <class T>
 class IsoContourDistance
 {
 public:
-  using RealT = detail::IsoRealType<T>;
+  using RealTType = detail::IsoRealType<T>;
 
-  IsoContourDistance(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, SizeVec3 dims, float64 levelSetValue, float64 farValue, FloatVec3 spacing,
+  IsoContourDistance(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, SizeVec3Type dims, float64 levelSetValue, float64 farValue, FloatVec3Type spacing,
                      const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize residentLimit2D = detail::k_IsoContour2DResidentLimit)
   : m_In(inStore)
   , m_Out(outStore)
-  , m_Dims(dims)
-  , m_LevelSet(static_cast<RealT>(levelSetValue))
+  , m_Dims(std::move(dims))
+  , m_LevelSet(static_cast<RealTType>(levelSetValue))
   , m_FarValue(static_cast<float32>(farValue))
-  , m_Spacing(spacing)
+  , m_Spacing(std::move(spacing))
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
   , m_ResidentLimit2D(residentLimit2D)
@@ -383,8 +376,8 @@ public:
     }
 
     const int64 nX = static_cast<int64>(m_Dims[0]);
-    const int64 nY = static_cast<int64>(m_Dims[1]);
-    const int64 nZ = static_cast<int64>(m_Dims[2]);
+    const int64 ny = static_cast<int64>(m_Dims[1]);
+    const int64 nz = static_cast<int64>(m_Dims[2]);
 
     // ITK stores spacing as double for every input type.
     // Double spacing preserves ITK promotion rules in the gradient denominator and distance calculation.
@@ -392,23 +385,23 @@ public:
     const double sp[3] = {static_cast<double>(m_Spacing[0]), static_cast<double>(m_Spacing[1]), static_cast<double>(m_Spacing[2])};
     const float32 negFar = -m_FarValue;
 
-    const auto* inMemoryInputStore = dynamic_cast<const DataStore<T>*>(&m_In);
-    auto* inMemoryOutputStore = dynamic_cast<DataStore<float32>*>(&m_Out);
+    const auto* inMemoryInputStorePtr = dynamic_cast<const DataStore<T>*>(&m_In);
+    auto* inMemoryOutputStorePtr = dynamic_cast<DataStore<float32>*>(&m_Out);
     const bool usesOutOfCoreStore = m_In.getStoreType() == IDataStore::StoreType::OutOfCore || m_Out.getStoreType() == IDataStore::StoreType::OutOfCore;
     const bool forceSlabs = ForceOocAlgorithm() && !ForceInCoreAlgorithm();
-    const bool direct = inMemoryInputStore != nullptr && inMemoryOutputStore != nullptr && !usesOutOfCoreStore && !forceSlabs;
+    const bool direct = inMemoryInputStorePtr != nullptr && inMemoryOutputStorePtr != nullptr && !usesOutOfCoreStore && !forceSlabs;
     RecordAlgorithmPathExecution(direct ? AlgorithmPath::InCore : AlgorithmPath::OutOfCore, usesOutOfCoreStore);
     if(direct)
     {
-      return RunResident(inMemoryInputStore->createSpan(), inMemoryOutputStore->createSpan(), nX, nY, nZ, slice, sp, negFar);
+      return runResident(inMemoryInputStorePtr->createSpan(), inMemoryOutputStorePtr->createSpan(), nX, ny, nz, slice, sp, negFar);
     }
 
-    if(nZ == 1)
+    if(nz == 1)
     {
-      return RunBounded2D(static_cast<usize>(nX), static_cast<usize>(nY), sp, negFar);
+      return runBounded2D(static_cast<usize>(nX), static_cast<usize>(ny), sp, negFar);
     }
 
-    return RunSlabs(nX, nY, nZ, slice, sp, negFar);
+    return runSlabs(nX, ny, nz, slice, sp, negFar);
   }
 
 private:
@@ -428,7 +421,7 @@ private:
    * Each slab uses at most two bulk reads because its new plane range can wrap once.
    * Each completed slab uses one bulk output write. A successful run reads every input plane once.
    */
-  Result<> RunSlabs(int64 nX, int64 nY, int64 nZ, usize slice, const double spacing[3], float32 negativeFar)
+  Result<> runSlabs(int64 nX, int64 ny, int64 nz, usize slice, const double spacing[3], float32 negativeFar)
   {
     auto usefulResult = detail::IsoContourSlabUsefulBytes<T>(m_Dims);
     if(usefulResult.invalid())
@@ -443,17 +436,17 @@ private:
     std::unique_ptr<float32[]> output;
     try
     {
-      input = std::make_unique_for_overwrite<T[]>(plan.inputPlanes * slice);
-      output = std::make_unique_for_overwrite<float32[]>(plan.corePlanes * slice);
+      input = std::make_unique_for_overwrite<T[]>(plan.input_planes * slice);
+      output = std::make_unique_for_overwrite<float32[]>(plan.core_planes * slice);
     } catch(const std::bad_alloc&)
     {
       return MakeErrorResult(-8627, fmt::format("Iso-contour distance could not allocate a slab with {} input planes ({} bytes) and {} output planes ({} bytes) from a {}-byte working-memory grant.",
-                                                plan.inputPlanes, plan.inputBytes, plan.corePlanes, plan.outputBytes, reservation.sizeBytes()));
+                                                plan.input_planes, plan.input_bytes, plan.core_planes, plan.output_bytes, reservation.sizeBytes()));
     }
 
     const usize xCount = static_cast<usize>(nX);
-    const usize yCount = static_cast<usize>(nY);
-    const usize zCount = static_cast<usize>(nZ);
+    const usize yCount = static_cast<usize>(ny);
+    const usize zCount = static_cast<usize>(nz);
     ThrottledMessageHandler progressThrottle(m_MessageHandler);
     m_MessageHandler.sendInfoMessage("Computing Iso-Contour Distances");
     progressThrottle.reset(zCount == 1 ? yCount : zCount, zCount == 1 ? "Computing Iso-Contour Rows" : "Computing Iso-Contour Slices");
@@ -464,7 +457,7 @@ private:
     };
     usize windowLo = 0;
     usize windowHi = 0;
-    for(usize z0 = 0; z0 < zCount; z0 += plan.corePlanes)
+    for(usize z0 = 0; z0 < zCount; z0 += plan.core_planes)
     {
       if(m_ShouldCancel)
       {
@@ -472,15 +465,15 @@ private:
       }
 
       const usize needLo = z0 >= 2 ? z0 - 2 : 0;
-      const usize zEnd = std::min(zCount, z0 + plan.corePlanes);
+      const usize zEnd = std::min(zCount, z0 + plan.core_planes);
       const usize needHi = std::min(zCount, zEnd + 2);
       const usize retainedLo = std::max(needLo, windowLo);
       const usize readLo = std::max(retainedLo, windowHi);
       const usize readPlanes = needHi - readLo;
       if(readPlanes > 0)
       {
-        const usize firstSlot = readLo % plan.inputPlanes;
-        const usize firstReadPlanes = std::min(readPlanes, plan.inputPlanes - firstSlot);
+        const usize firstSlot = readLo % plan.input_planes;
+        const usize firstReadPlanes = std::min(readPlanes, plan.input_planes - firstSlot);
         if(Result<> result = m_In.copyIntoBuffer(readLo * slice, nonstd::span<T>(input.get() + firstSlot * slice, firstReadPlanes * slice)); result.invalid())
         {
           return result;
@@ -518,31 +511,31 @@ private:
           const usize nextZ = std::min(zIndex + 1, zCount - 1);
           const usize previousY = yIndex > 0 ? yIndex - 1 : 0;
           const usize nextY = std::min(yIndex + 1, yCount - 1);
-          const T* previousPlaneRow = input.get() + (previousZ % plan.inputPlanes) * slice + yIndex * xCount;
-          const T* previousRow = input.get() + (zIndex % plan.inputPlanes) * slice + previousY * xCount;
-          const T* row = input.get() + (zIndex % plan.inputPlanes) * slice + yIndex * xCount;
-          const T* nextRow = input.get() + (zIndex % plan.inputPlanes) * slice + nextY * xCount;
-          const T* nextPlaneRow = input.get() + (nextZ % plan.inputPlanes) * slice + yIndex * xCount;
-          float32* outputRow = output.get() + localZ * slice + yIndex * xCount;
+          const T* previousPlaneRowPtr = input.get() + (previousZ % plan.input_planes) * slice + yIndex * xCount;
+          const T* previousRowPtr = input.get() + (zIndex % plan.input_planes) * slice + previousY * xCount;
+          const T* rowPtr = input.get() + (zIndex % plan.input_planes) * slice + yIndex * xCount;
+          const T* nextRowPtr = input.get() + (zIndex % plan.input_planes) * slice + nextY * xCount;
+          const T* nextPlaneRowPtr = input.get() + (nextZ % plan.input_planes) * slice + yIndex * xCount;
+          float32* outputRowPtr = output.get() + localZ * slice + yIndex * xCount;
           const int64 y = static_cast<int64>(yIndex);
           const int64 z = static_cast<int64>(zIndex);
           auto gather = [&](usize xIndex) {
             const int64 x = static_cast<int64>(xIndex);
-            auto relativeReal = [&](int64 deltaX, int64 deltaY, int64 deltaZ) -> RealT {
+            auto relativeReal = [&](int64 deltaX, int64 deltaY, int64 deltaZ) -> RealTType {
               const usize sampleX = static_cast<usize>(std::clamp<int64>(x + deltaX, 0, nX - 1));
-              const usize sampleY = static_cast<usize>(std::clamp<int64>(y + deltaY, 0, nY - 1));
-              const usize sampleZ = static_cast<usize>(std::clamp<int64>(z + deltaZ, 0, nZ - 1));
-              return static_cast<RealT>(input[(sampleZ % plan.inputPlanes) * slice + sampleY * xCount + sampleX]);
+              const usize sampleY = static_cast<usize>(std::clamp<int64>(y + deltaY, 0, ny - 1));
+              const usize sampleZ = static_cast<usize>(std::clamp<int64>(z + deltaZ, 0, nz - 1));
+              return static_cast<RealTType>(input[(sampleZ % plan.input_planes) * slice + sampleY * xCount + sampleX]);
             };
             auto relativeFloat = [&](int64 deltaX, int64 deltaY, int64 deltaZ) -> float32 {
               const usize sampleX = static_cast<usize>(std::clamp<int64>(x + deltaX, 0, nX - 1));
-              const usize sampleY = static_cast<usize>(std::clamp<int64>(y + deltaY, 0, nY - 1));
-              const usize sampleZ = static_cast<usize>(std::clamp<int64>(z + deltaZ, 0, nZ - 1));
-              return static_cast<float32>(input[(sampleZ % plan.inputPlanes) * slice + sampleY * xCount + sampleX]);
+              const usize sampleY = static_cast<usize>(std::clamp<int64>(y + deltaY, 0, ny - 1));
+              const usize sampleZ = static_cast<usize>(std::clamp<int64>(z + deltaZ, 0, nz - 1));
+              return static_cast<float32>(input[(sampleZ % plan.input_planes) * slice + sampleY * xCount + sampleX]);
             };
-            return Evaluate3DGather(relativeReal, relativeFloat, x, y, z, nX, nY, nZ, spacing, negativeFar);
+            return evaluate3DGather(relativeReal, relativeFloat, x, y, z, nX, ny, nz, spacing, negativeFar);
           };
-          detail::IsoContourRow(previousPlaneRow, previousRow, row, nextRow, nextPlaneRow, outputRow, xCount, m_LevelSet, m_FarValue, negativeFar, gather);
+          detail::IsoContourRow(previousPlaneRowPtr, previousRowPtr, rowPtr, nextRowPtr, nextPlaneRowPtr, outputRowPtr, xCount, m_LevelSet, m_FarValue, negativeFar, gather);
           if(zCount == 1 && ((rowIndex - range.min() + 1) & 15ULL) == 0)
           {
             sendThreadSafeProgress(16);
@@ -589,20 +582,20 @@ private:
    * The algorithm checks cancellation between plane groups and once per row inside each group.
    * The algorithm never checks cancellation per voxel.
    */
-  Result<> RunResident(nonstd::span<const T> input, nonstd::span<float32> output, int64 nX, int64 nY, int64 nZ, usize slice, const double spacing[3], float32 negativeFar)
+  Result<> runResident(nonstd::span<const T> input, nonstd::span<float32> output, int64 nX, int64 ny, int64 nz, usize slice, const double spacing[3], float32 negativeFar)
   {
     auto clampCoordinate = [](int64 value, int64 high) { return value < 0 ? int64{0} : (value > high ? high : value); };
-    auto sampleReal = [&](int64 x, int64 y, int64 z) -> RealT {
-      const usize index = static_cast<usize>((clampCoordinate(z, nZ - 1) * nY + clampCoordinate(y, nY - 1)) * nX + clampCoordinate(x, nX - 1));
-      return static_cast<RealT>(input[index]);
+    auto sampleReal = [&](int64 x, int64 y, int64 z) -> RealTType {
+      const usize index = static_cast<usize>((clampCoordinate(z, nz - 1) * ny + clampCoordinate(y, ny - 1)) * nX + clampCoordinate(x, nX - 1));
+      return static_cast<RealTType>(input[index]);
     };
     auto sampleFloat = [&](int64 x, int64 y, int64 z) -> float32 {
-      const usize index = static_cast<usize>((clampCoordinate(z, nZ - 1) * nY + clampCoordinate(y, nY - 1)) * nX + clampCoordinate(x, nX - 1));
+      const usize index = static_cast<usize>((clampCoordinate(z, nz - 1) * ny + clampCoordinate(y, ny - 1)) * nX + clampCoordinate(x, nX - 1));
       return static_cast<float32>(input[index]);
     };
     const usize xCount = static_cast<usize>(nX);
-    const usize yCount = static_cast<usize>(nY);
-    const usize zCount = static_cast<usize>(nZ);
+    const usize yCount = static_cast<usize>(ny);
+    const usize zCount = static_cast<usize>(nz);
     ThrottledMessageHandler progressThrottle(m_MessageHandler);
     m_MessageHandler.sendInfoMessage("Computing Iso-Contour Distances");
     progressThrottle.reset(zCount == 1 ? yCount : zCount, zCount == 1 ? "Computing Iso-Contour Rows" : "Computing Iso-Contour Slices");
@@ -635,21 +628,21 @@ private:
           const usize nextZ = std::min(zIndex + 1, zCount - 1);
           const usize previousY = yIndex > 0 ? yIndex - 1 : 0;
           const usize nextY = std::min(yIndex + 1, yCount - 1);
-          const T* previousPlaneRow = input.data() + previousZ * slice + yIndex * xCount;
-          const T* previousRow = input.data() + zIndex * slice + previousY * xCount;
-          const T* row = input.data() + zIndex * slice + yIndex * xCount;
-          const T* nextRow = input.data() + zIndex * slice + nextY * xCount;
-          const T* nextPlaneRow = input.data() + nextZ * slice + yIndex * xCount;
-          float32* outputRow = output.data() + zIndex * slice + yIndex * xCount;
+          const T* previousPlaneRowPtr = input.data() + previousZ * slice + yIndex * xCount;
+          const T* previousRowPtr = input.data() + zIndex * slice + previousY * xCount;
+          const T* rowPtr = input.data() + zIndex * slice + yIndex * xCount;
+          const T* nextRowPtr = input.data() + zIndex * slice + nextY * xCount;
+          const T* nextPlaneRowPtr = input.data() + nextZ * slice + yIndex * xCount;
+          float32* outputRowPtr = output.data() + zIndex * slice + yIndex * xCount;
           const int64 y = static_cast<int64>(yIndex);
           const int64 z = static_cast<int64>(zIndex);
           auto gather = [&](usize xIndex) {
             const int64 x = static_cast<int64>(xIndex);
-            auto relativeReal = [&](int64 deltaX, int64 deltaY, int64 deltaZ) -> RealT { return sampleReal(x + deltaX, y + deltaY, z + deltaZ); };
+            auto relativeReal = [&](int64 deltaX, int64 deltaY, int64 deltaZ) -> RealTType { return sampleReal(x + deltaX, y + deltaY, z + deltaZ); };
             auto relativeFloat = [&](int64 deltaX, int64 deltaY, int64 deltaZ) -> float32 { return sampleFloat(x + deltaX, y + deltaY, z + deltaZ); };
-            return Evaluate3DGather(relativeReal, relativeFloat, x, y, z, nX, nY, nZ, spacing, negativeFar);
+            return evaluate3DGather(relativeReal, relativeFloat, x, y, z, nX, ny, nz, spacing, negativeFar);
           };
-          detail::IsoContourRow(previousPlaneRow, previousRow, row, nextRow, nextPlaneRow, outputRow, xCount, m_LevelSet, m_FarValue, negativeFar, gather);
+          detail::IsoContourRow(previousPlaneRowPtr, previousRowPtr, rowPtr, nextRowPtr, nextPlaneRowPtr, outputRowPtr, xCount, m_LevelSet, m_FarValue, negativeFar, gather);
           if(zCount == 1 && ((rowIndex - range.min() + 1) & 15ULL) == 0)
           {
             sendThreadSafeProgress(16);
@@ -676,23 +669,23 @@ private:
   }
 
   template <class SampleReal, class SampleFloat>
-  float32 Evaluate2DGather(SampleReal&& sampleReal, SampleFloat&& sampleFloat, int64 x, int64 y, int64 nx, int64 ny, const double spacing[3], float32 negativeFar) const
+  float32 evaluate2DGather(SampleReal&& sampleReal, SampleFloat&& sampleFloat, int64 x, int64 y, int64 nx, int64 ny, const double spacing[3], float32 negativeFar) const
   {
-    const RealT centerValue = sampleReal(0, 0);
+    const RealTType centerValue = sampleReal(0, 0);
     float32 best = centerValue > m_LevelSet ? m_FarValue : (centerValue < m_LevelSet ? negativeFar : 0.0f);
     auto evaluateEdge = [&](int64 edgeX, int64 edgeY, int32 axis, bool targetIsFirst) {
       const int64 neighborX = edgeX + (axis == 0 ? 1 : 0);
       const int64 neighborY = edgeY + (axis == 1 ? 1 : 0);
-      const RealT val0 = sampleReal(edgeX, edgeY) - m_LevelSet;
-      const RealT val1 = sampleReal(neighborX, neighborY) - m_LevelSet;
-      const bool sign = val0 > RealT{0};
-      if(sign == (val1 > RealT{0}))
+      const RealTType val0 = sampleReal(edgeX, edgeY) - m_LevelSet;
+      const RealTType val1 = sampleReal(neighborX, neighborY) - m_LevelSet;
+      const bool sign = val0 > RealTType{0};
+      if(sign == (val1 > RealTType{0}))
       {
         return;
       }
 
-      RealT grad0[3];
-      RealT grad1[3];
+      RealTType grad0[3];
+      RealTType grad1[3];
       for(int32 gradientAxis = 0; gradientAxis < 3; ++gradientAxis)
       {
         const int64 gradientX = gradientAxis == 0 ? 1 : 0;
@@ -700,28 +693,28 @@ private:
         grad0[gradientAxis] = sampleReal(edgeX + gradientX, edgeY + gradientY) - sampleReal(edgeX - gradientX, edgeY - gradientY);
         const float32 positive = sampleFloat(neighborX + gradientX, neighborY + gradientY);
         const float32 negative = sampleFloat(neighborX - gradientX, neighborY - gradientY);
-        grad1[gradientAxis] = static_cast<RealT>(positive - negative);
+        grad1[gradientAxis] = static_cast<RealTType>(positive - negative);
       }
 
-      const RealT difference = sign ? (val0 - val1) : (val1 - val0);
-      if(difference < std::numeric_limits<RealT>::min())
+      const RealTType difference = sign ? (val0 - val1) : (val1 - val0);
+      if(difference < std::numeric_limits<RealTType>::min())
       {
         return;
       }
-      RealT gradient[3];
-      RealT norm = RealT{0};
+      RealTType gradient[3];
+      RealTType norm = RealTType{0};
       for(int32 gradientAxis = 0; gradientAxis < 3; ++gradientAxis)
       {
-        gradient[gradientAxis] = (grad0[gradientAxis] * RealT{0.5} + grad1[gradientAxis] * RealT{0.5}) / (RealT{2} * spacing[gradientAxis]);
+        gradient[gradientAxis] = (grad0[gradientAxis] * RealTType{0.5} + grad1[gradientAxis] * RealTType{0.5}) / (RealTType{2} * spacing[gradientAxis]);
         norm += gradient[gradientAxis] * gradient[gradientAxis];
       }
       norm = std::sqrt(norm);
-      if(norm < std::numeric_limits<RealT>::min())
+      if(norm < std::numeric_limits<RealTType>::min())
       {
         return;
       }
-      const RealT scale = std::abs(gradient[axis]) * spacing[axis] / norm / difference;
-      const RealT candidate = (targetIsFirst ? val0 : val1) * scale;
+      const RealTType scale = std::abs(gradient[axis]) * spacing[axis] / norm / difference;
+      const RealTType candidate = (targetIsFirst ? val0 : val1) * scale;
       UpdateMinimum(best, candidate);
     };
 
@@ -744,7 +737,7 @@ private:
     return best;
   }
 
-  static void UpdateMinimum(float32& target, RealT candidate)
+  static void UpdateMinimum(float32& target, RealTType candidate)
   {
     if(std::abs(static_cast<double>(candidate)) < std::abs(static_cast<double>(target)))
     {
@@ -773,25 +766,25 @@ private:
    * Relative samplers let resident and slab routes use the same kernel.
    */
   template <class SampleReal, class SampleFloat>
-  float32 Evaluate3DGather(SampleReal&& sampleReal, SampleFloat&& sampleFloat, int64 x, int64 y, int64 z, int64 nx, int64 ny, int64 nz, const double spacing[3], float32 negativeFar) const
+  float32 evaluate3DGather(SampleReal&& sampleReal, SampleFloat&& sampleFloat, int64 x, int64 y, int64 z, int64 nx, int64 ny, int64 nz, const double spacing[3], float32 negativeFar) const
   {
-    const RealT centerValue = sampleReal(0, 0, 0);
+    const RealTType centerValue = sampleReal(0, 0, 0);
     float32 best = centerValue > m_LevelSet ? m_FarValue : (centerValue < m_LevelSet ? negativeFar : 0.0f);
 
     auto evaluateEdge = [&](int64 edgeX, int64 edgeY, int64 edgeZ, int32 axis, bool targetIsFirst) {
       const int64 neighborX = edgeX + (axis == 0 ? 1 : 0);
       const int64 neighborY = edgeY + (axis == 1 ? 1 : 0);
       const int64 neighborZ = edgeZ + (axis == 2 ? 1 : 0);
-      const RealT val0 = sampleReal(edgeX, edgeY, edgeZ) - m_LevelSet;
-      const RealT val1 = sampleReal(neighborX, neighborY, neighborZ) - m_LevelSet;
-      const bool sign = val0 > RealT{0};
-      if(sign == (val1 > RealT{0}))
+      const RealTType val0 = sampleReal(edgeX, edgeY, edgeZ) - m_LevelSet;
+      const RealTType val1 = sampleReal(neighborX, neighborY, neighborZ) - m_LevelSet;
+      const bool sign = val0 > RealTType{0};
+      if(sign == (val1 > RealTType{0}))
       {
         return;
       }
 
-      RealT gradient0[3];
-      RealT gradient1[3];
+      RealTType gradient0[3];
+      RealTType gradient1[3];
       for(int32 gradientAxis = 0; gradientAxis < 3; ++gradientAxis)
       {
         const int64 gradientX = gradientAxis == 0 ? 1 : 0;
@@ -800,28 +793,28 @@ private:
         gradient0[gradientAxis] = sampleReal(edgeX + gradientX, edgeY + gradientY, edgeZ + gradientZ) - sampleReal(edgeX - gradientX, edgeY - gradientY, edgeZ - gradientZ);
         const float32 positive = sampleFloat(neighborX + gradientX, neighborY + gradientY, neighborZ + gradientZ);
         const float32 negative = sampleFloat(neighborX - gradientX, neighborY - gradientY, neighborZ - gradientZ);
-        gradient1[gradientAxis] = static_cast<RealT>(positive - negative);
+        gradient1[gradientAxis] = static_cast<RealTType>(positive - negative);
       }
 
-      const RealT difference = sign ? (val0 - val1) : (val1 - val0);
-      if(difference < std::numeric_limits<RealT>::min())
+      const RealTType difference = sign ? (val0 - val1) : (val1 - val0);
+      if(difference < std::numeric_limits<RealTType>::min())
       {
         return;
       }
-      RealT gradient[3];
-      RealT norm = RealT{0};
+      RealTType gradient[3];
+      RealTType norm = RealTType{0};
       for(int32 gradientAxis = 0; gradientAxis < 3; ++gradientAxis)
       {
-        gradient[gradientAxis] = (gradient0[gradientAxis] * RealT{0.5} + gradient1[gradientAxis] * RealT{0.5}) / (RealT{2} * spacing[gradientAxis]);
+        gradient[gradientAxis] = (gradient0[gradientAxis] * RealTType{0.5} + gradient1[gradientAxis] * RealTType{0.5}) / (RealTType{2} * spacing[gradientAxis]);
         norm += gradient[gradientAxis] * gradient[gradientAxis];
       }
       norm = std::sqrt(norm);
-      if(norm < std::numeric_limits<RealT>::min())
+      if(norm < std::numeric_limits<RealTType>::min())
       {
         return;
       }
-      const RealT scale = std::abs(gradient[axis]) * spacing[axis] / norm / difference;
-      const RealT candidate = (targetIsFirst ? val0 : val1) * scale;
+      const RealTType scale = std::abs(gradient[axis]) * spacing[axis] / norm / difference;
+      const RealTType candidate = (targetIsFirst ? val0 : val1) * scale;
       UpdateMinimum(best, candidate);
     };
 
@@ -852,7 +845,7 @@ private:
     return best;
   }
 
-  Result<> RunBounded2DFullWidth(usize nx, usize ny, usize coreRows, const double spacing[3], float32 negativeFar)
+  Result<> runBounded2DFullWidth(usize nx, usize ny, usize coreRows, const double spacing[3], float32 negativeFar)
   {
     ThrottledMessageHandler progressThrottle(m_MessageHandler);
     m_MessageHandler.sendInfoMessage("Computing Iso-Contour Distances");
@@ -884,17 +877,17 @@ private:
           const usize localRow = localIndex / nx;
           const int64 globalY = static_cast<int64>(yBegin + localRow);
           const int64 x = static_cast<int64>(localIndex - localRow * nx);
-          auto sampleReal = [&](int64 deltaX, int64 deltaY) -> RealT {
+          auto sampleReal = [&](int64 deltaX, int64 deltaY) -> RealTType {
             const int64 sampleX = std::clamp<int64>(x + deltaX, 0, static_cast<int64>(nx) - 1);
             const int64 sampleY = std::clamp<int64>(globalY + deltaY, 0, static_cast<int64>(ny) - 1);
-            return static_cast<RealT>(inputBlock[(static_cast<usize>(sampleY) - loadBegin) * nx + static_cast<usize>(sampleX)]);
+            return static_cast<RealTType>(inputBlock[(static_cast<usize>(sampleY) - loadBegin) * nx + static_cast<usize>(sampleX)]);
           };
           auto sampleFloat = [&](int64 deltaX, int64 deltaY) -> float32 {
             const int64 sampleX = std::clamp<int64>(x + deltaX, 0, static_cast<int64>(nx) - 1);
             const int64 sampleY = std::clamp<int64>(globalY + deltaY, 0, static_cast<int64>(ny) - 1);
             return static_cast<float32>(inputBlock[(static_cast<usize>(sampleY) - loadBegin) * nx + static_cast<usize>(sampleX)]);
           };
-          outputBlock[localIndex] = Evaluate2DGather(sampleReal, sampleFloat, x, globalY, static_cast<int64>(nx), static_cast<int64>(ny), spacing, negativeFar);
+          outputBlock[localIndex] = evaluate2DGather(sampleReal, sampleFloat, x, globalY, static_cast<int64>(nx), static_cast<int64>(ny), spacing, negativeFar);
         }
       };
       ParallelDataAlgorithm parallelAlgorithm;
@@ -910,7 +903,7 @@ private:
     return {};
   }
 
-  Result<> RunBounded2DTiled(usize nx, usize ny, usize coreCols, const double spacing[3], float32 negativeFar)
+  Result<> runBounded2DTiled(usize nx, usize ny, usize coreCols, const double spacing[3], float32 negativeFar)
   {
     ThrottledMessageHandler progressThrottle(m_MessageHandler);
     m_MessageHandler.sendInfoMessage("Computing Iso-Contour Distances");
@@ -945,17 +938,17 @@ private:
           for(usize localX = range.min(); localX < range.max(); ++localX)
           {
             const int64 globalX = static_cast<int64>(xBegin + localX);
-            auto sampleReal = [&](int64 deltaX, int64 deltaY) -> RealT {
+            auto sampleReal = [&](int64 deltaX, int64 deltaY) -> RealTType {
               const usize sampleX = static_cast<usize>(std::clamp<int64>(globalX + deltaX, 0, static_cast<int64>(nx) - 1));
               const usize inputRow = static_cast<usize>(deltaY + 2);
-              return static_cast<RealT>(inputWindow[inputRow * inputStride + sampleX - haloBegin]);
+              return static_cast<RealTType>(inputWindow[inputRow * inputStride + sampleX - haloBegin]);
             };
             auto sampleFloat = [&](int64 deltaX, int64 deltaY) -> float32 {
               const usize sampleX = static_cast<usize>(std::clamp<int64>(globalX + deltaX, 0, static_cast<int64>(nx) - 1));
               const usize inputRow = static_cast<usize>(deltaY + 2);
               return static_cast<float32>(inputWindow[inputRow * inputStride + sampleX - haloBegin]);
             };
-            output[localX] = Evaluate2DGather(sampleReal, sampleFloat, globalX, static_cast<int64>(y), static_cast<int64>(nx), static_cast<int64>(ny), spacing, negativeFar);
+            output[localX] = evaluate2DGather(sampleReal, sampleFloat, globalX, static_cast<int64>(y), static_cast<int64>(nx), static_cast<int64>(ny), spacing, negativeFar);
           }
         };
         ParallelDataAlgorithm parallelAlgorithm;
@@ -972,7 +965,7 @@ private:
     return {};
   }
 
-  Result<> RunBounded2D(usize nx, usize ny, const double spacing[3], float32 negativeFar)
+  Result<> runBounded2D(usize nx, usize ny, const double spacing[3], float32 negativeFar)
   {
     const detail::IsoContour2DBufferPlan plan = detail::BuildIsoContour2DBufferPlan(nx, ny, sizeof(T), m_ResidentLimit2D);
     if(plan.overflow)
@@ -984,26 +977,26 @@ private:
       return MakeErrorResult(
           -8625, fmt::format("Iso-contour distance 2D buffer plan exceeds the {}-byte resident limit for dimensions {} x {} and {}-byte input values.", m_ResidentLimit2D, nx, ny, sizeof(T)));
     }
-    if(plan.coreCols == nx)
+    if(plan.core_cols == nx)
     {
-      usize blockRows = plan.coreRows;
+      usize blockRows = plan.core_rows;
       const std::optional<ShapeType> outputChunkShape = m_Out.getChunkShape();
       if(outputChunkShape.has_value() && outputChunkShape->size() >= 3 && (*outputChunkShape)[0] == 1 && (*outputChunkShape)[1] > 0 && (*outputChunkShape)[1] <= blockRows &&
          (*outputChunkShape)[2] == nx)
       {
         blockRows = (blockRows / (*outputChunkShape)[1]) * (*outputChunkShape)[1];
       }
-      return RunBounded2DFullWidth(nx, ny, blockRows, spacing, negativeFar);
+      return runBounded2DFullWidth(nx, ny, blockRows, spacing, negativeFar);
     }
-    return RunBounded2DTiled(nx, ny, plan.coreCols, spacing, negativeFar);
+    return runBounded2DTiled(nx, ny, plan.core_cols, spacing, negativeFar);
   }
 
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<float32>& m_Out;
-  SizeVec3 m_Dims;
-  RealT m_LevelSet;
+  SizeVec3Type m_Dims;
+  RealTType m_LevelSet;
   float32 m_FarValue;
-  FloatVec3 m_Spacing;
+  FloatVec3Type m_Spacing;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
   usize m_ResidentLimit2D = detail::k_IsoContour2DResidentLimit;
@@ -1023,10 +1016,10 @@ private:
  * @return An error for invalid input, allocation, or transfer failures.
  */
 template <class T>
-Result<> ApplyIsoContourDistance(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3& dims, float64 levelSetValue, float64 farValue, FloatVec3 spacing,
+Result<> ApplyIsoContourDistance(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3Type& dims, float64 levelSetValue, float64 farValue, FloatVec3Type spacing,
                                  const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  IsoContourDistance<T> engine(inStore, outStore, dims, levelSetValue, farValue, spacing, shouldCancel, messageHandler);
+  IsoContourDistance<T> engine(inStore, outStore, dims, levelSetValue, farValue, std::move(spacing), shouldCancel, messageHandler);
   return engine();
 }
 } // namespace nx::core::ImageProcessing

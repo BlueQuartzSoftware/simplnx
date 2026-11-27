@@ -7,7 +7,7 @@
 
 using namespace nx::core;
 
-float32 nx::core::GeometryMath::AngleBetweenVectors(const nx::core::ZXZEuler& a, const nx::core::ZXZEuler& b)
+float32 nx::core::geometry_math::AngleBetweenVectors(const nx::core::ZxzEulerType& a, const nx::core::ZxzEulerType& b)
 {
   float norm1 = std::sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
   float norm2 = std::sqrt(b[0] * b[0] + b[1] * b[1] + b[2] * b[2]);
@@ -23,18 +23,18 @@ float32 nx::core::GeometryMath::AngleBetweenVectors(const nx::core::ZXZEuler& a,
   return std::acos(cosAng);
 }
 
-BoundingBox3Df nx::core::GeometryMath::FindBoundingBoxOfVertices(INodeGeometry0D& geom)
+BoundingBox3DfType nx::core::geometry_math::FindBoundingBoxOfVertices(INodeGeometry0D& geom)
 {
-  FloatVec3 ll = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
-  FloatVec3 ur = {std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min()};
+  FloatVec3Type ll = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
+  FloatVec3Type ur = {std::numeric_limits<float>::min(), std::numeric_limits<float>::min(), std::numeric_limits<float>::min()};
 
-  const IGeometry::SharedVertexList& vertexList = geom.getVerticesRef();
+  const IGeometry::SharedVertexListType& vertexList = geom.getVerticesRef();
   if(vertexList.getDataType() != DataType::float32)
   {
     return {ll, ur}; // will be invalid
   }
 
-  auto& vertexListStore = vertexList.getDataStoreRef();
+  const auto& vertexListStore = vertexList.getDataStoreRef();
 
   for(size_t tuple = 0; tuple < vertexListStore.getNumberOfTuples(); tuple++)
   {

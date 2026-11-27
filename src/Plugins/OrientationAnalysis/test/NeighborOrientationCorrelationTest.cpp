@@ -32,8 +32,8 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -42,7 +42,7 @@ namespace
 // are in oracle/DERIVATIONS.md and oracle/reference_noc.py. The deviation
 // document is src/Plugins/OrientationAnalysis/vv/deviations/NeighborOrientationCorrelationFilter.md.
 // Ties select the final valid neighbor in -Z, -Y, -X, +X, +Y, +Z order.
-namespace NOCOracle
+namespace noc_oracle
 {
 constexpr float32 k_GoodCI = 0.9f;
 constexpr float32 k_BadCI = 0.01f;
@@ -70,19 +70,19 @@ struct OracleFixture
   usize nx = 0;
   usize ny = 0;
   usize nz = 0;
-  std::vector<float64> anglesDeg;
+  std::vector<float64> angles_deg;
   std::vector<int32> phases;
   std::vector<float32> ci;
-  std::vector<uint32> crystalStructures;
+  std::vector<uint32> crystal_structures;
 
   OracleFixture(usize dimX, usize dimY, usize dimZ, std::vector<uint32> xtal)
   : nx(dimX)
   , ny(dimY)
   , nz(dimZ)
-  , anglesDeg(dimX * dimY * dimZ, 0.0)
+  , angles_deg(dimX * dimY * dimZ, 0.0)
   , phases(dimX * dimY * dimZ, 1)
   , ci(dimX * dimY * dimZ, k_GoodCI)
-  , crystalStructures(std::move(xtal))
+  , crystal_structures(std::move(xtal))
   {
   }
 
@@ -107,19 +107,19 @@ DataStructure BuildDataStructure(const OracleFixture& fixture)
   auto* cellAMPtr = AttributeMatrix::Create(dataStructure, "CellData", tupleShape, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellAMPtr);
 
-  auto* ciArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Confidence Index", tupleShape, {1}, cellAMPtr->getId());
-  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_CellPhasesPath, tupleShape, {1});
-  auto* phasesArrayPtr = Int32Array::Create(dataStructure, "Phases", phasesStore, cellAMPtr->getId());
-  auto* quatsArrayPtr = UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", tupleShape, {4}, cellAMPtr->getId());
-  auto* sourceIndexArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "SourceIndex", tupleShape, {1}, cellAMPtr->getId());
-  auto* payload2ArrayPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Payload2", tupleShape, {1}, cellAMPtr->getId());
-  auto* maskArrayPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, "Mask", tupleShape, {1}, cellAMPtr->getId());
+  auto* ciArrayPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Confidence Index", tupleShape, {1}, cellAMPtr->getId());
+  auto phasesStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_CellPhasesPath, tupleShape, {1});
+  auto* phasesArrayPtr = Int32ArrayType::Create(dataStructure, "Phases", phasesStore, cellAMPtr->getId());
+  auto* quatsArrayPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Quats", tupleShape, {4}, cellAMPtr->getId());
+  auto* sourceIndexArrayPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "SourceIndex", tupleShape, {1}, cellAMPtr->getId());
+  auto* payload2ArrayPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Payload2", tupleShape, {1}, cellAMPtr->getId());
+  auto* maskArrayPtr = unit_test::CreateTestDataArray<uint8>(dataStructure, "Mask", tupleShape, {1}, cellAMPtr->getId());
 
   for(usize i = 0; i < fixture.count(); i++)
   {
     (*ciArrayPtr)[i] = fixture.ci[i];
     (*phasesArrayPtr)[i] = fixture.phases[i];
-    const float64 halfAngle = fixture.anglesDeg[i] * numbers::pi_v<float64> / 360.0;
+    const float64 halfAngle = fixture.angles_deg[i] * numbers::k_PiV<float64> / 360.0;
     (*quatsArrayPtr)[i * 4 + 0] = 0.0f;
     (*quatsArrayPtr)[i * 4 + 1] = 0.0f;
     (*quatsArrayPtr)[i * 4 + 2] = static_cast<float32>(std::sin(halfAngle));
@@ -129,12 +129,12 @@ DataStructure BuildDataStructure(const OracleFixture& fixture)
     (*maskArrayPtr)[i] = static_cast<uint8>(i % 251);
   }
 
-  auto* ensembleAMPtr = AttributeMatrix::Create(dataStructure, "Ensemble Data", {fixture.crystalStructures.size()}, imageGeomPtr->getId());
-  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, k_XtalPath, {fixture.crystalStructures.size()}, {1});
-  auto* xtalArrayPtr = UInt32Array::Create(dataStructure, "CrystalStructures", crystalStructuresStore, ensembleAMPtr->getId());
-  for(usize i = 0; i < fixture.crystalStructures.size(); i++)
+  auto* ensembleAMPtr = AttributeMatrix::Create(dataStructure, "Ensemble Data", {fixture.crystal_structures.size()}, imageGeomPtr->getId());
+  auto crystalStructuresStore = data_store_utilities::CreateDataStore<uint32>(dataStructure, k_XtalPath, {fixture.crystal_structures.size()}, {1});
+  auto* xtalArrayPtr = UInt32ArrayType::Create(dataStructure, "CrystalStructures", crystalStructuresStore, ensembleAMPtr->getId());
+  for(usize i = 0; i < fixture.crystal_structures.size(); i++)
   {
-    (*xtalArrayPtr)[i] = fixture.crystalStructures[i];
+    (*xtalArrayPtr)[i] = fixture.crystal_structures[i];
   }
   return dataStructure;
 }
@@ -154,7 +154,7 @@ void ExecuteFixture(DataStructure& dataStructure, int32 level, const std::vector
   args.insertOrAssign(NeighborOrientationCorrelationFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(ignoredPaths));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 }
@@ -168,7 +168,7 @@ struct CellSnapshot
   std::vector<float32> ci;
   std::vector<int32> phases;
   std::vector<float32> quats;
-  std::vector<int32> sourceIndex;
+  std::vector<int32> source_index;
   std::vector<int32> payload2;
   std::vector<uint8> mask;
 };
@@ -176,18 +176,18 @@ struct CellSnapshot
 CellSnapshot Capture(const DataStructure& dataStructure)
 {
   CellSnapshot snapshot;
-  const auto& ciRef = dataStructure.getDataRefAs<Float32Array>(k_CIPath).getDataStoreRef();
-  const auto& phasesRef = dataStructure.getDataRefAs<Int32Array>(k_CellPhasesPath).getDataStoreRef();
-  const auto& quatsRef = dataStructure.getDataRefAs<Float32Array>(k_CellQuatsPath).getDataStoreRef();
-  const auto& sourceRef = dataStructure.getDataRefAs<Int32Array>(k_SourceIndexPath).getDataStoreRef();
-  const auto& payloadRef = dataStructure.getDataRefAs<Int32Array>(k_Payload2Path).getDataStoreRef();
-  const auto& maskRef = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath).getDataStoreRef();
+  const auto& ciRef = dataStructure.getDataRefAs<Float32ArrayType>(k_CIPath).getDataStoreRef();
+  const auto& phasesRef = dataStructure.getDataRefAs<Int32ArrayType>(k_CellPhasesPath).getDataStoreRef();
+  const auto& quatsRef = dataStructure.getDataRefAs<Float32ArrayType>(k_CellQuatsPath).getDataStoreRef();
+  const auto& sourceRef = dataStructure.getDataRefAs<Int32ArrayType>(k_SourceIndexPath).getDataStoreRef();
+  const auto& payloadRef = dataStructure.getDataRefAs<Int32ArrayType>(k_Payload2Path).getDataStoreRef();
+  const auto& maskRef = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath).getDataStoreRef();
   const usize numCells = ciRef.getNumberOfTuples();
   for(usize i = 0; i < numCells; i++)
   {
     snapshot.ci.push_back(ciRef[i]);
     snapshot.phases.push_back(phasesRef[i]);
-    snapshot.sourceIndex.push_back(sourceRef[i]);
+    snapshot.source_index.push_back(sourceRef[i]);
     snapshot.payload2.push_back(payloadRef[i]);
     snapshot.mask.push_back(maskRef[i]);
     for(usize c = 0; c < 4; c++)
@@ -216,16 +216,16 @@ void VerifyAgainstSnapshot(const DataStructure& dataStructure, const CellSnapsho
     auto it = expectedSource.find(i);
     const bool ignoreSourceLookup = it == expectedSource.end();
     const usize src = ignoreSourceLookup ? i : it->second;
-    const usize ciSrc = ignoredArrayNames.count("Confidence Index") > 0 ? i : src;
-    const usize phasesSrc = ignoredArrayNames.count("Phases") > 0 ? i : src;
-    const usize quatsSrc = ignoredArrayNames.count("Quats") > 0 ? i : src;
-    const usize sourceIndexSrc = ignoredArrayNames.count("SourceIndex") > 0 ? i : src;
-    const usize payloadSrc = ignoredArrayNames.count("Payload2") > 0 ? i : src;
-    const usize maskSrc = ignoredArrayNames.count("Mask") > 0 ? i : src;
+    const usize ciSrc = ignoredArrayNames.contains("Confidence Index") ? i : src;
+    const usize phasesSrc = ignoredArrayNames.contains("Phases") ? i : src;
+    const usize quatsSrc = ignoredArrayNames.contains("Quats") ? i : src;
+    const usize sourceIndexSrc = ignoredArrayNames.contains("SourceIndex") ? i : src;
+    const usize payloadSrc = ignoredArrayNames.contains("Payload2") ? i : src;
+    const usize maskSrc = ignoredArrayNames.contains("Mask") ? i : src;
     CAPTURE(i, src);
     REQUIRE(after.ci[i] == before.ci[ciSrc]);
     REQUIRE(after.phases[i] == before.phases[phasesSrc]);
-    REQUIRE(after.sourceIndex[i] == before.sourceIndex[sourceIndexSrc]);
+    REQUIRE(after.source_index[i] == before.source_index[sourceIndexSrc]);
     REQUIRE(after.payload2[i] == before.payload2[payloadSrc]);
     REQUIRE(after.mask[i] == before.mask[maskSrc]);
     for(usize c = 0; c < 4; c++)
@@ -234,9 +234,9 @@ void VerifyAgainstSnapshot(const DataStructure& dataStructure, const CellSnapsho
     }
   }
 }
-} // namespace NOCOracle
+} // namespace noc_oracle
 
-namespace SmallIn100Invariants
+namespace small_in100_invariants
 {
 /**
  * @brief Widens a numeric cell array for snapshot comparison.
@@ -296,7 +296,7 @@ std::vector<float64> SnapshotArray(const IDataArray& iDataArray)
 struct CellArraySnapshot
 {
   DataPath path;
-  usize numComponents = 0;
+  usize num_components = 0;
   std::vector<float64> values;
 };
 
@@ -318,42 +318,42 @@ std::vector<CellArraySnapshot> SnapshotCellArrays(const DataStructure& dataStruc
   }
   return snapshots;
 }
-} // namespace SmallIn100Invariants
+} // namespace small_in100_invariants
 } // namespace
 
 // Verifies production-scale array-transfer invariants after the Small IN100 pipeline.
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN100 Pipeline", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // One quaternion Z slice uses 607824 bytes. An OOC-enabled build keeps the full array disk-backed.
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceOutOfCore, 600000);
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceOutOfCore, 600000);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
 
-  auto* filterList = Application::Instance()->getFilterList();
+  auto* filterListPtr = Application::Instance()->getFilterList();
 
   auto baseDataFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
   if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
   {
-    REQUIRE(dataStructure.getDataRefAs<Int32Array>(k_PhasesArrayPath).getDataStoreRef().getDataFormat() == "HDF5-OOC");
+    REQUIRE(dataStructure.getDataRefAs<Int32ArrayType>(k_PhasesArrayPath).getDataStoreRef().getDataFormat() == "HDF5-OOC");
   }
 
-  SmallIn100::ExecuteMultiThresholdObjects(dataStructure, *filterList);
-  SmallIn100::ExecuteConvertOrientations(dataStructure, *filterList);
-  SmallIn100::ExecuteAlignSectionsMisorientation(dataStructure, *filterList, fs::path(fmt::format("{}/AlignSectionsMisorientation_1.txt", unit_test::k_BinaryDir)));
-  SmallIn100::ExecuteIdentifySample(dataStructure, *filterList);
-  SmallIn100::ExecuteAlignSectionsFeatureCentroid(dataStructure, *filterList, fs::path(fmt::format("{}/AlignSectionsFeatureCentroid_1.txt", unit_test::k_BinaryDir)));
-  SmallIn100::ExecuteBadDataNeighborOrientationCheck(dataStructure, *filterList);
+  small_in100::ExecuteMultiThresholdObjects(dataStructure, *filterListPtr);
+  small_in100::ExecuteConvertOrientations(dataStructure, *filterListPtr);
+  small_in100::ExecuteAlignSectionsMisorientation(dataStructure, *filterListPtr, fs::path(fmt::format("{}/AlignSectionsMisorientation_1.txt", unit_test::k_BinaryDir)));
+  small_in100::ExecuteIdentifySample(dataStructure, *filterListPtr);
+  small_in100::ExecuteAlignSectionsFeatureCentroid(dataStructure, *filterListPtr, fs::path(fmt::format("{}/AlignSectionsFeatureCentroid_1.txt", unit_test::k_BinaryDir)));
+  small_in100::ExecuteBadDataNeighborOrientationCheck(dataStructure, *filterListPtr);
 
   // The snapshot supports production-scale transfer invariants without an exemplar output file.
-  const std::vector<SmallIn100Invariants::CellArraySnapshot> preFilterCellData = SmallIn100Invariants::SnapshotCellArrays(dataStructure, k_CellAttributeMatrix);
+  const std::vector<small_in100_invariants::CellArraySnapshot> preFilterCellData = small_in100_invariants::SnapshotCellArrays(dataStructure, k_CellAttributeMatrix);
   REQUIRE(!preFilterCellData.empty());
 
   constexpr float32 k_SmallIn100MinConfidence = 0.2f;
 
   {
-    auto filter = filterList->createFilter(k_NeighborOrientationCorrelationFilterHandle);
+    auto filter = filterListPtr->createFilter(k_NeighborOrientationCorrelationFilterHandle);
     REQUIRE(nullptr != filter);
 
     Arguments args;
@@ -368,7 +368,7 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN10
     args.insertOrAssign(NeighborOrientationCorrelationFilter::k_IgnoredDataArrayPaths_Key, std::make_any<std::vector<DataPath>>());
 
     auto preflightResult = filter->preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = filter->execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -377,7 +377,7 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN10
   // The snapshot checks three invariants without an exemplar file.
   // High-confidence cells stay unchanged. Each changed cell had low confidence. At least one low-confidence cell changes.
   {
-    const std::vector<SmallIn100Invariants::CellArraySnapshot> postFilterCellData = SmallIn100Invariants::SnapshotCellArrays(dataStructure, k_CellAttributeMatrix);
+    const std::vector<small_in100_invariants::CellArraySnapshot> postFilterCellData = small_in100_invariants::SnapshotCellArrays(dataStructure, k_CellAttributeMatrix);
     REQUIRE(postFilterCellData.size() == preFilterCellData.size());
 
     const std::vector<float64>* preCIPtr = nullptr;
@@ -400,7 +400,7 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN10
       const auto& after = postFilterCellData[arrayIdx];
       REQUIRE(after.path == before.path);
       REQUIRE(after.values.size() == before.values.size());
-      const usize comps = before.numComponents;
+      const usize comps = before.num_components;
       for(usize valueIdx = 0; valueIdx < before.values.size(); valueIdx++)
       {
         if(before.values[valueIdx] != after.values[valueIdx])
@@ -432,29 +432,29 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Small IN10
   WriteTestDataStructure(dataStructure, fmt::format("{}/neighbor_orientation_correlation.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
+  unit_test::CheckArraysInheritTupleDims(dataStructure, small_in100::k_TupleCheckIgnoredPaths);
 }
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Preflight Error - Cell array tuple count mismatch (-580093)",
           "[OrientationAnalysis][NeighborOrientationCorrelationFilter][preflight]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Cell arrays have different tuple counts and must report -580093.
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "DataContainer");
-  imageGeom->setDimensions({10, 1, 1});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "DataContainer");
+  imageGeomPtr->setDimensions({10, 1, 1});
 
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "ConfidenceIndex", {10}, {1}, cellAM->getId());
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, cellAM->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeomPtr->getId());
+  unit_test::CreateTestDataArray<float32>(dataStructure, "ConfidenceIndex", {10}, {1}, cellAmPtr->getId());
+  unit_test::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, cellAmPtr->getId());
 
   // The separate group gives CellPhases nine tuples instead of ten.
-  auto* mismatchAM = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAM->getId());
+  auto* mismatchAmPtr = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeomPtr->getId());
+  unit_test::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAmPtr->getId());
 
-  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "Ensemble Data", {2}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
+  auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "Ensemble Data", {2}, imageGeomPtr->getId());
+  unit_test::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAmPtr->getId());
 
   NeighborOrientationCorrelationFilter filter;
   Arguments args;
@@ -469,15 +469,15 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Preflight 
   args.insertOrAssign(NeighborOrientationCorrelationFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -580093);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -580093);
 }
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Preflight - Level validation (-580094 error, -580095 warning)",
           "[OrientationAnalysis][NeighborOrientationCorrelationFilter][preflight]")
 {
-  using namespace NOCOracle;
-  UnitTest::LoadPlugins();
+  using namespace noc_oracle;
+  unit_test::LoadPlugins();
 
   OracleFixture fixture(5, 5, 5, {999, 1});
   DataStructure dataStructure = BuildDataStructure(fixture);
@@ -497,17 +497,17 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Preflight 
   {
     args.insertOrAssign(NeighborOrientationCorrelationFilter::k_Level_Key, std::make_any<int32>(-1));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors()[0].code == -580094);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors()[0].code == -580094);
   }
 
   SECTION("Level >= 6 preflights valid but warns that zero passes will run")
   {
     args.insertOrAssign(NeighborOrientationCorrelationFilter::k_Level_Key, std::make_any<int32>(6));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     bool foundWarning = false;
-    for(const auto& warning : preflightResult.outputActions.warnings())
+    for(const auto& warning : preflightResult.output_actions.warnings())
     {
       if(warning.code == -580095)
       {
@@ -521,8 +521,8 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Preflight 
   {
     args.insertOrAssign(NeighborOrientationCorrelationFilter::k_Level_Key, std::make_any<int32>(2));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    for(const auto& warning : preflightResult.outputActions.warnings())
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    for(const auto& warning : preflightResult.output_actions.warnings())
     {
       REQUIRE(warning.code != -580095);
     }
@@ -531,18 +531,18 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Preflight 
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Phase and Laue Index Bounds", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
-  using namespace NOCOracle;
+  using namespace noc_oracle;
 
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
 
   OracleFixture fixture(3, 1, 1, {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Cubic_High});
   fixture.ci[fixture.idx(1, 0, 0)] = k_BadCI;
 
   auto executeFixture = [&](const OracleFixture& configuredFixture) {
     DataStructure dataStructure = BuildDataStructure(configuredFixture);
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_CellPhasesPath));
-    const auto& cellPhasesArrayRef = dataStructure.getDataRefAs<Int32Array>(k_CellPhasesPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_CellPhasesPath));
+    const auto& cellPhasesArrayRef = dataStructure.getDataRefAs<Int32ArrayType>(k_CellPhasesPath);
     if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
     {
       REQUIRE(cellPhasesArrayRef.getDataStoreRef().getDataFormat() == "HDF5-OOC");
@@ -561,7 +561,7 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Phase and 
     args.insertOrAssign(NeighborOrientationCorrelationFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(std::vector<DataPath>{}));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     return filter.execute(dataStructure, args);
   };
 
@@ -575,7 +575,7 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Phase and 
 
   SECTION("Participating Laue index returns an error")
   {
-    fixture.crystalStructures[1] = 999U;
+    fixture.crystal_structures[1] = 999U;
     auto executeResult = executeFixture(fixture);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors()[0].code == -580097);
@@ -592,8 +592,8 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Phase and 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][NeighborOrientationCorrelationFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -606,22 +606,22 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: SIMPL Back
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<NeighborOrientationCorrelationFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<NeighborOrientationCorrelationFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<float32>(NeighborOrientationCorrelationFilter::k_MinConfidence_Key) == 2.5f);
       CHECK(args.value<float32>(NeighborOrientationCorrelationFilter::k_MisorientationTolerance_Key) == 2.5f);
       CHECK(args.value<int32>(NeighborOrientationCorrelationFilter::k_Level_Key) == 5);
@@ -639,14 +639,14 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: SIMPL Back
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F01 - uniform neighbors 3D", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
-  using namespace NOCOracle;
-  UnitTest::LoadPlugins();
+  using namespace noc_oracle;
+  unit_test::LoadPlugins();
 
   // Fully tied neighbors select the final +Z neighbor at index 87.
   OracleFixture fixture(5, 5, 5, {999, 1});
   const usize center = fixture.idx(2, 2, 2);
   fixture.ci[center] = k_BadCI;
-  fixture.anglesDeg[center] = 30.0;
+  fixture.angles_deg[center] = 30.0;
 
   DataStructure dataStructure = BuildDataStructure(fixture);
   const CellSnapshot before = Capture(dataStructure);
@@ -654,24 +654,24 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F01
 
   // Only the center receives the original tuple from index 87.
   VerifyAgainstSnapshot(dataStructure, before, {{62, 87}});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F02 - dissimilar neighbors untouched", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
-  using namespace NOCOracle;
-  UnitTest::LoadPlugins();
+  using namespace noc_oracle;
+  unit_test::LoadPlugins();
 
   // All neighbor pairs exceed the tolerance, so no tuple is replaced.
   OracleFixture fixture(5, 5, 5, {999, 1});
   const usize center = fixture.idx(2, 2, 2);
   fixture.ci[center] = k_BadCI;
-  fixture.anglesDeg[center] = 44.0;
+  fixture.angles_deg[center] = 44.0;
   const std::array<usize, 6> neighbors = {37, 57, 61, 63, 67, 87};
   const std::array<float64, 6> angles = {10.0, 17.0, 24.0, 31.0, 38.0, 45.0};
   for(usize j = 0; j < 6; j++)
   {
-    fixture.anglesDeg[neighbors[j]] = angles[j];
+    fixture.angles_deg[neighbors[j]] = angles[j];
   }
 
   DataStructure dataStructure = BuildDataStructure(fixture);
@@ -679,10 +679,10 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F02
   ExecuteFixture(dataStructure, 5);
 
   VerifyAgainstSnapshot(dataStructure, before, {});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
-namespace NOCOocTest
+namespace noc_ooc_test
 {
 const std::string k_GeomName("Image Geometry");
 const std::string k_CellDataName("Cell Data");
@@ -694,30 +694,30 @@ const DataPath k_QuatsPath = k_CellDataPath.createChildPath("Quats");
 const DataPath k_PhasesPath = k_CellDataPath.createChildPath("Phases");
 const DataPath k_CrystalStructuresPath = k_GeomPath.createChildPath("Ensemble Data").createChildPath("CrystalStructures");
 
-void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ, usize blockSize)
+static void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ, usize blockSize)
 {
   const ShapeType cellTupleShape = {dimZ, dimY, dimX};
   const usize sliceSize = dimX * dimY;
 
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeomName);
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellDataName, cellTupleShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
-  auto quatsDataStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_QuatsPath, cellTupleShape, {4});
-  auto* quatsArray = DataArray<float32>::Create(dataStructure, "Quats", quatsDataStore, cellAM->getId());
-  auto& quatsStore = quatsArray->getDataStoreRef();
+  auto quatsDataStore = data_store_utilities::CreateDataStore<float32>(dataStructure, k_QuatsPath, cellTupleShape, {4});
+  auto* quatsArrayPtr = DataArray<float32>::Create(dataStructure, "Quats", quatsDataStore, cellAmPtr->getId());
+  auto& quatsStore = quatsArrayPtr->getDataStoreRef();
 
-  auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_PhasesPath, cellTupleShape, {1});
-  auto* phasesArray = DataArray<int32>::Create(dataStructure, "Phases", phasesDataStore, cellAM->getId());
-  auto& phasesStore = phasesArray->getDataStoreRef();
+  auto phasesDataStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_PhasesPath, cellTupleShape, {1});
+  auto* phasesArrayPtr = DataArray<int32>::Create(dataStructure, "Phases", phasesDataStore, cellAmPtr->getId());
+  auto& phasesStore = phasesArrayPtr->getDataStoreRef();
 
-  auto ciDataStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_CIPath, cellTupleShape, {1});
-  auto* ciArray = DataArray<float32>::Create(dataStructure, "Confidence Index", ciDataStore, cellAM->getId());
-  auto& ciStore = ciArray->getDataStoreRef();
+  auto ciDataStore = data_store_utilities::CreateDataStore<float32>(dataStructure, k_CIPath, cellTupleShape, {1});
+  auto* ciArrayPtr = DataArray<float32>::Create(dataStructure, "Confidence Index", ciDataStore, cellAmPtr->getId());
+  auto& ciStore = ciArrayPtr->getDataStoreRef();
 
   const usize blocksPerDimX = dimX / blockSize;
   const usize blocksPerDimY = dimY / blockSize;
@@ -762,18 +762,18 @@ void BuildTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize d
     SIMPLNX_RESULT_REQUIRE_VALID(ciStoreWriteResult);
   }
 
-  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "Ensemble Data", {2}, imageGeom->getId());
-  auto crystalStructuresDataStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, k_CrystalStructuresPath, {2}, {1});
-  auto* crystalStructuresArray = DataArray<uint32>::Create(dataStructure, "CrystalStructures", crystalStructuresDataStore, ensembleAM->getId());
+  auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "Ensemble Data", {2}, imageGeomPtr->getId());
+  auto crystalStructuresDataStore = data_store_utilities::CreateDataStore<uint32>(dataStructure, k_CrystalStructuresPath, {2}, {1});
+  auto* crystalStructuresArrayPtr = DataArray<uint32>::Create(dataStructure, "CrystalStructures", crystalStructuresDataStore, ensembleAmPtr->getId());
   std::array<uint32, 2> csData = {999, 1};
-  auto crystalStructuresArrayWriteResult = crystalStructuresArray->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(csData.data(), 2));
+  auto crystalStructuresArrayWriteResult = crystalStructuresArrayPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(csData.data(), 2));
   SIMPLNX_RESULT_REQUIRE_VALID(crystalStructuresArrayWriteResult);
 }
-} // namespace NOCOocTest
+} // namespace noc_ooc_test
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Generate Test Data", "[OrientationAnalysis][NeighborOrientationCorrelationFilter][.GenerateTestData]")
 {
-  using namespace NOCOocTest;
+  using namespace noc_ooc_test;
   const auto outputDir = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "generated_test_data" / "neighbor_orientation_correlation";
   fs::create_directories(outputDir);
 
@@ -781,26 +781,26 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Generate T
   {
     DataStructure buildDS;
     BuildTestData(buildDS, 200, 200, 200, 25);
-    UnitTest::WriteTestDataStructure(buildDS, outputDir / "large_input.dream3d");
+    unit_test::WriteTestDataStructure(buildDS, outputDir / "large_input.dream3d");
   }
 }
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F03 - argmax selection (D3 regression)", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
-  using namespace NOCOracle;
-  UnitTest::LoadPlugins();
+  using namespace noc_oracle;
+  unit_test::LoadPlugins();
 
   // The four-neighbor clique must choose +X, the final highest-count neighbor.
   // This prevents a lower-count +Z neighbor from winning.
   OracleFixture fixture(5, 5, 5, {999, 1});
   const usize center = fixture.idx(2, 2, 2);
   fixture.ci[center] = k_BadCI;
-  fixture.anglesDeg[center] = 10.0;
+  fixture.angles_deg[center] = 10.0;
   const std::array<usize, 6> neighbors = {37, 57, 61, 63, 67, 87};
   const std::array<float64, 6> angles = {0.0, 1.0, 2.0, 1.5, 20.0, 21.0};
   for(usize j = 0; j < 6; j++)
   {
-    fixture.anglesDeg[neighbors[j]] = angles[j];
+    fixture.angles_deg[neighbors[j]] = angles[j];
   }
 
   DataStructure dataStructure = BuildDataStructure(fixture);
@@ -808,16 +808,16 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F03
   ExecuteFixture(dataStructure, 5);
 
   VerifyAgainstSnapshot(dataStructure, before, {{62, 63}});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 namespace
 {
 // A dissimilar 3x3x3 bad cube needs three erosion passes. This fixture detects
 // an incorrect cleanup-pass count.
-NOCOracle::OracleFixture BuildCascadeFixture()
+noc_oracle::OracleFixture BuildCascadeFixture()
 {
-  NOCOracle::OracleFixture fixture(7, 7, 7, {999, 1});
+  noc_oracle::OracleFixture fixture(7, 7, 7, {999, 1});
   for(usize z = 2; z <= 4; z++)
   {
     for(usize y = 2; y <= 4; y++)
@@ -825,8 +825,8 @@ NOCOracle::OracleFixture BuildCascadeFixture()
       for(usize x = 2; x <= 4; x++)
       {
         const usize i = fixture.idx(x, y, z);
-        fixture.ci[i] = NOCOracle::k_BadCI;
-        fixture.anglesDeg[i] = 6.0 + 6.0 * static_cast<float64>((x + 2 * y + 3 * z) % 7);
+        fixture.ci[i] = noc_oracle::k_BadCI;
+        fixture.angles_deg[i] = 6.0 + 6.0 * static_cast<float64>((x + 2 * y + 3 * z) % 7);
       }
     }
   }
@@ -836,16 +836,16 @@ NOCOracle::OracleFixture BuildCascadeFixture()
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F04 - pass schedule Level 2 (D2 regression)", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
-  using namespace NOCOracle;
-  UnitTest::LoadPlugins();
+  using namespace noc_oracle;
+  unit_test::LoadPlugins();
 
   // Level two gives four passes, enough to fill the three-pass cascade.
   OracleFixture fixture = BuildCascadeFixture();
   DataStructure dataStructure = BuildDataStructure(fixture);
   ExecuteFixture(dataStructure, 2);
 
-  const auto& ciRef = dataStructure.getDataRefAs<Float32Array>(k_CIPath).getDataStoreRef();
-  const auto& quatsRef = dataStructure.getDataRefAs<Float32Array>(k_CellQuatsPath).getDataStoreRef();
+  const auto& ciRef = dataStructure.getDataRefAs<Float32ArrayType>(k_CIPath).getDataStoreRef();
+  const auto& quatsRef = dataStructure.getDataRefAs<Float32ArrayType>(k_CellQuatsPath).getDataStoreRef();
   for(usize i = 0; i < fixture.count(); i++)
   {
     CAPTURE(i);
@@ -854,13 +854,13 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F04
     REQUIRE(quatsRef[i * 4 + 2] == 0.0f);
     REQUIRE(quatsRef[i * 4 + 3] == 1.0f);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F10 - pass schedule Level 4 (D2 regression)", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
-  using namespace NOCOracle;
-  UnitTest::LoadPlugins();
+  using namespace noc_oracle;
+  unit_test::LoadPlugins();
 
   // Level four gives two passes and leaves only the cube center.
   OracleFixture fixture = BuildCascadeFixture();
@@ -868,7 +868,7 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F10
   ExecuteFixture(dataStructure, 4);
 
   const usize cubeCenter = fixture.idx(3, 3, 3);
-  const auto& ciRef = dataStructure.getDataRefAs<Float32Array>(k_CIPath).getDataStoreRef();
+  const auto& ciRef = dataStructure.getDataRefAs<Float32ArrayType>(k_CIPath).getDataStoreRef();
   for(usize i = 0; i < fixture.count(); i++)
   {
     CAPTURE(i);
@@ -881,50 +881,50 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F10
       REQUIRE(ciRef[i] >= k_MinConfidence);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F05 - mixed-phase pair never similar (D1 regression)", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
-  using namespace NOCOracle;
-  UnitTest::LoadPlugins();
+  using namespace noc_oracle;
+  unit_test::LoadPlugins();
 
   // Only same-phase neighbors can contribute. The mixed-phase +X neighbor must
   // not replace the center.
   OracleFixture fixture(5, 5, 1, {999, 1, 1});
   const usize center = fixture.idx(2, 2, 0);
   fixture.ci[center] = k_BadCI;
-  fixture.anglesDeg[center] = 10.0;
-  fixture.anglesDeg[fixture.idx(2, 1, 0)] = 0.0;
-  fixture.anglesDeg[fixture.idx(1, 2, 0)] = 1.0;
-  fixture.anglesDeg[fixture.idx(3, 2, 0)] = 2.0;
+  fixture.angles_deg[center] = 10.0;
+  fixture.angles_deg[fixture.idx(2, 1, 0)] = 0.0;
+  fixture.angles_deg[fixture.idx(1, 2, 0)] = 1.0;
+  fixture.angles_deg[fixture.idx(3, 2, 0)] = 2.0;
   fixture.phases[fixture.idx(3, 2, 0)] = 2;
-  fixture.anglesDeg[fixture.idx(2, 3, 0)] = 40.0;
+  fixture.angles_deg[fixture.idx(2, 3, 0)] = 40.0;
 
   DataStructure dataStructure = BuildDataStructure(fixture);
   const CellSnapshot before = Capture(dataStructure);
   ExecuteFixture(dataStructure, 5);
 
   VerifyAgainstSnapshot(dataStructure, before, {{12, 11}});
-  const auto& phasesRef = dataStructure.getDataRefAs<Int32Array>(k_CellPhasesPath).getDataStoreRef();
+  const auto& phasesRef = dataStructure.getDataRefAs<Int32ArrayType>(k_CellPhasesPath).getDataStoreRef();
   REQUIRE(phasesRef[center] == 1);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F06 - phase-0 neighbors never counted", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
-  using namespace NOCOracle;
-  UnitTest::LoadPlugins();
+  using namespace noc_oracle;
+  unit_test::LoadPlugins();
 
   // Phase-zero neighbors must not contribute or become source tuples.
   OracleFixture fixture(5, 5, 5, {999, 1, 1});
   const usize center = fixture.idx(2, 2, 2);
   fixture.ci[center] = k_BadCI;
-  fixture.anglesDeg[center] = 10.0;
-  fixture.anglesDeg[37] = 0.0;
-  fixture.anglesDeg[57] = 1.0;
-  fixture.anglesDeg[61] = 30.0;
-  fixture.anglesDeg[63] = 38.0;
+  fixture.angles_deg[center] = 10.0;
+  fixture.angles_deg[37] = 0.0;
+  fixture.angles_deg[57] = 1.0;
+  fixture.angles_deg[61] = 30.0;
+  fixture.angles_deg[63] = 38.0;
   fixture.phases[67] = 0;
   fixture.phases[87] = 0;
 
@@ -933,32 +933,32 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F06
   ExecuteFixture(dataStructure, 5);
 
   VerifyAgainstSnapshot(dataStructure, before, {{62, 57}});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F07 - 2D image", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
-  using namespace NOCOracle;
-  UnitTest::LoadPlugins();
+  using namespace noc_oracle;
+  unit_test::LoadPlugins();
 
   // A z-degenerate image selects the final in-plane +Y neighbor.
   OracleFixture fixture(5, 5, 1, {999, 1});
   const usize center = fixture.idx(2, 2, 0);
   fixture.ci[center] = k_BadCI;
-  fixture.anglesDeg[center] = 30.0;
+  fixture.angles_deg[center] = 30.0;
 
   DataStructure dataStructure = BuildDataStructure(fixture);
   const CellSnapshot before = Capture(dataStructure);
   ExecuteFixture(dataStructure, 5);
 
   VerifyAgainstSnapshot(dataStructure, before, {{12, 17}});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F08 - Laue-class folding (hex vs cubic)", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
-  using namespace NOCOracle;
-  UnitTest::LoadPlugins();
+  using namespace noc_oracle;
+  unit_test::LoadPlugins();
 
   // The 37/87 pair differs by 58 degrees. Hexagonal folds it to 2 degrees;
   // cubic folds it to 32. Hex replaces the center with 87; cubic keeps it.
@@ -972,13 +972,13 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F08
     fixture.ci[center] = k_BadCI;
     for(usize j = 0; j < 6; j++)
     {
-      fixture.anglesDeg[neighbors[j]] = angles[j];
+      fixture.angles_deg[neighbors[j]] = angles[j];
     }
     DataStructure dataStructure = BuildDataStructure(fixture);
     const CellSnapshot before = Capture(dataStructure);
     ExecuteFixture(dataStructure, 5);
     VerifyAgainstSnapshot(dataStructure, before, {{62, 87}});
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Cubic-High: 58 deg folds to 32 deg -> no similar pair, center untouched")
@@ -988,39 +988,39 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F08
     fixture.ci[center] = k_BadCI;
     for(usize j = 0; j < 6; j++)
     {
-      fixture.anglesDeg[neighbors[j]] = angles[j];
+      fixture.angles_deg[neighbors[j]] = angles[j];
     }
     DataStructure dataStructure = BuildDataStructure(fixture);
     const CellSnapshot before = Capture(dataStructure);
     ExecuteFixture(dataStructure, 5);
     VerifyAgainstSnapshot(dataStructure, before, {});
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F09 - ignored arrays untouched (I2)", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
-  using namespace NOCOracle;
-  UnitTest::LoadPlugins();
+  using namespace noc_oracle;
+  unit_test::LoadPlugins();
 
   // Ignored Payload2 must retain its original tuple while other arrays transfer.
   OracleFixture fixture(5, 5, 5, {999, 1});
   const usize center = fixture.idx(2, 2, 2);
   fixture.ci[center] = k_BadCI;
-  fixture.anglesDeg[center] = 30.0;
+  fixture.angles_deg[center] = 30.0;
 
   DataStructure dataStructure = BuildDataStructure(fixture);
   const CellSnapshot before = Capture(dataStructure);
   ExecuteFixture(dataStructure, 5, {k_Payload2Path});
 
   VerifyAgainstSnapshot(dataStructure, before, {{62, 87}}, {"Payload2"});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F13 - NeighborList and String cell arrays transferred", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
-  using namespace NOCOracle;
-  UnitTest::LoadPlugins();
+  using namespace noc_oracle;
+  unit_test::LoadPlugins();
 
   // F13 adds NeighborList and StringArray to F01. Their transfer matches legacy
   // DREAM3D 6.5.171 behavior: a replaced cell copies the complete source tuple.
@@ -1028,7 +1028,7 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F13
   const usize center = fixture.idx(2, 2, 2);
   const usize source = 87;
   fixture.ci[center] = k_BadCI;
-  fixture.anglesDeg[center] = 30.0;
+  fixture.angles_deg[center] = 30.0;
 
   DataStructure dataStructure = BuildDataStructure(fixture);
   auto* cellAMPtr = dataStructure.getDataAs<AttributeMatrix>(k_CellAMPath);
@@ -1064,34 +1064,34 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F13
     REQUIRE(resultStrings[i] == fmt::format("cell_{}", expected));
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F11 - volume corner", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
-  using namespace NOCOracle;
-  UnitTest::LoadPlugins();
+  using namespace noc_oracle;
+  unit_test::LoadPlugins();
 
   // A corner has three valid neighbors and selects the final +Z neighbor.
   OracleFixture fixture(4, 4, 4, {999, 1});
   fixture.ci[0] = k_BadCI;
-  fixture.anglesDeg[0] = 20.0;
-  fixture.anglesDeg[fixture.idx(1, 0, 0)] = 0.0;
-  fixture.anglesDeg[fixture.idx(0, 1, 0)] = 1.0;
-  fixture.anglesDeg[fixture.idx(0, 0, 1)] = 2.0;
+  fixture.angles_deg[0] = 20.0;
+  fixture.angles_deg[fixture.idx(1, 0, 0)] = 0.0;
+  fixture.angles_deg[fixture.idx(0, 1, 0)] = 1.0;
+  fixture.angles_deg[fixture.idx(0, 0, 1)] = 2.0;
 
   DataStructure dataStructure = BuildDataStructure(fixture);
   const CellSnapshot before = Capture(dataStructure);
   ExecuteFixture(dataStructure, 5);
 
   VerifyAgainstSnapshot(dataStructure, before, {{0, 16}});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F12 - anisotropic dims", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
-  using namespace NOCOracle;
-  UnitTest::LoadPlugins();
+  using namespace noc_oracle;
+  unit_test::LoadPlugins();
 
   // Asymmetric dimensions detect x, y, or z stride swaps. The highest-count
   // tie must select -X.
@@ -1099,12 +1099,12 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F12
   const usize center = fixture.idx(1, 2, 1);
   REQUIRE(center == 29);
   fixture.ci[center] = k_BadCI;
-  fixture.anglesDeg[center] = 10.0;
+  fixture.angles_deg[center] = 10.0;
   const std::array<usize, 6> neighbors = {9, 25, 28, 30, 33, 49};
   const std::array<float64, 6> angles = {0.0, 1.0, 2.0, 20.0, 21.0, 40.0};
   for(usize j = 0; j < 6; j++)
   {
-    fixture.anglesDeg[neighbors[j]] = angles[j];
+    fixture.angles_deg[neighbors[j]] = angles[j];
   }
 
   DataStructure dataStructure = BuildDataStructure(fixture);
@@ -1112,27 +1112,27 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Oracle F12
   ExecuteFixture(dataStructure, 5);
 
   VerifyAgainstSnapshot(dataStructure, before, {{29, 28}});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Class 4 - Level >= 6 is a no-op (I4)", "[OrientationAnalysis][NeighborOrientationCorrelationFilter]")
 {
-  using namespace NOCOracle;
-  UnitTest::LoadPlugins();
+  using namespace noc_oracle;
+  unit_test::LoadPlugins();
 
   // The level loop runs 6 - Level passes; Level = 6 (the parameter default) runs zero
   // passes, so the output must be bit-identical to the input.
   OracleFixture fixture(5, 5, 5, {999, 1});
   const usize center = fixture.idx(2, 2, 2);
   fixture.ci[center] = k_BadCI;
-  fixture.anglesDeg[center] = 30.0;
+  fixture.angles_deg[center] = 30.0;
 
   DataStructure dataStructure = BuildDataStructure(fixture);
   const CellSnapshot before = Capture(dataStructure);
   ExecuteFixture(dataStructure, 6);
 
   VerifyAgainstSnapshot(dataStructure, before, {});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Geometry cell tuple counts", "[OrientationAnalysis][NeighborOrientationCorrelationFilter][TupleCount]")
@@ -1170,23 +1170,23 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Geometry c
   REQUIRE(inputAM2Ptr != nullptr);
   REQUIRE(DataArray<float32>::CreateWithStore<DataStore<float32>>(dataStructure, "Quats", {count2}, {4}, inputAM2Ptr->getId()) != nullptr);
   args.insertOrAssign(NeighborOrientationCorrelationFilter::k_QuatsArrayPath_Key, std::make_any<DataPath>(DataPath({quatsParentName, "Quats"})));
-  REQUIRE(UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, "CrystalStructures", {2}, {1}) != nullptr);
+  REQUIRE(UInt32ArrayType::CreateWithStore<DataStore<uint32>>(dataStructure, "CrystalStructures", {2}, {1}) != nullptr);
   args.insertOrAssign(NeighborOrientationCorrelationFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(DataPath({"CrystalStructures"})));
   args.insertOrAssign(NeighborOrientationCorrelationFilter::k_Level_Key, std::make_any<int32>(5));
 
   const auto result = filter.preflight(dataStructure, args);
   if(testCase == 2 || testCase == 6)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({"Input0", "Confidence"})));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(args.value<DataPath>(NeighborOrientationCorrelationFilter::k_CellPhasesArrayPath_Key)));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(args.value<DataPath>(NeighborOrientationCorrelationFilter::k_QuatsArrayPath_Key)));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(DataPath({"CrystalStructures"})));
-    auto& confidence = dataStructure.getDataRefAs<Float32Array>(DataPath({"Input0", "Confidence"}));
-    auto& phases = dataStructure.getDataRefAs<Int32Array>(args.value<DataPath>(NeighborOrientationCorrelationFilter::k_CellPhasesArrayPath_Key));
-    auto& quats = dataStructure.getDataRefAs<Float32Array>(args.value<DataPath>(NeighborOrientationCorrelationFilter::k_QuatsArrayPath_Key));
-    auto& crystalStructures = dataStructure.getDataRefAs<UInt32Array>(DataPath({"CrystalStructures"}));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(DataPath({"Input0", "Confidence"})));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(args.value<DataPath>(NeighborOrientationCorrelationFilter::k_CellPhasesArrayPath_Key)));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(args.value<DataPath>(NeighborOrientationCorrelationFilter::k_QuatsArrayPath_Key)));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(DataPath({"CrystalStructures"})));
+    auto& confidence = dataStructure.getDataRefAs<Float32ArrayType>(DataPath({"Input0", "Confidence"}));
+    auto& phases = dataStructure.getDataRefAs<Int32ArrayType>(args.value<DataPath>(NeighborOrientationCorrelationFilter::k_CellPhasesArrayPath_Key));
+    auto& quats = dataStructure.getDataRefAs<Float32ArrayType>(args.value<DataPath>(NeighborOrientationCorrelationFilter::k_QuatsArrayPath_Key));
+    auto& crystalStructures = dataStructure.getDataRefAs<UInt32ArrayType>(DataPath({"CrystalStructures"}));
     confidence.fill(0.9F);
     phases.fill(1);
     quats.fill(0.0F);
@@ -1202,7 +1202,7 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Geometry c
     quats[2] = 1.0F;
     quats[3] = 0.0F;
 
-    auto* ignoredPtr = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Ignored", {8}, {1}, inputAM0Ptr->getId());
+    auto* ignoredPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "Ignored", {8}, {1}, inputAM0Ptr->getId());
     REQUIRE(ignoredPtr != nullptr);
     for(usize cell = 0; cell < 8; cell++)
     {
@@ -1224,13 +1224,13 @@ TEST_CASE("OrientationAnalysis::NeighborOrientationCorrelationFilter: Geometry c
       CHECK(quats[cell * 4 + 3] == (externalBadCell ? 0.0F : 1.0F));
       CHECK((*ignoredPtr)[cell] == static_cast<int32>(100 + cell));
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     const std::vector<DataPath> inputPaths = {DataPath({"Input0", "Confidence"}), DataPath({"Input1", "Phases"}), DataPath({"Input2", "Quats"})};
     if(testCase >= 3)
     {

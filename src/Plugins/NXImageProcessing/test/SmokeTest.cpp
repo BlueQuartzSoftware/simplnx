@@ -11,7 +11,7 @@ using namespace nx::core;
 
 TEST_CASE("NXImageProcessing::Plugin loads", "[NXImageProcessing]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto plugins = Application::Instance()->getFilterList()->getLoadedPlugins();
   const bool found = std::any_of(plugins.cbegin(), plugins.cend(), [](const AbstractPlugin* plugin) { return plugin->getName() == "NXImageProcessing"; });
   REQUIRE(found);

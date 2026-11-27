@@ -13,16 +13,16 @@ using namespace nx::core;
 
 namespace
 {
-using OpeningFilter = BinaryMorphologicalOpeningImageFilter;
+using OpeningFilterType = BinaryMorphologicalOpeningImageFilter;
 
 // Kernel + Foreground/Background param setter for Binary Morphological Opening.
-morph_test::KernelParamSetter OpeningKernelParamSetter(float64 foreground, float64 background)
+morph_test::KernelParamSetterType OpeningKernelParamSetter(float64 foreground, float64 background)
 {
   return [foreground, background](Arguments& args, uint64 kernelType, const std::vector<uint32>& radius) {
-    args.insertOrAssign(OpeningFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
-    args.insertOrAssign(OpeningFilter::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(radius));
-    args.insertOrAssign(OpeningFilter::k_ForegroundValue_Key, std::make_any<float64>(foreground));
-    args.insertOrAssign(OpeningFilter::k_BackgroundValue_Key, std::make_any<float64>(background));
+    args.insertOrAssign(OpeningFilterType::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
+    args.insertOrAssign(OpeningFilterType::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(radius));
+    args.insertOrAssign(OpeningFilterType::k_ForegroundValue_Key, std::make_any<float64>(foreground));
+    args.insertOrAssign(OpeningFilterType::k_BackgroundValue_Key, std::make_any<float64>(background));
   };
 }
 } // namespace
@@ -36,25 +36,25 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Computed-ex
 {
   using morph_test::BinaryCompositeKind;
   using morph_test::KernelType;
-  const auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return morph_test::BuildBinaryLabelImage<uint8>(ds, dx, dy, dz, uint8{41}, uint8{0}); };
+  const auto build = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return morph_test::BuildBinaryLabelImage<uint8>(dataStructure, dx, dy, dz, uint8{41}, uint8{0}); };
   const auto setParams = OpeningKernelParamSetter(41.0, 0.0);
-  constexpr auto kOpening = BinaryCompositeKind::Opening;
+  constexpr auto k_Opening = BinaryCompositeKind::Opening;
 
   SECTION("Annulus 3D r{1,1,1}")
   {
-    morph_test::RunBinaryMorphologyCompositeComputedExpected<OpeningFilter, uint8>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, kOpening, uint8{41}, uint8{0}, setParams);
+    morph_test::RunBinaryMorphologyCompositeComputedExpected<OpeningFilterType, uint8>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, k_Opening, uint8{41}, uint8{0}, setParams);
   }
   SECTION("Annulus 3D asymmetric r{3,1,2}")
   {
-    morph_test::RunBinaryMorphologyCompositeComputedExpected<OpeningFilter, uint8>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, kOpening, uint8{41}, uint8{0}, setParams);
+    morph_test::RunBinaryMorphologyCompositeComputedExpected<OpeningFilterType, uint8>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, k_Opening, uint8{41}, uint8{0}, setParams);
   }
   SECTION("Annulus 2D Z=1 r{2,2,0}")
   {
-    morph_test::RunBinaryMorphologyCompositeComputedExpected<OpeningFilter, uint8>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, kOpening, uint8{41}, uint8{0}, setParams);
+    morph_test::RunBinaryMorphologyCompositeComputedExpected<OpeningFilterType, uint8>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, k_Opening, uint8{41}, uint8{0}, setParams);
   }
   SECTION("Box 3D zero-radius r{2,1,0} (legacy anchor path broken)")
   {
-    morph_test::RunBinaryMorphologyCompositeComputedExpected<OpeningFilter, uint8>(build, 12, 12, 12, KernelType::Box, {2, 1, 0}, kOpening, uint8{41}, uint8{0}, setParams);
+    morph_test::RunBinaryMorphologyCompositeComputedExpected<OpeningFilterType, uint8>(build, 12, 12, 12, KernelType::Box, {2, 1, 0}, k_Opening, uint8{41}, uint8{0}, setParams);
   }
 }
 
@@ -66,25 +66,25 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Computed-ex
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Rejects non-binary input at execute", "[NXImageProcessing][BinaryMorphologicalOpeningImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  const DataPath inputPath = morph_test::BuildMorphologyImage<uint8>(ds, 8, 8, 8); // values in [0,199] -> NOT binary
+  DataStructure dataStructure;
+  const DataPath inputPath = morph_test::BuildMorphologyImage<uint8>(dataStructure, 8, 8, 8); // values in [0,199] -> NOT binary
 
-  OpeningFilter filter;
+  OpeningFilterType filter;
   Arguments args;
-  args.insertOrAssign(OpeningFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(OpeningFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(OpeningFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  args.insertOrAssign(OpeningFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Ball)));
-  args.insertOrAssign(OpeningFilter::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{1, 1, 1}));
-  args.insertOrAssign(OpeningFilter::k_ForegroundValue_Key, std::make_any<float64>(1.0));
-  args.insertOrAssign(OpeningFilter::k_BackgroundValue_Key, std::make_any<float64>(0.0));
+  args.insertOrAssign(OpeningFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
+  args.insertOrAssign(OpeningFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(OpeningFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  args.insertOrAssign(OpeningFilterType::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Ball)));
+  args.insertOrAssign(OpeningFilterType::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{1, 1, 1}));
+  args.insertOrAssign(OpeningFilterType::k_ForegroundValue_Key, std::make_any<float64>(1.0));
+  args.insertOrAssign(OpeningFilterType::k_BackgroundValue_Key, std::make_any<float64>(0.0));
 
-  auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions); // fg/bg are in range -> preflight is clean
-  auto executeResult = filter.execute(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions); // fg/bg are in range -> preflight is clean
+  auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.invalid()); // non-binary input rejected at execute
   REQUIRE_FALSE(executeResult.result.errors().empty());
   REQUIRE(executeResult.result.errors()[0].code == ImageProcessing::k_NonBinaryInput);
@@ -99,47 +99,47 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Rejects non
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Computed-expected (both algorithm paths)", "[NXImageProcessing][BinaryMorphologicalOpeningImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  constexpr usize D = 32;
-  constexpr uint8 fg = 1;
-  constexpr uint8 bg = 0;
+  constexpr usize k_D = 32;
+  constexpr uint8 k_Fg = 1;
+  constexpr uint8 k_Bg = 0;
   const std::array<int32, 3> radius = {2, 1, 1};
   const auto kernelType = morph_test::KernelType::Box;
 
-  DataStructure ds;
-  const DataPath inputPath = morph_test::BuildBinaryPatternImage<uint8>(ds, D, fg, bg);
-  scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
+  DataStructure dataStructure;
+  const DataPath inputPath = morph_test::BuildBinaryPatternImage<uint8>(dataStructure, k_D, k_Fg, k_Bg);
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
 
-  OpeningFilter filter;
+  OpeningFilterType filter;
   Arguments args;
-  args.insertOrAssign(OpeningFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(OpeningFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(OpeningFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  args.insertOrAssign(OpeningFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
-  args.insertOrAssign(OpeningFilter::k_KernelRadius_Key,
-                      std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])}));
-  args.insertOrAssign(OpeningFilter::k_ForegroundValue_Key, std::make_any<float64>(static_cast<float64>(fg)));
-  args.insertOrAssign(OpeningFilter::k_BackgroundValue_Key, std::make_any<float64>(static_cast<float64>(bg)));
+  args.insertOrAssign(OpeningFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
+  args.insertOrAssign(OpeningFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(OpeningFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  args.insertOrAssign(OpeningFilterType::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
+  args.insertOrAssign(OpeningFilterType::k_KernelRadius_Key,
+                      std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])}));
+  args.insertOrAssign(OpeningFilterType::k_ForegroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Fg)));
+  args.insertOrAssign(OpeningFilterType::k_BackgroundValue_Key, std::make_any<float64>(static_cast<float64>(k_Bg)));
 
-  auto executeResult = scope.executeFilter(filter, ds, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  auto& outArray = ds.getDataRefAs<DataArray<uint8>>(outputPath);
+  auto& outArray = dataStructure.getDataRefAs<DataArray<uint8>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
-  const usize numSlots = D * D * D;
+  const usize numSlots = k_D * k_D * k_D;
   REQUIRE(outStore.getSize() == numSlots);
 
   // Stream the ACTUAL input into memory (bulk) and compute the independent composite fg-count oracle over it.
   constexpr usize k_ChunkValues = 65536;
   std::vector<uint8> input(numSlots);
-  const auto& inStore = ds.getDataRefAs<DataArray<uint8>>(inputPath).getDataStoreRef();
+  const auto& inStore = dataStructure.getDataRefAs<DataArray<uint8>>(inputPath).getDataStoreRef();
   for(usize start = 0; start < numSlots; start += k_ChunkValues)
   {
     const usize count = std::min(k_ChunkValues, numSlots - start);
@@ -147,7 +147,7 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Computed-ex
     SIMPLNX_RESULT_REQUIRE_VALID(r);
   }
   const morph_test::StructuringElement se = morph_test::MakeStructuringElement(kernelType, radius);
-  const std::vector<uint8> expected = morph_test::BinaryMorphologyCompositeFgOracle<uint8>(input, D, D, D, se, morph_test::BinaryCompositeKind::Opening, fg, bg);
+  const std::vector<uint8> expected = morph_test::BinaryMorphologyCompositeFgOracle<uint8>(input, k_D, k_D, k_D, se, morph_test::BinaryCompositeKind::Opening, k_Fg, k_Bg);
 
   // Stream the output in bounded chunks and compare (avoids per-element OOC access and per-voxel assertions).
   auto buffer = std::make_unique<uint8[]>(k_ChunkValues);
@@ -173,7 +173,7 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Computed-ex
     UNSCOPED_INFO("slot=" << badSlot << " got=" << static_cast<int>(buffer[badSlot % k_ChunkValues]) << " expected=" << static_cast<int>(expected[badSlot]));
   }
   REQUIRE(allMatch);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -183,32 +183,32 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Computed-ex
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Preflight rejects non-finite / out-of-range fg/bg for integer input", "[NXImageProcessing][BinaryMorphologicalOpeningImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  const DataPath inputPath = morph_test::BuildMorphologyImage<uint8>(ds, 8, 8, 8); // uint8 input, range [0, 255]
+  DataStructure dataStructure;
+  const DataPath inputPath = morph_test::BuildMorphologyImage<uint8>(dataStructure, 8, 8, 8); // uint8 input, range [0, 255]
 
   const auto makeArgs = [&](float64 fg, float64 bg) {
     Arguments args;
-    args.insertOrAssign(OpeningFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-    args.insertOrAssign(OpeningFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(OpeningFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(OpeningFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Ball)));
-    args.insertOrAssign(OpeningFilter::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{1, 1, 1}));
-    args.insertOrAssign(OpeningFilter::k_ForegroundValue_Key, std::make_any<float64>(fg));
-    args.insertOrAssign(OpeningFilter::k_BackgroundValue_Key, std::make_any<float64>(bg));
+    args.insertOrAssign(OpeningFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
+    args.insertOrAssign(OpeningFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(OpeningFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(OpeningFilterType::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Ball)));
+    args.insertOrAssign(OpeningFilterType::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{1, 1, 1}));
+    args.insertOrAssign(OpeningFilterType::k_ForegroundValue_Key, std::make_any<float64>(fg));
+    args.insertOrAssign(OpeningFilterType::k_BackgroundValue_Key, std::make_any<float64>(bg));
     return args;
   };
 
-  OpeningFilter filter;
+  OpeningFilterType filter;
 
-  REQUIRE_FALSE(filter.preflight(ds, makeArgs(99999.0, 0.0)).outputActions.valid());                                   // fg out of uint8 range
-  REQUIRE_FALSE(filter.preflight(ds, makeArgs(1.0, -5.0)).outputActions.valid());                                      // bg negative out of range
-  REQUIRE_FALSE(filter.preflight(ds, makeArgs(std::numeric_limits<float64>::quiet_NaN(), 0.0)).outputActions.valid()); // NaN fg
-  REQUIRE_FALSE(filter.preflight(ds, makeArgs(1.0, std::numeric_limits<float64>::infinity())).outputActions.valid());  // Inf bg
-  auto preflightResult = filter.preflight(ds, makeArgs(5.0, 0.0));
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions); // in-range integers preflight cleanly
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(99999.0, 0.0)).output_actions.valid());                                   // fg out of uint8 range
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(1.0, -5.0)).output_actions.valid());                                      // bg negative out of range
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::quiet_NaN(), 0.0)).output_actions.valid()); // NaN fg
+  REQUIRE_FALSE(filter.preflight(dataStructure, makeArgs(1.0, std::numeric_limits<float64>::infinity())).output_actions.valid());  // Inf bg
+  auto preflightResult = filter.preflight(dataStructure, makeArgs(5.0, 0.0));
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions); // in-range integers preflight cleanly
 }
 
 // -----------------------------------------------------------------------------
@@ -222,8 +222,8 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Preflight r
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: ITK real-image golden (WhiteDots)", "[NXImageProcessing][ItkGolden][BinaryMorphologicalOpeningImageFilter]")
 {
-  morph_test::RunMorphologyMd5ItkGolden<OpeningFilter>("WhiteDots.png", "3dcb8bce1c174f358608927212aa4cf7", static_cast<uint64>(morph_test::KernelType::Ball), {1, 1, 1},
-                                                       OpeningKernelParamSetter(255.0, 0.0));
+  morph_test::RunMorphologyMd5ItkGolden<OpeningFilterType>("WhiteDots.png", "3dcb8bce1c174f358608927212aa4cf7", static_cast<uint64>(morph_test::KernelType::Ball), {1, 1, 1},
+                                                           OpeningKernelParamSetter(255.0, 0.0));
 }
 
 // -----------------------------------------------------------------------------
@@ -232,7 +232,7 @@ TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: ITK real-im
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Preflight rejects non-scalar (multi-component) input", "[NXImageProcessing][BinaryMorphologicalOpeningImageFilter]")
 {
-  morph_test::RequirePreflightRejectsNonScalar<OpeningFilter, uint8>(-8480, OpeningKernelParamSetter(1.0, 0.0));
+  morph_test::RequirePreflightRejectsNonScalar<OpeningFilterType, uint8>(-8480, OpeningKernelParamSetter(1.0, 0.0));
 }
 
 TEST_CASE("NXImageProcessing::BinaryMorphologicalOpeningImageFilter: Kernel Radius representability", "[NXImageProcessing][BinaryMorphologicalOpeningImageFilter]")

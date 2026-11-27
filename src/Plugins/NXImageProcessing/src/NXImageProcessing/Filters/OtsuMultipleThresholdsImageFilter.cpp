@@ -25,16 +25,16 @@ namespace
 {
 struct OtsuOperation
 {
-  uint32 numBins = 128u;
-  uint8 numThresholds = 1u;
-  uint8 labelOffset = 0u;
-  bool valleyEmphasis = false;
-  bool returnBinMidpoint = false;
+  uint32 num_bins = 128u;
+  uint8 num_thresholds = 1u;
+  uint8 label_offset = 0u;
+  bool valley_emphasis = false;
+  bool return_bin_midpoint = false;
 
   template <class T, class U>
   auto makeClassifyOp(const std::vector<float64>& thresholds) const
   {
-    const uint8 offset = labelOffset;
+    const uint8 offset = label_offset;
     return [thresholds, offset](T value) -> U {
       // class index = count of thresholds this value STRICTLY EXCEEDS, + labelOffset. std::lower_bound gives the
       // count of thresholds < value, i.e. a value exactly equal to a threshold lands in the LOWER class -- which
@@ -73,16 +73,16 @@ Parameters OtsuMultipleThresholdsImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<UInt8Parameter>(k_NumberOfThresholds_Key, "Number Of Thresholds", "Set/Get the number of thresholds. Default is 1.", 1u));
-  params.insert(std::make_unique<UInt8Parameter>(k_LabelOffset_Key, "Label Offset", "Set/Get the offset which labels have to start from. Default is 0.", 0u));
-  params.insert(std::make_unique<UInt32Parameter>(k_NumberOfHistogramBins_Key, "Number Of Histogram Bins", "Set/Get the number of histogram bins. Default is 128.", 128u));
+  params.insert(std::make_unique<UInt8ParameterType>(k_NumberOfThresholds_Key, "Number Of Thresholds", "Set/Get the number of thresholds. Default is 1.", 1u));
+  params.insert(std::make_unique<UInt8ParameterType>(k_LabelOffset_Key, "Label Offset", "Set/Get the offset which labels have to start from. Default is 0.", 0u));
+  params.insert(std::make_unique<UInt32ParameterType>(k_NumberOfHistogramBins_Key, "Number Of Histogram Bins", "Set/Get the number of histogram bins. Default is 128.", 128u));
   params.insert(std::make_unique<BoolParameter>(k_ValleyEmphasis_Key, "Valley Emphasis", "Set/Get the use of valley emphasis. Default is false.", false));
   params.insert(
       std::make_unique<BoolParameter>(k_ReturnBinMidpoint_Key, "ReturnBinMidpoint", "Should the threshold value be mid-point of the bin or the maximum? Default is to return bin maximum.", false));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
 
@@ -96,12 +96,12 @@ IFilter::VersionType OtsuMultipleThresholdsImageFilter::parametersVersion() cons
 {
   return 1;
 }
-IFilter::UniquePointer OtsuMultipleThresholdsImageFilter::clone() const
+IFilter::UniquePointerType OtsuMultipleThresholdsImageFilter::clone() const
 {
   return std::make_unique<OtsuMultipleThresholdsImageFilter>();
 }
-IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                          const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -114,24 +114,24 @@ IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const 
   // set, which would silently classify every voxel into a single (labelOffset-valued) class.
   if(numberOfThresholds == 0 || numberOfThresholds >= numberOfHistogramBins)
   {
-    return {
-        MakeErrorResult<OutputActions>(-8311, fmt::format("NumberOfThresholds ({}) must be >= 1 and < NumberOfHistogramBins ({}).", static_cast<uint32>(numberOfThresholds), numberOfHistogramBins))};
+    return {.output_actions = MakeErrorResult<OutputActions>(
+                -8311, fmt::format("NumberOfThresholds ({}) must be >= 1 and < NumberOfHistogramBins ({}).", static_cast<uint32>(numberOfThresholds), numberOfHistogramBins))};
   }
 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(inputArray.getNumberOfComponents() != 1)
   {
-    return {MakeErrorResult<OutputActions>(-8310, fmt::format("Otsu Multiple Thresholds requires a single-component (scalar) input array, but '{}' has {} components.", selectedInputArray.toString(),
-                                                              inputArray.getNumberOfComponents()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-8310, fmt::format("Otsu Multiple Thresholds requires a single-component (scalar) input array, but '{}' has {} components.",
+                                                                                selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
   }
 
   // Output is a uint8 label image regardless of the (numeric) input element type.
   Result<OutputActions> resultOutputActions =
-      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
-  return {std::move(resultOutputActions)};
+      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8Type>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  return {.output_actions = std::move(resultOutputActions)};
 }
-Result<> OtsuMultipleThresholdsImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> OtsuMultipleThresholdsImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
@@ -143,21 +143,22 @@ Result<> OtsuMultipleThresholdsImageFilter::executeImpl(DataStructure& dataStruc
   auto valleyEmphasis = filterArgs.value<bool>(k_ValleyEmphasis_Key);
   auto returnBinMidpoint = filterArgs.value<bool>(k_ReturnBinMidpoint_Key);
 
-  const OtsuOperation operation{numberOfHistogramBins, numberOfThresholds, labelOffset, valleyEmphasis, returnBinMidpoint};
+  const OtsuOperation operation{
+      .num_bins = numberOfHistogramBins, .num_thresholds = numberOfThresholds, .label_offset = labelOffset, .valley_emphasis = valleyEmphasis, .return_bin_midpoint = returnBinMidpoint};
   return ImageProcessing::ExecuteHistogramImageFilter<ImageProcessing::AllNumeric>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_NumberOfThresholdsKey = "NumberOfThresholds";
-constexpr StringLiteral k_LabelOffsetKey = "LabelOffset";
-constexpr StringLiteral k_NumberOfHistogramBinsKey = "NumberOfHistogramBins";
-constexpr StringLiteral k_ValleyEmphasisKey = "ValleyEmphasis";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+constexpr StringLiteralType k_NumberOfThresholdsKey = "NumberOfThresholds";
+constexpr StringLiteralType k_LabelOffsetKey = "LabelOffset";
+constexpr StringLiteralType k_NumberOfHistogramBinsKey = "NumberOfHistogramBins";
+constexpr StringLiteralType k_ValleyEmphasisKey = "ValleyEmphasis";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_NewCellArrayNameKey = "NewCellArrayName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> OtsuMultipleThresholdsImageFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -166,13 +167,13 @@ Result<Arguments> OtsuMultipleThresholdsImageFilter::FromSIMPLJson(const nlohman
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint8>>(args, json, SIMPL::k_NumberOfThresholdsKey, k_NumberOfThresholds_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint8>>(args, json, SIMPL::k_LabelOffsetKey, k_LabelOffset_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint32>>(args, json, SIMPL::k_NumberOfHistogramBinsKey, k_NumberOfHistogramBins_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_ValleyEmphasisKey, k_ValleyEmphasis_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint8>>(args, json, simpl::k_NumberOfThresholdsKey, k_NumberOfThresholds_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint8>>(args, json, simpl::k_LabelOffsetKey, k_LabelOffset_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint32>>(args, json, simpl::k_NumberOfHistogramBinsKey, k_NumberOfHistogramBins_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_ValleyEmphasisKey, k_ValleyEmphasis_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -44,39 +44,39 @@ namespace
  * @namespace Keys
  * @brief Defines object keys for the hierarchy JSON schema.
  */
-namespace Keys
+namespace keys
 {
-constexpr StringLiteral k_DataType = "data_type";
-constexpr StringLiteral k_TupleShape = "tuple_shape";
-constexpr StringLiteral k_ComponentShape = "component_shape";
-constexpr StringLiteral k_NumTuples = "num_tuples";
-constexpr StringLiteral k_NumComponents = "num_components";
-constexpr StringLiteral k_StoreType = "store_type";
-constexpr StringLiteral k_Dimensions = "dimensions";
-constexpr StringLiteral k_CellDataPath = "cell_data_path";
-constexpr StringLiteral k_Origin = "origin";
-constexpr StringLiteral k_Spacing = "spacing";
-constexpr StringLiteral k_NumVertices = "num_vertices";
-constexpr StringLiteral k_VertexDataPath = "vertex_data_path";
-constexpr StringLiteral k_NumEdges = "num_edges";
-constexpr StringLiteral k_EdgeDataPath = "edge_data_path";
-constexpr StringLiteral k_NumFaces = "num_faces";
-constexpr StringLiteral k_FaceDataPath = "face_data_path";
-constexpr StringLiteral k_NumPolyhedra = "num_polyhedra";
-constexpr StringLiteral k_PolyhedronDataPath = "polyhedron_data_path";
-constexpr StringLiteral k_GeometryType = "geometry_type";
-constexpr StringLiteral k_UnitDimensionality = "unit_dimensionality";
-constexpr StringLiteral k_LengthUnits = "length_units";
-constexpr StringLiteral k_NumCells = "num_cells";
-constexpr StringLiteral k_Geometry = "geometry";
-constexpr StringLiteral k_Name = "name";
-constexpr StringLiteral k_Path = "path";
-constexpr StringLiteral k_Id = "id";
-constexpr StringLiteral k_Type = "type";
-constexpr StringLiteral k_Children = "children";
-constexpr StringLiteral k_SchemaVersion = "schema_version";
-constexpr StringLiteral k_Objects = "objects";
-} // namespace Keys
+constexpr StringLiteralType k_DataType = "data_type";
+constexpr StringLiteralType k_TupleShape = "tuple_shape";
+constexpr StringLiteralType k_ComponentShape = "component_shape";
+constexpr StringLiteralType k_NumTuples = "num_tuples";
+constexpr StringLiteralType k_NumComponents = "num_components";
+constexpr StringLiteralType k_StoreType = "store_type";
+constexpr StringLiteralType k_Dimensions = "dimensions";
+constexpr StringLiteralType k_CellDataPath = "cell_data_path";
+constexpr StringLiteralType k_Origin = "origin";
+constexpr StringLiteralType k_Spacing = "spacing";
+constexpr StringLiteralType k_NumVertices = "num_vertices";
+constexpr StringLiteralType k_VertexDataPath = "vertex_data_path";
+constexpr StringLiteralType k_NumEdges = "num_edges";
+constexpr StringLiteralType k_EdgeDataPath = "edge_data_path";
+constexpr StringLiteralType k_NumFaces = "num_faces";
+constexpr StringLiteralType k_FaceDataPath = "face_data_path";
+constexpr StringLiteralType k_NumPolyhedra = "num_polyhedra";
+constexpr StringLiteralType k_PolyhedronDataPath = "polyhedron_data_path";
+constexpr StringLiteralType k_GeometryType = "geometry_type";
+constexpr StringLiteralType k_UnitDimensionality = "unit_dimensionality";
+constexpr StringLiteralType k_LengthUnits = "length_units";
+constexpr StringLiteralType k_NumCells = "num_cells";
+constexpr StringLiteralType k_Geometry = "geometry";
+constexpr StringLiteralType k_Name = "name";
+constexpr StringLiteralType k_Path = "path";
+constexpr StringLiteralType k_Id = "id";
+constexpr StringLiteralType k_Type = "type";
+constexpr StringLiteralType k_Children = "children";
+constexpr StringLiteralType k_SchemaVersion = "schema_version";
+constexpr StringLiteralType k_Objects = "objects";
+} // namespace keys
 
 constexpr int32 k_HierarchyJsonSchemaVersion = 1;
 
@@ -85,7 +85,7 @@ constexpr int32 k_HierarchyJsonSchemaVersion = 1;
  * @param shape Shape dimensions to convert.
  * @return JSON array that contains the dimensions in their original order.
  */
-nlohmann::json shapeToJson(const std::vector<usize>& shape)
+nlohmann::json ShapeToJson(const std::vector<usize>& shape)
 {
   nlohmann::json::array_t values;
   values.reserve(shape.size());
@@ -101,7 +101,7 @@ nlohmann::json shapeToJson(const std::vector<usize>& shape)
  * @param storeType Data-store type to describe.
  * @return Static name of the data-store type.
  */
-std::string_view storeTypeToString(IDataStore::StoreType storeType)
+std::string_view StoreTypeToString(IDataStore::StoreType storeType)
 {
   switch(storeType)
   {
@@ -120,14 +120,14 @@ std::string_view storeTypeToString(IDataStore::StoreType storeType)
  * @param node JSON object that receives the metadata.
  * @param dataArray Array to describe.
  */
-void appendDataArrayFields(nlohmann::json& node, const IDataArray& dataArray)
+void AppendDataArrayFields(nlohmann::json& node, const IDataArray& dataArray)
 {
-  node[Keys::k_DataType.view()] = std::string(DataTypeToString(dataArray.getDataType()).view());
-  node[Keys::k_TupleShape.view()] = shapeToJson(dataArray.getTupleShape());
-  node[Keys::k_ComponentShape.view()] = shapeToJson(dataArray.getComponentShape());
-  node[Keys::k_NumTuples.view()] = dataArray.getNumberOfTuples();
-  node[Keys::k_NumComponents.view()] = dataArray.getNumberOfComponents();
-  node[Keys::k_StoreType.view()] = storeTypeToString(dataArray.getIDataStoreRef().getStoreType());
+  node[keys::k_DataType.view()] = std::string(DataTypeToString(dataArray.getDataType()).view());
+  node[keys::k_TupleShape.view()] = ShapeToJson(dataArray.getTupleShape());
+  node[keys::k_ComponentShape.view()] = ShapeToJson(dataArray.getComponentShape());
+  node[keys::k_NumTuples.view()] = dataArray.getNumberOfTuples();
+  node[keys::k_NumComponents.view()] = dataArray.getNumberOfComponents();
+  node[keys::k_StoreType.view()] = StoreTypeToString(dataArray.getIDataStoreRef().getStoreType());
 }
 
 /**
@@ -135,10 +135,10 @@ void appendDataArrayFields(nlohmann::json& node, const IDataArray& dataArray)
  * @param node JSON object that receives the metadata.
  * @param stringArray Array to describe.
  */
-void appendStringArrayFields(nlohmann::json& node, const StringArray& stringArray)
+void AppendStringArrayFields(nlohmann::json& node, const StringArray& stringArray)
 {
-  node[Keys::k_DataType.view()] = "string";
-  node[Keys::k_NumTuples.view()] = stringArray.getNumberOfTuples();
+  node[keys::k_DataType.view()] = "string";
+  node[keys::k_NumTuples.view()] = stringArray.getNumberOfTuples();
 }
 
 /**
@@ -146,10 +146,10 @@ void appendStringArrayFields(nlohmann::json& node, const StringArray& stringArra
  * @param node JSON object that receives the metadata.
  * @param neighborList Neighbor list to describe.
  */
-void appendNeighborListFields(nlohmann::json& node, const INeighborList& neighborList)
+void AppendNeighborListFields(nlohmann::json& node, const INeighborList& neighborList)
 {
-  node[Keys::k_DataType.view()] = std::string(DataTypeToString(neighborList.getDataType()).view());
-  node[Keys::k_NumTuples.view()] = neighborList.getNumberOfTuples();
+  node[keys::k_DataType.view()] = std::string(DataTypeToString(neighborList.getDataType()).view());
+  node[keys::k_NumTuples.view()] = neighborList.getNumberOfTuples();
 }
 
 /**
@@ -157,9 +157,9 @@ void appendNeighborListFields(nlohmann::json& node, const INeighborList& neighbo
  * @param node JSON object that receives the metadata.
  * @param attributeMatrix Attribute matrix to describe.
  */
-void appendAttributeMatrixFields(nlohmann::json& node, const AttributeMatrix& attributeMatrix)
+void AppendAttributeMatrixFields(nlohmann::json& node, const AttributeMatrix& attributeMatrix)
 {
-  node[Keys::k_TupleShape.view()] = shapeToJson(attributeMatrix.getShape());
+  node[keys::k_TupleShape.view()] = ShapeToJson(attributeMatrix.getShape());
 }
 
 /**
@@ -169,7 +169,7 @@ void appendAttributeMatrixFields(nlohmann::json& node, const AttributeMatrix& at
  * @return JSON array that contains the vector in X, Y, Z order.
  */
 template <typename T>
-nlohmann::json vec3ToJson(const Vec3<T>& vector)
+nlohmann::json Vec3ToJson(const Vec3<T>& vector)
 {
   return nlohmann::json::array({vector[0], vector[1], vector[2]});
 }
@@ -181,13 +181,13 @@ nlohmann::json vec3ToJson(const Vec3<T>& vector)
  *
  * Preflight stores contain only metadata and do not permit value access.
  */
-bool hasReadableBounds(const RectGridGeom& rectGridGeom)
+bool HasReadableBounds(const RectGridGeom& rectGridGeom)
 {
   const auto* xBoundsPtr = rectGridGeom.getXBounds();
   const auto* yBoundsPtr = rectGridGeom.getYBounds();
   const auto* zBoundsPtr = rectGridGeom.getZBounds();
 
-  const auto hasReadableStore = [](const Float32Array* boundsPtr) {
+  const auto hasReadableStore = [](const Float32ArrayType* boundsPtr) {
     if(boundsPtr == nullptr)
     {
       return false;
@@ -207,25 +207,25 @@ bool hasReadableBounds(const RectGridGeom& rectGridGeom)
  *
  * A RectGrid origin is omitted when its bounds values are not readable.
  */
-void appendGridGeometryFields(nlohmann::json& geometryNode, const IGridGeometry& gridGeometry)
+void AppendGridGeometryFields(nlohmann::json& geometryNode, const IGridGeometry& gridGeometry)
 {
-  geometryNode[Keys::k_Dimensions.view()] = vec3ToJson(gridGeometry.getDimensions());
+  geometryNode[keys::k_Dimensions.view()] = Vec3ToJson(gridGeometry.getDimensions());
   if(gridGeometry.getCellDataId().has_value())
   {
-    geometryNode[Keys::k_CellDataPath.view()] = gridGeometry.getCellDataPath().toString();
+    geometryNode[keys::k_CellDataPath.view()] = gridGeometry.getCellDataPath().toString();
   }
 
   if(const auto* imageGeomPtr = dynamic_cast<const ImageGeom*>(&gridGeometry); imageGeomPtr != nullptr)
   {
-    geometryNode[Keys::k_Origin.view()] = vec3ToJson(imageGeomPtr->getOrigin());
-    geometryNode[Keys::k_Spacing.view()] = vec3ToJson(imageGeomPtr->getSpacing());
+    geometryNode[keys::k_Origin.view()] = Vec3ToJson(imageGeomPtr->getOrigin());
+    geometryNode[keys::k_Spacing.view()] = Vec3ToJson(imageGeomPtr->getSpacing());
   }
-  else if(const auto* rectGridGeomPtr = dynamic_cast<const RectGridGeom*>(&gridGeometry); rectGridGeomPtr != nullptr && hasReadableBounds(*rectGridGeomPtr))
+  else if(const auto* rectGridGeomPtr = dynamic_cast<const RectGridGeom*>(&gridGeometry); rectGridGeomPtr != nullptr && HasReadableBounds(*rectGridGeomPtr))
   {
-    const Result<FloatVec3> originResult = rectGridGeomPtr->getOrigin();
+    const Result<FloatVec3Type> originResult = rectGridGeomPtr->getOrigin();
     if(originResult.valid())
     {
-      geometryNode[Keys::k_Origin.view()] = vec3ToJson(originResult.value());
+      geometryNode[keys::k_Origin.view()] = Vec3ToJson(originResult.value());
     }
   }
 }
@@ -237,38 +237,38 @@ void appendGridGeometryFields(nlohmann::json& geometryNode, const IGridGeometry&
  *
  * Each dimensionality contributes its counts and assigned attribute-matrix paths.
  */
-void appendNodeGeometryFields(nlohmann::json& geometryNode, const INodeGeometry0D& nodeGeometry)
+void AppendNodeGeometryFields(nlohmann::json& geometryNode, const INodeGeometry0D& nodeGeometry)
 {
-  geometryNode[Keys::k_NumVertices.view()] = nodeGeometry.getNumberOfVertices();
+  geometryNode[keys::k_NumVertices.view()] = nodeGeometry.getNumberOfVertices();
   if(nodeGeometry.getVertexAttributeMatrixId().has_value())
   {
-    geometryNode[Keys::k_VertexDataPath.view()] = nodeGeometry.getVertexAttributeMatrixDataPath().toString();
+    geometryNode[keys::k_VertexDataPath.view()] = nodeGeometry.getVertexAttributeMatrixDataPath().toString();
   }
 
   if(const auto* geom1DPtr = dynamic_cast<const INodeGeometry1D*>(&nodeGeometry); geom1DPtr != nullptr)
   {
-    geometryNode[Keys::k_NumEdges.view()] = geom1DPtr->getNumberOfEdges();
+    geometryNode[keys::k_NumEdges.view()] = geom1DPtr->getNumberOfEdges();
     if(geom1DPtr->getEdgeAttributeMatrixId().has_value())
     {
-      geometryNode[Keys::k_EdgeDataPath.view()] = geom1DPtr->getEdgeAttributeMatrixDataPath().toString();
+      geometryNode[keys::k_EdgeDataPath.view()] = geom1DPtr->getEdgeAttributeMatrixDataPath().toString();
     }
   }
 
   if(const auto* geom2DPtr = dynamic_cast<const INodeGeometry2D*>(&nodeGeometry); geom2DPtr != nullptr)
   {
-    geometryNode[Keys::k_NumFaces.view()] = geom2DPtr->getNumberOfFaces();
+    geometryNode[keys::k_NumFaces.view()] = geom2DPtr->getNumberOfFaces();
     if(geom2DPtr->getFaceAttributeMatrixId().has_value())
     {
-      geometryNode[Keys::k_FaceDataPath.view()] = geom2DPtr->getFaceAttributeMatrixDataPath().toString();
+      geometryNode[keys::k_FaceDataPath.view()] = geom2DPtr->getFaceAttributeMatrixDataPath().toString();
     }
   }
 
   if(const auto* geom3DPtr = dynamic_cast<const INodeGeometry3D*>(&nodeGeometry); geom3DPtr != nullptr)
   {
-    geometryNode[Keys::k_NumPolyhedra.view()] = geom3DPtr->getNumberOfPolyhedra();
+    geometryNode[keys::k_NumPolyhedra.view()] = geom3DPtr->getNumberOfPolyhedra();
     if(geom3DPtr->getPolyhedraAttributeMatrixId().has_value())
     {
-      geometryNode[Keys::k_PolyhedronDataPath.view()] = geom3DPtr->getPolyhedronAttributeMatrixDataPath().toString();
+      geometryNode[keys::k_PolyhedronDataPath.view()] = geom3DPtr->getPolyhedronAttributeMatrixDataPath().toString();
     }
   }
 }
@@ -278,24 +278,24 @@ void appendNodeGeometryFields(nlohmann::json& geometryNode, const INodeGeometry0
  * @param node JSON object that receives the geometry block.
  * @param geometry Geometry to describe.
  */
-void appendGeometryFields(nlohmann::json& node, const IGeometry& geometry)
+void AppendGeometryFields(nlohmann::json& node, const IGeometry& geometry)
 {
   nlohmann::json geometryNode;
-  geometryNode[Keys::k_GeometryType.view()] = IGeometry::GeomTypeToString(geometry.getGeomType());
-  geometryNode[Keys::k_UnitDimensionality.view()] = geometry.getUnitDimensionality();
-  geometryNode[Keys::k_LengthUnits.view()] = IGeometry::LengthUnitToString(geometry.getUnits());
-  geometryNode[Keys::k_NumCells.view()] = geometry.getNumberOfCells();
+  geometryNode[keys::k_GeometryType.view()] = IGeometry::GeomTypeToString(geometry.getGeomType());
+  geometryNode[keys::k_UnitDimensionality.view()] = geometry.getUnitDimensionality();
+  geometryNode[keys::k_LengthUnits.view()] = IGeometry::LengthUnitToString(geometry.getUnits());
+  geometryNode[keys::k_NumCells.view()] = geometry.getNumberOfCells();
 
   if(const auto* gridGeometryPtr = dynamic_cast<const IGridGeometry*>(&geometry); gridGeometryPtr != nullptr)
   {
-    appendGridGeometryFields(geometryNode, *gridGeometryPtr);
+    AppendGridGeometryFields(geometryNode, *gridGeometryPtr);
   }
   else if(const auto* nodeGeometryPtr = dynamic_cast<const INodeGeometry0D*>(&geometry); nodeGeometryPtr != nullptr)
   {
-    appendNodeGeometryFields(geometryNode, *nodeGeometryPtr);
+    AppendNodeGeometryFields(geometryNode, *nodeGeometryPtr);
   }
 
-  node[Keys::k_Geometry.view()] = std::move(geometryNode);
+  node[keys::k_Geometry.view()] = std::move(geometryNode);
 }
 
 /**
@@ -304,36 +304,36 @@ void appendGeometryFields(nlohmann::json& node, const IGeometry& geometry)
  * @param path Path of the object in the data structure.
  * @return JSON object that contains common and type-specific metadata.
  */
-nlohmann::json makeObjectNode(const DataObject& object, const DataPath& path)
+nlohmann::json MakeObjectNode(const DataObject& object, const DataPath& path)
 {
   nlohmann::json node;
-  node[Keys::k_Name.view()] = object.getName();
-  node[Keys::k_Path.view()] = path.toString();
-  node[Keys::k_Id.view()] = object.getId();
-  node[Keys::k_Type.view()] = object.getTypeName();
+  node[keys::k_Name.view()] = object.getName();
+  node[keys::k_Path.view()] = path.toString();
+  node[keys::k_Id.view()] = object.getId();
+  node[keys::k_Type.view()] = object.getTypeName();
 
   if(const auto* geometryPtr = dynamic_cast<const IGeometry*>(&object); geometryPtr != nullptr)
   {
-    appendGeometryFields(node, *geometryPtr);
+    AppendGeometryFields(node, *geometryPtr);
   }
   else if(const auto* attributeMatrixPtr = dynamic_cast<const AttributeMatrix*>(&object); attributeMatrixPtr != nullptr)
   {
-    appendAttributeMatrixFields(node, *attributeMatrixPtr);
+    AppendAttributeMatrixFields(node, *attributeMatrixPtr);
   }
   else if(const auto* dataArrayPtr = dynamic_cast<const IDataArray*>(&object); dataArrayPtr != nullptr)
   {
-    appendDataArrayFields(node, *dataArrayPtr);
+    AppendDataArrayFields(node, *dataArrayPtr);
   }
   else if(const auto* stringArrayPtr = dynamic_cast<const StringArray*>(&object); stringArrayPtr != nullptr)
   {
-    appendStringArrayFields(node, *stringArrayPtr);
+    AppendStringArrayFields(node, *stringArrayPtr);
   }
   else if(const auto* neighborListPtr = dynamic_cast<const INeighborList*>(&object); neighborListPtr != nullptr)
   {
-    appendNeighborListFields(node, *neighborListPtr);
+    AppendNeighborListFields(node, *neighborListPtr);
   }
 
-  node[Keys::k_Children.view()] = nlohmann::json::array();
+  node[keys::k_Children.view()] = nlohmann::json::array();
   return node;
 }
 
@@ -396,9 +396,9 @@ private:
  * @param path Path of the object in the data structure.
  * @return JSON object that contains the complete hierarchy branch.
  */
-nlohmann::json makeHierarchyNode(const DataObject& object, const DataPath& path)
+nlohmann::json MakeHierarchyNode(const DataObject& object, const DataPath& path)
 {
-  nlohmann::json hierarchyNode = makeObjectNode(object, path);
+  nlohmann::json hierarchyNode = MakeObjectNode(object, path);
   std::vector<PendingNode> pendingNodes;
   pendingNodes.emplace_back(&object, path, &hierarchyNode);
 
@@ -413,14 +413,14 @@ nlohmann::json makeHierarchyNode(const DataObject& object, const DataPath& path)
       continue;
     }
 
-    const std::vector<const DataObject*> sortedChildPtrs = DataStructureExportUtilities::GetSortedObjectPointers(groupPtr->getDataMap());
-    auto& children = pendingNode.getJson().at(Keys::k_Children.view()).get_ref<nlohmann::json::array_t&>();
+    const std::vector<const DataObject*> sortedChildPtrs = data_structure_export_utilities::GetSortedObjectPointers(groupPtr->getDataMap());
+    auto& children = pendingNode.getJson().at(keys::k_Children.view()).get_ref<nlohmann::json::array_t&>();
     // Reserve before pendingNodes stores pointers to child JSON values.
     children.reserve(sortedChildPtrs.size());
     for(const DataObject* childPtr : sortedChildPtrs)
     {
       DataPath childPath = pendingNode.getPath().createChildPath(childPtr->getName());
-      children.emplace_back(makeObjectNode(*childPtr, childPath));
+      children.emplace_back(MakeObjectNode(*childPtr, childPath));
       pendingNodes.emplace_back(childPtr, std::move(childPath), &children.back());
     }
   }
@@ -431,15 +431,15 @@ nlohmann::json makeHierarchyNode(const DataObject& object, const DataPath& path)
 nlohmann::json DataStructure::exportHierarchyAsJson() const
 {
   nlohmann::json root;
-  root[Keys::k_SchemaVersion.view()] = k_HierarchyJsonSchemaVersion;
-  root[Keys::k_Objects.view()] = nlohmann::json::array();
+  root[keys::k_SchemaVersion.view()] = k_HierarchyJsonSchemaVersion;
+  root[keys::k_Objects.view()] = nlohmann::json::array();
 
-  auto& objects = root[Keys::k_Objects.view()].get_ref<nlohmann::json::array_t&>();
-  const std::vector<const DataObject*> rootObjectPtrs = DataStructureExportUtilities::GetSortedObjectPointers(m_RootGroup);
+  auto& objects = root[keys::k_Objects.view()].get_ref<nlohmann::json::array_t&>();
+  const std::vector<const DataObject*> rootObjectPtrs = data_structure_export_utilities::GetSortedObjectPointers(m_RootGroup);
   objects.reserve(rootObjectPtrs.size());
   for(const DataObject* objectPtr : rootObjectPtrs)
   {
-    objects.emplace_back(makeHierarchyNode(*objectPtr, DataPath({objectPtr->getName()})));
+    objects.emplace_back(MakeHierarchyNode(*objectPtr, DataPath({objectPtr->getName()})));
   }
   return root;
 }

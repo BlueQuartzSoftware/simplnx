@@ -19,48 +19,48 @@ namespace nx::core
 #if SIMPLNX_BUILD_TESTS
 namespace
 {
-thread_local bool s_FailWriteDiagnosticAllocation = false;
-thread_local bool s_WriteDiagnosticAllocationFailureConsumed = false;
+thread_local bool SFailWriteDiagnosticAllocation = false;
+thread_local bool SWriteDiagnosticAllocationFailureConsumed = false;
 } // namespace
 
-void HDF5::SetWriteDiagnosticAllocationFailure(bool enabled)
+void hdf5::SetWriteDiagnosticAllocationFailure(bool enabled)
 {
-  s_FailWriteDiagnosticAllocation = enabled;
-  s_WriteDiagnosticAllocationFailureConsumed = false;
+  SFailWriteDiagnosticAllocation = enabled;
+  SWriteDiagnosticAllocationFailureConsumed = false;
 }
 
-bool HDF5::WriteDiagnosticAllocationFailureConsumed()
+bool hdf5::WriteDiagnosticAllocationFailureConsumed()
 {
-  return s_WriteDiagnosticAllocationFailureConsumed;
+  return SWriteDiagnosticAllocationFailureConsumed;
 }
 
-void HDF5::FailWriteDiagnosticAllocation()
+void hdf5::FailWriteDiagnosticAllocation()
 {
-  if(s_FailWriteDiagnosticAllocation)
+  if(SFailWriteDiagnosticAllocation)
   {
-    s_FailWriteDiagnosticAllocation = false;
-    s_WriteDiagnosticAllocationFailureConsumed = true;
+    SFailWriteDiagnosticAllocation = false;
+    SWriteDiagnosticAllocationFailureConsumed = true;
     throw std::bad_alloc{};
   }
 }
 #endif
-Result<> HDF5::WriteObjectAttributes(DataStructureWriter& dataStructureWriter, nx::core::HDF5::ObjectIO& objectWriter, const DataObject* dataObject, bool importable)
+Result<> hdf5::WriteObjectAttributes(DataStructureWriter& dataStructureWriter, nx::core::hdf5::ObjectIO& objectWriter, const DataObject* dataObject, bool importable)
 {
   // Add to DataStructureWriter for use in linking
   dataStructureWriter.addWriter(objectWriter, dataObject->getId());
 
   int32 importablei32 = (importable ? 1 : 0);
-  Result<> result = objectWriter.writeStringAttribute(Constants::k_ObjectTypeTag, dataObject->getTypeName());
+  Result<> result = objectWriter.writeStringAttribute(constants::k_ObjectTypeTag, dataObject->getTypeName());
   if(result.invalid())
   {
     return result;
   }
-  result = objectWriter.writeScalarAttribute(Constants::k_ObjectIdTag, dataObject->getId());
+  result = objectWriter.writeScalarAttribute(constants::k_ObjectIdTag, dataObject->getId());
   if(result.invalid())
   {
     return result;
   }
-  result = objectWriter.writeScalarAttribute(Constants::k_ImportableTag, importablei32);
+  result = objectWriter.writeScalarAttribute(constants::k_ImportableTag, importablei32);
   if(result.invalid())
   {
     return result;
@@ -69,12 +69,13 @@ Result<> HDF5::WriteObjectAttributes(DataStructureWriter& dataStructureWriter, n
   return {};
 }
 
-Result<> HDF5::ReadBaseGroup(DataStructureReader& dataStructureReader, const nx::core::HDF5::GroupIO& groupReader, BaseGroup* baseGroup, bool useEmptyDataStores)
+Result<> hdf5::ReadBaseGroup(DataStructureReader& dataStructureReader, const nx::core::hdf5::GroupIO& groupReader, BaseGroup* baseGroup, bool useEmptyDataStores)
 {
   return ReadDataMap(dataStructureReader, baseGroup->getDataMap(), groupReader, baseGroup->getId(), useEmptyDataStores);
 }
 
-Result<> HDF5::ReadDataMap(DataStructureReader& dataStructureReader, DataMap& dataMap, const nx::core::HDF5::GroupIO& groupReader, std::optional<DataObject::IdType> parentId, bool useEmptyDataStore)
+Result<> hdf5::ReadDataMap(DataStructureReader& dataStructureReader, DataMap& /*dataMap*/, const nx::core::hdf5::GroupIO& groupReader, std::optional<DataObject::IdType> parentId,
+                           bool useEmptyDataStore)
 {
   auto childrenNames = groupReader.getChildNames();
   Result<> result;
@@ -95,7 +96,7 @@ Result<> HDF5::ReadDataMap(DataStructureReader& dataStructureReader, DataMap& da
   return result;
 }
 
-Result<> HDF5::WriteBaseGroup(DataStructureWriter& dataStructureWriter, nx::core::HDF5::GroupIO& parentGroupIO, const BaseGroup* baseGroup, bool importable)
+Result<> hdf5::WriteBaseGroup(DataStructureWriter& dataStructureWriter, nx::core::hdf5::GroupIO& parentGroupIO, const BaseGroup* baseGroup, bool importable)
 {
   auto groupWriter = parentGroupIO.createGroup(baseGroup->getName());
 
@@ -108,7 +109,7 @@ Result<> HDF5::WriteBaseGroup(DataStructureWriter& dataStructureWriter, nx::core
   return WriteDataMap(dataStructureWriter, groupWriter, baseGroup->getDataMap());
 }
 
-Result<> HDF5::WriteDataMap(DataStructureWriter& dataStructureWriter, nx::core::HDF5::GroupIO& h5Group, const DataMap& dataMap)
+Result<> hdf5::WriteDataMap(DataStructureWriter& dataStructureWriter, nx::core::hdf5::GroupIO& h5Group, const DataMap& dataMap)
 {
   for(const auto& [id, dataObject] : dataMap)
   {

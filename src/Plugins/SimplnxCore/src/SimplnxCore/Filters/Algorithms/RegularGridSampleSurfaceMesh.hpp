@@ -22,13 +22,13 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT RegularGridSampleSurfaceMeshInputValues
 {
-  VectorUInt64Parameter::ValueType Dimensions;
-  VectorFloat32Parameter::ValueType Spacing;
-  VectorFloat32Parameter::ValueType Origin;
-  DataPath TriangleGeometryPath;
-  DataPath SurfaceMeshFaceLabelsArrayPath;
-  DataPath ImageGeometryOutputPath;
-  DataPath FeatureIdsArrayPath;
+  VectorUInt64ParameterType::ValueType dimensions;
+  VectorFloat32ParameterType::ValueType spacing;
+  VectorFloat32ParameterType::ValueType origin;
+  DataPath triangle_geometry_path;
+  DataPath surface_mesh_face_labels_array_path;
+  DataPath image_geometry_output_path;
+  DataPath feature_ids_array_path;
 };
 
 /**
@@ -57,7 +57,7 @@ public:
   /**
    * @brief Destroys the non-owning sampler.
    */
-  ~RegularGridSampleSurfaceMesh() noexcept;
+  ~RegularGridSampleSurfaceMesh() noexcept = default;
 
   RegularGridSampleSurfaceMesh(const RegularGridSampleSurfaceMesh&) = delete;
   RegularGridSampleSurfaceMesh(RegularGridSampleSurfaceMesh&&) noexcept = delete;
@@ -86,7 +86,7 @@ public:
   Result<> sendThreadSafeSliceUpdate(usize zSlice, const T* sliceData, usize count)
   {
     std::lock_guard<std::mutex> lock(m_Mutex);
-    auto& featureIdsRef = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
+    auto& featureIdsRef = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->feature_ids_array_path);
     const usize offset = zSlice * m_CellsPerSlice;
     return ExecuteDataFunctionIntType(
         [&]<typename OutputT>() -> Result<> {

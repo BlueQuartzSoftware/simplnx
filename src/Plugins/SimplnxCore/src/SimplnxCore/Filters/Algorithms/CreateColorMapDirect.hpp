@@ -32,7 +32,7 @@ public:
   /**
    * @brief Destroys the non-owning in-memory algorithm.
    */
-  ~CreateColorMapDirect() noexcept;
+  ~CreateColorMapDirect() noexcept = default;
 
   CreateColorMapDirect(const CreateColorMapDirect&) = delete;
   CreateColorMapDirect(CreateColorMapDirect&&) noexcept = delete;

@@ -51,29 +51,29 @@ const std::string k_UnknownPrecomputedMatrixDescription = "Precomputed transform
 
 Result<> ValidateTransformationParameters(const DataStructure& dataStructure, const ApplyTransformationToGeometryInputValues& inputValues)
 {
-  if(inputValues.TransformationSelection == detail::k_RotationIdx)
+  if(inputValues.transformation_selection == detail::k_RotationIdx)
   {
-    return ImageRotationUtilities::ValidateRotationAxisAngle(inputValues.Rotation, "Rotation");
+    return image_rotation_utilities::ValidateRotationAxisAngle(inputValues.rotation, "Rotation");
   }
-  if(inputValues.TransformationSelection == detail::k_TranslationIdx)
+  if(inputValues.transformation_selection == detail::k_TranslationIdx)
   {
-    if(inputValues.Translation.size() != 3)
+    if(inputValues.translation.size() != 3)
     {
-      return MakeErrorResult(k_TranslationLength, fmt::format("Parameter 'Translation' must contain 3 XYZ values, but contains {}.", inputValues.Translation.size()));
+      return MakeErrorResult(k_TranslationLength, fmt::format("Parameter 'Translation' must contain 3 XYZ values, but contains {}.", inputValues.translation.size()));
     }
-    return GeometryUtilities::ValidateFiniteVector(inputValues.Translation, "Translation", k_TranslationFinite);
+    return geometry_utilities::ValidateFiniteVector(inputValues.translation, "Translation", k_TranslationFinite);
   }
-  if(inputValues.TransformationSelection == detail::k_ScaleIdx)
+  if(inputValues.transformation_selection == detail::k_ScaleIdx)
   {
-    if(inputValues.Scale.size() != 3)
+    if(inputValues.scale.size() != 3)
     {
-      return MakeErrorResult(k_ScaleLength, fmt::format("Parameter 'Scale' must contain 3 XYZ values, but contains {}.", inputValues.Scale.size()));
+      return MakeErrorResult(k_ScaleLength, fmt::format("Parameter 'Scale' must contain 3 XYZ values, but contains {}.", inputValues.scale.size()));
     }
-    if(dataStructure.getDataAs<ImageGeom>(inputValues.SelectedGeometryPath) != nullptr)
+    if(dataStructure.getDataAs<ImageGeom>(inputValues.selected_geometry_path) != nullptr)
     {
-      return GeometryUtilities::ValidatePositiveFiniteVector(inputValues.Scale, "Scale", k_ImageScalePositive);
+      return geometry_utilities::ValidatePositiveFiniteVector(inputValues.scale, "Scale", k_ImageScalePositive);
     }
-    return GeometryUtilities::ValidateFiniteVector(inputValues.Scale, "Scale", k_NodeScaleFinite);
+    return geometry_utilities::ValidateFiniteVector(inputValues.scale, "Scale", k_NodeScaleFinite);
   }
   return {};
 }
@@ -103,12 +103,12 @@ public:
   ClearFeatureAttributeMatrixAction& operator=(const ClearFeatureAttributeMatrixAction&) = delete;
   ClearFeatureAttributeMatrixAction& operator=(ClearFeatureAttributeMatrixAction&&) noexcept = delete;
 
-  Result<> apply(DataStructure& dataStructure, Mode mode) const override
+  Result<> apply(DataStructure& dataStructure, Mode /*mode*/) const override
   {
     ClearFeatureAttributeMatrix(dataStructure, m_Path);
     return {};
   }
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     return std::make_unique<ClearFeatureAttributeMatrixAction>(m_Path);
   }
@@ -119,8 +119,8 @@ private:
 
 bool ResamplesImageGeometry(const ApplyTransformationToGeometryInputValues& inputValues)
 {
-  return inputValues.TransformationSelection != detail::k_NoTransformIdx && inputValues.TransformationSelection != detail::k_TranslationIdx &&
-         inputValues.TransformationSelection != detail::k_ScaleIdx;
+  return inputValues.transformation_selection != detail::k_NoTransformIdx && inputValues.transformation_selection != detail::k_TranslationIdx &&
+         inputValues.transformation_selection != detail::k_ScaleIdx;
 }
 
 void AppendRetainedAttributeMatricesWarning(const DataStructure& dataStructure, const DataPath& geometryPath, const AttributeMatrix* clearedMatrix, Result<OutputActions>& resultOutputActions)
@@ -143,26 +143,26 @@ void AppendRetainedAttributeMatricesWarning(const DataStructure& dataStructure, 
     }
   };
   excludeMatrix(clearedMatrix);
-  const auto* geometry = dataStructure.getDataAs<IGeometry>(geometryPath);
-  if(const auto* grid = dynamic_cast<const IGridGeometry*>(geometry); grid != nullptr)
+  const auto* geometryPtr = dataStructure.getDataAs<IGeometry>(geometryPath);
+  if(const auto* gridPtr = dynamic_cast<const IGridGeometry*>(geometryPtr); gridPtr != nullptr)
   {
-    excludeMatrix(grid->getCellData());
+    excludeMatrix(gridPtr->getCellData());
   }
-  if(const auto* nodes = dynamic_cast<const INodeGeometry0D*>(geometry); nodes != nullptr)
+  if(const auto* nodesPtr = dynamic_cast<const INodeGeometry0D*>(geometryPtr); nodesPtr != nullptr)
   {
-    excludeMatrix(nodes->getVertexAttributeMatrix());
+    excludeMatrix(nodesPtr->getVertexAttributeMatrix());
   }
-  if(const auto* edges = dynamic_cast<const INodeGeometry1D*>(geometry); edges != nullptr)
+  if(const auto* edgesPtr = dynamic_cast<const INodeGeometry1D*>(geometryPtr); edgesPtr != nullptr)
   {
-    excludeMatrix(edges->getEdgeAttributeMatrix());
+    excludeMatrix(edgesPtr->getEdgeAttributeMatrix());
   }
-  if(const auto* faces = dynamic_cast<const INodeGeometry2D*>(geometry); faces != nullptr)
+  if(const auto* facesPtr = dynamic_cast<const INodeGeometry2D*>(geometryPtr); facesPtr != nullptr)
   {
-    excludeMatrix(faces->getFaceAttributeMatrix());
+    excludeMatrix(facesPtr->getFaceAttributeMatrix());
   }
-  if(const auto* polyhedra = dynamic_cast<const INodeGeometry3D*>(geometry); polyhedra != nullptr)
+  if(const auto* polyhedraPtr = dynamic_cast<const INodeGeometry3D*>(geometryPtr); polyhedraPtr != nullptr)
   {
-    excludeMatrix(polyhedra->getPolyhedraAttributeMatrix());
+    excludeMatrix(polyhedraPtr->getPolyhedraAttributeMatrix());
   }
   AppendUnchangedAttributeMatricesWarning(dataStructure, childPaths.value(), excludedPaths, "transformed geometry", resultOutputActions, true);
 }
@@ -174,29 +174,29 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
   auto validation = ValidateTransformationParameters(dataStructure, inputValues);
   if(validation.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(validation))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(validation))};
   }
-  const auto pTransformationMatrixTypeValue = inputValues.TransformationSelection;
-  const auto& tableData = inputValues.ManualMatrixTableData;
-  const DataPath& pComputedTransformationMatrixPath = inputValues.ComputedTransformationMatrix;
-  const DataPath& pSelectedGeometryPathValue = inputValues.SelectedGeometryPath;
-  const DataPath& pCellAttributeMatrixPath = inputValues.CellAttributeMatrixPath;
-  const bool pTranslateGeometryToGlobalOrigin = inputValues.TranslateGeometryToGlobalOrigin;
-  const bool saveTransform = inputValues.SaveTransformMatrix;
-  const DataPath& transformMatrixDataPath = inputValues.TransformMatrixPath;
+  const auto pTransformationMatrixTypeValue = inputValues.transformation_selection;
+  const auto& tableData = inputValues.manual_matrix_table_data;
+  const DataPath& pComputedTransformationMatrixPath = inputValues.computed_transformation_matrix;
+  const DataPath& pSelectedGeometryPathValue = inputValues.selected_geometry_path;
+  const DataPath& pCellAttributeMatrixPath = inputValues.cell_attribute_matrix_path;
+  const bool pTranslateGeometryToGlobalOrigin = inputValues.translate_geometry_to_global_origin;
+  const bool saveTransform = inputValues.save_transform_matrix;
+  const DataPath& transformMatrixDataPath = inputValues.transform_matrix_path;
 
   if(pTransformationMatrixTypeValue == detail::k_PrecomputedTransformationMatrixIdx)
   {
-    const auto* precomputedMatrixPtr = dataStructure.getDataAs<Float32Array>(pComputedTransformationMatrixPath);
+    const auto* precomputedMatrixPtr = dataStructure.getDataAs<Float32ArrayType>(pComputedTransformationMatrixPath);
     if(nullptr == precomputedMatrixPtr)
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(
+      return {.output_actions = MakeErrorResult<OutputActions>(
                   -82010, fmt::format("Precomputed transformation matrix must have a valid path. Invalid path given: '{}'", pComputedTransformationMatrixPath.toString()))};
     }
     const auto totalElements = precomputedMatrixPtr->getNumberOfTuples() * precomputedMatrixPtr->getNumberOfComponents();
     if(totalElements != 16)
     {
-      return {.outputActions = MakeErrorResult<OutputActions>(
+      return {.output_actions = MakeErrorResult<OutputActions>(
                   -82019, fmt::format("Precomputed transformation matrix at path '{}' has {} total elements ({} tuples * {} components), but it MUST have 16 total elements.",
                                       pComputedTransformationMatrixPath.toString(), totalElements, precomputedMatrixPtr->getNumberOfTuples(), precomputedMatrixPtr->getNumberOfComponents()))};
     }
@@ -209,30 +209,30 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
   const ShapeType cDims = {4, 4};
 
   // Reset the final Transformation Matrix to all Zeros before we fill it with what the user has entered.
-  ImageRotationUtilities::Matrix4fR transformationMatrix;
+  image_rotation_utilities::Matrix4fRType transformationMatrix;
   std::string transformationMatrixDesc;
   transformationMatrix.setIdentity();
 
   // if ImageGeom was selected to be transformed: This should work because if we didn't pass
   // the earlier test, we should not have gotten to here.
   const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(pSelectedGeometryPathValue);
-  const AttributeMatrix* sourceFeatureAm = nullptr;
-  const bool clearFeatureAttributeMatrix = inputValues.ClearFeatureAttributeMatrix;
-  const bool renumberFeatures = clearFeatureAttributeMatrix && inputValues.RenumberFeatures;
+  const AttributeMatrix* sourceFeatureAmPtr = nullptr;
+  const bool clearFeatureAttributeMatrix = inputValues.clear_feature_attribute_matrix;
+  const bool renumberFeatures = clearFeatureAttributeMatrix && inputValues.renumber_features;
   const bool replacesImageGeometry = imageGeomPtr != nullptr && ResamplesImageGeometry(inputValues);
   if(clearFeatureAttributeMatrix)
   {
     const auto& geometry = dataStructure.getDataRefAs<IGeometry>(pSelectedGeometryPathValue);
-    const auto& featureAmPath = inputValues.FeatureAttributeMatrixPath;
-    sourceFeatureAm = dataStructure.getDataAs<AttributeMatrix>(featureAmPath);
-    if(sourceFeatureAm == nullptr || !geometry.contains(sourceFeatureAm))
+    const auto& featureAmPath = inputValues.feature_attribute_matrix_path;
+    sourceFeatureAmPtr = dataStructure.getDataAs<AttributeMatrix>(featureAmPath);
+    if(sourceFeatureAmPtr == nullptr || !geometry.contains(sourceFeatureAmPtr))
     {
       return IFilter::MakePreflightErrorResult(-67451, fmt::format("The Feature Attribute Matrix '{}' must be a direct child of the selected {} '{}'. Select an Attribute Matrix that is a direct "
                                                                    "child of the geometry, or turn off 'Clear Feature Attribute Matrix'.",
                                                                    featureAmPath.toString(), imageGeomPtr != nullptr ? "Image Geometry" : "Geometry", pSelectedGeometryPathValue.toString()));
     }
 
-    if(saveTransform && dataStructure.getData(transformMatrixDataPath.getParent()) == sourceFeatureAm)
+    if(saveTransform && dataStructure.getData(transformMatrixDataPath.getParent()) == sourceFeatureAmPtr)
     {
       return IFilter::MakePreflightErrorResult(
           -67456,
@@ -243,29 +243,29 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
 
     // Each registered element AM has its own element count, including lower-dimensional node data.
     std::vector<std::pair<const AttributeMatrix*, usize>> elementMatrices;
-    if(const auto* grid = dynamic_cast<const IGridGeometry*>(&geometry); grid != nullptr)
+    if(const auto* gridPtr = dynamic_cast<const IGridGeometry*>(&geometry); gridPtr != nullptr)
     {
-      elementMatrices.emplace_back(grid->getCellData(), grid->getNumberOfCells());
+      elementMatrices.emplace_back(gridPtr->getCellData(), gridPtr->getNumberOfCells());
     }
-    if(const auto* nodes = dynamic_cast<const INodeGeometry0D*>(&geometry); nodes != nullptr)
+    if(const auto* nodesPtr = dynamic_cast<const INodeGeometry0D*>(&geometry); nodesPtr != nullptr)
     {
-      elementMatrices.emplace_back(nodes->getVertexAttributeMatrix(), nodes->getNumberOfVertices());
+      elementMatrices.emplace_back(nodesPtr->getVertexAttributeMatrix(), nodesPtr->getNumberOfVertices());
     }
-    if(const auto* edges = dynamic_cast<const INodeGeometry1D*>(&geometry); edges != nullptr)
+    if(const auto* edgesPtr = dynamic_cast<const INodeGeometry1D*>(&geometry); edgesPtr != nullptr)
     {
-      elementMatrices.emplace_back(edges->getEdgeAttributeMatrix(), edges->getNumberOfEdges());
+      elementMatrices.emplace_back(edgesPtr->getEdgeAttributeMatrix(), edgesPtr->getNumberOfEdges());
     }
-    if(const auto* faces = dynamic_cast<const INodeGeometry2D*>(&geometry); faces != nullptr)
+    if(const auto* facesPtr = dynamic_cast<const INodeGeometry2D*>(&geometry); facesPtr != nullptr)
     {
-      elementMatrices.emplace_back(faces->getFaceAttributeMatrix(), faces->getNumberOfFaces());
+      elementMatrices.emplace_back(facesPtr->getFaceAttributeMatrix(), facesPtr->getNumberOfFaces());
     }
-    if(const auto* cells = dynamic_cast<const INodeGeometry3D*>(&geometry); cells != nullptr)
+    if(const auto* cellsPtr = dynamic_cast<const INodeGeometry3D*>(&geometry); cellsPtr != nullptr)
     {
-      elementMatrices.emplace_back(cells->getPolyhedraAttributeMatrix(), cells->getNumberOfPolyhedra());
+      elementMatrices.emplace_back(cellsPtr->getPolyhedraAttributeMatrix(), cellsPtr->getNumberOfPolyhedra());
     }
     for(const auto& [elementAm, count] : elementMatrices)
     {
-      if(elementAm == sourceFeatureAm)
+      if(elementAm == sourceFeatureAmPtr)
       {
         return IFilter::MakePreflightErrorResult(
             -67452,
@@ -276,17 +276,17 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
     auto elementDataResult = ValidateFeatureAttributeMatrixNotElementData(dataStructure, featureAmPath);
     if(elementDataResult.invalid())
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(elementDataResult))};
     }
     if(renumberFeatures)
     {
-      const auto& featureIdsPath = inputValues.FeatureIdsPath;
-      const auto* idsAm = dataStructure.getDataAs<AttributeMatrix>(featureIdsPath.getParent());
+      const auto& featureIdsPath = inputValues.feature_ids_path;
+      const auto* idsAmPtr = dataStructure.getDataAs<AttributeMatrix>(featureIdsPath.getParent());
       // Feature Ids must label elements, so they must be in a registered element AM of the geometry.
       std::optional<usize> elementCount;
       for(const auto& [elementAm, count] : elementMatrices)
       {
-        if(idsAm != nullptr && elementAm == idsAm)
+        if(idsAmPtr != nullptr && elementAm == idsAmPtr)
         {
           elementCount = count;
           break;
@@ -296,7 +296,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
       if(imageGeomPtr != nullptr)
       {
         // Execution resamples the geometry's registered Cell AM. The selected AM must identify that same object.
-        validLocation = validLocation && idsAm == dataStructure.getDataAs<AttributeMatrix>(pCellAttributeMatrixPath);
+        validLocation = validLocation && idsAmPtr == dataStructure.getDataAs<AttributeMatrix>(pCellAttributeMatrixPath);
       }
       if(!validLocation)
       {
@@ -304,12 +304,12 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
             -67453, fmt::format("**Feature Ids** DataArray '{}' must be in {} of the selected geometry '{}'. Select an array from that Attribute Matrix.", featureIdsPath.toString(),
                                 imageGeomPtr != nullptr ? "the selected Cell Attribute Matrix" : "a Vertex, Edge, Face, or Polyhedron Attribute Matrix", pSelectedGeometryPathValue.toString()));
       }
-      const auto* featureIdsPtr = dataStructure.getDataAs<Int32Array>(featureIdsPath);
+      const auto* featureIdsPtr = dataStructure.getDataAs<Int32ArrayType>(featureIdsPath);
       if(featureIdsPtr == nullptr || featureIdsPtr->getNumberOfComponents() != 1)
       {
-        return {MakeErrorResult<OutputActions>(
-            -67455,
-            fmt::format("Feature Ids '{}' must be a single-component int32 DataArray. Select a single-component int32 DataArray from the element Attribute Matrix.", featureIdsPath.toString()))};
+        return {.output_actions = MakeErrorResult<OutputActions>(
+                    -67455, fmt::format("Feature Ids '{}' must be a single-component int32 DataArray. Select a single-component int32 DataArray from the element Attribute Matrix.",
+                                        featureIdsPath.toString()))};
       }
       const auto& featureIds = *featureIdsPtr;
       if(featureIds.getNumberOfTuples() != *elementCount)
@@ -321,7 +321,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
     }
 
     std::string clearedList;
-    for(const auto& [identifier, object] : *sourceFeatureAm)
+    for(const auto& [identifier, object] : *sourceFeatureAmPtr)
     {
       const auto childPath = featureAmPath.createChildPath(object->getName());
       clearedList += "\n" + childPath.toString();
@@ -342,7 +342,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
       if(!replacesImageGeometry)
       {
         MarkDataPathModified(dataStructure, resultOutputActions, featureAmPath);
-        MarkDataPathModified(dataStructure, resultOutputActions, inputValues.FeatureIdsPath);
+        MarkDataPathModified(dataStructure, resultOutputActions, inputValues.feature_ids_path);
       }
     }
     preflightUpdatedValues.push_back({"Cleared Feature Data", std::move(message)});
@@ -355,15 +355,16 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
   if(imageGeomPtr != nullptr)
   {
     auto origin = imageGeomPtr->getOrigin();
-    const ImageRotationUtilities::Matrix4fR translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-origin[0], -origin[1], -origin[2]});
-    const ImageRotationUtilities::Matrix4fR translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({origin[0], origin[1], origin[2]});
+    const image_rotation_utilities::Matrix4fRType translationToGlobalOriginMat = image_rotation_utilities::GenerateTranslationTransformationMatrix({-origin[0], -origin[1], -origin[2]});
+    const image_rotation_utilities::Matrix4fRType translationFromGlobalOriginMat = image_rotation_utilities::GenerateTranslationTransformationMatrix({origin[0], origin[1], origin[2]});
 
     switch(pTransformationMatrixTypeValue)
     {
     case detail::k_NoTransformIdx: // No-Op
     {
-      resultOutputActions.warnings().push_back(Warning{82001, clearFeatureAttributeMatrix ? "No spatial transformation has been selected. Feature Attribute Matrix options still apply." :
-                                                                                            "No transformation has been selected. This filter will NOT modify any data."});
+      resultOutputActions.warnings().push_back(Warning{.code = 82001,
+                                                       .message = clearFeatureAttributeMatrix ? "No spatial transformation has been selected. Feature Attribute Matrix options still apply." :
+                                                                                                "No transformation has been selected. This filter will NOT modify any data."});
       transformationMatrixDesc = "No transformation matrix selected.";
       break;
     }
@@ -378,51 +379,51 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
       const usize numTableCols = tableData[0].size();
       if(numTableRows != 4)
       {
-        return {MakeErrorResult<OutputActions>(-82002, "Manually entered transformation matrix must have exactly 4 rows")};
+        return {.output_actions = MakeErrorResult<OutputActions>(-82002, "Manually entered transformation matrix must have exactly 4 rows")};
       }
       if(numTableCols != 4)
       {
-        return {MakeErrorResult<OutputActions>(-82006, "Manually entered transformation matrix must have exactly 4 columns")};
+        return {.output_actions = MakeErrorResult<OutputActions>(-82006, "Manually entered transformation matrix must have exactly 4 columns")};
       }
-      transformationMatrix = ImageRotationUtilities::GenerateManualTransformationMatrix(tableData);
+      transformationMatrix = image_rotation_utilities::GenerateManualTransformationMatrix(tableData);
       if(pTranslateGeometryToGlobalOrigin)
       {
         transformationMatrix = translationFromGlobalOriginMat * transformationMatrix * translationToGlobalOriginMat;
       }
-      transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
+      transformationMatrixDesc = image_rotation_utilities::GenerateTransformationMatrixDescription(transformationMatrix);
       break;
     }
     case detail::k_RotationIdx: // Rotation via axis-angle
     {
-      auto pRotationValue = inputValues.Rotation;
-      transformationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(pRotationValue);
+      auto pRotationValue = inputValues.rotation;
+      transformationMatrix = image_rotation_utilities::GenerateRotationTransformationMatrix(pRotationValue);
       if(pTranslateGeometryToGlobalOrigin)
       {
         transformationMatrix = translationFromGlobalOriginMat * transformationMatrix * translationToGlobalOriginMat;
       }
-      transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
+      transformationMatrixDesc = image_rotation_utilities::GenerateTransformationMatrixDescription(transformationMatrix);
       break;
     }
     case detail::k_TranslationIdx: // Translation
     {
-      auto pTranslationValue = inputValues.Translation;
-      transformationMatrix = ImageRotationUtilities::GenerateTranslationTransformationMatrix(pTranslationValue);
+      auto pTranslationValue = inputValues.translation;
+      transformationMatrix = image_rotation_utilities::GenerateTranslationTransformationMatrix(pTranslationValue);
       if(pTranslateGeometryToGlobalOrigin)
       {
         transformationMatrix = translationFromGlobalOriginMat * transformationMatrix * translationToGlobalOriginMat;
       }
-      transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
+      transformationMatrixDesc = image_rotation_utilities::GenerateTransformationMatrixDescription(transformationMatrix);
       break;
     }
     case detail::k_ScaleIdx: // Scale
     {
-      auto pScaleValue = inputValues.Scale;
-      transformationMatrix = ImageRotationUtilities::GenerateScaleTransformationMatrix(pScaleValue);
+      auto pScaleValue = inputValues.scale;
+      transformationMatrix = image_rotation_utilities::GenerateScaleTransformationMatrix(pScaleValue);
       if(pTranslateGeometryToGlobalOrigin)
       {
         transformationMatrix = translationFromGlobalOriginMat * transformationMatrix * translationToGlobalOriginMat;
       }
-      transformationMatrixDesc = ImageRotationUtilities::GenerateTransformationMatrixDescription(transformationMatrix);
+      transformationMatrixDesc = image_rotation_utilities::GenerateTransformationMatrixDescription(transformationMatrix);
       break;
     }
     }
@@ -433,7 +434,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
     errorMessage << "You have selected to transform an 'Image Geometry', please correct the following issues:\n";
     bool imageGeomInterpolationError = false;
 
-    auto pInterpolationTypeValue = inputValues.InterpolationSelection;
+    auto pInterpolationTypeValue = inputValues.interpolation_selection;
     if(pInterpolationTypeValue == detail::k_NoInterpolationIdx)
     {
       errorMessage << "* Select either 'Nearest Neighbor Resampling' or 'Linear Interpolation' from the 'Image Geometry Resampling/Interpolation' parameter section.\n";
@@ -448,7 +449,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
     }
     if(imageGeomInterpolationError)
     {
-      return {MakeErrorResult<OutputActions>(-82006, errorMessage.str())};
+      return {.output_actions = MakeErrorResult<OutputActions>(-82006, errorMessage.str())};
     }
 
     std::vector<std::string> selectedCellArrayNames = srcCellAttrMatrixPtr->getDataMap().getNames();
@@ -464,24 +465,24 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
         const auto* strArrayPtr = dataStructure.getDataAs<StringArray>(dataArrayPath);
         if(nullptr != strArrayPtr)
         {
-          resultOutputActions.warnings().push_back(
-              Warning{82009, fmt::format("DataArray '{}' will be deleted from final transformed geometry. Cannot perform interpolation on String Arrays", dataArrayPath.toString())});
+          resultOutputActions.warnings().push_back(Warning{
+              .code = 82009, .message = fmt::format("DataArray '{}' will be deleted from final transformed geometry. Cannot perform interpolation on String Arrays", dataArrayPath.toString())});
           continue;
         }
 
-        const auto* boolArrayPtr = dataStructure.getDataAs<BoolArray>(dataArrayPath);
+        const auto* boolArrayPtr = dataStructure.getDataAs<BoolArrayType>(dataArrayPath);
         if(nullptr != boolArrayPtr)
         {
           resultOutputActions.warnings().push_back(
-              Warning{82010, fmt::format("DataArray '{}' will be deleted from final transformed geometry. Cannot perform interpolation on Bool Arrays", dataArrayPath.toString())});
+              Warning{.code = 82010, .message = fmt::format("DataArray '{}' will be deleted from final transformed geometry. Cannot perform interpolation on Bool Arrays", dataArrayPath.toString())});
           continue;
         }
 
         const auto* neighborListPtr = dataStructure.getDataAs<INeighborList>(dataArrayPath);
         if(nullptr != neighborListPtr)
         {
-          resultOutputActions.warnings().push_back(
-              Warning{82011, fmt::format("DataArray '{}' will be deleted from final transformed geometry. Cannot perform interpolation on NeighborList Arrays", dataArrayPath.toString())});
+          resultOutputActions.warnings().push_back(Warning{
+              .code = 82011, .message = fmt::format("DataArray '{}' will be deleted from final transformed geometry. Cannot perform interpolation on NeighborList Arrays", dataArrayPath.toString())});
           continue;
         }
         selectedCellArrayNames.emplace_back(arrayName);
@@ -495,8 +496,8 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
     else if(pTransformationMatrixTypeValue == detail::k_TranslationIdx)
     {
       // If the user is purely doing a translation then just adjust the origin and be done.
-      auto pTranslationValue = inputValues.Translation;
-      FloatVec3 originVec = imageGeomPtr->getOrigin();
+      auto pTranslationValue = inputValues.translation;
+      FloatVec3Type originVec = imageGeomPtr->getOrigin();
       originVec = {originVec[0] + pTranslationValue[0], originVec[1] + pTranslationValue[1], originVec[2] + pTranslationValue[2]};
       for(usize axis = 0; axis < 3; ++axis)
       {
@@ -513,10 +514,10 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
     else if(pTransformationMatrixTypeValue == detail::k_ScaleIdx)
     {
       // If the user is purely doing a scaling then just adjust the spacing and origin and be done.
-      auto pScaleValue = inputValues.Scale;
-      FloatVec3 spacingVec = imageGeomPtr->getSpacing();
+      auto pScaleValue = inputValues.scale;
+      FloatVec3Type spacingVec = imageGeomPtr->getSpacing();
       spacingVec = {spacingVec[0] * pScaleValue[0], spacingVec[1] * pScaleValue[1], spacingVec[2] * pScaleValue[2]};
-      auto minMaxCoords = ImageRotationUtilities::DetermineMinMaxCoords(*imageGeomPtr, transformationMatrix);
+      auto minMaxCoords = image_rotation_utilities::DetermineMinMaxCoords(*imageGeomPtr, transformationMatrix);
       std::vector<float32> originVec = {minMaxCoords[0], minMaxCoords[2], minMaxCoords[4]};
       for(usize axis = 0; axis < 3; ++axis)
       {
@@ -533,19 +534,19 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
     }
     else // We are Rotating or manual transformation or precomputed. we need to create a brand new Image Geometry
     {
-      auto rotateArgs = ImageRotationUtilities::CreateRotationArgs(*imageGeomPtr, transformationMatrix);
+      auto rotateArgs = image_rotation_utilities::CreateRotationArgs(*imageGeomPtr, transformationMatrix);
 
-      auto srcImagePath = inputValues.SelectedGeometryPath;
+      auto srcImagePath = inputValues.selected_geometry_path;
       DataPath destImagePath = srcImagePath;
-      const bool pRemoveOriginalGeometry = inputValues.RemoveOriginalGeometry;
+      const bool pRemoveOriginalGeometry = inputValues.remove_original_geometry;
       const auto& selectedImageGeom = *imageGeomPtr; // dataStructure.getDataRefAs<ImageGeom>(srcImagePath);
 
-      const std::vector<usize> dims = {static_cast<usize>(rotateArgs.outputDims[0]), static_cast<usize>(rotateArgs.outputDims[1]), static_cast<usize>(rotateArgs.outputDims[2])};
-      const std::vector<float32> spacing = {rotateArgs.outputSpacing[0], rotateArgs.outputSpacing[1], rotateArgs.outputSpacing[2]};
+      const std::vector<usize> dims = {static_cast<usize>(rotateArgs.output_dims[0]), static_cast<usize>(rotateArgs.output_dims[1]), static_cast<usize>(rotateArgs.output_dims[2])};
+      const std::vector<float32> spacing = {rotateArgs.output_spacing[0], rotateArgs.output_spacing[1], rotateArgs.output_spacing[2]};
       auto originVec = selectedImageGeom.getOrigin().toContainer<std::vector<float32>>();
-      originVec[0] = rotateArgs.outputXMin;
-      originVec[1] = rotateArgs.outputYMin;
-      originVec[2] = rotateArgs.outputZMin;
+      originVec[0] = rotateArgs.output_x_min;
+      originVec[1] = rotateArgs.output_y_min;
+      originVec[2] = rotateArgs.output_z_min;
 
       if(pRemoveOriginalGeometry)
       {
@@ -564,7 +565,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
         const AttributeMatrix* selectedCellDataPtr = selectedImageGeom.getCellData();
         if(selectedCellDataPtr == nullptr)
         {
-          return {MakeErrorResult<OutputActions>(-5581, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
+          return {.output_actions = MakeErrorResult<OutputActions>(-5581, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
         }
         const std::string cellDataName = selectedCellDataPtr->getName();
         ignorePaths.push_back(srcImagePath.createChildPath(cellDataName)); // This prevents a later copy attempt.
@@ -589,8 +590,8 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
         // These values should have been updated during the preflightImpl(...) method
         const auto* srcImageGeomPtr = dataStructure.getDataAs<ImageGeom>(srcImagePath);
 
-        preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), srcImageGeomPtr->getSpacing(),
-                                                                                                                              srcImageGeomPtr->getOrigin(), srcImageGeomPtr->getUnits())});
+        preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), srcImageGeomPtr->getSpacing(),
+                                                                                                                               srcImageGeomPtr->getOrigin(), srcImageGeomPtr->getUnits())});
 
         if(pTransformationMatrixTypeValue == detail::k_PrecomputedTransformationMatrixIdx)
         {
@@ -599,17 +600,17 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
         else
         {
           preflightUpdatedValues.push_back(
-              {"Transformed Image Geometry Info",
-               nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, originVec, srcImageGeomPtr->getUnits())});
+              {"Transformed Image Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]},
+                                                                                                                originVec, srcImageGeomPtr->getUnits())});
         }
       }
 
-      const auto excludedPath = clearFeatureAttributeMatrix ? inputValues.FeatureAttributeMatrixPath : DataPath{};
+      const auto excludedPath = clearFeatureAttributeMatrix ? inputValues.feature_attribute_matrix_path : DataPath{};
       if(clearFeatureAttributeMatrix)
       {
-        ignorePaths.push_back(srcImagePath.createChildPath(sourceFeatureAm->getName()));
-        const auto destFeatureAmPath = destImagePath.createChildPath(sourceFeatureAm->getName());
-        resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destFeatureAmPath, sourceFeatureAm->getShape()));
+        ignorePaths.push_back(srcImagePath.createChildPath(sourceFeatureAmPtr->getName()));
+        const auto destFeatureAmPath = destImagePath.createChildPath(sourceFeatureAmPtr->getName());
+        resultOutputActions.value().appendAction(std::make_unique<CreateAttributeMatrixAction>(destFeatureAmPath, sourceFeatureAmPtr->getShape()));
       }
 
       // copy over the rest of the data from the src Image Geometry into the Target Image Geometry
@@ -642,18 +643,19 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
     // An image geometry was not chosen, so throw a warning communicating to the user that the cell attribute matrix will not be used
     if(!pCellAttributeMatrixPath.getTargetName().empty())
     {
-      auto warning = Warning{-5555, fmt::format("The selected geometry is not an 'Image Geometry'. NO interpolation is performed on the data. The 'Cell Attribute Matrix' DataPath can be empty.",
-                                                pCellAttributeMatrixPath.getTargetName())};
+      auto warning = Warning{.code = -5555,
+                             .message = fmt::format("The selected geometry is not an 'Image Geometry'. NO interpolation is performed on the data. The 'Cell Attribute Matrix' DataPath can be empty.",
+                                                    pCellAttributeMatrixPath.getTargetName())};
       resultOutputActions.warnings().push_back(warning);
     }
 
     // For non-ImageGeom geometries, vertex data is modified in place
-    nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pSelectedGeometryPathValue, {});
+    nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, pSelectedGeometryPathValue, {});
   }
 
   if(!replacesImageGeometry && (pTransformationMatrixTypeValue != detail::k_NoTransformIdx || renumberFeatures))
   {
-    AppendRetainedAttributeMatricesWarning(dataStructure, pSelectedGeometryPathValue, sourceFeatureAm, resultOutputActions);
+    AppendRetainedAttributeMatricesWarning(dataStructure, pSelectedGeometryPathValue, sourceFeatureAmPtr, resultOutputActions);
   }
 
   // Are we saving the transform matrix
@@ -661,12 +663,13 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
   {
     if(transformMatrixDataPath.empty())
     {
-      return {MakeErrorResult<OutputActions>(-5588, fmt::format("The DataPath for the saved Transformation Matrix is empty. Please select or set a DataPath to save the transformation matrix into."))};
+      return {.output_actions = MakeErrorResult<OutputActions>(
+                  -5588, fmt::format("The DataPath for the saved Transformation Matrix is empty. Please select or set a DataPath to save the transformation matrix into."))};
     }
     resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(DataType::float32, std::vector<usize>{4, 4}, std::vector<usize>{1}, transformMatrixDataPath));
   }
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 // -----------------------------------------------------------------------------
@@ -680,7 +683,6 @@ ApplyTransformationToGeometry::ApplyTransformationToGeometry(DataStructure& data
 }
 
 // -----------------------------------------------------------------------------
-ApplyTransformationToGeometry::~ApplyTransformationToGeometry() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ApplyTransformationToGeometry::getCancel()
@@ -692,55 +694,55 @@ const std::atomic_bool& ApplyTransformationToGeometry::getCancel()
 Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
 {
   // Preflight actions apply translation through the Image Geometry origin.
-  if(m_InputValues->TransformationSelection == detail::k_TranslationIdx)
+  if(m_InputValues->transformation_selection == detail::k_TranslationIdx)
   {
     return {};
   }
 
   // Preflight actions apply scale through the Image Geometry origin and spacing.
-  if(m_InputValues->TransformationSelection == detail::k_ScaleIdx)
+  if(m_InputValues->transformation_selection == detail::k_ScaleIdx)
   {
     return {};
   }
 
   DataPath destImagePath;
-  if(m_InputValues->RemoveOriginalGeometry)
+  if(m_InputValues->remove_original_geometry)
   {
     // Create an Image Geometry name with a "." as a prefix to the original Image Geometry Name
-    std::vector<std::string> tempPathVector = m_InputValues->SelectedGeometryPath.getPathVector();
+    std::vector<std::string> tempPathVector = m_InputValues->selected_geometry_path.getPathVector();
     tempPathVector.back() = "." + tempPathVector.back();
     destImagePath = DataPath({tempPathVector});
   }
 
-  auto& srcImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SelectedGeometryPath);
+  auto& srcImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->selected_geometry_path);
   auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(destImagePath);
 
-  const auto rotateArgs = ImageRotationUtilities::CreateRotationArgs(srcImageGeom, m_TransformationMatrix);
+  const auto rotateArgs = image_rotation_utilities::CreateRotationArgs(srcImageGeom, m_TransformationMatrix);
 
   auto selectedCellDataChildren = GetAllChildArrayDataPaths(m_DataStructure, srcImageGeom.getCellDataPath());
   auto selectedCellArrays = selectedCellDataChildren.has_value() ? selectedCellDataChildren.value() : std::vector<DataPath>{};
 
-  ImageRotationUtilities::FilterProgressCallback filterProgressCallback(m_MessageHandler, m_ShouldCancel);
+  image_rotation_utilities::FilterProgressCallback filterProgressCallback(m_MessageHandler, m_ShouldCancel);
 
   // Resident image arrays can resample in independent tasks.
   ParallelTaskAlgorithm taskRunner;
 
   const DataPath srcCelLDataAMPath = srcImageGeom.getCellDataPath();
   const auto& srcCellDataAM = srcImageGeom.getCellDataRef();
-  filterProgressCallback.resetProgress(srcCellDataAM.getSize() * static_cast<usize>(rotateArgs.outputDims[2]), "Interpolating Cell Arrays");
+  filterProgressCallback.resetProgress(srcCellDataAM.getSize() * static_cast<usize>(rotateArgs.output_dims[2]), "Interpolating Cell Arrays");
 
   const DataPath destCellDataAMPath = destImageGeom.getCellDataPath();
 
-  if(m_InputValues->TransformationSelection == detail::k_PrecomputedTransformationMatrixIdx)
+  if(m_InputValues->transformation_selection == detail::k_PrecomputedTransformationMatrixIdx)
   {
     // Adjust the destination because the transformation matrix was unavailable during preflight.
     auto& destCellDataAM = destImageGeom.getCellDataRef();
-    const std::vector<usize> dims = {static_cast<usize>(rotateArgs.outputDims[0]), static_cast<usize>(rotateArgs.outputDims[1]), static_cast<usize>(rotateArgs.outputDims[2])};
-    const std::vector<float32> spacing = {rotateArgs.outputSpacing[0], rotateArgs.outputSpacing[1], rotateArgs.outputSpacing[2]};
+    const std::vector<usize> dims = {static_cast<usize>(rotateArgs.output_dims[0]), static_cast<usize>(rotateArgs.output_dims[1]), static_cast<usize>(rotateArgs.output_dims[2])};
+    const std::vector<float32> spacing = {rotateArgs.output_spacing[0], rotateArgs.output_spacing[1], rotateArgs.output_spacing[2]};
     auto origin = srcImageGeom.getOrigin().toContainer<std::vector<float32>>();
-    origin[0] = rotateArgs.outputXMin;
-    origin[1] = rotateArgs.outputYMin;
-    origin[2] = rotateArgs.outputZMin;
+    origin[0] = rotateArgs.output_x_min;
+    origin[1] = rotateArgs.output_y_min;
+    origin[2] = rotateArgs.output_z_min;
 
     // DataArray tuple dimensions use ZYX order, opposite Image Geometry XYZ order.
     std::vector<usize> const dataArrayShape = {dims[2], dims[1], dims[0]};
@@ -766,9 +768,9 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
   bool usesOutOfCoreStore = false;
   for(const auto& [dataId, srcDataObject] : srcCellDataAM)
   {
-    const auto* srcDataArray = m_DataStructure.getDataAs<IDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
-    const auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
-    usesOutOfCoreStore = usesOutOfCoreStore || IsOutOfCore(*srcDataArray) || IsOutOfCore(*destDataArray);
+    const auto* srcDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(srcCelLDataAMPath.createChildPath(srcDataObject->getName()));
+    const auto* destDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
+    usesOutOfCoreStore = usesOutOfCoreStore || IsOutOfCore(*srcDataArrayPtr) || IsOutOfCore(*destDataArrayPtr);
   }
   const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
   RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
@@ -785,20 +787,20 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
     auto* destDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
 
     const bool sampleFeatureIds =
-        m_InputValues->ClearFeatureAttributeMatrix && m_InputValues->RenumberFeatures && srcDataObject->getId() == m_DataStructure.getData(m_InputValues->FeatureIdsPath)->getId();
-    if(sampleFeatureIds || m_InputValues->InterpolationSelection == detail::k_NearestNeighborInterpolationIdx)
+        m_InputValues->clear_feature_attribute_matrix && m_InputValues->renumber_features && srcDataObject->getId() == m_DataStructure.getData(m_InputValues->feature_ids_path)->getId();
+    if(sampleFeatureIds || m_InputValues->interpolation_selection == detail::k_NearestNeighborInterpolationIdx)
     {
       filterProgressCallback.sendThreadSafeStatusMessage(fmt::format("Applying Transform || Nearest Neighbor Interpolation {}", srcDataObject->getName()));
 
-      ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithNearestNeighbor>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr, rotateArgs,
-                                                                                              m_TransformationMatrix, false, &filterProgressCallback);
+      ExecuteParallelFunction<image_rotation_utilities::RotateImageGeometryWithNearestNeighbor>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr, rotateArgs,
+                                                                                                m_TransformationMatrix, false, &filterProgressCallback);
     }
-    else if(m_InputValues->InterpolationSelection == detail::k_LinearInterpolationIdx)
+    else if(m_InputValues->interpolation_selection == detail::k_LinearInterpolationIdx)
     {
       filterProgressCallback.sendThreadSafeStatusMessage(fmt::format("Applying Transform || Trilinear Interpolation {}", srcDataObject->getName()));
 
-      ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithTrilinearInterpolation, NoBooleanType>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr,
-                                                                                                                    rotateArgs, m_TransformationMatrix, &filterProgressCallback);
+      ExecuteParallelFunction<image_rotation_utilities::RotateImageGeometryWithTrilinearInterpolation, NoBooleanType>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr,
+                                                                                                                      rotateArgs, m_TransformationMatrix, &filterProgressCallback);
     }
 
     if(getCancel())
@@ -816,17 +818,17 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
 // -----------------------------------------------------------------------------
 Result<> ApplyTransformationToGeometry::applyNodeGeometryTransformation()
 {
-  auto& nodeGeometry0D = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
+  auto& nodeGeometry0D = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->selected_geometry_path);
 
-  IGeometry::SharedVertexList& vertexList = nodeGeometry0D.getVerticesRef();
+  IGeometry::SharedVertexListType& vertexList = nodeGeometry0D.getVerticesRef();
 
-  ImageRotationUtilities::FilterProgressCallback filterProgressCallback(m_MessageHandler, m_ShouldCancel);
+  image_rotation_utilities::FilterProgressCallback filterProgressCallback(m_MessageHandler, m_ShouldCancel);
   filterProgressCallback.resetProgress(vertexList.getNumberOfTuples(), "Transforming nodes");
 
   // Node geometry uses direct disjoint vertex ranges. Generic DataArray and DataStore concurrent access is not guaranteed.
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, vertexList.getNumberOfTuples());
-  dataAlg.execute(ImageRotationUtilities::ApplyTransformationToNodeGeometry(vertexList, m_TransformationMatrix, &filterProgressCallback));
+  dataAlg.execute(image_rotation_utilities::ApplyTransformationToNodeGeometry(vertexList, m_TransformationMatrix, &filterProgressCallback));
 
   return {};
 }
@@ -834,12 +836,12 @@ Result<> ApplyTransformationToGeometry::applyNodeGeometryTransformation()
 // -----------------------------------------------------------------------------
 Result<> ApplyTransformationToGeometry::operator()()
 {
-  if(!m_InputValues->RemoveOriginalGeometry)
+  if(!m_InputValues->remove_original_geometry)
   {
     return MakeErrorResult(-84500, fmt::format("Keeping the original geometry is not supported."));
   }
 
-  switch(m_InputValues->TransformationSelection)
+  switch(m_InputValues->transformation_selection)
   {
   case detail::k_NoTransformIdx: // No-Op
   {
@@ -847,47 +849,47 @@ Result<> ApplyTransformationToGeometry::operator()()
   }
   case detail::k_PrecomputedTransformationMatrixIdx: // Transformation matrix from array
   {
-    const auto& precomputed = m_DataStructure.getDataAsUnsafe<Float32Array>(m_InputValues->ComputedTransformationMatrix)->getDataStoreRef();
-    m_TransformationMatrix = ImageRotationUtilities::CopyPrecomputedToTransformationMatrix(precomputed);
+    const auto& precomputed = m_DataStructure.getDataAsUnsafe<Float32ArrayType>(m_InputValues->computed_transformation_matrix)->getDataStoreRef();
+    m_TransformationMatrix = image_rotation_utilities::CopyPrecomputedToTransformationMatrix(precomputed);
     break;
   }
   case detail::k_ManualTransformationMatrixIdx: // Manual transformation matrix
   {
-    m_TransformationMatrix = ImageRotationUtilities::GenerateManualTransformationMatrix(m_InputValues->ManualMatrixTableData);
+    m_TransformationMatrix = image_rotation_utilities::GenerateManualTransformationMatrix(m_InputValues->manual_matrix_table_data);
     break;
   }
   case detail::k_RotationIdx: // Rotation via axis-angle
   {
-    m_TransformationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(m_InputValues->Rotation);
+    m_TransformationMatrix = image_rotation_utilities::GenerateRotationTransformationMatrix(m_InputValues->rotation);
     break;
   }
   case detail::k_TranslationIdx: // Translation
   {
-    m_TransformationMatrix = ImageRotationUtilities::GenerateTranslationTransformationMatrix(m_InputValues->Translation);
+    m_TransformationMatrix = image_rotation_utilities::GenerateTranslationTransformationMatrix(m_InputValues->translation);
     break;
   }
   case detail::k_ScaleIdx: // Scale
   {
-    m_TransformationMatrix = ImageRotationUtilities::GenerateScaleTransformationMatrix(m_InputValues->Scale);
+    m_TransformationMatrix = image_rotation_utilities::GenerateScaleTransformationMatrix(m_InputValues->scale);
     break;
   }
   }
 
-  auto* imageGeometryPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->SelectedGeometryPath);
-  auto* nodeGeometry0D = m_DataStructure.getDataAs<INodeGeometry0D>(m_InputValues->SelectedGeometryPath);
-  if(m_InputValues->TranslateGeometryToGlobalOrigin)
+  auto* imageGeometryPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->selected_geometry_path);
+  auto* nodeGeometry0DPtr = m_DataStructure.getDataAs<INodeGeometry0D>(m_InputValues->selected_geometry_path);
+  if(m_InputValues->translate_geometry_to_global_origin)
   {
-    auto boundingBox = (imageGeometryPtr != nullptr) ? imageGeometryPtr->getBoundingBoxf() : nodeGeometry0D->getBoundingBox();
-    Point3Df minPoint = boundingBox.getMinPoint();
-    const ImageRotationUtilities::Matrix4fR translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-minPoint[0], -minPoint[1], -minPoint[2]});
-    const ImageRotationUtilities::Matrix4fR translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({minPoint[0], minPoint[1], minPoint[2]});
+    auto boundingBox = (imageGeometryPtr != nullptr) ? imageGeometryPtr->getBoundingBoxf() : nodeGeometry0DPtr->getBoundingBox();
+    FloatVec3Type minPoint = boundingBox.getMinPoint();
+    const image_rotation_utilities::Matrix4fRType translationToGlobalOriginMat = image_rotation_utilities::GenerateTranslationTransformationMatrix({-minPoint[0], -minPoint[1], -minPoint[2]});
+    const image_rotation_utilities::Matrix4fRType translationFromGlobalOriginMat = image_rotation_utilities::GenerateTranslationTransformationMatrix({minPoint[0], minPoint[1], minPoint[2]});
     m_TransformationMatrix = translationFromGlobalOriginMat * m_TransformationMatrix * translationToGlobalOriginMat;
   }
 
   // Store the matrix in row-major order with columns changing fastest.
-  if(m_InputValues->SaveTransformMatrix)
+  if(m_InputValues->save_transform_matrix)
   {
-    auto& transformMatrix = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->TransformMatrixPath);
+    auto& transformMatrix = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->transform_matrix_path);
     usize index = 0;
     for(usize row = 0; row < 4; row++)
     {
@@ -909,12 +911,12 @@ Result<> nx::core::ApplyGeometryTransformation(DataStructure& dataStructure, con
                                                const std::atomic_bool& shouldCancel)
 {
   ApplyTransformationToGeometryInputValues resolvedValues = inputValues;
-  const bool renumberFeatures = inputValues.ClearFeatureAttributeMatrix && inputValues.RenumberFeatures;
+  const bool renumberFeatures = inputValues.clear_feature_attribute_matrix && inputValues.renumber_features;
   if(renumberFeatures)
   {
     // Validate the source before resampling can discard cells with invalid IDs.
-    const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(inputValues.FeatureIdsPath);
-    auto validation = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, inputValues.FeatureAttributeMatrixPath, featureIds, false, messageHandler, &shouldCancel);
+    const auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(inputValues.feature_ids_path);
+    auto validation = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(dataStructure, inputValues.feature_attribute_matrix_path, featureIds, false, messageHandler, &shouldCancel);
     if(validation.invalid() || shouldCancel)
     {
       return validation;
@@ -925,13 +927,13 @@ Result<> nx::core::ApplyGeometryTransformation(DataStructure& dataStructure, con
   {
     return result;
   }
-  const auto* imageGeom = dataStructure.getDataAs<ImageGeom>(inputValues.SelectedGeometryPath);
-  const bool resamplesImage = imageGeom != nullptr && ResamplesImageGeometry(inputValues);
+  const auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(inputValues.selected_geometry_path);
+  const bool resamplesImage = imageGeomPtr != nullptr && ResamplesImageGeometry(inputValues);
   if(!renumberFeatures)
   {
-    if(inputValues.ClearFeatureAttributeMatrix && !resamplesImage)
+    if(inputValues.clear_feature_attribute_matrix && !resamplesImage)
     {
-      ClearFeatureAttributeMatrix(dataStructure, inputValues.FeatureAttributeMatrixPath);
+      ClearFeatureAttributeMatrix(dataStructure, inputValues.feature_attribute_matrix_path);
     }
     return result;
   }
@@ -939,25 +941,25 @@ Result<> nx::core::ApplyGeometryTransformation(DataStructure& dataStructure, con
   if(resamplesImage)
   {
     // Renumber before deferred actions delete the source and rename the replacement geometry.
-    auto pathVector = inputValues.SelectedGeometryPath.getPathVector();
+    auto pathVector = inputValues.selected_geometry_path.getPathVector();
     pathVector.back() = "." + pathVector.back();
     const DataPath destImagePath(pathVector);
-    const auto destFeatureAmPath = destImagePath.createChildPath(inputValues.FeatureAttributeMatrixPath.getTargetName());
-    const auto destFeatureIdsPath = destImagePath.createChildPath(imageGeom->getCellData()->getName()).createChildPath(inputValues.FeatureIdsPath.getTargetName());
-    return MergeResults(std::move(result), Sampling::RenumberFeatures(dataStructure, destFeatureAmPath, inputValues.FeatureIdsPath, destFeatureIdsPath, messageHandler, shouldCancel));
+    const auto destFeatureAmPath = destImagePath.createChildPath(inputValues.feature_attribute_matrix_path.getTargetName());
+    const auto destFeatureIdsPath = destImagePath.createChildPath(imageGeomPtr->getCellData()->getName()).createChildPath(inputValues.feature_ids_path.getTargetName());
+    return MergeResults(std::move(result), sampling::RenumberFeatures(dataStructure, destFeatureAmPath, inputValues.feature_ids_path, destFeatureIdsPath, messageHandler, shouldCancel));
   }
 
-  const auto& featureAmPath = inputValues.FeatureAttributeMatrixPath;
-  const auto& featureIdsPath = inputValues.FeatureIdsPath;
+  const auto& featureAmPath = inputValues.feature_attribute_matrix_path;
+  const auto& featureIdsPath = inputValues.feature_ids_path;
   std::vector<bool> activeObjects;
-  auto scanResult = Sampling::FindActiveFeatures(dataStructure, featureAmPath, featureIdsPath, featureIdsPath, activeObjects, shouldCancel);
+  auto scanResult = sampling::FindActiveFeatures(dataStructure, featureAmPath, featureIdsPath, featureIdsPath, activeObjects, shouldCancel);
   result = MergeResults(std::move(result), std::move(scanResult));
   if(result.invalid() || shouldCancel)
   {
     return result;
   }
 
-  auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath).getDataStoreRef();
+  auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath).getDataStoreRef();
   ClearFeatureAttributeMatrix(dataStructure, featureAmPath);
   // A store write can still fail after the clear, leaving the Feature Ids partly rewritten.
   return MergeResults(std::move(result), RemoveInactiveObjects(dataStructure, featureAmPath, activeObjects, featureIds, activeObjects.size(), messageHandler, shouldCancel));

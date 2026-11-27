@@ -9,6 +9,7 @@
 
 #include <EbsdLib/IO/TSL/AngConstants.h>
 #include <EbsdLib/IO/TSL/AngReader.h>
+#include <cmath>
 
 #include "simplnx/Utilities/ProgressEstimator.hpp"
 
@@ -59,7 +60,7 @@ public:
         m_Valid = false;
         return MakeWarningVoidResult(reader.getErrorCode(), reader.getErrorMessage());
       }
-      if(reader.getGrid().find(ebsdlib::Ang::SquareGrid) == 0)
+      if(reader.getGrid().starts_with(ebsdlib::Ang::SquareGrid))
       {
         m_Valid = false;
         return MakeErrorResult(-55000, fmt::format("Ang file is already a square grid: {}", inputPath.string()));
@@ -120,14 +121,14 @@ public:
       m_SqrNumRows = static_cast<int32>((static_cast<float32>(hexNumRows) * hexYStep) / m_SqrYStep);
 
       // Get the hex grid data from the input file
-      float32* phi1 = reader.getPhi1Pointer();
-      float32* PHI = reader.getPhiPointer();
-      float32* phi2 = reader.getPhi2Pointer();
-      float32* ci = reader.getConfidenceIndexPointer();
-      float32* iq = reader.getImageQualityPointer();
-      float32* semSig = reader.getSEMSignalPointer();
-      float32* fit = reader.getFitPointer();
-      int32* phase = reader.getPhaseDataPointer();
+      float32* phi1Ptr = reader.getPhi1Pointer();
+      float32* phiPtr = reader.getPhiPointer();
+      float32* phi2Ptr = reader.getPhi2Pointer();
+      float32* ciPtr = reader.getConfidenceIndexPointer();
+      float32* iqPtr = reader.getImageQualityPointer();
+      float32* semSigPtr = reader.getSEMSignalPointer();
+      float32* fitPtr = reader.getFitPointer();
+      int32* phasePtr = reader.getPhaseDataPointer();
 
       // Loop on the header part of the file and modify the header while writing to the output file
       // the updated information
@@ -147,8 +148,11 @@ public:
       }
 
       // Reusable variables for the loop
-      int32 hexGridIndex, hexGridIndex1, hexGridIndex2;
-      float32 xHex1, xHex2;
+      int32 hexGridIndex = 0;
+      int32 hexGridIndex1 = 0;
+      int32 hexGridIndex2 = 0;
+      float32 xHex1 = NAN;
+      float32 xHex2 = NAN;
 
       // Now loop on every cell in the replacement square grid
       for(int32 j = 0; j < m_SqrNumRows; j++)
@@ -207,8 +211,8 @@ public:
           }
 
           // Write to the output file
-          outFile << "  " << phi1[hexGridIndex] << "	" << PHI[hexGridIndex] << "	" << phi2[hexGridIndex] << "	" << xSqr << "	" << ySqr << "	" << iq[hexGridIndex] << "	" << ci[hexGridIndex]
-                  << "	" << phase[hexGridIndex] << "	" << semSig[hexGridIndex] << "	" << fit[hexGridIndex] << "  "
+          outFile << "  " << phi1Ptr[hexGridIndex] << "	" << phiPtr[hexGridIndex] << "	" << phi2Ptr[hexGridIndex] << "	" << xSqr << "	" << ySqr << "	" << iqPtr[hexGridIndex] << "	"
+                  << ciPtr[hexGridIndex] << "	" << phasePtr[hexGridIndex] << "	" << semSigPtr[hexGridIndex] << "	" << fitPtr[hexGridIndex] << "  "
                   << "\n";
         }
       }
@@ -300,29 +304,29 @@ private:
       return line;
     }
 
-    if(StringUtilities::contains(buf, ebsdlib::Ang::HexGrid))
+    if(string_utilities::Contains(buf, ebsdlib::Ang::HexGrid))
     {
-      line = StringUtilities::replace(buf, ebsdlib::Ang::HexGrid, ebsdlib::Ang::SquareGrid);
+      line = string_utilities::Replace(buf, ebsdlib::Ang::HexGrid, ebsdlib::Ang::SquareGrid);
     }
-    else if(StringUtilities::contains(buf, ebsdlib::Ang::XStep))
+    else if(string_utilities::Contains(buf, ebsdlib::Ang::XStep))
     {
-      line = "# " + ebsdlib::Ang::XStep + ": " + StringUtilities::number(m_SqrXStep);
+      line = "# " + ebsdlib::Ang::XStep + ": " + string_utilities::Number(m_SqrXStep);
     }
-    else if(StringUtilities::contains(buf, ebsdlib::Ang::YStep))
+    else if(string_utilities::Contains(buf, ebsdlib::Ang::YStep))
     {
-      line = "# " + ebsdlib::Ang::YStep + ": " + StringUtilities::number(m_SqrYStep);
+      line = "# " + ebsdlib::Ang::YStep + ": " + string_utilities::Number(m_SqrYStep);
     }
-    else if(StringUtilities::contains(buf, ebsdlib::Ang::NColsOdd))
+    else if(string_utilities::Contains(buf, ebsdlib::Ang::NColsOdd))
     {
-      line = "# " + ebsdlib::Ang::NColsOdd + ": " + StringUtilities::number(m_SqrNumCols);
+      line = "# " + ebsdlib::Ang::NColsOdd + ": " + string_utilities::Number(m_SqrNumCols);
     }
-    else if(StringUtilities::contains(buf, ebsdlib::Ang::NColsEven))
+    else if(string_utilities::Contains(buf, ebsdlib::Ang::NColsEven))
     {
-      line = "# " + ebsdlib::Ang::NColsEven + ": " + StringUtilities::number(m_SqrNumCols);
+      line = "# " + ebsdlib::Ang::NColsEven + ": " + string_utilities::Number(m_SqrNumCols);
     }
-    else if(StringUtilities::contains(buf, ebsdlib::Ang::NRows))
+    else if(string_utilities::Contains(buf, ebsdlib::Ang::NRows))
     {
-      line = "# " + ebsdlib::Ang::NRows + ": " + StringUtilities::number(m_SqrNumRows);
+      line = "# " + ebsdlib::Ang::NRows + ": " + string_utilities::Number(m_SqrNumRows);
     }
     else
     {
@@ -345,7 +349,6 @@ ConvertHexGridToSquareGrid::ConvertHexGridToSquareGrid(DataStructure& dataStruct
 }
 
 // -----------------------------------------------------------------------------
-ConvertHexGridToSquareGrid::~ConvertHexGridToSquareGrid() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ConvertHexGridToSquareGrid::getCancel()
@@ -356,18 +359,18 @@ const std::atomic_bool& ConvertHexGridToSquareGrid::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ConvertHexGridToSquareGrid::operator()()
 {
-  if(!m_InputValues->MultiFile)
+  if(!m_InputValues->multi_file)
   {
-    auto converter = ::Converter(getCancel(), m_InputValues->OutputPath, m_InputValues->OutputFilePrefix, m_InputValues->XYSpacing);
-    converter(m_InputValues->InputPath);
+    auto converter = ::Converter(getCancel(), m_InputValues->output_path, m_InputValues->output_file_prefix, m_InputValues->xy_spacing);
+    converter(m_InputValues->input_path);
     return converter.commitAllFiles();
   }
 
   // Now generate all the file names the user is asking for and populate the table
   std::vector<std::string> fileList =
-      FilePathGenerator::GenerateFileList(m_InputValues->InputFileListInfo.startIndex, m_InputValues->InputFileListInfo.endIndex, m_InputValues->InputFileListInfo.incrementIndex,
-                                          m_InputValues->InputFileListInfo.ordering, m_InputValues->InputPath.string(), m_InputValues->InputFileListInfo.filePrefix,
-                                          m_InputValues->InputFileListInfo.fileSuffix, m_InputValues->InputFileListInfo.fileExtension, m_InputValues->InputFileListInfo.paddingDigits);
+      file_path_generator::GenerateFileList(m_InputValues->input_file_list_info.start_index, m_InputValues->input_file_list_info.end_index, m_InputValues->input_file_list_info.increment_index,
+                                            m_InputValues->input_file_list_info.ordering, m_InputValues->input_path.string(), m_InputValues->input_file_list_info.file_prefix,
+                                            m_InputValues->input_file_list_info.file_suffix, m_InputValues->input_file_list_info.file_extension, m_InputValues->input_file_list_info.padding_digits);
 
   /* There is a frailness about the z index and the file list. The programmer
    * using this code MUST ensure that the list of files that is sent into this
@@ -393,12 +396,12 @@ Result<> ConvertHexGridToSquareGrid::operator()()
    * into the HDF5 file at the wrong index. YOU HAVE BEEN WARNED.
    */
   // Loop on Each EBSD File
-  const auto totalFiles = static_cast<usize>(m_InputValues->InputFileListInfo.endIndex - m_InputValues->InputFileListInfo.startIndex);
+  const auto totalFiles = static_cast<usize>(m_InputValues->input_file_list_info.end_index - m_InputValues->input_file_list_info.start_index);
   ProgressEstimator progressEstimator;
-  int64 z = m_InputValues->InputFileListInfo.startIndex;
+  int64 z = m_InputValues->input_file_list_info.start_index;
 
   auto result = Result<>{};
-  ::Converter converter(getCancel(), m_InputValues->OutputPath, m_InputValues->OutputFilePrefix, m_InputValues->XYSpacing);
+  ::Converter converter(getCancel(), m_InputValues->output_path, m_InputValues->output_file_prefix, m_InputValues->xy_spacing);
   for(const auto& filepath : fileList)
   {
     m_MessageHandler.sendInfoMessage(fmt::format("Now Processing: {}", filepath));
@@ -411,7 +414,7 @@ Result<> ConvertHexGridToSquareGrid::operator()()
 
     {
       z++;
-      const auto convertedFiles = static_cast<usize>(z - m_InputValues->InputFileListInfo.startIndex);
+      const auto convertedFiles = static_cast<usize>(z - m_InputValues->input_file_list_info.start_index);
       m_MessageHandler.sendProgressCount("Converting files", convertedFiles, totalFiles, progressEstimator.estimate(convertedFiles, totalFiles));
     }
 

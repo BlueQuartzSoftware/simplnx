@@ -23,9 +23,9 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT AlignGeometriesInputValues
 {
-  ChoicesParameter::ValueType AlignmentTypeIndex;
-  GeometrySelectionParameter::ValueType InputMovingGeometryPath;
-  GeometrySelectionParameter::ValueType InputTargetGeometryPath;
+  ChoicesParameter::ValueType alignment_type_index{};
+  GeometrySelectionParameter::ValueType input_moving_geometry_path;
+  GeometrySelectionParameter::ValueType input_target_geometry_path;
 };
 
 /**
@@ -37,7 +37,7 @@ class SIMPLNXCORE_EXPORT AlignGeometries
 {
 public:
   AlignGeometries(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AlignGeometriesInputValues* inputValues);
-  ~AlignGeometries() noexcept;
+  ~AlignGeometries() noexcept = default;
 
   AlignGeometries(const AlignGeometries&) = delete;
   AlignGeometries(AlignGeometries&&) noexcept = delete;

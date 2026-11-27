@@ -10,8 +10,6 @@
 #include <fstream>
 #include <limits>
 
-namespace fs = std::filesystem;
-
 namespace nx::core::fiji
 {
 Result<std::vector<FijiTile>> ParseTileConfiguration(const std::filesystem::path& configPath)
@@ -29,12 +27,12 @@ Result<std::vector<FijiTile>> ParseTileConfiguration(const std::filesystem::path
   while(std::getline(inStream, line))
   {
     ++lineNumber;
-    line = StringUtilities::trimmed(line);
-    if(StringUtilities::starts_with(line, "dim ="))
+    line = string_utilities::Trimmed(line);
+    if(string_utilities::StartsWith(line, "dim ="))
     {
       dimFound = true; // Fiji montages handled here are 2D; the value is informational.
     }
-    if(StringUtilities::starts_with(line, "# Define the image coordinates"))
+    if(string_utilities::StartsWith(line, "# Define the image coordinates"))
     {
       dataFound = true;
       break;
@@ -52,33 +50,33 @@ Result<std::vector<FijiTile>> ParseTileConfiguration(const std::filesystem::path
   while(std::getline(inStream, line))
   {
     ++lineNumber;
-    line = StringUtilities::trimmed(line);
+    line = string_utilities::Trimmed(line);
     if(line.empty())
     {
       continue;
     }
-    std::vector<std::string> tokens = StringUtilities::split(line, ';');
+    std::vector<std::string> tokens = string_utilities::Split(line, ';');
     if(tokens.size() != 3)
     {
       continue; // malformed line (token count != 3): silently skipped, matching legacy leniency
     }
 
-    std::string coords = StringUtilities::trimmed(tokens[2]);
-    coords = StringUtilities::replace(coords, "(", "");
-    coords = StringUtilities::replace(coords, ")", "");
-    std::vector<std::string> coordTokens = StringUtilities::split(coords, ',');
+    std::string coords = string_utilities::Trimmed(tokens[2]);
+    coords = string_utilities::Replace(coords, "(", "");
+    coords = string_utilities::Replace(coords, ")", "");
+    std::vector<std::string> coordTokens = string_utilities::Split(coords, ',');
     if(coordTokens.size() != 2)
     {
       continue; // only 2D configs are supported
     }
 
     FijiTile tile;
-    tile.filePath = configPath.parent_path() / StringUtilities::trimmed(tokens[0]);
+    tile.file_path = configPath.parent_path() / string_utilities::Trimmed(tokens[0]);
     try
     {
-      const float32 x = std::stof(StringUtilities::trimmed(coordTokens[0]));
-      const float32 y = std::stof(StringUtilities::trimmed(coordTokens[1]));
-      tile.origin = FloatVec3(x, y, 0.0f);
+      const float32 x = std::stof(string_utilities::Trimmed(coordTokens[0]));
+      const float32 y = std::stof(string_utilities::Trimmed(coordTokens[1]));
+      tile.origin = FloatVec3Type(x, y, 0.0f);
     } catch(const std::exception&)
     {
       continue; // unparseable coordinate, skip
@@ -104,20 +102,20 @@ void AssignTileNames(std::vector<FijiTile>& tiles, const std::string& prefix)
 {
   for(auto& tile : tiles)
   {
-    tile.imageName = prefix + tile.filePath.stem().string();
+    tile.image_name = prefix + tile.file_path.stem().string();
   }
 }
 
-void RebaseOrigins(std::vector<FijiTile>& tiles, const FloatVec3& userOrigin)
+void RebaseOrigins(std::vector<FijiTile>& tiles, const FloatVec3Type& userOrigin)
 {
-  FloatVec3 minCorner{std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max(), 0.0f};
+  FloatVec3Type minCorner{std::numeric_limits<float32>::max(), std::numeric_limits<float32>::max(), 0.0f};
   for(const auto& tile : tiles)
   {
     minCorner[0] = std::min(tile.origin[0], minCorner[0]);
     minCorner[1] = std::min(tile.origin[1], minCorner[1]);
   }
   minCorner[2] = 0.0f; // 2D montage: the Z minimum is always 0 (hoisted out of the loop)
-  const FloatVec3 delta{minCorner[0] - userOrigin[0], minCorner[1] - userOrigin[1], minCorner[2] - userOrigin[2]};
+  const FloatVec3Type delta{minCorner[0] - userOrigin[0], minCorner[1] - userOrigin[1], minCorner[2] - userOrigin[2]};
   for(auto& tile : tiles)
   {
     tile.origin[0] -= delta[0];

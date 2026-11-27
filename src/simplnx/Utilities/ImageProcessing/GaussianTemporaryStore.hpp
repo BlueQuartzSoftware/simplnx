@@ -141,12 +141,12 @@ template <class T>
 Result<std::unique_ptr<GaussianTemporaryStore<T>>> CreateGaussianTemporaryStore(usize valueCount, usize maxValuesPerBatch, const std::atomic_bool& shouldCancel)
 {
   TemporaryRecordStoreConfig config;
-  config.recordSize = sizeof(T);
-  config.maxRecordsPerBatch = static_cast<uint64>(maxValuesPerBatch);
-  config.initialRecordCount = static_cast<uint64>(valueCount);
+  config.record_size = sizeof(T);
+  config.max_records_per_batch = static_cast<uint64>(maxValuesPerBatch);
+  config.initial_record_count = static_cast<uint64>(valueCount);
   try
   {
-    auto result = DataStoreUtilities::CreateTemporaryRecordStore(config);
+    auto result = data_store_utilities::CreateTemporaryRecordStore(config);
     if(result.invalid())
     {
       return MakeErrorResult<std::unique_ptr<GaussianTemporaryStore<T>>>(-23609, fmt::format("Gaussian failed to create fixed-record scratch: {}", DescribeGaussianTemporaryStoreError(result)));
@@ -156,7 +156,7 @@ Result<std::unique_ptr<GaussianTemporaryStore<T>>> CreateGaussianTemporaryStore(
     {
       return MakeErrorResult<std::unique_ptr<GaussianTemporaryStore<T>>>(-23609, "Gaussian failed to create fixed-record scratch: provider returned a null store");
     }
-    if(store->recordSize() != config.recordSize || store->recordCount() != config.initialRecordCount || store->maxRecordsPerBatch() != config.maxRecordsPerBatch)
+    if(store->recordSize() != config.record_size || store->recordCount() != config.initial_record_count || store->maxRecordsPerBatch() != config.max_records_per_batch)
     {
       return MakeErrorResult<std::unique_ptr<GaussianTemporaryStore<T>>>(-23609, "Gaussian failed to create fixed-record scratch: provider returned mismatched store metadata");
     }

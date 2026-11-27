@@ -45,17 +45,17 @@ struct StringMaker<Warning>
 TEST_CASE("CoreFilterTest:Create Core Filter")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
-  REQUIRE(filterList != nullptr);
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
+  REQUIRE(filterListPtr != nullptr);
 
   // Only core filters should exist since plugins were not loaded
-  const auto& handles = filterList->getFilterHandles();
+  const auto& handles = filterListPtr->getFilterHandles();
   REQUIRE(!handles.empty());
 
   for(const auto& handle : handles)
   {
-    auto coreFilter = filterList->createFilter(handle);
+    auto coreFilter = filterListPtr->createFilter(handle);
     REQUIRE(coreFilter != nullptr);
     auto params = coreFilter->parameters();
     for(const auto& [name, param] : params)
@@ -68,14 +68,14 @@ TEST_CASE("CoreFilterTest:Create Core Filter")
 
 TEST_CASE("CoreFilterTest:RunCoreFilter")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  static const fs::path k_FileName = fmt::format("{}/ascii_data.txt", nx::core::unit_test::k_BinaryTestOutputDir);
+  static const fs::path kFileName = fmt::format("{}/ascii_data.txt", nx::core::unit_test::k_BinaryTestOutputDir);
   static constexpr uint64 k_NLines = 25;
 
   SECTION("Create ASCII File")
   {
-    std::ofstream file(k_FileName.c_str());
+    std::ofstream file(kFileName.c_str());
     for(int32 i = 0; i < k_NLines; i++)
     {
       file << i << "," << i + 1 << "," << i + 2 << "\n";
@@ -85,16 +85,16 @@ TEST_CASE("CoreFilterTest:RunCoreFilter")
   {
     static constexpr uint64 k_NComp = 3;
     static constexpr uint64 k_NSkipLines = 0;
-    const static DynamicTableInfo::TableDataType k_TupleDims = {{static_cast<double>(k_NLines)}};
+    const static DynamicTableInfo::TableDataType kTupleDims = {{static_cast<double>(k_NLines)}};
 
     ReadTextDataArrayFilter filter;
     DataStructure dataStructure;
     Arguments args;
     DataPath dataPath({"foo"});
 
-    args.insert(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(k_FileName));
+    args.insert(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(kFileName));
     args.insert(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericType>(NumericType::int32));
-    args.insert(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(k_TupleDims));
+    args.insert(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(kTupleDims));
     args.insert(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(k_NComp));
     args.insert(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(k_NSkipLines));
     args.insert(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<uint64>(0));
@@ -131,13 +131,13 @@ TEST_CASE("CoreFilterTest:RunCoreFilter")
       REQUIRE(dataArray[index + 2] == i + 2);
     }
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("CoreFilterTest:CreateDataGroupFilter")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   CreateDataGroupFilter filter;
@@ -146,20 +146,20 @@ TEST_CASE("CoreFilterTest:CreateDataGroupFilter")
   args.insert(CreateDataGroupFilter::k_DataObjectPath, path);
   auto result = filter.execute(dataStructure, args);
   REQUIRE(result.result.valid());
-  DataObject* object = dataStructure.getData(path);
-  REQUIRE(object != nullptr);
-  auto* group = dynamic_cast<DataGroup*>(object);
-  REQUIRE(group != nullptr);
+  DataObject* objectPtr = dataStructure.getData(path);
+  REQUIRE(objectPtr != nullptr);
+  auto* groupPtr = dynamic_cast<DataGroup*>(objectPtr);
+  REQUIRE(groupPtr != nullptr);
   REQUIRE(dataStructure.getSize() == path.getLength());
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::CreateDataGroupFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CreateDataGroupFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -172,22 +172,22 @@ TEST_CASE("SimplnxCore::CreateDataGroupFilter: SIMPL Backwards Compatibility", "
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<CreateDataGroupFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<CreateDataGroupFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(CreateDataGroupFilter::k_DataObjectPath) == DataPath({"DataContainer"}));
     }
   }

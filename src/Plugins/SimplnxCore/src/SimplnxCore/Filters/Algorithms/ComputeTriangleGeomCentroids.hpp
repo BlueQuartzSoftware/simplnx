@@ -11,11 +11,11 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ComputeTriangleGeomCentroidsInputValues
 {
-  DataPath TriangleGeometryPath;
-  DataPath FaceLabelsArrayPath;
-  DataPath FeatureAttributeMatrixPath;
-  DataPath CentroidsArrayPath;
-  bool IsPeriodic = false;
+  DataPath triangle_geometry_path;
+  DataPath face_labels_array_path;
+  DataPath feature_attribute_matrix_path;
+  DataPath centroids_array_path;
+  bool is_periodic = false;
 };
 
 /**
@@ -25,7 +25,7 @@ class SIMPLNXCORE_EXPORT ComputeTriangleGeomCentroids
 {
 public:
   ComputeTriangleGeomCentroids(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ComputeTriangleGeomCentroidsInputValues* inputValues);
-  ~ComputeTriangleGeomCentroids() noexcept;
+  ~ComputeTriangleGeomCentroids() noexcept = default;
 
   ComputeTriangleGeomCentroids(const ComputeTriangleGeomCentroids&) = delete;
   ComputeTriangleGeomCentroids(ComputeTriangleGeomCentroids&&) noexcept = delete;

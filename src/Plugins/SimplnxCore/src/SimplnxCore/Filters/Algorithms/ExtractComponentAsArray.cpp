@@ -39,16 +39,16 @@ Result<> TransferComponentsInChunks(const IDataArray& inputArray, IDataArray* ex
     return {};
   }
 
-  StoreType* extractedStore = nullptr;
+  StoreType* extractedStorePtr = nullptr;
   if(extractedArray != nullptr)
   {
-    extractedStore = &extractedArray->template getIDataStoreRefAs<StoreType>();
+    extractedStorePtr = &extractedArray->template getIDataStoreRefAs<StoreType>();
   }
 
-  StoreType* reducedStore = nullptr;
+  StoreType* reducedStorePtr = nullptr;
   if(reducedArray != nullptr)
   {
-    reducedStore = &reducedArray->template getIDataStoreRefAs<StoreType>();
+    reducedStorePtr = &reducedArray->template getIDataStoreRefAs<StoreType>();
   }
 
   const usize reducedComponents = numComponents - 1;
@@ -56,11 +56,11 @@ Result<> TransferComponentsInChunks(const IDataArray& inputArray, IDataArray* ex
   auto inputBuffer = std::make_unique<T[]>(chunkTuples * numComponents);
   std::unique_ptr<T[]> extractedBuffer;
   std::unique_ptr<T[]> reducedBuffer;
-  if(extractedStore != nullptr)
+  if(extractedStorePtr != nullptr)
   {
     extractedBuffer = std::make_unique<T[]>(chunkTuples);
   }
-  if(reducedStore != nullptr)
+  if(reducedStorePtr != nullptr)
   {
     reducedBuffer = std::make_unique<T[]>(chunkTuples * reducedComponents);
   }
@@ -84,30 +84,30 @@ Result<> TransferComponentsInChunks(const IDataArray& inputArray, IDataArray* ex
 
     for(usize tupleIndex = 0; tupleIndex < tupleCount; tupleIndex++)
     {
-      const T* inputTuple = inputBuffer.get() + tupleIndex * numComponents;
-      if(extractedStore != nullptr)
+      const T* inputTuplePtr = inputBuffer.get() + tupleIndex * numComponents;
+      if(extractedStorePtr != nullptr)
       {
-        extractedBuffer[tupleIndex] = inputTuple[componentIndex];
+        extractedBuffer[tupleIndex] = inputTuplePtr[componentIndex];
       }
-      if(reducedStore != nullptr)
+      if(reducedStorePtr != nullptr)
       {
-        T* reducedTuple = reducedBuffer.get() + tupleIndex * reducedComponents;
-        std::copy_n(inputTuple, componentIndex, reducedTuple);
-        std::copy_n(inputTuple + componentIndex + 1, reducedComponents - componentIndex, reducedTuple + componentIndex);
+        T* reducedTuplePtr = reducedBuffer.get() + tupleIndex * reducedComponents;
+        std::copy_n(inputTuplePtr, componentIndex, reducedTuplePtr);
+        std::copy_n(inputTuplePtr + componentIndex + 1, reducedComponents - componentIndex, reducedTuplePtr + componentIndex);
       }
     }
 
-    if(extractedStore != nullptr)
+    if(extractedStorePtr != nullptr)
     {
-      result = extractedStore->copyFromBuffer(tupleOffset, nonstd::span<const T>(extractedBuffer.get(), tupleCount));
+      result = extractedStorePtr->copyFromBuffer(tupleOffset, nonstd::span<const T>(extractedBuffer.get(), tupleCount));
       if(result.invalid())
       {
         return result;
       }
     }
-    if(reducedStore != nullptr)
+    if(reducedStorePtr != nullptr)
     {
-      result = reducedStore->copyFromBuffer(tupleOffset * reducedComponents, nonstd::span<const T>(reducedBuffer.get(), tupleCount * reducedComponents));
+      result = reducedStorePtr->copyFromBuffer(tupleOffset * reducedComponents, nonstd::span<const T>(reducedBuffer.get(), tupleCount * reducedComponents));
       if(result.invalid())
       {
         return result;
@@ -135,34 +135,34 @@ template <typename T>
 Result<> TransferComponentsDirect(const IDataArray& inputArray, IDataArray* extractedArray, IDataArray* reducedArray, usize componentIndex, const std::atomic_bool& shouldCancel)
 {
   const auto& inputStore = inputArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
-  const auto* contiguousInputStore = dynamic_cast<const DataStore<T>*>(&inputStore);
-  if(contiguousInputStore == nullptr)
+  const auto* contiguousInputStorePtr = dynamic_cast<const DataStore<T>*>(&inputStore);
+  if(contiguousInputStorePtr == nullptr)
   {
     return TransferComponentsInChunks<T>(inputArray, extractedArray, reducedArray, componentIndex, shouldCancel);
   }
 
-  DataStore<T>* contiguousExtractedStore = nullptr;
+  DataStore<T>* contiguousExtractedStorePtr = nullptr;
   if(extractedArray != nullptr)
   {
-    contiguousExtractedStore = dynamic_cast<DataStore<T>*>(&extractedArray->template getIDataStoreRefAs<AbstractDataStore<T>>());
-    if(contiguousExtractedStore == nullptr)
+    contiguousExtractedStorePtr = dynamic_cast<DataStore<T>*>(&extractedArray->template getIDataStoreRefAs<AbstractDataStore<T>>());
+    if(contiguousExtractedStorePtr == nullptr)
     {
       return TransferComponentsInChunks<T>(inputArray, extractedArray, reducedArray, componentIndex, shouldCancel);
     }
   }
 
-  DataStore<T>* contiguousReducedStore = nullptr;
+  DataStore<T>* contiguousReducedStorePtr = nullptr;
   if(reducedArray != nullptr)
   {
-    contiguousReducedStore = dynamic_cast<DataStore<T>*>(&reducedArray->template getIDataStoreRefAs<AbstractDataStore<T>>());
-    if(contiguousReducedStore == nullptr)
+    contiguousReducedStorePtr = dynamic_cast<DataStore<T>*>(&reducedArray->template getIDataStoreRefAs<AbstractDataStore<T>>());
+    if(contiguousReducedStorePtr == nullptr)
     {
       return TransferComponentsInChunks<T>(inputArray, extractedArray, reducedArray, componentIndex, shouldCancel);
     }
   }
 
-  const usize numTuples = contiguousInputStore->getNumberOfTuples();
-  const usize numComponents = contiguousInputStore->getNumberOfComponents();
+  const usize numTuples = contiguousInputStorePtr->getNumberOfTuples();
+  const usize numComponents = contiguousInputStorePtr->getNumberOfComponents();
   if(numTuples == 0 || shouldCancel)
   {
     return {};
@@ -171,9 +171,9 @@ Result<> TransferComponentsDirect(const IDataArray& inputArray, IDataArray* extr
   const usize reducedComponents = numComponents - 1;
   const usize chunkTuples = std::max<usize>(1, k_TargetChunkValues / numComponents);
   const usize totalChunks = ((numTuples - 1) / chunkTuples) + 1;
-  const T* inputData = contiguousInputStore->data();
-  T* extractedData = contiguousExtractedStore == nullptr ? nullptr : contiguousExtractedStore->data();
-  T* reducedData = contiguousReducedStore == nullptr ? nullptr : contiguousReducedStore->data();
+  const T* inputDataPtr = contiguousInputStorePtr->data();
+  T* extractedDataPtr = contiguousExtractedStorePtr == nullptr ? nullptr : contiguousExtractedStorePtr->data();
+  T* reducedDataPtr = contiguousReducedStorePtr == nullptr ? nullptr : contiguousReducedStorePtr->data();
 
   for(usize chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++)
   {
@@ -187,15 +187,15 @@ Result<> TransferComponentsDirect(const IDataArray& inputArray, IDataArray* extr
     for(usize tupleIndex = 0; tupleIndex < tupleCount; tupleIndex++)
     {
       const usize inputOffset = (tupleOffset + tupleIndex) * numComponents;
-      if(extractedData != nullptr)
+      if(extractedDataPtr != nullptr)
       {
-        extractedData[tupleOffset + tupleIndex] = inputData[inputOffset + componentIndex];
+        extractedDataPtr[tupleOffset + tupleIndex] = inputDataPtr[inputOffset + componentIndex];
       }
-      if(reducedData != nullptr)
+      if(reducedDataPtr != nullptr)
       {
-        T* reducedTuple = reducedData + (tupleOffset + tupleIndex) * reducedComponents;
-        std::copy_n(inputData + inputOffset, componentIndex, reducedTuple);
-        std::copy_n(inputData + inputOffset + componentIndex + 1, reducedComponents - componentIndex, reducedTuple + componentIndex);
+        T* reducedTuplePtr = reducedDataPtr + (tupleOffset + tupleIndex) * reducedComponents;
+        std::copy_n(inputDataPtr + inputOffset, componentIndex, reducedTuplePtr);
+        std::copy_n(inputDataPtr + inputOffset + componentIndex + 1, reducedComponents - componentIndex, reducedTuplePtr + componentIndex);
       }
     }
   }
@@ -245,12 +245,12 @@ public:
 
   Result<> operator()() const
   {
-    const bool removingComponents = m_InputValues->RemoveComponentsFromArray || !m_InputValues->MoveComponentsToNewArray;
-    const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(removingComponents ? m_InputValues->TempArrayPath : m_InputValues->BaseArrayPath);
-    auto* extractedArray = m_InputValues->MoveComponentsToNewArray ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->NewArrayPath) : nullptr;
-    auto* reducedArray = removingComponents ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->BaseArrayPath) : nullptr;
-    const usize componentIndex = static_cast<usize>(abs(m_InputValues->CompNumber));
-    return ExecuteDataFunction(TransferComponentsDirectFunctor{}, inputArray.getDataType(), inputArray, extractedArray, reducedArray, componentIndex, m_ShouldCancel);
+    const bool removingComponents = m_InputValues->remove_components_from_array || !m_InputValues->move_components_to_new_array;
+    const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(removingComponents ? m_InputValues->temp_array_path : m_InputValues->base_array_path);
+    auto* extractedArrayPtr = m_InputValues->move_components_to_new_array ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->new_array_path) : nullptr;
+    auto* reducedArrayPtr = removingComponents ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->base_array_path) : nullptr;
+    const usize componentIndex = static_cast<usize>(abs(m_InputValues->comp_number));
+    return ExecuteDataFunction(TransferComponentsDirectFunctor{}, inputArray.getDataType(), inputArray, extractedArrayPtr, reducedArrayPtr, componentIndex, m_ShouldCancel);
   }
 
 private:
@@ -275,12 +275,12 @@ public:
 
   Result<> operator()() const
   {
-    const bool removingComponents = m_InputValues->RemoveComponentsFromArray || !m_InputValues->MoveComponentsToNewArray;
-    const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(removingComponents ? m_InputValues->TempArrayPath : m_InputValues->BaseArrayPath);
-    auto* extractedArray = m_InputValues->MoveComponentsToNewArray ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->NewArrayPath) : nullptr;
-    auto* reducedArray = removingComponents ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->BaseArrayPath) : nullptr;
-    const usize componentIndex = static_cast<usize>(abs(m_InputValues->CompNumber));
-    return ExecuteDataFunction(TransferComponentsScanlineFunctor{}, inputArray.getDataType(), inputArray, extractedArray, reducedArray, componentIndex, m_ShouldCancel);
+    const bool removingComponents = m_InputValues->remove_components_from_array || !m_InputValues->move_components_to_new_array;
+    const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(removingComponents ? m_InputValues->temp_array_path : m_InputValues->base_array_path);
+    auto* extractedArrayPtr = m_InputValues->move_components_to_new_array ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->new_array_path) : nullptr;
+    auto* reducedArrayPtr = removingComponents ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->base_array_path) : nullptr;
+    const usize componentIndex = static_cast<usize>(abs(m_InputValues->comp_number));
+    return ExecuteDataFunction(TransferComponentsScanlineFunctor{}, inputArray.getDataType(), inputArray, extractedArrayPtr, reducedArrayPtr, componentIndex, m_ShouldCancel);
   }
 
 private:
@@ -301,7 +301,6 @@ ExtractComponentAsArray::ExtractComponentAsArray(DataStructure& dataStructure, c
 }
 
 // -----------------------------------------------------------------------------
-ExtractComponentAsArray::~ExtractComponentAsArray() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ExtractComponentAsArray::getCancel()
@@ -312,9 +311,9 @@ const std::atomic_bool& ExtractComponentAsArray::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ExtractComponentAsArray::operator()()
 {
-  const bool removingComponents = m_InputValues->RemoveComponentsFromArray || !m_InputValues->MoveComponentsToNewArray;
-  const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(removingComponents ? m_InputValues->TempArrayPath : m_InputValues->BaseArrayPath);
-  const auto* extractedArray = m_InputValues->MoveComponentsToNewArray ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->NewArrayPath) : nullptr;
-  const auto* reducedArray = removingComponents ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->BaseArrayPath) : nullptr;
-  return DispatchAlgorithm<ExtractComponentAsArrayDirect, ExtractComponentAsArrayScanline>({&inputArray, extractedArray, reducedArray}, m_DataStructure, m_ShouldCancel, m_InputValues);
+  const bool removingComponents = m_InputValues->remove_components_from_array || !m_InputValues->move_components_to_new_array;
+  const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(removingComponents ? m_InputValues->temp_array_path : m_InputValues->base_array_path);
+  const auto* extractedArrayPtr = m_InputValues->move_components_to_new_array ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->new_array_path) : nullptr;
+  const auto* reducedArrayPtr = removingComponents ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->base_array_path) : nullptr;
+  return DispatchAlgorithm<ExtractComponentAsArrayDirect, ExtractComponentAsArrayScanline>({&inputArray, extractedArrayPtr, reducedArrayPtr}, m_DataStructure, m_ShouldCancel, m_InputValues);
 }

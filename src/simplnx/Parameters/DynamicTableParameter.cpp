@@ -8,20 +8,21 @@
 #include <nlohmann/json.hpp>
 
 #include <stdexcept>
+#include <utility>
 
 namespace nx::core
 {
-DynamicTableParameter::DynamicTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const DynamicTableInfo& tableInfo)
+DynamicTableParameter::DynamicTableParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, DynamicTableInfo tableInfo)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
-, m_TableInfo(tableInfo)
+, m_DefaultValue(std::move(defaultValue))
+, m_TableInfo(std::move(tableInfo))
 {
   auto result = m_TableInfo.validate(m_DefaultValue);
   if(result.invalid())
   {
     std::vector<std::string_view> errMsgs;
     std::transform(result.errors().cbegin(), result.errors().cend(), std::back_inserter(errMsgs), [](const Error& err) { return err.message; });
-    std::string errMsgsStr = StringUtilities::join(errMsgs, "\n\n");
+    std::string errMsgsStr = string_utilities::Join(errMsgs, "\n\n");
     throw std::runtime_error(fmt::format("DynamicTableParameter: The default value is invalid:\n\n{}", errMsgsStr));
   }
 }
@@ -36,7 +37,7 @@ Uuid DynamicTableParameter::uuid() const
   return ParameterTraits<DynamicTableParameter>::uuid;
 }
 
-IParameter::AcceptedTypes DynamicTableParameter::acceptedTypes() const
+IParameter::AcceptedTypesType DynamicTableParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -53,12 +54,12 @@ nlohmann::json DynamicTableParameter::toJsonImpl(const std::any& value) const
   return DynamicTableInfo::WriteData(table);
 }
 
-Result<std::any> DynamicTableParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> DynamicTableParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   return {ConvertResultTo<std::any>(DynamicTableInfo::ReadData(json))};
 }
 
-IParameter::UniquePointer DynamicTableParameter::clone() const
+IParameter::UniquePointerType DynamicTableParameter::clone() const
 {
   return std::make_unique<DynamicTableParameter>(name(), humanName(), helpText(), m_DefaultValue, m_TableInfo);
 }
@@ -84,14 +85,14 @@ Result<> DynamicTableParameter::validate(const std::any& value) const
   return m_TableInfo.validate(table);
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 namespace
 {
-constexpr StringLiteral k_TableDataKey = "Table Data";
+constexpr StringLiteralType k_TableDataKey = "Table Data";
 } // namespace
 
-Result<DynamicTableFilterParameterConverter::ValueType> DynamicTableFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DynamicTableFilterParameterConverter::ValueType> DynamicTableFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.contains(k_TableDataKey))
   {
@@ -137,7 +138,7 @@ Result<DynamicTableFilterParameterConverter::ValueType> DynamicTableFilterParame
   return {std::move(table)};
 }
 
-Result<ArrayToDynamicTableFilterParameterConverter::ValueType> ArrayToDynamicTableFilterParameterConverter::convert(const nlohmann::json& json)
+Result<ArrayToDynamicTableFilterParameterConverter::ValueType> ArrayToDynamicTableFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   const auto& tableDataJson = json;
   if(!tableDataJson.is_array())
@@ -165,5 +166,5 @@ Result<ArrayToDynamicTableFilterParameterConverter::ValueType> ArrayToDynamicTab
 
   return {std::move(table)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

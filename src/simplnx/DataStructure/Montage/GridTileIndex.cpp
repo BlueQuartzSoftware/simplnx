@@ -3,17 +3,18 @@
 #include "simplnx/DataStructure/Montage/GridMontage.hpp"
 
 #include <stdexcept>
+#include <utility>
 
 using namespace nx::core;
 
 GridTileIndex::GridTileIndex()
-: AbstractTileIndex()
+
 {
 }
 
-GridTileIndex::GridTileIndex(const GridMontage* montage, const SizeVec3& pos)
+GridTileIndex::GridTileIndex(const GridMontage* montage, SizeVec3Type pos)
 : AbstractTileIndex(montage)
-, m_Pos(pos)
+, m_Pos(std::move(pos))
 {
 }
 
@@ -46,19 +47,19 @@ usize GridTileIndex::getDepth() const
   return m_Pos[2];
 }
 
-SizeVec3 GridTileIndex::getTilePos() const
+SizeVec3Type GridTileIndex::getTilePos() const
 {
   return m_Pos;
 }
 
 const IGeometry* GridTileIndex::getGeometry() const
 {
-  auto montage = dynamic_cast<const GridMontage*>(getMontage());
-  if(!montage)
+  const auto* montagePtr = dynamic_cast<const GridMontage*>(getMontage());
+  if(montagePtr == nullptr)
   {
     return nullptr;
   }
-  return montage->getGeometry(this);
+  return montagePtr->getGeometry(this);
 }
 
 TooltipGenerator GridTileIndex::getToolTipGenerator() const
@@ -68,7 +69,7 @@ TooltipGenerator GridTileIndex::getToolTipGenerator() const
 
 bool GridTileIndex::isValid() const
 {
-  if(!dynamic_cast<const GridMontage*>(getMontage()))
+  if(dynamic_cast<const GridMontage*>(getMontage()) == nullptr)
   {
     return false;
   }

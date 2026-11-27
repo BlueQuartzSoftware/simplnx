@@ -20,75 +20,75 @@ namespace rt = recon_test;
 
 namespace
 {
-using TMCCFilter = ThresholdMaximumConnectedComponentsImageFilter;
+using TmccFilterType = ThresholdMaximumConnectedComponentsImageFilter;
 
 // Sets the geometry, input, and output keys plus the four operation parameters on the Arguments. The helper runs
 // preflight and execute, and requires that both steps succeed.
-void RunTMCC(IFilter& filter, DataStructure& ds, const DataPath& inputPath, uint32 minimumObjectSizeInPixels, float64 upperBoundary, uint8 insideValue, uint8 outsideValue,
+void RunTMCC(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, uint32 minimumObjectSizeInPixels, float64 upperBoundary, uint8 insideValue, uint8 outsideValue,
              const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
-  args.insertOrAssign(TMCCFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(TMCCFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(TMCCFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-  args.insertOrAssign(TMCCFilter::k_MinimumObjectSizeInPixels_Key, std::make_any<uint32>(minimumObjectSizeInPixels));
-  args.insertOrAssign(TMCCFilter::k_UpperBoundary_Key, std::make_any<float64>(upperBoundary));
-  args.insertOrAssign(TMCCFilter::k_InsideValue_Key, std::make_any<uint8>(insideValue));
-  args.insertOrAssign(TMCCFilter::k_OutsideValue_Key, std::make_any<uint8>(outsideValue));
-  auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  args.insertOrAssign(TmccFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(TmccFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(TmccFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  args.insertOrAssign(TmccFilterType::k_MinimumObjectSizeInPixels_Key, std::make_any<uint32>(minimumObjectSizeInPixels));
+  args.insertOrAssign(TmccFilterType::k_UpperBoundary_Key, std::make_any<float64>(upperBoundary));
+  args.insertOrAssign(TmccFilterType::k_InsideValue_Key, std::make_any<uint8>(insideValue));
+  args.insertOrAssign(TmccFilterType::k_OutsideValue_Key, std::make_any<uint8>(outsideValue));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 } // namespace
 
 // -----------------------------------------------------------------------------
 // (1) Preflight guards: a multi-component input is rejected (requireScalar); a valid scalar input (of ANY numeric
-//     type, incl. float) produces a FIXED uint8 output array (AlwaysUInt8).
+//     type, incl. float) produces a FIXED uint8 output array (AlwaysUInt8Type).
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: preflight guards", "[NXImageProcessing][ThresholdMaximumConnectedComponentsImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   SECTION("multi-component rejected")
   {
-    DataStructure ds;
-    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, std::vector<int32>(36, 0));
+    DataStructure dataStructure;
+    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(ds, vecPath, {1, 6, 6}, {3});
-    const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
-    DataArray<int32>::Create(ds, "Vec", vecStore, cellAM.getId());
+    auto vecStore = data_store_utilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
+    DataArray<int32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
-    TMCCFilter filter;
+    TmccFilterType filter;
     Arguments args;
-    args.insertOrAssign(TMCCFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(TMCCFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
-    args.insertOrAssign(TMCCFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(TMCCFilter::k_MinimumObjectSizeInPixels_Key, std::make_any<uint32>(0u));
-    args.insertOrAssign(TMCCFilter::k_UpperBoundary_Key, std::make_any<float64>(65536.0));
-    args.insertOrAssign(TMCCFilter::k_InsideValue_Key, std::make_any<uint8>(uint8{1}));
-    args.insertOrAssign(TMCCFilter::k_OutsideValue_Key, std::make_any<uint8>(uint8{0}));
-    const auto result = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    args.insertOrAssign(TmccFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(TmccFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
+    args.insertOrAssign(TmccFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(TmccFilterType::k_MinimumObjectSizeInPixels_Key, std::make_any<uint32>(0u));
+    args.insertOrAssign(TmccFilterType::k_UpperBoundary_Key, std::make_any<float64>(65536.0));
+    args.insertOrAssign(TmccFilterType::k_InsideValue_Key, std::make_any<uint8>(uint8{1}));
+    args.insertOrAssign(TmccFilterType::k_OutsideValue_Key, std::make_any<uint8>(uint8{0}));
+    const auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("scalar input (incl. float) creates a uint8 output")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<float32> field = rt::MakeGradientNoisePattern<float32>(12, 12, 1);
-    const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, 12, 12, 1, field);
-    TMCCFilter filter;
-    RunTMCC(filter, ds, inputPath, /*minimumObjectSizeInPixels=*/0u, /*upperBoundary=*/65536.0, /*insideValue=*/1u, /*outsideValue=*/0u);
+    const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 12, 12, 1, field);
+    TmccFilterType filter;
+    RunTMCC(filter, dataStructure, inputPath, /*minimumObjectSizeInPixels=*/0u, /*upperBoundary=*/65536.0, /*insideValue=*/1u, /*outsideValue=*/0u);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-    REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint8);
+    REQUIRE(dataStructure.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint8);
   }
 }
 
 // -----------------------------------------------------------------------------
 // ITK-sourced real-image golden -- duplicates ITKThresholdMaximumConnectedComponentsImageTest.cpp on our ITK-free
-// filter. The output is a fixed uint8 binary image (AlwaysUInt8). The durable golden is an md5 pin. The helper pins
+// filter. The output is a fixed uint8 binary image (AlwaysUInt8Type). The durable golden is an md5 pin. The helper pins
 // ForceInCore.
 //   default:    cthead1.png, defaults (MinimumObjectSizeInPixels 0, UpperBoundary 65536, Inside 1, Outside 0).
 //   parameters: cthead1.png, MinimumObjectSizeInPixels = 40 AND UpperBoundary = 150.

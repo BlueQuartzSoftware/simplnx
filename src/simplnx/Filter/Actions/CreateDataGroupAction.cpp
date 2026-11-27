@@ -16,19 +16,19 @@ CreateDataGroupAction::CreateDataGroupAction(const DataPath& path)
 
 CreateDataGroupAction::~CreateDataGroupAction() noexcept = default;
 
-Result<> CreateDataGroupAction::apply(DataStructure& dataStructure, Mode mode) const
+Result<> CreateDataGroupAction::apply(DataStructure& dataStructure, Mode /*mode*/) const
 {
-  static constexpr StringLiteral prefix = "CreateDataGroupAction: ";
+  static constexpr StringLiteralType k_Prefix = "CreateDataGroupAction: ";
   Result<LinkedPath> linkedPath = dataStructure.makePath(getCreatedPath());
   if(!linkedPath.valid())
   {
-    return MakeErrorResult(-5301, fmt::format("{}Path '{}' was not created.", prefix, getCreatedPath().toString()));
+    return MakeErrorResult(-5301, fmt::format("{}Path '{}' was not created.", k_Prefix, getCreatedPath().toString()));
   }
   // Assuming nothing went wrong, return an empty Result<> object
   return {};
 }
 
-IDataAction::UniquePointer CreateDataGroupAction::clone() const
+IDataAction::UniquePointerType CreateDataGroupAction::clone() const
 {
   return std::make_unique<CreateDataGroupAction>(getCreatedPath());
 }

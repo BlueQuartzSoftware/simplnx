@@ -27,13 +27,13 @@ class NeighborList;
  * @namespace DataArrayConstants
  * @brief Contains DataArray constants.
  */
-namespace DataArrayConstants
+namespace data_array_constants
 {
 /**
  * @brief Names the generic DataArray type.
  */
-constexpr StringLiteral k_TypeName = "DataArray<T>";
-} // namespace DataArrayConstants
+constexpr StringLiteralType k_TypeName = "DataArray<T>";
+} // namespace data_array_constants
 
 /**
  * @class DataArray
@@ -49,32 +49,32 @@ public:
   /**
    * @brief Names the storage-neutral data-store type.
    */
-  using store_type = AbstractDataStore<T>;
+  using StoreType = AbstractDataStore<T>;
 
   /**
    * @brief Names the stored value type.
    */
-  using value_type = typename store_type::value_type;
+  using value_type = typename StoreType::value_type;
 
   /**
    * @brief Names the mutable value-proxy type.
    */
-  using reference = typename store_type::reference;
+  using reference = typename StoreType::reference;
 
   /**
    * @brief Names a non-owning data-store observer type.
    */
-  using weak_store = std::weak_ptr<store_type>;
+  using WeakStoreType = std::weak_ptr<StoreType>;
 
   /**
    * @brief Names the mutable data-store iterator type.
    */
-  using Iterator = typename store_type::Iterator;
+  using iterator = typename StoreType::iterator;
 
   /**
    * @brief Names the read-only data-store iterator type.
    */
-  using ConstIterator = typename store_type::ConstIterator;
+  using const_iterator = typename StoreType::const_iterator;
 
   /**
    * @brief Creates and inserts a typed array.
@@ -86,7 +86,7 @@ public:
    * @param parentId Optional parent object identifier.
    * @return Array owned by dataStructure, or nullptr if store is null or insertion fails.
    */
-  static DataArray* Create(DataStructure& dataStructure, std::string name, std::shared_ptr<store_type> store, const std::optional<IdType>& parentId = {})
+  static DataArray* Create(DataStructure& dataStructure, std::string name, std::shared_ptr<StoreType> store, const std::optional<IdType>& parentId = {})
   {
     if(store == nullptr)
     {
@@ -127,15 +127,15 @@ public:
     }
 
     auto warnings = std::move(storeResult.warnings());
-    auto* data = Create(dataStructure, name, std::move(storeResult.value()), parentId);
-    if(data == nullptr)
+    auto* dataPtr = Create(dataStructure, name, std::move(storeResult.value()), parentId);
+    if(dataPtr == nullptr)
     {
       auto result = MakeErrorResult<DataArray*>(k_PlannedInsertionError, fmt::format("Cannot insert planned numeric array at path '{}'.", pathResult.value().toString()));
       result.warnings() = std::move(warnings);
       return result;
     }
 
-    Result<DataArray*> result{data};
+    Result<DataArray*> result{dataPtr};
     result.warnings() = std::move(warnings);
     return result;
   }
@@ -195,7 +195,7 @@ public:
    * @param parentId Optional parent object identifier.
    * @return Array owned by dataStructure, or nullptr if store is null or insertion fails.
    */
-  static DataArray* Import(DataStructure& dataStructure, std::string name, IdType importId, std::shared_ptr<store_type> store, const std::optional<IdType>& parentId = {})
+  static DataArray* Import(DataStructure& dataStructure, std::string name, IdType importId, std::shared_ptr<StoreType> store, const std::optional<IdType>& parentId = {})
   {
     if(store == nullptr)
     {
@@ -237,15 +237,15 @@ public:
     }
 
     auto warnings = std::move(storeResult.warnings());
-    auto* data = Import(dataStructure, name, importId, std::move(storeResult.value()), parentId);
-    if(data == nullptr)
+    auto* dataPtr = Import(dataStructure, name, importId, std::move(storeResult.value()), parentId);
+    if(dataPtr == nullptr)
     {
       auto result = MakeErrorResult<DataArray*>(k_PlannedInsertionError, fmt::format("Cannot insert planned imported numeric array at path '{}'.", pathResult.value().toString()));
       result.warnings() = std::move(warnings);
       return result;
     }
 
-    Result<DataArray*> result{data};
+    Result<DataArray*> result{dataPtr};
     result.warnings() = std::move(warnings);
     return result;
   }
@@ -264,7 +264,7 @@ public:
    * @brief Moves an array and its data-store ownership.
    * @param other Source array.
    */
-  DataArray(DataArray<T>&& other)
+  DataArray(DataArray<T>&& other) noexcept
   : IDataArray(std::move(other))
   , m_DataStore(std::move(other.m_DataStore))
   {
@@ -313,7 +313,7 @@ public:
     {
       return nullptr;
     }
-    std::shared_ptr<store_type> dataStore;
+    std::shared_ptr<StoreType> dataStore;
     try
     {
       const auto bytes = CalculateStoreCopyBytes(getTupleShape(), getComponentShape(), sizeof(T));
@@ -323,7 +323,7 @@ public:
         throw std::runtime_error(formatResult.errors().front().message);
       }
       const std::shared_ptr<IDataStore> sharedStore = getDataStore()->deepCopy(formatResult.value());
-      dataStore = std::dynamic_pointer_cast<store_type>(sharedStore);
+      dataStore = std::dynamic_pointer_cast<StoreType>(sharedStore);
     } catch(const std::bad_alloc&)
     {
       throw;
@@ -576,7 +576,7 @@ public:
    * @brief Returns the read-only data store pointer.
    * @return Pointer valid until this array replaces or destroys its store, or null without a store.
    */
-  const store_type* getDataStore() const
+  const StoreType* getDataStore() const
   {
     return m_DataStore.get();
   }
@@ -585,7 +585,7 @@ public:
    * @brief Returns the mutable data store pointer.
    * @return Pointer valid until this array replaces or destroys its store, or null without a store.
    */
-  store_type* getDataStore()
+  StoreType* getDataStore()
   {
     return m_DataStore.get();
   }
@@ -613,7 +613,7 @@ public:
    * @return Reference valid while this array retains the store.
    * @throws std::runtime_error If the data store is null.
    */
-  store_type& getDataStoreRef()
+  StoreType& getDataStoreRef()
   {
     if(m_DataStore == nullptr)
     {
@@ -627,7 +627,7 @@ public:
    * @return Reference valid while this array retains the store.
    * @throws std::runtime_error If the data store is null.
    */
-  const store_type& getDataStoreRef() const
+  const StoreType& getDataStoreRef() const
   {
     if(m_DataStore == nullptr)
     {
@@ -640,7 +640,7 @@ public:
    * @brief Returns a non-owning data-store observer.
    * @return Weak pointer that expires when no array or caller owns the store.
    */
-  weak_store getDataStorePtr() const
+  WeakStoreType getDataStorePtr() const
   {
     return m_DataStore;
   }
@@ -661,7 +661,7 @@ public:
    *
    * The array shares ownership of store. This method does not select or create storage.
    */
-  [[nodiscard]] Result<> setDataStore(std::shared_ptr<store_type> store)
+  [[nodiscard]] Result<> setDataStore(std::shared_ptr<StoreType> store)
   {
     if(store == nullptr)
     {
@@ -700,32 +700,32 @@ public:
     return at(getSize() - 1);
   }
 
-  Iterator begin()
+  iterator begin()
   {
     return getDataStore()->begin();
   }
 
-  Iterator end()
+  iterator end()
   {
     return getDataStore()->end();
   }
 
-  ConstIterator begin() const
+  const_iterator begin() const
   {
     return getDataStore()->begin();
   }
 
-  ConstIterator end() const
+  const_iterator end() const
   {
     return getDataStore()->end();
   }
 
-  ConstIterator cbegin() const
+  const_iterator cbegin() const
   {
     return getDataStore()->cbegin();
   }
 
-  ConstIterator cend() const
+  const_iterator cend() const
   {
     return getDataStore()->cend();
   }
@@ -853,7 +853,7 @@ protected:
    * @param name Array name.
    * @param store Prepared shared data store.
    */
-  DataArray(DataStructure& dataStructure, std::string name, std::shared_ptr<store_type> store)
+  DataArray(DataStructure& dataStructure, std::string name, std::shared_ptr<StoreType> store)
   : IDataArray(dataStructure, std::move(name))
   , m_DataStore(std::move(store))
   {
@@ -866,17 +866,17 @@ protected:
    * @param importId Imported object identifier.
    * @param store Prepared shared data store.
    */
-  DataArray(DataStructure& dataStructure, std::string name, IdType importId, std::shared_ptr<store_type> store)
+  DataArray(DataStructure& dataStructure, std::string name, IdType importId, std::shared_ptr<StoreType> store)
   : IDataArray(dataStructure, std::move(name), importId)
   , m_DataStore(std::move(store))
   {
   }
 
 private:
-  static inline constexpr int32 k_PlannedPathError = -10610;
-  static inline constexpr int32 k_PlannedCreationError = -10611;
-  static inline constexpr int32 k_PlannedInsertionError = -10612;
-  static inline constexpr int32 k_NullStoreError = -10613;
+  static constexpr int32 k_PlannedPathError = -10610;
+  static constexpr int32 k_PlannedCreationError = -10611;
+  static constexpr int32 k_PlannedInsertionError = -10612;
+  static constexpr int32 k_NullStoreError = -10613;
 
   static Result<DataPath> ResolveProspectivePath(DataStructure& dataStructure, const std::string& name, const std::optional<IdType>& parentId)
   {
@@ -891,19 +891,19 @@ private:
         return {DataPath({name})};
       }
 
-      auto* parent = dataStructure.getData(*parentId);
-      if(parent == nullptr)
+      auto* parentPtr = dataStructure.getData(*parentId);
+      if(parentPtr == nullptr)
       {
         return MakeErrorResult<DataPath>(k_PlannedPathError, fmt::format("Cannot plan numeric array '{}': parent object ID {} does not exist.", name, *parentId));
       }
-      const auto parentPaths = parent->getDataPaths();
+      const auto parentPaths = parentPtr->getDataPaths();
       if(parentPaths.empty())
       {
         return MakeErrorResult<DataPath>(k_PlannedPathError, fmt::format("Cannot plan numeric array '{}': parent object ID {} has no path.", name, *parentId));
       }
 
       DataPath path = parentPaths.front().createChildPath(name);
-      if(dataStructure.getData(path.getParent()) != parent)
+      if(dataStructure.getData(path.getParent()) != parentPtr)
       {
         return MakeErrorResult<DataPath>(k_PlannedPathError, fmt::format("Cannot plan numeric array at path '{}': the path does not identify parent object ID {}.", path.toString(), *parentId));
       }
@@ -917,8 +917,8 @@ private:
     }
   }
 
-  static Result<std::shared_ptr<store_type>> PreparePlannedStore(const DataStructure& dataStructure, const DataPath& path, const ShapeType& tupleShape, const ShapeType& componentShape,
-                                                                 const std::string& requestedFormat)
+  static Result<std::shared_ptr<StoreType>> PreparePlannedStore(const DataStructure& dataStructure, const DataPath& path, const ShapeType& tupleShape, const ShapeType& componentShape,
+                                                                const std::string& requestedFormat)
   {
     try
     {
@@ -926,14 +926,14 @@ private:
       auto formatResult = ResolveNumericStorageFormat(dataStructure, path, GetDataType<T>(), logicalBytes, requestedFormat);
       if(formatResult.invalid())
       {
-        return ConvertInvalidResult<std::shared_ptr<store_type>>(std::move(formatResult));
+        return ConvertInvalidResult<std::shared_ptr<StoreType>>(std::move(formatResult));
       }
 
       auto warnings = std::move(formatResult.warnings());
       auto placeholderResult = EmptyDataStore<T>::Create(tupleShape, componentShape, formatResult.value());
       if(placeholderResult.invalid())
       {
-        auto result = ConvertInvalidResult<std::shared_ptr<store_type>>(std::move(placeholderResult));
+        auto result = ConvertInvalidResult<std::shared_ptr<StoreType>>(std::move(placeholderResult));
         result.warnings().insert(result.warnings().begin(), std::make_move_iterator(warnings.begin()), std::make_move_iterator(warnings.end()));
         for(auto& error : result.errors())
         {
@@ -942,8 +942,8 @@ private:
         return result;
       }
 
-      std::shared_ptr<store_type> store(std::move(placeholderResult.value()));
-      Result<std::shared_ptr<store_type>> result{std::move(store)};
+      std::shared_ptr<StoreType> store(std::move(placeholderResult.value()));
+      Result<std::shared_ptr<StoreType>> result{std::move(store)};
       result.warnings() = std::move(warnings);
       for(auto&& warning : placeholderResult.warnings())
       {
@@ -955,11 +955,11 @@ private:
       throw;
     } catch(const std::exception& error)
     {
-      return MakeErrorResult<std::shared_ptr<store_type>>(k_PlannedCreationError, fmt::format("Cannot create planned numeric array at path '{}': {}", path.toString(), error.what()));
+      return MakeErrorResult<std::shared_ptr<StoreType>>(k_PlannedCreationError, fmt::format("Cannot create planned numeric array at path '{}': {}", path.toString(), error.what()));
     }
   }
 
-  std::shared_ptr<store_type> m_DataStore = nullptr;
+  std::shared_ptr<StoreType> m_DataStore = nullptr;
 };
 
 extern template std::string DataArray<int8>::toString(usize tupleIndex, usize compIndex, const std::string& format) const;
@@ -989,55 +989,55 @@ extern template bool DataArray<bool>::setValueFromString(usize tupleIndex, usize
 /**
  * @brief Names a uint8 data array.
  */
-using UInt8Array = DataArray<uint8>;
+using UInt8ArrayType = DataArray<uint8>;
 
 /**
  * @brief Names a uint16 data array.
  */
-using UInt16Array = DataArray<uint16>;
+using UInt16ArrayType = DataArray<uint16>;
 
 /**
  * @brief Names a uint32 data array.
  */
-using UInt32Array = DataArray<uint32>;
+using UInt32ArrayType = DataArray<uint32>;
 
 /**
  * @brief Names a uint64 data array.
  */
-using UInt64Array = DataArray<uint64>;
+using UInt64ArrayType = DataArray<uint64>;
 
 /**
  * @brief Names an int8 data array.
  */
-using Int8Array = DataArray<int8>;
+using Int8ArrayType = DataArray<int8>;
 
 /**
  * @brief Names an int16 data array.
  */
-using Int16Array = DataArray<int16>;
+using Int16ArrayType = DataArray<int16>;
 
 /**
  * @brief Names an int32 data array.
  */
-using Int32Array = DataArray<int32>;
+using Int32ArrayType = DataArray<int32>;
 
 /**
  * @brief Names an int64 data array.
  */
-using Int64Array = DataArray<int64>;
+using Int64ArrayType = DataArray<int64>;
 
 /**
  * @brief Names a float32 data array.
  */
-using Float32Array = DataArray<float32>;
+using Float32ArrayType = DataArray<float32>;
 
 /**
  * @brief Names a float64 data array.
  */
-using Float64Array = DataArray<float64>;
+using Float64ArrayType = DataArray<float64>;
 
 /**
  * @brief Names a bool data array.
  */
-using BoolArray = DataArray<bool>;
+using BoolArrayType = DataArray<bool>;
 } // namespace nx::core

@@ -17,7 +17,6 @@ ComputeBiasedFeatures::ComputeBiasedFeatures(DataStructure& dataStructure, const
 }
 
 // -----------------------------------------------------------------------------
-ComputeBiasedFeatures::~ComputeBiasedFeatures() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeBiasedFeatures::getCancel()
@@ -28,8 +27,8 @@ const std::atomic_bool& ComputeBiasedFeatures::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeBiasedFeatures::operator()()
 {
-  const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  const SizeVec3 imageDimensions = imageGeometry.getDimensions();
+  const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
+  const SizeVec3Type imageDimensions = imageGeometry.getDimensions();
 
   if(imageDimensions[0] > 1 && imageDimensions[1] > 1 && imageDimensions[2] > 1)
   {
@@ -45,25 +44,25 @@ Result<> ComputeBiasedFeatures::operator()()
 // -----------------------------------------------------------------------------
 Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
 {
-  const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  const auto& centroidsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
+  const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
+  const auto& centroidsStore = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->centroids_array_path)->getDataStoreRef();
   AbstractDataStore<int32>* phasesStorePtr = nullptr;
-  if(m_InputValues->CalcByPhase)
+  if(m_InputValues->calc_by_phase)
   {
-    phasesStorePtr = m_DataStructure.getDataAs<Int32Array>(m_InputValues->PhasesArrayPath)->getDataStore();
+    phasesStorePtr = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->phases_array_path)->getDataStore();
   }
-  auto& biasedFeaturesStore = m_DataStructure.getDataAsUnsafe<BoolArray>(m_InputValues->BiasedFeaturesArrayName)->getDataStoreRef();
+  auto& biasedFeaturesStore = m_DataStructure.getDataAsUnsafe<BoolArrayType>(m_InputValues->biased_features_array_name)->getDataStoreRef();
   biasedFeaturesStore.fill(false);
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> surfaceFeatures = nullptr;
+  std::unique_ptr<mask_compare_utilities::MaskCompare> surfaceFeatures = nullptr;
   try
   {
-    surfaceFeatures = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->SurfaceFeaturesArrayPath);
+    surfaceFeatures = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->surface_features_array_path);
   } catch(const std::out_of_range& exception)
   {
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
     // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
-    std::string message = fmt::format("Surface Features Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->SurfaceFeaturesArrayPath.toString());
+    std::string message = fmt::format("Surface Features Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->surface_features_array_path.toString());
     return MakeErrorResult(-54900, message);
   }
 
@@ -73,14 +72,14 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
 
   // loop first to determine number of phases if calcByPhase is being used
   int32 numPhases = 1;
-  if(m_InputValues->CalcByPhase)
+  if(m_InputValues->calc_by_phase)
   {
     numPhases = *std::max_element(phasesStorePtr->begin(), phasesStorePtr->end());
   }
   for(int32 iter = 1; iter <= numPhases; iter++)
   {
     // reset boundBox for each phase
-    const BoundingBox3D<float32> boundingBox = imageGeometry.getBoundingBoxf();
+    const BoundingBox3DType<float32> boundingBox = imageGeometry.getBoundingBoxf();
 
     const auto& min = boundingBox.getMinPoint();
     const auto& max = boundingBox.getMaxPoint();
@@ -97,7 +96,7 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
       {
         return {};
       }
-      if(surfaceFeatures->isTrue(i) && (!m_InputValues->CalcByPhase || (*phasesStorePtr)[i] == iter))
+      if(surfaceFeatures->isTrue(i) && (!m_InputValues->calc_by_phase || (*phasesStorePtr)[i] == iter))
       {
         int32 sideToMove = 0;
         int32 move = 1;
@@ -152,7 +151,7 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
       {
         return {};
       }
-      if(!m_InputValues->CalcByPhase || (*phasesStorePtr)[j] == iter)
+      if(!m_InputValues->calc_by_phase || (*phasesStorePtr)[j] == iter)
       {
         if(centroidsStore[3 * j] <= boundBox[0])
         {
@@ -185,7 +184,7 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
     {
       return {};
     }
-    if(m_InputValues->CalcByPhase)
+    if(m_InputValues->calc_by_phase)
     {
       m_MessageHandler.sendProgressCount("Computing Biased Features Phases", static_cast<usize>(iter), static_cast<usize>(numPhases));
     }
@@ -197,22 +196,22 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures()
 // -----------------------------------------------------------------------------
 Result<> ComputeBiasedFeatures::findBoundingBoxFeatures2D()
 {
-  const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  const SizeVec3 imageDimensions = imageGeometry.getDimensions();
-  const FloatVec3 imageOrigin = imageGeometry.getOrigin();
-  const auto& centroidsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
-  auto& biasedFeaturesStore = m_DataStructure.getDataAs<BoolArray>(m_InputValues->BiasedFeaturesArrayName)->getDataStoreRef();
+  const ImageGeom imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
+  const SizeVec3Type imageDimensions = imageGeometry.getDimensions();
+  const FloatVec3Type imageOrigin = imageGeometry.getOrigin();
+  const auto& centroidsStore = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->centroids_array_path)->getDataStoreRef();
+  auto& biasedFeaturesStore = m_DataStructure.getDataAs<BoolArrayType>(m_InputValues->biased_features_array_name)->getDataStoreRef();
   biasedFeaturesStore.fill(false);
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
+  std::unique_ptr<mask_compare_utilities::MaskCompare> maskCompare = nullptr;
   try
   {
-    maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->SurfaceFeaturesArrayPath);
+    maskCompare = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->surface_features_array_path);
   } catch(const std::out_of_range& exception)
   {
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
     // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
-    std::string message = fmt::format("Surface Features Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->SurfaceFeaturesArrayPath.toString());
+    std::string message = fmt::format("Surface Features Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->surface_features_array_path.toString());
     return MakeErrorResult(-54900, message);
   }
 
@@ -224,7 +223,7 @@ Result<> ComputeBiasedFeatures::findBoundingBoxFeatures2D()
   float32 yOrigin = 0.0f;
   int32 xPoints = 0;
   int32 yPoints = 0;
-  FloatVec3 spacing;
+  FloatVec3Type spacing;
 
   usize centroidShift0 = 0;
   usize centroidShift1 = 1;

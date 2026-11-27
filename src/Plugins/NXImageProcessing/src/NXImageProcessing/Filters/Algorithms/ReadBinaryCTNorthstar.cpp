@@ -31,20 +31,20 @@ namespace
 bool SeekToOffset(FILE* file, uint64 offset)
 {
 #if defined(_MSC_VER)
-  using FileOffset = int64;
+  using FileOffsetType = int64;
 #else
-  using FileOffset = off_t;
+  using FileOffsetType = off_t;
 #endif
 
-  if(offset > static_cast<uint64>(std::numeric_limits<FileOffset>::max()))
+  if(offset > static_cast<uint64>(std::numeric_limits<FileOffsetType>::max()))
   {
     return false;
   }
 
 #if defined(_MSC_VER)
-  return ::_fseeki64(file, static_cast<FileOffset>(offset), SEEK_SET) == 0;
+  return ::_fseeki64(file, static_cast<FileOffsetType>(offset), SEEK_SET) == 0;
 #else
-  return ::fseeko(file, static_cast<FileOffset>(offset), SEEK_SET) == 0;
+  return ::fseeko(file, static_cast<FileOffsetType>(offset), SEEK_SET) == 0;
 #endif
 }
 
@@ -76,14 +76,14 @@ Result<> SanityCheckFileSizeVersusAllocatedSize(size_t allocatedBytes, size_t fi
  */
 Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ReadBinaryCTNorthstarInputValues* inputValues)
 {
-  auto& geom = dataStructure.getDataRefAs<ImageGeom>(inputValues->ImageGeometryPath);
-  geom.setUnits(static_cast<IGeometry::LengthUnit>(inputValues->LengthUnit));
+  auto& geom = dataStructure.getDataRefAs<ImageGeom>(inputValues->image_geometry_path);
+  geom.setUnits(static_cast<IGeometry::LengthUnit>(inputValues->length_unit));
 
-  auto& density = dataStructure.getDataAs<Float32Array>(inputValues->DensityArrayPath)->getDataStoreRef();
-  const usize deltaX = inputValues->EndVoxelCoord[0] - inputValues->StartVoxelCoord[0] + 1;
+  auto& density = dataStructure.getDataAs<Float32ArrayType>(inputValues->density_array_path)->getDataStoreRef();
+  const usize deltaX = inputValues->end_voxel_coord[0] - inputValues->start_voxel_coord[0] + 1;
 
   // Initialize through slice-sized writes so an incomplete import retains sentinel values.
-  const usize sliceSize = inputValues->ImportedGeometryDims[0] * inputValues->ImportedGeometryDims[1];
+  const usize sliceSize = inputValues->imported_geometry_dims[0] * inputValues->imported_geometry_dims[1];
   auto initializationBuffer = std::make_unique<float32[]>(sliceSize);
   std::fill_n(initializationBuffer.get(), sliceSize, static_cast<float32>(0xABCDEF));
   for(usize offset = 0; offset < density.getSize(); offset += sliceSize)
@@ -100,19 +100,19 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
   // int32 fileIndex = 1;
 
   usize totalSlices = 0;
-  for(const auto& dataFileInput : inputValues->DataFilePaths)
+  for(const auto& dataFileInput : inputValues->data_file_paths)
   {
     totalSlices += dataFileInput.second;
   }
   ThrottledMessageHandler progressThrottle(messageHandler);
   progressThrottle.reset(totalSlices, "Importing Slices");
 
-  for(const auto& dataFileInput : inputValues->DataFilePaths)
+  for(const auto& dataFileInput : inputValues->data_file_paths)
   {
     const fs::path& dataFilePath = dataFileInput.first;
     const usize fileSize = fs::file_size(dataFilePath);
     // Validate this file against its declared slice count, not the complete output size.
-    usize allocatedBytes = inputValues->OriginalGeometryDims[0] * inputValues->OriginalGeometryDims[1] * dataFileInput.second * sizeof(float32);
+    usize allocatedBytes = inputValues->original_geometry_dims[0] * inputValues->original_geometry_dims[1] * dataFileInput.second * sizeof(float32);
 
     Result<> result = SanityCheckFileSizeVersusAllocatedSize(allocatedBytes, fileSize);
     if(result.invalid())
@@ -121,13 +121,13 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
                                                  fileSize, allocatedBytes));
     }
 
-    FILE* f = fopen(dataFilePath.string().c_str(), "rb");
-    if(nullptr == f)
+    FILE* fPtr = fopen(dataFilePath.string().c_str(), "rb");
+    if(nullptr == fPtr)
     {
       return MakeErrorResult(-38706, fmt::format("Error opening binary input file: {}.", dataFilePath.string()));
     }
 
-    auto fileGuard = MakeScopeGuard([f]() noexcept { fclose(f); });
+    auto fileGuard = MakeScopeGuard([fPtr]() noexcept { fclose(fPtr); });
 
     usize fileZSlice = 0;
 
@@ -142,30 +142,30 @@ Result<> ReadBinaryCTFiles(DataStructure& dataStructure, const IFilter::MessageH
         return {};
       }
 
-      if(inputValues->ImportSubvolume && (z < inputValues->StartVoxelCoord[2] || z > inputValues->EndVoxelCoord[2]))
+      if(inputValues->import_subvolume && (z < inputValues->start_voxel_coord[2] || z > inputValues->end_voxel_coord[2]))
       {
         fileZSlice++;
         progressThrottle.updateCount(z + 1);
         continue;
       }
-      for(usize y = 0; y < inputValues->OriginalGeometryDims[1]; y++)
+      for(usize y = 0; y < inputValues->original_geometry_dims[1]; y++)
       {
-        if(inputValues->ImportSubvolume && (y < inputValues->StartVoxelCoord[1] || y > inputValues->EndVoxelCoord[1]))
+        if(inputValues->import_subvolume && (y < inputValues->start_voxel_coord[1] || y > inputValues->end_voxel_coord[1]))
         {
           continue;
         }
 
-        const uint64 fpOffset = ((static_cast<uint64>(inputValues->OriginalGeometryDims[1]) * inputValues->OriginalGeometryDims[0] * fileZSlice) +
-                                 (static_cast<uint64>(inputValues->OriginalGeometryDims[0]) * y) + static_cast<uint64>(inputValues->StartVoxelCoord[0])) *
+        const uint64 fpOffset = ((static_cast<uint64>(inputValues->original_geometry_dims[1]) * inputValues->original_geometry_dims[0] * fileZSlice) +
+                                 (static_cast<uint64>(inputValues->original_geometry_dims[0]) * y) + static_cast<uint64>(inputValues->start_voxel_coord[0])) *
                                 sizeof(float32);
-        if(!SeekToOffset(f, fpOffset))
+        if(!SeekToOffset(fPtr, fpOffset))
         {
           return MakeErrorResult(-38707, fmt::format("Could not seek to position {} in file '{}'.", fpOffset, dataFileInput.first.string()));
         }
 
-        usize index = (inputValues->ImportedGeometryDims[0] * inputValues->ImportedGeometryDims[1] * (z - inputValues->StartVoxelCoord[2])) +
-                      (inputValues->ImportedGeometryDims[0] * (y - inputValues->StartVoxelCoord[1])) + (0);
-        if(fread(buffer.data(), sizeof(float32), deltaX, f) != deltaX)
+        usize index = (inputValues->imported_geometry_dims[0] * inputValues->imported_geometry_dims[1] * (z - inputValues->start_voxel_coord[2])) +
+                      (inputValues->imported_geometry_dims[0] * (y - inputValues->start_voxel_coord[1])) + (0);
+        if(fread(buffer.data(), sizeof(float32), deltaX, fPtr) != deltaX)
         {
           return MakeErrorResult(-38708, fmt::format("Error reading file at position {} in file '{}'.", fpOffset, dataFileInput.first.string()));
         }
@@ -200,8 +200,6 @@ ReadBinaryCTNorthstar::ReadBinaryCTNorthstar(DataStructure& dataStructure, const
 , m_MessageHandler(messageHandler)
 {
 }
-
-ReadBinaryCTNorthstar::~ReadBinaryCTNorthstar() noexcept = default;
 
 const std::atomic_bool& ReadBinaryCTNorthstar::getCancel()
 {

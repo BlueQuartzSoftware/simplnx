@@ -26,22 +26,22 @@ namespace
 /**
  * @brief Dispatched execute body for the Signed Maurer Distance Map filter. The input is the T-typed (integer scalar)
  *        image; the output is a FIXED float32 signed distance image (matching the legacy ITK SignedMaurerDistanceMap
- *        FilterOutputType), so the preflight must have created it via the AlwaysFloat32 map. The Float64 BackgroundValue
+ *        FilterOutputType), so the preflight must have created it via the AlwaysFloat32Type map. The Float64 BackgroundValue
  *        is cast to the input element type T here; the caller's preflight has enforced an integer scalar input.
  */
 struct SignedMaurerDistanceMapExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  SizeVec3 dims;
-  bool insideIsPositive;
-  bool squaredDistance;
-  bool useSpacing;
-  FloatVec3 spacing;
-  float64 backgroundValue;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
+  SizeVec3Type dims;
+  bool inside_is_positive;
+  bool squared_distance;
+  bool use_spacing;
+  FloatVec3Type spacing;
+  float64 background_value;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
@@ -49,39 +49,39 @@ struct SignedMaurerDistanceMapExecuteFn
     // The in/out IDataArrays are needed by ApplySignedMaurerDistanceMap's DispatchAlgorithm to decide the storage
     // path; the typed stores are the buffers the engine reads/writes. Output type is a FIXED float32 signed distance
     // image (matching the legacy ITK FilterOutputType), not the input element type.
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-    auto& outArray = dataStructure.getDataRefAs<DataArray<float32>>(outputArrayPath);
-    return ApplySignedMaurerDistanceMap<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, static_cast<T>(backgroundValue), insideIsPositive, squaredDistance, useSpacing, spacing,
-                                           inArray, outArray, shouldCancel, messageHandler);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
+    auto& outArray = data_structure.getDataRefAs<DataArray<float32>>(output_array_path);
+    return ApplySignedMaurerDistanceMap<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, static_cast<T>(background_value), inside_is_positive, squared_distance, use_spacing, spacing,
+                                           inArray, outArray, should_cancel, message_handler);
   }
 };
 
 /**
  * @brief Dispatched execute body for the (unsigned) Danielsson Distance Map filter. The input is the T-typed (integer
  *        scalar) image; the output is a FIXED float32 distance image (matching the legacy ITK Danielsson
- *        FilterOutputType), so the preflight must have created it via the AlwaysFloat32 map. @p inputIsBinary is
+ *        FilterOutputType), so the preflight must have created it via the AlwaysFloat32Type map. @p inputIsBinary is
  *        carried for interface/SIMPL parity but does not affect the distance output.
  */
 struct DanielssonDistanceMapExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  SizeVec3 dims;
-  bool inputIsBinary;
-  bool squaredDistance;
-  bool useSpacing;
-  FloatVec3 spacing;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
+  SizeVec3Type dims;
+  bool input_is_binary;
+  bool squared_distance;
+  bool use_spacing;
+  FloatVec3Type spacing;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-    auto& outArray = dataStructure.getDataRefAs<DataArray<float32>>(outputArrayPath);
-    return ApplyDanielssonDistanceMap<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, inputIsBinary, squaredDistance, useSpacing, spacing, inArray, outArray, shouldCancel,
-                                         messageHandler);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
+    auto& outArray = data_structure.getDataRefAs<DataArray<float32>>(output_array_path);
+    return ApplyDanielssonDistanceMap<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, input_is_binary, squared_distance, use_spacing, spacing, inArray, outArray, should_cancel,
+                                         message_handler);
   }
 };
 
@@ -93,22 +93,22 @@ struct DanielssonDistanceMapExecuteFn
  */
 struct SignedDanielssonDistanceMapExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  SizeVec3 dims;
-  bool insideIsPositive;
-  bool squaredDistance;
-  bool useSpacing;
-  FloatVec3 spacing;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
+  SizeVec3Type dims;
+  bool inside_is_positive;
+  bool squared_distance;
+  bool use_spacing;
+  FloatVec3Type spacing;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-    auto& outArray = dataStructure.getDataRefAs<DataArray<float32>>(outputArrayPath);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
+    auto& outArray = data_structure.getDataRefAs<DataArray<float32>>(output_array_path);
     const AbstractDataStore<T>& inStore = inArray.getDataStoreRef();
     AbstractDataStore<float32>& outStore = outArray.getDataStoreRef();
 
@@ -118,19 +118,20 @@ struct SignedDanielssonDistanceMapExecuteFn
     // d1 scratch is needed; peak scratch is one T image (dil; inv is freed after the dilate) plus one float32 image (d2).
     const std::string format = detail::SelectDanielssonWorkingDataFormat(inStore.getStoreType(), inStore.getDataFormat(), outStore.getStoreType(), outStore.getDataFormat());
     const std::vector<usize> tupleShape = inArray.getTupleShape();
-    auto invStore = DataStoreUtilities::CreateDataStoreWithFormat<T>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
-    auto dilStore = DataStoreUtilities::CreateDataStoreWithFormat<T>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
-    auto d2Store = DataStoreUtilities::CreateDataStoreWithFormat<float32>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
+    auto invStore = data_store_utilities::CreateDataStoreWithFormat<T>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
+    auto dilStore = data_store_utilities::CreateDataStoreWithFormat<T>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
+    auto d2Store = data_store_utilities::CreateDataStoreWithFormat<float32>(format, tupleShape, std::vector<usize>{1}, IDataAction::Mode::Execute);
 
     // (1) inv = InvertIntensity(input): (input != 0) ? 0 : 1.
-    if(Result<> r = InvertBinaryStore<T>(inStore, *invStore, shouldCancel); r.invalid())
+    if(Result<> r = InvertBinaryStore<T>(inStore, *invStore, should_cancel); r.invalid())
     {
       return r;
     }
     // (2) dil = BinaryDilate(inv, ball radius 1, DilateValue=1). ITK's BinaryBallStructuringElement(1) is
     // FlatStructuringElement::Ball(1) (== KernelType::Ball); outside is background (boundaryToForeground=false).
     const StructuringElement se = MakeStructuringElement(KernelType::Ball, {1, 1, 1});
-    if(Result<> r = ApplyBinaryMorphology<T>(*invStore, *dilStore, dims, se, MorphOp::Dilate, T{1}, T{0}, /*boundaryToForeground=*/false, inArray, outArray, shouldCancel, messageHandler); r.invalid())
+    if(Result<> r = ApplyBinaryMorphology<T>(*invStore, *dilStore, dims, se, MorphOp::Dilate, T{1}, T{0}, /*boundaryToForeground=*/false, inArray, outArray, should_cancel, message_handler);
+       r.invalid())
     {
       return r;
     }
@@ -139,48 +140,49 @@ struct SignedDanielssonDistanceMapExecuteFn
     // (3) d1 = Danielsson(input) -> the real output store; (4) d2 = Danielsson(dil) -> d2 scratch. Both inherit
     // SquaredDistance/UseImageSpacing (ITK sets these on both inner filters); InputIsBinary is left default (it never
     // affects the distance).
-    if(Result<> r = ApplyDanielssonDistanceMap<T>(inStore, outStore, dims, /*inputIsBinary=*/false, squaredDistance, useSpacing, spacing, inArray, outArray, shouldCancel, messageHandler); r.invalid())
+    if(Result<> r = ApplyDanielssonDistanceMap<T>(inStore, outStore, dims, /*inputIsBinary=*/false, squared_distance, use_spacing, spacing, inArray, outArray, should_cancel, message_handler);
+       r.invalid())
     {
       return r;
     }
-    if(Result<> r = ApplyDanielssonDistanceMap<T>(*dilStore, *d2Store, dims, /*inputIsBinary=*/false, squaredDistance, useSpacing, spacing, inArray, outArray, shouldCancel, messageHandler);
+    if(Result<> r = ApplyDanielssonDistanceMap<T>(*dilStore, *d2Store, dims, /*inputIsBinary=*/false, squared_distance, use_spacing, spacing, inArray, outArray, should_cancel, message_handler);
        r.invalid())
     {
       return r;
     }
     // (5) subtract IN PLACE per InsideIsPositive (SubtractStores(a, b, out) = a - b, alias-safe; outStore holds d1):
     // InsideIsPositive -> out = d2 - d1; else -> out = d1 - d2.
-    if(insideIsPositive)
+    if(inside_is_positive)
     {
-      return SubtractStores<float32>(*d2Store, outStore, outStore, shouldCancel);
+      return SubtractStores<float32>(*d2Store, outStore, outStore, should_cancel);
     }
-    return SubtractStores<float32>(outStore, *d2Store, outStore, shouldCancel);
+    return SubtractStores<float32>(outStore, *d2Store, outStore, should_cancel);
   }
 };
 
 /**
  * @brief Dispatched execute body for the IsoContourDistance filter. Input is the T-typed (any scalar) image; output is
  *        a FIXED float32 narrow-band signed distance image (matching the legacy ITK FilterOutputType), so the
- *        preflight must have created it via the AlwaysFloat32 map.
+ *        preflight must have created it via the AlwaysFloat32Type map.
  */
 struct IsoContourDistanceExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  SizeVec3 dims;
-  float64 levelSetValue;
-  float64 farValue;
-  FloatVec3 spacing;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
+  SizeVec3Type dims;
+  float64 level_set_value;
+  float64 far_value;
+  FloatVec3Type spacing;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-    auto& outArray = dataStructure.getDataRefAs<DataArray<float32>>(outputArrayPath);
-    return ApplyIsoContourDistance<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, levelSetValue, farValue, spacing, shouldCancel, messageHandler);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
+    auto& outArray = data_structure.getDataRefAs<DataArray<float32>>(output_array_path);
+    return ApplyIsoContourDistance<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, level_set_value, far_value, spacing, should_cancel, message_handler);
   }
 };
 
@@ -192,35 +194,35 @@ struct IsoContourDistanceExecuteFn
  */
 struct ApproximateSignedDistanceMapExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  SizeVec3 dims;
-  float64 insideValue;
-  float64 outsideValue;
-  FloatVec3 spacing;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
+  SizeVec3Type dims;
+  float64 inside_value;
+  float64 outside_value;
+  FloatVec3Type spacing;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
     const int64 nX = static_cast<int64>(dims[0]);
-    const int64 nY = static_cast<int64>(dims[1]);
-    const int64 nZ = static_cast<int64>(dims[2]);
-    const int64 sumSq = nX * nX + nY * nY + ((nZ > 1) ? (nZ * nZ) : 0);
+    const int64 ny = static_cast<int64>(dims[1]);
+    const int64 nz = static_cast<int64>(dims[2]);
+    const int64 sumSq = nX * nX + ny * ny + ((nz > 1) ? (nz * nz) : 0);
     const float32 maxDist = static_cast<float32>(std::floor(std::sqrt(static_cast<float64>(sumSq))));
-    const float64 levelSet = (insideValue + outsideValue) / 2.0;
+    const float64 levelSet = (inside_value + outside_value) / 2.0;
 
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-    auto& outArray = dataStructure.getDataRefAs<DataArray<float32>>(outputArrayPath);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
+    auto& outArray = data_structure.getDataRefAs<DataArray<float32>>(output_array_path);
     AbstractDataStore<float32>& outStore = outArray.getDataStoreRef();
 
-    if(Result<> r = ApplyIsoContourDistance<T>(inArray.getDataStoreRef(), outStore, dims, levelSet, static_cast<float64>(maxDist) + 1.0, spacing, shouldCancel, messageHandler); r.invalid())
+    if(Result<> r = ApplyIsoContourDistance<T>(inArray.getDataStoreRef(), outStore, dims, levelSet, static_cast<float64>(maxDist) + 1.0, spacing, should_cancel, message_handler); r.invalid())
     {
       return r;
     }
-    if(Result<> r = ApplyFastChamferDistance(outStore, dims, maxDist, shouldCancel, messageHandler, insideValue > outsideValue); r.invalid())
+    if(Result<> r = ApplyFastChamferDistance(outStore, dims, maxDist, should_cancel, message_handler, inside_value > outside_value); r.invalid())
     {
       return r;
     }
@@ -237,29 +239,47 @@ struct ApproximateSignedDistanceMapExecuteFn
 Result<> ExecuteSignedMaurerDistanceMapImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, bool insideIsPositive,
                                                    bool squaredDistance, bool useSpacing, float64 backgroundValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = IntegerOnly;
+  using TypeSetPolicyType = IntegerOnly;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
-  const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::SignedMaurerDistanceMapExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims,         insideIsPositive, squaredDistance,
-                                                     useSpacing,    spacing,        backgroundValue, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  const SizeVec3Type dims = imageGeom.getDimensions();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
+  detail::SignedMaurerDistanceMapExecuteFn executeFn{.data_structure = dataStructure,
+                                                     .input_array_path = inputArrayPath,
+                                                     .output_array_path = outputArrayPath,
+                                                     .dims = dims,
+                                                     .inside_is_positive = insideIsPositive,
+                                                     .squared_distance = squaredDistance,
+                                                     .use_spacing = useSpacing,
+                                                     .spacing = spacing,
+                                                     .background_value = backgroundValue,
+                                                     .should_cancel = shouldCancel,
+                                                     .message_handler = messageHandler};
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
 Result<> ExecuteDanielssonDistanceMapImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, bool inputIsBinary,
                                                  bool squaredDistance, bool useSpacing, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = IntegerOnly;
+  using TypeSetPolicyType = IntegerOnly;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
-  const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::DanielssonDistanceMapExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, inputIsBinary, squaredDistance, useSpacing, spacing, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  const SizeVec3Type dims = imageGeom.getDimensions();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
+  detail::DanielssonDistanceMapExecuteFn executeFn{.data_structure = dataStructure,
+                                                   .input_array_path = inputArrayPath,
+                                                   .output_array_path = outputArrayPath,
+                                                   .dims = dims,
+                                                   .input_is_binary = inputIsBinary,
+                                                   .squared_distance = squaredDistance,
+                                                   .use_spacing = useSpacing,
+                                                   .spacing = spacing,
+                                                   .should_cancel = shouldCancel,
+                                                   .message_handler = messageHandler};
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -267,42 +287,67 @@ Result<> ExecuteSignedDanielssonDistanceMapImageFilter(DataStructure& dataStruct
                                                        bool insideIsPositive, bool squaredDistance, bool useSpacing, const std::atomic_bool& shouldCancel,
                                                        const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = IntegerOnly;
+  using TypeSetPolicyType = IntegerOnly;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
-  const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::SignedDanielssonDistanceMapExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, insideIsPositive, squaredDistance, useSpacing, spacing, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  const SizeVec3Type dims = imageGeom.getDimensions();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
+  detail::SignedDanielssonDistanceMapExecuteFn executeFn{.data_structure = dataStructure,
+                                                         .input_array_path = inputArrayPath,
+                                                         .output_array_path = outputArrayPath,
+                                                         .dims = dims,
+                                                         .inside_is_positive = insideIsPositive,
+                                                         .squared_distance = squaredDistance,
+                                                         .use_spacing = useSpacing,
+                                                         .spacing = spacing,
+                                                         .should_cancel = shouldCancel,
+                                                         .message_handler = messageHandler};
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
 Result<> ExecuteIsoContourDistanceImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, float64 levelSetValue,
                                               float64 farValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = AllNumeric;
+  using TypeSetPolicyType = AllNumeric;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
-  const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::IsoContourDistanceExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, levelSetValue, farValue, spacing, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  const SizeVec3Type dims = imageGeom.getDimensions();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
+  detail::IsoContourDistanceExecuteFn executeFn{.data_structure = dataStructure,
+                                                .input_array_path = inputArrayPath,
+                                                .output_array_path = outputArrayPath,
+                                                .dims = dims,
+                                                .level_set_value = levelSetValue,
+                                                .far_value = farValue,
+                                                .spacing = spacing,
+                                                .should_cancel = shouldCancel,
+                                                .message_handler = messageHandler};
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
 Result<> ExecuteApproximateSignedDistanceMapImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath,
                                                         float64 insideValue, float64 outsideValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = IntegerOnly;
+  using TypeSetPolicyType = IntegerOnly;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
-  const FloatVec3 spacing = imageGeom.getSpacing();
-  detail::ApproximateSignedDistanceMapExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, insideValue, outsideValue, spacing, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  const SizeVec3Type dims = imageGeom.getDimensions();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
+  detail::ApproximateSignedDistanceMapExecuteFn executeFn{.data_structure = dataStructure,
+                                                          .input_array_path = inputArrayPath,
+                                                          .output_array_path = outputArrayPath,
+                                                          .dims = dims,
+                                                          .inside_value = insideValue,
+                                                          .outside_value = outsideValue,
+                                                          .spacing = spacing,
+                                                          .should_cancel = shouldCancel,
+                                                          .message_handler = messageHandler};
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 } // namespace nx::core::ImageProcessing

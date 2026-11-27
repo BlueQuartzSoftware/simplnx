@@ -10,13 +10,13 @@ using namespace nx::core;
 // -----------------------------------------------------------------------------
 void StopWatch::start()
 {
-  start_time = std::chrono::steady_clock::now();
+  m_StartTime = std::chrono::steady_clock::now();
 }
 
 // -----------------------------------------------------------------------------
 void StopWatch::stop()
 {
-  end_time = std::chrono::steady_clock::now();
+  m_EndTime = std::chrono::steady_clock::now();
 }
 
 // -----------------------------------------------------------------------------
@@ -28,6 +28,6 @@ void StopWatch::print(std::ostream& os) const
 // -----------------------------------------------------------------------------
 std::string StopWatch::toString() const
 {
-  auto elapsed = end_time - start_time;
+  auto elapsed = m_EndTime - m_StartTime;
   return fmt::format("{:%H:%M:%S}", elapsed, std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count() % 1000);
 }

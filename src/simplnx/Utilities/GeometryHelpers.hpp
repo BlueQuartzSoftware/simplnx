@@ -19,19 +19,19 @@
  * @namespace nx::core::GeometryHelpers
  * @brief Provides geometry description, connectivity, and topology utilities.
  */
-namespace nx::core::GeometryHelpers
+namespace nx::core::geometry_helpers
 {
 /**
  * @typedef ErrorCode
  * @brief Defines integer status values for connectivity utilities.
  */
-using ErrorCode = int32;
+using ErrorCodeType = int32;
 
 /**
  * @namespace Description
  * @brief Provides user-readable geometry descriptions.
  */
-namespace Description
+namespace description
 {
 
 /**
@@ -42,15 +42,15 @@ namespace Description
  * @param units Specifies length units.
  * @return Geometry description.
  */
-SIMPLNX_EXPORT std::string GenerateGeometryInfo(const nx::core::SizeVec3& dims, const nx::core::FloatVec3& spacing, const nx::core::FloatVec3& origin, IGeometry::LengthUnit units);
+SIMPLNX_EXPORT std::string GenerateGeometryInfo(const nx::core::SizeVec3Type& dims, const nx::core::FloatVec3Type& spacing, const nx::core::FloatVec3Type& origin, IGeometry::LengthUnit units);
 
-} // namespace Description
+} // namespace description
 
 /**
  * @namespace Connectivity
  * @brief Provides mesh adjacency and boundary extraction utilities.
  */
-namespace Connectivity
+namespace connectivity
 {
 /**
  * @namespace detail
@@ -181,7 +181,7 @@ usize FastEdgeCount(const AbstractDataStore<T>& faceStore)
  * @param faceLabelsRef Provides two region labels per face.
  * @return Euler characteristic values indexed by region ID.
  */
-SIMPLNX_EXPORT std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeom, const Int32Array& faceLabelsRef);
+SIMPLNX_EXPORT std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeom, const Int32ArrayType& faceLabelsRef);
 
 /**
  * @brief Selects a unique-edge count implementation from vertex-index range.
@@ -340,7 +340,7 @@ template <typename T, typename K>
   std::vector<uint8> visited(numElems, 0);
 
   // Reuse one neighbor vector across source elements.
-  std::vector<K> loop_neighbors(32, 0);
+  std::vector<K> loopNeighbors(32, 0);
 
   // Keep one candidate element outside the active chunk in local memory.
   auto neighborVertsBuf = std::make_unique<K[]>(numVertsPerElem);
@@ -367,25 +367,25 @@ template <typename T, typename K>
       {
         K vertId = chunkBuf[localOffset + v];
         T nEs = elemsContainingVert->getNumberOfElements(vertId);
-        K* vertIdxs = elemsContainingVert->getElementListPointer(vertId);
+        K* vertIdxsPtr = elemsContainingVert->getElementListPointer(vertId);
 
         for(T vt = 0; vt < nEs; vt++)
         {
-          if(vertIdxs[vt] == static_cast<K>(t))
+          if(vertIdxsPtr[vt] == static_cast<K>(t))
           {
             continue; // This is the same element as our "source"
           }
-          if(visited[vertIdxs[vt]])
+          if(visited[vertIdxsPtr[vt]])
           {
             continue; // We already added this element so loop again
           }
 
           // Reuse the active chunk or read one exterior candidate.
-          K candidateElem = vertIdxs[vt];
-          const K* candidateVerts = nullptr;
+          K candidateElem = vertIdxsPtr[vt];
+          const K* candidateVertsPtr = nullptr;
           if(candidateElem >= chunkStart && candidateElem < chunkStart + chunkCount)
           {
-            candidateVerts = &chunkBuf[(candidateElem - chunkStart) * numVertsPerElem];
+            candidateVertsPtr = &chunkBuf[(candidateElem - chunkStart) * numVertsPerElem];
           }
           else
           {
@@ -394,7 +394,7 @@ template <typename T, typename K>
             {
               return candidateReadResult;
             }
-            candidateVerts = neighborVertsBuf.get();
+            candidateVertsPtr = neighborVertsBuf.get();
           }
 
           // Count shared vertices between this source and candidate.
@@ -403,7 +403,7 @@ template <typename T, typename K>
           {
             for(usize j = 0; j < numVertsPerElem; j++)
             {
-              if(chunkBuf[localOffset + i] == candidateVerts[j])
+              if(chunkBuf[localOffset + i] == candidateVertsPtr[j])
               {
                 vCount++;
               }
@@ -413,13 +413,13 @@ template <typename T, typename K>
           // A complete shared boundary entity defines one neighbor.
           if(vCount == numSharedVerts)
           {
-            loop_neighbors[linkCount[t]] = vertIdxs[vt];
+            loopNeighbors[linkCount[t]] = vertIdxsPtr[vt];
             ++linkCount[t];
-            if(linkCount[t] >= loop_neighbors.size())
+            if(linkCount[t] >= loopNeighbors.size())
             {
-              loop_neighbors.resize(loop_neighbors.size() + 10);
+              loopNeighbors.resize(loopNeighbors.size() + 10);
             }
-            visited[vertIdxs[vt]] = true;
+            visited[vertIdxsPtr[vt]] = true;
           }
         }
       }
@@ -427,9 +427,9 @@ template <typename T, typename K>
       // Clear only visited indexes recorded for this source element.
       for(int64 k = 0; k < linkCount[t]; k++)
       {
-        visited[loop_neighbors[k]] = false;
+        visited[loopNeighbors[k]] = false;
       }
-      dynamicList->setElementList(t, linkCount[t], &(loop_neighbors[0]));
+      dynamicList->setElementList(t, linkCount[t], loopNeighbors.data());
     }
   }
 
@@ -1077,19 +1077,19 @@ template <typename T>
   }
   return {};
 }
-} // namespace Connectivity
+} // namespace connectivity
 
 /**
  * @namespace Topology
  * @brief Provides periodic-boundary and geometric-measure utilities.
  */
-namespace Topology
+namespace topology
 {
 /**
  * @typedef BoundingBoxFaces
  * @brief Defines a unique set of bounding-box faces.
  */
-using BoundingBoxFaces = std::unordered_set<BoundingBox3Df::faces_enum>;
+using BoundingBoxFacesType = std::unordered_set<BoundingBox3DfType::faces_enum>;
 
 /**
  * @brief Finds bounding-box faces touched by selected vertices.
@@ -1100,7 +1100,7 @@ using BoundingBoxFaces = std::unordered_set<BoundingBox3Df::faces_enum>;
  * @param vertexSet Specifies vertex indexes to test.
  * @return Unique touched faces.
  */
-BoundingBoxFaces SIMPLNX_EXPORT FindElementPeriodicFaces(const BoundingBox3Df& boundingBox, const Float32AbstractDataStore& vertices, const std::set<IGeometry::MeshIndexType>& vertexSet);
+BoundingBoxFacesType SIMPLNX_EXPORT FindElementPeriodicFaces(const BoundingBox3DfType& boundingBox, const Float32AbstractDataStoreType& vertices, const std::set<IGeometry::MeshIndexType>& vertexSet);
 
 /**
  * @brief Adjusts a feature's centroid for periodic (wrap-around) boundaries. For every axis on which the
@@ -1119,8 +1119,8 @@ BoundingBoxFaces SIMPLNX_EXPORT FindElementPeriodicFaces(const BoundingBox3Df& b
  * @return True when any centroid component was adjusted.
  * @pre Vertex and centroid coordinates use the bounding box's coordinate system.
  */
-bool SIMPLNX_EXPORT AdjustCentroidsForPeriodicFaces(const BoundingBox3Df& boundingBox, const BoundingBoxFaces& faces, const Float32AbstractDataStore& vertices,
-                                                    const std::set<IGeometry::MeshIndexType>& vertexSet, Float32AbstractDataStore& centroids, IGeometry::MeshIndexType featureId);
+bool SIMPLNX_EXPORT AdjustCentroidsForPeriodicFaces(const BoundingBox3DfType& boundingBox, const BoundingBoxFacesType& faces, const Float32AbstractDataStoreType& vertices,
+                                                    const std::set<IGeometry::MeshIndexType>& vertexSet, Float32AbstractDataStoreType& centroids, IGeometry::MeshIndexType featureId);
 
 /**
  * @brief Computes arithmetic vertex centroids for mesh elements.
@@ -1130,14 +1130,14 @@ bool SIMPLNX_EXPORT AdjustCentroidsForPeriodicFaces(const BoundingBox3Df& boundi
  * @param centroids Receives one XYZ tuple per element.
  */
 template <typename T>
-void FindElementCentroids(const DataArray<T>* elemList, const Float32Array* vertices, Float32Array* centroids)
+void FindElementCentroids(const DataArray<T>* elemList, const Float32ArrayType* vertices, Float32ArrayType* centroids)
 {
   auto& elems = *elemList;
   const usize numElems = elemList->getNumberOfTuples();
   const usize numVertsPerElem = elemList->getNumberOfComponents();
   usize numDims = 3;
   auto& elementCentroids = *centroids;
-  auto& vertex = *vertices;
+  const auto& vertex = *vertices;
 
   for(usize i = 0; i < numDims; i++)
   {
@@ -1163,12 +1163,12 @@ void FindElementCentroids(const DataArray<T>* elemList, const Float32Array* vert
  * @param volumes Receives one signed volume per tetrahedron.
  */
 template <typename T>
-void FindTetVolumes(const DataArray<T>* tetList, const Float32Array* vertices, Float32Array* volumes)
+void FindTetVolumes(const DataArray<T>* tetList, const Float32ArrayType* vertices, Float32ArrayType* volumes)
 {
   auto& tets = *tetList;
   const usize numTets = tetList->getNumberOfTuples();
   const usize numVertsPerTet = tetList->getNumberOfComponents();
-  auto& vertex = *vertices;
+  const auto& vertex = *vertices;
   auto& volumePtr = *volumes;
 
   for(usize i = 0; i < numTets; i++)
@@ -1195,11 +1195,11 @@ void FindTetVolumes(const DataArray<T>* tetList, const Float32Array* vertices, F
  * @param volumes Receives one signed volume per hexahedron.
  */
 template <typename T>
-void FindHexVolumes(const DataArray<T>* hexList, const Float32Array* vertices, Float32Array* volumes)
+void FindHexVolumes(const DataArray<T>* hexList, const Float32ArrayType* vertices, Float32ArrayType* volumes)
 {
   const usize numHexas = hexList->getNumberOfTuples();
   const usize numElementsPerHex = hexList->getNumberOfComponents();
-  auto& vertex = *vertices;
+  const auto& vertex = *vertices;
   auto& volumePtr = *volumes;
   auto& hexas = *hexList;
 
@@ -1267,7 +1267,7 @@ void FindHexVolumes(const DataArray<T>* hexList, const Float32Array* vertices, F
  * @param areas Receives one area per element.
  */
 template <typename T>
-void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertices, Float32Array* areas)
+void Find2DElementAreas(const DataArray<T>* elemList, const Float32ArrayType* vertices, Float32ArrayType* areas)
 {
 
   auto& elems = *elemList;
@@ -1278,7 +1278,7 @@ void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertic
     return;
   }
   auto& elemAreas = *areas;
-  std::vector<Point3Df> coords;
+  std::vector<FloatVec3Type> coords;
   coords.reserve(numVertsPerElem);
   std::vector<float32> coordinate(3 * numVertsPerElem, 0.0f);
 
@@ -1295,7 +1295,7 @@ void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertic
       coords.emplace_back(vertices->at(3 * elems[offset + j]), vertices->at(3 * elems[offset + j] + 1), vertices->at(3 * elems[offset + j] + 2));
     }
 
-    ZXZEuler normal = ZXZEuler(GeometryMath::FindPolygonNormal<float32>({coords.data(), coords.size()}).data());
+    ZxzEulerType normal = ZxzEulerType(geometry_math::FindPolygonNormal<float32>({coords.data(), coords.size()}).data());
     normal.normalize();
 
     float32 nx = (normal[0] > 0.0 ? normal[0] : -normal[0]);
@@ -1303,25 +1303,25 @@ void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertic
     float32 nz = (normal[2] > 0.0 ? normal[2] : -normal[2]);
     int32 projection = (nx > ny ? (nx > nz ? 0 : 2) : (ny > nz ? 1 : 2));
 
-    float* coordinates = coordinate.data();
+    float* coordinatesPtr = coordinate.data();
     for(int64 j = 0; j < numVertsPerElem; j++)
     {
-      Point3D<float32> vert0(coordinates + (3 * j));
-      Point3D<float32> vert1(coordinates + (3 * ((j + 1) % numVertsPerElem)));
-      Point3D<float32> vert2(coordinates + (3 * ((j + 2) % numVertsPerElem)));
+      Vec3<float32> vert0(coordinatesPtr + (3 * j));
+      Vec3<float32> vert1(coordinatesPtr + (3 * ((j + 1) % numVertsPerElem)));
+      Vec3<float32> vert2(coordinatesPtr + (3 * ((j + 2) % numVertsPerElem)));
 
       switch(projection)
       {
       case 0: {
-        area += coordinates[3 * ((j + 1) % numVertsPerElem) + 1] * (coordinates[3 * ((j + 2) % numVertsPerElem) + 2] - coordinates[3 * j + 2]);
+        area += coordinatesPtr[3 * ((j + 1) % numVertsPerElem) + 1] * (coordinatesPtr[3 * ((j + 2) % numVertsPerElem) + 2] - coordinatesPtr[3 * j + 2]);
         continue;
       }
       case 1: {
-        area += coordinates[3 * ((j + 1) % numVertsPerElem) + 0] * (coordinates[3 * ((j + 2) % numVertsPerElem) + 2] - coordinates[3 * j + 2]);
+        area += coordinatesPtr[3 * ((j + 1) % numVertsPerElem) + 0] * (coordinatesPtr[3 * ((j + 2) % numVertsPerElem) + 2] - coordinatesPtr[3 * j + 2]);
         continue;
       }
       case 2: {
-        area += coordinates[3 * ((j + 1) % numVertsPerElem) + 0] * (coordinates[3 * ((j + 2) % numVertsPerElem) + 1] - coordinates[3 * j + 1]);
+        area += coordinatesPtr[3 * ((j + 1) % numVertsPerElem) + 0] * (coordinatesPtr[3 * ((j + 2) % numVertsPerElem) + 1] - coordinatesPtr[3 * j + 1]);
         continue;
       }
       default:
@@ -1348,5 +1348,5 @@ void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertic
     elemAreas[i] = fabsf(area);
   }
 }
-} // namespace Topology
-} // namespace nx::core::GeometryHelpers
+} // namespace topology
+} // namespace nx::core::geometry_helpers

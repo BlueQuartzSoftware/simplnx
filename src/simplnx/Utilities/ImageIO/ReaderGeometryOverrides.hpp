@@ -14,14 +14,14 @@
 #include <string>
 #include <string_view>
 
-namespace nx::core::ImageIO
+namespace nx::core::image_io
 {
-inline constexpr StringLiteral k_ChangeOrigin = "change_origin";
-inline constexpr StringLiteral k_Origin = "origin";
-inline constexpr StringLiteral k_ChangeSpacing = "change_spacing";
-inline constexpr StringLiteral k_Spacing = "spacing";
-inline constexpr StringLiteral k_SetOriginLabel = "Set Origin";
-inline constexpr StringLiteral k_SetSpacingLabel = "Set Spacing";
+inline constexpr StringLiteralType k_ChangeOrigin = "change_origin";
+inline constexpr StringLiteralType k_Origin = "origin";
+inline constexpr StringLiteralType k_ChangeSpacing = "change_spacing";
+inline constexpr StringLiteralType k_Spacing = "spacing";
+inline constexpr StringLiteralType k_SetOriginLabel = "Set Origin";
+inline constexpr StringLiteralType k_SetSpacingLabel = "Set Spacing";
 
 /**
  * @brief Formats a stored geometry value error with the settings that replace it.
@@ -45,12 +45,12 @@ inline constexpr StringLiteral k_SetSpacingLabel = "Set Spacing";
  */
 inline void InsertGeometryOverrideParameters(Parameters& params)
 {
-  using V = VectorFloat32Parameter::ValueType;
-  using Names = VectorFloat32Parameter::NamesType;
+  using V = VectorFloat32ParameterType::ValueType;
+  using NamesType = VectorFloat32ParameterType::NamesType;
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin, k_SetOriginLabel, "Use the supplied origin for the imported image.", false));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin, "Origin (Physical Units)", "Origin coordinates in X, Y, Z order.", V{0.0F, 0.0F, 0.0F}, Names{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Origin, "Origin (Physical Units)", "Origin coordinates in X, Y, Z order.", V{0.0F, 0.0F, 0.0F}, NamesType{"X", "Y", "Z"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeSpacing, k_SetSpacingLabel, "Use the supplied spacing for the imported image.", false));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing, "Spacing (Physical Units)", "Positive spacing in X, Y, Z order.", V{1.0F, 1.0F, 1.0F}, Names{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Spacing, "Spacing (Physical Units)", "Positive spacing in X, Y, Z order.", V{1.0F, 1.0F, 1.0F}, NamesType{"X", "Y", "Z"}));
   params.linkParameters(k_ChangeOrigin, k_Origin, true);
   params.linkParameters(k_ChangeSpacing, k_Spacing, true);
 }
@@ -63,7 +63,7 @@ inline void InsertGeometryOverrideParameters(Parameters& params)
  * @param overridden True if the value comes from an override. This changes the error message.
  * @return Success, -1556 for invalid spacing, or -1557 for invalid origin.
  */
-[[nodiscard]] inline Result<> ValidateReaderValue(const std::filesystem::path& filePath, const FloatVec3& value, bool isSpacing, bool overridden = false)
+[[nodiscard]] inline Result<> ValidateReaderValue(const std::filesystem::path& filePath, const FloatVec3Type& value, bool isSpacing, bool overridden = false)
 {
   auto result = isSpacing ? ImageGeom::ValidateSpacing(value) : ImageGeom::ValidateOrigin(value);
   if(result.invalid())
@@ -84,8 +84,8 @@ inline void InsertGeometryOverrideParameters(Parameters& params)
 
 struct GeometryOverrides
 {
-  std::optional<FloatVec3> Origin;
-  std::optional<FloatVec3> Spacing;
+  std::optional<FloatVec3Type> Origin;
+  std::optional<FloatVec3Type> Spacing;
 
   /**
    * @brief Gets the enabled origin and spacing overrides.
@@ -97,11 +97,11 @@ struct GeometryOverrides
     GeometryOverrides overrides;
     if(args.value<bool>(k_ChangeOrigin))
     {
-      overrides.Origin = FloatVec3(args.value<VectorFloat32Parameter::ValueType>(k_Origin));
+      overrides.Origin = FloatVec3Type(args.value<VectorFloat32ParameterType::ValueType>(k_Origin));
     }
     if(args.value<bool>(k_ChangeSpacing))
     {
-      overrides.Spacing = FloatVec3(args.value<VectorFloat32Parameter::ValueType>(k_Spacing));
+      overrides.Spacing = FloatVec3Type(args.value<VectorFloat32ParameterType::ValueType>(k_Spacing));
     }
     return overrides;
   }
@@ -118,8 +118,8 @@ struct GeometryOverrides
   template <class OriginType, class SpacingType>
   [[nodiscard]] Result<> apply(const std::filesystem::path& path, OriginType& origin, SpacingType& spacing) const
   {
-    const auto effectiveOrigin = Origin.value_or(FloatVec3{origin[0], origin[1], origin[2]});
-    const auto effectiveSpacing = Spacing.value_or(FloatVec3{spacing[0], spacing[1], spacing[2]});
+    const auto effectiveOrigin = Origin.value_or(FloatVec3Type{origin[0], origin[1], origin[2]});
+    const auto effectiveSpacing = Spacing.value_or(FloatVec3Type{spacing[0], spacing[1], spacing[2]});
     if(auto result = ValidateReaderValue(path, effectiveOrigin, false, Origin.has_value()); result.invalid())
     {
       return result;
@@ -150,8 +150,8 @@ struct GeometryOverrides
  * @return Success, -1556 for invalid spacing, or -1557 for invalid origin.
  * If centering fails, the output vectors contain the effective spacing and the computed origin.
  */
-[[nodiscard]] inline Result<> ResolveCropGeometry(const std::filesystem::path& path, const GeometryOverrides& overrides, OriginSpacingProcessing processing, bool centerOrigin, const SizeVec3& dims,
-                                                  FloatVec3& origin, FloatVec3& spacing)
+[[nodiscard]] inline Result<> ResolveCropGeometry(const std::filesystem::path& path, const GeometryOverrides& overrides, OriginSpacingProcessing processing, bool centerOrigin,
+                                                  const SizeVec3Type& dims, FloatVec3Type& origin, FloatVec3Type& spacing)
 {
   auto cropOverrides = overrides;
   if(processing == OriginSpacingProcessing::Postprocessed)
@@ -191,8 +191,8 @@ struct GeometryOverrides
  * @return Success, -1556 for invalid spacing, or -1557 for invalid origin.
  * If centering fails, the output vectors contain the effective spacing and the computed origin.
  */
-[[nodiscard]] inline Result<> ApplyPostprocessedGeometry(const std::filesystem::path& path, const GeometryOverrides& overrides, bool centerOrigin, const SizeVec3& dims, FloatVec3& origin,
-                                                         FloatVec3& spacing)
+[[nodiscard]] inline Result<> ApplyPostprocessedGeometry(const std::filesystem::path& path, const GeometryOverrides& overrides, bool centerOrigin, const SizeVec3Type& dims, FloatVec3Type& origin,
+                                                         FloatVec3Type& spacing)
 {
   if(auto result = overrides.apply(path, origin, spacing); result.invalid())
   {
@@ -208,4 +208,4 @@ struct GeometryOverrides
   }
   return {};
 }
-} // namespace nx::core::ImageIO
+} // namespace nx::core::image_io

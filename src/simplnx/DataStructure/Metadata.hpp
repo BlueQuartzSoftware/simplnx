@@ -22,8 +22,8 @@ class SIMPLNX_EXPORT Metadata
 public:
   using KeyType = std::string;
   using ValueType = std::any;
-  using Iterator = std::map<KeyType, ValueType>::iterator;
-  using ConstIterator = std::map<KeyType, ValueType>::const_iterator;
+  using iterator = std::map<KeyType, ValueType>::iterator;
+  using const_iterator = std::map<KeyType, ValueType>::const_iterator;
 
   /**
    * @brief Default constructor.
@@ -107,25 +107,25 @@ public:
    * @brief Returns an iterator to the beginning of the Metadata collection.
    * @return Iterator to the beginning
    */
-  Iterator begin();
+  iterator begin();
 
   /**
    * @brief Returns an iterator to the end of the Metadata collection.
    * @return Iterator to the end
    */
-  Iterator end();
+  iterator end();
 
   /**
    * @brief Returns a const iterator to the beginning of the Metadata collection.
    * @return ConstIterator to the beginning
    */
-  ConstIterator begin() const;
+  const_iterator begin() const;
 
   /**
    * @brief Returns a const iterator to the end of the Metadata collection.
    * @return ConstIterator to the end
    */
-  ConstIterator end() const;
+  const_iterator end() const;
 
 private:
   std::map<KeyType, ValueType> m_Map;

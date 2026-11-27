@@ -80,7 +80,7 @@ const DataPath k_FixtureArrayPath({"DataContainer", "CellData", "TestArray"});
 /**
  * @brief Gives the output array name that most restored fixtures set.
  */
-constexpr StringLiteral k_FixtureOutputName = "TestName";
+constexpr StringLiteralType k_FixtureOutputName = "TestName";
 
 /**
  * @brief Builds a FilterList that holds the NXImageProcessing plugin only.
@@ -135,7 +135,7 @@ std::string ClassNameFor(const FilterList& filterList, const Uuid& uuid)
 TEST_CASE("NXImageProcessing::every filter replacement map entry redirects a retired Uuid", "[NXImageProcessing][BackwardsCompatibility][PipelineUuidRedirect]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const NXImageProcessingPlugin plugin;
   const AbstractPlugin::FilterReplacementMapType replacements = plugin.getFilterReplacementMap();
@@ -179,8 +179,8 @@ TEST_CASE("NXImageProcessing::every filter replacement map entry redirects a ret
 TEST_CASE("NXImageProcessing::every SIMPL map entry converts a DREAM3D 6.x fixture", "[NXImageProcessing][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const NXImageProcessingPlugin plugin;
   const AbstractPlugin::SIMPLMapType simplMap = plugin.getSimplToSimplnxMap();
@@ -193,8 +193,8 @@ TEST_CASE("NXImageProcessing::every SIMPL map entry converts a DREAM3D 6.x fixtu
 
   for(const auto& [simplUuid, conversion] : simplMap)
   {
-    const Uuid newUuid = conversion.simplnxUuid;
-    const std::string className = ClassNameFor(*filterList, newUuid);
+    const Uuid newUuid = conversion.simplnx_uuid;
+    const std::string className = ClassNameFor(*filterListPtr, newUuid);
 
     // Every entry must own at least one fixture, or the entry is untested.
     usize fixturesForEntry = 0;
@@ -212,27 +212,27 @@ TEST_CASE("NXImageProcessing::every SIMPL map entry converts a DREAM3D 6.x fixtu
 
       DYNAMIC_SECTION(version + "::" + className)
       {
-        auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+        auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
         REQUIRE(pipelineResult.valid());
 
         auto& pipeline = pipelineResult.value();
         REQUIRE(pipeline.size() == 1);
 
-        auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-        REQUIRE(pipelineFilter != nullptr);
+        auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+        REQUIRE(pipelineFilterPtr != nullptr);
 
-        const IFilter* filter = pipelineFilter->getFilter();
-        REQUIRE(filter != nullptr);
-        REQUIRE(filter->uuid() == newUuid);
+        const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+        REQUIRE(filterPtr != nullptr);
+        REQUIRE(filterPtr->uuid() == newUuid);
 
         // The conversion must move data. A conversion that silently produces the defaults resolves
         // the filter but loses every saved value, so compare the arguments with the defaults.
-        const Arguments& args = pipelineFilter->getArguments();
-        REQUIRE(filter->toJson(args) != filter->toJson(filter->getDefaultArguments()));
+        const Arguments& args = pipelineFilterPtr->getArguments();
+        REQUIRE(filterPtr->toJson(args) != filterPtr->toJson(filterPtr->getDefaultArguments()));
 
         // The restored fixtures all select DataContainer/CellData/TestArray. Check the keys that
         // the converted filter declares, so a converter that writes the wrong key fails here.
-        const Parameters params = filter->parameters();
+        const Parameters params = filterPtr->parameters();
         if(params.contains("input_image_geometry_path"))
         {
           REQUIRE(args.value<DataPath>("input_image_geometry_path") == k_FixtureGeometryPath);

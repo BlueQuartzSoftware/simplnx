@@ -41,7 +41,7 @@ class DataStructure;
  * arrays can contain the new boundary layer while Feature IDs retain the prior
  * iteration. Callers must discard output after cancellation.
  */
-SIMPLNXCORE_EXPORT Result<> FillBadVoxels(DataStructure& dataStructure, const DataPath& featureIdsPath, const SizeVec3& dimensions, const std::vector<DataPath>& ignoredArrayPaths,
+SIMPLNXCORE_EXPORT Result<> FillBadVoxels(DataStructure& dataStructure, const DataPath& featureIdsPath, const SizeVec3Type& dimensions, const std::vector<DataPath>& ignoredArrayPaths,
                                           std::optional<usize> maxFeatureCount, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel);
 
 } // namespace nx::core

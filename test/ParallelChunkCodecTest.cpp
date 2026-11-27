@@ -42,7 +42,7 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::HDF5;
+using namespace nx::core::hdf5;
 
 namespace
 {
@@ -54,7 +54,7 @@ const std::string k_DatasetName = "data";
  * @return Predefined native type, which must not be closed.
  */
 template <typename T>
-hid_t codecMemoryType()
+hid_t CodecMemoryType()
 {
   std::lock_guard lock(Support::ApiLock());
   return Support::HdfTypeForPrimitive<T>();
@@ -65,7 +65,7 @@ hid_t codecMemoryType()
  * @param shape Dimensions to multiply.
  * @return Product of all dimensions, or 1 for an empty shape.
  */
-usize product(const std::vector<uint64>& shape)
+usize Product(const std::vector<uint64>& shape)
 {
   return std::accumulate(shape.begin(), shape.end(), usize{1}, std::multiplies<usize>());
 }
@@ -83,7 +83,7 @@ usize product(const std::vector<uint64>& shape)
  * Components form the trailing chunk dimensions. Direct C API calls keep this
  * test independent of higher-level compression wiring.
  */
-void createChunkedDeflateDataset(const fs::path& filePath, const std::vector<uint64>& tupleShape, const std::vector<uint64>& componentShape, const std::vector<uint64>& chunkShape, hid_t h5Type,
+void CreateChunkedDeflateDataset(const fs::path& filePath, const std::vector<uint64>& tupleShape, const std::vector<uint64>& componentShape, const std::vector<uint64>& chunkShape, hid_t h5Type,
                                  const std::vector<std::byte>& bytes, int deflateLevel = 5)
 {
   const usize tupleRank = tupleShape.size();
@@ -126,7 +126,7 @@ void createChunkedDeflateDataset(const fs::path& filePath, const std::vector<uin
  * @param h5Type HDF5 element type.
  * @return Dataset bytes in file order.
  */
-std::vector<std::byte> serialReadWhole(const fs::path& filePath, usize totalBytes, hid_t h5Type)
+std::vector<std::byte> SerialReadWhole(const fs::path& filePath, usize totalBytes, hid_t h5Type)
 {
   std::vector<std::byte> out(totalBytes);
   const hid_t fileId = H5Fopen(filePath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
@@ -152,7 +152,7 @@ std::vector<std::byte> serialReadWhole(const fs::path& filePath, usize totalByte
  *
  * The caller owns and closes the returned identifiers.
  */
-void createEmptyChunkedDeflateDataset(const fs::path& filePath, const std::vector<uint64>& tupleShape, const std::vector<uint64>& componentShape, const std::vector<uint64>& chunkShape, hid_t h5Type,
+void CreateEmptyChunkedDeflateDataset(const fs::path& filePath, const std::vector<uint64>& tupleShape, const std::vector<uint64>& componentShape, const std::vector<uint64>& chunkShape, hid_t h5Type,
                                       hid_t& fileIdOut, hid_t& datasetIdOut, int deflateLevel = 5)
 {
   const usize tupleRank = tupleShape.size();
@@ -195,7 +195,7 @@ void createEmptyChunkedDeflateDataset(const fs::path& filePath, const std::vecto
  * @param h5Type HDF5 element type.
  * @return Bytes in the selected region.
  */
-std::vector<std::byte> serialReadChunkRegion(hid_t dataset, const Extent& bounds, const std::vector<uint64>& componentShape, usize elementSize, usize numComponents, hid_t h5Type)
+std::vector<std::byte> SerialReadChunkRegion(hid_t dataset, const Extent& bounds, const std::vector<uint64>& componentShape, usize elementSize, usize numComponents, hid_t h5Type)
 {
   const usize tupleRank = bounds.min.size();
   const usize fullRank = tupleRank + componentShape.size();
@@ -217,7 +217,7 @@ std::vector<std::byte> serialReadChunkRegion(hid_t dataset, const Extent& bounds
     memDims[tupleRank + d] = static_cast<hsize_t>(componentShape[d]);
   }
 
-  const usize clampedTuples = product(clampedTupleDims);
+  const usize clampedTuples = Product(clampedTupleDims);
   std::vector<std::byte> out(clampedTuples * numComponents * elementSize);
   const hid_t fileSpace = H5Dget_space(dataset);
   const hid_t memSpace = H5Screate_simple(static_cast<int>(fullRank), memDims.data(), nullptr);
@@ -233,7 +233,7 @@ std::vector<std::byte> serialReadChunkRegion(hid_t dataset, const Extent& bounds
  * @param name File name.
  * @return Output file path.
  */
-fs::path testFilePath(const std::string& name)
+fs::path TestFilePath(const std::string& name)
 {
   return fs::path(unit_test::k_BinaryTestOutputDir.view()) / name;
 }
@@ -247,7 +247,7 @@ fs::path testFilePath(const std::string& name)
  *
  * DatasetIO must use its serial fallback for this dataset.
  */
-void createContiguousDataset(const fs::path& filePath, const std::vector<uint64>& dims, hid_t h5Type, const std::vector<std::byte>& bytes)
+void CreateContiguousDataset(const fs::path& filePath, const std::vector<uint64>& dims, hid_t h5Type, const std::vector<std::byte>& bytes)
 {
   std::vector<hsize_t> hDims(dims.begin(), dims.end());
   const hid_t fileId = H5Fcreate(filePath.string().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -272,7 +272,7 @@ void createContiguousDataset(const fs::path& filePath, const std::vector<uint64>
  *
  * The multi-filter pipeline is ineligible for the parallel codec.
  */
-void createShuffleDeflateDataset(const fs::path& filePath, const std::vector<uint64>& dims, const std::vector<uint64>& chunkShape, hid_t h5Type, const std::vector<std::byte>& bytes)
+void CreateShuffleDeflateDataset(const fs::path& filePath, const std::vector<uint64>& dims, const std::vector<uint64>& chunkShape, hid_t h5Type, const std::vector<std::byte>& bytes)
 {
   std::vector<hsize_t> hDims(dims.begin(), dims.end());
   std::vector<hsize_t> hChunk(chunkShape.begin(), chunkShape.end());
@@ -304,7 +304,7 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(uint16);
-    const usize numElements = product(tupleShape) * product(componentShape);
+    const usize numElements = Product(tupleShape) * Product(componentShape);
 
     std::vector<uint16> values(numElements);
     for(usize i = 0; i < numElements; ++i)
@@ -314,17 +314,17 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     std::vector<std::byte> bytes(numElements * elementSize);
     std::memcpy(bytes.data(), values.data(), bytes.size());
 
-    const fs::path filePath = testFilePath("ParallelChunkCodec_uint16.h5");
-    createChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT16, bytes);
+    const fs::path filePath = TestFilePath("ParallelChunkCodec_uint16.h5");
+    CreateChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT16, bytes);
 
-    const std::vector<std::byte> bufferA = serialReadWhole(filePath, bytes.size(), H5T_NATIVE_UINT16);
+    const std::vector<std::byte> bufferA = SerialReadWhole(filePath, bytes.size(), H5T_NATIVE_UINT16);
 
     const hid_t fileId = H5Fopen(filePath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
     const hid_t dataset = H5Dopen(fileId, k_DatasetName.c_str(), H5P_DEFAULT);
-    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, codecMemoryType<uint16>());
+    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<uint16>());
     REQUIRE(codec.isEligible());
 
-    const uint64 numChunks = getNumberOfChunks(tupleShape, chunkShape);
+    const uint64 numChunks = GetNumberOfChunks(tupleShape, chunkShape);
     std::vector<uint64> allChunks(numChunks);
     std::iota(allChunks.begin(), allChunks.end(), uint64{0});
 
@@ -342,7 +342,7 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(uint8);
-    const usize numElements = product(tupleShape) * product(componentShape);
+    const usize numElements = Product(tupleShape) * Product(componentShape);
 
     std::vector<std::byte> bytes(numElements * elementSize);
     for(usize i = 0; i < numElements; ++i)
@@ -350,17 +350,17 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
       bytes[i] = static_cast<std::byte>((i * 13 + 1) & 0xFF);
     }
 
-    const fs::path filePath = testFilePath("ParallelChunkCodec_uint8.h5");
-    createChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT8, bytes);
+    const fs::path filePath = TestFilePath("ParallelChunkCodec_uint8.h5");
+    CreateChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT8, bytes);
 
-    const std::vector<std::byte> bufferA = serialReadWhole(filePath, bytes.size(), H5T_NATIVE_UINT8);
+    const std::vector<std::byte> bufferA = SerialReadWhole(filePath, bytes.size(), H5T_NATIVE_UINT8);
 
     const hid_t fileId = H5Fopen(filePath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
     const hid_t dataset = H5Dopen(fileId, k_DatasetName.c_str(), H5P_DEFAULT);
-    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, codecMemoryType<uint8>());
+    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<uint8>());
     REQUIRE(codec.isEligible());
 
-    const uint64 numChunks = getNumberOfChunks(tupleShape, chunkShape);
+    const uint64 numChunks = GetNumberOfChunks(tupleShape, chunkShape);
     std::vector<uint64> allChunks(numChunks);
     std::iota(allChunks.begin(), allChunks.end(), uint64{0});
 
@@ -378,7 +378,7 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     const std::vector<uint64> componentShape = {3};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(float32);
-    const usize numElements = product(tupleShape) * product(componentShape);
+    const usize numElements = Product(tupleShape) * Product(componentShape);
 
     std::vector<float32> values(numElements);
     for(usize i = 0; i < numElements; ++i)
@@ -388,17 +388,17 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     std::vector<std::byte> bytes(numElements * elementSize);
     std::memcpy(bytes.data(), values.data(), bytes.size());
 
-    const fs::path filePath = testFilePath("ParallelChunkCodec_vec3.h5");
-    createChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_FLOAT, bytes);
+    const fs::path filePath = TestFilePath("ParallelChunkCodec_vec3.h5");
+    CreateChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_FLOAT, bytes);
 
-    const std::vector<std::byte> bufferA = serialReadWhole(filePath, bytes.size(), H5T_NATIVE_FLOAT);
+    const std::vector<std::byte> bufferA = SerialReadWhole(filePath, bytes.size(), H5T_NATIVE_FLOAT);
 
     const hid_t fileId = H5Fopen(filePath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
     const hid_t dataset = H5Dopen(fileId, k_DatasetName.c_str(), H5P_DEFAULT);
-    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, codecMemoryType<float32>());
+    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<float32>());
     REQUIRE(codec.isEligible());
 
-    const uint64 numChunks = getNumberOfChunks(tupleShape, chunkShape);
+    const uint64 numChunks = GetNumberOfChunks(tupleShape, chunkShape);
     std::vector<uint64> allChunks(numChunks);
     std::iota(allChunks.begin(), allChunks.end(), uint64{0});
 
@@ -416,8 +416,8 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(uint16);
-    const usize numComponents = product(componentShape);
-    const usize numElements = product(tupleShape) * numComponents;
+    const usize numComponents = Product(componentShape);
+    const usize numElements = Product(tupleShape) * numComponents;
 
     std::vector<uint16> values(numElements);
     for(usize i = 0; i < numElements; ++i)
@@ -427,19 +427,19 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     std::vector<std::byte> bytes(numElements * elementSize);
     std::memcpy(bytes.data(), values.data(), bytes.size());
 
-    const fs::path filePath = testFilePath("ParallelChunkCodec_edge.h5");
-    createChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT16, bytes);
+    const fs::path filePath = TestFilePath("ParallelChunkCodec_edge.h5");
+    CreateChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT16, bytes);
 
     const hid_t fileId = H5Fopen(filePath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
     const hid_t dataset = H5Dopen(fileId, k_DatasetName.c_str(), H5P_DEFAULT);
-    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, codecMemoryType<uint16>());
+    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<uint16>());
 
     // Last chunk is the bottom-right edge chunk: rows 8-9 (clamped from 8-11), cols 4-6 (clamped from 4-7).
-    const uint64 numChunks = getNumberOfChunks(tupleShape, chunkShape);
+    const uint64 numChunks = GetNumberOfChunks(tupleShape, chunkShape);
     const uint64 edgeChunk = numChunks - 1;
-    const Extent bounds = getChunkBounds(edgeChunk, tupleShape, chunkShape);
+    const Extent bounds = GetChunkBounds(edgeChunk, tupleShape, chunkShape);
 
-    const std::vector<std::byte> expected = serialReadChunkRegion(dataset, bounds, componentShape, elementSize, numComponents, H5T_NATIVE_UINT16);
+    const std::vector<std::byte> expected = SerialReadChunkRegion(dataset, bounds, componentShape, elementSize, numComponents, H5T_NATIVE_UINT16);
     const std::vector<std::byte> actual = codec.inflateChunk(edgeChunk);
     H5Dclose(dataset);
     H5Fclose(fileId);
@@ -453,16 +453,16 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(uint16);
-    const usize numElements = product(tupleShape) * product(componentShape);
+    const usize numElements = Product(tupleShape) * Product(componentShape);
     std::vector<std::byte> bytes(numElements * elementSize, std::byte{0});
 
     // Eligible: single-filter deflate.
     {
-      const fs::path filePath = testFilePath("ParallelChunkCodec_eligible.h5");
-      createChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT16, bytes);
+      const fs::path filePath = TestFilePath("ParallelChunkCodec_eligible.h5");
+      CreateChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT16, bytes);
       const hid_t fileId = H5Fopen(filePath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
       const hid_t dataset = H5Dopen(fileId, k_DatasetName.c_str(), H5P_DEFAULT);
-      ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, codecMemoryType<uint16>());
+      ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<uint16>());
       REQUIRE(codec.isEligible());
       H5Dclose(dataset);
       H5Fclose(fileId);
@@ -470,7 +470,7 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
 
     // Ineligible: shuffle + deflate (multi-filter pipeline).
     {
-      const fs::path filePath = testFilePath("ParallelChunkCodec_shuffle.h5");
+      const fs::path filePath = TestFilePath("ParallelChunkCodec_shuffle.h5");
       std::vector<hsize_t> dims = {8, 8};
       std::vector<hsize_t> chunkDims = {4, 4};
       const hid_t fileId = H5Fcreate(filePath.string().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -488,7 +488,7 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
 
       const hid_t rFileId = H5Fopen(filePath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
       const hid_t rDataset = H5Dopen(rFileId, k_DatasetName.c_str(), H5P_DEFAULT);
-      ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, rDataset, codecMemoryType<uint16>());
+      ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, rDataset, CodecMemoryType<uint16>());
       REQUIRE_FALSE(codec.isEligible());
       H5Dclose(rDataset);
       H5Fclose(rFileId);
@@ -505,8 +505,8 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(uint16);
-    const usize numComponents = product(componentShape);
-    const usize chunkTuples = product(chunkShape);
+    const usize numComponents = Product(componentShape);
+    const usize chunkTuples = Product(chunkShape);
     const usize chunkElements = chunkTuples * numComponents;
     const usize chunkBytes = chunkElements * elementSize;
     const uint16 fillValue = 0xBEEFu;
@@ -514,7 +514,7 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     std::vector<hsize_t> dims = {8, 8};
     std::vector<hsize_t> chunkDims = {4, 4};
 
-    const fs::path filePath = testFilePath("ParallelChunkCodec_fill.h5");
+    const fs::path filePath = TestFilePath("ParallelChunkCodec_fill.h5");
     const hid_t fileId = H5Fcreate(filePath.string().c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
     REQUIRE(fileId >= 0);
     const hid_t space = H5Screate_simple(2, dims.data(), nullptr);
@@ -534,7 +534,7 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
     const std::vector<uint64> writtenChunks = {0, 3};
     for(const uint64 flatChunk : writtenChunks)
     {
-      const Extent bounds = getChunkBounds(flatChunk, tupleShape, chunkShape);
+      const Extent bounds = GetChunkBounds(flatChunk, tupleShape, chunkShape);
 
       // Build the chunk's nominal (4x4) element bytes from a deterministic pattern.
       std::vector<uint16> chunkValues(chunkElements);
@@ -562,8 +562,8 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
 
     // Independent reference: a serial whole-dataset H5Dread (HDF5 supplies the fill value
     // for the unallocated chunks itself).
-    const usize totalBytes = product(tupleShape) * numComponents * elementSize;
-    const std::vector<std::byte> bufferA = serialReadWhole(filePath, totalBytes, H5T_NATIVE_UINT16);
+    const usize totalBytes = Product(tupleShape) * numComponents * elementSize;
+    const std::vector<std::byte> bufferA = SerialReadWhole(filePath, totalBytes, H5T_NATIVE_UINT16);
 
     const hid_t rFileId = H5Fopen(filePath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
     const hid_t rDataset = H5Dopen(rFileId, k_DatasetName.c_str(), H5P_DEFAULT);
@@ -576,13 +576,13 @@ TEST_CASE("ParallelChunkCodec inflate matches serial H5Dread", "[ParallelChunkCo
       REQUIRE(H5Dget_num_chunks(rDataset, allocSpace, &allocatedChunks) >= 0);
       H5Sclose(allocSpace);
       REQUIRE(allocatedChunks == writtenChunks.size());
-      REQUIRE(allocatedChunks < getNumberOfChunks(tupleShape, chunkShape));
+      REQUIRE(allocatedChunks < GetNumberOfChunks(tupleShape, chunkShape));
     }
 
-    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, rDataset, codecMemoryType<uint16>());
+    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, rDataset, CodecMemoryType<uint16>());
     REQUIRE(codec.isEligible());
 
-    const uint64 numChunks = getNumberOfChunks(tupleShape, chunkShape);
+    const uint64 numChunks = GetNumberOfChunks(tupleShape, chunkShape);
     std::vector<uint64> allChunks(numChunks);
     std::iota(allChunks.begin(), allChunks.end(), uint64{0});
 
@@ -607,20 +607,20 @@ TEST_CASE("ParallelChunkCodec batch-locates chunks for parallel inflate", "[Para
   const std::vector<uint64> tupleShape = {4, 64};
   const std::vector<uint64> componentShape = {1};
   const std::vector<uint64> chunkShape = {1, 64};
-  std::vector<std::byte> source(product(tupleShape));
+  std::vector<std::byte> source(Product(tupleShape));
   for(usize index = 0; index < source.size(); ++index)
   {
     source[index] = static_cast<std::byte>((index * 17 + index / 13) & 0xFF);
   }
 
-  const fs::path filePath = testFilePath("ParallelChunkCodec_metadata_batch.h5");
-  createChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT8, source, /*deflateLevel=*/1);
+  const fs::path filePath = TestFilePath("ParallelChunkCodec_metadata_batch.h5");
+  CreateChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT8, source, /*deflateLevel=*/1);
 
   const hid_t fileId = H5Fopen(filePath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
   REQUIRE(fileId >= 0);
   const hid_t dataset = H5Dopen(fileId, k_DatasetName.c_str(), H5P_DEFAULT);
   REQUIRE(dataset >= 0);
-  ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, sizeof(uint8), dataset, codecMemoryType<uint8>());
+  ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, sizeof(uint8), dataset, CodecMemoryType<uint8>());
   REQUIRE(codec.isEligible());
 
   const std::vector<uint64> chunkIndices = {0, 1, 2, 3};
@@ -630,7 +630,7 @@ TEST_CASE("ParallelChunkCodec batch-locates chunks for parallel inflate", "[Para
   {
     INFO("Chunk " << chunkIndices[localIndex]);
     REQUIRE(chunkInfos[localIndex].allocated);
-    REQUIRE(chunkInfos[localIndex].storedSize > 0);
+    REQUIRE(chunkInfos[localIndex].stored_size > 0);
     const std::vector<std::byte> inflated = codec.inflateChunk(chunkIndices[localIndex], chunkInfos[localIndex]);
     REQUIRE(std::equal(inflated.begin(), inflated.end(), source.begin() + static_cast<std::ptrdiff_t>(localIndex * chunkShape[1])));
   }
@@ -649,7 +649,7 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(uint16);
-    const usize numElements = product(tupleShape) * product(componentShape);
+    const usize numElements = Product(tupleShape) * Product(componentShape);
 
     std::vector<uint16> values(numElements);
     for(usize i = 0; i < numElements; ++i)
@@ -659,15 +659,15 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     std::vector<std::byte> source(numElements * elementSize);
     std::memcpy(source.data(), values.data(), source.size());
 
-    const fs::path filePath = testFilePath("ParallelChunkCodec_deflate_uint16.h5");
+    const fs::path filePath = TestFilePath("ParallelChunkCodec_deflate_uint16.h5");
     hid_t fileId = H5I_INVALID_HID;
     hid_t dataset = H5I_INVALID_HID;
-    createEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT16, fileId, dataset);
+    CreateEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT16, fileId, dataset);
 
-    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, codecMemoryType<uint16>());
+    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<uint16>());
     REQUIRE(codec.isEligible());
 
-    const uint64 numChunks = getNumberOfChunks(tupleShape, chunkShape);
+    const uint64 numChunks = GetNumberOfChunks(tupleShape, chunkShape);
     std::vector<uint64> allChunks(numChunks);
     std::iota(allChunks.begin(), allChunks.end(), uint64{0});
 
@@ -677,7 +677,7 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     H5Dclose(dataset);
     H5Fclose(fileId);
 
-    const std::vector<std::byte> readBack = serialReadWhole(filePath, source.size(), H5T_NATIVE_UINT16);
+    const std::vector<std::byte> readBack = SerialReadWhole(filePath, source.size(), H5T_NATIVE_UINT16);
     REQUIRE(readBack == source);
   }
 
@@ -690,7 +690,7 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 8};
     const usize elementSize = sizeof(uint16);
-    const usize numComponents = product(componentShape);
+    const usize numComponents = Product(componentShape);
 
     // Band = chunk-rows 1 and 2 -> tuple rows [4, 12) -> sourceStartTuple = 4 * 8 = 32.
     const std::vector<uint64> bandChunks = {1, 2};
@@ -708,12 +708,12 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     for(usize iteration = 0; iteration < 64; ++iteration)
     {
       INFO("band-write iteration " << iteration);
-      const fs::path filePath = testFilePath("ParallelChunkCodec_deflate_band.h5");
+      const fs::path filePath = TestFilePath("ParallelChunkCodec_deflate_band.h5");
       hid_t fileId = H5I_INVALID_HID;
       hid_t dataset = H5I_INVALID_HID;
-      createEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT16, fileId, dataset);
+      CreateEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT16, fileId, dataset);
 
-      ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, codecMemoryType<uint16>());
+      ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<uint16>());
       REQUIRE(codec.isEligible());
 
       std::string errorOut;
@@ -722,7 +722,7 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
 
       // Oracle: serial hyperslab read of the band region [rows 4..11, all cols].
       const Extent bandBounds{{4, 0}, {11, 7}};
-      const std::vector<std::byte> readBack = serialReadChunkRegion(dataset, bandBounds, componentShape, elementSize, numComponents, H5T_NATIVE_UINT16);
+      const std::vector<std::byte> readBack = SerialReadChunkRegion(dataset, bandBounds, componentShape, elementSize, numComponents, H5T_NATIVE_UINT16);
       H5Dclose(dataset);
       H5Fclose(fileId);
 
@@ -736,7 +736,7 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     const std::vector<uint64> componentShape = {3};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(float32);
-    const usize numElements = product(tupleShape) * product(componentShape);
+    const usize numElements = Product(tupleShape) * Product(componentShape);
 
     std::vector<float32> values(numElements);
     for(usize i = 0; i < numElements; ++i)
@@ -746,15 +746,15 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     std::vector<std::byte> source(numElements * elementSize);
     std::memcpy(source.data(), values.data(), source.size());
 
-    const fs::path filePath = testFilePath("ParallelChunkCodec_deflate_vec3.h5");
+    const fs::path filePath = TestFilePath("ParallelChunkCodec_deflate_vec3.h5");
     hid_t fileId = H5I_INVALID_HID;
     hid_t dataset = H5I_INVALID_HID;
-    createEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_FLOAT, fileId, dataset);
+    CreateEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_FLOAT, fileId, dataset);
 
-    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, codecMemoryType<float32>());
+    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<float32>());
     REQUIRE(codec.isEligible());
 
-    const uint64 numChunks = getNumberOfChunks(tupleShape, chunkShape);
+    const uint64 numChunks = GetNumberOfChunks(tupleShape, chunkShape);
     std::vector<uint64> allChunks(numChunks);
     std::iota(allChunks.begin(), allChunks.end(), uint64{0});
 
@@ -764,7 +764,7 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     H5Dclose(dataset);
     H5Fclose(fileId);
 
-    const std::vector<std::byte> readBack = serialReadWhole(filePath, source.size(), H5T_NATIVE_FLOAT);
+    const std::vector<std::byte> readBack = SerialReadWhole(filePath, source.size(), H5T_NATIVE_FLOAT);
     REQUIRE(readBack == source);
   }
 
@@ -776,7 +776,7 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     const std::vector<uint64> componentShape = {2};
     const std::vector<uint64> chunkShape = {5, 5};
     const usize elementSize = sizeof(uint16);
-    const usize numElements = product(tupleShape) * product(componentShape);
+    const usize numElements = Product(tupleShape) * Product(componentShape);
 
     std::vector<uint16> values(numElements);
     for(usize i = 0; i < numElements; ++i)
@@ -786,15 +786,15 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     std::vector<std::byte> source(numElements * elementSize);
     std::memcpy(source.data(), values.data(), source.size());
 
-    const fs::path filePath = testFilePath("ParallelChunkCodec_deflate_cross.h5");
+    const fs::path filePath = TestFilePath("ParallelChunkCodec_deflate_cross.h5");
     hid_t fileId = H5I_INVALID_HID;
     hid_t dataset = H5I_INVALID_HID;
-    createEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT16, fileId, dataset);
+    CreateEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT16, fileId, dataset);
 
-    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, codecMemoryType<uint16>());
+    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<uint16>());
     REQUIRE(codec.isEligible());
 
-    const uint64 numChunks = getNumberOfChunks(tupleShape, chunkShape);
+    const uint64 numChunks = GetNumberOfChunks(tupleShape, chunkShape);
     std::vector<uint64> allChunks(numChunks);
     std::iota(allChunks.begin(), allChunks.end(), uint64{0});
 
@@ -814,19 +814,19 @@ TEST_CASE("ParallelChunkCodec deflate round-trips byte-identically", "[ParallelC
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(uint16);
-    const usize numElements = product(tupleShape) * product(componentShape);
+    const usize numElements = Product(tupleShape) * Product(componentShape);
 
     std::vector<std::byte> source(numElements * elementSize, std::byte{0});
 
-    const fs::path filePath = testFilePath("ParallelChunkCodec_deflate_fail.h5");
+    const fs::path filePath = TestFilePath("ParallelChunkCodec_deflate_fail.h5");
     hid_t fileId = H5I_INVALID_HID;
     hid_t dataset = H5I_INVALID_HID;
-    createEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT16, fileId, dataset);
+    CreateEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT16, fileId, dataset);
 
-    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, codecMemoryType<uint16>());
+    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<uint16>());
     REQUIRE(codec.isEligible());
 
-    const uint64 numChunks = getNumberOfChunks(tupleShape, chunkShape);
+    const uint64 numChunks = GetNumberOfChunks(tupleShape, chunkShape);
     std::vector<uint64> allChunks(numChunks);
     std::iota(allChunks.begin(), allChunks.end(), uint64{0});
 
@@ -867,12 +867,12 @@ TEST_CASE("ParallelChunkCodec skips deflate only for incompressible chunks", "[P
     source[index] = static_cast<std::byte>(distribution(rng));
   }
 
-  const fs::path filePath = testFilePath("ParallelChunkCodec_adaptive_deflate.h5");
+  const fs::path filePath = TestFilePath("ParallelChunkCodec_adaptive_deflate.h5");
   hid_t fileId = H5I_INVALID_HID;
   hid_t dataset = H5I_INVALID_HID;
-  createEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT8, fileId, dataset, /*deflateLevel=*/1);
+  CreateEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT8, fileId, dataset, /*deflateLevel=*/1);
 
-  ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, sizeof(uint8), dataset, codecMemoryType<uint8>());
+  ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, sizeof(uint8), dataset, CodecMemoryType<uint8>());
   REQUIRE(codec.isEligible());
 
   const std::vector<uint64> allChunks = {0, 1};
@@ -918,7 +918,7 @@ TEST_CASE("ParallelChunkCodec preserves rewritten skipped-deflate metadata for l
   constexpr usize k_ChunkBytes = 256 * 1024;
   const std::vector<uint64> tupleShape = {1, k_ChunkBytes};
   const std::vector<uint64> componentShape = {1};
-  const std::vector<uint64> chunkShape = tupleShape;
+  const std::vector<uint64>& chunkShape = tupleShape;
 
   std::vector<std::byte> source(k_ChunkBytes);
   std::mt19937_64 rng(0xA11CE5C0FFEEULL);
@@ -928,15 +928,15 @@ TEST_CASE("ParallelChunkCodec preserves rewritten skipped-deflate metadata for l
     value = static_cast<std::byte>(distribution(rng));
   }
 
-  const fs::path filePath = testFilePath("ParallelChunkCodec_live_skipped_deflate.h5");
+  const fs::path filePath = TestFilePath("ParallelChunkCodec_live_skipped_deflate.h5");
   hid_t fileId = H5I_INVALID_HID;
   hid_t dataset = H5I_INVALID_HID;
-  createEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT8, fileId, dataset, /*deflateLevel=*/1);
+  CreateEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT8, fileId, dataset, /*deflateLevel=*/1);
   auto fileGuard = MakeScopeGuard([&fileId]() noexcept { H5Fclose(fileId); });
   auto datasetGuard = MakeScopeGuard([&dataset]() noexcept { H5Dclose(dataset); });
 
   {
-    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, sizeof(uint8), dataset, codecMemoryType<uint8>());
+    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, sizeof(uint8), dataset, CodecMemoryType<uint8>());
     REQUIRE(codec.isEligible());
     const std::vector<uint64> chunkIndices = {0};
     const std::vector<std::byte> initial(k_ChunkBytes, std::byte{0});
@@ -982,8 +982,8 @@ TEST_CASE("ParallelChunkCodec per-chunk compress + write primitives", "[Parallel
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(uint16);
-    const usize numComponents = product(componentShape);
-    const usize chunkTuples = product(chunkShape);
+    const usize numComponents = Product(componentShape);
+    const usize chunkTuples = Product(chunkShape);
     const usize nominalElements = chunkTuples * numComponents;
 
     std::vector<uint16> nominalValues(nominalElements);
@@ -994,12 +994,12 @@ TEST_CASE("ParallelChunkCodec per-chunk compress + write primitives", "[Parallel
     std::vector<std::byte> nominalBytes(nominalElements * elementSize);
     std::memcpy(nominalBytes.data(), nominalValues.data(), nominalBytes.size());
 
-    const fs::path filePath = testFilePath("ParallelChunkCodec_primitives.h5");
+    const fs::path filePath = TestFilePath("ParallelChunkCodec_primitives.h5");
     hid_t fileId = H5I_INVALID_HID;
     hid_t dataset = H5I_INVALID_HID;
-    createEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT16, fileId, dataset);
+    CreateEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT16, fileId, dataset);
 
-    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, codecMemoryType<uint16>());
+    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<uint16>());
     REQUIRE(codec.isEligible());
 
     // Chunk 1 is interior, so its nominal and clamped layouts are identical.
@@ -1012,8 +1012,8 @@ TEST_CASE("ParallelChunkCodec per-chunk compress + write primitives", "[Parallel
     REQUIRE(codec.writeCompressedChunk(targetChunk, compressed, &errorOut));
     REQUIRE(errorOut.empty());
 
-    const Extent bounds = getChunkBounds(targetChunk, tupleShape, chunkShape);
-    const std::vector<std::byte> readBack = serialReadChunkRegion(dataset, bounds, componentShape, elementSize, numComponents, H5T_NATIVE_UINT16);
+    const Extent bounds = GetChunkBounds(targetChunk, tupleShape, chunkShape);
+    const std::vector<std::byte> readBack = SerialReadChunkRegion(dataset, bounds, componentShape, elementSize, numComponents, H5T_NATIVE_UINT16);
     H5Dclose(dataset);
     H5Fclose(fileId);
 
@@ -1027,16 +1027,16 @@ TEST_CASE("ParallelChunkCodec per-chunk compress + write primitives", "[Parallel
     const std::vector<uint64> componentShape = {1};
     const std::vector<uint64> chunkShape = {4, 4};
     const usize elementSize = sizeof(uint16);
-    const usize nominalElements = product(chunkShape) * product(componentShape);
+    const usize nominalElements = Product(chunkShape) * Product(componentShape);
 
     std::vector<std::byte> nominalBytes(nominalElements * elementSize, std::byte{0});
 
-    const fs::path filePath = testFilePath("ParallelChunkCodec_primitives_fail.h5");
+    const fs::path filePath = TestFilePath("ParallelChunkCodec_primitives_fail.h5");
     hid_t fileId = H5I_INVALID_HID;
     hid_t dataset = H5I_INVALID_HID;
-    createEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT16, fileId, dataset);
+    CreateEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, chunkShape, H5T_NATIVE_UINT16, fileId, dataset);
 
-    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, codecMemoryType<uint16>());
+    ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, chunkShape, componentShape, elementSize, dataset, CodecMemoryType<uint16>());
     REQUIRE(codec.isEligible());
 
     std::string compressError;
@@ -1056,7 +1056,7 @@ TEST_CASE("ParallelChunkCodec per-chunk compress + write primitives", "[Parallel
 
 TEST_CASE("DatasetIO::readIntoSpan routes compressed chunked reads through the parallel codec", "[DatasetIO][ParallelChunkCodec]")
 {
-  using namespace nx::core::HDF5;
+  using namespace nx::core::hdf5;
 
   SECTION("eligible: DatasetIO write path (compression level > 0) round-trips through the codec branch")
   {
@@ -1071,7 +1071,7 @@ TEST_CASE("DatasetIO::readIntoSpan routes compressed chunked reads through the p
       source[i] = static_cast<uint32>(i * 2654435761u + 1013904223u);
     }
 
-    const fs::path filePath = testFilePath("DatasetIO_codec_uint32.h5");
+    const fs::path filePath = TestFilePath("DatasetIO_codec_uint32.h5");
     {
       auto fileWriter = FileIO::WriteFile(filePath);
       REQUIRE(fileWriter.isValid());
@@ -1107,7 +1107,7 @@ TEST_CASE("DatasetIO::readIntoSpan routes compressed chunked reads through the p
       source[i] = ((i * 7 + 1) % 3 == 0);
     }
 
-    const fs::path filePath = testFilePath("DatasetIO_codec_bool.h5");
+    const fs::path filePath = TestFilePath("DatasetIO_codec_bool.h5");
     {
       auto fileWriter = FileIO::WriteFile(filePath);
       REQUIRE(fileWriter.isValid());
@@ -1139,7 +1139,7 @@ TEST_CASE("DatasetIO::readIntoSpan routes compressed chunked reads through the p
     // chunks, last row/col clamped. Built with the raw HDF5 API so the chunk shape is exact.
     const std::vector<uint64> dims = {10, 7};
     const std::vector<uint64> chunkShape = {4, 4};
-    const usize numElements = product(dims);
+    const usize numElements = Product(dims);
     const usize elementSize = sizeof(uint16);
 
     std::vector<uint16> source(numElements);
@@ -1150,8 +1150,8 @@ TEST_CASE("DatasetIO::readIntoSpan routes compressed chunked reads through the p
     std::vector<std::byte> bytes(numElements * elementSize);
     std::memcpy(bytes.data(), source.data(), bytes.size());
 
-    const fs::path filePath = testFilePath("DatasetIO_codec_edge_uint16.h5");
-    createChunkedDeflateDataset(filePath, dims, {1}, chunkShape, H5T_NATIVE_UINT16, bytes);
+    const fs::path filePath = TestFilePath("DatasetIO_codec_edge_uint16.h5");
+    CreateChunkedDeflateDataset(filePath, dims, {1}, chunkShape, H5T_NATIVE_UINT16, bytes);
 
     auto fileReader = FileIO::ReadFile(filePath);
     REQUIRE(fileReader.isValid());
@@ -1168,7 +1168,7 @@ TEST_CASE("DatasetIO::readIntoSpan routes compressed chunked reads through the p
   {
     const std::vector<uint64> dims = {10, 7};
     const std::vector<uint64> chunkShape = {4, 4};
-    const usize numElements = product(dims);
+    const usize numElements = Product(dims);
     const usize elementSize = sizeof(uint16);
 
     std::vector<uint16> source(numElements);
@@ -1179,8 +1179,8 @@ TEST_CASE("DatasetIO::readIntoSpan routes compressed chunked reads through the p
     std::vector<std::byte> bytes(numElements * elementSize);
     std::memcpy(bytes.data(), source.data(), bytes.size());
 
-    const fs::path filePath = testFilePath("DatasetIO_serial_shuffle.h5");
-    createShuffleDeflateDataset(filePath, dims, chunkShape, H5T_NATIVE_UINT16, bytes);
+    const fs::path filePath = TestFilePath("DatasetIO_serial_shuffle.h5");
+    CreateShuffleDeflateDataset(filePath, dims, chunkShape, H5T_NATIVE_UINT16, bytes);
 
     auto fileReader = FileIO::ReadFile(filePath);
     REQUIRE(fileReader.isValid());
@@ -1198,7 +1198,7 @@ TEST_CASE("DatasetIO::readIntoSpan routes compressed chunked reads through the p
   SECTION("ineligible: contiguous (unchunked) dataset reads correctly via the serial fallback")
   {
     const std::vector<uint64> dims = {10, 7};
-    const usize numElements = product(dims);
+    const usize numElements = Product(dims);
     const usize elementSize = sizeof(float32);
 
     std::vector<float32> source(numElements);
@@ -1209,8 +1209,8 @@ TEST_CASE("DatasetIO::readIntoSpan routes compressed chunked reads through the p
     std::vector<std::byte> bytes(numElements * elementSize);
     std::memcpy(bytes.data(), source.data(), bytes.size());
 
-    const fs::path filePath = testFilePath("DatasetIO_serial_contiguous.h5");
-    createContiguousDataset(filePath, dims, H5T_NATIVE_FLOAT, bytes);
+    const fs::path filePath = TestFilePath("DatasetIO_serial_contiguous.h5");
+    CreateContiguousDataset(filePath, dims, H5T_NATIVE_FLOAT, bytes);
 
     auto fileReader = FileIO::ReadFile(filePath);
     REQUIRE(fileReader.isValid());
@@ -1227,10 +1227,10 @@ TEST_CASE("DatasetIO::readIntoSpan routes compressed chunked reads through the p
 
 TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the parallel codec", "[DatasetIO][ParallelChunkCodec]")
 {
-  using namespace nx::core::HDF5;
+  using namespace nx::core::hdf5;
 
   // The writer regime the in-core write path uses to pick the on-disk chunk shape.
-  const ChunkShapeOptions k_WriterRegime{k_TargetChunkBytes, ChunkShapeRegime::BundleOuterSlabs};
+  const ChunkShapeOptions kWriterRegime{.target_bytes = k_TargetChunkBytes, .regime = ChunkShapeRegime::BundleOuterSlabs};
 
   SECTION("eligible: single-chunk compressed write (level > 0) round-trips and writes the policy chunk shape")
   {
@@ -1246,7 +1246,7 @@ TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the par
       source[i] = static_cast<uint32>(i * 2654435761u + 1013904223u);
     }
 
-    const fs::path filePath = testFilePath("DatasetIO_write_codec_uint32.h5");
+    const fs::path filePath = TestFilePath("DatasetIO_write_codec_uint32.h5");
     {
       auto fileWriter = FileIO::WriteFile(filePath);
       REQUIRE(fileWriter.isValid());
@@ -1264,7 +1264,7 @@ TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the par
     // This proves that the write used chunked deflate rather than contiguous fallback.
     const std::vector<usize> onDiskChunk = dataset.getChunkDimensions();
     REQUIRE_FALSE(onDiskChunk.empty());
-    const ShapeType expectedChunk = computeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(uint32), k_WriterRegime);
+    const ShapeType expectedChunk = ComputeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(uint32), kWriterRegime);
     REQUIRE(ShapeType(onDiskChunk.begin(), onDiskChunk.end()) == expectedChunk);
 
     std::vector<uint32> readBack(numElements, 0u);
@@ -1288,7 +1288,7 @@ TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the par
       source[i] = static_cast<uint32>(i);
     }
 
-    const fs::path filePath = testFilePath("DatasetIO_write_codec_multichunk_uint32.h5");
+    const fs::path filePath = TestFilePath("DatasetIO_write_codec_multichunk_uint32.h5");
     {
       auto fileWriter = FileIO::WriteFile(filePath);
       REQUIRE(fileWriter.isValid());
@@ -1304,14 +1304,14 @@ TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the par
 
     const std::vector<usize> onDiskChunk = dataset.getChunkDimensions();
     REQUIRE_FALSE(onDiskChunk.empty());
-    const ShapeType expectedChunk = computeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(uint32), k_WriterRegime);
+    const ShapeType expectedChunk = ComputeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(uint32), kWriterRegime);
     REQUIRE(ShapeType(onDiskChunk.begin(), onDiskChunk.end()) == expectedChunk);
 
     // Require multiple chunks and a non-divisible outer extent.
     // These checks keep this test on the parallel edge-chunk path.
     const std::vector<uint64> chunkU64(onDiskChunk.begin(), onDiskChunk.end());
     const std::vector<uint64> dimsU64(dims.begin(), dims.end());
-    REQUIRE(getNumberOfChunks(dimsU64, chunkU64) > 1);
+    REQUIRE(GetNumberOfChunks(dimsU64, chunkU64) > 1);
     REQUIRE(dimsU64[0] % chunkU64[0] != 0); // edge chunk exists along the banded outer dimension
 
     std::vector<uint32> readBack(numElements, 0u);
@@ -1337,7 +1337,7 @@ TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the par
       source[i] = static_cast<float32>(i) * 0.125f - 7.0f;
     }
 
-    const fs::path filePath = testFilePath("DatasetIO_write_codec_multicomp_float.h5");
+    const fs::path filePath = TestFilePath("DatasetIO_write_codec_multicomp_float.h5");
     {
       auto fileWriter = FileIO::WriteFile(filePath);
       REQUIRE(fileWriter.isValid());
@@ -1353,12 +1353,12 @@ TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the par
 
     const std::vector<usize> onDiskChunk = dataset.getChunkDimensions();
     REQUIRE_FALSE(onDiskChunk.empty());
-    const ShapeType expectedChunk = computeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(float32), k_WriterRegime);
+    const ShapeType expectedChunk = ComputeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(float32), kWriterRegime);
     REQUIRE(ShapeType(onDiskChunk.begin(), onDiskChunk.end()) == expectedChunk);
 
     const std::vector<uint64> chunkU64(onDiskChunk.begin(), onDiskChunk.end());
     const std::vector<uint64> dimsU64(dims.begin(), dims.end());
-    REQUIRE(getNumberOfChunks(dimsU64, chunkU64) > 1);
+    REQUIRE(GetNumberOfChunks(dimsU64, chunkU64) > 1);
     REQUIRE(dimsU64[0] % chunkU64[0] != 0); // edge chunk exists along the banded outer dimension
 
     std::vector<float32> readBack(numElements, 0.0f);
@@ -1380,7 +1380,7 @@ TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the par
       source[i] = ((i * 7 + 1) % 3 == 0);
     }
 
-    const fs::path filePath = testFilePath("DatasetIO_write_codec_bool.h5");
+    const fs::path filePath = TestFilePath("DatasetIO_write_codec_bool.h5");
     {
       auto fileWriter = FileIO::WriteFile(filePath);
       REQUIRE(fileWriter.isValid());
@@ -1397,7 +1397,7 @@ TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the par
     // bool is stored as H5_BOOL_TYPE on disk; the policy shape uses that element size.
     const std::vector<usize> onDiskChunk = dataset.getChunkDimensions();
     REQUIRE_FALSE(onDiskChunk.empty());
-    const ShapeType expectedChunk = computeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(H5_BOOL_TYPE), k_WriterRegime);
+    const ShapeType expectedChunk = ComputeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(H5_BOOL_TYPE), kWriterRegime);
     REQUIRE(ShapeType(onDiskChunk.begin(), onDiskChunk.end()) == expectedChunk);
 
     auto readBack = std::make_unique<bool[]>(numElements);
@@ -1424,7 +1424,7 @@ TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the par
       source[i] = static_cast<uint32>(i * 40503u + 7u);
     }
 
-    const fs::path filePath = testFilePath("DatasetIO_write_serial_uncompressed.h5");
+    const fs::path filePath = TestFilePath("DatasetIO_write_serial_uncompressed.h5");
     {
       auto fileWriter = FileIO::WriteFile(filePath);
       REQUIRE(fileWriter.isValid());
@@ -1460,7 +1460,7 @@ TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the par
       source[i] = static_cast<float32>(i) * 0.5f - 2.0f;
     }
 
-    const fs::path filePath = testFilePath("DatasetIO_write_serial_small.h5");
+    const fs::path filePath = TestFilePath("DatasetIO_write_serial_small.h5");
     {
       auto fileWriter = FileIO::WriteFile(filePath);
       REQUIRE(fileWriter.isValid());
@@ -1488,12 +1488,12 @@ TEST_CASE("DatasetIO::writeSpan routes compressed chunked writes through the par
 // The leading-dot tag excludes the benchmark from normal CTest runs.
 TEST_CASE("DatasetIO::writeSpan in-core write benchmark: codec vs serial", "[.][benchmark]")
 {
-  using namespace nx::core::HDF5;
-  using Clock = std::chrono::steady_clock;
+  using namespace nx::core::hdf5;
+  using ClockType = std::chrono::steady_clock;
 
   // Match the regime the in-core write path uses to choose the on-disk chunk shape.
-  const ChunkShapeOptions k_WriterRegime{k_TargetChunkBytes, ChunkShapeRegime::BundleOuterSlabs};
-  const int k_DeflateLevel = 5;
+  const ChunkShapeOptions kWriterRegime{.target_bytes = k_TargetChunkBytes, .regime = ChunkShapeRegime::BundleOuterSlabs};
+  const int kDeflateLevel = 5;
 
   WARN("ParallelChunkCodec write benchmark — hardware_concurrency = " << std::thread::hardware_concurrency());
 
@@ -1505,9 +1505,9 @@ TEST_CASE("DatasetIO::writeSpan in-core write benchmark: codec vs serial", "[.][
     const char* label;
   };
   const std::vector<Case> cases = {
-      {{4096, 1024}, "~4.2M float32 (16 MiB)"},
-      {{4096, 4096}, "~16.8M float32 (64 MiB)"},
-      {{8192, 8192}, "~67.1M float32 (256 MiB)"},
+      {.dims = {4096, 1024}, .label = "~4.2M float32 (16 MiB)"},
+      {.dims = {4096, 4096}, .label = "~16.8M float32 (64 MiB)"},
+      {.dims = {8192, 8192}, .label = "~67.1M float32 (256 MiB)"},
   };
 
   for(const Case& testCase : cases)
@@ -1537,13 +1537,13 @@ TEST_CASE("DatasetIO::writeSpan in-core write benchmark: codec vs serial", "[.][
     const usize sourceBytes = numElements * sizeof(float32);
 
     // The on-disk chunk shape both paths use (exactly what writeSpan would pick for these dims).
-    const ShapeType chunkShape = computeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(float32), k_WriterRegime);
+    const ShapeType chunkShape = ComputeChunkShape(ShapeType(dims.begin(), dims.end()), /*numComponents=*/1, sizeof(float32), kWriterRegime);
     const std::vector<uint64> dimsU64(dims.begin(), dims.end());
     const std::vector<uint64> chunkU64(chunkShape.begin(), chunkShape.end());
-    const uint64 numChunks = getNumberOfChunks(dimsU64, chunkU64);
+    const uint64 numChunks = GetNumberOfChunks(dimsU64, chunkU64);
 
     // -------- Serial baseline: one H5Dwrite into a chunked+deflate dataset of that chunk shape ----
-    const fs::path serialPath = testFilePath("bench_write_serial.h5");
+    const fs::path serialPath = TestFilePath("bench_write_serial.h5");
     double serialMs = 0.0;
     {
       std::vector<hsize_t> hDims(dimsU64.begin(), dimsU64.end());
@@ -1553,13 +1553,13 @@ TEST_CASE("DatasetIO::writeSpan in-core write benchmark: codec vs serial", "[.][
       const hid_t space = H5Screate_simple(static_cast<int>(hDims.size()), hDims.data(), nullptr);
       const hid_t dcpl = H5Pcreate(H5P_DATASET_CREATE);
       REQUIRE(H5Pset_chunk(dcpl, static_cast<int>(hChunk.size()), hChunk.data()) >= 0);
-      REQUIRE(H5Pset_deflate(dcpl, static_cast<unsigned int>(k_DeflateLevel)) >= 0);
+      REQUIRE(H5Pset_deflate(dcpl, static_cast<unsigned int>(kDeflateLevel)) >= 0);
       const hid_t dataset = H5Dcreate(fileId, k_DatasetName.c_str(), H5T_NATIVE_FLOAT, space, H5P_DEFAULT, dcpl, H5P_DEFAULT);
       REQUIRE(dataset >= 0);
 
-      const auto t0 = Clock::now();
+      const auto t0 = ClockType::now();
       REQUIRE(H5Dwrite(dataset, H5T_NATIVE_FLOAT, H5S_ALL, H5S_ALL, H5P_DEFAULT, source.data()) >= 0);
-      const auto t1 = Clock::now();
+      const auto t1 = ClockType::now();
       serialMs = std::chrono::duration<double, std::milli>(t1 - t0).count();
 
       H5Dclose(dataset);
@@ -1569,17 +1569,17 @@ TEST_CASE("DatasetIO::writeSpan in-core write benchmark: codec vs serial", "[.][
     }
 
     // -------- Codec path: DatasetIO::writeSpan at level 5 (production routes through the codec) ----
-    const fs::path codecPath = testFilePath("bench_write_codec.h5");
+    const fs::path codecPath = TestFilePath("bench_write_codec.h5");
     double codecMs = 0.0;
     {
       auto fileWriter = FileIO::WriteFile(codecPath);
       REQUIRE(fileWriter.isValid());
       DatasetIO dataset = fileWriter.createDataset(k_DatasetName);
-      dataset.setCompressionLevel(k_DeflateLevel);
+      dataset.setCompressionLevel(kDeflateLevel);
 
-      const auto t0 = Clock::now();
+      const auto t0 = ClockType::now();
       const Result<> writeResult = dataset.writeSpan<float32>(dims, nonstd::span<const float32>(source.data(), source.size()));
-      const auto t1 = Clock::now();
+      const auto t1 = ClockType::now();
       codecMs = std::chrono::duration<double, std::milli>(t1 - t0).count();
       REQUIRE(writeResult.valid());
     }
@@ -1599,16 +1599,16 @@ TEST_CASE("DatasetIO::writeSpan in-core write benchmark: codec vs serial", "[.][
 
       // Byte-identical read-back of the codec-written file through the normal serial read API.
       std::vector<float32> readBack(numElements, 0.0f);
-      const auto t0 = Clock::now();
+      const auto t0 = ClockType::now();
       const Result<> readResult = dataset.readIntoSpan<float32>(nonstd::span<float32>(readBack.data(), readBack.size()));
-      const auto t1 = Clock::now();
+      const auto t1 = ClockType::now();
       codecReadMs = std::chrono::duration<double, std::milli>(t1 - t0).count();
       REQUIRE(readResult.valid());
       REQUIRE(std::memcmp(readBack.data(), source.data(), sourceBytes) == 0);
     }
 
     // -------- Contiguous path: compression level 0 must bypass the codec entirely -----------------
-    const fs::path contiguousPath = testFilePath("bench_write_contiguous.h5");
+    const fs::path contiguousPath = TestFilePath("bench_write_contiguous.h5");
     double contiguousWriteMs = 0.0;
     {
       auto fileWriter = FileIO::WriteFile(contiguousPath);
@@ -1616,9 +1616,9 @@ TEST_CASE("DatasetIO::writeSpan in-core write benchmark: codec vs serial", "[.][
       DatasetIO dataset = fileWriter.createDataset(k_DatasetName);
       dataset.setCompressionLevel(0);
 
-      const auto t0 = Clock::now();
+      const auto t0 = ClockType::now();
       const Result<> writeResult = dataset.writeSpan<float32>(dims, nonstd::span<const float32>(source.data(), source.size()));
-      const auto t1 = Clock::now();
+      const auto t1 = ClockType::now();
       contiguousWriteMs = std::chrono::duration<double, std::milli>(t1 - t0).count();
       REQUIRE(writeResult.valid());
     }
@@ -1631,9 +1631,9 @@ TEST_CASE("DatasetIO::writeSpan in-core write benchmark: codec vs serial", "[.][
       REQUIRE(dataset.getChunkDimensions().empty());
 
       std::vector<float32> readBack(numElements, 0.0f);
-      const auto t0 = Clock::now();
+      const auto t0 = ClockType::now();
       const Result<> readResult = dataset.readIntoSpan<float32>(nonstd::span<float32>(readBack.data(), readBack.size()));
-      const auto t1 = Clock::now();
+      const auto t1 = ClockType::now();
       contiguousReadMs = std::chrono::duration<double, std::milli>(t1 - t0).count();
       REQUIRE(readResult.valid());
       REQUIRE(std::memcmp(readBack.data(), source.data(), sourceBytes) == 0);
@@ -1660,7 +1660,7 @@ TEST_CASE("ParallelChunkCodec: ParallelLoadChunks fills every slot", "[ParallelL
 
   ParallelLoadChunks<uint64>(
       nonstd::span<const uint64>(chunkIndices.data(), chunkIndices.size()), [](uint64 chunkIndex) -> uint64 { return chunkIndex * 10; },
-      [&results](usize localIndex, uint64&& value) { results[localIndex] = std::move(value); });
+      [&results](usize localIndex, uint64&& value) { results[localIndex] = value; });
 
   REQUIRE(results == std::vector<uint64>{0, 10, 20, 30, 40});
 }
@@ -1715,7 +1715,7 @@ TEST_CASE("ParallelChunkCodec: ParallelLoadChunks skips unallocated chunks", "[P
         }
         return chunkIndex * 10;
       },
-      [&results](usize localIndex, uint64&& value) { results[localIndex] = std::move(value); });
+      [&results](usize localIndex, uint64&& value) { results[localIndex] = value; });
 
   // Slot 2 is skipped (sink never called); every other slot is filled.
   REQUIRE(results == std::vector<uint64>{0, 10, k_Untouched, 30, 40});
@@ -1736,7 +1736,7 @@ TEST_CASE("ParallelChunkCodec: ParallelLoadChunks rethrows a non-skip error", "[
                           }
                           return chunkIndex * 10;
                         },
-                        [&results](usize localIndex, uint64&& value) { results[localIndex] = std::move(value); }),
+                        [&results](usize localIndex, uint64&& value) { results[localIndex] = value; }),
                     std::runtime_error);
 }
 
@@ -1751,7 +1751,7 @@ namespace
 struct H8NativeHandle
 {
   hid_t id = H5I_INVALID_HID;
-  herr_t (*close)(hid_t);
+  herr_t (*close)(hid_t){};
 
   /** @brief Closes a valid owned ID after all enclosing native guards have ended. */
   ~H8NativeHandle()
@@ -1791,11 +1791,11 @@ template <typename FileT>
 void H8CreateDataset(const fs::path& path, bool oppositeOrder)
 {
   const auto values = H8Values<FileT>();
-  H8NativeHandle file{H5I_INVALID_HID, H5Fclose};
-  H8NativeHandle type{H5I_INVALID_HID, H5Tclose};
-  H8NativeHandle space{H5I_INVALID_HID, H5Sclose};
-  H8NativeHandle property{H5I_INVALID_HID, H5Pclose};
-  H8NativeHandle dataset{H5I_INVALID_HID, H5Dclose};
+  H8NativeHandle file{.id = H5I_INVALID_HID, .close = H5Fclose};
+  H8NativeHandle type{.id = H5I_INVALID_HID, .close = H5Tclose};
+  H8NativeHandle space{.id = H5I_INVALID_HID, .close = H5Sclose};
+  H8NativeHandle property{.id = H5I_INVALID_HID, .close = H5Pclose};
+  H8NativeHandle dataset{.id = H5I_INVALID_HID, .close = H5Dclose};
   std::lock_guard lock(Support::ApiLock());
   const hid_t nativeType = Support::HdfTypeForPrimitive<FileT>();
   type.id = H5Tcopy(nativeType);
@@ -1833,11 +1833,11 @@ void H8CreateDataset(const fs::path& path, bool oppositeOrder)
 template <typename MemoryT, typename FileT>
 std::vector<MemoryT> H8ReadNative(const fs::path& path, bool oppositeOrder)
 {
-  H8NativeHandle file{H5I_INVALID_HID, H5Fclose};
-  H8NativeHandle dataset{H5I_INVALID_HID, H5Dclose};
-  H8NativeHandle type{H5I_INVALID_HID, H5Tclose};
-  H8NativeHandle expectedType{H5I_INVALID_HID, H5Tclose};
-  H8NativeHandle space{H5I_INVALID_HID, H5Sclose};
+  H8NativeHandle file{.id = H5I_INVALID_HID, .close = H5Fclose};
+  H8NativeHandle dataset{.id = H5I_INVALID_HID, .close = H5Dclose};
+  H8NativeHandle type{.id = H5I_INVALID_HID, .close = H5Tclose};
+  H8NativeHandle expectedType{.id = H5I_INVALID_HID, .close = H5Tclose};
+  H8NativeHandle space{.id = H5I_INVALID_HID, .close = H5Sclose};
   std::lock_guard lock(Support::ApiLock());
   file.id = H5Fopen(path.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
   REQUIRE(file.id >= 0);
@@ -1865,49 +1865,49 @@ std::vector<MemoryT> H8ReadNative(const fs::path& path, bool oppositeOrder)
 
 TEMPLATE_TEST_CASE("H8 DatasetIO full-span reads convert scalar values", "[H8][DatasetIO][ParallelChunkCodec]", int32, float32)
 {
-  using FileT = TestType;
-  using MemoryT = std::conditional_t<std::is_same_v<FileT, int32>, float32, int32>;
-  const auto path = testFilePath("H8_full_span_read.h5");
-  H8CreateDataset<FileT>(path, false);
-  const auto expected = H8Values<MemoryT>();
-  CHECK((H8ReadNative<MemoryT, FileT>(path, false) == expected));
+  using FileTType = TestType;
+  using MemoryTType = std::conditional_t<std::is_same_v<FileTType, int32>, float32, int32>;
+  const auto path = TestFilePath("H8_full_span_read.h5");
+  H8CreateDataset<FileTType>(path, false);
+  const auto expected = H8Values<MemoryTType>();
+  CHECK((H8ReadNative<MemoryTType, FileTType>(path, false) == expected));
   auto file = FileIO::ReadFile(path);
   REQUIRE(file.isValid());
   auto dataset = file.openDataset("data");
   REQUIRE(dataset.getChunkDimensions() == std::vector<usize>{3, 2});
-  std::vector<MemoryT> hyperslab(35, MemoryT{-99});
-  REQUIRE(dataset.readIntoSpan<MemoryT>(nonstd::span<MemoryT>(hyperslab.data(), hyperslab.size()), std::vector<uint64>{0, 0}, std::vector<uint64>{7, 5}).valid());
+  std::vector<MemoryTType> hyperslab(35, MemoryTType{-99});
+  REQUIRE(dataset.readIntoSpan<MemoryTType>(nonstd::span<MemoryTType>(hyperslab.data(), hyperslab.size()), std::vector<uint64>{0, 0}, std::vector<uint64>{7, 5}).valid());
   CHECK(hyperslab == expected);
-  std::vector<MemoryT> full(35, MemoryT{-99});
-  REQUIRE(dataset.readIntoSpan<MemoryT>(nonstd::span<MemoryT>(full.data(), full.size())).valid());
+  std::vector<MemoryTType> full(35, MemoryTType{-99});
+  REQUIRE(dataset.readIntoSpan<MemoryTType>(nonstd::span<MemoryTType>(full.data(), full.size())).valid());
   CHECK(full == expected);
   CHECK(full == hyperslab);
 }
 
 TEMPLATE_TEST_CASE("H8 DatasetIO full-span writes convert into the existing file type", "[H8][DatasetIO][ParallelChunkCodec]", int32, float32)
 {
-  using FileT = TestType;
-  using MemoryT = std::conditional_t<std::is_same_v<FileT, int32>, float32, int32>;
-  const auto path = testFilePath("H8_full_span_write.h5");
-  H8CreateDataset<FileT>(path, false);
-  auto values = H8Values<MemoryT>();
+  using FileTType = TestType;
+  using MemoryTType = std::conditional_t<std::is_same_v<FileTType, int32>, float32, int32>;
+  const auto path = TestFilePath("H8_full_span_write.h5");
+  H8CreateDataset<FileTType>(path, false);
+  auto values = H8Values<MemoryTType>();
   for(auto& value : values)
   {
-    value += MemoryT{2};
+    value += MemoryTType{2};
   }
   {
     auto file = FileIO::AppendFile(path);
     REQUIRE(file.isValid());
     auto dataset = file.openDataset("data");
     REQUIRE(dataset.getChunkDimensions() == std::vector<usize>{3, 2});
-    REQUIRE(dataset.writeSpan<MemoryT>({7, 5}, nonstd::span<const MemoryT>(values.data(), values.size())).valid());
+    REQUIRE(dataset.writeSpan<MemoryTType>({7, 5}, nonstd::span<const MemoryTType>(values.data(), values.size())).valid());
   }
-  CHECK((H8ReadNative<MemoryT, FileT>(path, false) == values));
+  CHECK((H8ReadNative<MemoryTType, FileTType>(path, false) == values));
 }
 
 TEMPLATE_TEST_CASE("H8 DatasetIO opposite-endian full spans preserve numeric values", "[H8][DatasetIO][ParallelChunkCodec]", int32, float32)
 {
-  const auto path = testFilePath("H8_opposite_endian.h5");
+  const auto path = TestFilePath("H8_opposite_endian.h5");
   H8CreateDataset<TestType>(path, true);
   auto expected = H8Values<TestType>();
   {
@@ -1915,7 +1915,7 @@ TEMPLATE_TEST_CASE("H8 DatasetIO opposite-endian full spans preserve numeric val
     REQUIRE(file.isValid());
     auto dataset = file.openDataset("data");
     const hid_t id = dataset.getId();
-    ParallelChunkCodec codec(path, "/data", {7, 5}, {3, 2}, {}, sizeof(TestType), id, codecMemoryType<TestType>());
+    ParallelChunkCodec codec(path, "/data", {7, 5}, {3, 2}, {}, sizeof(TestType), id, CodecMemoryType<TestType>());
     REQUIRE_FALSE(codec.isEligible());
     std::vector<TestType> values(35, TestType{-99});
     REQUIRE(dataset.readIntoSpan<TestType>(nonstd::span<TestType>(values.data(), values.size())).valid());
@@ -1931,7 +1931,7 @@ TEMPLATE_TEST_CASE("H8 DatasetIO opposite-endian full spans preserve numeric val
 
 TEMPLATE_TEST_CASE("H8 exact native codecs preserve raw scalar bytes", "[H8][ParallelChunkCodec]", int32, float32)
 {
-  const auto path = testFilePath("H8_exact_raw.h5");
+  const auto path = TestFilePath("H8_exact_raw.h5");
   H8CreateDataset<TestType>(path, false);
   auto expected = H8Values<TestType>();
   {
@@ -1939,7 +1939,7 @@ TEMPLATE_TEST_CASE("H8 exact native codecs preserve raw scalar bytes", "[H8][Par
     REQUIRE(file.isValid());
     auto dataset = file.openDataset("data");
     const hid_t id = dataset.getId();
-    ParallelChunkCodec codec(path, "/data", {7, 5}, {3, 2}, {}, sizeof(TestType), id, codecMemoryType<TestType>());
+    ParallelChunkCodec codec(path, "/data", {7, 5}, {3, 2}, {}, sizeof(TestType), id, CodecMemoryType<TestType>());
     REQUIRE(codec.isEligible());
     std::vector<uint64> chunks(9);
     std::iota(chunks.begin(), chunks.end(), uint64{0});
@@ -1968,15 +1968,15 @@ namespace
 template <typename FileT, typename MemoryT>
 void H8RequireRejectedRepresentation()
 {
-  const auto path = testFilePath("H8_rejected_representation.h5");
+  const auto path = TestFilePath("H8_rejected_representation.h5");
   H8CreateDataset<FileT>(path, false);
   auto file = FileIO::ReadFile(path);
   REQUIRE(file.isValid());
   auto dataset = file.openDataset("data");
   const hid_t datasetId = dataset.getId();
-  const hid_t memoryType = codecMemoryType<MemoryT>();
+  const hid_t memoryType = CodecMemoryType<MemoryT>();
   int32 level = -1;
-  CHECK_FALSE(probeSingleDeflateEligibility(datasetId, sizeof(MemoryT), memoryType, &level));
+  CHECK_FALSE(ProbeSingleDeflateEligibility(datasetId, sizeof(MemoryT), memoryType, &level));
   CHECK(level == 5);
   ParallelChunkCodec codec(path, "/data", {7, 5}, {3, 2}, {}, sizeof(MemoryT), datasetId, memoryType);
   CHECK_FALSE(codec.isEligible());
@@ -2022,13 +2022,13 @@ TEST_CASE("H8 codecs reject scalar class signedness and width mismatches", "[H8]
 TEST_CASE("H8 codecs reject inconsistent memory size and invalid memory IDs", "[H8][ParallelChunkCodec]")
 {
   const usize elementSize = GENERATE(usize{1}, usize{2}, usize{8});
-  const auto path = testFilePath("H8_memory_size.h5");
+  const auto path = TestFilePath("H8_memory_size.h5");
   H8CreateDataset<int32>(path, false);
   auto file = FileIO::ReadFile(path);
   REQUIRE(file.isValid());
   auto dataset = file.openDataset("data");
   const hid_t datasetId = dataset.getId();
-  ParallelChunkCodec wrongSize(path, "/data", {7, 5}, {3, 2}, {}, elementSize, datasetId, codecMemoryType<int32>());
+  ParallelChunkCodec wrongSize(path, "/data", {7, 5}, {3, 2}, {}, elementSize, datasetId, CodecMemoryType<int32>());
   CHECK_FALSE(wrongSize.isEligible());
   ParallelChunkCodec invalidType(path, "/data", {7, 5}, {3, 2}, {}, sizeof(int32), datasetId, H5I_INVALID_HID);
   CHECK_FALSE(invalidType.isEligible());
@@ -2036,22 +2036,22 @@ TEST_CASE("H8 codecs reject inconsistent memory size and invalid memory IDs", "[
   const Extent extent({0, 0}, {0, 0});
   const auto wrongBounded = wrongSize.readExtentIntoBufferBounded(extent, destination, 65536);
   REQUIRE(wrongBounded.invalid());
-  REQUIRE(wrongBounded.errors().front().code == BoundedRead::InvalidExtent);
+  REQUIRE(wrongBounded.errors().front().code == bounded_read::InvalidExtent);
   const auto invalidBounded = invalidType.readExtentIntoBufferBounded(extent, destination, 65536);
   REQUIRE(invalidBounded.invalid());
-  REQUIRE(invalidBounded.errors().front().code == BoundedRead::MetadataFailure);
+  REQUIRE(invalidBounded.errors().front().code == bounded_read::MetadataFailure);
 }
 
 TEST_CASE("H8 codecs reject reduced precision and same-size structured file types", "[H8][ParallelChunkCodec]")
 {
   const int kind = GENERATE(0, 1, 2);
   INFO("file representation kind=" << kind);
-  const auto path = testFilePath("H8_structured_type.h5");
-  H8NativeHandle file{H5I_INVALID_HID, H5Fclose};
-  H8NativeHandle fileType{H5I_INVALID_HID, H5Tclose};
-  H8NativeHandle space{H5I_INVALID_HID, H5Sclose};
-  H8NativeHandle property{H5I_INVALID_HID, H5Pclose};
-  H8NativeHandle dataset{H5I_INVALID_HID, H5Dclose};
+  const auto path = TestFilePath("H8_structured_type.h5");
+  H8NativeHandle file{.id = H5I_INVALID_HID, .close = H5Fclose};
+  H8NativeHandle fileType{.id = H5I_INVALID_HID, .close = H5Tclose};
+  H8NativeHandle space{.id = H5I_INVALID_HID, .close = H5Sclose};
+  H8NativeHandle property{.id = H5I_INVALID_HID, .close = H5Pclose};
+  H8NativeHandle dataset{.id = H5I_INVALID_HID, .close = H5Dclose};
   hid_t memoryType = H5I_INVALID_HID;
   {
     std::lock_guard lock(Support::ApiLock());
@@ -2114,10 +2114,10 @@ TEST_CASE("ParallelChunkCodec preserves legacy stream acceptance", "[ParallelChu
   const std::vector<uint64> tupleShape{64};
   const std::vector<uint64> componentShape{1};
   const std::vector<std::byte> expected(64, std::byte{37});
-  const auto filePath = testFilePath("ParallelChunkCodec_legacy_stream_acceptance.h5");
+  const auto filePath = TestFilePath("ParallelChunkCodec_legacy_stream_acceptance.h5");
   hid_t fileId = H5I_INVALID_HID;
   hid_t datasetId = H5I_INVALID_HID;
-  createEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, tupleShape, H5T_NATIVE_UINT8, fileId, datasetId, 1);
+  CreateEmptyChunkedDeflateDataset(filePath, tupleShape, componentShape, tupleShape, H5T_NATIVE_UINT8, fileId, datasetId, 1);
   auto fileGuard = MakeScopeGuard([&]() noexcept { H5Fclose(fileId); });
   auto datasetGuard = MakeScopeGuard([&]() noexcept { H5Dclose(datasetId); });
 
@@ -2142,7 +2142,7 @@ TEST_CASE("ParallelChunkCodec preserves legacy stream acceptance", "[ParallelChu
   REQUIRE(H5Dwrite_chunk(datasetId, H5P_DEFAULT, 0, offset.data(), payload.size(), payload.data()) >= 0);
   REQUIRE(H5Fflush(fileId, H5F_SCOPE_LOCAL) >= 0);
 
-  ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, tupleShape, componentShape, sizeof(uint8), datasetId, codecMemoryType<uint8>());
+  ParallelChunkCodec codec(filePath, k_DatasetName, tupleShape, tupleShape, componentShape, sizeof(uint8), datasetId, CodecMemoryType<uint8>());
   REQUIRE(codec.isEligible());
   std::vector<std::byte> boundedOutput(expected.size(), std::byte{0});
   const auto bounded = codec.readExtentIntoBufferBounded(Extent({0, 0}, {63, 0}), boundedOutput, 256 * 1024);
@@ -2155,7 +2155,7 @@ TEST_CASE("ParallelChunkCodec preserves legacy stream acceptance", "[ParallelChu
   else
   {
     REQUIRE(bounded.invalid());
-    REQUIRE(bounded.errors().front().code == BoundedRead::DecodeFailure);
+    REQUIRE(bounded.errors().front().code == bounded_read::DecodeFailure);
   }
   // The ordinary decoder retains its former trailing-byte acceptance.
   if(streamCase == StreamCase::Complete || streamCase == StreamCase::Trailing)
@@ -2178,35 +2178,35 @@ TEST_CASE("ParallelChunkCodec observes nominal edge and returned payload lifetim
   {
     expected[index] = static_cast<std::byte>(index);
   }
-  const auto path = testFilePath("ParallelChunkCodec_ownership.h5");
-  createChunkedDeflateDataset(path, tuples, components, chunks, H5T_NATIVE_UINT8, expected);
+  const auto path = TestFilePath("ParallelChunkCodec_ownership.h5");
+  CreateChunkedDeflateDataset(path, tuples, components, chunks, H5T_NATIVE_UINT8, expected);
   const hid_t file = H5Fopen(path.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
   REQUIRE(file >= 0);
   auto fileGuard = MakeScopeGuard([&]() noexcept { H5Fclose(file); });
   const hid_t dataset = H5Dopen2(file, k_DatasetName.c_str(), H5P_DEFAULT);
   REQUIRE(dataset >= 0);
   auto datasetGuard = MakeScopeGuard([&]() noexcept { H5Dclose(dataset); });
-  ParallelChunkCodec codec(path, k_DatasetName, tuples, chunks, components, 1, dataset, codecMemoryType<uint8>());
+  ParallelChunkCodec codec(path, k_DatasetName, tuples, chunks, components, 1, dataset, CodecMemoryType<uint8>());
   REQUIRE(codec.isEligible());
   CodecOwnershipCountersForTesting counters;
   const auto before = GetCodecOwnershipStateForTesting();
-  REQUIRE(before.outstandingBuffers == 0);
-  REQUIRE(before.activeTasks == 0);
-  const auto previous = SetCodecIoObserverForTesting({&counters, &CodecOwnershipCountersForTesting::Observe});
+  REQUIRE(before.outstanding_buffers == 0);
+  REQUIRE(before.active_tasks == 0);
+  const auto previous = SetCodecIoObserverForTesting({.context = &counters, .callback = &CodecOwnershipCountersForTesting::Observe});
   auto observerGuard = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const std::array<uint64, 4> selected{0, 1, 2, 3};
   std::vector<std::byte> result(expected.size());
   codec.inflateChunksIntoSpan(result, selected);
   REQUIRE(result == expected);
   const auto after = GetCodecOwnershipStateForTesting();
-  CHECK(after.outstandingBuffers == 0);
-  CHECK(after.activeTasks == 0);
-  CHECK(after.integrityFailures == before.integrityFailures);
-  CHECK(after.unobservedReturns == before.unobservedReturns);
-  CHECK(counters.nominalAcquired.load() == 4);
-  CHECK(counters.edgeAcquired.load() == 3);
+  CHECK(after.outstanding_buffers == 0);
+  CHECK(after.active_tasks == 0);
+  CHECK(after.integrity_failures == before.integrity_failures);
+  CHECK(after.unobserved_returns == before.unobserved_returns);
+  CHECK(counters.nominal_acquired.load() == 4);
+  CHECK(counters.edge_acquired.load() == 3);
   CHECK(counters.live.load() == 0);
-  CHECK_FALSE(counters.invalidRelease.load());
+  CHECK_FALSE(counters.invalid_release.load());
   CHECK(counters.peak.load() >= 18);
 }
 
@@ -2215,24 +2215,24 @@ TEST_CASE("ParallelChunkCodec observation refuses active replacement", "[Paralle
   CodecOwnershipCountersForTesting original;
   CodecOwnershipCountersForTesting replacement;
   const auto before = GetCodecOwnershipStateForTesting();
-  REQUIRE(before.outstandingBuffers == 0);
-  REQUIRE(before.activeTasks == 0);
-  const auto previous = SetCodecIoObserverForTesting({&original, &CodecOwnershipCountersForTesting::Observe});
+  REQUIRE(before.outstanding_buffers == 0);
+  REQUIRE(before.active_tasks == 0);
+  const auto previous = SetCodecIoObserverForTesting({.context = &original, .callback = &CodecOwnershipCountersForTesting::Observe});
   auto observerGuard = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
-  const auto path = testFilePath("ownership-control.h5");
+  const auto path = TestFilePath("ownership-control.h5");
   {
     LegacyPayloadTaskScopeForTesting task;
-    (void)SetCodecIoObserverForTesting({&replacement, &CodecOwnershipCountersForTesting::Observe});
+    (void)SetCodecIoObserverForTesting({.context = &replacement, .callback = &CodecOwnershipCountersForTesting::Observe});
     LegacyPayloadTicketForTesting ticket;
     const std::vector<std::byte> bytes(64);
     ticket.acquire(path, "/data", bytes, LegacyPayloadKindForTesting::Nominal);
   }
   const auto after = GetCodecOwnershipStateForTesting();
-  CHECK(after.integrityFailures == before.integrityFailures + 1);
-  CHECK(after.outstandingBuffers == 0);
-  CHECK(after.activeTasks == 0);
-  CHECK(original.nominalAcquired.load() == 1);
-  CHECK(replacement.nominalAcquired.load() == 0);
+  CHECK(after.integrity_failures == before.integrity_failures + 1);
+  CHECK(after.outstanding_buffers == 0);
+  CHECK(after.active_tasks == 0);
+  CHECK(original.nominal_acquired.load() == 1);
+  CHECK(replacement.nominal_acquired.load() == 0);
   CHECK(original.live.load() == 0);
 }
 
@@ -2240,11 +2240,11 @@ TEST_CASE("ParallelChunkCodec checks stranded receipts on each worker exit", "[P
 {
   CodecOwnershipCountersForTesting counters;
   const auto before = GetCodecOwnershipStateForTesting();
-  REQUIRE(before.outstandingBuffers == 0);
-  REQUIRE(before.activeTasks == 0);
-  const auto previous = SetCodecIoObserverForTesting({&counters, &CodecOwnershipCountersForTesting::Observe});
+  REQUIRE(before.outstanding_buffers == 0);
+  REQUIRE(before.active_tasks == 0);
+  const auto previous = SetCodecIoObserverForTesting({.context = &counters, .callback = &CodecOwnershipCountersForTesting::Observe});
   auto observerGuard = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
-  const auto path = testFilePath("ownership-worker-control.h5");
+  const auto path = TestFilePath("ownership-worker-control.h5");
   const std::array<uint64, 2> selected{0, 1};
   const auto loader = [](uint64 index) { return index; };
   const auto sink = [&](usize index, uint64&& value) {
@@ -2261,23 +2261,23 @@ TEST_CASE("ParallelChunkCodec checks stranded receipts on each worker exit", "[P
   CHECK_THROWS_AS(ParallelLoadChunks<uint64>(selected, loader, sink), std::runtime_error);
   const auto after = GetCodecOwnershipStateForTesting();
   // Each task strands one receipt. The throwing task also reaches error aggregation with that charge.
-  CHECK(after.errorAggregations == before.errorAggregations + 1);
-  CHECK(after.integrityFailures == before.integrityFailures + selected.size() + 1);
-  CHECK(after.outstandingBuffers == 0);
-  CHECK(after.activeTasks == 0);
+  CHECK(after.error_aggregations == before.error_aggregations + 1);
+  CHECK(after.integrity_failures == before.integrity_failures + selected.size() + 1);
+  CHECK(after.outstanding_buffers == 0);
+  CHECK(after.active_tasks == 0);
   CHECK(counters.live.load() == 0);
-  CHECK_FALSE(counters.invalidRelease.load());
+  CHECK_FALSE(counters.invalid_release.load());
 }
 
 TEST_CASE("ParallelChunkCodec releases a throwing vector sink before error aggregation", "[ParallelChunkCodec][ooc-review-codec-ownership]")
 {
   CodecOwnershipCountersForTesting counters;
   const auto before = GetCodecOwnershipStateForTesting();
-  REQUIRE(before.outstandingBuffers == 0);
-  REQUIRE(before.activeTasks == 0);
-  const auto previous = SetCodecIoObserverForTesting({&counters, &CodecOwnershipCountersForTesting::Observe});
+  REQUIRE(before.outstanding_buffers == 0);
+  REQUIRE(before.active_tasks == 0);
+  const auto previous = SetCodecIoObserverForTesting({.context = &counters, .callback = &CodecOwnershipCountersForTesting::Observe});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
-  const auto path = testFilePath("throwing-vector-sink-control.h5");
+  const auto path = TestFilePath("throwing-vector-sink-control.h5");
   const std::array<uint64, 1> selected{0};
   const auto loader = [&](uint64) {
     LegacyPayloadTicketForTesting ticket;
@@ -2289,10 +2289,10 @@ TEST_CASE("ParallelChunkCodec releases a throwing vector sink before error aggre
   const auto sink = [](usize, std::vector<std::byte>&&) { throw std::runtime_error("throwing vector sink"); };
   CHECK_THROWS_AS(ParallelLoadChunks<std::vector<std::byte>>(selected, loader, sink), std::runtime_error);
   const auto after = GetCodecOwnershipStateForTesting();
-  REQUIRE(after.errorAggregations == before.errorAggregations + 1);
-  REQUIRE(after.integrityFailures == before.integrityFailures);
-  REQUIRE(after.outstandingBuffers == 0);
-  REQUIRE(after.activeTasks == 0);
+  REQUIRE(after.error_aggregations == before.error_aggregations + 1);
+  REQUIRE(after.integrity_failures == before.integrity_failures);
+  REQUIRE(after.outstanding_buffers == 0);
+  REQUIRE(after.active_tasks == 0);
   REQUIRE(counters.live.load() == 0);
 }
 
@@ -2300,11 +2300,11 @@ TEST_CASE("ParallelChunkCodec observes simultaneous worker payloads deterministi
 {
   CodecOwnershipCountersForTesting counters;
   const auto before = GetCodecOwnershipStateForTesting();
-  REQUIRE(before.outstandingBuffers == 0);
-  REQUIRE(before.activeTasks == 0);
-  const auto previous = SetCodecIoObserverForTesting({&counters, &CodecOwnershipCountersForTesting::Observe});
+  REQUIRE(before.outstanding_buffers == 0);
+  REQUIRE(before.active_tasks == 0);
+  const auto previous = SetCodecIoObserverForTesting({.context = &counters, .callback = &CodecOwnershipCountersForTesting::Observe});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
-  const auto path = testFilePath("simultaneous-ownership-control.h5");
+  const auto path = TestFilePath("simultaneous-ownership-control.h5");
   std::latch acquired(2);
   std::latch release(1);
   std::mutex failureMutex;
@@ -2366,9 +2366,9 @@ TEST_CASE("ParallelChunkCodec observes simultaneous worker payloads deterministi
   first.join();
   second.join();
   const auto after = GetCodecOwnershipStateForTesting();
-  REQUIRE(after.outstandingBuffers == 0);
-  REQUIRE(after.activeTasks == 0);
-  REQUIRE(after.integrityFailures == before.integrityFailures);
+  REQUIRE(after.outstanding_buffers == 0);
+  REQUIRE(after.active_tasks == 0);
+  REQUIRE(after.integrity_failures == before.integrity_failures);
   REQUIRE(counters.live.load() == 0);
 }
 
@@ -2376,19 +2376,19 @@ TEST_CASE("ParallelChunkCodec labels a non-codec vector return as unobserved", "
 {
   CodecOwnershipCountersForTesting counters;
   const auto before = GetCodecOwnershipStateForTesting();
-  REQUIRE(before.outstandingBuffers == 0);
-  REQUIRE(before.activeTasks == 0);
-  const auto previous = SetCodecIoObserverForTesting({&counters, &CodecOwnershipCountersForTesting::Observe});
+  REQUIRE(before.outstanding_buffers == 0);
+  REQUIRE(before.active_tasks == 0);
+  const auto previous = SetCodecIoObserverForTesting({.context = &counters, .callback = &CodecOwnershipCountersForTesting::Observe});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const std::array<uint64, 1> selected{0};
   const auto loader = [](uint64) { return std::vector<std::byte>(64); };
   const auto sink = [](usize, std::vector<std::byte>&& bytes) { REQUIRE(bytes.size() == 64); };
   ParallelLoadChunks<std::vector<std::byte>>(selected, loader, sink);
   const auto after = GetCodecOwnershipStateForTesting();
-  REQUIRE(after.unobservedReturns == before.unobservedReturns + 1);
-  REQUIRE(after.integrityFailures == before.integrityFailures);
-  REQUIRE(after.outstandingBuffers == 0);
-  REQUIRE(after.activeTasks == 0);
+  REQUIRE(after.unobserved_returns == before.unobserved_returns + 1);
+  REQUIRE(after.integrity_failures == before.integrity_failures);
+  REQUIRE(after.outstanding_buffers == 0);
+  REQUIRE(after.active_tasks == 0);
 }
 
 namespace
@@ -2400,23 +2400,23 @@ struct BoundedCodecObservation
   uint64 peak = 0;
   uint64 acquired = 0;
   uint64 released = 0;
-  uint64 rawReads = 0;
+  uint64 raw_reads = 0;
   uint64 decoded = 0;
   uint64 queries = 0;
-  uint64 metadataCalls = 0;
-  uint64 successConstructions = 0;
-  uint64 liveAtSuccessConstruction = 0;
-  uint64 metadataCleanups = 0;
-  uint64 decoderCleanups = 0;
-  uint64 metadataCleanupsAtSuccessConstruction = 0;
-  uint64 decoderCleanupsAtSuccessConstruction = 0;
-  uint64 activeTasksAtSuccessConstruction = 0;
+  uint64 metadata_calls = 0;
+  uint64 success_constructions = 0;
+  uint64 live_at_success_construction = 0;
+  uint64 metadata_cleanups = 0;
+  uint64 decoder_cleanups = 0;
+  uint64 metadata_cleanups_at_success_construction = 0;
+  uint64 decoder_cleanups_at_success_construction = 0;
+  uint64 active_tasks_at_success_construction = 0;
   bool invalid = false;
   bool inject = false;
-  uint64 faultAfterReads = 0;
+  uint64 fault_after_reads = 0;
   BoundedFaultPointForTesting fault = BoundedFaultPointForTesting::MetadataQuery;
 
-  static void Observe(void* context, const fs::path&, std::string_view, CodecIoEventForTesting event, uint64 input, uint64 output) noexcept
+  static void Observe(void* context, const fs::path& /*unused*/, std::string_view /*unused*/, CodecIoEventForTesting event, uint64 input, uint64 /*output*/) noexcept
   {
     auto& self = *static_cast<BoundedCodecObservation*>(context);
     if(event == CodecIoEventForTesting::BoundedAcquired)
@@ -2439,7 +2439,7 @@ struct BoundedCodecObservation
     }
     else if(event == CodecIoEventForTesting::StoredRead)
     {
-      ++self.rawReads;
+      ++self.raw_reads;
     }
     else if(event == CodecIoEventForTesting::Inflated)
     {
@@ -2451,30 +2451,30 @@ struct BoundedCodecObservation
     }
     else if(event >= CodecIoEventForTesting::MetadataTypeCall && event <= CodecIoEventForTesting::MetadataSpaceCall)
     {
-      ++self.metadataCalls;
+      ++self.metadata_calls;
     }
   }
 
-  static bool Fault(void* context, const fs::path&, std::string_view, BoundedFaultPointForTesting point) noexcept
+  static bool Fault(void* context, const fs::path& /*unused*/, std::string_view /*unused*/, BoundedFaultPointForTesting point) noexcept
   {
     auto& self = *static_cast<BoundedCodecObservation*>(context);
     if(point == BoundedFaultPointForTesting::SuccessResultConstruction)
     {
-      ++self.successConstructions;
-      self.liveAtSuccessConstruction = self.live;
-      self.metadataCleanupsAtSuccessConstruction = self.metadataCleanups;
-      self.decoderCleanupsAtSuccessConstruction = self.decoderCleanups;
-      self.activeTasksAtSuccessConstruction = GetCodecOwnershipStateForTesting().activeTasks;
+      ++self.success_constructions;
+      self.live_at_success_construction = self.live;
+      self.metadata_cleanups_at_success_construction = self.metadata_cleanups;
+      self.decoder_cleanups_at_success_construction = self.decoder_cleanups;
+      self.active_tasks_at_success_construction = GetCodecOwnershipStateForTesting().active_tasks;
     }
     else if(point == BoundedFaultPointForTesting::MetadataCleanup)
     {
-      ++self.metadataCleanups;
+      ++self.metadata_cleanups;
     }
     else if(point == BoundedFaultPointForTesting::DecoderCleanup)
     {
-      ++self.decoderCleanups;
+      ++self.decoder_cleanups;
     }
-    return self.inject && self.fault == point && self.rawReads >= self.faultAfterReads;
+    return self.inject && self.fault == point && self.raw_reads >= self.fault_after_reads;
   }
 };
 } // namespace
@@ -2482,7 +2482,7 @@ struct BoundedCodecObservation
 TEST_CASE("Bounded codec reads strided physical component-split chunks within actual scratch", "[ParallelChunkCodec][bounded]")
 {
   const int filter = GENERATE(0, 1);
-  const fs::path path = testFilePath("bounded_component_split_" + std::to_string(filter) + ".h5");
+  const fs::path path = TestFilePath("bounded_component_split_" + std::to_string(filter) + ".h5");
   const std::array<hsize_t, 3> shape{3, 5, 3};
   const std::array<hsize_t, 3> physicalChunks{2, 4, 2};
   std::vector<uint16> values(45);
@@ -2537,7 +2537,7 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
     }
   }
   BoundedCodecObservation observation;
-  const auto previous = SetCodecIoObserverForTesting({&observation, &BoundedCodecObservation::Observe, &BoundedCodecObservation::Fault});
+  const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .bounded_fault = &BoundedCodecObservation::Fault});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const auto destination = nonstd::span<std::byte>(reinterpret_cast<std::byte*>(output.data()), output.size() * sizeof(uint16));
   SECTION("zero allowance refuses with required and available bytes before payload I/O")
@@ -2546,30 +2546,30 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
     REQUIRE(result.valid());
     REQUIRE_FALSE(result.value());
     REQUIRE(result.warnings().size() == 1);
-    REQUIRE(result.warnings().front().code == BoundedRead::Insufficient);
+    REQUIRE(result.warnings().front().code == bounded_read::Insufficient);
     REQUIRE(result.warnings().front().message.find("available=0") != std::string::npos);
     REQUIRE(observation.queries > 0);
-    REQUIRE(observation.rawReads == 0);
+    REQUIRE(observation.raw_reads == 0);
     REQUIRE(output == std::vector<uint16>(12, uint16{0xCAFE}));
   }
   SECTION("complete selected values and actual allocation lifetime")
   {
-    constexpr uint64 allowance = 1024 * 1024;
-    auto result = codec.readExtentIntoBufferBounded(extent, destination, allowance);
+    constexpr uint64 k_Allowance = 1024 * 1024;
+    auto result = codec.readExtentIntoBufferBounded(extent, destination, k_Allowance);
     REQUIRE(result.valid());
     REQUIRE(result.value());
     REQUIRE(output == expected);
-    REQUIRE(observation.rawReads > 0);
-    REQUIRE(observation.peak <= allowance);
-    REQUIRE(observation.queries >= 2 * observation.rawReads);
+    REQUIRE(observation.raw_reads > 0);
+    REQUIRE(observation.peak <= k_Allowance);
+    REQUIRE(observation.queries >= 2 * observation.raw_reads);
   }
   SECTION("native tag independently rejects the wrong element size")
   {
-    ParallelChunkCodec wrongSize(path, "data", {3, 5}, {2, 4}, {3}, 1, dataset, codecMemoryType<uint16>());
+    ParallelChunkCodec wrongSize(path, "data", {3, 5}, {2, 4}, {3}, 1, dataset, CodecMemoryType<uint16>());
     auto result = wrongSize.readExtentIntoBufferBounded(extent, destination, 1024 * 1024);
     REQUIRE(result.invalid());
-    REQUIRE(result.errors().front().code == BoundedRead::InvalidExtent);
-    REQUIRE(observation.rawReads == 0);
+    REQUIRE(result.errors().front().code == bounded_read::InvalidExtent);
+    REQUIRE(observation.raw_reads == 0);
     REQUIRE(output == std::vector<uint16>(12, uint16{0xCAFE}));
   }
   SECTION("faults do not fall back to a typed filtered read")
@@ -2582,9 +2582,9 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
     REQUIRE(result.invalid());
     if(fault == BoundedFaultPointForTesting::NativeSizeQuery || fault == BoundedFaultPointForTesting::ContradictoryRecord || fault == BoundedFaultPointForTesting::MetadataQuery)
     {
-      REQUIRE(result.errors().front().code == BoundedRead::MetadataFailure);
+      REQUIRE(result.errors().front().code == bounded_read::MetadataFailure);
     }
-    REQUIRE(observation.rawReads == 0);
+    REQUIRE(observation.raw_reads == 0);
     REQUIRE(output == std::vector<uint16>(12, uint16{0xCAFE}));
   }
   SECTION("decoder window admission refuses before reading payload")
@@ -2595,9 +2595,9 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
       REQUIRE(result.valid());
       REQUIRE_FALSE(result.value());
       REQUIRE(result.warnings().size() == 1);
-      REQUIRE(result.warnings().front().code == BoundedRead::Insufficient);
+      REQUIRE(result.warnings().front().code == bounded_read::Insufficient);
       REQUIRE(observation.queries > 0);
-      REQUIRE(observation.rawReads == 0);
+      REQUIRE(observation.raw_reads == 0);
       REQUIRE(output == std::vector<uint16>(12, uint16{0xCAFE}));
     }
   }
@@ -2609,8 +2609,8 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
       observation.fault = BoundedFaultPointForTesting::DecoderQuotaAfterPayload;
       const auto result = codec.readExtentIntoBufferBounded(extent, destination, 1024 * 1024);
       REQUIRE(result.invalid());
-      REQUIRE(result.errors().front().code == BoundedRead::DecoderQuotaFailure);
-      REQUIRE(observation.rawReads > 0);
+      REQUIRE(result.errors().front().code == bounded_read::DecoderQuotaFailure);
+      REQUIRE(observation.raw_reads > 0);
     }
   }
   SECTION("deflate allocation failure destroys initialized scratch")
@@ -2621,8 +2621,8 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
       observation.fault = GENERATE(BoundedFaultPointForTesting::NominalAllocation, BoundedFaultPointForTesting::DecoderAllocation);
       auto result = codec.readExtentIntoBufferBounded(extent, destination, 1024 * 1024);
       REQUIRE(result.invalid());
-      REQUIRE(result.errors().front().code == BoundedRead::AllocationFailure);
-      REQUIRE(observation.rawReads == 0);
+      REQUIRE(result.errors().front().code == bounded_read::AllocationFailure);
+      REQUIRE(observation.raw_reads == 0);
     }
   }
   REQUIRE_FALSE(observation.invalid);
@@ -2633,7 +2633,7 @@ TEST_CASE("Bounded codec reads strided physical component-split chunks within ac
 TEST_CASE("Bounded codec payload grants and late failure preserve all caller bytes", "[ParallelChunkCodec][bounded][payload-contract]")
 {
   const bool compressed = GENERATE(false, true);
-  const auto path = testFilePath(compressed ? "bounded_payload_deflate.h5" : "bounded_payload_raw.h5");
+  const auto path = TestFilePath(compressed ? "bounded_payload_deflate.h5" : "bounded_payload_raw.h5");
   const std::array<uint8, 12> source{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
   hid_t file = H5I_INVALID_HID;
   hid_t dataset = H5I_INVALID_HID;
@@ -2672,7 +2672,7 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
     H5Fclose(file);
   });
   REQUIRE(fs::exists(path));
-  ParallelChunkCodec codec(path, "data", {12}, {4}, {}, 1, dataset, codecMemoryType<uint8>());
+  ParallelChunkCodec codec(path, "data", {12}, {4}, {}, 1, dataset, CodecMemoryType<uint8>());
   const Extent extent({0}, {7});
   std::array<std::byte, 11> output{};
   output.fill(std::byte{0xCA});
@@ -2680,7 +2680,7 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
   // Two selected four-byte chunks share one input buffer; deflate also owns four decoded bytes and its named workspace.
   const uint64 required = 8 + maximumStored + (compressed ? 4 + 128 * 1024 : 0);
   BoundedCodecObservation observation;
-  const auto previous = SetCodecIoObserverForTesting({&observation, &BoundedCodecObservation::Observe, &BoundedCodecObservation::Fault});
+  const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .bounded_fault = &BoundedCodecObservation::Fault});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   SECTION("one byte short refuses before payload I/O")
   {
@@ -2688,10 +2688,10 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
     REQUIRE(result.valid());
     REQUIRE_FALSE(result.value());
     REQUIRE(result.warnings().size() == 1);
-    REQUIRE(result.warnings().front().code == BoundedRead::Insufficient);
+    REQUIRE(result.warnings().front().code == bounded_read::Insufficient);
     REQUIRE(result.warnings().front().message.find("required=" + std::to_string(required)) != std::string::npos);
     REQUIRE(result.warnings().front().message.find("available=" + std::to_string(required - 1)) != std::string::npos);
-    REQUIRE(observation.rawReads == 0);
+    REQUIRE(observation.raw_reads == 0);
     REQUIRE(output == sentinel);
   }
   SECTION("exact payload allowance publishes selected bytes and preserves the tail")
@@ -2701,14 +2701,14 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
     REQUIRE(result.value());
     REQUIRE((output == std::array<std::byte, 11>{std::byte{0}, std::byte{1}, std::byte{2}, std::byte{3}, std::byte{4}, std::byte{5}, std::byte{6}, std::byte{7}, std::byte{0xCA}, std::byte{0xCA},
                                                  std::byte{0xCA}}));
-    REQUIRE(observation.rawReads == 2);
+    REQUIRE(observation.raw_reads == 2);
     REQUIRE(observation.peak <= required);
   }
   SECTION("private state uses the backend grant without another output stage")
   {
     Result<> diagnostic;
     const auto status = codec.readExtentIntoBufferBoundedState(extent, nonstd::span<std::byte>(output.data(), 8), required - 8, diagnostic);
-    REQUIRE(status == BoundedRead::Status::Complete);
+    REQUIRE(status == bounded_read::Status::Complete);
     REQUIRE(output[0] == std::byte{0});
     REQUIRE(output[7] == std::byte{7});
     REQUIRE(output[8] == std::byte{0xCA});
@@ -2720,8 +2720,8 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
     observation.fault = BoundedFaultPointForTesting::SelectedAllocation;
     const auto result = codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), required);
     REQUIRE(result.invalid());
-    REQUIRE(result.errors().front().code == BoundedRead::AllocationFailure);
-    REQUIRE(observation.rawReads == 0);
+    REQUIRE(result.errors().front().code == bounded_read::AllocationFailure);
+    REQUIRE(observation.raw_reads == 0);
     REQUIRE(output == sentinel);
   }
   SECTION("metadata cleanup failure leaves all successfully read chunks unpublished")
@@ -2730,8 +2730,8 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
     observation.fault = BoundedFaultPointForTesting::MetadataCleanup;
     const auto result = codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), required);
     REQUIRE(result.invalid());
-    REQUIRE(result.errors().front().code == BoundedRead::MetadataFailure);
-    REQUIRE(observation.rawReads == 2);
+    REQUIRE(result.errors().front().code == bounded_read::MetadataFailure);
+    REQUIRE(observation.raw_reads == 2);
     REQUIRE(output == sentinel);
   }
   SECTION("decoder cleanup failure leaves all successfully decoded chunks unpublished")
@@ -2742,8 +2742,8 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
       observation.fault = BoundedFaultPointForTesting::DecoderCleanup;
       const auto result = codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), required);
       REQUIRE(result.invalid());
-      REQUIRE(result.errors().front().code == BoundedRead::DecodeFailure);
-      REQUIRE(observation.rawReads == 2);
+      REQUIRE(result.errors().front().code == bounded_read::DecodeFailure);
+      REQUIRE(observation.raw_reads == 2);
       REQUIRE(observation.decoded > 0);
       REQUIRE(output == sentinel);
     }
@@ -2753,23 +2753,23 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
     observation.inject = true;
     observation.fault = BoundedFaultPointForTesting::SuccessResultConstruction;
     REQUIRE_THROWS_AS(static_cast<void>(codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), required)), std::bad_alloc);
-    REQUIRE(observation.successConstructions == 1);
-    REQUIRE(observation.rawReads == 2);
-    REQUIRE(observation.metadataCleanupsAtSuccessConstruction == 1);
-    REQUIRE(observation.decoderCleanupsAtSuccessConstruction == (compressed ? 1 : 0));
-    REQUIRE(observation.activeTasksAtSuccessConstruction > 0);
+    REQUIRE(observation.success_constructions == 1);
+    REQUIRE(observation.raw_reads == 2);
+    REQUIRE(observation.metadata_cleanups_at_success_construction == 1);
+    REQUIRE(observation.decoder_cleanups_at_success_construction == (compressed ? 1 : 0));
+    REQUIRE(observation.active_tasks_at_success_construction > 0);
     REQUIRE(output == sentinel);
-    REQUIRE(observation.liveAtSuccessConstruction == 8);
+    REQUIRE(observation.live_at_success_construction == 8);
   }
   SECTION("second chunk read failure leaves the successful first chunk unpublished")
   {
     observation.inject = true;
     observation.fault = BoundedFaultPointForTesting::RawRead;
-    observation.faultAfterReads = 1;
+    observation.fault_after_reads = 1;
     const auto result = codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), 1024 * 1024);
     REQUIRE(result.invalid());
-    REQUIRE(result.errors().front().code == BoundedRead::ReadFailure);
-    REQUIRE(observation.rawReads == 1);
+    REQUIRE(result.errors().front().code == bounded_read::ReadFailure);
+    REQUIRE(observation.raw_reads == 1);
     REQUIRE(output == sentinel);
   }
   SECTION("second compressed checksum failure leaves the successful first chunk unpublished")
@@ -2791,8 +2791,8 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
     {
       const auto result = codec.readExtentIntoBufferBounded(extent, nonstd::span<std::byte>(output.data(), 8), 1024 * 1024);
       REQUIRE(result.invalid());
-      REQUIRE(result.errors().front().code == BoundedRead::DecodeFailure);
-      REQUIRE(observation.rawReads == 2);
+      REQUIRE(result.errors().front().code == bounded_read::DecodeFailure);
+      REQUIRE(observation.raw_reads == 2);
       REQUIRE(observation.decoded > 0);
       REQUIRE(output == sentinel);
     }
@@ -2810,7 +2810,7 @@ TEST_CASE("Bounded codec payload grants and late failure preserve all caller byt
       REQUIRE(output[8] == std::byte{0xCA});
     }
     const auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - start).count();
-    std::cout << "bounded-payload-timing compressed=" << compressed << " repeats=100 elapsed_us=" << elapsed << " reads=" << observation.rawReads << " input_decoded=" << observation.decoded
+    std::cout << "bounded-payload-timing compressed=" << compressed << " repeats=100 elapsed_us=" << elapsed << " reads=" << observation.raw_reads << " input_decoded=" << observation.decoded
               << " peak_payload=" << observation.peak << '\n';
   }
   REQUIRE_FALSE(observation.invalid);
@@ -2822,7 +2822,7 @@ TEST_CASE("Bounded codec distinguishes sparse fill from metadata failure", "[Par
 {
   const int fillChoice = GENERATE(0, 1, 2);
   const uint16 fillValue = 123;
-  const fs::path path = testFilePath("bounded_sparse_fill.h5");
+  const fs::path path = TestFilePath("bounded_sparse_fill.h5");
   hid_t file = H5I_INVALID_HID;
   hid_t dataset = H5I_INVALID_HID;
   {
@@ -2851,10 +2851,10 @@ TEST_CASE("Bounded codec distinguishes sparse fill from metadata failure", "[Par
     H5Dclose(dataset);
     H5Fclose(file);
   });
-  ParallelChunkCodec codec(path, "data", {2, 3}, {1, 2}, {1}, sizeof(uint16), dataset, codecMemoryType<uint16>());
+  ParallelChunkCodec codec(path, "data", {2, 3}, {1, 2}, {1}, sizeof(uint16), dataset, CodecMemoryType<uint16>());
   std::vector<uint16> output(6, 77);
   BoundedCodecObservation observation;
-  const auto previous = SetCodecIoObserverForTesting({&observation, &BoundedCodecObservation::Observe, &BoundedCodecObservation::Fault});
+  const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .bounded_fault = &BoundedCodecObservation::Fault});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
   const auto result = codec.readExtentIntoBufferBounded(Extent({0, 0, 0}, {1, 2, 0}), nonstd::span<std::byte>(reinterpret_cast<std::byte*>(output.data()), output.size() * sizeof(uint16)), 16384);
   REQUIRE(result.valid());
@@ -2862,7 +2862,7 @@ TEST_CASE("Bounded codec distinguishes sparse fill from metadata failure", "[Par
   {
     REQUIRE_FALSE(result.value());
     REQUIRE(result.warnings().size() == 1);
-    REQUIRE(result.warnings().front().code == BoundedRead::UndefinedFill);
+    REQUIRE(result.warnings().front().code == bounded_read::UndefinedFill);
     REQUIRE(output == std::vector<uint16>(6, 77));
   }
   else
@@ -2870,25 +2870,25 @@ TEST_CASE("Bounded codec distinguishes sparse fill from metadata failure", "[Par
     REQUIRE(result.value());
     REQUIRE(output == std::vector<uint16>(6, fillChoice == 1 ? fillValue : 0));
   }
-  REQUIRE(observation.rawReads == 0);
+  REQUIRE(observation.raw_reads == 0);
   REQUIRE(observation.decoded == 0);
   REQUIRE(observation.live == 0);
   const std::array<uint64, 3> origin{0, 0, 0};
   const auto info = codec.getChunkInfoChecked(origin);
   REQUIRE(info.valid());
   REQUIRE_FALSE(info.value().allocated);
-  REQUIRE(info.value().storedSize == 0);
+  REQUIRE(info.value().stored_size == 0);
 }
 
 TEST_CASE("Bounded codec rejects a second-pass request for an unprepared decoder", "[ParallelChunkCodec][bounded]")
 {
-  const fs::path path = testFilePath("bounded_unprepared_decoder.h5");
+  const fs::path path = TestFilePath("bounded_unprepared_decoder.h5");
   hid_t file = H5I_INVALID_HID;
   hid_t dataset = H5I_INVALID_HID;
   std::array<std::byte, 64> raw{};
   {
     std::lock_guard lock(Support::ApiLock());
-    createEmptyChunkedDeflateDataset(path, {64}, {1}, {64}, H5T_NATIVE_UINT8, file, dataset, 1);
+    CreateEmptyChunkedDeflateDataset(path, {64}, {1}, {64}, H5T_NATIVE_UINT8, file, dataset, 1);
     const std::array<hsize_t, 2> origin{0, 0};
     REQUIRE(H5Dwrite_chunk(dataset, H5P_DEFAULT, 1, origin.data(), raw.size(), raw.data()) >= 0);
     REQUIRE(H5Fflush(file, H5F_SCOPE_LOCAL) >= 0);
@@ -2898,18 +2898,18 @@ TEST_CASE("Bounded codec rejects a second-pass request for an unprepared decoder
     H5Dclose(dataset);
     H5Fclose(file);
   });
-  ParallelChunkCodec codec(path, "data", {64}, {64}, {1}, sizeof(uint8), dataset, codecMemoryType<uint8>());
+  ParallelChunkCodec codec(path, "data", {64}, {64}, {1}, sizeof(uint8), dataset, CodecMemoryType<uint8>());
   BoundedCodecObservation observation;
   observation.inject = true;
   observation.fault = BoundedFaultPointForTesting::SecondPassUnpreparedDecoder;
-  const auto previous = SetCodecIoObserverForTesting({&observation, &BoundedCodecObservation::Observe, &BoundedCodecObservation::Fault});
+  const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .bounded_fault = &BoundedCodecObservation::Fault});
   auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
-  std::array<std::byte, 64> destination;
+  std::array<std::byte, 64> destination{};
   destination.fill(std::byte{0x7B});
   const auto result = codec.readExtentIntoBufferBounded(Extent({0, 0}, {63, 0}), destination, 65536);
   REQUIRE(result.invalid());
-  REQUIRE(result.errors().front().code == BoundedRead::MetadataChanged);
-  REQUIRE(observation.rawReads == 0);
+  REQUIRE(result.errors().front().code == bounded_read::MetadataChanged);
+  REQUIRE(observation.raw_reads == 0);
   REQUIRE(std::all_of(destination.begin(), destination.end(), [](std::byte value) { return value == std::byte{0x7B}; }));
   REQUIRE(observation.live == 0);
   REQUIRE_FALSE(observation.invalid);
@@ -2920,9 +2920,9 @@ TEST_CASE("Bounded codec scatter preserves selected values across contiguous run
   struct Fixture
   {
     const char* name;
-    std::vector<uint64> tupleShape;
-    std::vector<uint64> componentShape;
-    std::vector<hsize_t> physicalChunks;
+    std::vector<uint64> tuple_shape;
+    std::vector<uint64> component_shape;
+    std::vector<hsize_t> physical_chunks;
     Extent extent;
     std::vector<uint16> expected;
     bool sparse = false;
@@ -2930,29 +2930,74 @@ TEST_CASE("Bounded codec scatter preserves selected values across contiguous run
   // Literal outputs select from a dense row-major sequence that starts at 101.
   // These expectations do not use the reader's strides, chunk intersections or scatter helpers.
   const std::vector<Fixture> fixtures = {
-      {"full trailing suffix", {2, 3, 4}, {1}, {1, 3, 4, 1}, Extent({0, 0, 0, 0}, {1, 2, 3, 0}), {101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112,
-                                                                                                  113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124}},
-      {"nonzero chunk and extent origins", {4, 3, 4}, {1}, {2, 3, 4, 1}, Extent({2, 1, 0, 0}, {3, 2, 3, 0}), {129, 130, 131, 132, 133, 134, 135, 136, 141, 142, 143, 144, 145, 146, 147, 148}},
-      {"adjacent source with output row gaps", {2, 4}, {1}, {2, 2, 1}, Extent({0, 0, 0}, {1, 3, 0}), {101, 102, 103, 104, 105, 106, 107, 108}},
-      {"adjacent output with nominal source gaps", {2, 4}, {1}, {2, 4, 1}, Extent({0, 1, 0}, {1, 2, 0}), {102, 103, 106, 107}},
-      {"physical component splits", {2, 3}, {3}, {2, 3, 2}, Extent({0, 0, 0}, {1, 2, 2}), {101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118}},
-      {"clamped physical edges retain nominal padding", {3, 5}, {1}, {2, 4, 1}, Extent({1, 2, 0}, {2, 4, 0}), {108, 109, 110, 113, 114, 115}},
-      {"tuple and component strides", {3, 4}, {3}, {2, 3, 2}, Extent({0, 1, 0}, {2, 3, 2}, {2, 2, 2}), {104, 106, 110, 112, 128, 130, 134, 136}},
-      {"rank one contiguous", {9}, {}, {4}, Extent({1}, {8}), {102, 103, 104, 105, 106, 107, 108, 109}},
-      {"rank one strided", {9}, {}, {4}, Extent({1}, {8}, {3}), {102, 105, 108}},
-      {"singleton axes inside a contiguous suffix", {2, 1, 3, 1}, {1}, {2, 1, 3, 1, 1}, Extent({0, 0, 0, 0, 0}, {1, 0, 2, 0, 0}), {101, 102, 103, 104, 105, 106}},
-      {"single selected scalar", {1}, {1}, {1, 1}, Extent({0, 0}, {0, 0}), {101}},
-      {"sparse fill stays scalar", {2, 4}, {1}, {2, 2, 1}, Extent({0, 0, 0}, {1, 3, 0}), {513, 513, 513, 513, 513, 513, 513, 513}, true}};
+      {.name = "full trailing suffix",
+       .tuple_shape = {2, 3, 4},
+       .component_shape = {1},
+       .physical_chunks = {1, 3, 4, 1},
+       .extent = Extent({0, 0, 0, 0}, {1, 2, 3, 0}),
+       .expected = {101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124}},
+      {.name = "nonzero chunk and extent origins",
+       .tuple_shape = {4, 3, 4},
+       .component_shape = {1},
+       .physical_chunks = {2, 3, 4, 1},
+       .extent = Extent({2, 1, 0, 0}, {3, 2, 3, 0}),
+       .expected = {129, 130, 131, 132, 133, 134, 135, 136, 141, 142, 143, 144, 145, 146, 147, 148}},
+      {.name = "adjacent source with output row gaps",
+       .tuple_shape = {2, 4},
+       .component_shape = {1},
+       .physical_chunks = {2, 2, 1},
+       .extent = Extent({0, 0, 0}, {1, 3, 0}),
+       .expected = {101, 102, 103, 104, 105, 106, 107, 108}},
+      {.name = "adjacent output with nominal source gaps",
+       .tuple_shape = {2, 4},
+       .component_shape = {1},
+       .physical_chunks = {2, 4, 1},
+       .extent = Extent({0, 1, 0}, {1, 2, 0}),
+       .expected = {102, 103, 106, 107}},
+      {.name = "physical component splits",
+       .tuple_shape = {2, 3},
+       .component_shape = {3},
+       .physical_chunks = {2, 3, 2},
+       .extent = Extent({0, 0, 0}, {1, 2, 2}),
+       .expected = {101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118}},
+      {.name = "clamped physical edges retain nominal padding",
+       .tuple_shape = {3, 5},
+       .component_shape = {1},
+       .physical_chunks = {2, 4, 1},
+       .extent = Extent({1, 2, 0}, {2, 4, 0}),
+       .expected = {108, 109, 110, 113, 114, 115}},
+      {.name = "tuple and component strides",
+       .tuple_shape = {3, 4},
+       .component_shape = {3},
+       .physical_chunks = {2, 3, 2},
+       .extent = Extent({0, 1, 0}, {2, 3, 2}, {2, 2, 2}),
+       .expected = {104, 106, 110, 112, 128, 130, 134, 136}},
+      {.name = "rank one contiguous", .tuple_shape = {9}, .component_shape = {}, .physical_chunks = {4}, .extent = Extent({1}, {8}), .expected = {102, 103, 104, 105, 106, 107, 108, 109}},
+      {.name = "rank one strided", .tuple_shape = {9}, .component_shape = {}, .physical_chunks = {4}, .extent = Extent({1}, {8}, {3}), .expected = {102, 105, 108}},
+      {.name = "singleton axes inside a contiguous suffix",
+       .tuple_shape = {2, 1, 3, 1},
+       .component_shape = {1},
+       .physical_chunks = {2, 1, 3, 1, 1},
+       .extent = Extent({0, 0, 0, 0, 0}, {1, 0, 2, 0, 0}),
+       .expected = {101, 102, 103, 104, 105, 106}},
+      {.name = "single selected scalar", .tuple_shape = {1}, .component_shape = {1}, .physical_chunks = {1, 1}, .extent = Extent({0, 0}, {0, 0}), .expected = {101}},
+      {.name = "sparse fill stays scalar",
+       .tuple_shape = {2, 4},
+       .component_shape = {1},
+       .physical_chunks = {2, 2, 1},
+       .extent = Extent({0, 0, 0}, {1, 3, 0}),
+       .expected = {513, 513, 513, 513, 513, 513, 513, 513},
+       .sparse = true}};
   const int filter = GENERATE(0, 1);
   for(const auto& fixture : fixtures)
   {
     DYNAMIC_SECTION(fixture.name << ", deflate=" << filter)
     {
-      const fs::path path = testFilePath("bounded_scatter_" + std::to_string(filter) + ".h5");
-      std::vector<hsize_t> shape(fixture.tupleShape.begin(), fixture.tupleShape.end());
-      shape.insert(shape.end(), fixture.componentShape.begin(), fixture.componentShape.end());
-      REQUIRE(shape.size() == fixture.physicalChunks.size());
-      std::vector<uint16> values(product(fixture.tupleShape) * product(fixture.componentShape));
+      const fs::path path = TestFilePath("bounded_scatter_" + std::to_string(filter) + ".h5");
+      std::vector<hsize_t> shape(fixture.tuple_shape.begin(), fixture.tuple_shape.end());
+      shape.insert(shape.end(), fixture.component_shape.begin(), fixture.component_shape.end());
+      REQUIRE(shape.size() == fixture.physical_chunks.size());
+      std::vector<uint16> values(Product(fixture.tuple_shape) * Product(fixture.component_shape));
       std::iota(values.begin(), values.end(), uint16{101});
       const uint16 fillValue = fixture.sparse ? uint16{513} : uint16{0x4F4F};
       hid_t file = H5I_INVALID_HID;
@@ -2986,7 +3031,7 @@ TEST_CASE("Bounded codec scatter preserves selected values across contiguous run
         REQUIRE(space >= 0);
         properties = H5Pcreate(H5P_DATASET_CREATE);
         REQUIRE(properties >= 0);
-        REQUIRE(H5Pset_chunk(properties, static_cast<int>(shape.size()), fixture.physicalChunks.data()) >= 0);
+        REQUIRE(H5Pset_chunk(properties, static_cast<int>(shape.size()), fixture.physical_chunks.data()) >= 0);
         REQUIRE(H5Pset_fill_value(properties, H5T_NATIVE_UINT16, &fillValue) >= 0);
         if(filter != 0)
         {
@@ -3000,39 +3045,39 @@ TEST_CASE("Bounded codec scatter preserves selected values across contiguous run
         }
         REQUIRE(H5Fflush(file, H5F_SCOPE_LOCAL) >= 0);
       }
-      const std::vector<uint64> tupleChunks(fixture.physicalChunks.begin(), fixture.physicalChunks.begin() + static_cast<std::ptrdiff_t>(fixture.tupleShape.size()));
-      ParallelChunkCodec codec(path, "data", fixture.tupleShape, tupleChunks, fixture.componentShape, sizeof(uint16), dataset, codecMemoryType<uint16>());
-      constexpr usize guardValues = 16;
-      constexpr uint16 leadingGuard = 0xD1D1;
-      constexpr uint16 trailingGuard = 0xE2E2;
-      constexpr uint16 unfilled = 0xB6B6;
-      std::vector<uint16> guardedOutput(guardValues + fixture.expected.size() + guardValues, unfilled);
-      std::fill_n(guardedOutput.begin(), guardValues, leadingGuard);
-      std::fill_n(guardedOutput.end() - guardValues, guardValues, trailingGuard);
-      const auto destination = nonstd::span<std::byte>(reinterpret_cast<std::byte*>(guardedOutput.data() + guardValues), fixture.expected.size() * sizeof(uint16));
+      const std::vector<uint64> tupleChunks(fixture.physical_chunks.begin(), fixture.physical_chunks.begin() + static_cast<std::ptrdiff_t>(fixture.tuple_shape.size()));
+      ParallelChunkCodec codec(path, "data", fixture.tuple_shape, tupleChunks, fixture.component_shape, sizeof(uint16), dataset, CodecMemoryType<uint16>());
+      constexpr usize k_GuardValues = 16;
+      constexpr uint16 k_LeadingGuard = 0xD1D1;
+      constexpr uint16 k_TrailingGuard = 0xE2E2;
+      constexpr uint16 k_Unfilled = 0xB6B6;
+      std::vector<uint16> guardedOutput(k_GuardValues + fixture.expected.size() + k_GuardValues, k_Unfilled);
+      std::fill_n(guardedOutput.begin(), k_GuardValues, k_LeadingGuard);
+      std::fill_n(guardedOutput.end() - k_GuardValues, k_GuardValues, k_TrailingGuard);
+      const auto destination = nonstd::span<std::byte>(reinterpret_cast<std::byte*>(guardedOutput.data() + k_GuardValues), fixture.expected.size() * sizeof(uint16));
       BoundedCodecObservation observation;
-      const auto previous = SetCodecIoObserverForTesting({&observation, &BoundedCodecObservation::Observe, &BoundedCodecObservation::Fault});
+      const auto previous = SetCodecIoObserverForTesting({.context = &observation, .callback = &BoundedCodecObservation::Observe, .bounded_fault = &BoundedCodecObservation::Fault});
       auto restore = MakeScopeGuard([&]() noexcept { (void)SetCodecIoObserverForTesting(previous); });
-      constexpr uint64 allowance = 1024 * 1024;
-      const auto result = codec.readExtentIntoBufferBounded(fixture.extent, destination, allowance);
+      constexpr uint64 k_Allowance = 1024 * 1024;
+      const auto result = codec.readExtentIntoBufferBounded(fixture.extent, destination, k_Allowance);
       REQUIRE(result.valid());
       REQUIRE(result.value());
       REQUIRE(result.warnings().empty());
-      REQUIRE(std::equal(fixture.expected.begin(), fixture.expected.end(), guardedOutput.begin() + guardValues));
-      REQUIRE(std::all_of(guardedOutput.begin(), guardedOutput.begin() + guardValues, [](uint16 value) { return value == leadingGuard; }));
-      REQUIRE(std::all_of(guardedOutput.end() - guardValues, guardedOutput.end(), [](uint16 value) { return value == trailingGuard; }));
+      REQUIRE(std::equal(fixture.expected.begin(), fixture.expected.end(), guardedOutput.begin() + k_GuardValues));
+      REQUIRE(std::all_of(guardedOutput.begin(), guardedOutput.begin() + k_GuardValues, [](uint16 value) { return value == k_LeadingGuard; }));
+      REQUIRE(std::all_of(guardedOutput.end() - k_GuardValues, guardedOutput.end(), [](uint16 value) { return value == k_TrailingGuard; }));
       REQUIRE_FALSE(observation.invalid);
       REQUIRE(observation.live == 0);
       REQUIRE(observation.acquired == observation.released);
-      REQUIRE(observation.peak <= allowance);
+      REQUIRE(observation.peak <= k_Allowance);
       if(fixture.sparse)
       {
-        REQUIRE(observation.rawReads == 0);
+        REQUIRE(observation.raw_reads == 0);
         REQUIRE(observation.decoded == 0);
       }
       else
       {
-        REQUIRE(observation.rawReads > 0);
+        REQUIRE(observation.raw_reads > 0);
         REQUIRE((observation.decoded > 0) == (filter != 0));
       }
     }

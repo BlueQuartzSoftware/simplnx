@@ -6,9 +6,9 @@
 namespace nx::core
 {
 
-namespace ScalarDataConstants
+namespace scalar_data_constants
 {
-inline constexpr StringLiteral k_TypeName = "ScalarData";
+inline constexpr StringLiteralType k_TypeName = "ScalarData";
 }
 
 /**

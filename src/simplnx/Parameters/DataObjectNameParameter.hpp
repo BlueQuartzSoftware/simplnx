@@ -14,7 +14,7 @@ public:
   using ValueType = std::string;
 
   DataObjectNameParameter() = delete;
-  DataObjectNameParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  DataObjectNameParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~DataObjectNameParameter() override = default;
 
   DataObjectNameParameter(const DataObjectNameParameter&) = delete;
@@ -33,13 +33,13 @@ public:
    * @brief
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -89,17 +89,17 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
+  ValueType m_DefaultValue;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT LinkedPathCreationFilterParameterConverter
 {
   using ParameterType = DataObjectNameParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT DataArrayCreationToDataObjectNameFilterParameterConverter
@@ -107,7 +107,7 @@ struct SIMPLNX_EXPORT DataArrayCreationToDataObjectNameFilterParameterConverter
   using ParameterType = DataObjectNameParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT DataContainerNameFilterParameterConverter
@@ -115,7 +115,7 @@ struct SIMPLNX_EXPORT DataContainerNameFilterParameterConverter
   using ParameterType = DataObjectNameParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT AttributeMatrixNameFilterParameterConverter
@@ -123,7 +123,7 @@ struct SIMPLNX_EXPORT AttributeMatrixNameFilterParameterConverter
   using ParameterType = DataObjectNameParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT DataArrayNameFilterParameterConverter
@@ -131,9 +131,9 @@ struct SIMPLNX_EXPORT DataArrayNameFilterParameterConverter
   using ParameterType = DataObjectNameParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::DataObjectNameParameter, "fbc89375-3ca4-4eb2-8257-aad9bf8e1c94");

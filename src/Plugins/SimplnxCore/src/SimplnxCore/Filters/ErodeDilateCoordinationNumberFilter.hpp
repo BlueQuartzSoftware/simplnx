@@ -24,11 +24,11 @@ public:
   ErodeDilateCoordinationNumberFilter& operator=(ErodeDilateCoordinationNumberFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_CoordinationNumber_Key = "coordination_number";
-  static constexpr StringLiteral k_Loop_Key = "loop";
-  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
-  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_CoordinationNumber_Key = "coordination_number";
+  static constexpr StringLiteralType k_Loop_Key = "loop";
+  static constexpr StringLiteralType k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteralType k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
+  static constexpr StringLiteralType k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -85,7 +85,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

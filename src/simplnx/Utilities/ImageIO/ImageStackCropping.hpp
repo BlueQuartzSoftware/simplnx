@@ -47,7 +47,7 @@ template <class VectorT>
 Result<usize> ComputeCroppedZDimension(const CropGeometryParameter::CropValues& croppingOptions, usize zDim, const VectorT& origin, const VectorT& spacing, bool shouldChangeOrigin,
                                        bool shouldChangeSpacing, OriginSpacingProcessing originSpacingProcessing)
 {
-  if(!croppingOptions.cropZ)
+  if(!croppingOptions.crop_z)
   {
     return {zDim};
   }
@@ -55,8 +55,8 @@ Result<usize> ComputeCroppedZDimension(const CropGeometryParameter::CropValues& 
   if(croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume)
   {
     // Voxel-based Z cropping: zBoundVoxels are inclusive indices
-    const auto zMin = static_cast<usize>(croppingOptions.zBoundVoxels[0]);
-    const auto zMax = static_cast<usize>(croppingOptions.zBoundVoxels[1]);
+    const auto zMin = static_cast<usize>(croppingOptions.z_bound_voxels[0]);
+    const auto zMax = static_cast<usize>(croppingOptions.z_bound_voxels[1]);
     if(zMax >= zMin)
     {
       zDim = zMax - zMin + 1;
@@ -66,8 +66,8 @@ Result<usize> ComputeCroppedZDimension(const CropGeometryParameter::CropValues& 
 
   if(croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume)
   {
-    const float64 zMinPhys = croppingOptions.zBoundPhysical[0];
-    const float64 zMaxPhys = croppingOptions.zBoundPhysical[1];
+    const float64 zMinPhys = croppingOptions.z_bound_physical[0];
+    const float64 zMaxPhys = croppingOptions.z_bound_physical[1];
     if(std::isnan(zMinPhys) || std::isnan(zMaxPhys))
     {
       return MakeErrorResult<usize>(-23526,

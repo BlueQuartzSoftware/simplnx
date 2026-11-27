@@ -27,8 +27,6 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace fs = std::filesystem;
-
 namespace
 {
 using namespace nx::core;
@@ -43,21 +41,21 @@ std::string FirstErrorMessage(const std::vector<Error>& errors)
 // built). Handles both in-place-output filters (an array under the shared cell AM) and new-geometry-output filters
 // like MaximumProjection (a whole new ImageGeom). removeData recurses into children and is a no-op for IDs already
 // gone, so removing a parent before a stale child ID is harmless. Cheap: a few map removals + freeing the output.
-void CleanToBaseline(DataStructure& ds, const std::unordered_set<DataObject::IdType>& baseline)
+void CleanToBaseline(DataStructure& dataStructure, const std::unordered_set<DataObject::IdType>& baseline)
 {
-  const std::vector<DataObject::IdType> ids = ds.getAllDataObjectIds(); // snapshot (removal mutates the structure)
+  const std::vector<DataObject::IdType> ids = dataStructure.getAllDataObjectIds(); // snapshot (removal mutates the structure)
   for(DataObject::IdType id : ids)
   {
     if(baseline.find(id) == baseline.end())
     {
-      ds.removeData(id);
+      dataStructure.removeData(id);
     }
   }
 }
 
-std::unordered_set<DataObject::IdType> SnapshotIds(const DataStructure& ds)
+std::unordered_set<DataObject::IdType> SnapshotIds(const DataStructure& dataStructure)
 {
-  const std::vector<DataObject::IdType> ids = ds.getAllDataObjectIds();
+  const std::vector<DataObject::IdType> ids = dataStructure.getAllDataObjectIds();
   return std::unordered_set<DataObject::IdType>(ids.begin(), ids.end());
 }
 
@@ -65,23 +63,23 @@ Result<DataPath> PrepareBenchmarkInput(DataStructure& dataStructure, const ip_be
                                        const std::string& inputArrayName, usize targetVoxels, usize minZSlices, bool force2D, DataStorageMode storeMode)
 {
   ip_bench::BenchmarkInputContext context;
-  context.realInputPath = ip_golden::InputPath(spec.realInputFile);
-  context.geometryPath = geometryPath;
-  context.cellAttributeMatrixName = cellAttributeMatrixName;
-  context.inputArrayName = inputArrayName;
-  context.targetVoxels = targetVoxels;
-  context.minZSlices = minZSlices;
-  context.force2D = force2D;
-  context.storeMode = storeMode;
+  context.real_input_path = ip_golden::InputPath(spec.real_input_file);
+  context.geometry_path = geometryPath;
+  context.cell_attribute_matrix_name = cellAttributeMatrixName;
+  context.input_array_name = inputArrayName;
+  context.target_voxels = targetVoxels;
+  context.min_z_slices = minZSlices;
+  context.force_2d = force2D;
+  context.store_mode = storeMode;
 
-  if(spec.prepareInput)
+  if(spec.prepare_input)
   {
-    return spec.prepareInput(dataStructure, context);
+    return spec.prepare_input(dataStructure, context);
   }
 
   DataPath inputPath;
   Result<> buildResult =
-      ip_bench::BuildTiledInput(dataStructure, context.realInputPath, geometryPath, cellAttributeMatrixName, inputArrayName, targetVoxels, minZSlices, storeMode, inputPath, force2D);
+      ip_bench::BuildTiledInput(dataStructure, context.real_input_path, geometryPath, cellAttributeMatrixName, inputArrayName, targetVoxels, minZSlices, storeMode, inputPath, force2D);
   return ConvertResultTo<DataPath>(std::move(buildResult), std::move(inputPath));
 }
 
@@ -89,10 +87,11 @@ Result<DataPath> PrepareBenchmarkInput(DataStructure& dataStructure, const ip_be
 // pre-check (to catch e.g. a key mismatch without aborting the sweep), then times execute() over warmup + repeats.
 // Returns the median ms, or nullopt with @p note set to the skip/error reason. @p sentinel must already be active for
 // the desired store mode.
-std::optional<double> RunConfig(FilterList* filterList, const Uuid& uuid, DataStructure& ds, const std::unordered_set<DataObject::IdType>& baseline, const ip_bench::BenchmarkFilterSpec& spec,
-                                const DataPath& geom, const DataPath& input, const std::string& outName, int warmup, int repeats, const std::optional<uint32>& projectionAxis, std::string& note)
+std::optional<double> RunConfig(FilterList* filterList, const Uuid& uuid, DataStructure& dataStructure, const std::unordered_set<DataObject::IdType>& baseline,
+                                const ip_bench::BenchmarkFilterSpec& spec, const DataPath& geom, const DataPath& input, const std::string& outName, int warmup, int repeats,
+                                const std::optional<uint32>& projectionAxis, std::string& note)
 {
-  IFilter::UniquePointer filter = filterList->createFilter(uuid);
+  IFilter::UniquePointerType filter = filterList->createFilter(uuid);
   if(filter == nullptr)
   {
     note = fmt::format("could not create filter {}", uuid.str());
@@ -100,21 +99,21 @@ std::optional<double> RunConfig(FilterList* filterList, const Uuid& uuid, DataSt
   }
 
   Arguments args;
-  spec.setArgs(args, geom, input, outName);
-  if(spec.supportsProjectionAxisOverride && projectionAxis.has_value())
+  spec.set_args(args, geom, input, outName);
+  if(spec.supports_projection_axis_override && projectionAxis.has_value())
   {
     args.insertOrAssign("projection_dimension", std::make_any<uint32>(*projectionAxis));
   }
 
   // Start from a clean slate: a prior config may have left an output object of the same name behind.
-  CleanToBaseline(ds, baseline);
+  CleanToBaseline(dataStructure, baseline);
 
   try
   {
-    IFilter::PreflightResult pf = filter->preflight(ds, args);
-    if(pf.outputActions.invalid())
+    IFilter::PreflightResult pf = filter->preflight(dataStructure, args);
+    if(pf.output_actions.invalid())
     {
-      note = "preflight failed: " + FirstErrorMessage(pf.outputActions.errors());
+      note = "preflight failed: " + FirstErrorMessage(pf.output_actions.errors());
       return std::nullopt;
     }
   } catch(const std::exception& ex)
@@ -130,8 +129,8 @@ std::optional<double> RunConfig(FilterList* filterList, const Uuid& uuid, DataSt
     // while the filter execute() over the full volume dominates.
     const ip_bench::Timing t = ip_bench::RunTimed(
         [&]() {
-          CleanToBaseline(ds, baseline);
-          const IFilter::ExecuteResult ex = filter->execute(ds, args);
+          CleanToBaseline(dataStructure, baseline);
+          const IFilter::ExecuteResult ex = filter->execute(dataStructure, args);
           if(ex.result.invalid())
           {
             throw std::runtime_error(FirstErrorMessage(ex.result.errors()));
@@ -250,10 +249,10 @@ struct ParsedRow
 {
   std::string filter;
   std::string type;
-  std::string inDims;
-  std::string inVoxels;
-  std::optional<double> newIncoreMs;
-  std::optional<double> newOocMs;
+  std::string in_dims;
+  std::string in_voxels;
+  std::optional<double> new_incore_ms;
+  std::optional<double> new_ooc_ms;
   std::string notes;
 };
 
@@ -300,11 +299,11 @@ Result<std::vector<ParsedRow>> ReadCsv(const std::string& path)
     ParsedRow r;
     r.filter = at(f, "filter");
     r.type = at(f, "type");
-    r.inDims = col.count("in_dims") ? at(f, "in_dims") : std::string{};
-    r.inVoxels = col.count("in_voxels") ? at(f, "in_voxels") : std::string{};
-    r.newIncoreMs = ParseMs(at(f, "new_incore_ms"));
-    r.newOocMs = ParseMs(at(f, "new_ooc_ms"));
-    r.notes = col.count("notes") ? at(f, "notes") : std::string{};
+    r.in_dims = (col.contains("in_dims")) ? at(f, "in_dims") : std::string{};
+    r.in_voxels = (col.contains("in_voxels")) ? at(f, "in_voxels") : std::string{};
+    r.new_incore_ms = ParseMs(at(f, "new_incore_ms"));
+    r.new_ooc_ms = ParseMs(at(f, "new_ooc_ms"));
+    r.notes = (col.contains("notes")) ? at(f, "notes") : std::string{};
     rows.push_back(std::move(r));
   }
   return {std::move(rows)};
@@ -348,7 +347,7 @@ BenchmarkRow RunFilterBenchmark(const BenchmarkFilterSpec& spec, const SweepOpti
   BenchmarkRow row;
   row.filter = spec.name;
 
-  auto* filterList = Application::Instance()->getFilterList();
+  auto* filterListPtr = Application::Instance()->getFilterList();
 
   const DataPath geom({"Image Geometry"});
   const std::string cellAmName = "CellData";
@@ -368,7 +367,7 @@ BenchmarkRow RunFilterBenchmark(const BenchmarkFilterSpec& spec, const SweepOpti
   DataPath inputPath;
   {
     const ip_bench::BenchmarkPreferenceSnapshot sentinel(*Application::Instance()->getPreferences(), DataStorageMode::ForceInCore);
-    Result<DataPath> r = PrepareBenchmarkInput(dsInCore, spec, geom, cellAmName, inArrayName, opts.targetVoxels, opts.minZSlices, opts.force2D, DataStorageMode::ForceInCore);
+    Result<DataPath> r = PrepareBenchmarkInput(dsInCore, spec, geom, cellAmName, inArrayName, opts.target_voxels, opts.min_z_slices, opts.force_2d, DataStorageMode::ForceInCore);
     if(r.invalid())
     {
       addNote("in-core input build failed: " + FirstErrorMessage(r.errors()));
@@ -378,19 +377,19 @@ BenchmarkRow RunFilterBenchmark(const BenchmarkFilterSpec& spec, const SweepOpti
   }
 
   const auto& geomRef = dsInCore.getDataRefAs<ImageGeom>(geom);
-  const SizeVec3 dims = geomRef.getDimensions();
-  row.inDims = fmt::format("{}x{}x{}", dims[0], dims[1], dims[2]);
-  row.inVoxels = static_cast<uint64>(dims[0]) * static_cast<uint64>(dims[1]) * static_cast<uint64>(dims[2]);
+  const SizeVec3Type dims = geomRef.getDimensions();
+  row.in_dims = fmt::format("{}x{}x{}", dims[0], dims[1], dims[2]);
+  row.in_voxels = static_cast<uint64>(dims[0]) * static_cast<uint64>(dims[1]) * static_cast<uint64>(dims[2]);
   row.type = std::string(DataTypeToString(dsInCore.getDataRefAs<IDataArray>(inputPath).getDataType()).view());
 
   const std::unordered_set<DataObject::IdType> baseInCore = SnapshotIds(dsInCore);
 
   // --- new-in-core ---
-  if(!opts.oocOnly)
+  if(!opts.ooc_only)
   {
     const ip_bench::BenchmarkPreferenceSnapshot sentinel(*Application::Instance()->getPreferences(), DataStorageMode::ForceInCore);
     std::string note;
-    row.newIncoreMs = RunConfig(filterList, spec.newFilterUuid, dsInCore, baseInCore, spec, geom, inputPath, outName, opts.warmup, opts.repeats, opts.projectionAxis, note);
+    row.new_incore_ms = RunConfig(filterListPtr, spec.new_filter_uuid, dsInCore, baseInCore, spec, geom, inputPath, outName, opts.warmup, opts.repeats, opts.projection_axis, note);
     if(!note.empty())
     {
       addNote("new-incore " + note);
@@ -399,14 +398,14 @@ BenchmarkRow RunFilterBenchmark(const BenchmarkFilterSpec& spec, const SweepOpti
 
   // --- new-OOC: ONLY when the CLI requested it AND an out-of-core backend is actually loaded (self-skip; never
   //     silently claim a number). ---
-  if(opts.oocRequested && DataStoreUtilities::GetIOCollection().anyManagerFinalizesImport())
+  if(opts.ooc_requested && data_store_utilities::GetIOCollection().anyManagerFinalizesImport())
   {
     DataStructure dsOoc;
     DataPath oocInput;
     bool built = false;
     {
-      const ip_bench::BenchmarkPreferenceSnapshot sentinel(*Application::Instance()->getPreferences(), DataStorageMode::ForceOutOfCore, opts.oocThreshold);
-      Result<DataPath> r = PrepareBenchmarkInput(dsOoc, spec, geom, cellAmName, inArrayName, opts.targetVoxels, opts.minZSlices, opts.force2D, DataStorageMode::ForceOutOfCore);
+      const ip_bench::BenchmarkPreferenceSnapshot sentinel(*Application::Instance()->getPreferences(), DataStorageMode::ForceOutOfCore, opts.ooc_threshold);
+      Result<DataPath> r = PrepareBenchmarkInput(dsOoc, spec, geom, cellAmName, inArrayName, opts.target_voxels, opts.min_z_slices, opts.force_2d, DataStorageMode::ForceOutOfCore);
       if(r.invalid())
       {
         addNote("ooc input build failed: " + FirstErrorMessage(r.errors()));
@@ -420,16 +419,16 @@ BenchmarkRow RunFilterBenchmark(const BenchmarkFilterSpec& spec, const SweepOpti
     if(built)
     {
       const std::unordered_set<DataObject::IdType> baseOoc = SnapshotIds(dsOoc);
-      const ip_bench::BenchmarkPreferenceSnapshot sentinel(*Application::Instance()->getPreferences(), DataStorageMode::ForceOutOfCore, opts.oocThreshold);
+      const ip_bench::BenchmarkPreferenceSnapshot sentinel(*Application::Instance()->getPreferences(), DataStorageMode::ForceOutOfCore, opts.ooc_threshold);
       std::string note;
-      row.newOocMs = RunConfig(filterList, spec.newFilterUuid, dsOoc, baseOoc, spec, geom, oocInput, outName, opts.warmup, opts.repeats, opts.projectionAxis, note);
+      row.new_ooc_ms = RunConfig(filterListPtr, spec.new_filter_uuid, dsOoc, baseOoc, spec, geom, oocInput, outName, opts.warmup, opts.repeats, opts.projection_axis, note);
       if(!note.empty())
       {
         addNote("new-ooc " + note);
       }
     }
   }
-  else if(opts.oocRequested)
+  else if(opts.ooc_requested)
   {
     addNote("OOC skipped: no out-of-core backend registered");
   }
@@ -445,38 +444,38 @@ std::vector<BenchmarkRow> RunSweep(const std::vector<const BenchmarkFilterSpec*>
 {
   std::vector<BenchmarkRow> rows;
   rows.reserve(specs.size());
-  for(const auto* spec : specs)
+  for(const auto* specPtr : specs)
   {
-    fmt::print("=== {} ===\n", spec->name);
+    fmt::print("=== {} ===\n", specPtr->name);
     std::fflush(stdout);
     BenchmarkRow row;
     try
     {
       // RunFilterBenchmark already isolates per-config failures; this guard defends against any unexpected throw so
       // one bad filter can never abort the whole sweep.
-      row = RunFilterBenchmark(*spec, opts);
+      row = RunFilterBenchmark(*specPtr, opts);
     } catch(const std::exception& ex)
     {
-      row.filter = spec->name;
+      row.filter = specPtr->name;
       row.notes = std::string("unhandled exception: ") + ex.what();
     }
-    if(opts.oocRequested)
+    if(opts.ooc_requested)
     {
       // RunFilterBenchmark owns all per-filter DataStructures, so their stores are gone when it returns. Clear
       // backend caches now so chunks belonging to those dead stores cannot consume memory or bias later sweep rows.
       try
       {
-        DataStoreUtilities::GetIOCollection().shutdownManagers();
+        data_store_utilities::GetIOCollection().shutdownManagers();
       } catch(const std::exception& ex)
       {
-        throw std::runtime_error(fmt::format("OOC backend cache cleanup failed after benchmark filter '{}': {}", spec->name, ex.what()));
+        throw std::runtime_error(fmt::format("OOC backend cache cleanup failed after benchmark filter '{}': {}", specPtr->name, ex.what()));
       } catch(...)
       {
-        throw std::runtime_error(fmt::format("OOC backend cache cleanup failed after benchmark filter '{}' with an unknown exception", spec->name));
+        throw std::runtime_error(fmt::format("OOC backend cache cleanup failed after benchmark filter '{}' with an unknown exception", specPtr->name));
       }
     }
-    fmt::print("{:<32} type={:<8} dims={:<16} new={:>10} ooc={:>10}{}\n", row.filter, row.type.empty() ? "?" : row.type, row.inDims.empty() ? "?" : row.inDims, MsCell(row.newIncoreMs),
-               MsCell(row.newOocMs), row.notes.empty() ? "" : ("  [" + row.notes + "]"));
+    fmt::print("{:<32} type={:<8} dims={:<16} new={:>10} ooc={:>10}{}\n", row.filter, row.type.empty() ? "?" : row.type, row.in_dims.empty() ? "?" : row.in_dims, MsCell(row.new_incore_ms),
+               MsCell(row.new_ooc_ms), row.notes.empty() ? "" : ("  [" + row.notes + "]"));
     std::fflush(stdout);
     rows.push_back(std::move(row));
   }
@@ -493,8 +492,8 @@ Result<> WriteCsv(const std::string& path, const std::vector<BenchmarkRow>& rows
   out << "filter,type,in_dims,in_voxels,new_incore_ms,new_ooc_ms,ooc_vs_incore,notes\n";
   for(const auto& r : rows)
   {
-    out << CsvEscape(r.filter) << ',' << CsvEscape(r.type) << ',' << CsvEscape(r.inDims) << ',' << r.inVoxels << ',' << MsCell(r.newIncoreMs) << ',' << MsCell(r.newOocMs) << ','
-        << RatioCell(r.newOocMs, r.newIncoreMs) << ',' << CsvEscape(r.notes) << '\n';
+    out << CsvEscape(r.filter) << ',' << CsvEscape(r.type) << ',' << CsvEscape(r.in_dims) << ',' << r.in_voxels << ',' << MsCell(r.new_incore_ms) << ',' << MsCell(r.new_ooc_ms) << ','
+        << RatioCell(r.new_ooc_ms, r.new_incore_ms) << ',' << CsvEscape(r.notes) << '\n';
   }
   if(out.fail())
   {
@@ -510,7 +509,7 @@ void PrintSummary(const std::vector<BenchmarkRow>& rows)
   std::vector<const BenchmarkRow*> byOoc;
   for(const auto& r : rows)
   {
-    if(r.newOocMs.has_value() && r.newIncoreMs.has_value() && *r.newIncoreMs > 0.0)
+    if(r.new_ooc_ms.has_value() && r.new_incore_ms.has_value() && *r.new_incore_ms > 0.0)
     {
       byOoc.push_back(&r);
     }
@@ -519,10 +518,10 @@ void PrintSummary(const std::vector<BenchmarkRow>& rows)
   {
     fmt::print("  (no OOC timings -- run with --mode ooc on a build with an out-of-core backend)\n");
   }
-  std::sort(byOoc.begin(), byOoc.end(), [](const BenchmarkRow* a, const BenchmarkRow* b) { return (*a->newOocMs / *a->newIncoreMs) > (*b->newOocMs / *b->newIncoreMs); });
-  for(const BenchmarkRow* r : byOoc)
+  std::sort(byOoc.begin(), byOoc.end(), [](const BenchmarkRow* a, const BenchmarkRow* b) { return (*a->new_ooc_ms / *a->new_incore_ms) > (*b->new_ooc_ms / *b->new_incore_ms); });
+  for(const BenchmarkRow* rPtr : byOoc)
   {
-    fmt::print("  {:<32} ooc/incore={:6.3f}   (ooc={:.2f} ms, incore={:.2f} ms)\n", r->filter, *r->newOocMs / *r->newIncoreMs, *r->newOocMs, *r->newIncoreMs);
+    fmt::print("  {:<32} ooc/incore={:6.3f}   (ooc={:.2f} ms, incore={:.2f} ms)\n", rPtr->filter, *rPtr->new_ooc_ms / *rPtr->new_incore_ms, *rPtr->new_ooc_ms, *rPtr->new_incore_ms);
   }
 }
 
@@ -556,22 +555,22 @@ Result<> MergeCsv(const std::string& incoreCsv, const std::string& oocCsv, const
     BenchmarkRow row;
     row.filter = in.filter;
     row.type = in.type;
-    row.inDims = in.inDims;
-    row.inVoxels = 0;
+    row.in_dims = in.in_dims;
+    row.in_voxels = 0;
     try
     {
-      row.inVoxels = in.inVoxels.empty() ? 0ULL : std::stoull(in.inVoxels);
+      row.in_voxels = in.in_voxels.empty() ? 0ULL : std::stoull(in.in_voxels);
     } catch(const std::exception&)
     {
-      row.inVoxels = 0;
+      row.in_voxels = 0;
     }
-    row.newIncoreMs = in.newIncoreMs;
+    row.new_incore_ms = in.new_incore_ms;
     std::string notes = in.notes;
 
     const auto it = oocByKey.find(key(in));
     if(it != oocByKey.end())
     {
-      row.newOocMs = it->second->newOocMs;
+      row.new_ooc_ms = it->second->new_ooc_ms;
       if(!it->second->notes.empty())
       {
         notes = notes.empty() ? it->second->notes : (notes + "; " + it->second->notes);

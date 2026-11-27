@@ -1,5 +1,7 @@
 #include "GroupMicroTextureRegions.hpp"
 
+#include <cmath>
+
 #include "simplnx/Common/Constants.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/NeighborList.hpp"
@@ -25,11 +27,11 @@ GroupMicroTextureRegions::GroupMicroTextureRegions(DataStructure& dataStructure,
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
-, m_FeaturePhases(m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath))
-, m_FeatureParentIds(m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureParentIdsArrayName))
-, m_CrystalStructures(m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath))
-, m_AvgQuats(m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgQuatsArrayPath))
-, m_Volumes(m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->VolumesArrayPath))
+, m_FeaturePhases(m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_phases_array_path))
+, m_FeatureParentIds(m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_parent_ids_array_name))
+, m_CrystalStructures(m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path))
+, m_AvgQuats(m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->avg_quats_array_path))
+, m_Volumes(m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->volumes_array_path))
 {
 }
 
@@ -101,8 +103,8 @@ Result<> GroupMicroTextureRegions::cacheFeatureData()
 // -----------------------------------------------------------------------------
 Result<> GroupMicroTextureRegions::remapCellParentIds()
 {
-  auto& cellParentIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellParentIdsArrayName);
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  auto& cellParentIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_parent_ids_array_name);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
   const auto& featureIdsStore = featureIds.getDataStoreRef();
   auto& cellParentIdsStore = cellParentIds.getDataStoreRef();
   const usize totalPoints = featureIds.getNumberOfTuples();
@@ -142,11 +144,11 @@ Result<> GroupMicroTextureRegions::execute()
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;
   ThrottledMessageHandler progressThrottle(messageHandler);
 
-  NeighborList<int32>& featureNeighborListRef = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->ContiguousNeighborListArrayPath);
+  NeighborList<int32>& featureNeighborListRef = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->contiguous_neighbor_list_array_path);
   NeighborList<int32>* nonContigNeighListPtr = nullptr;
-  if(m_InputValues->UseNonContiguousNeighbors)
+  if(m_InputValues->use_non_contiguous_neighbors)
   {
-    nonContigNeighListPtr = m_DataStructure.getDataAs<NeighborList<int32>>(m_InputValues->NonContiguousNeighborListArrayPath);
+    nonContigNeighListPtr = m_DataStructure.getDataAs<NeighborList<int32>>(m_InputValues->non_contiguous_neighbor_list_array_path);
     if(nullptr == nonContigNeighListPtr)
     {
       return MakeErrorResult(-99345, "There was an error getting the Non-contiguous neighborlist from the DataStructure");
@@ -180,7 +182,7 @@ Result<> GroupMicroTextureRegions::execute()
     {
       const int32 currentFeatureIdx = groupList[groupListIdx];
       list1size = static_cast<int32>(featureNeighborListRef[currentFeatureIdx].size());
-      if(m_InputValues->UseNonContiguousNeighbors)
+      if(m_InputValues->use_non_contiguous_neighbors)
       {
         list2size = nonContigNeighListPtr->getListSize(currentFeatureIdx);
       }
@@ -195,7 +197,7 @@ Result<> GroupMicroTextureRegions::execute()
           {
             neighborFeatureIdx = featureNeighborListRef[currentFeatureIdx][neighborIdx];
           }
-          else if(neighborListIdx == 1 && m_InputValues->UseNonContiguousNeighbors)
+          else if(neighborListIdx == 1 && m_InputValues->use_non_contiguous_neighbors)
           {
             bool ok = false;
             neighborFeatureIdx = nonContigNeighListPtr->getValue(currentFeatureIdx, neighborIdx, ok);
@@ -226,7 +228,7 @@ Result<> GroupMicroTextureRegions::operator()()
 {
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;
 
-  m_Generator = std::mt19937_64(m_InputValues->SeedValue);
+  m_Generator = std::mt19937_64(m_InputValues->seed_value);
   m_Distribution = std::uniform_real_distribution<float32>(0.0f, 1.0f);
 
   // Initialize Data
@@ -258,12 +260,12 @@ Result<> GroupMicroTextureRegions::operator()()
   {
     return MakeErrorResult(-87000, fmt::format("The number of grouped Features was {} which means no grouped features were detected. A grouping value may be set too high", m_NumTuples));
   }
-  if(Result<> resizeResult = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->NewCellFeatureAttributeMatrixName).resizeTuples(ShapeType{m_NumTuples}); resizeResult.invalid())
+  if(Result<> resizeResult = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->new_cell_feature_attribute_matrix_name).resizeTuples(ShapeType{m_NumTuples}); resizeResult.invalid())
   {
     return ConvertResult(std::move(resizeResult));
   }
 
-  if(m_InputValues->RandomizeParentIds)
+  if(m_InputValues->randomize_parent_ids)
   {
     messageHandler.sendInfoMessage(fmt::format("Randomizing Parent Ids"));
     randomizeParentIds(m_NumTuples);
@@ -329,7 +331,7 @@ int GroupMicroTextureRegions::getSeed(int32 newFid)
     m_FeatureParentIdsCache[featureIdSeed] = newFid;
     m_NumTuples = newFid + 1;
 
-    if(m_InputValues->UseRunningAverage)
+    if(m_InputValues->use_running_average)
     {
       usize index = featureIdSeed * 4;
       // Get the orientation matrix (which is passive) and then transpose it to make it active transform
@@ -362,21 +364,21 @@ Result<bool> GroupMicroTextureRegions::determineGrouping(int32 referenceFeatureI
       return MakeErrorResult<bool>(
           -87001,
           fmt::format("Feature Phases array '{}' has value {} at reference Feature index {}, but Crystal Structures array '{}' contains {} tuples. Valid positive Phase indices are in [1, {}).",
-                      m_InputValues->FeaturePhasesArrayPath.toString(), referenceFeaturePhaseIdx, referenceFeatureIdx, m_InputValues->CrystalStructuresArrayPath.toString(), numCrystalStructures,
+                      m_InputValues->feature_phases_array_path.toString(), referenceFeaturePhaseIdx, referenceFeatureIdx, m_InputValues->crystal_structures_array_path.toString(), numCrystalStructures,
                       numCrystalStructures));
     }
     if(static_cast<usize>(neighborFeaturePhaseIdx) >= numCrystalStructures)
     {
       return MakeErrorResult<bool>(
           -87001, fmt::format("Feature Phases array '{}' has value {} at neighbor Feature index {}, but Crystal Structures array '{}' contains {} tuples. Valid positive Phase indices are in [1, {}).",
-                              m_InputValues->FeaturePhasesArrayPath.toString(), neighborFeaturePhaseIdx, neighborFeatureIdx, m_InputValues->CrystalStructuresArrayPath.toString(), numCrystalStructures,
-                              numCrystalStructures));
+                              m_InputValues->feature_phases_array_path.toString(), neighborFeaturePhaseIdx, neighborFeatureIdx, m_InputValues->crystal_structures_array_path.toString(),
+                              numCrystalStructures, numCrystalStructures));
     }
 
     ebsdlib::Matrix3X1F c1 = {0.0f, 0.0f, 0.0f};
     ebsdlib::Matrix3X1F cAxis(0.0f, 0.0f, 1.0f);
 
-    if(!m_InputValues->UseRunningAverage)
+    if(!m_InputValues->use_running_average)
     {
       const usize index = referenceFeatureIdx * 4;
       // The transposed matrix maps crystal [001] into the sample frame.
@@ -394,8 +396,8 @@ Result<bool> GroupMicroTextureRegions::determineGrouping(int32 referenceFeatureI
           ebsdlib::Quaternion<float32>(m_AvgQuatsCache[index + 0], m_AvgQuatsCache[index + 1], m_AvgQuatsCache[index + 2], m_AvgQuatsCache[index + 3]).toOrientationMatrix().toGMatrix().transpose();
       ebsdlib::Matrix3X1F c2 = (g2t * cAxis).normalize();
 
-      float32 w;
-      if(m_InputValues->UseRunningAverage)
+      float32 w = NAN;
+      if(m_InputValues->use_running_average)
       {
         w = m_AvgCAxes.cosTheta(c2);
       }
@@ -406,11 +408,11 @@ Result<bool> GroupMicroTextureRegions::determineGrouping(int32 referenceFeatureI
       w = std::acos(std::clamp(w, -1.0f, 1.0f));
 
       // Convert user defined tolerance to radians.
-      float32 cAxisToleranceRad = m_InputValues->CAxisTolerance * nx::core::Constants::k_PiF / 180.0f;
-      if(w <= cAxisToleranceRad || (nx::core::Constants::k_PiD - w) <= cAxisToleranceRad)
+      float32 cAxisToleranceRad = m_InputValues->c_axis_tolerance * nx::core::constants::k_PiF / 180.0f;
+      if(w <= cAxisToleranceRad || (nx::core::constants::k_PiD - w) <= cAxisToleranceRad)
       {
         m_FeatureParentIdsCache[neighborFeatureIdx] = newFid;
-        if(m_InputValues->UseRunningAverage)
+        if(m_InputValues->use_running_average)
         {
           c2 = c2 * m_VolumesCache[neighborFeatureIdx];
           m_AvgCAxes = m_AvgCAxes + c2;

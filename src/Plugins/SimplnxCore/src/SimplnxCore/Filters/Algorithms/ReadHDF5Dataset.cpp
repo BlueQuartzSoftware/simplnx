@@ -21,17 +21,15 @@ ReadHDF5Dataset::ReadHDF5Dataset(DataStructure& dataStructure, const IFilter::Me
 {
 }
 
-ReadHDF5Dataset::~ReadHDF5Dataset() noexcept = default;
-
 Result<> ReadHDF5Dataset::operator()()
 {
-  auto pSelectedAttributeMatrixValue = m_InputValues->ImportHdf5Object.parent;
-  auto inputFile = m_InputValues->ImportHdf5Object.inputFile;
+  auto pSelectedAttributeMatrixValue = m_InputValues->import_hdf5_object.parent;
+  auto inputFile = m_InputValues->import_hdf5_object.input_file;
   fs::path inputFilePath(inputFile);
-  auto datasetImportInfoList = m_InputValues->ImportHdf5Object.datasets;
+  auto datasetImportInfoList = m_InputValues->import_hdf5_object.datasets;
 
-  auto h5FileReader = nx::core::HDF5::FileIO::ReadFile(inputFilePath);
-  if(h5FileReader.isValid() == false)
+  auto h5FileReader = nx::core::hdf5::FileIO::ReadFile(inputFilePath);
+  if(!h5FileReader.isValid())
   {
     return MakeErrorResult(-21000, fmt::format("Error Reading HDF5 file: '{}'", inputFile));
   }
@@ -44,7 +42,7 @@ Result<> ReadHDF5Dataset::operator()()
       return {};
     }
 
-    std::string datasetPath = datasetImportInfo.dataSetPath;
+    std::string datasetPath = datasetImportInfo.data_set_path;
     auto datasetReader = h5FileReader.openDataset(datasetPath);
 
     std::string objectName = datasetReader.getName();
@@ -52,47 +50,47 @@ Result<> ReadHDF5Dataset::operator()()
     DataPath dataArrayPath = pSelectedAttributeMatrixValue.has_value() ? pSelectedAttributeMatrixValue.value().createChildPath(objectName) : DataPath::FromString(objectName).value();
     Result<> fillArrayResults;
     auto h5TypeResult = datasetReader.getDataType();
-    const auto type = std::move(h5TypeResult.value());
+    const auto type = h5TypeResult.value();
     switch(type)
     {
     case DataType::float32: {
-      fillArrayResults = HDF5::Support::FillDataArray<float32>(m_DataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = hdf5::Support::FillDataArray<float32>(m_DataStructure, dataArrayPath, datasetReader);
       break;
     }
     case DataType::float64: {
-      fillArrayResults = HDF5::Support::FillDataArray<float64>(m_DataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = hdf5::Support::FillDataArray<float64>(m_DataStructure, dataArrayPath, datasetReader);
       break;
     }
     case DataType::int8: {
-      fillArrayResults = HDF5::Support::FillDataArray<int8>(m_DataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = hdf5::Support::FillDataArray<int8>(m_DataStructure, dataArrayPath, datasetReader);
       break;
     }
     case DataType::int16: {
-      fillArrayResults = HDF5::Support::FillDataArray<int16>(m_DataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = hdf5::Support::FillDataArray<int16>(m_DataStructure, dataArrayPath, datasetReader);
       break;
     }
     case DataType::int32: {
-      fillArrayResults = HDF5::Support::FillDataArray<int32>(m_DataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = hdf5::Support::FillDataArray<int32>(m_DataStructure, dataArrayPath, datasetReader);
       break;
     }
     case DataType::int64: {
-      fillArrayResults = HDF5::Support::FillDataArray<int64>(m_DataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = hdf5::Support::FillDataArray<int64>(m_DataStructure, dataArrayPath, datasetReader);
       break;
     }
     case DataType::uint8: {
-      fillArrayResults = HDF5::Support::FillDataArray<uint8>(m_DataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = hdf5::Support::FillDataArray<uint8>(m_DataStructure, dataArrayPath, datasetReader);
       break;
     }
     case DataType::uint16: {
-      fillArrayResults = HDF5::Support::FillDataArray<uint16>(m_DataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = hdf5::Support::FillDataArray<uint16>(m_DataStructure, dataArrayPath, datasetReader);
       break;
     }
     case DataType::uint32: {
-      fillArrayResults = HDF5::Support::FillDataArray<uint32>(m_DataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = hdf5::Support::FillDataArray<uint32>(m_DataStructure, dataArrayPath, datasetReader);
       break;
     }
     case DataType::uint64: {
-      fillArrayResults = HDF5::Support::FillDataArray<uint64>(m_DataStructure, dataArrayPath, datasetReader);
+      fillArrayResults = hdf5::Support::FillDataArray<uint64>(m_DataStructure, dataArrayPath, datasetReader);
       break;
     }
     default: {

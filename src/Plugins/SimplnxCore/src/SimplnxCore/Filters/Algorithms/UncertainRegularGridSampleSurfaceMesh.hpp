@@ -22,14 +22,14 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT UncertainRegularGridSampleSurfaceMeshInputValues
 {
-  uint64 SeedValue;
-  VectorUInt64Parameter::ValueType Dimensions;
-  VectorFloat32Parameter::ValueType Spacing;
-  VectorFloat32Parameter::ValueType Origin;
-  VectorFloat32Parameter::ValueType Uncertainty;
-  DataPath TriangleGeometryPath;
-  DataPath SurfaceMeshFaceLabelsArrayPath;
-  DataPath FeatureIdsArrayPath;
+  uint64 seed_value{};
+  VectorUInt64ParameterType::ValueType dimensions;
+  VectorFloat32ParameterType::ValueType spacing;
+  VectorFloat32ParameterType::ValueType origin;
+  VectorFloat32ParameterType::ValueType uncertainty;
+  DataPath triangle_geometry_path;
+  DataPath surface_mesh_face_labels_array_path;
+  DataPath feature_ids_array_path;
 };
 
 /**
@@ -92,7 +92,7 @@ protected:
    * @return Dimensions converted to usize.
    * @pre Each configured dimension fits usize.
    */
-  SizeVec3 getGridDimensions() const override;
+  SizeVec3Type getGridDimensions() const override;
 
   /**
    * @brief Generates one slice of jittered cell-center points.
@@ -102,7 +102,7 @@ protected:
    *
    * This method does not inspect cancellation during the slice draw sequence.
    */
-  void generateSlicePoints(usize zSlice, std::vector<Point3Df>& slicePoints) override;
+  void generateSlicePoints(usize zSlice, std::vector<FloatVec3Type>& slicePoints) override;
 
 private:
   DataStructure& m_DataStructure;

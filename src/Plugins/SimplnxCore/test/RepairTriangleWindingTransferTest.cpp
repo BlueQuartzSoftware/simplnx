@@ -47,16 +47,16 @@ struct InjectedFailure
   const char* message;
 };
 
-constexpr InjectedFailure k_TriangleReadFailure{Transfer::ReadTriangles, -95251, "Injected triangle winding connectivity read refusal."};
-constexpr InjectedFailure k_IdReadFailure{Transfer::ReadIds, -95252, "Injected triangle winding ID read refusal."};
-constexpr InjectedFailure k_TriangleWriteFailure{Transfer::WriteTriangles, -95253, "Injected triangle winding connectivity write refusal."};
+constexpr InjectedFailure k_TriangleReadFailure{.operation = Transfer::ReadTriangles, .code = -95251, .message = "Injected triangle winding connectivity read refusal."};
+constexpr InjectedFailure k_IdReadFailure{.operation = Transfer::ReadIds, .code = -95252, .message = "Injected triangle winding ID read refusal."};
+constexpr InjectedFailure k_TriangleWriteFailure{.operation = Transfer::WriteTriangles, .code = -95253, .message = "Injected triangle winding connectivity write refusal."};
 
 struct TransferTrace
 {
   bool armed = false;
   const InjectedFailure* failure = nullptr;
   std::vector<TransferCall> calls;
-  std::vector<Transfer> rejectedCalls;
+  std::vector<Transfer> rejected_calls;
 };
 
 /**
@@ -103,7 +103,7 @@ public:
       m_Trace.calls.push_back({m_ReadOperation, startIndex, buffer.size()});
       if(m_Trace.failure != nullptr && m_Trace.failure->operation == m_ReadOperation)
       {
-        m_Trace.rejectedCalls.push_back(m_ReadOperation);
+        m_Trace.rejected_calls.push_back(m_ReadOperation);
         return MakeErrorResult(m_Trace.failure->code, m_Trace.failure->message);
       }
     }
@@ -121,10 +121,10 @@ public:
     if(m_Trace.armed)
     {
       m_Trace.calls.push_back({m_WriteOperation, startIndex, buffer.size()});
-      attemptedWrite.assign(buffer.begin(), buffer.end());
+      attempted_write.assign(buffer.begin(), buffer.end());
       if(m_Trace.failure != nullptr && m_Trace.failure->operation == m_WriteOperation)
       {
-        m_Trace.rejectedCalls.push_back(m_WriteOperation);
+        m_Trace.rejected_calls.push_back(m_WriteOperation);
         return MakeErrorResult(m_Trace.failure->code, m_Trace.failure->message);
       }
     }
@@ -132,7 +132,7 @@ public:
   }
 
   // The payload survives a refused write so the test can inspect the computed connectivity.
-  std::vector<T> attemptedWrite;
+  std::vector<T> attempted_write;
 
 private:
   TransferTrace& m_Trace;
@@ -144,24 +144,66 @@ struct WindingCase
 {
   const char* name;
   const InjectedFailure* failure;
-  bool preCancelled;
-  bool cancelAfterFeature;
-  usize expectedCalls;
-  const ConnectivityType* expectedStoredTriangles;
-  const ConnectivityType* expectedWrittenTriangles;
+  bool pre_cancelled;
+  bool cancel_after_feature;
+  usize expected_calls;
+  const ConnectivityType* expected_stored_triangles;
+  const ConnectivityType* expected_written_triangles;
 };
 
 constexpr std::array<WindingCase, 4> k_TransferCases{{
-    {"successful control", nullptr, false, false, 3, &k_RepairedTriangles, &k_RepairedTriangles},
-    {"connectivity read refusal", &k_TriangleReadFailure, false, false, 1, &k_InputTriangles, nullptr},
-    {"ID read refusal", &k_IdReadFailure, false, false, 2, &k_InputTriangles, nullptr},
-    {"connectivity write refusal", &k_TriangleWriteFailure, false, false, 3, &k_InputTriangles, &k_RepairedTriangles},
+    {.name = "successful control",
+     .failure = nullptr,
+     .pre_cancelled = false,
+     .cancel_after_feature = false,
+     .expected_calls = 3,
+     .expected_stored_triangles = &k_RepairedTriangles,
+     .expected_written_triangles = &k_RepairedTriangles},
+    {.name = "connectivity read refusal",
+     .failure = &k_TriangleReadFailure,
+     .pre_cancelled = false,
+     .cancel_after_feature = false,
+     .expected_calls = 1,
+     .expected_stored_triangles = &k_InputTriangles,
+     .expected_written_triangles = nullptr},
+    {.name = "ID read refusal",
+     .failure = &k_IdReadFailure,
+     .pre_cancelled = false,
+     .cancel_after_feature = false,
+     .expected_calls = 2,
+     .expected_stored_triangles = &k_InputTriangles,
+     .expected_written_triangles = nullptr},
+    {.name = "connectivity write refusal",
+     .failure = &k_TriangleWriteFailure,
+     .pre_cancelled = false,
+     .cancel_after_feature = false,
+     .expected_calls = 3,
+     .expected_stored_triangles = &k_InputTriangles,
+     .expected_written_triangles = &k_RepairedTriangles},
 }};
 
 constexpr std::array<WindingCase, 3> k_CancellationCases{{
-    {"pre-cancelled control", nullptr, true, false, 3, &k_InputTriangles, &k_InputTriangles},
-    {"cancellation after feature 1", nullptr, false, true, 3, &k_PartialTriangles, &k_PartialTriangles},
-    {"write refusal after feature 1 cancellation", &k_TriangleWriteFailure, false, true, 3, &k_InputTriangles, &k_PartialTriangles},
+    {.name = "pre-cancelled control",
+     .failure = nullptr,
+     .pre_cancelled = true,
+     .cancel_after_feature = false,
+     .expected_calls = 3,
+     .expected_stored_triangles = &k_InputTriangles,
+     .expected_written_triangles = &k_InputTriangles},
+    {.name = "cancellation after feature 1",
+     .failure = nullptr,
+     .pre_cancelled = false,
+     .cancel_after_feature = true,
+     .expected_calls = 3,
+     .expected_stored_triangles = &k_PartialTriangles,
+     .expected_written_triangles = &k_PartialTriangles},
+    {.name = "write refusal after feature 1 cancellation",
+     .failure = &k_TriangleWriteFailure,
+     .pre_cancelled = false,
+     .cancel_after_feature = true,
+     .expected_calls = 3,
+     .expected_stored_triangles = &k_InputTriangles,
+     .expected_written_triangles = &k_PartialTriangles},
 }};
 
 /**
@@ -192,15 +234,15 @@ void CheckWindingCase(bool useFaceLabels, const WindingCase& windingCase)
   REQUIRE(triangles.getStoreType() == IDataStore::StoreType::InMemory);
   REQUIRE(ids.getStoreType() == IDataStore::StoreType::InMemory);
   REQUIRE(trace.calls.empty());
-  REQUIRE(trace.rejectedCalls.empty());
-  REQUIRE(triangles.attemptedWrite.empty());
-  REQUIRE(ids.attemptedWrite.empty());
+  REQUIRE(trace.rejected_calls.empty());
+  REQUIRE(triangles.attempted_write.empty());
+  REQUIRE(ids.attempted_write.empty());
 
-  std::atomic_bool shouldCancel = windingCase.preCancelled;
+  std::atomic_bool shouldCancel = windingCase.pre_cancelled;
   usize cancellationWitnesses = 0;
-  const IFilter::MessageHandler handler{IFilter::MessageHandler::Callback{[&](const IFilter::Message& message) {
+  const IFilter::MessageHandler handler{IFilter::MessageHandler::CallbackType{[&](const IFilter::Message& message) {
     // reset() opens the first progress gate; this synchronous callback stops traversal before feature 2.
-    if(windingCase.cancelAfterFeature && message.type == IFilter::Message::Type::Progress && message.progress == 50 && message.message.rfind("Repairing Feature Windings", 0) == 0)
+    if(windingCase.cancel_after_feature && message.type == IFilter::Message::Type::Progress && message.progress == 50 && message.message.starts_with("Repairing Feature Windings"))
     {
       ++cancellationWitnesses;
       shouldCancel.store(true);
@@ -209,14 +251,14 @@ void CheckWindingCase(bool useFaceLabels, const WindingCase& windingCase)
 
   trace.failure = windingCase.failure;
   trace.armed = true;
-  const auto result = MeshingUtilities::RepairTriangleWinding(triangles, *neighborsPtr, ids, shouldCancel, handler);
+  const auto result = meshing_utilities::RepairTriangleWinding(triangles, *neighborsPtr, ids, shouldCancel, handler);
   trace.armed = false;
 
   REQUIRE(result.warnings().empty());
   if(windingCase.failure == nullptr)
   {
     REQUIRE(result.valid());
-    REQUIRE(trace.rejectedCalls.empty());
+    REQUIRE(trace.rejected_calls.empty());
   }
   else
   {
@@ -224,43 +266,45 @@ void CheckWindingCase(bool useFaceLabels, const WindingCase& windingCase)
     REQUIRE(result.errors().size() == 1);
     REQUIRE(result.errors()[0].code == windingCase.failure->code);
     REQUIRE(result.errors()[0].message == windingCase.failure->message);
-    REQUIRE(trace.rejectedCalls.size() == 1);
-    REQUIRE(trace.rejectedCalls[0] == windingCase.failure->operation);
+    REQUIRE(trace.rejected_calls.size() == 1);
+    REQUIRE(trace.rejected_calls[0] == windingCase.failure->operation);
   }
 
-  const std::array<TransferCall, 3> expectedTransfers{{{Transfer::ReadTriangles, 0, 12}, {Transfer::ReadIds, 0, inputIds.size()}, {Transfer::WriteTriangles, 0, 12}}};
-  REQUIRE(trace.calls.size() == windingCase.expectedCalls);
-  REQUIRE(windingCase.expectedCalls <= expectedTransfers.size());
-  for(usize callIdx = 0; callIdx < windingCase.expectedCalls; ++callIdx)
+  const std::array<TransferCall, 3> expectedTransfers{{{.operation = Transfer::ReadTriangles, .offset = 0, .values = 12},
+                                                       {.operation = Transfer::ReadIds, .offset = 0, .values = inputIds.size()},
+                                                       {.operation = Transfer::WriteTriangles, .offset = 0, .values = 12}}};
+  REQUIRE(trace.calls.size() == windingCase.expected_calls);
+  REQUIRE(windingCase.expected_calls <= expectedTransfers.size());
+  for(usize callIdx = 0; callIdx < windingCase.expected_calls; ++callIdx)
   {
     CAPTURE(callIdx);
     REQUIRE(trace.calls[callIdx].operation == expectedTransfers[callIdx].operation);
     REQUIRE(trace.calls[callIdx].offset == expectedTransfers[callIdx].offset);
     REQUIRE(trace.calls[callIdx].values == expectedTransfers[callIdx].values);
   }
-  REQUIRE(cancellationWitnesses == (windingCase.cancelAfterFeature ? 1 : 0));
-  REQUIRE(shouldCancel.load() == (windingCase.preCancelled || windingCase.cancelAfterFeature));
+  REQUIRE(cancellationWitnesses == (windingCase.cancel_after_feature ? 1 : 0));
+  REQUIRE(shouldCancel.load() == (windingCase.pre_cancelled || windingCase.cancel_after_feature));
 
-  REQUIRE(triangles.getSize() == windingCase.expectedStoredTriangles->size());
+  REQUIRE(triangles.getSize() == windingCase.expected_stored_triangles->size());
   for(usize valueIdx = 0; valueIdx < triangles.getSize(); ++valueIdx)
   {
     CAPTURE(valueIdx);
-    REQUIRE(triangles[valueIdx] == (*windingCase.expectedStoredTriangles)[valueIdx]);
+    REQUIRE(triangles[valueIdx] == (*windingCase.expected_stored_triangles)[valueIdx]);
   }
-  if(windingCase.expectedWrittenTriangles == nullptr)
+  if(windingCase.expected_written_triangles == nullptr)
   {
-    REQUIRE(triangles.attemptedWrite.empty());
+    REQUIRE(triangles.attempted_write.empty());
   }
   else
   {
-    REQUIRE(triangles.attemptedWrite.size() == windingCase.expectedWrittenTriangles->size());
-    for(usize valueIdx = 0; valueIdx < triangles.attemptedWrite.size(); ++valueIdx)
+    REQUIRE(triangles.attempted_write.size() == windingCase.expected_written_triangles->size());
+    for(usize valueIdx = 0; valueIdx < triangles.attempted_write.size(); ++valueIdx)
     {
       CAPTURE(valueIdx);
-      REQUIRE(triangles.attemptedWrite[valueIdx] == (*windingCase.expectedWrittenTriangles)[valueIdx]);
+      REQUIRE(triangles.attempted_write[valueIdx] == (*windingCase.expected_written_triangles)[valueIdx]);
     }
   }
-  REQUIRE(ids.attemptedWrite.empty());
+  REQUIRE(ids.attempted_write.empty());
   REQUIRE(ids.getSize() == inputIds.size());
   for(usize valueIdx = 0; valueIdx < inputIds.size(); ++valueIdx)
   {

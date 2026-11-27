@@ -4,7 +4,7 @@
 #include "NXImageProcessing/NXImageProcessingPlugin.hpp"
 
 using namespace nx::core;
-using namespace nx::core::NxPybind;
+using namespace nx::core::nx_pybind;
 namespace py = pybind11;
 
 PYBIND11_MODULE(nximageprocessing, mod)

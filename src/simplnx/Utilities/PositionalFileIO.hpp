@@ -24,12 +24,12 @@
 namespace nx::core::detail
 {
 #ifdef _WIN32
-using FileHandle = HANDLE;
-inline FileHandle invalidFileHandle()
+using FileHandleType = HANDLE;
+inline FileHandleType InvalidFileHandle()
 {
   return INVALID_HANDLE_VALUE;
 }
-inline bool isValidFileHandle(FileHandle h)
+inline bool IsValidFileHandle(FileHandleType h)
 {
   return h != INVALID_HANDLE_VALUE;
 }
@@ -41,7 +41,7 @@ inline bool isValidFileHandle(FileHandle h)
  *
  * Read and write sharing permits access while HDF5 has the same file open.
  */
-inline FileHandle openFileForRead(const std::string& path)
+inline FileHandleType OpenFileForRead(const std::string& path)
 {
   // FILE_SHARE_READ | FILE_SHARE_WRITE so HDF5's own open handle on the same file
   // does not conflict with our independent read handle.
@@ -53,7 +53,7 @@ inline FileHandle openFileForRead(const std::string& path)
  * @param path Native file path.
  * @return Read-write handle, or `invalidFileHandle()` on failure.
  */
-inline FileHandle openFileForReadWrite(const std::filesystem::path& path)
+inline FileHandleType OpenFileForReadWrite(const std::filesystem::path& path)
 {
   return CreateFileW(path.c_str(), GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
 }
@@ -68,7 +68,7 @@ inline FileHandle openFileForReadWrite(const std::filesystem::path& path)
  * @pre `buf` points to at least `bytes` writable bytes.
  * @note The function changes the handle position. Concurrent calls require separate handles.
  */
-inline std::ptrdiff_t positionalRead(FileHandle h, void* buf, std::size_t bytes, uint64_t offset)
+inline std::ptrdiff_t PositionalRead(FileHandleType h, void* buf, std::size_t bytes, uint64_t offset)
 {
   if(bytes > static_cast<std::size_t>(std::numeric_limits<DWORD>::max()) || offset > static_cast<uint64_t>(std::numeric_limits<LONGLONG>::max()))
   {
@@ -100,7 +100,7 @@ inline std::ptrdiff_t positionalRead(FileHandle h, void* buf, std::size_t bytes,
  * @pre `buf` points to at least `bytes` readable bytes.
  * @note The function changes the handle position. Concurrent calls require separate handles.
  */
-inline std::ptrdiff_t positionalWrite(FileHandle h, const void* buf, std::size_t bytes, uint64_t offset)
+inline std::ptrdiff_t PositionalWrite(FileHandleType h, const void* buf, std::size_t bytes, uint64_t offset)
 {
   if(bytes > static_cast<std::size_t>(std::numeric_limits<DWORD>::max()) || offset > static_cast<uint64_t>(std::numeric_limits<LONGLONG>::max()))
   {
@@ -126,17 +126,17 @@ inline std::ptrdiff_t positionalWrite(FileHandle h, const void* buf, std::size_t
  * @brief Closes a valid Windows file handle.
  * @param h Handle to close.
  */
-inline void closeFileHandle(FileHandle h)
+inline void CloseFileHandle(FileHandleType h)
 {
   CloseHandle(h);
 }
 #else
-using FileHandle = int;
-inline FileHandle invalidFileHandle()
+using FileHandleType = int;
+inline FileHandleType InvalidFileHandle()
 {
   return -1;
 }
-inline bool isValidFileHandle(FileHandle h)
+inline bool IsValidFileHandle(FileHandleType h)
 {
   return h >= 0;
 }
@@ -146,7 +146,7 @@ inline bool isValidFileHandle(FileHandle h)
  * @param path Supplies the native file path.
  * @return Read descriptor, or invalidFileHandle() on failure.
  */
-inline FileHandle openFileForRead(const std::string& path)
+inline FileHandleType OpenFileForRead(const std::string& path)
 {
   return ::open(path.c_str(), O_RDONLY);
 }
@@ -156,7 +156,7 @@ inline FileHandle openFileForRead(const std::string& path)
  * @param path Native file path.
  * @return Read-write descriptor, or `invalidFileHandle()` on failure.
  */
-inline FileHandle openFileForReadWrite(const std::filesystem::path& path)
+inline FileHandleType OpenFileForReadWrite(const std::filesystem::path& path)
 {
   return ::open(path.c_str(), O_RDWR);
 }
@@ -170,7 +170,7 @@ inline FileHandle openFileForReadWrite(const std::filesystem::path& path)
  * @return Number of bytes read, or -1 on failure.
  * @pre `buf` points to at least `bytes` writable bytes. `offset` fits in `off_t`.
  */
-inline std::ptrdiff_t positionalRead(FileHandle h, void* buf, std::size_t bytes, uint64_t offset)
+inline std::ptrdiff_t PositionalRead(FileHandleType h, void* buf, std::size_t bytes, uint64_t offset)
 {
   std::ptrdiff_t result = 0;
   do
@@ -189,7 +189,7 @@ inline std::ptrdiff_t positionalRead(FileHandle h, void* buf, std::size_t bytes,
  * @return Number of bytes written, or -1 on failure.
  * @pre `buf` points to at least `bytes` readable bytes. `offset` fits in `off_t`.
  */
-inline std::ptrdiff_t positionalWrite(FileHandle h, const void* buf, std::size_t bytes, uint64_t offset)
+inline std::ptrdiff_t PositionalWrite(FileHandleType h, const void* buf, std::size_t bytes, uint64_t offset)
 {
   std::ptrdiff_t result = 0;
   do
@@ -203,7 +203,7 @@ inline std::ptrdiff_t positionalWrite(FileHandle h, const void* buf, std::size_t
  * @brief Closes a valid POSIX file descriptor.
  * @param h Supplies the descriptor to close.
  */
-inline void closeFileHandle(FileHandle h)
+inline void CloseFileHandle(FileHandleType h)
 {
   ::close(h);
 }

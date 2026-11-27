@@ -41,38 +41,38 @@ public:
 
   void compute(usize start, usize end) const
   {
-    auto* array0 = m_Length ? m_Arrays[0]->template getIDataStoreAs<AbstractDataStore<uint64>>() : nullptr;
-    if(m_Length && array0 == nullptr)
+    auto* array0Ptr = m_Length ? m_Arrays[0]->template getIDataStoreAs<AbstractDataStore<uint64>>() : nullptr;
+    if(m_Length && array0Ptr == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Length' array to needed type. Check input array selection.");
     }
-    auto* array1 = m_Min ? m_Arrays[1]->template getIDataStoreAs<StoreType>() : nullptr;
-    if(m_Min && array1 == nullptr)
+    auto* array1Ptr = m_Min ? m_Arrays[1]->template getIDataStoreAs<StoreType>() : nullptr;
+    if(m_Min && array1Ptr == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Min' array to needed type. Check input array selection.");
     }
-    auto* array2 = m_Max ? m_Arrays[2]->template getIDataStoreAs<StoreType>() : nullptr;
-    if(m_Max && array2 == nullptr)
+    auto* array2Ptr = m_Max ? m_Arrays[2]->template getIDataStoreAs<StoreType>() : nullptr;
+    if(m_Max && array2Ptr == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Max' array to needed type. Check input array selection.");
     }
-    auto* array3 = m_Mean ? m_Arrays[3]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
-    if(m_Mean && array3 == nullptr)
+    auto* array3Ptr = m_Mean ? m_Arrays[3]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
+    if(m_Mean && array3Ptr == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Mean' array to needed type. Check input array selection.");
     }
-    auto* array4 = m_Median ? m_Arrays[4]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
-    if(m_Median && array4 == nullptr)
+    auto* array4Ptr = m_Median ? m_Arrays[4]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
+    if(m_Median && array4Ptr == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Median' array to needed type. Check input array selection.");
     }
-    auto* array5 = m_StdDeviation ? m_Arrays[5]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
-    if(m_StdDeviation && array5 == nullptr)
+    auto* array5Ptr = m_StdDeviation ? m_Arrays[5]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
+    if(m_StdDeviation && array5Ptr == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'StdDev' array to needed type. Check input array selection.");
     }
-    auto* array6 = m_Summation ? m_Arrays[6]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
-    if(m_Summation && array6 == nullptr)
+    auto* array6Ptr = m_Summation ? m_Arrays[6]->template getIDataStoreAs<AbstractDataStore<float32>>() : nullptr;
+    if(m_Summation && array6Ptr == nullptr)
     {
       throw std::invalid_argument("ComputeNeighborListStatisticsFilter::compute() could not dynamic_cast 'Summation' array to needed type. Check input array selection.");
     }
@@ -91,37 +91,37 @@ public:
       if(m_Length)
       {
         auto val = static_cast<int64_t>(tmpList.size());
-        array0->setValue(i, val);
+        array0Ptr->setValue(i, val);
       }
       if(m_Min)
       {
-        T val = StatisticsCalculations::findMin(tmpList);
-        array1->setValue(i, val);
+        T val = statistics_calculations::FindMin(tmpList);
+        array1Ptr->setValue(i, val);
       }
       if(m_Max)
       {
-        T val = StatisticsCalculations::findMax(tmpList);
-        array2->setValue(i, val);
+        T val = statistics_calculations::FindMax(tmpList);
+        array2Ptr->setValue(i, val);
       }
       if(m_Mean)
       {
-        float val = StatisticsCalculations::findMean(tmpList);
-        array3->setValue(i, val);
+        float val = statistics_calculations::FindMean(tmpList);
+        array3Ptr->setValue(i, val);
       }
       if(m_Median)
       {
-        float val = StatisticsCalculations::findMedian(tmpList);
-        array4->setValue(i, val);
+        float val = statistics_calculations::FindMedian(tmpList);
+        array4Ptr->setValue(i, val);
       }
       if(m_StdDeviation)
       {
-        float val = StatisticsCalculations::findStdDeviation(tmpList);
-        array5->setValue(i, val);
+        float val = statistics_calculations::findStdDeviation(tmpList);
+        array5Ptr->setValue(i, val);
       }
       if(m_Summation)
       {
-        float val = StatisticsCalculations::findSummation(tmpList);
-        array6->setValue(i, val);
+        float val = statistics_calculations::FindSummation(tmpList);
+        array6Ptr->setValue(i, val);
       }
 
       m_Filter->sendThreadSafeProgressMessage(1);
@@ -167,14 +167,14 @@ ComputeNeighborListStatistics::~ComputeNeighborListStatistics() noexcept = defau
 // -----------------------------------------------------------------------------
 void ComputeNeighborListStatistics::sendThreadSafeProgressMessage(usize counter)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_Throttle.incrementPercent(counter);
 }
 
 // -----------------------------------------------------------------------------
 Result<> ComputeNeighborListStatistics::operator()()
 {
-  const auto& inputINeighborList = m_DataStructure.getDataRefAs<INeighborList>(m_InputValues->TargetNeighborListPath);
+  const auto& inputINeighborList = m_DataStructure.getDataRefAs<INeighborList>(m_InputValues->target_neighbor_list_path);
 
   DataType type = inputINeighborList.getDataType();
   if(type == DataType::boolean)
@@ -190,33 +190,33 @@ Result<> ComputeNeighborListStatistics::operator()()
 
   std::vector<IDataArray*> arrays(7, nullptr);
 
-  if(m_InputValues->FindLength)
+  if(m_InputValues->find_length)
   {
-    arrays[0] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->LengthPath);
+    arrays[0] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->length_path);
   }
-  if(m_InputValues->FindMin)
+  if(m_InputValues->find_min)
   {
-    arrays[1] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MinPath);
+    arrays[1] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->min_path);
   }
-  if(m_InputValues->FindMax)
+  if(m_InputValues->find_max)
   {
-    arrays[2] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaxPath);
+    arrays[2] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->max_path);
   }
-  if(m_InputValues->FindMean)
+  if(m_InputValues->find_mean)
   {
-    arrays[3] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MeanPath);
+    arrays[3] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->mean_path);
   }
-  if(m_InputValues->FindMedian)
+  if(m_InputValues->find_median)
   {
-    arrays[4] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MedianPath);
+    arrays[4] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->median_path);
   }
-  if(m_InputValues->FindStdDeviation)
+  if(m_InputValues->find_std_deviation)
   {
-    arrays[5] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->StdDeviationPath);
+    arrays[5] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->std_deviation_path);
   }
-  if(m_InputValues->FindSummation)
+  if(m_InputValues->find_summation)
   {
-    arrays[6] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->SummationPath);
+    arrays[6] = m_DataStructure.getDataAs<IDataArray>(m_InputValues->summation_path);
   }
 
   m_Throttle.reset(numTuples, "Finding Statistics");
@@ -224,9 +224,9 @@ Result<> ComputeNeighborListStatistics::operator()()
   // Allow data-based parallelization
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, numTuples);
-  ExecuteParallelFunction<ComputeNeighborListStatisticsImpl, NoBooleanType>(type, dataAlg, this, inputINeighborList, m_InputValues->FindLength, m_InputValues->FindMin, m_InputValues->FindMax,
-                                                                            m_InputValues->FindMean, m_InputValues->FindMedian, m_InputValues->FindStdDeviation, m_InputValues->FindSummation, arrays,
-                                                                            m_ShouldCancel);
+  ExecuteParallelFunction<ComputeNeighborListStatisticsImpl, NoBooleanType>(type, dataAlg, this, inputINeighborList, m_InputValues->find_length, m_InputValues->find_min, m_InputValues->find_max,
+                                                                            m_InputValues->find_mean, m_InputValues->find_median, m_InputValues->find_std_deviation, m_InputValues->find_summation,
+                                                                            arrays, m_ShouldCancel);
 
   return {};
 }

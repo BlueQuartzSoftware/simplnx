@@ -14,9 +14,9 @@ class SIMPLNX_EXPORT VertexGeom : public INodeGeometry0D
 public:
   friend class DataStructure;
 
-  static inline constexpr usize k_NumVerts = 1;
+  static constexpr usize k_NumVerts = 1;
 
-  static inline constexpr StringLiteral k_TypeName = "VertexGeom";
+  static constexpr StringLiteralType k_TypeName = "VertexGeom";
 
   /**
    * @brief Creates a new VertexGeom in the specified DataStructure.
@@ -47,7 +47,7 @@ public:
    * @brief Move constructor.
    * @param other The VertexGeom to move from
    */
-  VertexGeom(VertexGeom&& other);
+  VertexGeom(VertexGeom&& other) noexcept;
 
   ~VertexGeom() noexcept override;
 
@@ -102,16 +102,16 @@ public:
 
   /**
    * @brief Returns the parametric center of a vertex element (always at the vertex position).
-   * @return Point3D<float64> The parametric center coordinates
+   * @return Vec3<float64> The parametric center coordinates
    */
-  Point3D<float64> getParametricCenter() const override;
+  Vec3<float64> getParametricCenter() const override;
 
   /**
    * @brief Calculates shape functions at the given parametric coordinates.
    * @param pCoords The parametric coordinates
    * @param shape Output array to store the calculated shape function values
    */
-  void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
+  void getShapeFunctions(const Vec3<float64>& pCoords, float64* shape) const override;
 
 protected:
   /**

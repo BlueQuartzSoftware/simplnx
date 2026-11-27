@@ -24,26 +24,26 @@ public:
   SurfaceNetsFilter& operator=(SurfaceNetsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_GridGeometryDataPath_Key = "input_grid_geometry_path";
-  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
+  static constexpr StringLiteralType k_GridGeometryDataPath_Key = "input_grid_geometry_path";
+  static constexpr StringLiteralType k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteralType k_SelectedDataArrayPaths_Key = "input_data_array_paths";
 
-  static constexpr StringLiteral k_SelectedFeatureDataArrayPaths_Key = "input_feature_data_array_paths";
+  static constexpr StringLiteralType k_SelectedFeatureDataArrayPaths_Key = "input_feature_data_array_paths";
 
-  static constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "output_triangle_geometry_path";
+  static constexpr StringLiteralType k_CreatedTriangleGeometryPath_Key = "output_triangle_geometry_path";
 
-  static constexpr StringLiteral k_VertexDataGroupName_Key = "vertex_data_group_name";
-  static constexpr StringLiteral k_NodeTypesArrayName_Key = "node_types_array_name";
+  static constexpr StringLiteralType k_VertexDataGroupName_Key = "vertex_data_group_name";
+  static constexpr StringLiteralType k_NodeTypesArrayName_Key = "node_types_array_name";
 
-  static constexpr StringLiteral k_FaceDataGroupName_Key = "face_data_group_name";
-  static constexpr StringLiteral k_FaceLabelsArrayName_Key = "face_labels_array_name";
+  static constexpr StringLiteralType k_FaceDataGroupName_Key = "face_data_group_name";
+  static constexpr StringLiteralType k_FaceLabelsArrayName_Key = "face_labels_array_name";
 
-  static constexpr StringLiteral k_ApplySmoothing_Key = "apply_smoothing";
-  static constexpr StringLiteral k_RepairTriangleWinding_Key = "repair_triangle_winding";
-  static constexpr StringLiteral k_BoundingBoxSkinMode_Key = "bounding_box_skin_mode_index";
-  static constexpr StringLiteral k_SmoothingIterations_Key = "smoothing_iterations";
-  static constexpr StringLiteral k_MaxDistanceFromVoxelCenter_Key = "max_distance_from_voxel";
-  static constexpr StringLiteral k_RelaxationFactor_Key = "relaxation_factor";
+  static constexpr StringLiteralType k_ApplySmoothing_Key = "apply_smoothing";
+  static constexpr StringLiteralType k_RepairTriangleWinding_Key = "repair_triangle_winding";
+  static constexpr StringLiteralType k_BoundingBoxSkinMode_Key = "bounding_box_skin_mode_index";
+  static constexpr StringLiteralType k_SmoothingIterations_Key = "smoothing_iterations";
+  static constexpr StringLiteralType k_MaxDistanceFromVoxelCenter_Key = "max_distance_from_voxel";
+  static constexpr StringLiteralType k_RelaxationFactor_Key = "relaxation_factor";
 
   /**
    * @brief Returns the name of the filter.
@@ -93,7 +93,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

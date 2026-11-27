@@ -11,7 +11,7 @@
 #include <cmath>
 #include <limits>
 
-namespace nx::core::DBSCANCommon
+namespace nx::core::dbscan_common
 {
 inline constexpr int32 k_GridAxisTooLargeError = -54091;      // One axis needs more grid cells than a grid index can hold.
 inline constexpr int32 k_GridCellCountTooLargeError = -54092; // The dense resident grid needs more cells than memory can address.
@@ -157,10 +157,10 @@ Result<std::array<usize, N>> ComputeGridDimensions(const DataPath& arrayPath, co
       return MakeErrorResult<std::array<usize, N>>(k_GridCellCountTooLargeError,
                                                    fmt::format("DBSCAN cannot build its search grid for the clustering array '{}': a grid of {} cells needs more than {} cells, the most that "
                                                                "memory can address. Increase Epsilon.",
-                                                               arrayPath.toString(), StringUtilities::formatDimensions(dims, true), k_MaxCellCount));
+                                                               arrayPath.toString(), string_utilities::FormatDimensions(dims, true), k_MaxCellCount));
     }
     cellCount *= dim;
   }
   return {dims};
 }
-} // namespace nx::core::DBSCANCommon
+} // namespace nx::core::dbscan_common

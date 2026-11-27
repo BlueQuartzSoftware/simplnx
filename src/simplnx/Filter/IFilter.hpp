@@ -28,7 +28,7 @@ class PipelineFilter;
 class SIMPLNX_EXPORT IFilter
 {
 public:
-  using UniquePointer = std::unique_ptr<IFilter>;
+  using UniquePointerType = std::unique_ptr<IFilter>;
   using VersionType = uint64;
 
   /**
@@ -64,7 +64,7 @@ public:
    * @brief Retained as an alias so existing aggregate initializations keep compiling. Progress
    * information now lives on Message itself.
    */
-  using ProgressMessage = Message;
+  using ProgressMessageType = Message;
 
   /**
    * @brief Handler for processing filter messages during execution.
@@ -75,7 +75,7 @@ public:
    */
   struct SIMPLNX_EXPORT MessageHandler
   {
-    using Callback = std::function<void(const Message&)>;
+    using CallbackType = std::function<void(const Message&)>;
 
     /**
      * @brief Sends a message.
@@ -83,9 +83,9 @@ public:
      */
     void sendMessage(const Message& message) const
     {
-      if(m_Callback)
+      if(m_callback)
       {
-        m_Callback(message);
+        m_callback(message);
       }
     }
 
@@ -96,7 +96,7 @@ public:
      */
     void sendMessage(Message::Type type, std::string message) const
     {
-      sendMessage(Message{type, std::move(message)});
+      sendMessage(Message{.type = type, .message = std::move(message)});
     }
 
     /**
@@ -105,7 +105,7 @@ public:
      */
     void sendInfoMessage(std::string message) const
     {
-      sendMessage(Message{Message::Type::Info, std::move(message)});
+      sendMessage(Message{.type = Message::Type::Info, .message = std::move(message)});
     }
 
     /**
@@ -114,7 +114,7 @@ public:
      */
     void sendDebugMessage(std::string message) const
     {
-      sendMessage(Message{Message::Type::Debug, std::move(message)});
+      sendMessage(Message{.type = Message::Type::Debug, .message = std::move(message)});
     }
 
     /**
@@ -123,7 +123,7 @@ public:
      */
     void sendWarningMessage(std::string message) const
     {
-      sendMessage(Message{Message::Type::Warning, std::move(message)});
+      sendMessage(Message{.type = Message::Type::Warning, .message = std::move(message)});
     }
 
     /**
@@ -132,7 +132,7 @@ public:
      */
     void sendErrorMessage(std::string message) const
     {
-      sendMessage(Message{Message::Type::Error, std::move(message)});
+      sendMessage(Message{.type = Message::Type::Error, .message = std::move(message)});
     }
 
     /**
@@ -174,7 +174,7 @@ public:
      */
     void sendProgressPercent(std::string label, usize current, usize max, int32 decimals = 2, std::string_view detail = {}) const;
 
-    Callback m_Callback;
+    CallbackType m_callback;
   };
 
   /**
@@ -191,8 +191,8 @@ public:
    */
   struct PreflightResult
   {
-    Result<OutputActions> outputActions;
-    std::vector<PreflightValue> outputValues;
+    Result<OutputActions> output_actions;
+    std::vector<PreflightValue> output_values;
   };
 
   /**
@@ -203,7 +203,7 @@ public:
    */
   static PreflightResult MakePreflightErrorResult(int32 errorCode, const std::string& errorMessage)
   {
-    return {nonstd::make_unexpected(std::vector<Error>{Error{errorCode, errorMessage}})};
+    return {nonstd::make_unexpected(std::vector<Error>{Error{.code = errorCode, .message = errorMessage}})};
   }
 
   /**
@@ -215,7 +215,7 @@ public:
   struct [[nodiscard]] ExecuteResult
   {
     Result<> result;
-    std::vector<PreflightValue> outputValues;
+    std::vector<PreflightValue> output_values;
   };
 
   virtual ~IFilter() noexcept;
@@ -274,7 +274,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return UniquePointer
    */
-  virtual UniquePointer clone() const = 0;
+  virtual UniquePointerType clone() const = 0;
 
   /**
    * @brief Takes in a DataStructure and checks that the filter can be run on it with the given arguments.
@@ -354,5 +354,5 @@ protected:
                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const = 0;
 };
 
-using FilterCreationFunc = std::function<IFilter::UniquePointer()>;
+using FilterCreationFuncType = std::function<IFilter::UniquePointerType()>;
 } // namespace nx::core

@@ -18,7 +18,6 @@ ComputeKMedoids::ComputeKMedoids(DataStructure& dataStructure, const IFilter::Me
 }
 
 // -----------------------------------------------------------------------------
-ComputeKMedoids::~ComputeKMedoids() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeKMedoids::getCancel()
@@ -29,14 +28,14 @@ const std::atomic_bool& ComputeKMedoids::getCancel()
 Result<> ComputeKMedoids::operator()()
 {
   // Include every scanline input and output in storage-path selection.
-  auto* clusteringArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  auto* featureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  auto* medoidsArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MedoidsArrayPath);
-  if(m_InputValues->UseMask)
+  auto* clusteringArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->clustering_array_path);
+  auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
+  auto* medoidsArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->medoids_array_path);
+  if(m_InputValues->use_mask)
   {
-    auto* maskArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);
-    return DispatchAlgorithm<ComputeKMedoidsDirect, ComputeKMedoidsScanline>({clusteringArray, featureIdsArray, medoidsArray, maskArray}, m_DataStructure, m_MessageHandler, m_ShouldCancel,
+    auto* maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path);
+    return DispatchAlgorithm<ComputeKMedoidsDirect, ComputeKMedoidsScanline>({clusteringArrayPtr, featureIdsArrayPtr, medoidsArrayPtr, maskArrayPtr}, m_DataStructure, m_MessageHandler, m_ShouldCancel,
                                                                              m_InputValues);
   }
-  return DispatchAlgorithm<ComputeKMedoidsDirect, ComputeKMedoidsScanline>({clusteringArray, featureIdsArray, medoidsArray}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
+  return DispatchAlgorithm<ComputeKMedoidsDirect, ComputeKMedoidsScanline>({clusteringArrayPtr, featureIdsArrayPtr, medoidsArrayPtr}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

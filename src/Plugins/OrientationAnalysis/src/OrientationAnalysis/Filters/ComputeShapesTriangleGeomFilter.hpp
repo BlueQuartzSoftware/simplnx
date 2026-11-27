@@ -24,15 +24,15 @@ public:
   ComputeShapesTriangleGeomFilter& operator=(ComputeShapesTriangleGeomFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_FaceLabelsArrayPath_Key = "face_labels_array_path";
-  static constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
-  static constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
-  static constexpr StringLiteral k_Omega3sArrayName_Key = "omega3s_array_name";
-  static constexpr StringLiteral k_AxisLengthsArrayName_Key = "axis_lengths_array_name";
-  static constexpr StringLiteral k_AxisEulerAnglesArrayName_Key = "axis_euler_angles_array_name";
-  static constexpr StringLiteral k_AspectRatiosArrayName_Key = "aspect_ratios_array_name";
-  static constexpr StringLiteral k_TriGeometryDataPath_Key = "input_triangle_geometry_path";
-  static constexpr StringLiteral k_EulerCharacteristicArrayName_Key = "euler_characteristic_array_name";
+  static constexpr StringLiteralType k_FaceLabelsArrayPath_Key = "face_labels_array_path";
+  static constexpr StringLiteralType k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
+  static constexpr StringLiteralType k_CentroidsArrayPath_Key = "centroids_array_path";
+  static constexpr StringLiteralType k_Omega3sArrayName_Key = "omega3s_array_name";
+  static constexpr StringLiteralType k_AxisLengthsArrayName_Key = "axis_lengths_array_name";
+  static constexpr StringLiteralType k_AxisEulerAnglesArrayName_Key = "axis_euler_angles_array_name";
+  static constexpr StringLiteralType k_AspectRatiosArrayName_Key = "aspect_ratios_array_name";
+  static constexpr StringLiteralType k_TriGeometryDataPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteralType k_EulerCharacteristicArrayName_Key = "euler_characteristic_array_name";
   /**
    * @brief Returns the name of the filter.
    * @return
@@ -81,7 +81,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

@@ -41,12 +41,11 @@ NormalizeImage::NormalizeImage(DataStructure& dataStructure, const IFilter::Mess
 }
 
 // -----------------------------------------------------------------------------
-NormalizeImage::~NormalizeImage() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> NormalizeImage::operator()()
 {
   const NormalizeOperation operation{};
-  return ImageProcessing::ExecuteTwoPassImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(m_DataStructure, m_InputValues->InputArrayPath, m_InputValues->OutputArrayPath,
-                                                                                                                 operation, m_ShouldCancel, m_MessageHandler);
+  return ImageProcessing::ExecuteTwoPassImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64Type>(m_DataStructure, m_InputValues->input_array_path, m_InputValues->output_array_path,
+                                                                                                                     operation, m_ShouldCancel, m_MessageHandler);
 }

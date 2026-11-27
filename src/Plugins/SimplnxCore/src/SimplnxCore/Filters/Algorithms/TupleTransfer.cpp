@@ -5,9 +5,9 @@ namespace nx::core
 void AddTupleTransferInstance(DataStructure& dataStructure, const DataPath& selectedDataPath, const DataPath& createdDataPath,
                               std::vector<std::shared_ptr<AbstractTupleTransfer>>& tupleTransferFunctions)
 {
-  auto* inputDataArray = dataStructure.getDataAs<IDataArray>(selectedDataPath);
+  auto* inputDataArrayPtr = dataStructure.getDataAs<IDataArray>(selectedDataPath);
 
-  switch(inputDataArray->getDataType())
+  switch(inputDataArrayPtr->getDataType())
   {
   case DataType::int8: {
     tupleTransferFunctions.push_back(std::make_shared<TransferTuple<int8>>(dataStructure, selectedDataPath, createdDataPath));
@@ -59,9 +59,9 @@ void AddTupleTransferInstance(DataStructure& dataStructure, const DataPath& sele
 void AddFeatureTupleTransferInstance(DataStructure& dataStructure, const DataPath& selectedDataPath, const DataPath& createdDataPath, const DataPath& featureIdsArrayPath,
                                      std::vector<std::shared_ptr<AbstractTupleTransfer>>& tupleTransferFunctions)
 {
-  auto* inputDataArray = dataStructure.getDataAs<IDataArray>(selectedDataPath);
+  auto* inputDataArrayPtr = dataStructure.getDataAs<IDataArray>(selectedDataPath);
 
-  switch(inputDataArray->getDataType())
+  switch(inputDataArrayPtr->getDataType())
   {
   case DataType::int8: {
     tupleTransferFunctions.push_back(std::make_shared<TransferFeatureTuple<int8, int32>>(dataStructure, selectedDataPath, createdDataPath, featureIdsArrayPath));

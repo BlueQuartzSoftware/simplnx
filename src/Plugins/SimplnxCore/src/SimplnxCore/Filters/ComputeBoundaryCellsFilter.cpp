@@ -60,9 +60,9 @@ Parameters ComputeBoundaryCellsFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_IncludeVolumeBoundary_Key, "Include Volume Boundary", "Include the Cell boundaries", false));
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryPath_Key, "Image Geometry", "The selected geometry to which the cells belong", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_BoundaryCellsArrayName_Key, "Boundary Cells",
                                                           "The number of neighboring Cells of a given Cell that belong to a different Feature than itself. Values will range from 0 to 6",
@@ -78,14 +78,14 @@ IFilter::VersionType ComputeBoundaryCellsFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeBoundaryCellsFilter::clone() const
+IFilter::UniquePointerType ComputeBoundaryCellsFilter::clone() const
 {
   return std::make_unique<ComputeBoundaryCellsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeBoundaryCellsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeBoundaryCellsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                   const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pImageGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
@@ -97,47 +97,48 @@ IFilter::PreflightResult ComputeBoundaryCellsFilter::preflightImpl(const DataStr
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(pFeatureIdsArrayPathValue);
   const usize numFeatureIds = featureIds.getSize();
   const usize numCells = dataStructure.getDataRefAs<ImageGeom>(pImageGeometryPath).getNumberOfCells();
   if(numFeatureIds != numCells)
   {
-    return {MakeErrorResult<OutputActions>(
-        -5320,
-        fmt::format("The selected Image geometry '{}' and feature ids array '{}' have mismatching number of elements. Make sure the selected feature ids was created for the selected Image geometry.",
+    return {.output_actions = MakeErrorResult<OutputActions>(
+                -5320,
+                fmt::format(
+                    "The selected Image geometry '{}' and feature ids array '{}' have mismatching number of elements. Make sure the selected feature ids was created for the selected Image geometry.",
                     pImageGeometryPath.toString(), pFeatureIdsArrayPathValue.toString()))};
   }
 
   auto action = std::make_unique<CreateArrayAction>(DataType::int8, featureIds.getTupleShape(), std::vector<usize>{1}, boundaryCellsArrayPath);
   resultOutputActions.value().appendAction(std::move(action));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeBoundaryCellsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeBoundaryCellsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeBoundaryCellsInputValues inputValues;
 
-  inputValues.IgnoreFeatureZero = filterArgs.value<bool>(k_IgnoreFeatureZero_Key);
-  inputValues.IncludeVolumeBoundary = filterArgs.value<bool>(k_IncludeVolumeBoundary_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.BoundaryCellsArrayName = inputValues.FeatureIdsArrayPath.replaceName(filterArgs.value<std::string>(k_BoundaryCellsArrayName_Key));
+  inputValues.ignore_feature_zero = filterArgs.value<bool>(k_IgnoreFeatureZero_Key);
+  inputValues.include_volume_boundary = filterArgs.value<bool>(k_IncludeVolumeBoundary_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_GeometryPath_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.boundary_cells_array_name = inputValues.feature_ids_array_path.replaceName(filterArgs.value<std::string>(k_BoundaryCellsArrayName_Key));
 
   return ComputeBoundaryCells(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_IgnoreFeatureZeroKey = "IgnoreFeatureZero";
-constexpr StringLiteral k_IncludeVolumeBoundaryKey = "IncludeVolumeBoundary";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_BoundaryCellsArrayNameKey = "BoundaryCellsArrayName";
-} // namespace SIMPL
+constexpr StringLiteralType k_IgnoreFeatureZeroKey = "IgnoreFeatureZero";
+constexpr StringLiteralType k_IncludeVolumeBoundaryKey = "IncludeVolumeBoundary";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_BoundaryCellsArrayNameKey = "BoundaryCellsArrayName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeBoundaryCellsFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -146,11 +147,11 @@ Result<Arguments> ComputeBoundaryCellsFilter::FromSIMPLJson(const nlohmann::json
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_IgnoreFeatureZeroKey, k_IgnoreFeatureZero_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_IncludeVolumeBoundaryKey, k_IncludeVolumeBoundary_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_GeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_BoundaryCellsArrayNameKey, k_BoundaryCellsArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_IgnoreFeatureZeroKey, k_IgnoreFeatureZero_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_IncludeVolumeBoundaryKey, k_IncludeVolumeBoundary_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_GeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_BoundaryCellsArrayNameKey, k_BoundaryCellsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

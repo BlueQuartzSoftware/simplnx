@@ -57,13 +57,13 @@ IFilter::VersionType CreateAttributeMatrixFilter::parametersVersion() const
   return 1;
 }
 
-IFilter::UniquePointer CreateAttributeMatrixFilter::clone() const
+IFilter::UniquePointerType CreateAttributeMatrixFilter::clone() const
 {
   return std::make_unique<CreateAttributeMatrixFilter>();
 }
 
-IFilter::PreflightResult CreateAttributeMatrixFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult CreateAttributeMatrixFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto dataObjectPath = filterArgs.value<DataPath>(k_DataObjectPath);
   auto tableData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
@@ -71,7 +71,7 @@ IFilter::PreflightResult CreateAttributeMatrixFilter::preflightImpl(const DataSt
   auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Allow);
   if(dimensions.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(dimensions))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
   }
   ShapeType tupleDims = std::move(dimensions.value());
 
@@ -83,19 +83,19 @@ IFilter::PreflightResult CreateAttributeMatrixFilter::preflightImpl(const DataSt
   return {std::move(actions)};
 }
 
-Result<> CreateAttributeMatrixFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> CreateAttributeMatrixFilter::executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                                                  const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   return {};
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_TupleDimensionsKey = "TupleDimensions";
-constexpr StringLiteral k_CreatedAttributeMatrixKey = "CreatedAttributeMatrix";
-} // namespace SIMPL
+constexpr StringLiteralType k_TupleDimensionsKey = "TupleDimensions";
+constexpr StringLiteralType k_CreatedAttributeMatrixKey = "CreatedAttributeMatrix";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CreateAttributeMatrixFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -105,8 +105,8 @@ Result<Arguments> CreateAttributeMatrixFilter::FromSIMPLJson(const nlohmann::jso
   std::vector<Result<>> results;
 
   // Attribute matrix type parameter is not applicable in NX
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DynamicTableFilterParameterConverter>(args, json, SIMPL::k_TupleDimensionsKey, k_TupleDims_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixCreationFilterParameterConverter>(args, json, SIMPL::k_CreatedAttributeMatrixKey, k_DataObjectPath));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DynamicTableFilterParameterConverter>(args, json, simpl::k_TupleDimensionsKey, k_TupleDims_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixCreationFilterParameterConverter>(args, json, simpl::k_CreatedAttributeMatrixKey, k_DataObjectPath));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

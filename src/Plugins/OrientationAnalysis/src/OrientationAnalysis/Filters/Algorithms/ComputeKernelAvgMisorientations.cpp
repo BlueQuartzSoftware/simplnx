@@ -19,9 +19,9 @@ using namespace nx::core;
 Result<> nx::core::ValidateKernelAvgMisorientationsPhaseIndices(DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues& inputValues)
 {
   constexpr usize k_ValidationChunkTuples = 65536;
-  const auto& featureIdsStoreRef = dataStructure.getDataRefAs<Int32Array>(inputValues.FeatureIdsArrayPath).getDataStoreRef();
-  const auto& cellPhasesStoreRef = dataStructure.getDataRefAs<Int32Array>(inputValues.CellPhasesArrayPath).getDataStoreRef();
-  const auto& crystalStructuresStoreRef = dataStructure.getDataRefAs<UInt32Array>(inputValues.CrystalStructuresArrayPath).getDataStoreRef();
+  const auto& featureIdsStoreRef = dataStructure.getDataRefAs<Int32ArrayType>(inputValues.feature_ids_array_path).getDataStoreRef();
+  const auto& cellPhasesStoreRef = dataStructure.getDataRefAs<Int32ArrayType>(inputValues.cell_phases_array_path).getDataStoreRef();
+  const auto& crystalStructuresStoreRef = dataStructure.getDataRefAs<UInt32ArrayType>(inputValues.crystal_structures_array_path).getDataStoreRef();
   const usize numCrystalStructures = crystalStructuresStoreRef.getNumberOfTuples();
   std::vector<uint32> crystalStructuresCache(numCrystalStructures);
   if(Result<> readResult = crystalStructuresStoreRef.copyIntoBuffer(0, nonstd::span<uint32>(crystalStructuresCache.data(), crystalStructuresCache.size())); readResult.invalid())
@@ -54,14 +54,14 @@ Result<> nx::core::ValidateKernelAvgMisorientationsPhaseIndices(DataStructure& d
       {
         return MakeErrorResult(-67203,
                                fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' contains {} tuples. Valid positive Phase indices are in [1, {}).",
-                                           inputValues.CellPhasesArrayPath.toString(), currentPhaseIdx, tupleOffset + chunkTupleIdx, inputValues.CrystalStructuresArrayPath.toString(),
+                                           inputValues.cell_phases_array_path.toString(), currentPhaseIdx, tupleOffset + chunkTupleIdx, inputValues.crystal_structures_array_path.toString(),
                                            numCrystalStructures, numCrystalStructures));
       }
       const uint32 currentLaueIndex = crystalStructuresCache[currentPhaseIdx];
       if(currentLaueIndex >= numLaueOperations)
       {
         return MakeErrorResult(-67204, fmt::format("Crystal Structures array '{}' has value {} at Phase index {}, but only {} Laue operations are available. Valid Laue indices are in [0, {}).",
-                                                   inputValues.CrystalStructuresArrayPath.toString(), currentLaueIndex, currentPhaseIdx, numLaueOperations, numLaueOperations));
+                                                   inputValues.crystal_structures_array_path.toString(), currentLaueIndex, currentPhaseIdx, numLaueOperations, numLaueOperations));
       }
     }
   }
@@ -77,16 +77,14 @@ ComputeKernelAvgMisorientations::ComputeKernelAvgMisorientations(DataStructure& 
 {
 }
 
-ComputeKernelAvgMisorientations::~ComputeKernelAvgMisorientations() noexcept = default;
-
 Result<> ComputeKernelAvgMisorientations::operator()()
 {
-  const auto* featureIds = m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
-  const auto* phases = m_DataStructure.getDataAs<IDataArray>(m_InputValues->CellPhasesArrayPath);
-  const auto* quats = m_DataStructure.getDataAs<IDataArray>(m_InputValues->QuatsArrayPath);
-  const auto* crystalStructures = m_DataStructure.getDataAs<IDataArray>(m_InputValues->CrystalStructuresArrayPath);
-  const auto* output = m_DataStructure.getDataAs<IDataArray>(m_InputValues->KernelAverageMisorientationsArrayName);
+  const auto* featureIdsPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->feature_ids_array_path);
+  const auto* phasesPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->cell_phases_array_path);
+  const auto* quatsPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->quats_array_path);
+  const auto* crystalStructuresPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->crystal_structures_array_path);
+  const auto* outputPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->kernel_average_misorientations_array_name);
 
-  return DispatchAlgorithm<ComputeKernelAvgMisorientationsDirect, ComputeKernelAvgMisorientationsScanline>({featureIds, phases, quats, crystalStructures, output}, m_DataStructure, m_MessageHandler,
-                                                                                                           m_ShouldCancel, m_InputValues);
+  return DispatchAlgorithm<ComputeKernelAvgMisorientationsDirect, ComputeKernelAvgMisorientationsScanline>({featureIdsPtr, phasesPtr, quatsPtr, crystalStructuresPtr, outputPtr}, m_DataStructure,
+                                                                                                           m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

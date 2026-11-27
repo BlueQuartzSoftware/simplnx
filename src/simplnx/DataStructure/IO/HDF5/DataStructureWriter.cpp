@@ -17,7 +17,7 @@
 #include <optional>
 #include <set>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 namespace
 {
@@ -84,24 +84,24 @@ Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, cons
 
 Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, const std::filesystem::path& filepath, const WriteOptions& options)
 {
-  auto fileWriter = nx::core::HDF5::FileIO::WriteFile(filepath);
-  if(fileWriter.isValid() == false)
+  auto fileWriter = nx::core::hdf5::FileIO::WriteFile(filepath);
+  if(!fileWriter.isValid())
   {
     return MakeErrorResult(-8054, fmt::format("Failed to create file at path {}", filepath.string()));
   }
   return WriteFile(dataStructure, fileWriter, options);
 }
 
-Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, nx::core::HDF5::FileIO& FileIO)
+Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, nx::core::hdf5::FileIO& FileIO)
 {
   return WriteFile(dataStructure, FileIO, WriteOptions{});
 }
 
-Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, nx::core::HDF5::FileIO& FileIO, const WriteOptions& options)
+Result<> DataStructureWriter::WriteFile(const DataStructure& dataStructure, nx::core::hdf5::FileIO& FileIO, const WriteOptions& options)
 {
-  HDF5::DataStructureWriter dataStructureWriter;
+  hdf5::DataStructureWriter dataStructureWriter;
   dataStructureWriter.setWriteOptions(options);
-  auto groupIO = FileIO.createGroup(Constants::k_DataStructureTag);
+  auto groupIO = FileIO.createGroup(constants::k_DataStructureTag);
   return dataStructureWriter.writeDataStructure(dataStructure, groupIO);
 }
 
@@ -136,7 +136,7 @@ Result<> DataStructureWriter::AppendFile(FileIO& file, const DataStructure& data
     return {};
   }
 
-  GroupIO dataStructureGroup = file.openGroup(Constants::k_DataStructureTag);
+  GroupIO dataStructureGroup = file.openGroup(constants::k_DataStructureTag);
   if(!dataStructureGroup.isValid())
   {
     return MakeErrorResult(-5, fmt::format("Failed to open top-level DataStructure group in file '{}'", file.getFilePath().string()));
@@ -149,7 +149,7 @@ Result<> DataStructureWriter::AppendFile(FileIO& file, const DataStructure& data
     return MakeErrorResult(-6, fmt::format("Cannot append because object '{}' already exists", targetName));
   }
 
-  auto idResult = dataStructureGroup.readScalarAttribute<DataObject::IdType>(Constants::k_NextIdTag);
+  auto idResult = dataStructureGroup.readScalarAttribute<DataObject::IdType>(constants::k_NextIdTag);
   if(idResult.invalid())
   {
     return ConvertResult(std::move(idResult));
@@ -184,24 +184,24 @@ Result<> DataStructureWriter::AppendFile(FileIO& file, const DataStructure& data
     }
   }
 
-  for(DataObject* topLevelObject : dataStructureShallowCopy.getTopLevelData())
+  for(DataObject* topLevelObjectPtr : dataStructureShallowCopy.getTopLevelData())
   {
-    if(topLevelObject->getName() != targetName)
+    if(topLevelObjectPtr->getName() != targetName)
     {
-      dataStructureShallowCopy.removeData(topLevelObject->getId());
+      dataStructureShallowCopy.removeData(topLevelObjectPtr->getId());
     }
   }
 
   dataStructureShallowCopy.resetIds(nextObjectId);
 
-  auto writeNextIdResult = dataStructureGroup.writeScalarAttribute(Constants::k_NextIdTag, dataStructureShallowCopy.getNextId());
+  auto writeNextIdResult = dataStructureGroup.writeScalarAttribute(constants::k_NextIdTag, dataStructureShallowCopy.getNextId());
   if(writeNextIdResult.invalid())
   {
     return writeNextIdResult;
   }
 
   const DataObject& dataObject = dataStructureShallowCopy.getDataRef(dataPath);
-  HDF5::DataStructureWriter dataStructureWriter;
+  hdf5::DataStructureWriter dataStructureWriter;
   dataStructureWriter.setWriteOptions(options);
   return dataStructureWriter.writeDataObject(&dataObject, dataStructureGroup);
 }
@@ -222,7 +222,7 @@ Result<> DataStructureWriter::AppendFile(const std::filesystem::path& filepath, 
   return AppendFile(file, dataStructure, dataPath, options);
 }
 
-Result<> DataStructureWriter::writeDataObject(const DataObject* dataObject, nx::core::HDF5::GroupIO& parentGroup)
+Result<> DataStructureWriter::writeDataObject(const DataObject* dataObject, nx::core::hdf5::GroupIO& parentGroup)
 {
   // Connectivity caches are rebuilt from the geometry on demand and have no file representation.
   if(isOmittedConnectivity(dataObject->getId()))
@@ -254,7 +254,7 @@ Result<> DataStructureWriter::writeDataObject(const DataObject* dataObject, nx::
   return factory->writeDataObject(*this, dataObject, parentGroup);
 }
 
-Result<> DataStructureWriter::writeDataMap(const DataMap& dataMap, nx::core::HDF5::GroupIO& parentGroup)
+Result<> DataStructureWriter::writeDataMap(const DataMap& dataMap, nx::core::hdf5::GroupIO& parentGroup)
 {
   Result<> result;
   for(const auto& [key, object] : dataMap)
@@ -269,14 +269,14 @@ Result<> DataStructureWriter::writeDataMap(const DataMap& dataMap, nx::core::HDF
   return result;
 }
 
-Result<> DataStructureWriter::writeDataStructure(const DataStructure& dataStructure, nx::core::HDF5::GroupIO& groupIO)
+Result<> DataStructureWriter::writeDataStructure(const DataStructure& dataStructure, nx::core::hdf5::GroupIO& groupIO)
 {
   if(!groupIO.isValid())
   {
     std::string ss = "Failed to write DataStructure to HDF5 group";
     return MakeErrorResult(-700, ss);
   }
-  groupIO.writeScalarAttribute(Constants::k_NextIdTag, dataStructure.getNextId());
+  groupIO.writeScalarAttribute(constants::k_NextIdTag, dataStructure.getNextId());
   m_OmittedConnectivityIds = FindConnectivityCaches(dataStructure);
   return writeDataMap(dataStructure.getDataMap(), groupIO);
 }
@@ -286,7 +286,7 @@ bool DataStructureWriter::isOmittedConnectivity(DataObject::IdType objectId) con
   return m_OmittedConnectivityIds.contains(objectId);
 }
 
-Result<> DataStructureWriter::writeDataObjectLink(const DataObject* dataObject, nx::core::HDF5::GroupIO& parentGroup)
+Result<> DataStructureWriter::writeDataObjectLink(const DataObject* dataObject, nx::core::hdf5::GroupIO& parentGroup)
 {
   auto objectPath = getPathForObjectId(dataObject->getId());
   auto result = parentGroup.createLink(objectPath);
@@ -296,9 +296,9 @@ Result<> DataStructureWriter::writeDataObjectLink(const DataObject* dataObject, 
   }
 
   // NeighborList links require the NumNeighbors companion array for reconstruction.
-  if(const auto* neighborList = dynamic_cast<const INeighborList*>(dataObject))
+  if(const auto* neighborListPtr = dynamic_cast<const INeighborList*>(dataObject))
   {
-    auto numNeighborsName = neighborList->getNumNeighborsArrayName();
+    auto numNeighborsName = neighborListPtr->getNumNeighborsArrayName();
     auto dataPath = getPathForObjectSibling(dataObject->getId(), numNeighborsName);
     result = parentGroup.createLink(dataPath);
     if(result.invalid())
@@ -363,8 +363,8 @@ void DataStructureWriter::clearIdMap()
   m_IdMap.clear();
 }
 
-void DataStructureWriter::addWriter(nx::core::HDF5::ObjectIO& objectWriter, DataObject::IdType objectId)
+void DataStructureWriter::addWriter(nx::core::hdf5::ObjectIO& objectWriter, DataObject::IdType objectId)
 {
   m_IdMap[objectId] = objectWriter.getObjectPath();
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

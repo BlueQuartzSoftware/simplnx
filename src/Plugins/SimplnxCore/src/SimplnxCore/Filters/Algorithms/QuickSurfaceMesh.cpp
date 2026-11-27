@@ -24,35 +24,33 @@ QuickSurfaceMesh::QuickSurfaceMesh(DataStructure& dataStructure, QuickSurfaceMes
 {
 }
 
-QuickSurfaceMesh::~QuickSurfaceMesh() noexcept = default;
-
 Result<> QuickSurfaceMesh::operator()()
 {
   std::vector<const IArray*> targets;
   const auto append = [this, &targets](const DataPath& path) {
-    if(const auto* array = m_DataStructure.getDataAs<IDataArray>(path); array != nullptr)
+    if(const auto* arrayPtr = m_DataStructure.getDataAs<IDataArray>(path); arrayPtr != nullptr)
     {
-      targets.push_back(array);
+      targets.push_back(arrayPtr);
     }
   };
 
-  append(m_InputValues->FeatureIdsArrayPath);
-  append(m_InputValues->NodeTypesDataPath);
-  append(m_InputValues->FaceLabelsDataPath);
-  for(const auto& path : m_InputValues->SelectedCellDataArrayPaths)
+  append(m_InputValues->feature_ids_array_path);
+  append(m_InputValues->node_types_data_path);
+  append(m_InputValues->face_labels_data_path);
+  for(const auto& path : m_InputValues->selected_cell_data_array_paths)
   {
     append(path);
   }
-  for(const auto& path : m_InputValues->SelectedFeatureDataArrayPaths)
+  for(const auto& path : m_InputValues->selected_feature_data_array_paths)
   {
     append(path);
   }
-  for(const auto& path : m_InputValues->CreatedDataArrayPaths)
+  for(const auto& path : m_InputValues->created_data_array_paths)
   {
     append(path);
   }
 
-  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
+  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_geometry_path);
   targets.push_back(triangleGeom.getVertices());
   targets.push_back(triangleGeom.getFaces());
   return DispatchAlgorithm<QuickSurfaceMeshDirect, QuickSurfaceMeshScanline>(AlgorithmArrayTargets(std::move(targets)), m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);

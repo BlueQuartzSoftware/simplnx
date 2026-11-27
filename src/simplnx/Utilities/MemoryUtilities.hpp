@@ -5,16 +5,14 @@
 
 #include <filesystem>
 
-namespace nx::core
-{
-namespace Memory
+namespace nx::core::memory_utilities
 {
 
 /**
  * @brief Holds a total capacity and free-space measurement for a storage
  * device or filesystem, in bytes.
  */
-struct SIMPLNX_EXPORT dataStorage
+struct SIMPLNX_EXPORT DataStorage
 {
   uint64_t total = 0; ///< Total capacity of the storage device in bytes.
   uint64_t free = 0;  ///< Available (free) space on the storage device in bytes.
@@ -35,7 +33,7 @@ uint64 SIMPLNX_EXPORT GetTotalMemory();
  * @return dataStorage containing total and free bytes on the temp drive.
  * @see GetAvailableStorageOnDrive()
  */
-dataStorage SIMPLNX_EXPORT GetAvailableStorage();
+DataStorage SIMPLNX_EXPORT GetAvailableStorage();
 
 /**
  * @brief Returns the total and free space on the filesystem that contains
@@ -47,7 +45,7 @@ dataStorage SIMPLNX_EXPORT GetAvailableStorage();
  * @return dataStorage containing total and free bytes on the queried drive.
  * @see GetAvailableStorage()
  */
-dataStorage SIMPLNX_EXPORT GetAvailableStorageOnDrive(const std::filesystem::path& path);
+DataStorage SIMPLNX_EXPORT GetAvailableStorageOnDrive(const std::filesystem::path& path);
 
 /**
  * @brief Snapshot of system-wide and per-process memory statistics.
@@ -56,10 +54,10 @@ dataStorage SIMPLNX_EXPORT GetAvailableStorageOnDrive(const std::filesystem::pat
  */
 struct SIMPLNX_EXPORT SystemMemoryInfo
 {
-  double totalGB = 0.0;     ///< Total installed physical RAM in GB.
-  double usedGB = 0.0;      ///< Currently used physical RAM in GB (total - available).
-  double loadPercent = 0.0; ///< System memory load as a percentage in the range [0, 100].
-  double processGB = 0.0;   ///< Resident memory used by the current process in GB.
+  double total_gb = 0.0;     ///< Total installed physical RAM in GB.
+  double used_gb = 0.0;      ///< Currently used physical RAM in GB (total - available).
+  double load_percent = 0.0; ///< System memory load as a percentage in the range [0, 100].
+  double process_gb = 0.0;   ///< Resident memory used by the current process in GB.
 };
 
 /**
@@ -75,5 +73,4 @@ struct SIMPLNX_EXPORT SystemMemoryInfo
  */
 SIMPLNX_EXPORT SystemMemoryInfo GetSystemMemoryInfo();
 
-} // namespace Memory
-} // namespace nx::core
+} // namespace nx::core::memory_utilities

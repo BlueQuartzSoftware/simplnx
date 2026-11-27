@@ -89,30 +89,30 @@ Parameters WriteImageFilter::parameters() const
 
   using ExtensionListType = std::unordered_set<std::string>;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<ChoicesParameter>(k_Plane_Key, "Plane", "Selection for plane normal for writing the images (XY, XZ, or YZ)", 0, ChoicesParameter::Choices{"XY", "XZ", "YZ"}));
+  params.insert(std::make_unique<ChoicesParameter>(k_Plane_Key, "Plane", "Selection for plane normal for writing the images (XY, XZ, or YZ)", 0, ChoicesParameter::ChoicesType{"XY", "XZ", "YZ"}));
   params.insert(std::make_unique<ChoicesParameter>(k_FlipMode_Key, "Flip Output Image",
                                                    "Optionally flip each output image about the X or Y axis before writing. This affects only the written image files; the input Image Geometry and "
                                                    "its data are not modified.",
-                                                   0, ChoicesParameter::Choices{"None", "Flip About X Axis", "Flip About Y Axis"}));
+                                                   0, ChoicesParameter::ChoicesType{"None", "Flip About X Axis", "Flip About Y Axis"}));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ImageArrayPath_Key, "Input Image Data Array", "The image data that will be processed by this filter.", DataPath{}, GetAllNumericTypes()));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Whether to assign the masked color to 'bad' voxels", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Path to the data array used to define voxels as good or bad.", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   std::vector<uint8> defaultMask(3, 0);
-  params.insert(std::make_unique<VectorUInt8Parameter>(k_InvalidColorValue_Key, "Masked Color (RGB)", "The color to assign to voxels that have a mask value of FALSE", defaultMask,
-                                                       std::vector<std::string>{"Red", "Green", "Blue"}));
+  params.insert(std::make_unique<VectorUInt8ParameterType>(k_InvalidColorValue_Key, "Masked Color (RGB)", "The color to assign to voxels that have a mask value of FALSE", defaultMask,
+                                                           std::vector<std::string>{"Red", "Green", "Blue"}));
 
   params.insertSeparator(Parameters::Separator{"Color Table (Optional)"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_CreateColorTable_Key, "Create Color Table",
                                                                  "When enabled, the single-component input array is converted to RGB using the selected preset before writing.", false));
-  params.insert(
-      std::make_unique<CreateColorMapParameter>(k_SelectedPreset_Key, "Select Preset...", "Select a preset color scheme to apply to the input array", ColorTableUtilities::GetDefaultRGBPresetName()));
+  params.insert(std::make_unique<CreateColorMapParameter>(k_SelectedPreset_Key, "Select Preset...", "Select a preset color scheme to apply to the input array",
+                                                          color_table_utilities::GetDefaultRGBPresetName()));
 
   params.insertSeparator(Parameters::Separator{"Scale Bar (Optional)"});
   params.insert(std::make_unique<BoolParameter>(k_AddScaleBar_Key, "Add Physical Scale Bar",
@@ -123,8 +123,8 @@ Parameters WriteImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Output File Options"});
   params.insert(
       std::make_unique<FileSystemPathParameter>(k_FileName_Key, "Output File", "Path to the output file to write.", fs::path(), ExtensionListType{}, FileSystemPathParameter::PathType::OutputFile));
-  params.insert(std::make_unique<UInt64Parameter>(k_IndexOffset_Key, "Index Offset", "This is the starting index when writing multiple images", 0));
-  params.insert(std::make_unique<Int32Parameter>(k_TotalIndexDigits_Key, "Total Number of Index Digits", "This is the total number of digits to use when generating the index", 3));
+  params.insert(std::make_unique<UInt64ParameterType>(k_IndexOffset_Key, "Index Offset", "This is the starting index when writing multiple images", 0));
+  params.insert(std::make_unique<Int32ParameterType>(k_TotalIndexDigits_Key, "Total Number of Index Digits", "This is the total number of digits to use when generating the index", 3));
   params.insert(std::make_unique<StringParameter>(k_LeadingDigitCharacter_Key, "Fill Character", "The character to use for the leading digits if needed", "0"));
 
   params.linkParameters(k_CreateColorTable_Key, k_SelectedPreset_Key, true);
@@ -148,14 +148,14 @@ IFilter::VersionType WriteImageFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer WriteImageFilter::clone() const
+IFilter::UniquePointerType WriteImageFilter::clone() const
 {
   return std::make_unique<WriteImageFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                         const ExecutionContext& executionContext) const
+IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto plane = filterArgs.value<ChoicesParameter::ValueType>(k_Plane_Key);
   auto filePath = filterArgs.value<fs::path>(k_FileName_Key);
@@ -173,19 +173,19 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
   auto imageIOResult = CreateImageIO(filePath);
   if(imageIOResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(imageIOResult)), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(ConvertResult(std::move(imageIOResult)), {})};
   }
   const std::unique_ptr<IImageIO>& imageIO = imageIOResult.value();
 
   // Validate fill character is a single character
   if(fillChar.size() != 1)
   {
-    return {MakeErrorResult<OutputActions>(-27010, fmt::format("The fill character must contain exactly one character, but it contains {} characters.", fillChar.size()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-27010, fmt::format("The fill character must contain exactly one character, but it contains {} characters.", fillChar.size()))};
   }
   if(!IsValidFillCharacter(fillChar.front()))
   {
-    return {MakeErrorResult<OutputActions>(
-        -27018, fmt::format("The fill character '{}' is not valid in an output file name. Select one printable character that is not in the set '{}'.", fillChar, "{}\\/:*?\"<>|"))};
+    return {.output_actions = MakeErrorResult<OutputActions>(
+                -27018, fmt::format("The fill character '{}' is not valid in an output file name. Select one printable character that is not in the set '{}'.", fillChar, "{}\\/:*?\"<>|"))};
   }
 
   // Stored fastest to slowest i.e. X Y Z
@@ -201,12 +201,14 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
     if(supportedTypes.find(arrayDataType) == supportedTypes.end())
     {
       std::vector<std::string> typeNames;
+      typeNames.reserve(supportedTypes.size());
       for(DataType t : supportedTypes)
       {
         typeNames.push_back(DataTypeToString(t).str());
       }
-      return {MakeErrorResult<OutputActions>(
-          -27011, fmt::format("The output file format for '{}' cannot write '{}' pixel data. Supported data types for this format: {}. Enable 'Create Color Table' to write this array as an RGB image "
+      return {.output_actions = MakeErrorResult<OutputActions>(
+                  -27011,
+                  fmt::format("The output file format for '{}' cannot write '{}' pixel data. Supported data types for this format: {}. Enable 'Create Color Table' to write this array as an RGB image "
                               "instead.",
                               filePath.filename().string(), DataTypeToString(arrayDataType), fmt::join(typeNames, ", ")))};
     }
@@ -217,6 +219,7 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
     if(supportedComponentCounts.find(numComponents) == supportedComponentCounts.end())
     {
       std::vector<std::string> countStrings;
+      countStrings.reserve(supportedComponentCounts.size());
       for(usize count : supportedComponentCounts)
       {
         countStrings.push_back(std::to_string(count));
@@ -227,7 +230,7 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
       {
         message += " Enable 'Create Color Table' to write this single-component array as an RGB image instead.";
       }
-      return {MakeErrorResult<OutputActions>(-27014, message)};
+      return {.output_actions = MakeErrorResult<OutputActions>(-27014, message)};
     }
   }
 
@@ -236,17 +239,17 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
     // Color mapping requires a single-component scalar input; RGB is produced by the filter.
     if(imageArray.getNumberOfComponents() != 1)
     {
-      return {MakeErrorResult<OutputActions>(-27012, fmt::format("When 'Create Color Table' is enabled the input array must have a single component, but '{}' has {} components.",
-                                                                 imageArrayPath.toString(), imageArray.getNumberOfComponents()))};
+      return {.output_actions = MakeErrorResult<OutputActions>(-27012, fmt::format("When 'Create Color Table' is enabled the input array must have a single component, but '{}' has {} components.",
+                                                                                   imageArrayPath.toString(), imageArray.getNumberOfComponents()))};
     }
 
     // Validate the selected preset now so an unknown/empty/degenerate preset fails during preflight
     // rather than at execute. A valid preset defines at least 2 control colors (4 floats each => >= 8 floats).
     auto presetName = filterArgs.value<CreateColorMapParameter::ValueType>(k_SelectedPreset_Key);
-    auto controlPointsResult = ColorTableUtilities::ExtractControlPoints(presetName);
+    auto controlPointsResult = color_table_utilities::ExtractControlPoints(presetName);
     if(controlPointsResult.invalid() || controlPointsResult.value().empty() || controlPointsResult.value().size() < 8)
     {
-      return {MakeErrorResult<OutputActions>(-27015, fmt::format("The selected color preset '{}' is invalid or does not define at least 2 control colors.", presetName))};
+      return {.output_actions = MakeErrorResult<OutputActions>(-27015, fmt::format("The selected color preset '{}' is invalid or does not define at least 2 control colors.", presetName))};
     }
 
     if(useMask)
@@ -254,7 +257,7 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
       auto tupleValidityCheck = dataStructure.validateNumberOfTuples({imageArrayPath, maskArrayPath});
       if(!tupleValidityCheck)
       {
-        return {MakeErrorResult<OutputActions>(-27013, fmt::format("The input array and mask array must have equal tuple counts.\n{}", tupleValidityCheck.error()))};
+        return {.output_actions = MakeErrorResult<OutputActions>(-27013, fmt::format("The input array and mask array must have equal tuple counts.\n{}", tupleValidityCheck.error()))};
       }
     }
   }
@@ -263,9 +266,9 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
 
   if(!nx::core::DoDimensionsMatch(imageArrayStore, imageGeom))
   {
-    return {MakeErrorResult<OutputActions>(-25600, fmt::format("Image array '{}' dimensions ({}) do not match image geometry '{}' dimensions ({}).", imageArrayPath.toString(),
-                                                               StringUtilities::formatTupleShape3D(imageArray.getTupleShape()), imageGeomPath.toString(),
-                                                               StringUtilities::formatDimensions3D(imageGeom.getDimensions())))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-25600, fmt::format("Image array '{}' dimensions ({}) do not match image geometry '{}' dimensions ({}).", imageArrayPath.toString(),
+                                                                                 string_utilities::FormatTupleShape3D(imageArray.getTupleShape()), imageGeomPath.toString(),
+                                                                                 string_utilities::FormatDimensions3D(imageGeom.getDimensions())))};
   }
 
   // Compute slice count based on plane and geometry dims
@@ -316,60 +319,61 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
       const bool supportedComponents = (numComponents == 1 || numComponents == 3 || numComponents == 4);
       if(arrayDataType != DataType::uint8 || !supportedComponents)
       {
-        return {MakeErrorResult<OutputActions>(-27016, fmt::format("The scale bar can only be drawn on 8-bit images. '{}' is {} with {} component(s); supported inputs are uint8 with 1, 3 or 4 "
-                                                                   "components. Enable 'Create Color Table' to convert this array to an 8-bit RGB image instead.",
-                                                                   imageArrayPath.toString(), DataTypeToString(arrayDataType), numComponents))};
+        return {.output_actions =
+                    MakeErrorResult<OutputActions>(-27016, fmt::format("The scale bar can only be drawn on 8-bit images. '{}' is {} with {} component(s); supported inputs are uint8 with 1, 3 or 4 "
+                                                                       "components. Enable 'Create Color Table' to convert this array to an 8-bit RGB image instead.",
+                                                                       imageArrayPath.toString(), DataTypeToString(arrayDataType), numComponents))};
       }
     }
 
-    const FloatVec3 spacing = imageGeom.getSpacing();
+    const FloatVec3Type spacing = imageGeom.getSpacing();
     const float32 horizontalSpacing = (plane == 2) ? spacing[1] : spacing[0];
     if(!std::isfinite(horizontalSpacing) || horizontalSpacing <= 0.0f)
     {
-      return {MakeErrorResult<OutputActions>(
-          -27017, fmt::format("The scale bar requires a positive, finite spacing along the written image's horizontal axis, but the Image Geometry's spacing is {}.", horizontalSpacing))};
+      return {.output_actions = MakeErrorResult<OutputActions>(
+                  -27017, fmt::format("The scale bar requires a positive, finite spacing along the written image's horizontal axis, but the Image Geometry's spacing is {}.", horizontalSpacing))};
     }
 
-    const usize bandHeight = ScaleBarRenderer::ComputeBandHeight(sliceH);
+    const usize bandHeight = scale_bar_renderer::ComputeBandHeight(sliceH);
     preflightUpdatedValues.push_back({"Output Image Size (with scale bar)", fmt::format("{} x {}", sliceW, sliceH + bandHeight)});
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> WriteImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   WriteImageInputValues inputValues;
 
-  inputValues.outputFilePath = filterArgs.value<fs::path>(k_FileName_Key);
-  inputValues.planeIndex = filterArgs.value<ChoicesParameter::ValueType>(k_Plane_Key);
-  inputValues.indexOffset = filterArgs.value<uint64>(k_IndexOffset_Key);
-  inputValues.totalIndexDigits = filterArgs.value<int32>(k_TotalIndexDigits_Key);
-  inputValues.leadingDigitCharacter = filterArgs.value<StringParameter::ValueType>(k_LeadingDigitCharacter_Key);
-  inputValues.imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
-  inputValues.imageDataArrayPath = filterArgs.value<DataPath>(k_ImageArrayPath_Key);
-  inputValues.createColorTable = filterArgs.value<bool>(k_CreateColorTable_Key);
-  inputValues.presetName = filterArgs.value<CreateColorMapParameter::ValueType>(k_SelectedPreset_Key);
-  inputValues.useMask = filterArgs.value<bool>(k_UseMask_Key);
-  inputValues.maskArrayPath = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
-  inputValues.invalidColor = filterArgs.value<std::vector<uint8>>(k_InvalidColorValue_Key);
-  inputValues.flipMode = static_cast<ImageFlipTransform>(filterArgs.value<ChoicesParameter::ValueType>(k_FlipMode_Key));
-  inputValues.addScaleBar = filterArgs.value<bool>(k_AddScaleBar_Key);
+  inputValues.output_file_path = filterArgs.value<fs::path>(k_FileName_Key);
+  inputValues.plane_index = filterArgs.value<ChoicesParameter::ValueType>(k_Plane_Key);
+  inputValues.index_offset = filterArgs.value<uint64>(k_IndexOffset_Key);
+  inputValues.total_index_digits = filterArgs.value<int32>(k_TotalIndexDigits_Key);
+  inputValues.leading_digit_character = filterArgs.value<StringParameter::ValueType>(k_LeadingDigitCharacter_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
+  inputValues.image_data_array_path = filterArgs.value<DataPath>(k_ImageArrayPath_Key);
+  inputValues.create_color_table = filterArgs.value<bool>(k_CreateColorTable_Key);
+  inputValues.preset_name = filterArgs.value<CreateColorMapParameter::ValueType>(k_SelectedPreset_Key);
+  inputValues.use_mask = filterArgs.value<bool>(k_UseMask_Key);
+  inputValues.mask_array_path = filterArgs.value<DataPath>(k_MaskArrayPath_Key);
+  inputValues.invalid_color = filterArgs.value<std::vector<uint8>>(k_InvalidColorValue_Key);
+  inputValues.flip_mode = static_cast<ImageFlipTransform>(filterArgs.value<ChoicesParameter::ValueType>(k_FlipMode_Key));
+  inputValues.add_scale_bar = filterArgs.value<bool>(k_AddScaleBar_Key);
 
   return WriteImage(dataStructure, messageHandler, shouldCancel, inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_PlaneKey = "Plane";
-constexpr StringLiteral k_FileNameKey = "FileName";
-constexpr StringLiteral k_IndexOffsetKey = "IndexOffset";
-constexpr StringLiteral k_ImageArrayPathKey = "ImageArrayPath";
-} // namespace SIMPL
+constexpr StringLiteralType k_PlaneKey = "Plane";
+constexpr StringLiteralType k_FileNameKey = "FileName";
+constexpr StringLiteralType k_IndexOffsetKey = "IndexOffset";
+constexpr StringLiteralType k_ImageArrayPathKey = "ImageArrayPath";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteImageFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -378,21 +382,21 @@ Result<Arguments> WriteImageFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  Result<> planeResult = SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_PlaneKey, k_Plane_Key);
+  Result<> planeResult = simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_PlaneKey, k_Plane_Key);
   if(planeResult.valid())
   {
     // Some 6.5 pipelines omit this parameter, so include it only when conversion succeeds.
     results.push_back(std::move(planeResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_FileNameKey, k_FileName_Key));
-  Result<> offsetResult = SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_IndexOffsetKey, k_IndexOffset_Key);
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_FileNameKey, k_FileName_Key));
+  Result<> offsetResult = simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_IndexOffsetKey, k_IndexOffset_Key);
   if(offsetResult.valid())
   {
     // 6.5 pipelines omit this parameter, so include it only when conversion succeeds.
     results.push_back(std::move(offsetResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_ImageArrayPathKey, k_ImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_ImageArrayPathKey, k_ImageArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_ImageArrayPathKey, k_ImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ImageArrayPathKey, k_ImageArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -63,13 +63,13 @@ Parameters NearestPointFuseRegularGridsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Sampling Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SamplingGeometryPath_Key, "Sampling Image Geometry",
                                                              "This is the geometry that will be copied into the reference geometry at the overlap", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(
       std::make_unique<AttributeMatrixSelectionParameter>(k_SamplingCellAttributeMatrixPath_Key, "Sampling Cell Attribute Matrix", "The attribute matrix for the sampling geometry", DataPath{}));
 
   params.insertSeparator(Parameters::Separator{"Input Reference Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ReferenceGeometryPath_Key, "Reference Image Geometry", "This is the geometry that will store the values from the overlap", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(
       std::make_unique<AttributeMatrixSelectionParameter>(k_ReferenceCellAttributeMatrixPath_Key, "Reference Cell Attribute Matrix", "The attribute matrix for the reference geometry", DataPath{}));
 
@@ -85,14 +85,14 @@ IFilter::VersionType NearestPointFuseRegularGridsFilter::parametersVersion() con
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer NearestPointFuseRegularGridsFilter::clone() const
+IFilter::UniquePointerType NearestPointFuseRegularGridsFilter::clone() const
 {
   return std::make_unique<NearestPointFuseRegularGridsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                           const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pSamplingGeometryPathValue = filterArgs.value<DataPath>(k_SamplingGeometryPath_Key);
   auto pReferenceGeometryPathValue = filterArgs.value<DataPath>(k_ReferenceGeometryPath_Key);
@@ -108,21 +108,21 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
     const usize cellCount = dataStructure.getDataRefAs<ImageGeom>(geometryPath).getNumberOfCells();
     if(tupleCount != cellCount)
     {
-      return {MakeErrorResult<OutputActions>(-5565,
-                                             fmt::format("**{}** Attribute Matrix '{}' has {} tuples, but the selected geometry '{}' has {} cells. Select an Attribute Matrix with one tuple per cell.",
-                                                         parameterName, matrixPath.toString(), tupleCount, geometryPath.toString(), cellCount))};
+      return {.output_actions = MakeErrorResult<OutputActions>(
+                  -5565, fmt::format("**{}** Attribute Matrix '{}' has {} tuples, but the selected geometry '{}' has {} cells. Select an Attribute Matrix with one tuple per cell.", parameterName,
+                                     matrixPath.toString(), tupleCount, geometryPath.toString(), cellCount))};
     }
   }
 
   nx::core::Result<OutputActions> resultOutputActions;
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  auto* sampleAM = dataStructure.getDataAs<AttributeMatrix>(pSamplingCellAttributeMatrixPathValue);
-  auto* refAM = dataStructure.getDataAs<AttributeMatrix>(pReferenceCellAttributeMatrixPathValue);
+  const auto* sampleAmPtr = dataStructure.getDataAs<AttributeMatrix>(pSamplingCellAttributeMatrixPathValue);
+  const auto* refAmPtr = dataStructure.getDataAs<AttributeMatrix>(pReferenceCellAttributeMatrixPathValue);
 
   // The reference grid needs matching arrays for sampling-grid values.
   {
-    auto sampleVoxelArrays = sampleAM->findAllChildrenOfType<IArray>();
+    auto sampleVoxelArrays = sampleAmPtr->findAllChildrenOfType<IArray>();
     for(const auto& array : sampleVoxelArrays)
     {
       // Neighbor lists may implement IDataArray, but this filter intentionally does not create or
@@ -133,17 +133,17 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
       }
       const auto& dataArray = dynamic_cast<const IDataArray&>(*array);
       DataPath createdArrayPath = pReferenceCellAttributeMatrixPathValue.createChildPath(array->getName());
-      auto createArrayAction = std::make_unique<CreateArrayAction>(dataArray.getDataType(), refAM->getShape(), dataArray.getComponentShape(), createdArrayPath);
+      auto createArrayAction = std::make_unique<CreateArrayAction>(dataArray.getDataType(), refAmPtr->getShape(), dataArray.getComponentShape(), createdArrayPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
   }
 
   {
-    auto sampleVoxelArrays = sampleAM->findAllChildrenOfType<StringArray>();
+    auto sampleVoxelArrays = sampleAmPtr->findAllChildrenOfType<StringArray>();
     for(const auto& array : sampleVoxelArrays)
     {
       DataPath createdArrayPath = pReferenceCellAttributeMatrixPathValue.createChildPath(array->getName());
-      auto createArrayAction = std::make_unique<CreateStringArrayAction>(refAM->getShape(), createdArrayPath);
+      auto createArrayAction = std::make_unique<CreateStringArrayAction>(refAmPtr->getShape(), createdArrayPath);
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
   }
@@ -159,31 +159,31 @@ IFilter::PreflightResult NearestPointFuseRegularGridsFilter::preflightImpl(const
   //    }
   //  }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> NearestPointFuseRegularGridsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> NearestPointFuseRegularGridsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   NearestPointFuseRegularGridsInputValues inputValues;
 
-  inputValues.SamplingGeometryPath = filterArgs.value<DataPath>(k_SamplingGeometryPath_Key);
-  inputValues.ReferenceGeometryPath = filterArgs.value<DataPath>(k_ReferenceGeometryPath_Key);
-  inputValues.SamplingCellAttributeMatrixPath = filterArgs.value<DataPath>(k_SamplingCellAttributeMatrixPath_Key);
-  inputValues.ReferenceCellAttributeMatrixPath = filterArgs.value<DataPath>(k_ReferenceCellAttributeMatrixPath_Key);
-  filterArgs.value<bool>(k_UseFill_Key) ? inputValues.fillValue = filterArgs.value<float64>(k_FillValue_Key) : inputValues.fillValue = 0.0;
+  inputValues.sampling_geometry_path = filterArgs.value<DataPath>(k_SamplingGeometryPath_Key);
+  inputValues.reference_geometry_path = filterArgs.value<DataPath>(k_ReferenceGeometryPath_Key);
+  inputValues.sampling_cell_attribute_matrix_path = filterArgs.value<DataPath>(k_SamplingCellAttributeMatrixPath_Key);
+  inputValues.reference_cell_attribute_matrix_path = filterArgs.value<DataPath>(k_ReferenceCellAttributeMatrixPath_Key);
+  filterArgs.value<bool>(k_UseFill_Key) ? inputValues.fill_value = filterArgs.value<float64>(k_FillValue_Key) : inputValues.fill_value = 0.0;
 
   return NearestPointFuseRegularGrids(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_ReferenceCellAttributeMatrixPathKey = "ReferenceCellAttributeMatrixPath";
-constexpr StringLiteral k_SamplingCellAttributeMatrixPathKey = "SamplingCellAttributeMatrixPath";
-} // namespace SIMPL
+constexpr StringLiteralType k_ReferenceCellAttributeMatrixPathKey = "ReferenceCellAttributeMatrixPath";
+constexpr StringLiteralType k_SamplingCellAttributeMatrixPathKey = "SamplingCellAttributeMatrixPath";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> NearestPointFuseRegularGridsFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -193,13 +193,13 @@ Result<Arguments> NearestPointFuseRegularGridsFilter::FromSIMPLJson(const nlohma
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_ReferenceCellAttributeMatrixPathKey, k_ReferenceGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_ReferenceCellAttributeMatrixPathKey,
-                                                                                                                         k_ReferenceCellAttributeMatrixPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_ReferenceCellAttributeMatrixPathKey, k_ReferenceGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_ReferenceCellAttributeMatrixPathKey,
+                                                                                                                           k_ReferenceCellAttributeMatrixPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SamplingCellAttributeMatrixPathKey, k_SamplingGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_SamplingCellAttributeMatrixPathKey,
-                                                                                                                         k_SamplingCellAttributeMatrixPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SamplingCellAttributeMatrixPathKey, k_SamplingGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_SamplingCellAttributeMatrixPathKey,
+                                                                                                                           k_SamplingCellAttributeMatrixPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

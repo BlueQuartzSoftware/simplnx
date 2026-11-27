@@ -10,7 +10,7 @@ namespace nx::core
 {
 namespace read_string_data_array
 {
-const ChoicesParameter::Choices k_Delimiters = {", (comma)", "; (semicolon)", "  (space)", ": (colon)", "\\t (Tab)", "New Line"};
+const ChoicesParameter::ChoicesType k_Delimiters = {", (comma)", "; (semicolon)", "  (space)", ": (colon)", "\\t (Tab)", "New Line"};
 const ChoicesParameter::ValueType k_CommaIndex = 0;
 const ChoicesParameter::ValueType k_SemicolonIndex = 1;
 const ChoicesParameter::ValueType k_SpaceIndex = 2;
@@ -21,18 +21,18 @@ const ChoicesParameter::ValueType k_NewLineIndex = 5;
 
 struct SIMPLNXCORE_EXPORT ReadStringDataArrayInputValues
 {
-  FileSystemPathParameter::ValueType inputFileValue;
-  usize skipLineCount;
-  usize delimiterIndex;
-  DataPath outputArrayPath;
-  std::string dataFormat;
+  FileSystemPathParameter::ValueType input_file_value;
+  usize skip_line_count{};
+  usize delimiter_index{};
+  DataPath output_array_path;
+  std::string data_format;
 };
 
 class SIMPLNXCORE_EXPORT ReadStringDataArray
 {
 public:
   ReadStringDataArray(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ReadStringDataArrayInputValues* inputValues);
-  ~ReadStringDataArray() noexcept;
+  ~ReadStringDataArray() noexcept = default;
 
   ReadStringDataArray(const ReadStringDataArray&) = delete;
   ReadStringDataArray(ReadStringDataArray&&) noexcept = delete;

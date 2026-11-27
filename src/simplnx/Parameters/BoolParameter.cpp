@@ -18,7 +18,7 @@ Uuid BoolParameter::uuid() const
   return ParameterTraits<BoolParameter>::uuid;
 }
 
-IParameter::AcceptedTypes BoolParameter::acceptedTypes() const
+IParameter::AcceptedTypesType BoolParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -36,18 +36,18 @@ nlohmann::json BoolParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> BoolParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> BoolParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'BoolParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'BoolParameter' JSON Error: ";
   if(!json.is_boolean())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a bool", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a bool", k_Prefix, name()));
   }
   auto boolValue = json.get<ValueType>();
   return {{boolValue}};
 }
 
-IParameter::UniquePointer BoolParameter::clone() const
+IParameter::UniquePointerType BoolParameter::clone() const
 {
   return std::make_unique<BoolParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -68,16 +68,16 @@ Result<> BoolParameter::validate(const std::any& value) const
   return {};
 }
 
-bool BoolParameter::checkActive(const std::any& parameterValue, const std::any& associatedValue) const
+bool BoolParameter::checkActive(const std::any& parameterValue, const std::any& associatedValue)
 {
   auto value = std::any_cast<ValueType>(parameterValue);
   auto storedValue = std::any_cast<ValueType>(associatedValue);
   return value == storedValue;
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
-Result<BooleanFilterParameterConverter::ValueType> BooleanFilterParameterConverter::convert(const nlohmann::json& json)
+Result<BooleanFilterParameterConverter::ValueType> BooleanFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_number_integer() && !json.is_number_unsigned() && !json.is_boolean())
   {
@@ -89,7 +89,7 @@ Result<BooleanFilterParameterConverter::ValueType> BooleanFilterParameterConvert
   return {std::move(value)};
 }
 
-Result<InvertedBooleanFilterParameterConverter::ValueType> InvertedBooleanFilterParameterConverter::convert(const nlohmann::json& json)
+Result<InvertedBooleanFilterParameterConverter::ValueType> InvertedBooleanFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_number_integer() || !json.is_number_unsigned())
   {
@@ -101,7 +101,7 @@ Result<InvertedBooleanFilterParameterConverter::ValueType> InvertedBooleanFilter
   return {std::move(value)};
 }
 
-Result<LinkedBooleanFilterParameterConverter::ValueType> LinkedBooleanFilterParameterConverter::convert(const nlohmann::json& json)
+Result<LinkedBooleanFilterParameterConverter::ValueType> LinkedBooleanFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_number_integer())
   {
@@ -112,5 +112,5 @@ Result<LinkedBooleanFilterParameterConverter::ValueType> LinkedBooleanFilterPara
 
   return {value};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

@@ -20,7 +20,7 @@ using namespace nx::core;
 
 namespace
 {
-using ull = unsigned long long int;
+using UllType = unsigned long long int;
 
 // Tuple chunks limit DataStore transfers and formatted text memory.
 constexpr usize k_ChunkTuples = 65536;
@@ -108,7 +108,7 @@ private:
  * @param shouldCancel Stops before or after later chunks when true.
  * @return Source, stream, or cancellation error, or success.
  */
-Result<> WriteChunkedData(std::ofstream& file, const fs::path& outputPath, const SizeVec3& dims, ChunkedInput& input, const std::atomic_bool& shouldCancel)
+Result<> WriteChunkedData(std::ofstream& file, const fs::path& outputPath, const SizeVec3Type& dims, ChunkedInput& input, const std::atomic_bool& shouldCancel)
 {
   const usize totalTuples = dims[0] * dims[1] * dims[2];
   std::string textBuffer;
@@ -137,11 +137,11 @@ Result<> WriteChunkedData(std::ofstream& file, const fs::path& outputPath, const
     for(usize chunkIndex = 0; chunkIndex < tupleCount; ++chunkIndex)
     {
       const usize eulerIndex = chunkIndex * k_EulerComponents;
-      const float32 phi1 = input.eulerAngles()[eulerIndex] * 180.0f * Constants::k_1OverPiF;
-      const float32 phi = input.eulerAngles()[eulerIndex + 1] * 180.0f * Constants::k_1OverPiF;
-      const float32 phi2 = input.eulerAngles()[eulerIndex + 2] * 180.0f * Constants::k_1OverPiF;
+      const float32 phi1 = input.eulerAngles()[eulerIndex] * 180.0f * constants::k_1OverPiF;
+      const float32 phi = input.eulerAngles()[eulerIndex + 1] * 180.0f * constants::k_1OverPiF;
+      const float32 phi2 = input.eulerAngles()[eulerIndex + 2] * 180.0f * constants::k_1OverPiF;
 
-      fmt::format_to(std::back_inserter(textBuffer), "{:.3f} {:.3f} {:.3f} {} {} {} {} {}\n", phi1, phi, phi2, static_cast<ull>(x + 1), static_cast<ull>(y + 1), static_cast<ull>(z + 1),
+      fmt::format_to(std::back_inserter(textBuffer), "{:.3f} {:.3f} {:.3f} {} {} {} {} {}\n", phi1, phi, phi2, static_cast<UllType>(x + 1), static_cast<UllType>(y + 1), static_cast<UllType>(z + 1),
                      input.featureIds()[chunkIndex], input.cellPhases()[chunkIndex]);
 
       x++;
@@ -183,13 +183,13 @@ Result<> WriteChunkedData(std::ofstream& file, const fs::path& outputPath, const
  * @param shouldCancel Stops before or after later chunks when true.
  * @return Stream or cancellation error, or success.
  */
-Result<> WriteDirectData(std::ofstream& file, const fs::path& outputPath, const SizeVec3& dims, const DataStore<float32>& eulerAnglesStore, const DataStore<int32>& featureIdsStore,
+Result<> WriteDirectData(std::ofstream& file, const fs::path& outputPath, const SizeVec3Type& dims, const DataStore<float32>& eulerAnglesStore, const DataStore<int32>& featureIdsStore,
                          const DataStore<int32>& cellPhasesStore, const std::atomic_bool& shouldCancel)
 {
   const usize totalTuples = dims[0] * dims[1] * dims[2];
-  const float32* eulerAngles = eulerAnglesStore.data();
-  const int32* featureIds = featureIdsStore.data();
-  const int32* cellPhases = cellPhasesStore.data();
+  const float32* eulerAnglesPtr = eulerAnglesStore.data();
+  const int32* featureIdsPtr = featureIdsStore.data();
+  const int32* cellPhasesPtr = cellPhasesStore.data();
 
   for(usize tupleOffset = 0; tupleOffset < totalTuples; tupleOffset += k_ChunkTuples)
   {
@@ -199,9 +199,9 @@ Result<> WriteDirectData(std::ofstream& file, const fs::path& outputPath, const 
     }
 
     const usize tupleCount = std::min(k_ChunkTuples, totalTuples - tupleOffset);
-    const float32* eulerAnglesChunk = eulerAngles + (tupleOffset * k_EulerComponents);
-    const int32* featureIdsChunk = featureIds + tupleOffset;
-    const int32* cellPhasesChunk = cellPhases + tupleOffset;
+    const float32* eulerAnglesChunkPtr = eulerAnglesPtr + (tupleOffset * k_EulerComponents);
+    const int32* featureIdsChunkPtr = featureIdsPtr + tupleOffset;
+    const int32* cellPhasesChunkPtr = cellPhasesPtr + tupleOffset;
 
     usize x = tupleOffset % dims[0];
     const usize yzIndex = tupleOffset / dims[0];
@@ -211,12 +211,12 @@ Result<> WriteDirectData(std::ofstream& file, const fs::path& outputPath, const 
     for(usize chunkIndex = 0; chunkIndex < tupleCount; ++chunkIndex)
     {
       const usize eulerIndex = chunkIndex * k_EulerComponents;
-      const float32 phi1 = eulerAnglesChunk[eulerIndex] * 180.0f * Constants::k_1OverPiF;
-      const float32 phi = eulerAnglesChunk[eulerIndex + 1] * 180.0f * Constants::k_1OverPiF;
-      const float32 phi2 = eulerAnglesChunk[eulerIndex + 2] * 180.0f * Constants::k_1OverPiF;
+      const float32 phi1 = eulerAnglesChunkPtr[eulerIndex] * 180.0f * constants::k_1OverPiF;
+      const float32 phi = eulerAnglesChunkPtr[eulerIndex + 1] * 180.0f * constants::k_1OverPiF;
+      const float32 phi2 = eulerAnglesChunkPtr[eulerIndex + 2] * 180.0f * constants::k_1OverPiF;
 
-      file << fmt::format("{:.3f} {:.3f} {:.3f} {} {} {} {} {}\n", phi1, phi, phi2, static_cast<ull>(x + 1), static_cast<ull>(y + 1), static_cast<ull>(z + 1), featureIdsChunk[chunkIndex],
-                          cellPhasesChunk[chunkIndex]);
+      file << fmt::format("{:.3f} {:.3f} {:.3f} {} {} {} {} {}\n", phi1, phi, phi2, static_cast<UllType>(x + 1), static_cast<UllType>(y + 1), static_cast<UllType>(z + 1),
+                          featureIdsChunkPtr[chunkIndex], cellPhasesChunkPtr[chunkIndex]);
 
       x++;
       if(x == dims[0])
@@ -252,12 +252,12 @@ Result<> WriteDirectData(std::ofstream& file, const fs::path& outputPath, const 
 struct WriterContext
 {
   std::ofstream& File;
-  const fs::path& OutputPath;
-  const SizeVec3& Dims;
-  const Float32Array& EulerAngles;
-  const Int32Array& FeatureIds;
-  const Int32Array& CellPhases;
-  const std::atomic_bool& ShouldCancel;
+  const fs::path& output_path;
+  const SizeVec3Type& Dims;
+  const Float32ArrayType& euler_angles;
+  const Int32ArrayType& feature_ids;
+  const Int32ArrayType& cell_phases;
+  const std::atomic_bool& should_cancel;
 };
 
 /**
@@ -284,16 +284,16 @@ public:
    */
   Result<> operator()()
   {
-    const auto* eulerAngles = dynamic_cast<const DataStore<float32>*>(&m_Context.EulerAngles.getDataStoreRef());
-    const auto* featureIds = dynamic_cast<const DataStore<int32>*>(&m_Context.FeatureIds.getDataStoreRef());
-    const auto* cellPhases = dynamic_cast<const DataStore<int32>*>(&m_Context.CellPhases.getDataStoreRef());
-    if(eulerAngles == nullptr || featureIds == nullptr || cellPhases == nullptr)
+    const auto* eulerAnglesPtr = dynamic_cast<const DataStore<float32>*>(&m_Context.euler_angles.getDataStoreRef());
+    const auto* featureIdsPtr = dynamic_cast<const DataStore<int32>*>(&m_Context.feature_ids.getDataStoreRef());
+    const auto* cellPhasesPtr = dynamic_cast<const DataStore<int32>*>(&m_Context.cell_phases.getDataStoreRef());
+    if(eulerAnglesPtr == nullptr || featureIdsPtr == nullptr || cellPhasesPtr == nullptr)
     {
-      ChunkedInput input(m_Context.EulerAngles.getDataStoreRef(), m_Context.FeatureIds.getDataStoreRef(), m_Context.CellPhases.getDataStoreRef());
-      return WriteChunkedData(m_Context.File, m_Context.OutputPath, m_Context.Dims, input, m_Context.ShouldCancel);
+      ChunkedInput input(m_Context.euler_angles.getDataStoreRef(), m_Context.feature_ids.getDataStoreRef(), m_Context.cell_phases.getDataStoreRef());
+      return WriteChunkedData(m_Context.File, m_Context.output_path, m_Context.Dims, input, m_Context.should_cancel);
     }
 
-    return WriteDirectData(m_Context.File, m_Context.OutputPath, m_Context.Dims, *eulerAngles, *featureIds, *cellPhases, m_Context.ShouldCancel);
+    return WriteDirectData(m_Context.File, m_Context.output_path, m_Context.Dims, *eulerAnglesPtr, *featureIdsPtr, *cellPhasesPtr, m_Context.should_cancel);
   }
 
 private:
@@ -322,8 +322,8 @@ public:
    */
   Result<> operator()()
   {
-    ChunkedInput input(m_Context.EulerAngles.getDataStoreRef(), m_Context.FeatureIds.getDataStoreRef(), m_Context.CellPhases.getDataStoreRef());
-    return WriteChunkedData(m_Context.File, m_Context.OutputPath, m_Context.Dims, input, m_Context.ShouldCancel);
+    ChunkedInput input(m_Context.euler_angles.getDataStoreRef(), m_Context.feature_ids.getDataStoreRef(), m_Context.cell_phases.getDataStoreRef());
+    return WriteChunkedData(m_Context.File, m_Context.output_path, m_Context.Dims, input, m_Context.should_cancel);
   }
 
 private:
@@ -339,8 +339,6 @@ WriteLosAlamosFFT::WriteLosAlamosFFT(DataStructure& dataStructure, const IFilter
 {
 }
 
-WriteLosAlamosFFT::~WriteLosAlamosFFT() noexcept = default;
-
 const std::atomic_bool& WriteLosAlamosFFT::getCancel()
 {
   return m_ShouldCancel;
@@ -349,25 +347,26 @@ const std::atomic_bool& WriteLosAlamosFFT::getCancel()
 Result<> WriteLosAlamosFFT::operator()()
 {
   // Create parent directories before opening the requested output path.
-  Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->OutputFile.parent_path());
+  Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->output_file.parent_path());
   if(createDirectoriesResult.invalid())
   {
     return createDirectoriesResult;
   }
 
-  std::ofstream file = std::ofstream(m_InputValues->OutputFile, std::ios_base::out | std::ios_base::binary);
+  std::ofstream file = std::ofstream(m_InputValues->output_file, std::ios_base::out | std::ios_base::binary);
   if(!file.is_open())
   {
-    return MakeErrorResult(-73450, fmt::format("Error creating and opening output file at path: {}", m_InputValues->OutputFile.string()));
+    return MakeErrorResult(-73450, fmt::format("Error creating and opening output file at path: {}", m_InputValues->output_file.string()));
   }
 
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
-  const auto& cellEulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath);
-  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geom_path);
+  const SizeVec3Type dims = imageGeom.getDimensions();
+  const auto& cellEulerAngles = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->cell_euler_angles_array_path);
+  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
 
-  WriterContext context{file, m_InputValues->OutputFile, dims, cellEulerAngles, featureIds, cellPhases, m_ShouldCancel};
+  WriterContext context{
+      .File = file, .output_path = m_InputValues->output_file, .Dims = dims, .euler_angles = cellEulerAngles, .feature_ids = featureIds, .cell_phases = cellPhases, .should_cancel = m_ShouldCancel};
   Result<> writeResult = DispatchAlgorithm<WriteLosAlamosFFTDirect, WriteLosAlamosFFTScanline>({&cellEulerAngles, &featureIds, &cellPhases}, context);
   if(writeResult.invalid())
   {
@@ -377,12 +376,12 @@ Result<> WriteLosAlamosFFT::operator()()
   file.flush();
   if(!file)
   {
-    return MakeErrorResult(-73452, fmt::format("Error flushing output file at path: {}", m_InputValues->OutputFile.string()));
+    return MakeErrorResult(-73452, fmt::format("Error flushing output file at path: {}", m_InputValues->output_file.string()));
   }
   file.close();
   if(!file)
   {
-    return MakeErrorResult(-73453, fmt::format("Error closing output file at path: {}", m_InputValues->OutputFile.string()));
+    return MakeErrorResult(-73453, fmt::format("Error closing output file at path: {}", m_InputValues->output_file.string()));
   }
 
   return {};

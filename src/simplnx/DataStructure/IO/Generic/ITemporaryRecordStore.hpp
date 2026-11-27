@@ -26,19 +26,19 @@ struct SIMPLNX_EXPORT TemporaryRecordStoreConfig
   /**
    * @brief Specifies the exact byte width of each logical record.
    */
-  uint64 recordSize = 0;
+  uint64 record_size = 0;
   /**
    * @brief Limits the record count in one read or write call.
    */
-  uint64 maxRecordsPerBatch = 0;
+  uint64 max_records_per_batch = 0;
   /**
    * @brief Specifies the initial logical capacity in records.
    */
-  uint64 initialRecordCount = 0;
+  uint64 initial_record_count = 0;
   /**
    * @brief Requires write, fill, and resize requests to fail when true.
    */
-  bool readOnly = false;
+  bool read_only = false;
 };
 
 /**

@@ -23,7 +23,7 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace
 {
@@ -31,8 +31,8 @@ const std::string k_LabDCTGeometryName("LabDCT");
 const std::string k_AbsorptionCTGeometryName("AbsorptionCT");
 const std::string k_CellAttributeMatrixName("Cell Data");
 const std::string k_CellEnsembleAttributeMatrixName("Cell Ensemble Data");
-const std::array<std::string, 3> k_IpfDatasetNames = {GrainMapper3DUtilities::Constants::k_IPF001Name, GrainMapper3DUtilities::Constants::k_IPF010Name,
-                                                      GrainMapper3DUtilities::Constants::k_IPF100Name};
+const std::array<std::string, 3> k_IpfDatasetNames = {grain_mapper_3d_utilities::constants::k_IPF001Name, grain_mapper_3d_utilities::constants::k_IPF010Name,
+                                                      grain_mapper_3d_utilities::constants::k_IPF100Name};
 
 enum class IpfStorage
 {
@@ -44,9 +44,9 @@ enum class IpfStorage
 struct GrainMapperFixtureSpec
 {
   std::array<usize, 3> dimensions = {1, 1, 1}; // X, Y, Z
-  usize rodriguesComponentCount = 3;
-  usize phaseTupleCount = 0;
-  std::array<IpfStorage, 3> ipfStorage = {IpfStorage::Float32, IpfStorage::Float32, IpfStorage::Float32};
+  usize rodrigues_component_count = 3;
+  usize phase_tuple_count = 0;
+  std::array<IpfStorage, 3> ipf_storage = {IpfStorage::Float32, IpfStorage::Float32, IpfStorage::Float32};
 };
 
 template <typename T>
@@ -134,7 +134,7 @@ fs::path WriteGrainMapperFixture(const std::string& fileName, const GrainMapperF
 
   const auto fileGuard = MakeScopeGuard([fileId]() noexcept { H5Fclose(fileId); });
   const usize tupleCount = spec.dimensions[0] * spec.dimensions[1] * spec.dimensions[2];
-  const usize phaseTupleCount = spec.phaseTupleCount == 0 ? tupleCount : spec.phaseTupleCount;
+  const usize phaseTupleCount = spec.phase_tuple_count == 0 ? tupleCount : spec.phase_tuple_count;
   const std::vector<hsize_t> scalarDimensions = {spec.dimensions[2], spec.dimensions[1], spec.dimensions[0]};
 
   const hid_t labDctGroupId = OpenOrCreateGroup(fileId, "LabDCT");
@@ -155,14 +155,14 @@ fs::path WriteGrainMapperFixture(const std::string& fileName, const GrainMapperF
   const auto dataGroupGuard = MakeScopeGuard([dataGroupId]() noexcept { H5Gclose(dataGroupId); });
   std::vector<float32> completeness(tupleCount);
   std::vector<uint8> phases(phaseTupleCount);
-  std::vector<float32> rodrigues(tupleCount * spec.rodriguesComponentCount);
+  std::vector<float32> rodrigues(tupleCount * spec.rodrigues_component_count);
   std::vector<float32> quaternions(tupleCount * 4);
   for(usize tupleIndex = 0; tupleIndex < tupleCount; tupleIndex++)
   {
     completeness[tupleIndex] = static_cast<float32>(tupleIndex);
-    for(usize componentIndex = 0; componentIndex < spec.rodriguesComponentCount; componentIndex++)
+    for(usize componentIndex = 0; componentIndex < spec.rodrigues_component_count; componentIndex++)
     {
-      rodrigues[tupleIndex * spec.rodriguesComponentCount + componentIndex] = RodriguesValue(tupleIndex, componentIndex);
+      rodrigues[tupleIndex * spec.rodrigues_component_count + componentIndex] = RodriguesValue(tupleIndex, componentIndex);
     }
     for(usize componentIndex = 0; componentIndex < 4; componentIndex++)
     {
@@ -178,16 +178,16 @@ fs::path WriteGrainMapperFixture(const std::string& fileName, const GrainMapperF
   const std::vector<hsize_t> phaseDimensions = phaseTupleCount == tupleCount ? scalarDimensions : std::vector<hsize_t>{1, 1, phaseTupleCount};
   WriteVector<uint8>(dataGroupId, "PhaseId", phaseDimensions, phases);
   auto vectorDimensions = scalarDimensions;
-  vectorDimensions.push_back(spec.rodriguesComponentCount);
+  vectorDimensions.push_back(spec.rodrigues_component_count);
   WriteVector<float32>(dataGroupId, "Rodrigues", vectorDimensions, rodrigues);
   vectorDimensions.back() = 3;
   for(usize directionIndex = 0; directionIndex < k_IpfDatasetNames.size(); directionIndex++)
   {
-    if(spec.ipfStorage[directionIndex] == IpfStorage::Absent)
+    if(spec.ipf_storage[directionIndex] == IpfStorage::Absent)
     {
       continue;
     }
-    if(spec.ipfStorage[directionIndex] == IpfStorage::UInt8)
+    if(spec.ipf_storage[directionIndex] == IpfStorage::UInt8)
     {
       std::vector<uint8> colors(tupleCount * 3);
       for(usize index = 0; index < colors.size(); index++)
@@ -232,17 +232,17 @@ Arguments GrainMapperArguments(const fs::path& filePath, const DataPath& geometr
 ReadGrainMapper3DInputValues GrainMapperInputValues(const fs::path& filePath, const DataPath& geometryPath)
 {
   ReadGrainMapper3DInputValues inputValues;
-  inputValues.InputFile = filePath;
-  inputValues.ReadDctData = true;
-  inputValues.DctImageGeometryPath = geometryPath;
-  inputValues.DctCellAttributeMatrixName = k_CellAttributeMatrixName;
-  inputValues.DctCellEnsembleAttributeMatrixName = k_CellEnsembleAttributeMatrixName;
-  inputValues.ConvertPhaseData = true;
-  inputValues.ConvertOrientationData = true;
-  inputValues.ConvertIPFColors = true;
-  inputValues.ReadAbsorptionData = false;
-  inputValues.AbsorptionImageGeometryPath = DataPath({"Unused Absorption"});
-  inputValues.AbsorptionCellAttributeMatrixName = k_CellAttributeMatrixName;
+  inputValues.input_file = filePath;
+  inputValues.read_dct_data = true;
+  inputValues.dct_image_geometry_path = geometryPath;
+  inputValues.dct_cell_attribute_matrix_name = k_CellAttributeMatrixName;
+  inputValues.dct_cell_ensemble_attribute_matrix_name = k_CellEnsembleAttributeMatrixName;
+  inputValues.convert_phase_data = true;
+  inputValues.convert_orientation_data = true;
+  inputValues.convert_ipf_colors = true;
+  inputValues.read_absorption_data = false;
+  inputValues.absorption_image_geometry_path = DataPath({"Unused Absorption"});
+  inputValues.absorption_cell_attribute_matrix_name = k_CellAttributeMatrixName;
   return inputValues;
 }
 
@@ -250,18 +250,18 @@ void ApplyGrainMapperRegularActions(DataStructure& dataStructure, const fs::path
 {
   ReadGrainMapper3DFilter filter;
   const auto preflightResult = filter.preflight(dataStructure, GrainMapperArguments(filePath, geometryPath));
-  auto assertionResult = preflightResult.outputActions;
+  auto assertionResult = preflightResult.output_actions;
   SIMPLNX_RESULT_REQUIRE_VALID(assertionResult);
-  auto valueResult = preflightResult.outputActions.value().applyRegular(dataStructure, IDataAction::Mode::Execute);
+  auto valueResult = preflightResult.output_actions.value().applyRegular(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(valueResult);
 }
 
 template <typename T>
 const DataArray<T>& RequireDataArray(const DataStructure& dataStructure, const DataPath& path)
 {
-  const DataArray<T>* array = nullptr;
-  REQUIRE_NOTHROW(array = &dataStructure.getDataRefAs<DataArray<T>>(path));
-  return *array;
+  const DataArray<T>* arrayPtr = nullptr;
+  REQUIRE_NOTHROW(arrayPtr = &dataStructure.getDataRefAs<DataArray<T>>(path));
+  return *arrayPtr;
 }
 
 void VerifyGrainMapperOutput(const DataStructure& dataStructure, const DataPath& cellDataPath, const ShapeType& expectedTupleShape)
@@ -326,12 +326,12 @@ void VerifyGrainMapperOutput(const DataStructure& dataStructure, const DataPath&
 
 TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Default_Parameters", "[OrientationAnalysis][ReadGrainMapper3D]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "GrainMapper3D_Test_Files.tar.gz", "GrainMapper3D_Test_Files");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "GrainMapper3D_Test_Files.tar.gz", "GrainMapper3D_Test_Files");
 
   auto exemplarFilePath = fs::path(fmt::format("{}/GrainMapper3D_Test_Files/7_0_SimulatedMultiPhase.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   DataPath computedDCTGeometryPath({fmt::format("{} computed", k_LabDCTGeometryName)});
   DataPath computedAbsorptionCTGeometryPath({fmt::format("{} computed", k_AbsorptionCTGeometryName)});
@@ -347,18 +347,18 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Default_Parameters", "[Orienta
     args.insertOrAssign(ReadGrainMapper3DFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputGM3DFilePath)));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ReadLabDCT_Key, std::make_any<bool>(true));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_CreatedDCTImageGeometryPath_Key, std::make_any<DataPath>(computedDCTGeometryPath));
-    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Data));
-    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Ensemble_Data));
+    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellDataWithSpaces));
+    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_CellEnsembleDataWithSpaces));
 
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ConvertPhaseToInt32_Key, std::make_any<bool>(true));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ConvertOrientationData_Key, std::make_any<bool>(true));
 
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ReadAbsorptionCT_Key, std::make_any<bool>(true));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_CreatedAbsorptionGeometryPath_Key, std::make_any<DataPath>(computedAbsorptionCTGeometryPath));
-    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellAbsorptionAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Data));
+    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellAbsorptionAttributeMatrixName_Key, std::make_any<std::string>(k_CellDataWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    auto assertionResult2 = preflightResult.outputActions;
+    auto assertionResult2 = preflightResult.output_actions;
     SIMPLNX_RESULT_REQUIRE_VALID(assertionResult2);
 
     auto executeResult = filter.execute(dataStructure, args);
@@ -367,17 +367,18 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Default_Parameters", "[Orienta
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/read_grainmapper_3d_default.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/read_grainmapper_3d_default.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CompareImageGeometry(dataStructure, exemplarDCTGeometryPath, computedDCTGeometryPath);
-  UnitTest::CompareImageGeometry(dataStructure, exemplarAbsorptionCTGeometryPath, computedAbsorptionCTGeometryPath);
+  unit_test::CompareImageGeometry(dataStructure, exemplarDCTGeometryPath, computedDCTGeometryPath);
+  unit_test::CompareImageGeometry(dataStructure, exemplarAbsorptionCTGeometryPath, computedAbsorptionCTGeometryPath);
 
-  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_Cell_Data), dataStructure, computedDCTGeometryPath.createChildPath(k_Cell_Data));
-  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAbsorptionCTGeometryPath.createChildPath(k_Cell_Data), dataStructure,
-                                                     computedAbsorptionCTGeometryPath.createChildPath(k_Cell_Data));
-  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_Cell_Ensemble_Data), dataStructure,
-                                                     computedDCTGeometryPath.createChildPath(k_Cell_Ensemble_Data));
+  unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_CellDataWithSpaces), dataStructure,
+                                                      computedDCTGeometryPath.createChildPath(k_CellDataWithSpaces));
+  unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAbsorptionCTGeometryPath.createChildPath(k_CellDataWithSpaces), dataStructure,
+                                                      computedAbsorptionCTGeometryPath.createChildPath(k_CellDataWithSpaces));
+  unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_CellEnsembleDataWithSpaces), dataStructure,
+                                                      computedDCTGeometryPath.createChildPath(k_CellEnsembleDataWithSpaces));
 
   // The exemplar predates UniversalHermannMauguin and cannot validate that
   // array. Compare parsed values with known phase metadata. Index zero is the
@@ -386,7 +387,7 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Default_Parameters", "[Orienta
     const std::vector<std::string> expectedHermannMauguin = {
         "Invalid Phase",    "F d -3 m :2 (a-1/8,b-1/8,c-1/8)", "F d -3 m :2 (a-1/8,b-1/8,c-1/8)", "P 63/m m c", "P 42/m n m", "R -3 c :H (-y+z,x+z,-x+y+z)", "P 32 2 1", "P b c n", "C 1 2/m 1",
         "P -1 (a+b,a-b,-c)"};
-    const DataPath hermannMauguinPath = computedDCTGeometryPath.createChildPath(k_Cell_Ensemble_Data).createChildPath("UniversalHermannMauguin");
+    const DataPath hermannMauguinPath = computedDCTGeometryPath.createChildPath(k_CellEnsembleDataWithSpaces).createChildPath("UniversalHermannMauguin");
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(hermannMauguinPath));
     const auto& hermannMauguinArray = dataStructure.getDataRefAs<StringArray>(hermannMauguinPath);
     REQUIRE(hermannMauguinArray.getNumberOfTuples() == expectedHermannMauguin.size());
@@ -397,17 +398,17 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Default_Parameters", "[Orienta
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:NonCompatible_Parameters", "[OrientationAnalysis][ReadGrainMapper3D]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "GrainMapper3D_Test_Files.tar.gz", "GrainMapper3D_Test_Files");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "GrainMapper3D_Test_Files.tar.gz", "GrainMapper3D_Test_Files");
 
   auto exemplarFilePath = fs::path(fmt::format("{}/GrainMapper3D_Test_Files/7_0_SimulatedMultiPhase.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   DataPath computedDCTGeometryPath({fmt::format("{} computed", k_LabDCTGeometryName)});
   DataPath computedAbsorptionCTGeometryPath({fmt::format("{} computed", k_AbsorptionCTGeometryName)});
@@ -423,18 +424,18 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:NonCompatible_Parameters", "[O
     args.insertOrAssign(ReadGrainMapper3DFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputGM3DFilePath)));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ReadLabDCT_Key, std::make_any<bool>(true));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_CreatedDCTImageGeometryPath_Key, std::make_any<DataPath>(computedDCTGeometryPath));
-    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Data));
-    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Ensemble_Data));
+    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellDataWithSpaces));
+    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_CellEnsembleDataWithSpaces));
 
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ConvertPhaseToInt32_Key, std::make_any<bool>(false));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ConvertOrientationData_Key, std::make_any<bool>(false));
 
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ReadAbsorptionCT_Key, std::make_any<bool>(true));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_CreatedAbsorptionGeometryPath_Key, std::make_any<DataPath>(computedAbsorptionCTGeometryPath));
-    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellAbsorptionAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Data));
+    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellAbsorptionAttributeMatrixName_Key, std::make_any<std::string>(k_CellDataWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    auto assertionResult4 = preflightResult.outputActions;
+    auto assertionResult4 = preflightResult.output_actions;
     SIMPLNX_RESULT_REQUIRE_VALID(assertionResult4);
 
     auto executeResult = filter.execute(dataStructure, args);
@@ -442,45 +443,46 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:NonCompatible_Parameters", "[O
     SIMPLNX_RESULT_REQUIRE_VALID(assertionResult5);
   }
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/read_grainmapper_3d_non_compatible.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/read_grainmapper_3d_non_compatible.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CompareImageGeometry(dataStructure, exemplarDCTGeometryPath, computedDCTGeometryPath);
-  UnitTest::CompareImageGeometry(dataStructure, exemplarAbsorptionCTGeometryPath, computedAbsorptionCTGeometryPath);
+  unit_test::CompareImageGeometry(dataStructure, exemplarDCTGeometryPath, computedDCTGeometryPath);
+  unit_test::CompareImageGeometry(dataStructure, exemplarAbsorptionCTGeometryPath, computedAbsorptionCTGeometryPath);
 
-  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_Cell_Data), dataStructure, computedDCTGeometryPath.createChildPath(k_Cell_Data));
-  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAbsorptionCTGeometryPath.createChildPath(k_Cell_Data), dataStructure,
-                                                     computedAbsorptionCTGeometryPath.createChildPath(k_Cell_Data));
-  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_Cell_Ensemble_Data), dataStructure,
-                                                     computedDCTGeometryPath.createChildPath(k_Cell_Ensemble_Data));
+  unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_CellDataWithSpaces), dataStructure,
+                                                      computedDCTGeometryPath.createChildPath(k_CellDataWithSpaces));
+  unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAbsorptionCTGeometryPath.createChildPath(k_CellDataWithSpaces), dataStructure,
+                                                      computedAbsorptionCTGeometryPath.createChildPath(k_CellDataWithSpaces));
+  unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_CellEnsembleDataWithSpaces), dataStructure,
+                                                      computedDCTGeometryPath.createChildPath(k_CellEnsembleDataWithSpaces));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_PartialIpfColors", "[OrientationAnalysis][ReadGrainMapper3D]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
-  GrainMapperFixtureSpec spec{{7, 3, 1}};
-  spec.ipfStorage = {IpfStorage::Absent, IpfStorage::Absent, IpfStorage::Absent};
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  GrainMapperFixtureSpec spec{.dimensions = {7, 3, 1}};
+  spec.ipf_storage = {IpfStorage::Absent, IpfStorage::Absent, IpfStorage::Absent};
   bool convertIpfColors = true;
 
   SECTION("IPF001 only is converted")
   {
-    spec.ipfStorage[0] = IpfStorage::Float32;
+    spec.ipf_storage[0] = IpfStorage::Float32;
   }
   SECTION("IPF010 only is converted")
   {
-    spec.ipfStorage[1] = IpfStorage::Float32;
+    spec.ipf_storage[1] = IpfStorage::Float32;
   }
   SECTION("Float32 IPF001 is converted and uint8 IPF100 is copied verbatim")
   {
-    spec.ipfStorage[0] = IpfStorage::Float32;
-    spec.ipfStorage[2] = IpfStorage::UInt8;
+    spec.ipf_storage[0] = IpfStorage::Float32;
+    spec.ipf_storage[2] = IpfStorage::UInt8;
   }
   SECTION("IPF001 stays float32 when conversion is disabled")
   {
-    spec.ipfStorage[0] = IpfStorage::Float32;
+    spec.ipf_storage[0] = IpfStorage::Float32;
     convertIpfColors = false;
   }
 
@@ -495,7 +497,7 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_PartialIpfColors", "
   ReadGrainMapper3DFilter filter;
   Arguments args = GrainMapperArguments(inputFile, geometryPath);
   args.insertOrAssign(ReadGrainMapper3DFilter::k_ConvertIPFColorData_Key, std::make_any<bool>(convertIpfColors));
-  auto preflightResult = filter.preflight(dataStructure, args).outputActions;
+  auto preflightResult = filter.preflight(dataStructure, args).output_actions;
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult);
   auto executeResult = filter.execute(dataStructure, args).result;
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
@@ -505,11 +507,11 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_PartialIpfColors", "
   {
     CAPTURE(directionIndex);
     const DataPath arrayPath = cellDataPath.createChildPath(k_IpfDatasetNames[directionIndex]);
-    if(spec.ipfStorage[directionIndex] == IpfStorage::Absent)
+    if(spec.ipf_storage[directionIndex] == IpfStorage::Absent)
     {
       REQUIRE_FALSE(dataStructure.containsData(arrayPath));
     }
-    else if(convertIpfColors || spec.ipfStorage[directionIndex] == IpfStorage::UInt8)
+    else if(convertIpfColors || spec.ipf_storage[directionIndex] == IpfStorage::UInt8)
     {
       const auto& colors = RequireDataArray<uint8>(dataStructure, arrayPath);
       REQUIRE(colors.getComponentShape() == ShapeType({3}));
@@ -517,7 +519,7 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_PartialIpfColors", "
       REQUIRE(values.size() == tupleCount * 3);
       for(usize index = 0; index < values.size(); index++)
       {
-        const uint8 expected = spec.ipfStorage[directionIndex] == IpfStorage::UInt8 ? IpfValue(directionIndex, index / 3, index % 3) : ConvertedIpfValue(directionIndex, index / 3, index % 3);
+        const uint8 expected = spec.ipf_storage[directionIndex] == IpfStorage::UInt8 ? IpfValue(directionIndex, index / 3, index % 3) : ConvertedIpfValue(directionIndex, index / 3, index % 3);
         REQUIRE(values[index] == expected);
       }
     }
@@ -533,17 +535,17 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_PartialIpfColors", "
       }
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_BatchBoundaries", "[OrientationAnalysis][ReadGrainMapper3D]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
 
   SECTION("Datasets below the transfer boundary retain component order")
   {
-    const GrainMapperFixtureSpec spec{{7, 3, 1}};
+    const GrainMapperFixtureSpec spec{.dimensions = {7, 3, 1}};
     const fs::path inputFile = WriteGrainMapperFixture("ReadGrainMapper3D_Small.h5", spec);
     const auto fileGuard = MakeScopeGuard([&inputFile]() noexcept {
       std::error_code errorCode;
@@ -554,18 +556,18 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_BatchBoundaries", "[
     const DataPath geometryPath({"Synthetic Small"});
     ReadGrainMapper3DFilter filter;
     const Arguments args = GrainMapperArguments(inputFile, geometryPath);
-    auto preflightResult2 = filter.preflight(dataStructure, args).outputActions;
+    auto preflightResult2 = filter.preflight(dataStructure, args).output_actions;
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult2);
     auto executeResult2 = filter.execute(dataStructure, args).result;
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult2);
 
     VerifyGrainMapperOutput(dataStructure, geometryPath.createChildPath(k_CellAttributeMatrixName), {1, 3, 7});
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Large row and plane batches retain values through the partial tail")
   {
-    const GrainMapperFixtureSpec spec{{256, 257, 2}};
+    const GrainMapperFixtureSpec spec{.dimensions = {256, 257, 2}};
     const fs::path inputFile = WriteGrainMapperFixture("ReadGrainMapper3D_Batched.h5", spec);
     const auto fileGuard = MakeScopeGuard([&inputFile]() noexcept {
       std::error_code errorCode;
@@ -576,22 +578,22 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_BatchBoundaries", "[
     const DataPath geometryPath({"Synthetic Batched"});
     ReadGrainMapper3DFilter filter;
     const Arguments args = GrainMapperArguments(inputFile, geometryPath);
-    auto preflightResult3 = filter.preflight(dataStructure, args).outputActions;
+    auto preflightResult3 = filter.preflight(dataStructure, args).output_actions;
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult3);
     auto executeResult3 = filter.execute(dataStructure, args).result;
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult3);
 
     VerifyGrainMapperOutput(dataStructure, geometryPath.createChildPath(k_CellAttributeMatrixName), {2, 257, 256});
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_ConversionCancellation", "[OrientationAnalysis][ReadGrainMapper3D]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
 
-  const fs::path inputFile = WriteGrainMapperFixture("ReadGrainMapper3D_Cancel.h5", GrainMapperFixtureSpec{{256, 257, 2}});
+  const fs::path inputFile = WriteGrainMapperFixture("ReadGrainMapper3D_Cancel.h5", GrainMapperFixtureSpec{.dimensions = {256, 257, 2}});
   const auto fileGuard = MakeScopeGuard([&inputFile]() noexcept {
     std::error_code errorCode;
     fs::remove(inputFile, errorCode);
@@ -600,19 +602,19 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_ConversionCancellati
   const DataPath cellDataPath = geometryPath.createChildPath(k_CellAttributeMatrixName);
   DataStructure dataStructure;
   ApplyGrainMapperRegularActions(dataStructure, inputFile, geometryPath);
-  auto* phaseArray = dataStructure.getDataAs<Int32Array>(cellDataPath.createChildPath("PhaseId"));
-  auto* rodArray = dataStructure.getDataAs<Float32Array>(cellDataPath.createChildPath("Rodrigues"));
-  REQUIRE(phaseArray != nullptr);
-  REQUIRE(rodArray != nullptr);
+  auto* phaseArrayPtr = dataStructure.getDataAs<Int32ArrayType>(cellDataPath.createChildPath("PhaseId"));
+  auto* rodArrayPtr = dataStructure.getDataAs<Float32ArrayType>(cellDataPath.createChildPath("Rodrigues"));
+  REQUIRE(phaseArrayPtr != nullptr);
+  REQUIRE(rodArrayPtr != nullptr);
 
   constexpr int32 k_PhaseSentinel = -713;
   constexpr float32 k_RodriguesSentinel = -719.0F;
   std::atomic_bool shouldCancel = false;
-  auto phaseStore = std::make_shared<CancelAfterWriteDataStore<int32>>(phaseArray->getTupleShape(), phaseArray->getComponentShape(), k_PhaseSentinel, shouldCancel);
-  auto rodStore = std::make_shared<DataStore<float32>>(rodArray->getTupleShape(), rodArray->getComponentShape(), k_RodriguesSentinel);
-  auto setDataStoreResult2 = phaseArray->setDataStore(phaseStore);
+  auto phaseStore = std::make_shared<CancelAfterWriteDataStore<int32>>(phaseArrayPtr->getTupleShape(), phaseArrayPtr->getComponentShape(), k_PhaseSentinel, shouldCancel);
+  auto rodStore = std::make_shared<DataStore<float32>>(rodArrayPtr->getTupleShape(), rodArrayPtr->getComponentShape(), k_RodriguesSentinel);
+  auto setDataStoreResult2 = phaseArrayPtr->setDataStore(phaseStore);
   SIMPLNX_RESULT_REQUIRE_VALID(setDataStoreResult2);
-  auto setDataStoreResult = rodArray->setDataStore(rodStore);
+  auto setDataStoreResult = rodArrayPtr->setDataStore(rodStore);
   SIMPLNX_RESULT_REQUIRE_VALID(setDataStoreResult);
 
   const IFilter::MessageHandler messageHandler = {};
@@ -630,12 +632,12 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_ConversionCancellati
 
 TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_MalformedShapes", "[OrientationAnalysis][ReadGrainMapper3D]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
 
   SECTION("Rodrigues dimensions that do not contain triples fail")
   {
-    const fs::path inputFile = WriteGrainMapperFixture("ReadGrainMapper3D_BadRodrigues.h5", GrainMapperFixtureSpec{{2, 1, 1}, 2});
+    const fs::path inputFile = WriteGrainMapperFixture("ReadGrainMapper3D_BadRodrigues.h5", GrainMapperFixtureSpec{.dimensions = {2, 1, 1}, .rodrigues_component_count = 2});
     const auto fileGuard = MakeScopeGuard([&inputFile]() noexcept {
       std::error_code errorCode;
       fs::remove(inputFile, errorCode);
@@ -643,7 +645,7 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_MalformedShapes", "[
     DataStructure dataStructure;
     ReadGrainMapper3DFilter filter;
     const Arguments args = GrainMapperArguments(inputFile, DataPath({"Malformed Rodrigues"}));
-    auto preflightResult4 = filter.preflight(dataStructure, args).outputActions;
+    auto preflightResult4 = filter.preflight(dataStructure, args).output_actions;
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult4);
     const auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.invalid());
@@ -652,7 +654,7 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_MalformedShapes", "[
 
   SECTION("A dataset longer than the geometry reports its reachable destination mismatch")
   {
-    const fs::path inputFile = WriteGrainMapperFixture("ReadGrainMapper3D_PhaseOverflow.h5", GrainMapperFixtureSpec{{2, 1, 1}, 3, 3});
+    const fs::path inputFile = WriteGrainMapperFixture("ReadGrainMapper3D_PhaseOverflow.h5", GrainMapperFixtureSpec{.dimensions = {2, 1, 1}, .rodrigues_component_count = 3, .phase_tuple_count = 3});
     const auto fileGuard = MakeScopeGuard([&inputFile]() noexcept {
       std::error_code errorCode;
       fs::remove(inputFile, errorCode);
@@ -660,7 +662,7 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Synthetic_MalformedShapes", "[
     DataStructure dataStructure;
     ReadGrainMapper3DFilter filter;
     const Arguments args = GrainMapperArguments(inputFile, DataPath({"Phase Overflow"}));
-    auto preflightResult5 = filter.preflight(dataStructure, args).outputActions;
+    auto preflightResult5 = filter.preflight(dataStructure, args).output_actions;
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult5);
     const auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.invalid());

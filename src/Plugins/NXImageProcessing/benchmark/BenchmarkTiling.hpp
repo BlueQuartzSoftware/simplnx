@@ -46,8 +46,8 @@ using SourceArrayValidator = std::function<Result<>(const IDataArray& sourceArra
  * @param sourceValidator Optional validator run on the small in-core source before replication.
  * @return Any read, validation, size, allocation, or fill error.
  */
-Result<> BuildTiledInput(DataStructure& ds, const std::filesystem::path& realInput, const DataPath& geomPath, const std::string& cellAmName, const std::string& arrayName, usize targetVoxels,
-                         usize minZSlices, DataStorageMode storeMode, DataPath& outArrayPath, bool force2D = false, const SourceArrayValidator& sourceValidator = {});
+Result<> BuildTiledInput(DataStructure& dataStructure, const std::filesystem::path& realInput, const DataPath& geomPath, const std::string& cellAmName, const std::string& arrayName,
+                         usize targetVoxels, usize minZSlices, DataStorageMode storeMode, DataPath& outArrayPath, bool force2D = false, const SourceArrayValidator& sourceValidator = {});
 
 /**
  * @brief Adds a tiled array to an ImageGeom previously created by BuildTiledInput.
@@ -57,7 +57,7 @@ Result<> BuildTiledInput(DataStructure& ds, const std::filesystem::path& realInp
  * This lets benchmark cases add a distinct mask, marker, or other companion array without materializing the
  * destination volume in memory. The optional validator runs on the small in-core source before replication.
  */
-Result<> AddTiledArray(DataStructure& ds, const std::filesystem::path& realInput, const DataPath& geomPath, const std::string& cellAmName, const std::string& arrayName, DataStorageMode storeMode,
-                       DataPath& outArrayPath, const SourceArrayValidator& sourceValidator = {});
+Result<> AddTiledArray(DataStructure& dataStructure, const std::filesystem::path& realInput, const DataPath& geomPath, const std::string& cellAmName, const std::string& arrayName,
+                       DataStorageMode storeMode, DataPath& outArrayPath, const SourceArrayValidator& sourceValidator = {});
 
 } // namespace ip_bench

@@ -12,7 +12,7 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 namespace
 {
 const std::string k_GeometryName = "Geometry";
@@ -32,32 +32,32 @@ void Cleanup()
   }
 }
 
-void CreateVertexGeometry(DataStructure& ds)
+void CreateVertexGeometry(DataStructure& dataStructure)
 {
-  VertexGeom* geom = VertexGeom::Create(ds, k_GeometryName);
-  auto vertexAttrMatrix = AttributeMatrix::Create(ds, "Vertex Data", {2}, geom->getId());
-  geom->setVertexAttributeMatrix(*vertexAttrMatrix);
-  Float32Array* vertices = UnitTest::CreateTestDataArray<float32>(ds, "Vertices Store", {2}, {3}, geom->getId());
+  VertexGeom* geomPtr = VertexGeom::Create(dataStructure, k_GeometryName);
+  auto* vertexAttrMatrixPtr = AttributeMatrix::Create(dataStructure, "Vertex Data", {2}, geomPtr->getId());
+  geomPtr->setVertexAttributeMatrix(*vertexAttrMatrixPtr);
+  Float32ArrayType* verticesPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Vertices Store", {2}, {3}, geomPtr->getId());
   std::vector<float32> verticesVec = {1, 1.5, 1.75, 2, 3, 4};
-  std::copy(verticesVec.begin(), verticesVec.end(), vertices->begin());
-  geom->setVertices(*vertices);
+  std::copy(verticesVec.begin(), verticesVec.end(), verticesPtr->begin());
+  geomPtr->setVertices(*verticesPtr);
 }
 
-void CreateEdgeGeometry(DataStructure& ds)
+void CreateEdgeGeometry(DataStructure& dataStructure)
 {
-  EdgeGeom* geom = EdgeGeom::Create(ds, k_GeometryName);
-  auto edgeAttrMatrix = AttributeMatrix::Create(ds, "Edge Data", {1}, geom->getId());
-  geom->setEdgeAttributeMatrix(*edgeAttrMatrix);
-  auto vertexAttrMatrix = AttributeMatrix::Create(ds, "Vertex Data", {2}, geom->getId());
-  geom->setVertexAttributeMatrix(*vertexAttrMatrix);
-  Float32Array* vertices = UnitTest::CreateTestDataArray<float32>(ds, "Vertices Store", {2}, {3}, geom->getId());
+  EdgeGeom* geomPtr = EdgeGeom::Create(dataStructure, k_GeometryName);
+  auto* edgeAttrMatrixPtr = AttributeMatrix::Create(dataStructure, "Edge Data", {1}, geomPtr->getId());
+  geomPtr->setEdgeAttributeMatrix(*edgeAttrMatrixPtr);
+  auto* vertexAttrMatrixPtr = AttributeMatrix::Create(dataStructure, "Vertex Data", {2}, geomPtr->getId());
+  geomPtr->setVertexAttributeMatrix(*vertexAttrMatrixPtr);
+  Float32ArrayType* verticesPtr = unit_test::CreateTestDataArray<float32>(dataStructure, "Vertices Store", {2}, {3}, geomPtr->getId());
   std::vector<float32> verticesVec = {1.0f, 1.5f, 1.75f, 2.0f, 3.0f, 4.0f};
-  std::copy(verticesVec.begin(), verticesVec.end(), vertices->begin());
-  geom->setVertices(*vertices);
-  DataArray<IGeometry::MeshIndexType>* cells = UnitTest::CreateTestDataArray<IGeometry::MeshIndexType>(ds, "Cells Store", {1}, {2}, geom->getId());
-  cells->setValue(0, 0ULL);
-  cells->setValue(1, 1ULL);
-  geom->setEdgeList(*cells);
+  std::copy(verticesVec.begin(), verticesVec.end(), verticesPtr->begin());
+  geomPtr->setVertices(*verticesPtr);
+  DataArray<IGeometry::MeshIndexType>* cellsPtr = unit_test::CreateTestDataArray<IGeometry::MeshIndexType>(dataStructure, "Cells Store", {1}, {2}, geomPtr->getId());
+  cellsPtr->setValue(0, 0ULL);
+  cellsPtr->setValue(1, 1ULL);
+  geomPtr->setEdgeList(*cellsPtr);
 }
 
 void ValidateFile(const fs::path& filePath, const std::vector<std::string>& expectedHeader, const std::vector<std::vector<std::string>>& expectedContent)
@@ -66,7 +66,7 @@ void ValidateFile(const fs::path& filePath, const std::vector<std::string>& expe
   REQUIRE(file.is_open());
 
   auto validateTokens = [&](const std::string& line, const std::vector<std::string>& expectedTokens) {
-    auto tokens = StringUtilities::split(line, ' ');
+    auto tokens = string_utilities::Split(line, ' ');
     REQUIRE(tokens == expectedTokens);
   };
 
@@ -160,7 +160,7 @@ TEST_CASE("SimplnxCore::WriteNodesAndElementsFilesFilter: Valid Execution", "[Si
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -200,7 +200,7 @@ TEST_CASE("SimplnxCore::WriteNodesAndElementsFilesFilter: Valid Execution", "[Si
   // Clean up the files
   Cleanup();
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteNodesAndElementsFilesFilter: Invalid Execution", "[SimplnxCore][WriteNodesAndElementsFilesFilter]")
@@ -243,9 +243,9 @@ TEST_CASE("SimplnxCore::WriteNodesAndElementsFilesFilter: Invalid Execution", "[
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == code);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == code);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -203,8 +203,8 @@ bool operator>=(BasicStringLiteral<T> lhs, const std::basic_string<T>& rhs)
   return lhs.view() >= rhs;
 }
 
-using StringLiteral = BasicStringLiteral<char>;
-using WStringLiteral = BasicStringLiteral<wchar_t>;
-using String16Literal = BasicStringLiteral<char16_t>;
-using String32Literal = BasicStringLiteral<char32_t>;
+using StringLiteralType = BasicStringLiteral<char>;
+using WStringLiteralType = BasicStringLiteral<wchar_t>;
+using String16LiteralType = BasicStringLiteral<char16_t>;
+using String32LiteralType = BasicStringLiteral<char32_t>;
 } // namespace nx::core

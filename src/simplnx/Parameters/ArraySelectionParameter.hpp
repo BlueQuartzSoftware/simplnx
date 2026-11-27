@@ -19,8 +19,8 @@ class SIMPLNX_EXPORT ArraySelectionParameter : public MutableDataParameter
 {
 public:
   using ValueType = DataPath;
-  using AllowedTypes = nx::core::DataTypeSetType;
-  using AllowedComponentShapes = std::vector<ShapeType>;
+  using AllowedTypeSetType = nx::core::DataTypeSetType;
+  using AllowedComponentShapesType = std::vector<ShapeType>;
 
   enum class DataLocation : uint8
   {
@@ -30,8 +30,8 @@ public:
   };
 
   ArraySelectionParameter() = delete;
-  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes,
-                          AllowedComponentShapes requiredComps = {}, DataLocation location = DataLocation::Any);
+  ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const AllowedTypeSetType& allowedTypes,
+                          AllowedComponentShapesType requiredComps = {}, DataLocation location = DataLocation::Any);
   ~ArraySelectionParameter() override = default;
 
   ArraySelectionParameter(const ArraySelectionParameter&) = delete;
@@ -50,13 +50,13 @@ public:
    * @brief Returns a list of accpeted input types.
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief Creates a copy of the parameter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the user defined default value.
@@ -82,13 +82,13 @@ public:
    * @brief Returns the set of allowed DataArray types. An empty set means all are allowed.
    * @return
    */
-  AllowedTypes allowedTypes() const;
+  AllowedTypeSetType allowedTypes() const;
 
   /**
    * @brief Returns the required number of components. If return value is empty, then no component requirements.
    * @return
    */
-  AllowedComponentShapes requiredComponentShapes() const;
+  AllowedComponentShapesType requiredComponentShapes() const;
 
   /**
    * @brief Checks and returns if out-of-core data is allowed.
@@ -149,22 +149,22 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
-  AllowedTypes m_AllowedTypes = {};
-  AllowedComponentShapes m_RequiredComponentShapes = {};
+  ValueType m_DefaultValue;
+  AllowedTypeSetType m_AllowedTypes;
+  AllowedComponentShapesType m_RequiredComponentShapes;
   DataLocation m_Location = DataLocation::Any;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT DataArraySelectionFilterParameterConverter
 {
   using ParameterType = ArraySelectionParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::ArraySelectionParameter, "ab047a7f-f9ab-4e6f-99b5-610e7b69fc5b");

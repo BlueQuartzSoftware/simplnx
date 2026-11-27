@@ -84,24 +84,24 @@ Parameters RegularGridSampleSurfaceMeshFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_UseExistingGeometry_Key, "Use existing geometry", "Should the filter create a new geometry or use an existing one",
-                                                                    to_underlying(GeometryOption::Create), ChoicesParameter::Choices{"Create geometry", "Use existing geometry"}));
-  params.insert(std::make_unique<VectorUInt64Parameter>(k_Dimensions_Key, "Dimensions (Voxels)", "The dimensions of the created Image geometry", std::vector<uint64>{128, 128, 128},
-                                                        std::vector<std::string>{"x", "y", "z"}));
-  params.insert(
-      std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the created Image geometry", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
-  params.insert(
-      std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "The spacing of the created Image geometry", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"x", "y", "z"}));
+                                                                    to_underlying(GeometryOption::Create), ChoicesParameter::ChoicesType{"Create geometry", "Use existing geometry"}));
+  params.insert(std::make_unique<VectorUInt64ParameterType>(k_Dimensions_Key, "Dimensions (Voxels)", "The dimensions of the created Image geometry", std::vector<uint64>{128, 128, 128},
+                                                            std::vector<std::string>{"x", "y", "z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Origin", "The origin of the created Image geometry", std::vector<float32>{0.0F, 0.0F, 0.0F},
+                                                             std::vector<std::string>{"x", "y", "z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Spacing_Key, "Spacing", "The spacing of the created Image geometry", std::vector<float32>{1.0F, 1.0F, 1.0F},
+                                                             std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Units (For Description Only)", "The units to be displayed below", to_underlying(IGeometry::LengthUnit::Micrometer),
                                                    IGeometry::GetAllLengthUnitStrings()));
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryPath_Key, "Triangle Geometry", "The geometry to be sampled onto grid", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{GeometrySelectionParameter::AllowedType ::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{GeometrySelectionParameter::AllowedType ::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels/Part Numbers",
                                                           "Array specifying which Features are on either side of each Face. Accepts 1-component (single part number per face) or 2-component arrays.",
-                                                          DataPath{}, nx::core::GetIntegerDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}, {2}}));
+                                                          DataPath{}, nx::core::GetIntegerDataTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}, {2}}));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ExistingImageGeomPath_Key, "Image Geometry", "The path to the existing image geometry to use", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{GeometrySelectionParameter::AllowedType::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{GeometrySelectionParameter::AllowedType::Image}));
 
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeomPath_Key, "Image Geometry", "The name and path for the image geometry to be created", DataPath{}));
@@ -146,20 +146,20 @@ IFilter::VersionType RegularGridSampleSurfaceMeshFilter::parametersVersion() con
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer RegularGridSampleSurfaceMeshFilter::clone() const
+IFilter::UniquePointerType RegularGridSampleSurfaceMeshFilter::clone() const
 {
   return std::make_unique<RegularGridSampleSurfaceMeshFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                           const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pSurfaceMeshFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
   auto pTriangleGeometryPathValue = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
-  auto pDimensionsValue = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
-  auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
-  auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
+  auto pDimensionsValue = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_Dimensions_Key);
+  auto pSpacingValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Spacing_Key);
+  auto pOriginValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Origin_Key);
   auto pLengthUnitValue = filterArgs.value<ChoicesParameter::ValueType>(k_LengthUnit_Key);
   auto pImageGeomPathValue = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
   auto pCellAMNameValue = filterArgs.value<std::string>(k_CellAMName_Key);
@@ -179,18 +179,19 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
   const auto* faceAttributeMatrixPtr = triangleGeom.getFaceAttributeMatrix();
   if(faceAttributeMatrixPtr == nullptr || !IsChildOfAttributeMatrix(dataStructure, pSurfaceMeshFaceLabelsArrayPathValue, *faceAttributeMatrixPtr))
   {
-    return {MakeErrorResult<OutputActions>(-11803, fmt::format("The **Face Labels/Part Numbers** DataArray '{}' must belong to the Face Data Attribute Matrix of **Triangle Geometry** '{}'. "
-                                                               "Select a Triangle Geometry with a Face Data Attribute Matrix and a DataArray from that Attribute Matrix.",
-                                                               pSurfaceMeshFaceLabelsArrayPathValue.toString(), pTriangleGeometryPathValue.toString()))};
+    return {.output_actions =
+                MakeErrorResult<OutputActions>(-11803, fmt::format("The **Face Labels/Part Numbers** DataArray '{}' must belong to the Face Data Attribute Matrix of **Triangle Geometry** '{}'. "
+                                                                   "Select a Triangle Geometry with a Face Data Attribute Matrix and a DataArray from that Attribute Matrix.",
+                                                                   pSurfaceMeshFaceLabelsArrayPathValue.toString(), pTriangleGeometryPathValue.toString()))};
   }
 
   if(geometryOptionIndex == GeometryOption::Create)
   {
-    if(!(std::isfinite(pSpacingValue[0]) && pSpacingValue[0] > 0.0F) || !(std::isfinite(pSpacingValue[1]) && pSpacingValue[1] > 0.0F) || !(std::isfinite(pSpacingValue[2]) && pSpacingValue[2] > 0.0F))
+    if(!std::isfinite(pSpacingValue[0]) || pSpacingValue[0] <= 0.0F || !std::isfinite(pSpacingValue[1]) || pSpacingValue[1] <= 0.0F || !std::isfinite(pSpacingValue[2]) || pSpacingValue[2] <= 0.0F)
     {
-      return {MakeErrorResult<OutputActions>(-11802, fmt::format("**Spacing** must be a finite value greater than zero on every axis when creating an Image Geometry. "
-                                                                 "Received X={}, Y={}, Z={}. Set each spacing component to a finite positive value.",
-                                                                 pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]))};
+      return {.output_actions = MakeErrorResult<OutputActions>(-11802, fmt::format("**Spacing** must be a finite value greater than zero on every axis when creating an Image Geometry. "
+                                                                                   "Received X={}, Y={}, Z={}. Set each spacing component to a finite positive value.",
+                                                                                   pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]))};
     }
 
     tupleDims = {static_cast<usize>(pDimensionsValue[0]), static_cast<usize>(pDimensionsValue[1]), static_cast<usize>(pDimensionsValue[2])};
@@ -200,7 +201,7 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
 
     cellAttributeMatrixPath = pImageGeomPathValue.createChildPath(pCellAMNameValue);
 
-    preflightUpdatedValues.push_back({"Input Geometry Info", GeometryHelpers::Description::GenerateGeometryInfo(tupleDims, pSpacingValue, pOriginValue, IGeometry::LengthUnit(pLengthUnitValue))});
+    preflightUpdatedValues.push_back({"Input Geometry Info", geometry_helpers::description::GenerateGeometryInfo(tupleDims, pSpacingValue, pOriginValue, IGeometry::LengthUnit(pLengthUnitValue))});
     // Flip the dimensions
     tupleDims = {static_cast<usize>(pDimensionsValue[2]), static_cast<usize>(pDimensionsValue[1]), static_cast<usize>(pDimensionsValue[0])};
   }
@@ -216,7 +217,7 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
   if(!pUseCustomOutputType)
   {
     // Create Feature Ids array with the same type as the input Face Labels array, but always single component
-    auto& faceLabelsArray = dataStructure.getDataRefAs<IDataArray>(pSurfaceMeshFaceLabelsArrayPathValue);
+    const auto& faceLabelsArray = dataStructure.getDataRefAs<IDataArray>(pSurfaceMeshFaceLabelsArrayPathValue);
     outputType = faceLabelsArray.getDataType();
   }
   DataPath featIdsPath = cellAttributeMatrixPath.createChildPath(pFeatureIdsArrayNameValue);
@@ -226,12 +227,12 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> RegularGridSampleSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> RegularGridSampleSurfaceMeshFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   RegularGridSampleSurfaceMeshInputValues inputValues;
 
@@ -243,46 +244,46 @@ Result<> RegularGridSampleSurfaceMeshFilter::executeImpl(DataStructure& dataStru
   {
     auto imageGeomPath = filterArgs.value<DataPath>(k_ImageGeomPath_Key);
 
-    inputValues.Dimensions = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
-    inputValues.Spacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
-    inputValues.Origin = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
-    inputValues.FeatureIdsArrayPath = imageGeomPath.createChildPath(filterArgs.value<std::string>(k_CellAMName_Key)).createChildPath(featureIdsArrayName);
-    inputValues.ImageGeometryOutputPath = imageGeomPath;
+    inputValues.dimensions = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_Dimensions_Key);
+    inputValues.spacing = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Spacing_Key);
+    inputValues.origin = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Origin_Key);
+    inputValues.feature_ids_array_path = imageGeomPath.createChildPath(filterArgs.value<std::string>(k_CellAMName_Key)).createChildPath(featureIdsArrayName);
+    inputValues.image_geometry_output_path = imageGeomPath;
   }
   else
   {
     auto existingImageGeomPathValue = filterArgs.value<DataPath>(k_ExistingImageGeomPath_Key);
     const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(existingImageGeomPathValue);
-    inputValues.Dimensions = imageGeom.getDimensions().toContainer<VectorUInt64Parameter::ValueType>();
-    inputValues.Spacing = imageGeom.getSpacing().toContainer<VectorFloat32Parameter::ValueType>();
-    inputValues.Origin = imageGeom.getOrigin().toContainer<VectorFloat32Parameter::ValueType>();
-    inputValues.ImageGeometryOutputPath = existingImageGeomPathValue;
-    inputValues.FeatureIdsArrayPath = imageGeom.getCellDataPath().createChildPath(featureIdsArrayName);
+    inputValues.dimensions = imageGeom.getDimensions().toContainer<VectorUInt64ParameterType::ValueType>();
+    inputValues.spacing = imageGeom.getSpacing().toContainer<VectorFloat32ParameterType::ValueType>();
+    inputValues.origin = imageGeom.getOrigin().toContainer<VectorFloat32ParameterType::ValueType>();
+    inputValues.image_geometry_output_path = existingImageGeomPathValue;
+    inputValues.feature_ids_array_path = imageGeom.getCellDataPath().createChildPath(featureIdsArrayName);
   }
 
-  inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
-  inputValues.SurfaceMeshFaceLabelsArrayPath = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
+  inputValues.triangle_geometry_path = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
+  inputValues.surface_mesh_face_labels_array_path = filterArgs.value<DataPath>(k_SurfaceMeshFaceLabelsArrayPath_Key);
 
   return RegularGridSampleSurfaceMesh(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
-constexpr StringLiteral k_DimensionsKey = "Dimensions";
-constexpr StringLiteral k_SpacingKey = "Spacing";
-constexpr StringLiteral k_ResolutionKey = "Resolution";
-constexpr StringLiteral k_OriginKey = "Origin";
-constexpr StringLiteral k_LengthUnitKey = "LengthUnit";
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
-constexpr StringLiteral k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
-constexpr StringLiteral k_XPointsKey = "XPoints";
-constexpr StringLiteral k_YPointsKey = "YPoints";
-constexpr StringLiteral k_ZPointsKey = "ZPoints";
-} // namespace SIMPL
+constexpr StringLiteralType k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
+constexpr StringLiteralType k_DimensionsKey = "Dimensions";
+constexpr StringLiteralType k_SpacingKey = "Spacing";
+constexpr StringLiteralType k_ResolutionKey = "Resolution";
+constexpr StringLiteralType k_OriginKey = "Origin";
+constexpr StringLiteralType k_LengthUnitKey = "LengthUnit";
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteralType k_FeatureIdsArrayNameKey = "FeatureIdsArrayName";
+constexpr StringLiteralType k_XPointsKey = "XPoints";
+constexpr StringLiteralType k_YPointsKey = "YPoints";
+constexpr StringLiteralType k_ZPointsKey = "ZPoints";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> RegularGridSampleSurfaceMeshFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -292,36 +293,36 @@ Result<Arguments> RegularGridSampleSurfaceMeshFilter::FromSIMPLJson(const nlohma
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceLabelsArrayPathKey, k_TriangleGeometryPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_TriangleGeometryPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceLabelsArrayPathKey, k_SurfaceMeshFaceLabelsArrayPath_Key));
-  Result<> dimsResult = SIMPLConversion::ConvertParameter<SIMPLConversion::UInt64Vec3FilterParameterConverter>(args, json, SIMPL::k_DimensionsKey, k_Dimensions_Key);
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_SurfaceMeshFaceLabelsArrayPath_Key));
+  Result<> dimsResult = simpl_conversion::ConvertParameter<simpl_conversion::UInt64Vec3FilterParameterConverterType>(args, json, simpl::k_DimensionsKey, k_Dimensions_Key);
   if(dimsResult.invalid())
   {
     // 6.5 stores dims as 3 parameter
     results.push_back(
-        SIMPLConversion::Convert3Parameters<SIMPLConversion::UInt64ToVec3FilterParameterConverter>(args, json, SIMPL::k_XPointsKey, SIMPL::k_YPointsKey, SIMPL::k_ZPointsKey, k_Dimensions_Key));
+        simpl_conversion::Convert3Parameters<simpl_conversion::UInt64ToVec3FilterParameterConverterType>(args, json, simpl::k_XPointsKey, simpl::k_YPointsKey, simpl::k_ZPointsKey, k_Dimensions_Key));
   }
-  Result<> spacingResult = SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_SpacingKey, k_Spacing_Key);
+  Result<> spacingResult = simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(args, json, simpl::k_SpacingKey, k_Spacing_Key);
   if(spacingResult.invalid())
   {
     // 6.5 key for spacing was named resolution
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_ResolutionKey, k_Spacing_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(args, json, simpl::k_ResolutionKey, k_Spacing_Key));
   }
   else
   {
     results.push_back(std::move(spacingResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_OriginKey, k_Origin_Key));
-  Result<> lengthResult = SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_LengthUnitKey, k_LengthUnit_Key);
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(args, json, simpl::k_OriginKey, k_Origin_Key));
+  Result<> lengthResult = simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_LengthUnitKey, k_LengthUnit_Key);
   if(lengthResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(lengthResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_ImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAMName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayNameKey, k_FeatureIdsArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_ImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAMName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayNameKey, k_FeatureIdsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

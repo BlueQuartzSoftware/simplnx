@@ -15,8 +15,8 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT CombineTransformationMatricesInputValues
 {
-  MultiArraySelectionParameter::ValueType SelectedPaths;
-  ArrayCreationParameter::ValueType OutputPath;
+  MultiArraySelectionParameter::ValueType selected_paths;
+  ArrayCreationParameter::ValueType output_path;
 };
 
 /**
@@ -26,7 +26,7 @@ class SIMPLNXCORE_EXPORT CombineTransformationMatrices
 {
 public:
   CombineTransformationMatrices(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CombineTransformationMatricesInputValues* inputValues);
-  ~CombineTransformationMatrices() noexcept;
+  ~CombineTransformationMatrices() noexcept = default;
 
   CombineTransformationMatrices(const CombineTransformationMatrices&) = delete;
   CombineTransformationMatrices(CombineTransformationMatrices&&) noexcept = delete;

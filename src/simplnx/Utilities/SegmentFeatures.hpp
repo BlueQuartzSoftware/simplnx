@@ -25,10 +25,10 @@ class AbstractDataStore;
  */
 namespace segment_features
 {
-inline constexpr StringLiteral k_6NeighborString = "Face Neighbors";
-inline constexpr StringLiteral k_26NeighborString = "All Connected Neighbors";
+inline constexpr StringLiteralType k_6NeighborString = "Face Neighbors";
+inline constexpr StringLiteralType k_26NeighborString = "All Connected Neighbors";
 
-inline const ChoicesParameter::Choices k_OperationChoices = {k_6NeighborString, k_26NeighborString};
+inline const ChoicesParameter::ChoicesType k_OperationChoices = {k_6NeighborString, k_26NeighborString};
 
 inline constexpr ChoicesParameter::ValueType k_6NeighborIndex = 0ULL;
 inline constexpr ChoicesParameter::ValueType k_26NeighborIndex = 1ULL;
@@ -99,7 +99,7 @@ public:
    *
    * This method does not check cancellation.
    */
-  [[nodiscard]] Result<> randomizeFeatureIds(Int32Array* featureIds, uint64 totalFeatures);
+  [[nodiscard]] Result<> randomizeFeatureIds(Int32ArrayType* featureIds, uint64 totalFeatures);
 
   /**
    * @class CompareFunctor
@@ -119,7 +119,7 @@ public:
      * @param neighIndex Specifies its neighbor.
      * @return False by default.
      */
-    virtual bool compare(int64 index, int64 neighIndex)
+    virtual bool compare(int64 /*index*/, int64 /*neighIndex*/)
     {
       return false;
     }

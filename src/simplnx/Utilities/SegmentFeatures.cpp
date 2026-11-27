@@ -25,7 +25,7 @@ namespace
 constexpr uint64 k_RecordsPerPage = 4096;
 constexpr usize k_MaxCachedPages = 16;
 
-using ProgressCallback = std::function<void(usize)>;
+using ProgressCallbackType = std::function<void(usize)>;
 
 /**
  * @brief Creates fixed-record connected-component scratch.
@@ -40,11 +40,11 @@ using ProgressCallback = std::function<void(usize)>;
 Result<std::unique_ptr<ITemporaryRecordStore>> CreateTemporaryRecordStore(uint64 recordSize, uint64 recordCount, bool allowInMemoryFallback)
 {
   TemporaryRecordStoreConfig config;
-  config.recordSize = recordSize;
-  config.maxRecordsPerBatch = k_RecordsPerPage;
-  config.initialRecordCount = recordCount;
+  config.record_size = recordSize;
+  config.max_records_per_batch = k_RecordsPerPage;
+  config.initial_record_count = recordCount;
 
-  auto result = DataStoreUtilities::GetIOCollection().createTemporaryRecordStore(config);
+  auto result = data_store_utilities::GetIOCollection().createTemporaryRecordStore(config);
   if(result.invalid() && allowInMemoryFallback)
   {
     auto fallbackResult = InMemoryTemporaryRecordStore::Create(config);
@@ -323,7 +323,7 @@ private:
  * neighbor supplies the label. A later similar neighbor with a different label makes
  * the two labels equivalent, because the scan cannot relabel earlier voxels.
  */
-Result<> adoptOrUniteNeighbor(int32& assignedLabel, int32 neighborLabel, int64 index, int64 neighborIndex, SegmentFeatures& segmenter, LabelEquivalence& equivalences,
+Result<> AdoptOrUniteNeighbor(int32& assignedLabel, int32 neighborLabel, int64 index, int64 neighborIndex, SegmentFeatures& segmenter, LabelEquivalence& equivalences,
                               const std::atomic_bool& shouldCancel)
 {
   if(neighborLabel > 0 && segmenter.areNeighborsSimilar(index, neighborIndex))
@@ -360,7 +360,7 @@ Result<> adoptOrUniteNeighbor(int32& assignedLabel, int32 neighborLabel, int64 i
  * reach. A similar pair joins two provisional labels and marks the run as holding
  * a feature that wraps across a boundary.
  */
-Result<> unitePeriodicPair(int32 labelA, int32 labelB, int64 indexA, int64 indexB, SegmentFeatures& segmenter, LabelEquivalence& equivalences, bool& hasNonContiguousFeature,
+Result<> UnitePeriodicPair(int32 labelA, int32 labelB, int64 indexA, int64 indexB, SegmentFeatures& segmenter, LabelEquivalence& equivalences, bool& hasNonContiguousFeature,
                            const std::atomic_bool& shouldCancel)
 {
   if(labelA > 0 && labelB > 0 && segmenter.areNeighborsSimilar(indexA, indexB))
@@ -393,8 +393,8 @@ Result<> unitePeriodicPair(int32 labelA, int32 labelB, int64 indexA, int64 index
  * rolling buffer keeps label memory proportional to slice area. Cancellation returns
  * success and leaves provisional labels in the written slices.
  */
-Result<> runForwardScan(SegmentFeatures& segmenter, AbstractDataStore<int32>& featureIdsStore, LabelEquivalence& equivalences, int64 dimX, int64 dimY, int64 dimZ, bool useFaceOnly, int32& nextLabel,
-                        const std::atomic_bool& shouldCancel, const ProgressCallback& reportProgress)
+Result<> RunForwardScan(SegmentFeatures& segmenter, AbstractDataStore<int32>& featureIdsStore, LabelEquivalence& equivalences, int64 dimX, int64 dimY, int64 dimZ, bool useFaceOnly, int32& nextLabel,
+                        const std::atomic_bool& shouldCancel, const ProgressCallbackType& reportProgress)
 {
   const int64 sliceStride = dimX * dimY;
   const usize sliceSize = static_cast<usize>(sliceStride);
@@ -450,7 +450,7 @@ Result<> runForwardScan(SegmentFeatures& segmenter, AbstractDataStore<int32>& fe
           if(ix > 0)
           {
             const int64 neighIdx = index - 1;
-            auto neighborResult = adoptOrUniteNeighbor(assignedLabel, labelBuffer[bufIdx - 1], index, neighIdx, segmenter, equivalences, shouldCancel);
+            auto neighborResult = AdoptOrUniteNeighbor(assignedLabel, labelBuffer[bufIdx - 1], index, neighIdx, segmenter, equivalences, shouldCancel);
             if(neighborResult.invalid())
             {
               return neighborResult;
@@ -460,7 +460,7 @@ Result<> runForwardScan(SegmentFeatures& segmenter, AbstractDataStore<int32>& fe
           {
             const int64 neighIdx = index - dimX;
             auto neighborResult =
-                adoptOrUniteNeighbor(assignedLabel, labelBuffer[currentSliceOffset + static_cast<usize>((iy - 1) * dimX + ix)], index, neighIdx, segmenter, equivalences, shouldCancel);
+                AdoptOrUniteNeighbor(assignedLabel, labelBuffer[currentSliceOffset + static_cast<usize>((iy - 1) * dimX + ix)], index, neighIdx, segmenter, equivalences, shouldCancel);
             if(neighborResult.invalid())
             {
               return neighborResult;
@@ -469,7 +469,7 @@ Result<> runForwardScan(SegmentFeatures& segmenter, AbstractDataStore<int32>& fe
           if(iz > 0)
           {
             const int64 neighIdx = index - sliceStride;
-            auto neighborResult = adoptOrUniteNeighbor(assignedLabel, labelBuffer[prevSliceOffset + static_cast<usize>(iy * dimX + ix)], index, neighIdx, segmenter, equivalences, shouldCancel);
+            auto neighborResult = AdoptOrUniteNeighbor(assignedLabel, labelBuffer[prevSliceOffset + static_cast<usize>(iy * dimX + ix)], index, neighIdx, segmenter, equivalences, shouldCancel);
             if(neighborResult.invalid())
             {
               return neighborResult;
@@ -501,8 +501,8 @@ Result<> runForwardScan(SegmentFeatures& segmenter, AbstractDataStore<int32>& fe
                 continue;
               }
 
-              int64 dxStart;
-              int64 dxEnd;
+              int64 dxStart = 0;
+              int64 dxEnd = 0;
               if(dz < 0)
               {
                 dxStart = -1;
@@ -532,7 +532,7 @@ Result<> runForwardScan(SegmentFeatures& segmenter, AbstractDataStore<int32>& fe
                 }
 
                 const int64 neighIdx = nz * sliceStride + ny * dimX + nx;
-                auto neighborResult = adoptOrUniteNeighbor(assignedLabel, labelBuffer[neighSliceOffset + static_cast<usize>(ny * dimX + nx)], index, neighIdx, segmenter, equivalences, shouldCancel);
+                auto neighborResult = AdoptOrUniteNeighbor(assignedLabel, labelBuffer[neighSliceOffset + static_cast<usize>(ny * dimX + nx)], index, neighIdx, segmenter, equivalences, shouldCancel);
                 if(neighborResult.invalid())
                 {
                   return neighborResult;
@@ -593,8 +593,8 @@ Result<> runForwardScan(SegmentFeatures& segmenter, AbstractDataStore<int32>& fe
  * stay independent. The X and Y passes read one Z slice at a time. The Z pass holds
  * the first and last slices together.
  */
-Result<> mergePeriodicFaceBoundaries(SegmentFeatures& segmenter, AbstractDataStore<int32>& featureIdsStore, LabelEquivalence& equivalences, int64 dimX, int64 dimY, int64 dimZ,
-                                     bool& hasNonContiguousFeature, const std::atomic_bool& shouldCancel, const ProgressCallback& reportProgress)
+Result<> MergePeriodicFaceBoundaries(SegmentFeatures& segmenter, AbstractDataStore<int32>& featureIdsStore, LabelEquivalence& equivalences, int64 dimX, int64 dimY, int64 dimZ,
+                                     bool& hasNonContiguousFeature, const std::atomic_bool& shouldCancel, const ProgressCallbackType& reportProgress)
 {
   const int64 sliceStride = dimX * dimY;
   const usize sliceSize = static_cast<usize>(sliceStride);
@@ -627,7 +627,7 @@ Result<> mergePeriodicFaceBoundaries(SegmentFeatures& segmenter, AbstractDataSto
         const int64 idxB = iz * sliceStride + iy * dimX + (dimX - 1);
         const int32 labelA = featureIdsSliceCur[static_cast<usize>(iy * dimX)];
         const int32 labelB = featureIdsSliceCur[static_cast<usize>(iy * dimX + (dimX - 1))];
-        auto uniteResult = unitePeriodicPair(labelA, labelB, idxA, idxB, segmenter, equivalences, hasNonContiguousFeature, shouldCancel);
+        auto uniteResult = UnitePeriodicPair(labelA, labelB, idxA, idxB, segmenter, equivalences, hasNonContiguousFeature, shouldCancel);
         if(uniteResult.invalid())
         {
           return uniteResult;
@@ -663,7 +663,7 @@ Result<> mergePeriodicFaceBoundaries(SegmentFeatures& segmenter, AbstractDataSto
         const int64 idxB = iz * sliceStride + (dimY - 1) * dimX + ix;
         const int32 labelA = featureIdsSliceCur[static_cast<usize>(ix)];
         const int32 labelB = featureIdsSliceCur[static_cast<usize>((dimY - 1) * dimX + ix)];
-        auto uniteResult = unitePeriodicPair(labelA, labelB, idxA, idxB, segmenter, equivalences, hasNonContiguousFeature, shouldCancel);
+        auto uniteResult = UnitePeriodicPair(labelA, labelB, idxA, idxB, segmenter, equivalences, hasNonContiguousFeature, shouldCancel);
         if(uniteResult.invalid())
         {
           return uniteResult;
@@ -713,7 +713,7 @@ Result<> mergePeriodicFaceBoundaries(SegmentFeatures& segmenter, AbstractDataSto
         const int64 idxB = (dimZ - 1) * sliceStride + iy * dimX + ix;
         const int32 labelA = featureIdsSliceCur[inSlice];
         const int32 labelB = featureIdsSliceOther[inSlice];
-        auto uniteResult = unitePeriodicPair(labelA, labelB, idxA, idxB, segmenter, equivalences, hasNonContiguousFeature, shouldCancel);
+        auto uniteResult = UnitePeriodicPair(labelA, labelB, idxA, idxB, segmenter, equivalences, hasNonContiguousFeature, shouldCancel);
         if(uniteResult.invalid())
         {
           return uniteResult;
@@ -743,8 +743,8 @@ Result<> mergePeriodicFaceBoundaries(SegmentFeatures& segmenter, AbstractDataSto
  * cannot be processed separately. Each boundary voxel walks its 26 neighbors and keeps
  * only the wrapped pairs the forward scan could not reach. Cancellation returns success.
  */
-Result<> mergePeriodicCompleteBoundaries(SegmentFeatures& segmenter, AbstractDataStore<int32>& featureIdsStore, LabelEquivalence& equivalences, int64 dimX, int64 dimY, int64 dimZ,
-                                         bool& hasNonContiguousFeature, const std::atomic_bool& shouldCancel, const ProgressCallback& reportProgress)
+Result<> MergePeriodicCompleteBoundaries(SegmentFeatures& segmenter, AbstractDataStore<int32>& featureIdsStore, LabelEquivalence& equivalences, int64 dimX, int64 dimY, int64 dimZ,
+                                         bool& hasNonContiguousFeature, const std::atomic_bool& shouldCancel, const ProgressCallbackType& reportProgress)
 {
   const int64 sliceStride = dimX * dimY;
   const usize sliceSize = static_cast<usize>(sliceStride);
@@ -793,7 +793,7 @@ Result<> mergePeriodicCompleteBoundaries(SegmentFeatures& segmenter, AbstractDat
         continue;
       }
 
-      const int32* neighborSlice = featureIdsSliceCur.data();
+      const int32* neighborSlicePtr = featureIdsSliceCur.data();
       if(nz != iz)
       {
         // With dimZ == 2, dz = -1 and dz = +1 give the same partner slice.
@@ -806,7 +806,7 @@ Result<> mergePeriodicCompleteBoundaries(SegmentFeatures& segmenter, AbstractDat
           }
           partnerZ = nz;
         }
-        neighborSlice = featureIdsSlicePartner.data();
+        neighborSlicePtr = featureIdsSlicePartner.data();
       }
       auto prepareResult = segmenter.prepareForSlice(iz, dimX, dimY, dimZ);
       if(prepareResult.invalid())
@@ -889,9 +889,9 @@ Result<> mergePeriodicCompleteBoundaries(SegmentFeatures& segmenter, AbstractDat
                 continue;
               }
 
-              const int32 labelNeigh = neighborSlice[static_cast<usize>(ny * dimX + nx)];
+              const int32 labelNeigh = neighborSlicePtr[static_cast<usize>(ny * dimX + nx)];
 
-              auto uniteResult = unitePeriodicPair(labelCurrent, labelNeigh, index, neighIdx, segmenter, equivalences, hasNonContiguousFeature, shouldCancel);
+              auto uniteResult = UnitePeriodicPair(labelCurrent, labelNeigh, index, neighIdx, segmenter, equivalences, hasNonContiguousFeature, shouldCancel);
               if(uniteResult.invalid())
               {
                 return uniteResult;
@@ -923,8 +923,8 @@ Result<> mergePeriodicCompleteBoundaries(SegmentFeatures& segmenter, AbstractDat
  * voxel appearance determines final Feature-ID order. Cancellation returns success and
  * leaves a partially resolved Feature-ID array, so the caller discards the count.
  */
-Result<> writeFinalLabels(AbstractDataStore<int32>& featureIdsStore, LabelEquivalence& equivalences, int64 dimX, int64 dimY, int64 dimZ, int32& finalFeatureCount, const std::atomic_bool& shouldCancel,
-                          const ProgressCallback& reportProgress)
+Result<> WriteFinalLabels(AbstractDataStore<int32>& featureIdsStore, LabelEquivalence& equivalences, int64 dimX, int64 dimY, int64 dimZ, int32& finalFeatureCount, const std::atomic_bool& shouldCancel,
+                          const ProgressCallbackType& reportProgress)
 {
   const int64 sliceStride = dimX * dimY;
   const usize sliceSize = static_cast<usize>(sliceStride);
@@ -989,7 +989,7 @@ SegmentFeatures::~SegmentFeatures() = default;
 // equivalences. Periodic merging joins wrapped boundaries. Final resolution writes dense IDs.
 Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<int32>& featureIdsStore, bool usesOutOfCoreInput)
 {
-  const SizeVec3 udims = gridGeom->getDimensions();
+  const SizeVec3Type udims = gridGeom->getDimensions();
   const int64 dimX = static_cast<int64>(udims[0]);
   const int64 dimY = static_cast<int64>(udims[1]);
   const int64 dimZ = static_cast<int64>(udims[2]);
@@ -1020,7 +1020,7 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
   // The forward scan creates provisional labels and the equivalences between them.
   m_MessageHandler.sendInfoMessage("Labeling Features");
   progressThrottle.reset(static_cast<usize>(dimZ), "Labeling Features");
-  auto forwardScanResult = runForwardScan(*this, featureIdsStore, *equivalences, dimX, dimY, dimZ, useFaceOnly, nextLabel, m_ShouldCancel, reportCompletedCount);
+  auto forwardScanResult = RunForwardScan(*this, featureIdsStore, *equivalences, dimX, dimY, dimZ, useFaceOnly, nextLabel, m_ShouldCancel, reportCompletedCount);
   if(forwardScanResult.invalid())
   {
     return forwardScanResult;
@@ -1040,7 +1040,7 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
     {
       const usize periodicWorkUnits = (dimX > 1 ? static_cast<usize>(dimZ) : 0) + (dimY > 1 ? static_cast<usize>(dimZ) : 0) + (dimZ > 1 ? static_cast<usize>(dimY) : 0);
       progressThrottle.reset(periodicWorkUnits, "Merging Periodic Feature Boundaries");
-      auto mergeResult = mergePeriodicFaceBoundaries(*this, featureIdsStore, *equivalences, dimX, dimY, dimZ, hasNonContiguousFeature, m_ShouldCancel, reportCompletedCount);
+      auto mergeResult = MergePeriodicFaceBoundaries(*this, featureIdsStore, *equivalences, dimX, dimY, dimZ, hasNonContiguousFeature, m_ShouldCancel, reportCompletedCount);
       if(mergeResult.invalid())
       {
         return mergeResult;
@@ -1049,7 +1049,7 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
     else
     {
       progressThrottle.reset(static_cast<usize>(dimZ), "Merging Periodic Feature Boundaries");
-      auto mergeResult = mergePeriodicCompleteBoundaries(*this, featureIdsStore, *equivalences, dimX, dimY, dimZ, hasNonContiguousFeature, m_ShouldCancel, reportCompletedCount);
+      auto mergeResult = MergePeriodicCompleteBoundaries(*this, featureIdsStore, *equivalences, dimX, dimY, dimZ, hasNonContiguousFeature, m_ShouldCancel, reportCompletedCount);
       if(mergeResult.invalid())
       {
         return mergeResult;
@@ -1088,7 +1088,7 @@ Result<> SegmentFeatures::executeCCL(IGridGeometry* gridGeom, AbstractDataStore<
   int32 finalFeatureCount = 0;
   m_MessageHandler.sendInfoMessage("Assigning Final Feature Labels");
   progressThrottle.reset(static_cast<usize>(dimZ), "Assigning Final Feature Labels");
-  auto finalLabelsResult = writeFinalLabels(featureIdsStore, *equivalences, dimX, dimY, dimZ, finalFeatureCount, m_ShouldCancel, reportCompletedCount);
+  auto finalLabelsResult = WriteFinalLabels(featureIdsStore, *equivalences, dimX, dimY, dimZ, finalFeatureCount, m_ShouldCancel, reportCompletedCount);
   if(finalLabelsResult.invalid())
   {
     return finalLabelsResult;
@@ -1116,18 +1116,18 @@ Result<> SegmentFeatures::prepareForSlice(int64 /*iz*/, int64 /*dimX*/, int64 /*
   return {};
 }
 
-bool SegmentFeatures::isValidVoxel(int64 point) const
+bool SegmentFeatures::isValidVoxel(int64 /*point*/) const
 {
   return true;
 }
 
-bool SegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
+bool SegmentFeatures::areNeighborsSimilar(int64 /*point1*/, int64 /*point2*/) const
 {
   return false;
 }
 
-Result<> SegmentFeatures::randomizeFeatureIds(nx::core::Int32Array* featureIds, uint64 totalFeatures)
+Result<> SegmentFeatures::randomizeFeatureIds(nx::core::Int32ArrayType* featureIds, uint64 totalFeatures)
 {
   m_MessageHandler.sendInfoMessage("Randomizing Feature Ids");
-  return ClusterUtilities::RandomizeFeatureIds(featureIds->getDataStoreRef(), totalFeatures);
+  return cluster_utilities::RandomizeFeatureIds(featureIds->getDataStoreRef(), totalFeatures);
 }

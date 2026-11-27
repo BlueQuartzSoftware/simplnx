@@ -24,7 +24,7 @@ namespace
  * @param outputStream Stream that receives the escaped label text.
  * @param label Unescaped label text.
  */
-void writeGraphVizLabel(std::ostream& outputStream, std::string_view label)
+void WriteGraphVizLabel(std::ostream& outputStream, std::string_view label)
 {
   for(const unsigned char character : label)
   {
@@ -64,7 +64,7 @@ void writeGraphVizLabel(std::ostream& outputStream, std::string_view label)
  * @param outputStream Stream that receives the identifier.
  * @param identifier DataObject identifier.
  */
-void writeGraphVizNodeId(std::ostream& outputStream, DataObject::IdType identifier)
+void WriteGraphVizNodeId(std::ostream& outputStream, DataObject::IdType identifier)
 {
   outputStream << "\"node_" << identifier << '"';
 }
@@ -83,7 +83,7 @@ void DataStructure::exportHierarchyAsGraphViz(std::ostream& outputStream) const
                << "\tnode [shape=record style=\"filled\" fillcolor=\"#1D7ECD\" fontsize=12 fontcolor=\"#FFFFFA\"]\n"
                << "\tedge [dir=front arrowtail=empty style=\"\" color=\"#FFFFFA\"]\n\n";
 
-  const std::vector<const DataObject*> rootObjectPtrs = DataStructureExportUtilities::GetSortedObjectPointers(m_RootGroup);
+  const std::vector<const DataObject*> rootObjectPtrs = data_structure_export_utilities::GetSortedObjectPointers(m_RootGroup);
   std::vector<const DataObject*> pendingObjectPtrs;
   pendingObjectPtrs.reserve(rootObjectPtrs.size());
   for(const DataObject* objectPtr : std::ranges::reverse_view(rootObjectPtrs))
@@ -102,9 +102,9 @@ void DataStructure::exportHierarchyAsGraphViz(std::ostream& outputStream) const
       continue;
     }
 
-    writeGraphVizNodeId(outputStream, objectPtr->getId());
+    WriteGraphVizNodeId(outputStream, objectPtr->getId());
     outputStream << " [label=\"";
-    writeGraphVizLabel(outputStream, objectPtr->getName());
+    WriteGraphVizLabel(outputStream, objectPtr->getName());
     outputStream << "\"];\n";
 
     const auto* groupPtr = dynamic_cast<const BaseGroup*>(objectPtr);
@@ -113,12 +113,12 @@ void DataStructure::exportHierarchyAsGraphViz(std::ostream& outputStream) const
       continue;
     }
 
-    const std::vector<const DataObject*> childObjectPtrs = DataStructureExportUtilities::GetSortedObjectPointers(groupPtr->getDataMap());
+    const std::vector<const DataObject*> childObjectPtrs = data_structure_export_utilities::GetSortedObjectPointers(groupPtr->getDataMap());
     for(const DataObject* childPtr : childObjectPtrs)
     {
-      writeGraphVizNodeId(outputStream, objectPtr->getId());
+      WriteGraphVizNodeId(outputStream, objectPtr->getId());
       outputStream << " -> ";
-      writeGraphVizNodeId(outputStream, childPtr->getId());
+      WriteGraphVizNodeId(outputStream, childPtr->getId());
       outputStream << ";\n";
     }
     for(const DataObject* childPtr : std::ranges::reverse_view(childObjectPtrs))

@@ -19,7 +19,7 @@ const std::optional<INodeGeometry0D::IdType>& INodeGeometry0D::getSharedVertexDa
   return m_VertexDataArrayId;
 }
 
-INodeGeometry0D::SharedVertexList* INodeGeometry0D::getVertices()
+INodeGeometry0D::SharedVertexListType* INodeGeometry0D::getVertices()
 {
   if(!m_VertexDataArrayId.has_value())
   {
@@ -30,10 +30,10 @@ INodeGeometry0D::SharedVertexList* INodeGeometry0D::getVertices()
   {
     return nullptr;
   }
-  return dataStructurePtr->getDataAs<SharedVertexList>(m_VertexDataArrayId);
+  return dataStructurePtr->getDataAs<SharedVertexListType>(m_VertexDataArrayId);
 }
 
-const INodeGeometry0D::SharedVertexList* INodeGeometry0D::getVertices() const
+const INodeGeometry0D::SharedVertexListType* INodeGeometry0D::getVertices() const
 {
   if(!m_VertexDataArrayId.has_value())
   {
@@ -44,10 +44,10 @@ const INodeGeometry0D::SharedVertexList* INodeGeometry0D::getVertices() const
   {
     return nullptr;
   }
-  return dataStructurePtr->getDataAs<SharedVertexList>(m_VertexDataArrayId);
+  return dataStructurePtr->getDataAs<SharedVertexListType>(m_VertexDataArrayId);
 }
 
-INodeGeometry0D::SharedVertexList& INodeGeometry0D::getVerticesRef()
+INodeGeometry0D::SharedVertexListType& INodeGeometry0D::getVerticesRef()
 {
   if(!m_VertexDataArrayId.has_value())
   {
@@ -60,10 +60,10 @@ INodeGeometry0D::SharedVertexList& INodeGeometry0D::getVerticesRef()
     throw std::runtime_error(
         fmt::format("INodeGeometry0D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return dataStructurePtr->getDataRefAs<SharedVertexList>(m_VertexDataArrayId.value());
+  return dataStructurePtr->getDataRefAs<SharedVertexListType>(m_VertexDataArrayId.value());
 }
 
-const INodeGeometry0D::SharedVertexList& INodeGeometry0D::getVerticesRef() const
+const INodeGeometry0D::SharedVertexListType& INodeGeometry0D::getVerticesRef() const
 {
   if(!m_VertexDataArrayId.has_value())
   {
@@ -76,10 +76,10 @@ const INodeGeometry0D::SharedVertexList& INodeGeometry0D::getVerticesRef() const
     throw std::runtime_error(
         fmt::format("INodeGeometry0D::{} threw runtime exception. The geometry with name '{}' does not have a Data Structure assigned.\n  {}:{}", __func__, getName(), __FILE__, __LINE__));
   }
-  return dataStructurePtr->getDataRefAs<SharedVertexList>(m_VertexDataArrayId.value());
+  return dataStructurePtr->getDataRefAs<SharedVertexListType>(m_VertexDataArrayId.value());
 }
 
-void INodeGeometry0D::setVertices(const INodeGeometry0D::SharedVertexList& vertices)
+void INodeGeometry0D::setVertices(const INodeGeometry0D::SharedVertexListType& vertices)
 {
   m_VertexDataArrayId = vertices.getId();
 }
@@ -115,15 +115,15 @@ usize INodeGeometry0D::getNumberOfCells() const
   return getNumberOfVertices();
 }
 
-BoundingBox3Df INodeGeometry0D::getBoundingBox() const
+BoundingBox3DfType INodeGeometry0D::getBoundingBox() const
 {
-  FloatVec3 ll = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
+  FloatVec3Type ll = {std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max()};
   // Upper corner must start at the most-negative float (lowest()), NOT min()
   // (which is the smallest POSITIVE normal ~1.18e-38). Using min() left the max
   // corner wrong for any geometry whose coordinates are <= ~0 on an axis.
-  FloatVec3 ur = {std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest()};
+  FloatVec3Type ur = {std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest()};
 
-  const IGeometry::SharedVertexList& vertexList = getVerticesRef();
+  const IGeometry::SharedVertexListType& vertexList = getVerticesRef();
   if(vertexList.getDataType() != DataType::float32)
   {
     return {ll, ur}; // will be invalid
@@ -131,7 +131,7 @@ BoundingBox3Df INodeGeometry0D::getBoundingBox() const
 
   try
   {
-    auto& vertexListStore = vertexList.getDataStoreRef();
+    const auto& vertexListStore = vertexList.getDataStoreRef();
 
     for(size_t tuple = 0; tuple < vertexListStore.getNumberOfTuples(); tuple++)
     {
@@ -159,8 +159,8 @@ Result<bool> INodeGeometry0D::isPlane(usize dimensionIndex) const
 {
   try
   {
-    const IGeometry::SharedVertexList& vertexList = getVerticesRef();
-    auto& vertexListStore = vertexList.getDataStoreRef();
+    const IGeometry::SharedVertexListType& vertexList = getVerticesRef();
+    const auto& vertexListStore = vertexList.getDataStoreRef();
 
     std::set<float32> pointSet;
     for(usize tuple = 0; tuple < vertexListStore.getNumberOfTuples(); tuple++)
@@ -190,7 +190,7 @@ Result<bool> INodeGeometry0D::isXZPlane() const
   return isPlane(1);
 }
 
-void INodeGeometry0D::setVertexCoordinate(usize vertId, const Point3D<float32>& coordinate)
+void INodeGeometry0D::setVertexCoordinate(usize vertId, const Vec3<float32>& coordinate)
 {
   auto& vertices = getVerticesRef();
   const usize offset = vertId * 3;
@@ -200,11 +200,11 @@ void INodeGeometry0D::setVertexCoordinate(usize vertId, const Point3D<float32>& 
   }
 }
 
-Point3D<float32> INodeGeometry0D::getVertexCoordinate(usize vertId) const
+Vec3<float32> INodeGeometry0D::getVertexCoordinate(usize vertId) const
 {
-  auto& vertices = getVerticesRef();
+  const auto& vertices = getVerticesRef();
   const usize offset = vertId * 3;
-  Point3D<float32> coordinate;
+  Vec3<float32> coordinate;
   for(usize i = 0; i < 3; i++)
   {
     coordinate[i] = vertices.at(offset + i);
@@ -217,7 +217,7 @@ const std::optional<INodeGeometry0D::IdType>& INodeGeometry0D::getVertexAttribut
   return m_VertexAttributeMatrixId;
 }
 
-void INodeGeometry0D::setVertexDataId(const OptionalId& vertexDataId)
+void INodeGeometry0D::setVertexDataId(const OptionalIdType& vertexDataId)
 {
   m_VertexAttributeMatrixId = vertexDataId;
 }

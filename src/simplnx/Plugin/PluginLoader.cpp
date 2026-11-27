@@ -3,6 +3,7 @@
 #include <fmt/core.h>
 
 #include <memory>
+#include <utility>
 
 // fmt >= 8.0.0
 #if FMT_VERSION >= 80000
@@ -30,7 +31,7 @@ using namespace nx::core;
 namespace
 {
 template <class T>
-constexpr bool is_function_ptr_v = (std::is_pointer_v<T> && std::is_function_v<std::remove_pointer_t<T>>);
+constexpr bool k_IsFunctionPtrV = (std::is_pointer_v<T> && std::is_function_v<std::remove_pointer_t<T>>);
 
 void* LoadSharedLibrary(const std::filesystem::path& path)
 {
@@ -50,8 +51,9 @@ bool UnloadSharedLibrary(void* handle)
 #endif
 }
 
-template <class Func, class = std::enable_if_t<is_function_ptr_v<Func>>>
+template <class Func>
 Func ImportFunction(void* handle, const char* funcName)
+requires(k_IsFunctionPtrV<Func>)
 {
 #if defined(_WIN32)
   return reinterpret_cast<Func>(GetProcAddress(reinterpret_cast<HINSTANCE>(handle), funcName));
@@ -76,19 +78,19 @@ auto GetErrorMessage()
   std::wstring message = fmt::format(L"Error code {}: {}", error, messageBuffer);
   return message;
 #elif defined(__linux__) || defined(__APPLE__)
-  const char* error = dlerror();
-  if(error == nullptr)
+  const char* errorPtr = dlerror();
+  if(errorPtr == nullptr)
   {
     return std::string("Unable to retrieve error message");
   }
-  std::string message(error);
+  std::string message(errorPtr);
   return message;
 #endif
 }
 } // namespace
 
-PluginLoader::PluginLoader(const std::filesystem::path& path)
-: m_Path(path)
+PluginLoader::PluginLoader(std::filesystem::path path)
+: m_Path(std::move(path))
 , m_Plugin(nullptr)
 {
   loadPlugin();
@@ -106,8 +108,8 @@ void PluginLoader::loadPlugin()
     return;
   }
 
-  CreatePluginFunc createPluginFunc = ImportFunction<CreatePluginFunc>(m_Handle, SIMPLNX_CREATE_PLUGIN_FUNC_NAME);
-  if(createPluginFunc == nullptr)
+  CreatePluginFuncType createPluginFuncPtr = ImportFunction<CreatePluginFuncType>(m_Handle, SIMPLNX_CREATE_PLUGIN_FUNC_NAME);
+  if(createPluginFuncPtr == nullptr)
   {
     unloadPlugin();
     fmt::print(SIMPLNX_TEXT("Could not retrieve function \"" SIMPLNX_CREATE_PLUGIN_FUNC_NAME "\" from library '{}' with the following error:\n"), m_Path.c_str());
@@ -115,8 +117,8 @@ void PluginLoader::loadPlugin()
     return;
   }
 
-  DestroyPluginFunc destroyPluginFunc = ImportFunction<DestroyPluginFunc>(m_Handle, SIMPLNX_DESTROY_PLUGIN_FUNC_NAME);
-  if(destroyPluginFunc == nullptr)
+  DestroyPluginFuncType destroyPluginFuncPtr = ImportFunction<DestroyPluginFuncType>(m_Handle, SIMPLNX_DESTROY_PLUGIN_FUNC_NAME);
+  if(destroyPluginFuncPtr == nullptr)
   {
     unloadPlugin();
     fmt::print(SIMPLNX_TEXT("Could not retrieve function \"" SIMPLNX_DESTROY_PLUGIN_FUNC_NAME "\" from library '{}' with following error:\n"), m_Path.c_str());
@@ -124,12 +126,12 @@ void PluginLoader::loadPlugin()
     return;
   }
 
-  m_Plugin = std::shared_ptr<AbstractPlugin>(createPluginFunc(), destroyPluginFunc);
+  m_Plugin = std::shared_ptr<AbstractPlugin>(createPluginFuncPtr(), destroyPluginFuncPtr);
 }
 
 void PluginLoader::unloadPlugin()
 {
-  if(!m_Handle)
+  if(m_Handle == nullptr)
   {
     return;
   }

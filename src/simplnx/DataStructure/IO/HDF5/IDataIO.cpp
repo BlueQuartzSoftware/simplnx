@@ -7,12 +7,12 @@
 
 #include <fmt/format.h>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 IDataIO::IDataIO() = default;
 IDataIO::~IDataIO() noexcept = default;
 
-DataObject::OptionalId IDataIO::ReadDataId(const object_reader_type& groupReader, const std::string& tag)
+DataObject::OptionalIdType IDataIO::ReadDataId(const ObjectReaderType& groupReader, const std::string& tag)
 {
   if(!groupReader.isValid())
   {
@@ -24,12 +24,12 @@ DataObject::OptionalId IDataIO::ReadDataId(const object_reader_type& groupReader
   {
     return {};
   }
-  DataObject::IdType id = std::move(result.value());
+  DataObject::IdType id = result.value();
 
   return id;
 }
 
-Result<> IDataIO::WriteDataId(object_writer_type& objectWriter, const std::optional<DataObject::IdType>& objectId, const std::string& tag)
+Result<> IDataIO::WriteDataId(ObjectWriterType& objectWriter, const std::optional<DataObject::IdType>& objectId, const std::string& tag)
 {
   if(!objectId.has_value())
   {
@@ -40,14 +40,14 @@ Result<> IDataIO::WriteDataId(object_writer_type& objectWriter, const std::optio
   return objectWriter.writeScalarAttribute(tag, id);
 }
 
-Result<> IDataIO::WriteObjectAttributes(DataStructureWriter& dataStructureWriter, const DataObject& dataObject, object_writer_type& objectWriter, bool importable)
+Result<> IDataIO::WriteObjectAttributes(DataStructureWriter& dataStructureWriter, const DataObject& dataObject, ObjectWriterType& objectWriter, bool importable)
 {
   std::string dataTypeName = dataObject.getTypeName();
-  objectWriter.writeStringAttribute(Constants::k_ObjectTypeTag, dataTypeName);
-  objectWriter.writeScalarAttribute(Constants::k_ObjectIdTag, dataObject.getId());
+  objectWriter.writeStringAttribute(constants::k_ObjectTypeTag, dataTypeName);
+  objectWriter.writeScalarAttribute(constants::k_ObjectIdTag, dataObject.getId());
 
   int32 value = (importable ? 1 : 0);
-  objectWriter.writeScalarAttribute(Constants::k_ImportableTag, value);
+  objectWriter.writeScalarAttribute(constants::k_ImportableTag, value);
 
   // Add to DataStructureWriter for use in linking
   dataStructureWriter.addWriter(objectWriter, dataObject.getId());
@@ -55,8 +55,8 @@ Result<> IDataIO::WriteObjectAttributes(DataStructureWriter& dataStructureWriter
   return {};
 }
 
-Result<> IDataIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
+Result<> IDataIO::finishImportingData(DataStructure& /*dataStructure*/, const DataPath& /*dataPath*/, const GroupReaderType& /*dataStructureGroup*/) const
 {
   return {};
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

@@ -43,11 +43,11 @@ Parameters MaskImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Float64Parameter>(k_OutsideValue_Key, "Outside Value", "The value assigned to output pixels where the mask is zero.", 0.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_OutsideValue_Key, "Outside Value", "The value assigned to output pixels where the mask is zero.", 0.0));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskImageDataPath_Key, "Mask Cell Data",
@@ -62,12 +62,12 @@ IFilter::VersionType MaskImageFilter::parametersVersion() const
 {
   return 1;
 }
-IFilter::UniquePointer MaskImageFilter::clone() const
+IFilter::UniquePointerType MaskImageFilter::clone() const
 {
   return std::make_unique<MaskImageFilter>();
 }
-IFilter::PreflightResult MaskImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                        const ExecutionContext& executionContext) const
+IFilter::PreflightResult MaskImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                        const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -79,20 +79,21 @@ IFilter::PreflightResult MaskImageFilter::preflightImpl(const DataStructure& dat
   const DataType maskType = maskArray.getDataType();
   if(maskType != DataType::uint8 && maskType != DataType::uint16 && maskType != DataType::uint32)
   {
-    return {MakeErrorResult<OutputActions>(-8100, fmt::format("Mask array '{}' must be uint8, uint16, or uint32, but is '{}'.", maskArrayPath.toString(), DataTypeToString(maskType)))};
+    return {.output_actions =
+                MakeErrorResult<OutputActions>(-8100, fmt::format("Mask array '{}' must be uint8, uint16, or uint32, but is '{}'.", maskArrayPath.toString(), DataTypeToString(maskType)))};
   }
   // The mask engine reads the mask as a single-component scalar (ApplyMask/ReadMaskKeepChunk index by tuple);
   // a multi-component mask would be mis-read, so require scalar here.
   if(maskArray.getNumberOfComponents() != 1)
   {
-    return {
-        MakeErrorResult<OutputActions>(-8105, fmt::format("Mask array '{}' must be single-component (scalar), but has {} components.", maskArrayPath.toString(), maskArray.getNumberOfComponents()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(
+                -8105, fmt::format("Mask array '{}' must be single-component (scalar), but has {} components.", maskArrayPath.toString(), maskArray.getNumberOfComponents()))};
   }
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
   if(maskArray.getNumberOfTuples() != inputArray.getNumberOfTuples())
   {
-    return {
-        MakeErrorResult<OutputActions>(-8101, fmt::format("Mask array tuple count ({}) does not match input array tuple count ({}).", maskArray.getNumberOfTuples(), inputArray.getNumberOfTuples()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(
+                -8101, fmt::format("Mask array tuple count ({}) does not match input array tuple count ({}).", maskArray.getNumberOfTuples(), inputArray.getNumberOfTuples()))};
   }
 
   // The Outside Value is a Float64 parameter cast to the input element type by the mask engine. That conversion
@@ -102,22 +103,22 @@ IFilter::PreflightResult MaskImageFilter::preflightImpl(const DataStructure& dat
   Result<> outsideGuard = ImageProcessing::ValidateScalarValueForType(inputArray.getDataType(), outsideValue, "Outside Value", -8102, -8103, -8104);
   if(outsideGuard.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(outsideGuard), OutputActions{})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(outsideGuard), OutputActions{})};
   }
 
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   if(resultOutputActions.invalid())
   {
-    return {std::move(resultOutputActions)};
+    return {.output_actions = std::move(resultOutputActions)};
   }
   for(Warning& warning : outsideGuard.warnings())
   {
     resultOutputActions.warnings().push_back(std::move(warning));
   }
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
-Result<> MaskImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> MaskImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                      const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto maskArrayPath = filterArgs.value<DataPath>(k_MaskImageDataPath_Key);
@@ -131,13 +132,13 @@ Result<> MaskImageFilter::executeImpl(DataStructure& dataStructure, const Argume
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_OutsideValueKey = "OutsideValue";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_MaskCellArrayPathKey = "MaskCellArrayPath";
-constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+constexpr StringLiteralType k_OutsideValueKey = "OutsideValue";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_MaskCellArrayPathKey = "MaskCellArrayPath";
+constexpr StringLiteralType k_NewCellArrayNameKey = "NewCellArrayName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> MaskImageFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -146,11 +147,11 @@ Result<Arguments> MaskImageFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_OutsideValueKey, k_OutsideValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_MaskCellArrayPathKey, k_MaskImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_OutsideValueKey, k_OutsideValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskCellArrayPathKey, k_MaskImageDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

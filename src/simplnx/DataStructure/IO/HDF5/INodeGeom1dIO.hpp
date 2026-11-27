@@ -7,7 +7,7 @@ namespace nx::core
 {
 class INodeGeometry1D;
 
-namespace HDF5
+namespace hdf5
 {
 class SIMPLNX_EXPORT INodeGeom1dIO : public INodeGeom0dIO
 {
@@ -36,8 +36,8 @@ protected:
    * @param useEmptyDataStore = false
    * @return Result<>
    */
-  static Result<> ReadNodeGeom1dData(DataStructureReader& dataStructureReader, INodeGeometry1D& geometry, const group_reader_type& parentGroup, const std::string& geomName,
-                                     DataObject::IdType importId, const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false);
+  static Result<> ReadNodeGeom1dData(DataStructureReader& dataStructureReader, INodeGeometry1D& geometry, const GroupReaderType& parentGroup, const std::string& geomName, DataObject::IdType importId,
+                                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false);
 
   /**
    * @brief Attempts to write the INodeGeometry1D data to HDF5.
@@ -47,7 +47,7 @@ protected:
    * @param importable
    * @return Result<>
    */
-  static Result<> WriteNodeGeom1dData(DataStructureWriter& dataStructureWriter, const INodeGeometry1D& geometry, group_writer_type& parentGroup, bool importable);
+  static Result<> WriteNodeGeom1dData(DataStructureWriter& dataStructureWriter, const INodeGeometry1D& geometry, GroupWriterType& parentGroup, bool importable);
 
   /**
    * @brief Writes or removes one connectivity ID attribute of a geometry group.
@@ -61,7 +61,7 @@ protected:
    * attribute. An existing attribute of that name, for example in a group written earlier, is removed. A reload
    * then cannot restore a stale reference.
    */
-  static Result<> WriteConnectivityId(const DataStructureWriter& dataStructureWriter, group_writer_type& groupWriter, const std::optional<DataObject::IdType>& objectId, const std::string& tag);
+  static Result<> WriteConnectivityId(const DataStructureWriter& dataStructureWriter, GroupWriterType& groupWriter, const std::optional<DataObject::IdType>& objectId, const std::string& tag);
 
   /**
    * @brief Finishes importing 1D node geometry data after the geometry has been created.
@@ -70,7 +70,7 @@ protected:
    * @param dataStructureGroup The HDF5 group containing the geometry data
    * @return Result<> Result with any errors or warnings
    */
-  static Result<> FinishImportingNodeGeom1dData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup);
+  static Result<> FinishImportingNodeGeom1dData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& dataStructureGroup);
 };
-} // namespace HDF5
+} // namespace hdf5
 } // namespace nx::core

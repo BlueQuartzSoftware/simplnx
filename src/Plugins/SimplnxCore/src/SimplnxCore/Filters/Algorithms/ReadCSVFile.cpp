@@ -7,28 +7,26 @@ using namespace nx::core;
 
 ReadCSVFile::ReadCSVFile() = default;
 
-ReadCSVFile::~ReadCSVFile() noexcept = default;
-
 Result<> ReadCSVFile::readFile(DataStructure& dataStructure, const std::string& inputFilePath, usize importStartingRow, usize headersLineNumber, const std::vector<CSVType>& columnDataTypes,
                                const std::vector<bool>& columnsSkipped, const DataPath& groupPath, const ShapeType& tupleDims, const std::vector<char>& delimiters, bool consecutiveDelimiters,
                                const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& msgHandler)
 {
-  auto result = FileUtilities::CSV::ReadHeaders(inputFilePath, headersLineNumber, delimiters, consecutiveDelimiters);
+  auto result = file_utilities::csv::ReadHeaders(inputFilePath, headersLineNumber, delimiters, consecutiveDelimiters);
   if(result.invalid())
   {
     return ConvertResult(std::move(result));
   }
-  return readFile(dataStructure, inputFilePath, importStartingRow, result.value(), columnDataTypes, columnsSkipped, groupPath, tupleDims, delimiters, consecutiveDelimiters, shouldCancel, msgHandler);
+  return ReadFile(dataStructure, inputFilePath, importStartingRow, result.value(), columnDataTypes, columnsSkipped, groupPath, tupleDims, delimiters, consecutiveDelimiters, shouldCancel, msgHandler);
 }
 
-Result<> ReadCSVFile::readFile(DataStructure& dataStructure, const std::string& inputFilePath, usize importStartingRow, const std::vector<std::string>& columnHeaders,
+Result<> ReadCSVFile::ReadFile(DataStructure& dataStructure, const std::string& inputFilePath, usize importStartingRow, const std::vector<std::string>& columnHeaders,
                                const std::vector<CSVType>& columnDataTypes, const std::vector<bool>& columnsSkipped, const DataPath& groupPath, const ShapeType& tupleDims,
                                const std::vector<char>& delimiters, bool consecutiveDelimiters, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& msgHandler)
 {
   auto headers = columnHeaders;
-  headers = FileUtilities::CSV::RemoveIllegalCharacters(headers);
+  headers = file_utilities::csv::RemoveIllegalCharacters(headers);
 
-  auto parsersResult = FileUtilities::CSV::CreateParsers(columnDataTypes, columnsSkipped, groupPath, headers, dataStructure);
+  auto parsersResult = file_utilities::csv::CreateParsers(columnDataTypes, columnsSkipped, groupPath, headers, dataStructure);
   if(parsersResult.invalid())
   {
     return ConvertResult(std::move(parsersResult));
@@ -41,7 +39,7 @@ Result<> ReadCSVFile::readFile(DataStructure& dataStructure, const std::string& 
   }
 
   // Position the stream at the first requested data row.
-  if(!FileUtilities::CSV::SkipNumberOfLines(in, importStartingRow))
+  if(!file_utilities::csv::SkipNumberOfLines(in, importStartingRow))
   {
     return MakeErrorResult(to_underlying(IssueCodes::CANNOT_SKIP_TO_LINE), fmt::format("Could not skip to the first line in the file to import ({}).", importStartingRow));
   }
@@ -54,20 +52,20 @@ Result<> ReadCSVFile::readFile(DataStructure& dataStructure, const std::string& 
   {
     if(shouldCancel)
     {
-      return FileUtilities::CSV::FlushParsers(parsersResult.value());
+      return file_utilities::csv::FlushParsers(parsersResult.value());
     }
 
     bool flushRequired = false;
-    Result<> parsingResult = FileUtilities::CSV::ParseLine(in, parsersResult.value(), headers, delimiters, consecutiveDelimiters, lineNum, importStartingRow, flushRequired);
+    Result<> parsingResult = file_utilities::csv::ParseLine(in, parsersResult.value(), headers, delimiters, consecutiveDelimiters, lineNum, importStartingRow, flushRequired);
     if(parsingResult.invalid())
     {
-      Result<> flushResult = FileUtilities::CSV::FlushParsers(parsersResult.value());
+      Result<> flushResult = file_utilities::csv::FlushParsers(parsersResult.value());
       return MergeResults(std::move(parsingResult), std::move(flushResult));
     }
 
     if(flushRequired)
     {
-      Result<> flushResult = FileUtilities::CSV::FlushParsers(parsersResult.value());
+      Result<> flushResult = file_utilities::csv::FlushParsers(parsersResult.value());
       if(flushResult.invalid())
       {
         return flushResult;
@@ -81,5 +79,5 @@ Result<> ReadCSVFile::readFile(DataStructure& dataStructure, const std::string& 
     lineNum++;
   }
 
-  return FileUtilities::CSV::FlushParsers(parsersResult.value());
+  return file_utilities::csv::FlushParsers(parsersResult.value());
 }

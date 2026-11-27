@@ -71,7 +71,7 @@ inline std::vector<WsNeighborOffset> BuildWatershedOffsets(int effDim, bool full
         {
           continue; // face connectivity: only axial neighbors
         }
-        offsets.push_back(WsNeighborOffset{ox, oy, oz});
+        offsets.push_back(WsNeighborOffset{.dx = ox, .dy = oy, .dz = oz});
       }
     }
   }
@@ -135,17 +135,17 @@ public:
     return {requestedRecordCount};
   }
 
-  Result<> write(uint64 recordOffset, uint64 requestedRecordCount, nonstd::span<const std::byte>, const std::atomic_bool&) override
+  Result<> write(uint64 recordOffset, uint64 requestedRecordCount, nonstd::span<const std::byte> /*records*/, const std::atomic_bool& /*shouldCancel*/) override
   {
     return MakeErrorResult(-79071, fmt::format("External watershed input-page view is read-only. Write offset: {}; records: {}.", recordOffset, requestedRecordCount));
   }
 
-  Result<> fill(uint64 recordOffset, uint64 requestedRecordCount, nonstd::span<const std::byte>, const std::atomic_bool&) override
+  Result<> fill(uint64 recordOffset, uint64 requestedRecordCount, nonstd::span<const std::byte> /*record*/, const std::atomic_bool& /*shouldCancel*/) override
   {
     return MakeErrorResult(-79071, fmt::format("External watershed input-page view is read-only. Fill offset: {}; records: {}.", recordOffset, requestedRecordCount));
   }
 
-  Result<> resize(uint64 recordCount, const std::atomic_bool&) override
+  Result<> resize(uint64 recordCount, const std::atomic_bool& /*shouldCancel*/) override
   {
     return MakeErrorResult(-79071, fmt::format("External watershed input-page view is read-only. Requested record count: {}.", recordCount));
   }
@@ -157,18 +157,18 @@ private:
 } // namespace detail
 
 template <class TInput, bool SplitBucketState, bool PackedCombinedState, bool PackedResidentStatusState>
-Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& inStore, const AbstractDataStore<uint32>& markerStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims,
-                                               bool markWatershedLine, bool fullyConnected, uint32 borderSentinel, const std::atomic_bool& shouldCancel,
+Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& inStore, const AbstractDataStore<uint32>& markerStore, AbstractDataStore<uint32>& outStore, const SizeVec3Type& dims,
+                                               bool markWatershedLine, bool fullyConnected, uint32 /*borderSentinel*/, const std::atomic_bool& shouldCancel,
                                                std::unique_ptr<ITemporaryRecordStore> voxelRecordStore, std::unique_ptr<ITemporaryRecordStore> queueRecordStore,
                                                const detail::WatershedExternalMemoryPlan<TInput>& plan, const IFilter::MessageHandler& messageHandler = {})
 {
   messageHandler.sendInfoMessage("Computing Watershed From Markers");
   ThrottledMessageHandler progressThrottle(messageHandler);
-  using VoxelRecord = detail::WatershedVoxelRecord<TInput>;
-  using PhysicalVoxelRecord = std::conditional_t<SplitBucketState, detail::WatershedBucketVoxelRecord,
-                                                 std::conditional_t<PackedResidentStatusState, detail::WatershedPackedResidentStatusVoxelRecord<TInput>,
-                                                                    std::conditional_t<PackedCombinedState, detail::WatershedPackedVoxelRecord<TInput>, VoxelRecord>>>;
-  using Queue = detail::WatershedExternalQueue<TInput>;
+  using VoxelRecordType = detail::WatershedVoxelRecord<TInput>;
+  using PhysicalVoxelRecordType = std::conditional_t<SplitBucketState, detail::WatershedBucketVoxelRecord,
+                                                     std::conditional_t<PackedResidentStatusState, detail::WatershedPackedResidentStatusVoxelRecordType<TInput>,
+                                                                        std::conditional_t<PackedCombinedState, detail::WatershedPackedVoxelRecordType<TInput>, VoxelRecordType>>>;
+  using QueueType = detail::WatershedExternalQueue<TInput>;
   static_assert(!SplitBucketState || detail::k_UseWatershedBucketQueue<TInput>);
   static_assert(!PackedCombinedState || (detail::k_UseWatershedBucketQueue<TInput> && !SplitBucketState));
   static_assert(!PackedResidentStatusState || (detail::k_UseWatershedBucketQueue<TInput> && !SplitBucketState && !PackedCombinedState));
@@ -191,67 +191,67 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
   }
   detail::WatershedTiledRecordLayout tiledLayout;
   usize physicalVoxelRecordCount = valueCount;
-  if(plan.useTiledVoxelLayout)
+  if(plan.use_tiled_voxel_layout)
   {
-    auto layoutResult = detail::CreateWatershedTiledRecordLayout(dims, plan.voxelRecordsPerPage);
+    auto layoutResult = detail::CreateWatershedTiledRecordLayout(dims, plan.voxel_records_per_page);
     if(layoutResult.invalid())
     {
       return ConvertInvalidResult<void>(std::move(layoutResult));
     }
     tiledLayout = layoutResult.value();
-    physicalVoxelRecordCount = tiledLayout.recordCount;
+    physicalVoxelRecordCount = tiledLayout.record_count;
   }
-  if(plan.useSplitBucketState != SplitBucketState || plan.usePackedCombinedState != PackedCombinedState || plan.usePackedResidentStatusState != PackedResidentStatusState)
+  if(plan.use_split_bucket_state != SplitBucketState || plan.use_packed_combined_state != PackedCombinedState || plan.use_packed_resident_status_state != PackedResidentStatusState)
   {
     return MakeErrorResult(
         -79056, fmt::format("External watershed state-plan mismatch. Planned split state: {}; selected split state: {}; planned packed combined state: {}; selected packed combined state: {}; "
                             "planned packed resident-status state: {}; selected packed resident-status state: {}.",
-                            plan.useSplitBucketState, SplitBucketState, plan.usePackedCombinedState, PackedCombinedState, plan.usePackedResidentStatusState, PackedResidentStatusState));
+                            plan.use_split_bucket_state, SplitBucketState, plan.use_packed_combined_state, PackedCombinedState, plan.use_packed_resident_status_state, PackedResidentStatusState));
   }
-  if(voxelRecordStore == nullptr || voxelRecordStore->recordSize() != sizeof(PhysicalVoxelRecord) || voxelRecordStore->recordCount() != physicalVoxelRecordCount ||
-     voxelRecordStore->maxRecordsPerBatch() < std::max(plan.voxelRecordsPerPage, plan.transferRecords))
+  if(voxelRecordStore == nullptr || voxelRecordStore->recordSize() != sizeof(PhysicalVoxelRecordType) || voxelRecordStore->recordCount() != physicalVoxelRecordCount ||
+     voxelRecordStore->maxRecordsPerBatch() < std::max(plan.voxel_records_per_page, plan.transfer_records))
   {
     return MakeErrorResult(-79056, "External watershed voxel-record provider returned mismatched storage metadata.");
   }
-  const bool bucketStoreMismatch = plan.useBucketQueue && (queueRecordStore == nullptr || queueRecordStore->recordSize() != sizeof(detail::WatershedQueueBlock) ||
-                                                           queueRecordStore->recordCount() != plan.bucketBlockCount || queueRecordStore->maxRecordsPerBatch() < plan.bucketBlocksPerPage);
-  const bool heapStoreMismatch = !plan.useBucketQueue && (queueRecordStore == nullptr || queueRecordStore->recordSize() != sizeof(detail::WatershedHeapRecord<TInput>) ||
-                                                          queueRecordStore->recordCount() != valueCount || queueRecordStore->maxRecordsPerBatch() < plan.heapRecordsPerPage);
+  const bool bucketStoreMismatch = plan.use_bucket_queue && (queueRecordStore == nullptr || queueRecordStore->recordSize() != sizeof(detail::WatershedQueueBlock) ||
+                                                             queueRecordStore->recordCount() != plan.bucket_block_count || queueRecordStore->maxRecordsPerBatch() < plan.bucket_blocks_per_page);
+  const bool heapStoreMismatch = !plan.use_bucket_queue && (queueRecordStore == nullptr || queueRecordStore->recordSize() != sizeof(detail::WatershedHeapRecord<TInput>) ||
+                                                            queueRecordStore->recordCount() != valueCount || queueRecordStore->maxRecordsPerBatch() < plan.heap_records_per_page);
   if(bucketStoreMismatch || heapStoreMismatch)
   {
     return MakeErrorResult(
         -79056,
         fmt::format("External watershed queue-record provider returned mismatched storage metadata. Queue kind: {}; record bytes: {}; records: {}; provider batch: {}; expected record bytes: {}; "
                     "expected records: {}; expected batch: {}.",
-                    plan.useBucketQueue ? "bucket blocks" : "minimum heap", queueRecordStore == nullptr ? 0 : queueRecordStore->recordSize(),
+                    plan.use_bucket_queue ? "bucket blocks" : "minimum heap", queueRecordStore == nullptr ? 0 : queueRecordStore->recordSize(),
                     queueRecordStore == nullptr ? 0 : queueRecordStore->recordCount(), queueRecordStore == nullptr ? 0 : queueRecordStore->maxRecordsPerBatch(),
-                    plan.useBucketQueue ? sizeof(detail::WatershedQueueBlock) : sizeof(detail::WatershedHeapRecord<TInput>), plan.useBucketQueue ? plan.bucketBlockCount : valueCount,
-                    plan.useBucketQueue ? plan.bucketBlocksPerPage : plan.heapRecordsPerPage));
+                    plan.use_bucket_queue ? sizeof(detail::WatershedQueueBlock) : sizeof(detail::WatershedHeapRecord<TInput>), plan.use_bucket_queue ? plan.bucket_block_count : valueCount,
+                    plan.use_bucket_queue ? plan.bucket_blocks_per_page : plan.heap_records_per_page));
   }
-  if(plan.useResidentStatus && (!markWatershedLine || plan.residentStatusWordCount == 0 || plan.residentStatusBytes != plan.residentStatusWordCount * sizeof(uint64)))
+  if(plan.use_resident_status && (!markWatershedLine || plan.resident_status_word_count == 0 || plan.resident_status_bytes != plan.resident_status_word_count * sizeof(uint64)))
   {
     return MakeErrorResult(-79056, fmt::format("External watershed resident-status plan is inconsistent. Watershed line: {}; status words: {}; status bytes: {}.", markWatershedLine,
-                                               plan.residentStatusWordCount, plan.residentStatusBytes));
+                                               plan.resident_status_word_count, plan.resident_status_bytes));
   }
 
   auto describeStoreError = [](const auto& result) { return result.errors().empty() ? std::string{"provider returned an unspecified error"} : result.errors().front().message; };
   std::vector<uint64> residentStatus;
-  if(plan.useResidentStatus)
+  if(plan.use_resident_status)
   {
     try
     {
-      residentStatus.assign(plan.residentStatusWordCount, uint64{0});
+      residentStatus.assign(plan.resident_status_word_count, uint64{0});
     } catch(const std::exception& exception)
     {
-      return MakeErrorResult(-79056,
-                             fmt::format("External watershed could not allocate {} resident status words ({} bytes): {}", plan.residentStatusWordCount, plan.residentStatusBytes, exception.what()));
+      return MakeErrorResult(
+          -79056, fmt::format("External watershed could not allocate {} resident status words ({} bytes): {}", plan.resident_status_word_count, plan.resident_status_bytes, exception.what()));
     }
   }
 
-  auto encodePhysicalVoxel = [](const VoxelRecord& record) {
+  auto encodePhysicalVoxel = [](const VoxelRecordType& record) {
     if constexpr(SplitBucketState)
     {
-      return PhysicalVoxelRecord{record.output};
+      return PhysicalVoxelRecordType{record.output};
     }
     else if constexpr(PackedCombinedState)
     {
@@ -266,10 +266,10 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
       return record;
     }
   };
-  auto decodePhysicalVoxel = [](const PhysicalVoxelRecord& record) {
+  auto decodePhysicalVoxel = [](const PhysicalVoxelRecordType& record) {
     if constexpr(SplitBucketState)
     {
-      return VoxelRecord{record.output, uint8{0}, TInput{}};
+      return VoxelRecordType{record.output, uint8{0}, TInput{}};
     }
     else if constexpr(PackedCombinedState)
     {
@@ -287,24 +287,24 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
 
   messageHandler.sendInfoMessage("Initializing Watershed Regions");
   progressThrottle.reset(valueCount, "Initializing Watershed Values");
-  if(plan.useTiledVoxelLayout)
+  if(plan.use_tiled_voxel_layout)
   {
-    std::vector<TInput> inputBuffer(plan.transferRecords);
-    std::vector<uint32> markerBuffer(plan.transferRecords);
-    std::vector<PhysicalVoxelRecord> recordBuffer(plan.transferRecords);
-    if(plan.transferRecords < plan.voxelRecordsPerPage)
+    std::vector<TInput> inputBuffer(plan.transfer_records);
+    std::vector<uint32> markerBuffer(plan.transfer_records);
+    std::vector<PhysicalVoxelRecordType> recordBuffer(plan.transfer_records);
+    if(plan.transfer_records < plan.voxel_records_per_page)
     {
       return MakeErrorResult(
-          -79057, fmt::format("External watershed tiled initialization requires at least {} transfer records. Planned transfer records: {}.", plan.voxelRecordsPerPage, plan.transferRecords));
+          -79057, fmt::format("External watershed tiled initialization requires at least {} transfer records. Planned transfer records: {}.", plan.voxel_records_per_page, plan.transfer_records));
     }
-    const usize tileX = tiledLayout.tileDimensions[0];
-    const usize tileY = tiledLayout.tileDimensions[1];
-    const usize tileZ = tiledLayout.tileDimensions[2];
-    for(usize tileZIndex = 0; tileZIndex < tiledLayout.tileCounts[2]; ++tileZIndex)
+    const usize tileX = tiledLayout.tile_dimensions[0];
+    const usize tileY = tiledLayout.tile_dimensions[1];
+    const usize tileZ = tiledLayout.tile_dimensions[2];
+    for(usize tileZIndex = 0; tileZIndex < tiledLayout.tile_counts[2]; ++tileZIndex)
     {
       const usize zStart = tileZIndex * tileZ;
       const usize validZ = std::min(tileZ, dims[2] - zStart);
-      for(usize tileYIndex = 0; tileYIndex < tiledLayout.tileCounts[1]; ++tileYIndex)
+      for(usize tileYIndex = 0; tileYIndex < tiledLayout.tile_counts[1]; ++tileYIndex)
       {
         if(shouldCancel)
         {
@@ -313,11 +313,11 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
         const usize yStart = tileYIndex * tileY;
         const usize validY = std::min(tileY, dims[1] - yStart);
         const usize bandRows = validZ * validY;
-        const usize maximumGroupWidth = std::max(tileX, plan.transferRecords / bandRows);
+        const usize maximumGroupWidth = std::max(tileX, plan.transfer_records / bandRows);
         const usize maximumGroupTiles = std::max<usize>(1, maximumGroupWidth / tileX);
-        for(usize firstTileX = 0; firstTileX < tiledLayout.tileCounts[0]; firstTileX += maximumGroupTiles)
+        for(usize firstTileX = 0; firstTileX < tiledLayout.tile_counts[0]; firstTileX += maximumGroupTiles)
         {
-          const usize groupTileCount = std::min(maximumGroupTiles, tiledLayout.tileCounts[0] - firstTileX);
+          const usize groupTileCount = std::min(maximumGroupTiles, tiledLayout.tile_counts[0] - firstTileX);
           const usize xStart = firstTileX * tileX;
           const usize groupWidth = std::min(groupTileCount * tileX, dims[0] - xStart);
           for(usize localZ = 0; localZ < validZ; ++localZ)
@@ -339,7 +339,7 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
 
           for(usize groupTileX = 0; groupTileX < groupTileCount; ++groupTileX)
           {
-            std::fill_n(recordBuffer.begin(), plan.voxelRecordsPerPage, PhysicalVoxelRecord{});
+            std::fill_n(recordBuffer.begin(), plan.voxel_records_per_page, PhysicalVoxelRecordType{});
             const usize tileStartInGroup = groupTileX * tileX;
             const usize validX = std::min(tileX, groupWidth - tileStartInGroup);
             for(usize localZ = 0; localZ < validZ; ++localZ)
@@ -352,9 +352,9 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
                   const usize localIndex = (localZ * tileY + localY) * tileX + localX;
                   const uint32 marker = markerBuffer[bandOffset];
                   const bool isMarker = marker != uint32{0};
-                  const uint8 status = markWatershedLine && isMarker && !plan.useResidentStatus ? uint8{1} : uint8{0};
-                  recordBuffer[localIndex] = encodePhysicalVoxel(VoxelRecord{marker, status, inputBuffer[bandOffset]});
-                  if(markWatershedLine && isMarker && plan.useResidentStatus)
+                  const uint8 status = markWatershedLine && isMarker && !plan.use_resident_status ? uint8{1} : uint8{0};
+                  recordBuffer[localIndex] = encodePhysicalVoxel(VoxelRecordType{marker, status, inputBuffer[bandOffset]});
+                  if(markWatershedLine && isMarker && plan.use_resident_status)
                   {
                     const usize logicalIndex = ((zStart + localZ) * dims[1] + yStart + localY) * dims[0] + xStart + tileStartInGroup + localX;
                     residentStatus[logicalIndex / 64] |= uint64{1} << (logicalIndex % 64);
@@ -362,10 +362,10 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
                 }
               }
             }
-            const usize tileIndex = (tileZIndex * tiledLayout.tileCounts[1] + tileYIndex) * tiledLayout.tileCounts[0] + firstTileX + groupTileX;
-            nonstd::span<const PhysicalVoxelRecord> records(recordBuffer.data(), plan.voxelRecordsPerPage);
-            nonstd::span<const std::byte> bytes(reinterpret_cast<const std::byte*>(records.data()), records.size() * sizeof(PhysicalVoxelRecord));
-            Result<> writeResult = voxelRecordStore->write(tileIndex * plan.voxelRecordsPerPage, plan.voxelRecordsPerPage, bytes, shouldCancel);
+            const usize tileIndex = (tileZIndex * tiledLayout.tile_counts[1] + tileYIndex) * tiledLayout.tile_counts[0] + firstTileX + groupTileX;
+            nonstd::span<const PhysicalVoxelRecordType> records(recordBuffer.data(), plan.voxel_records_per_page);
+            nonstd::span<const std::byte> bytes(reinterpret_cast<const std::byte*>(records.data()), records.size() * sizeof(PhysicalVoxelRecordType));
+            Result<> writeResult = voxelRecordStore->write(tileIndex * plan.voxel_records_per_page, plan.voxel_records_per_page, bytes, shouldCancel);
             if(writeResult.invalid())
             {
               return MakeErrorResult(-79057, fmt::format("External watershed tiled voxel initialization write for tile {} failed: {}", tileIndex, describeStoreError(writeResult)));
@@ -379,16 +379,16 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
   }
   else
   {
-    std::vector<TInput> inputBuffer(plan.transferRecords);
-    std::vector<uint32> markerBuffer(plan.transferRecords);
-    std::vector<PhysicalVoxelRecord> recordBuffer(plan.transferRecords);
-    for(usize start = 0; start < valueCount; start += plan.transferRecords)
+    std::vector<TInput> inputBuffer(plan.transfer_records);
+    std::vector<uint32> markerBuffer(plan.transfer_records);
+    std::vector<PhysicalVoxelRecordType> recordBuffer(plan.transfer_records);
+    for(usize start = 0; start < valueCount; start += plan.transfer_records)
     {
       if(shouldCancel)
       {
         return {};
       }
-      const usize count = std::min(plan.transferRecords, valueCount - start);
+      const usize count = std::min(plan.transfer_records, valueCount - start);
       if(Result<> result = inStore.copyIntoBuffer(start, nonstd::span<TInput>(inputBuffer.data(), count)); result.invalid())
       {
         return result;
@@ -401,16 +401,16 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
       {
         const uint32 marker = markerBuffer[index];
         const bool isMarker = marker != uint32{0};
-        const uint8 status = markWatershedLine && isMarker && !plan.useResidentStatus ? uint8{1} : uint8{0};
-        recordBuffer[index] = encodePhysicalVoxel(VoxelRecord{marker, status, inputBuffer[index]});
-        if(markWatershedLine && isMarker && plan.useResidentStatus)
+        const uint8 status = markWatershedLine && isMarker && !plan.use_resident_status ? uint8{1} : uint8{0};
+        recordBuffer[index] = encodePhysicalVoxel(VoxelRecordType{marker, status, inputBuffer[index]});
+        if(markWatershedLine && isMarker && plan.use_resident_status)
         {
           const usize flatIndex = start + index;
           residentStatus[flatIndex / 64] |= uint64{1} << (flatIndex % 64);
         }
       }
-      nonstd::span<const PhysicalVoxelRecord> records(recordBuffer.data(), count);
-      nonstd::span<const std::byte> bytes(reinterpret_cast<const std::byte*>(records.data()), records.size() * sizeof(PhysicalVoxelRecord));
+      nonstd::span<const PhysicalVoxelRecordType> records(recordBuffer.data(), count);
+      nonstd::span<const std::byte> bytes(reinterpret_cast<const std::byte*>(records.data()), records.size() * sizeof(PhysicalVoxelRecordType));
       Result<> writeResult = voxelRecordStore->write(start, count, bytes, shouldCancel);
       if(writeResult.invalid())
       {
@@ -421,15 +421,15 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
     }
   }
 
-  BoundedRecordPageCache<PhysicalVoxelRecord> voxels(*voxelRecordStore, plan.voxelRecordsPerPage, plan.voxelCachePages);
-  detail::WatershedInputRecordStoreView<TInput> inputRecordView(inStore, plan.inputRecordsPerPage);
-  BoundedRecordPageCache<TInput> inputValues(inputRecordView, plan.inputRecordsPerPage, plan.inputCachePages);
-  auto queueResult = Queue::Create(std::move(queueRecordStore), plan, valueCount, shouldCancel);
+  BoundedRecordPageCache<PhysicalVoxelRecordType> voxels(*voxelRecordStore, plan.voxel_records_per_page, plan.voxel_cache_pages);
+  detail::WatershedInputRecordStoreView<TInput> inputRecordView(inStore, plan.input_records_per_page);
+  BoundedRecordPageCache<TInput> inputValues(inputRecordView, plan.input_records_per_page, plan.input_cache_pages);
+  auto queueResult = QueueType::Create(std::move(queueRecordStore), plan, valueCount, shouldCancel);
   if(queueResult.invalid())
   {
     return ConvertInvalidResult<void>(std::move(queueResult));
   }
-  std::unique_ptr<Queue> queue = std::move(queueResult.value());
+  std::unique_ptr<QueueType> queue = std::move(queueResult.value());
 
   const int64 dimX = static_cast<int64>(dims[0]);
   const int64 dimY = static_cast<int64>(dims[1]);
@@ -441,7 +441,7 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
     int64 dx;
     int64 dy;
     int64 dz;
-    int64 flatDelta;
+    int64 flat_delta;
   };
   std::vector<Neighbor> neighbors;
   neighbors.reserve(offsets.size());
@@ -458,18 +458,18 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
   };
   auto physicalIndex = [&](int64 flatIndex) {
     const usize logicalIndex = static_cast<usize>(flatIndex);
-    return plan.useTiledVoxelLayout ? tiledLayout.physicalIndexUnchecked(logicalIndex) : logicalIndex;
+    return plan.use_tiled_voxel_layout ? tiledLayout.physicalIndexUnchecked(logicalIndex) : logicalIndex;
   };
-  auto readVoxelAt = [&](int64 flatIndex, usize recordIndex) -> Result<VoxelRecord> {
+  auto readVoxelAt = [&](int64 flatIndex, usize recordIndex) -> Result<VoxelRecordType> {
     auto result = voxels.read(recordIndex, shouldCancel);
     if(result.invalid())
     {
-      return MakeErrorResult<VoxelRecord>(-79058, fmt::format("External watershed voxel read at flat index {} failed: {}", flatIndex, describeStoreError(result)));
+      return MakeErrorResult<VoxelRecordType>(-79058, fmt::format("External watershed voxel read at flat index {} failed: {}", flatIndex, describeStoreError(result)));
     }
     return {decodePhysicalVoxel(result.value())};
   };
   auto readVoxel = [&](int64 flatIndex) { return readVoxelAt(flatIndex, physicalIndex(flatIndex)); };
-  auto writeVoxelAt = [&](int64 flatIndex, usize recordIndex, const VoxelRecord& record) -> Result<> {
+  auto writeVoxelAt = [&](int64 flatIndex, usize recordIndex, const VoxelRecordType& record) -> Result<> {
     Result<> result;
     result = voxels.write(recordIndex, encodePhysicalVoxel(record), shouldCancel);
     if(result.invalid())
@@ -478,17 +478,17 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
     }
     return {};
   };
-  auto writeVoxel = [&](int64 flatIndex, const VoxelRecord& record) { return writeVoxelAt(flatIndex, physicalIndex(flatIndex), record); };
-  auto isStatusSet = [&](int64 flatIndex, const VoxelRecord& record) {
-    if(plan.useResidentStatus)
+  auto writeVoxel = [&](int64 flatIndex, const VoxelRecordType& record) { return writeVoxelAt(flatIndex, physicalIndex(flatIndex), record); };
+  auto isStatusSet = [&](int64 flatIndex, const VoxelRecordType& record) {
+    if(plan.use_resident_status)
     {
       const usize index = static_cast<usize>(flatIndex);
       return (residentStatus[index / 64] & (uint64{1} << (index % 64))) != 0;
     }
     return record.status != 0;
   };
-  auto setStatus = [&](int64 flatIndex, VoxelRecord& record) {
-    if(plan.useResidentStatus)
+  auto setStatus = [&](int64 flatIndex, VoxelRecordType& record) {
+    if(plan.use_resident_status)
     {
       const usize index = static_cast<usize>(flatIndex);
       residentStatus[index / 64] |= uint64{1} << (index % 64);
@@ -497,7 +497,7 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
     record.status = uint8{1};
     return true;
   };
-  auto readGrayValue = [&](int64 flatIndex, const VoxelRecord& record) -> Result<TInput> {
+  auto readGrayValue = [&](int64 flatIndex, const VoxelRecordType& record) -> Result<TInput> {
     if constexpr(SplitBucketState)
     {
       auto result = inputValues.read(static_cast<uint64>(flatIndex), shouldCancel);
@@ -509,7 +509,7 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
     }
     else
     {
-      return {record.grayValue};
+      return {record.gray_value};
     }
   };
 
@@ -534,7 +534,7 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
       {
         return ConvertInvalidResult<void>(std::move(recordResult));
       }
-      VoxelRecord record = recordResult.value();
+      VoxelRecordType record = recordResult.value();
       if(record.output == k_BackgroundLabel)
       {
         continue;
@@ -552,13 +552,13 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
         {
           continue;
         }
-        const int64 neighborFlat = flatIndex + offset.flatDelta;
+        const int64 neighborFlat = flatIndex + offset.flat_delta;
         auto neighborResult = readVoxel(neighborFlat);
         if(neighborResult.invalid())
         {
           return ConvertInvalidResult<void>(std::move(neighborResult));
         }
-        VoxelRecord neighbor = neighborResult.value();
+        VoxelRecordType neighbor = neighborResult.value();
         if(!isStatusSet(neighborFlat, neighbor) && neighbor.output == k_BackgroundLabel)
         {
           auto grayValueResult = readGrayValue(neighborFlat, neighbor);
@@ -587,8 +587,8 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
     uint64 popCount = 0;
     std::array<uint64, 26> cachedNeighborIndices = {};
     std::array<uint64, 26> cachedPhysicalNeighborIndices = {};
-    std::array<PhysicalVoxelRecord, 26> cachedPhysicalNeighborRecords = {};
-    std::array<VoxelRecord, 26> cachedNeighborRecords = {};
+    std::array<PhysicalVoxelRecordType, 26> cachedPhysicalNeighborRecords = {};
+    std::array<VoxelRecordType, 26> cachedNeighborRecords = {};
     while(!queue->empty())
     {
       if(((++popCount & 0xFFFFu) == 0) && shouldCancel)
@@ -605,7 +605,7 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
         return ConvertInvalidResult<void>(std::move(queuedVoxelResult));
       }
       const auto queueRecord = queuedVoxelResult.value();
-      const int64 flatIndex = queueRecord.flatIndex;
+      const int64 flatIndex = queueRecord.flat_index;
       int64 x = 0;
       int64 y = 0;
       int64 z = 0;
@@ -622,14 +622,14 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
         const int64 neighborZ = z + offset.dz;
         if(neighborX >= 0 && neighborX < dimX && neighborY >= 0 && neighborY < dimY && neighborZ >= 0 && neighborZ < dimZ)
         {
-          const int64 neighborFlatIndex = flatIndex + offset.flatDelta;
+          const int64 neighborFlatIndex = flatIndex + offset.flat_delta;
           cachedNeighborIndices[cachedNeighborCount] = static_cast<uint64>(neighborFlatIndex);
           cachedPhysicalNeighborIndices[cachedNeighborCount] = physicalIndex(neighborFlatIndex);
           ++cachedNeighborCount;
         }
       }
       auto neighborReadResult = voxels.readMany(nonstd::span<const uint64>(cachedPhysicalNeighborIndices.data(), cachedNeighborCount),
-                                                nonstd::span<PhysicalVoxelRecord>(cachedPhysicalNeighborRecords.data(), cachedNeighborCount), shouldCancel);
+                                                nonstd::span<PhysicalVoxelRecordType>(cachedPhysicalNeighborRecords.data(), cachedNeighborCount), shouldCancel);
       if(neighborReadResult.invalid())
       {
         return MakeErrorResult(-79058, fmt::format("External watershed neighbor read for flat index {} failed: {}", flatIndex, describeStoreError(neighborReadResult)));
@@ -657,7 +657,7 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
       {
         return ConvertInvalidResult<void>(std::move(currentResult));
       }
-      VoxelRecord current = currentResult.value();
+      VoxelRecordType current = currentResult.value();
       current.output = marker;
       if(Result<> result = writeVoxelAt(flatIndex, currentPhysicalIndex, current); result.invalid())
       {
@@ -666,7 +666,7 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
       for(usize neighborIndex = 0; neighborIndex < cachedNeighborCount; ++neighborIndex)
       {
         const int64 neighborFlat = static_cast<int64>(cachedNeighborIndices[neighborIndex]);
-        VoxelRecord neighbor = cachedNeighborRecords[neighborIndex];
+        VoxelRecordType neighbor = cachedNeighborRecords[neighborIndex];
         if(!isStatusSet(neighborFlat, neighbor))
         {
           auto grayValueResult = readGrayValue(neighborFlat, neighbor);
@@ -707,7 +707,7 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
       {
         return ConvertInvalidResult<void>(std::move(recordResult));
       }
-      VoxelRecord record = recordResult.value();
+      VoxelRecordType record = recordResult.value();
       if(record.output == k_BackgroundLabel)
       {
         continue;
@@ -726,7 +726,7 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
         {
           continue;
         }
-        auto neighborResult = readVoxel(flatIndex + offset.flatDelta);
+        auto neighborResult = readVoxel(flatIndex + offset.flat_delta);
         if(neighborResult.invalid())
         {
           return ConvertInvalidResult<void>(std::move(neighborResult));
@@ -771,7 +771,7 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
         return ConvertInvalidResult<void>(std::move(queuedVoxelResult));
       }
       const auto queueRecord = queuedVoxelResult.value();
-      const int64 flatIndex = queueRecord.flatIndex;
+      const int64 flatIndex = queueRecord.flat_index;
       auto currentResult = readVoxel(flatIndex);
       if(currentResult.invalid())
       {
@@ -791,13 +791,13 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
         {
           continue;
         }
-        const int64 neighborFlat = flatIndex + offset.flatDelta;
+        const int64 neighborFlat = flatIndex + offset.flat_delta;
         auto neighborResult = readVoxel(neighborFlat);
         if(neighborResult.invalid())
         {
           return ConvertInvalidResult<void>(std::move(neighborResult));
         }
-        VoxelRecord neighbor = neighborResult.value();
+        VoxelRecordType neighbor = neighborResult.value();
         if(neighbor.output == k_WatershedLabel)
         {
           neighbor.output = currentMarker;
@@ -830,18 +830,18 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
     return MakeErrorResult(-79060, fmt::format("External watershed voxel-cache flush failed: {}", describeStoreError(result)));
   }
 
-  if(plan.useTiledVoxelLayout)
+  if(plan.use_tiled_voxel_layout)
   {
-    std::vector<PhysicalVoxelRecord> recordBuffer(plan.transferRecords);
-    std::vector<uint32> outputBuffer(plan.transferRecords);
-    const usize tileX = tiledLayout.tileDimensions[0];
-    const usize tileY = tiledLayout.tileDimensions[1];
-    const usize tileZ = tiledLayout.tileDimensions[2];
-    for(usize tileZIndex = 0; tileZIndex < tiledLayout.tileCounts[2]; ++tileZIndex)
+    std::vector<PhysicalVoxelRecordType> recordBuffer(plan.transfer_records);
+    std::vector<uint32> outputBuffer(plan.transfer_records);
+    const usize tileX = tiledLayout.tile_dimensions[0];
+    const usize tileY = tiledLayout.tile_dimensions[1];
+    const usize tileZ = tiledLayout.tile_dimensions[2];
+    for(usize tileZIndex = 0; tileZIndex < tiledLayout.tile_counts[2]; ++tileZIndex)
     {
       const usize zStart = tileZIndex * tileZ;
       const usize validZ = std::min(tileZ, dims[2] - zStart);
-      for(usize tileYIndex = 0; tileYIndex < tiledLayout.tileCounts[1]; ++tileYIndex)
+      for(usize tileYIndex = 0; tileYIndex < tiledLayout.tile_counts[1]; ++tileYIndex)
       {
         if(shouldCancel)
         {
@@ -850,28 +850,29 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
         const usize yStart = tileYIndex * tileY;
         const usize validY = std::min(tileY, dims[1] - yStart);
         const usize bandRows = validZ * validY;
-        const usize maximumGroupWidth = std::max(tileX, plan.transferRecords / bandRows);
+        const usize maximumGroupWidth = std::max(tileX, plan.transfer_records / bandRows);
         const usize maximumGroupTiles = std::max<usize>(1, maximumGroupWidth / tileX);
-        for(usize firstTileX = 0; firstTileX < tiledLayout.tileCounts[0]; firstTileX += maximumGroupTiles)
+        for(usize firstTileX = 0; firstTileX < tiledLayout.tile_counts[0]; firstTileX += maximumGroupTiles)
         {
-          const usize groupTileCount = std::min(maximumGroupTiles, tiledLayout.tileCounts[0] - firstTileX);
+          const usize groupTileCount = std::min(maximumGroupTiles, tiledLayout.tile_counts[0] - firstTileX);
           const usize xStart = firstTileX * tileX;
           const usize groupWidth = std::min(groupTileCount * tileX, dims[0] - xStart);
           const usize bandValueCount = bandRows * groupWidth;
           std::fill_n(outputBuffer.begin(), bandValueCount, uint32{0});
           for(usize groupTileX = 0; groupTileX < groupTileCount; ++groupTileX)
           {
-            const usize tileIndex = (tileZIndex * tiledLayout.tileCounts[1] + tileYIndex) * tiledLayout.tileCounts[0] + firstTileX + groupTileX;
-            nonstd::span<PhysicalVoxelRecord> records(recordBuffer.data(), plan.voxelRecordsPerPage);
-            nonstd::span<std::byte> bytes(reinterpret_cast<std::byte*>(records.data()), records.size() * sizeof(PhysicalVoxelRecord));
-            auto readResult = voxelRecordStore->read(tileIndex * plan.voxelRecordsPerPage, plan.voxelRecordsPerPage, bytes, shouldCancel);
+            const usize tileIndex = (tileZIndex * tiledLayout.tile_counts[1] + tileYIndex) * tiledLayout.tile_counts[0] + firstTileX + groupTileX;
+            nonstd::span<PhysicalVoxelRecordType> records(recordBuffer.data(), plan.voxel_records_per_page);
+            nonstd::span<std::byte> bytes(reinterpret_cast<std::byte*>(records.data()), records.size() * sizeof(PhysicalVoxelRecordType));
+            auto readResult = voxelRecordStore->read(tileIndex * plan.voxel_records_per_page, plan.voxel_records_per_page, bytes, shouldCancel);
             if(readResult.invalid())
             {
               return MakeErrorResult(-79061, fmt::format("External watershed final tiled voxel read for tile {} failed: {}", tileIndex, describeStoreError(readResult)));
             }
-            if(readResult.value() != plan.voxelRecordsPerPage)
+            if(readResult.value() != plan.voxel_records_per_page)
             {
-              return MakeErrorResult(-79061, fmt::format("External watershed final tiled voxel read for tile {} returned {} of {} records.", tileIndex, readResult.value(), plan.voxelRecordsPerPage));
+              return MakeErrorResult(-79061,
+                                     fmt::format("External watershed final tiled voxel read for tile {} returned {} of {} records.", tileIndex, readResult.value(), plan.voxel_records_per_page));
             }
             const usize tileStartInGroup = groupTileX * tileX;
             const usize validX = std::min(tileX, groupWidth - tileStartInGroup);
@@ -908,17 +909,17 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
   }
   else
   {
-    std::vector<PhysicalVoxelRecord> recordBuffer(plan.transferRecords);
-    std::vector<uint32> outputBuffer(plan.transferRecords);
-    for(usize start = 0; start < valueCount; start += plan.transferRecords)
+    std::vector<PhysicalVoxelRecordType> recordBuffer(plan.transfer_records);
+    std::vector<uint32> outputBuffer(plan.transfer_records);
+    for(usize start = 0; start < valueCount; start += plan.transfer_records)
     {
       if(shouldCancel)
       {
         return {};
       }
-      const usize count = std::min(plan.transferRecords, valueCount - start);
-      nonstd::span<PhysicalVoxelRecord> records(recordBuffer.data(), count);
-      nonstd::span<std::byte> bytes(reinterpret_cast<std::byte*>(records.data()), records.size() * sizeof(PhysicalVoxelRecord));
+      const usize count = std::min(plan.transfer_records, valueCount - start);
+      nonstd::span<PhysicalVoxelRecordType> records(recordBuffer.data(), count);
+      nonstd::span<std::byte> bytes(reinterpret_cast<std::byte*>(records.data()), records.size() * sizeof(PhysicalVoxelRecordType));
       auto readResult = voxelRecordStore->read(start, count, bytes, shouldCancel);
       if(readResult.invalid())
       {
@@ -944,24 +945,24 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
 }
 
 template <class TInput>
-Result<> ApplyWatershedFromMarkersExternal(const AbstractDataStore<TInput>& inStore, const AbstractDataStore<uint32>& markerStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims,
+Result<> ApplyWatershedFromMarkersExternal(const AbstractDataStore<TInput>& inStore, const AbstractDataStore<uint32>& markerStore, AbstractDataStore<uint32>& outStore, const SizeVec3Type& dims,
                                            bool markWatershedLine, bool fullyConnected, uint32 borderSentinel, const std::atomic_bool& shouldCancel,
                                            std::unique_ptr<ITemporaryRecordStore> voxelRecordStore, std::unique_ptr<ITemporaryRecordStore> queueRecordStore,
                                            const detail::WatershedExternalMemoryPlan<TInput>& plan, const IFilter::MessageHandler& messageHandler = {})
 {
   if constexpr(detail::k_UseWatershedBucketQueue<TInput>)
   {
-    if(plan.useSplitBucketState)
+    if(plan.use_split_bucket_state)
     {
       return ApplyWatershedFromMarkersExternalImpl<TInput, true, false, false>(inStore, markerStore, outStore, dims, markWatershedLine, fullyConnected, borderSentinel, shouldCancel,
                                                                                std::move(voxelRecordStore), std::move(queueRecordStore), plan, messageHandler);
     }
-    if(plan.usePackedResidentStatusState)
+    if(plan.use_packed_resident_status_state)
     {
       return ApplyWatershedFromMarkersExternalImpl<TInput, false, false, true>(inStore, markerStore, outStore, dims, markWatershedLine, fullyConnected, borderSentinel, shouldCancel,
                                                                                std::move(voxelRecordStore), std::move(queueRecordStore), plan, messageHandler);
     }
-    if(plan.usePackedCombinedState)
+    if(plan.use_packed_combined_state)
     {
       return ApplyWatershedFromMarkersExternalImpl<TInput, false, true, false>(inStore, markerStore, outStore, dims, markWatershedLine, fullyConnected, borderSentinel, shouldCancel,
                                                                                std::move(voxelRecordStore), std::move(queueRecordStore), plan, messageHandler);
@@ -972,7 +973,7 @@ Result<> ApplyWatershedFromMarkersExternal(const AbstractDataStore<TInput>& inSt
 }
 
 template <class TInput>
-Result<> ApplyWatershedFromMarkersExternal(const AbstractDataStore<TInput>& inStore, const AbstractDataStore<uint32>& markerStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims,
+Result<> ApplyWatershedFromMarkersExternal(const AbstractDataStore<TInput>& inStore, const AbstractDataStore<uint32>& markerStore, AbstractDataStore<uint32>& outStore, const SizeVec3Type& dims,
                                            bool markWatershedLine, bool fullyConnected, uint32 borderSentinel, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler = {})
 {
   auto allocationResult = detail::ReserveWatershedExternalMemoryPlan<TInput>(inStore.getSize(), detail::k_WatershedPreferredUsefulNumerator, detail::k_WatershedPreferredUsefulDenominator,
@@ -984,34 +985,34 @@ Result<> ApplyWatershedFromMarkersExternal(const AbstractDataStore<TInput>& inSt
   auto allocation = std::move(allocationResult.value());
   const auto& plan = allocation.plan;
   TemporaryRecordStoreConfig voxelConfig;
-  voxelConfig.recordSize = plan.voxelRecordBytes;
-  voxelConfig.maxRecordsPerBatch = std::max(plan.voxelRecordsPerPage, plan.transferRecords);
-  voxelConfig.initialRecordCount = inStore.getSize();
-  if(plan.useTiledVoxelLayout)
+  voxelConfig.record_size = plan.voxel_record_bytes;
+  voxelConfig.max_records_per_batch = std::max(plan.voxel_records_per_page, plan.transfer_records);
+  voxelConfig.initial_record_count = inStore.getSize();
+  if(plan.use_tiled_voxel_layout)
   {
-    auto layoutResult = detail::CreateWatershedTiledRecordLayout(dims, plan.voxelRecordsPerPage);
+    auto layoutResult = detail::CreateWatershedTiledRecordLayout(dims, plan.voxel_records_per_page);
     if(layoutResult.invalid())
     {
       return ConvertInvalidResult<void>(std::move(layoutResult));
     }
-    voxelConfig.initialRecordCount = layoutResult.value().recordCount;
+    voxelConfig.initial_record_count = layoutResult.value().record_count;
   }
   TemporaryRecordStoreConfig queueConfig;
-  queueConfig.recordSize = plan.useBucketQueue ? sizeof(detail::WatershedQueueBlock) : sizeof(detail::WatershedHeapRecord<TInput>);
-  queueConfig.maxRecordsPerBatch = plan.useBucketQueue ? plan.bucketBlocksPerPage : plan.heapRecordsPerPage;
-  queueConfig.initialRecordCount = plan.useBucketQueue ? plan.bucketBlockCount : inStore.getSize();
+  queueConfig.record_size = plan.use_bucket_queue ? sizeof(detail::WatershedQueueBlock) : sizeof(detail::WatershedHeapRecord<TInput>);
+  queueConfig.max_records_per_batch = plan.use_bucket_queue ? plan.bucket_blocks_per_page : plan.heap_records_per_page;
+  queueConfig.initial_record_count = plan.use_bucket_queue ? plan.bucket_block_count : inStore.getSize();
   try
   {
-    auto voxelStoreResult = DataStoreUtilities::CreateTemporaryRecordStore(voxelConfig);
+    auto voxelStoreResult = data_store_utilities::CreateTemporaryRecordStore(voxelConfig);
     if(voxelStoreResult.invalid())
     {
       return MakeErrorResult(-79062, fmt::format("External watershed failed to create its voxel-record store: {}", detail::DescribeWatershedStoreError(voxelStoreResult)));
     }
-    auto queueStoreResult = DataStoreUtilities::CreateTemporaryRecordStore(queueConfig);
+    auto queueStoreResult = data_store_utilities::CreateTemporaryRecordStore(queueConfig);
     if(queueStoreResult.invalid())
     {
-      return MakeErrorResult(-79063, fmt::format("External watershed failed to create its {} queue store with {} records of {} bytes: {}", plan.useBucketQueue ? "bucket-block" : "min-heap",
-                                                 queueConfig.initialRecordCount, queueConfig.recordSize, detail::DescribeWatershedStoreError(queueStoreResult)));
+      return MakeErrorResult(-79063, fmt::format("External watershed failed to create its {} queue store with {} records of {} bytes: {}", plan.use_bucket_queue ? "bucket-block" : "min-heap",
+                                                 queueConfig.initial_record_count, queueConfig.record_size, detail::DescribeWatershedStoreError(queueStoreResult)));
     }
     return ApplyWatershedFromMarkersExternal<TInput>(inStore, markerStore, outStore, dims, markWatershedLine, fullyConnected, borderSentinel, shouldCancel, std::move(voxelStoreResult.value()),
                                                      std::move(queueStoreResult.value()), plan, messageHandler);
@@ -1034,20 +1035,20 @@ Result<> ApplyWatershedFromMarkersExternal(const AbstractDataStore<TInput>& inSt
 // queue-block cache stores 64-bit flat indexes in exact bucket/FIFO order. Wider/floating levels use an exact
 // (level, insertion-sequence) external min-heap. Both queue forms preserve the resident gray-level/FIFO order.
 template <class TInput>
-Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inStore, const AbstractDataStore<uint32>& markerStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims,
+Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inStore, const AbstractDataStore<uint32>& markerStore, AbstractDataStore<uint32>& outStore, const SizeVec3Type& dims,
                                            bool markWatershedLine, bool fullyConnected, uint32 borderSentinel, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   messageHandler.sendInfoMessage("Computing Watershed From Markers");
   ThrottledMessageHandler progressThrottle(messageHandler);
 
   // the label used to find background in the marker image, and to mark the watershed line in the output image
-  static constexpr uint32 bgLabel = 0u;
-  static constexpr uint32 wsLabel = 0u;
+  static constexpr uint32 k_BgLabel = 0u;
+  static constexpr uint32 k_WsLabel = 0u;
 
   // Precondition: borderSentinel must be non-zero (it is NumericTraits<TLabel>::max() by contract). The Beucher branch
   // maps out-of-bounds neighbors to borderSentinel and gates propagation on `o == wsLabel(0)`, so a non-zero sentinel
   // guarantees an OOB neighbor can never alias a real label (nor flat index 0). All type maxes are > 0, so this holds.
-  assert(borderSentinel != wsLabel);
+  assert(borderSentinel != k_WsLabel);
 
   const int64 nX = static_cast<int64>(dims[0]);
   const int64 nY = static_cast<int64>(dims[1]);
@@ -1072,7 +1073,7 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
     int64 dx;
     int64 dy;
     int64 dz;
-    int64 flatDelta;
+    int64 flat_delta;
   };
   std::vector<WsNeighbor> neighbors;
   neighbors.reserve(offsets.size());
@@ -1161,7 +1162,7 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
         {
           const int64 flat = (z * nY + y) * nX + x;
           const uint32 markerPixel = markerBuf[static_cast<usize>(flat)];
-          if(markerPixel != bgLabel)
+          if(markerPixel != k_BgLabel)
           {
             // this pixel belongs to a marker: mark it processed and copy it to the output
             status[static_cast<usize>(flat)] = uint8{1};
@@ -1173,11 +1174,11 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
               const int64 ny = y + off.dy;
               const int64 nz = z + off.dz;
               const bool inBounds = (nx >= 0 && nx < nX && ny >= 0 && ny < nY && nz >= 0 && nz < nZ);
-              const int64 nFlat = flat + off.flatDelta; // valid only when inBounds
+              const int64 nFlat = flat + off.flat_delta; // valid only when inBounds
               // status boundary: OOB -> already processed(true); marker boundary: OOB -> borderSentinel.
               const bool nbrStatus = inBounds ? (status[static_cast<usize>(nFlat)] != 0) : true;
               const uint32 nbrMarker = inBounds ? markerBuf[static_cast<usize>(nFlat)] : borderSentinel;
-              if(!nbrStatus && nbrMarker == bgLabel)
+              if(!nbrStatus && nbrMarker == k_BgLabel)
               {
                 // background pixel not yet processed: add it to the FAH at its input gray level; mark it queued
                 fah[inBuf[static_cast<usize>(nFlat)]].push(nFlat);
@@ -1188,7 +1189,7 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
           else
           {
             // non-marked pixels default to the watershed line (some are never processed)
-            outBuf[static_cast<usize>(flat)] = wsLabel;
+            outBuf[static_cast<usize>(flat)] = k_WsLabel;
           }
         }
         progressThrottle.updateCount(static_cast<usize>(z * nY + y + 1));
@@ -1234,7 +1235,7 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
 
         // If there is only one marker value among the neighbors, give that value to the pixel; else keep it as the
         // watershed line (collision). Output boundary (Meyer): OOB -> wsLabel.
-        uint32 marker = wsLabel;
+        uint32 marker = k_WsLabel;
         bool collision = false;
         for(const WsNeighbor& off : neighbors)
         {
@@ -1242,10 +1243,10 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
           const int64 ny = y + off.dy;
           const int64 nz = z + off.dz;
           const bool inBounds = (nx >= 0 && nx < nX && ny >= 0 && ny < nY && nz >= 0 && nz < nZ);
-          const uint32 o = inBounds ? outBuf[static_cast<usize>(flat + off.flatDelta)] : wsLabel;
-          if(o != wsLabel)
+          const uint32 o = inBounds ? outBuf[static_cast<usize>(flat + off.flat_delta)] : k_WsLabel;
+          if(o != k_WsLabel)
           {
-            if(marker != wsLabel && o != marker)
+            if(marker != k_WsLabel && o != marker)
             {
               collision = true;
               break;
@@ -1267,7 +1268,7 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
             {
               continue; // status boundary: OOB -> processed(true) -> never pushed
             }
-            const int64 nFlat = flat + off.flatDelta;
+            const int64 nFlat = flat + off.flat_delta;
             if(status[static_cast<usize>(nFlat)] == 0)
             {
               const TInput grayVal = inBuf[static_cast<usize>(nFlat)];
@@ -1305,7 +1306,7 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
         {
           const int64 flat = (z * nY + y) * nX + x;
           const uint32 markerPixel = markerBuf[static_cast<usize>(flat)];
-          if(markerPixel != bgLabel)
+          if(markerPixel != k_BgLabel)
           {
             outBuf[static_cast<usize>(flat)] = markerPixel;
             bool haveBgNeighbor = false;
@@ -1316,8 +1317,8 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
               const int64 nz = z + off.dz;
               const bool inBounds = (nx >= 0 && nx < nX && ny >= 0 && ny < nY && nz >= 0 && nz < nZ);
               // marker boundary: OOB -> borderSentinel (never == bgLabel).
-              const uint32 nbrMarker = inBounds ? markerBuf[static_cast<usize>(flat + off.flatDelta)] : borderSentinel;
-              if(nbrMarker == bgLabel)
+              const uint32 nbrMarker = inBounds ? markerBuf[static_cast<usize>(flat + off.flat_delta)] : borderSentinel;
+              if(nbrMarker == k_BgLabel)
               {
                 haveBgNeighbor = true;
                 break;
@@ -1331,7 +1332,7 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
           }
           else
           {
-            outBuf[static_cast<usize>(flat)] = wsLabel;
+            outBuf[static_cast<usize>(flat)] = k_WsLabel;
           }
         }
         progressThrottle.updateCount(static_cast<usize>(z * nY + y + 1));
@@ -1383,9 +1384,9 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
           const int64 ny = y + off.dy;
           const int64 nz = z + off.dz;
           const bool inBounds = (nx >= 0 && nx < nX && ny >= 0 && ny < nY && nz >= 0 && nz < nZ);
-          const int64 nFlat = flat + off.flatDelta; // valid only when inBounds
+          const int64 nFlat = flat + off.flat_delta; // valid only when inBounds
           const uint32 o = inBounds ? outBuf[static_cast<usize>(nFlat)] : borderSentinel;
-          if(o == wsLabel)
+          if(o == k_WsLabel)
           {
             // not yet processed: label it with the current marker and add it to the FAH
             outBuf[static_cast<usize>(nFlat)] = currentMarker;
@@ -1425,7 +1426,7 @@ Result<> ApplyWatershedFromMarkersResident(const AbstractDataStore<TInput>& inSt
 }
 
 template <class TInput>
-Result<> ApplyWatershedFromMarkers(const AbstractDataStore<TInput>& inStore, const AbstractDataStore<uint32>& markerStore, AbstractDataStore<uint32>& outStore, const SizeVec3& dims,
+Result<> ApplyWatershedFromMarkers(const AbstractDataStore<TInput>& inStore, const AbstractDataStore<uint32>& markerStore, AbstractDataStore<uint32>& outStore, const SizeVec3Type& dims,
                                    bool markWatershedLine, bool fullyConnected, uint32 borderSentinel, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   const bool usesOutOfCoreStore =

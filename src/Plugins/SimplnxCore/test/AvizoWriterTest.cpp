@@ -52,7 +52,7 @@ public:
   ObservedAvizoStore(const ObservedAvizoStore&) = default;
   ObservedAvizoStore(ObservedAvizoStore&&) = default;
   ObservedAvizoStore& operator=(const ObservedAvizoStore&) = delete;
-  ObservedAvizoStore& operator=(ObservedAvizoStore&&) = default;
+  ObservedAvizoStore& operator=(ObservedAvizoStore&&) noexcept = default;
 
   /**
    * @brief Copies a source window or reports the selected read failure.
@@ -62,24 +62,24 @@ public:
    */
   Result<> copyIntoBuffer(usize startIndex, nonstd::span<int32> buffer) const override
   {
-    ++readCalls;
-    if(failReadAt == readCalls)
+    ++read_calls;
+    if(fail_read_at == read_calls)
     {
       auto result = MakeErrorResult(-92561, "Injected Avizo second-block read failure");
-      result.warnings().push_back(Warning{-92574, "Source failure warning"});
+      result.warnings().push_back(Warning{.code = -92574, .message = "Source failure warning"});
       return result;
     }
     auto result = DataStore<int32>::copyIntoBuffer(startIndex, buffer);
-    if(result.valid() && warnOnRead)
+    if(result.valid() && warn_on_read)
     {
-      result.warnings().push_back(Warning{-92573, "Successful source read warning"});
+      result.warnings().push_back(Warning{.code = -92573, .message = "Successful source read warning"});
     }
     return result;
   }
 
-  usize failReadAt = 0;
-  bool warnOnRead = false;
-  mutable usize readCalls = 0;
+  usize fail_read_at = 0;
+  bool warn_on_read = false;
+  mutable usize read_calls = 0;
 };
 
 /**
@@ -98,23 +98,23 @@ struct AvizoFixture
     const auto outputBase = std::filesystem::path(unit_test::k_BinaryTestOutputDir.view());
     std::filesystem::create_directories(outputBase);
     const auto stamp = std::chrono::steady_clock::now().time_since_epoch().count();
-    outputRoot = outputBase / ("AvizoStreamFailure-" + std::to_string(stamp));
-    REQUIRE(std::filesystem::create_directory(outputRoot));
-    values.OutputFile = outputRoot / "output.am";
-    values.WriteBinaryFile = binary;
-    values.GeometryPath = DataPath({"ImageGeom"});
-    values.FeatureIdsArrayPath = DataPath({"ImageGeom", "CellData", "FeatureIds"});
-    values.Units = "microns";
-    auto* geom = ImageGeom::Create(dataStructure, "ImageGeom");
-    REQUIRE(geom != nullptr);
-    geom->setDimensions({tupleCount, 1, 1});
-    REQUIRE(geom->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-    REQUIRE(geom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-    auto* cells = AttributeMatrix::Create(dataStructure, "CellData", {1, 1, tupleCount}, geom->getId());
-    REQUIRE(cells != nullptr);
-    geom->setCellData(*cells);
+    output_root = outputBase / ("AvizoStreamFailure-" + std::to_string(stamp));
+    REQUIRE(std::filesystem::create_directory(output_root));
+    values.output_file = output_root / "output.am";
+    values.write_binary_file = binary;
+    values.geometry_path = DataPath({"ImageGeom"});
+    values.feature_ids_array_path = DataPath({"ImageGeom", "CellData", "FeatureIds"});
+    values.units = "microns";
+    auto* geomPtr = ImageGeom::Create(data_structure, "ImageGeom");
+    REQUIRE(geomPtr != nullptr);
+    geomPtr->setDimensions({tupleCount, 1, 1});
+    REQUIRE(geomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+    REQUIRE(geomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+    auto* cellsPtr = AttributeMatrix::Create(data_structure, "CellData", {1, 1, tupleCount}, geomPtr->getId());
+    REQUIRE(cellsPtr != nullptr);
+    geomPtr->setCellData(*cellsPtr);
     source = std::make_shared<ObservedAvizoStore>(tupleCount);
-    REQUIRE(Int32Array::Create(dataStructure, "FeatureIds", source, cells->getId()) != nullptr);
+    REQUIRE(Int32ArrayType::Create(data_structure, "FeatureIds", source, cellsPtr->getId()) != nullptr);
   }
 
   /**
@@ -123,7 +123,7 @@ struct AvizoFixture
   ~AvizoFixture() noexcept
   {
     std::error_code ignored;
-    std::filesystem::remove_all(outputRoot, ignored);
+    std::filesystem::remove_all(output_root, ignored);
   }
 
   AvizoFixture(const AvizoFixture&) = delete;
@@ -131,11 +131,11 @@ struct AvizoFixture
   AvizoFixture& operator=(const AvizoFixture&) = delete;
   AvizoFixture& operator=(AvizoFixture&&) = delete;
 
-  std::filesystem::path outputRoot;
-  DataStructure dataStructure;
+  std::filesystem::path output_root;
+  DataStructure data_structure;
   std::shared_ptr<ObservedAvizoStore> source;
   IFilter::MessageHandler handler{[](const IFilter::Message&) {}};
-  std::atomic_bool shouldCancel = false;
+  std::atomic_bool should_cancel = false;
   AvizoWriterInputValues values;
 };
 
@@ -178,41 +178,41 @@ public:
   FaultAvizoWriter& operator=(const FaultAvizoWriter&) = delete;
   FaultAvizoWriter& operator=(FaultAvizoWriter&&) = delete;
 
-  usize failWriteAt = 0;
-  usize failPrintAt = 0;
-  std::string_view printFormat;
-  bool throwFromPrint = false;
-  bool failFlush = false;
-  bool failClose = false;
-  bool throwFromClose = false;
-  bool rejectEveryWrite = false;
-  usize writeCalls = 0;
-  usize printCalls = 0;
-  usize matchingPrintCalls = 0;
-  usize flushCalls = 0;
-  usize closeCalls = 0;
-  usize observedElementSize = 0;
-  usize observedRequestedElements = 0;
-  usize observedWrittenElements = 0;
-  int nativeCloseStatus = EOF;
+  usize fail_write_at = 0;
+  usize fail_print_at = 0;
+  std::string_view print_format;
+  bool throw_from_print = false;
+  bool fail_flush = false;
+  bool fail_close = false;
+  bool throw_from_close = false;
+  bool reject_every_write = false;
+  usize write_calls = 0;
+  usize print_calls = 0;
+  usize matching_print_calls = 0;
+  usize flush_calls = 0;
+  usize close_calls = 0;
+  usize observed_element_size = 0;
+  usize observed_requested_elements = 0;
+  usize observed_written_elements = 0;
+  int native_close_status = EOF;
 
 private:
   static usize Write(void* context, FILE* stream, const void* data, usize writeElementSize, usize count)
   {
     auto& self = *static_cast<FaultAvizoWriter*>(context);
-    ++self.writeCalls;
-    if(self.rejectEveryWrite)
+    ++self.write_calls;
+    if(self.reject_every_write)
     {
       // The overflow fixture never transfers its deliberately rejected byte count.
       return 0;
     }
-    if(self.writeCalls == self.failWriteAt)
+    if(self.write_calls == self.fail_write_at)
     {
-      self.observedElementSize = writeElementSize;
-      self.observedRequestedElements = count;
-      self.observedWrittenElements = std::fwrite(data, writeElementSize, count == 0 ? 0 : count - 1, stream);
+      self.observed_element_size = writeElementSize;
+      self.observed_requested_elements = count;
+      self.observed_written_elements = std::fwrite(data, writeElementSize, count == 0 ? 0 : count - 1, stream);
       errno = ENOSPC;
-      return self.observedWrittenElements;
+      return self.observed_written_elements;
     }
     return std::fwrite(data, writeElementSize, count, stream);
   }
@@ -220,13 +220,13 @@ private:
   static int Print(void* context, FILE* stream, const char* format, std::va_list args)
   {
     auto& self = *static_cast<FaultAvizoWriter*>(context);
-    ++self.printCalls;
-    if(self.printFormat.empty() || self.printFormat == format)
+    ++self.print_calls;
+    if(self.print_format.empty() || self.print_format == format)
     {
-      ++self.matchingPrintCalls;
-      if(self.matchingPrintCalls == self.failPrintAt)
+      ++self.matching_print_calls;
+      if(self.matching_print_calls == self.fail_print_at)
       {
-        if(self.throwFromPrint)
+        if(self.throw_from_print)
         {
           throw std::runtime_error("Injected variadic print failure");
         }
@@ -241,8 +241,8 @@ private:
   static int Flush(void* context, FILE* stream)
   {
     auto& self = *static_cast<FaultAvizoWriter*>(context);
-    ++self.flushCalls;
-    if(self.failFlush)
+    ++self.flush_calls;
+    if(self.fail_flush)
     {
       errno = EIO;
       return EOF;
@@ -253,24 +253,24 @@ private:
   static int Close(void* context, FILE* stream)
   {
     auto& self = *static_cast<FaultAvizoWriter*>(context);
-    ++self.closeCalls;
-    if(self.closeCalls != 1)
+    ++self.close_calls;
+    if(self.close_calls != 1)
     {
       // A broken owner must produce a count failure without a second access to a closed stream.
       errno = EIO;
       return EOF;
     }
-    self.nativeCloseStatus = std::fclose(stream);
-    if(self.throwFromClose)
+    self.native_close_status = std::fclose(stream);
+    if(self.throw_from_close)
     {
       throw std::runtime_error("Injected consumed-stream close failure");
     }
-    if(self.failClose)
+    if(self.fail_close)
     {
       errno = EIO;
       return EOF;
     }
-    return self.nativeCloseStatus;
+    return self.native_close_status;
   }
 
   typename WriterType::OutputOperations m_Operations;
@@ -308,13 +308,13 @@ public:
   StageAvizoWriter& operator=(StageAvizoWriter&&) = delete;
 
   StageFault fault = StageFault::None;
-  mutable usize headerCalls = 0;
-  mutable usize dataCalls = 0;
+  mutable usize header_calls = 0;
+  mutable usize data_calls = 0;
 
 protected:
-  Result<> generateHeader(FILE*) const override
+  Result<> generateHeader(FILE* /*outputFile*/) const override
   {
-    ++headerCalls;
+    ++header_calls;
     if(fault == StageFault::HeaderStandard)
     {
       throw std::runtime_error("Injected header exception");
@@ -328,13 +328,13 @@ protected:
       throw std::bad_alloc{};
     }
     auto result = fault == StageFault::HeaderResult ? MakeErrorResult(-92562, "Injected header Result failure") : Result<>{};
-    result.warnings().push_back(Warning{-92571, "Header stage warning"});
+    result.warnings().push_back(Warning{.code = -92571, .message = "Header stage warning"});
     return result;
   }
 
-  Result<> writeData(FILE*) const override
+  Result<> writeData(FILE* /*outputFile*/) const override
   {
-    ++dataCalls;
+    ++data_calls;
     if(fault == StageFault::DataStandard)
     {
       throw std::runtime_error("Injected data exception");
@@ -348,7 +348,7 @@ protected:
       throw std::bad_alloc{};
     }
     auto result = fault == StageFault::DataResult ? MakeErrorResult(-92563, "Injected data Result failure") : Result<>{};
-    result.warnings().push_back(Warning{-92572, "Data stage warning"});
+    result.warnings().push_back(Warning{.code = -92572, .message = "Data stage warning"});
     return result;
   }
 };
@@ -364,11 +364,11 @@ public:
   OverflowAvizoWriter& operator=(const OverflowAvizoWriter&) = delete;
   OverflowAvizoWriter& operator=(OverflowAvizoWriter&&) = delete;
 
-  usize elementSize = 2;
-  usize elementCount = std::numeric_limits<usize>::max();
+  usize element_size = 2;
+  usize element_count = std::numeric_limits<usize>::max();
 
 protected:
-  Result<> generateHeader(FILE*) const override
+  Result<> generateHeader(FILE* /*outputFile*/) const override
   {
     return {};
   }
@@ -376,51 +376,51 @@ protected:
   Result<> writeData(FILE* outputFile) const override
   {
     const char payload = 0;
-    return writeOutputChecked(outputFile, &payload, elementSize, elementCount);
+    return writeOutputChecked(outputFile, &payload, element_size, element_count);
   }
 };
 
 template <class WriterType>
 void CheckClosedOnce(const WriterType& writer, const AvizoFixture& fixture)
 {
-  CHECK(writer.closeCalls == 1);
-  CHECK(writer.nativeCloseStatus == 0);
+  CHECK(writer.close_calls == 1);
+  CHECK(writer.native_close_status == 0);
   std::error_code error;
-  CHECK(std::filesystem::remove(fixture.values.OutputFile, error));
+  CHECK(std::filesystem::remove(fixture.values.output_file, error));
   CHECK_FALSE(error);
-  UnitTest::CheckArraysInheritTupleDims(fixture.dataStructure);
+  unit_test::CheckArraysInheritTupleDims(fixture.data_structure);
 }
 
 void CheckOutputFailure(const Result<>& result, const AvizoFixture& fixture)
 {
   REQUIRE(result.invalid());
   REQUIRE_FALSE(result.errors().empty());
-  CHECK(result.errors().front().message.find(fixture.values.OutputFile.string()) != std::string::npos);
+  CHECK(result.errors().front().message.find(fixture.values.output_file.string()) != std::string::npos);
 }
 
 template <class AlgorithmType>
 void CheckBinaryWindowFailure(usize failedWindow, bool closeAlsoFails)
 {
   AvizoFixture fixture(131073, true);
-  FaultAvizoWriter<AlgorithmType> writer(fixture.dataStructure, fixture.handler, fixture.shouldCancel, &fixture.values);
-  writer.failWriteAt = failedWindow;
-  writer.failClose = closeAlsoFails;
+  FaultAvizoWriter<AlgorithmType> writer(fixture.data_structure, fixture.handler, fixture.should_cancel, &fixture.values);
+  writer.fail_write_at = failedWindow;
+  writer.fail_close = closeAlsoFails;
   const auto result = writer.execute();
   CheckOutputFailure(result, fixture);
   REQUIRE(result.invalid());
   REQUIRE(result.errors().size() == (closeAlsoFails ? usize{2} : usize{1}));
   const auto& message = result.errors().front().message;
-  CHECK(message.find(std::to_string(writer.observedRequestedElements)) != std::string::npos);
-  CHECK(message.find(std::to_string(writer.observedWrittenElements)) != std::string::npos);
-  CHECK(message.find(std::to_string(writer.observedElementSize)) != std::string::npos);
-  CHECK(message.find(std::to_string(writer.observedRequestedElements * writer.observedElementSize)) != std::string::npos);
-  CHECK(message.find(std::to_string(writer.observedWrittenElements * writer.observedElementSize)) != std::string::npos);
-  CHECK(fixture.source->readCalls == failedWindow);
-  CHECK(writer.writeCalls == failedWindow);
-  CHECK(writer.flushCalls == 0);
+  CHECK(message.find(std::to_string(writer.observed_requested_elements)) != std::string::npos);
+  CHECK(message.find(std::to_string(writer.observed_written_elements)) != std::string::npos);
+  CHECK(message.find(std::to_string(writer.observed_element_size)) != std::string::npos);
+  CHECK(message.find(std::to_string(writer.observed_requested_elements * writer.observed_element_size)) != std::string::npos);
+  CHECK(message.find(std::to_string(writer.observed_written_elements * writer.observed_element_size)) != std::string::npos);
+  CHECK(fixture.source->read_calls == failedWindow);
+  CHECK(writer.write_calls == failedWindow);
+  CHECK(writer.flush_calls == 0);
   if(closeAlsoFails)
   {
-    CHECK(result.errors().back().message.find(fixture.values.OutputFile.string()) != std::string::npos);
+    CHECK(result.errors().back().message.find(fixture.values.output_file.string()) != std::string::npos);
     CHECK(result.errors().back().message.find("close") != std::string::npos);
   }
   CheckClosedOnce(writer, fixture);
@@ -430,14 +430,14 @@ template <class AlgorithmType>
 void CheckTextFailure(std::string_view format, bool binary, usize expectedReads)
 {
   AvizoFixture fixture(65537, binary);
-  FaultAvizoWriter<AlgorithmType> writer(fixture.dataStructure, fixture.handler, fixture.shouldCancel, &fixture.values);
-  writer.printFormat = format;
-  writer.failPrintAt = 1;
+  FaultAvizoWriter<AlgorithmType> writer(fixture.data_structure, fixture.handler, fixture.should_cancel, &fixture.values);
+  writer.print_format = format;
+  writer.fail_print_at = 1;
   const auto result = writer.execute();
   CheckOutputFailure(result, fixture);
-  CHECK(writer.matchingPrintCalls == 1);
-  CHECK(fixture.source->readCalls == expectedReads);
-  CHECK(writer.flushCalls == 0);
+  CHECK(writer.matching_print_calls == 1);
+  CHECK(fixture.source->read_calls == expectedReads);
+  CHECK(writer.flush_calls == 0);
   CheckClosedOnce(writer, fixture);
 }
 
@@ -445,10 +445,10 @@ template <class AlgorithmType>
 void CheckSourceWarnings(bool readFails, bool closeFails)
 {
   AvizoFixture fixture(65537, true);
-  fixture.source->failReadAt = readFails ? 2 : 0;
-  fixture.source->warnOnRead = true;
-  FaultAvizoWriter<AlgorithmType> writer(fixture.dataStructure, fixture.handler, fixture.shouldCancel, &fixture.values);
-  writer.failClose = closeFails;
+  fixture.source->fail_read_at = readFails ? 2 : 0;
+  fixture.source->warn_on_read = true;
+  FaultAvizoWriter<AlgorithmType> writer(fixture.data_structure, fixture.handler, fixture.should_cancel, &fixture.values);
+  writer.fail_close = closeFails;
   const auto result = writer.execute();
   CHECK(result.valid() == (!readFails && !closeFails));
   if(readFails || closeFails)
@@ -467,16 +467,16 @@ void CheckSourceWarnings(bool readFails, bool closeFails)
   REQUIRE(result.warnings().size() == 2);
   CHECK(result.warnings()[0].code == -92573);
   CHECK(result.warnings()[1].code == (readFails ? -92574 : -92573));
-  CHECK(fixture.source->readCalls == 2);
-  CHECK(writer.writeCalls == (readFails ? usize{1} : (std::is_same_v<AlgorithmType, WriteAvizoUniformCoordinate> ? usize{2} : usize{5})));
-  CHECK(writer.flushCalls == (readFails ? usize{0} : usize{1}));
+  CHECK(fixture.source->read_calls == 2);
+  CHECK(writer.write_calls == (readFails ? usize{1} : (std::is_same_v<AlgorithmType, WriteAvizoUniformCoordinate> ? usize{2} : usize{5})));
+  CHECK(writer.flush_calls == (readFails ? usize{0} : usize{1}));
   CheckClosedOnce(writer, fixture);
 }
 } // namespace
 
 TEST_CASE("SimplnxCore::AvizoWriter: Short binary feature writes stop later reads", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const usize failedWindow = GENERATE(usize{1}, usize{2}, usize{3});
   const bool closeAlsoFails = GENERATE(false, true);
   SECTION("Uniform")
@@ -491,7 +491,7 @@ TEST_CASE("SimplnxCore::AvizoWriter: Short binary feature writes stop later read
 
 TEST_CASE("SimplnxCore::AvizoWriter: Text failures stop production output", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto item = GENERATE(std::pair<std::string_view, usize>{"# AmiraMesh 3D ASCII 2.0\n", 0}, std::pair<std::string_view, usize>{"%d", 1}, std::pair<std::string_view, usize>{" ", 1});
   SECTION("Uniform")
   {
@@ -505,39 +505,39 @@ TEST_CASE("SimplnxCore::AvizoWriter: Text failures stop production output", "[Si
 
 TEST_CASE("SimplnxCore::AvizoWriter: Final feature newline is checked", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool rectilinear = GENERATE(false, true);
   const bool writeBinary = GENERATE(false, true);
   AvizoFixture fixture(1, writeBinary);
   // Both production headers contain one standalone newline before the data newline.
   if(rectilinear)
   {
-    FaultAvizoWriter<WriteAvizoRectilinearCoordinate> writer(fixture.dataStructure, fixture.handler, fixture.shouldCancel, &fixture.values);
-    writer.printFormat = "\n";
-    writer.failPrintAt = 2;
+    FaultAvizoWriter<WriteAvizoRectilinearCoordinate> writer(fixture.data_structure, fixture.handler, fixture.should_cancel, &fixture.values);
+    writer.print_format = "\n";
+    writer.fail_print_at = 2;
     const auto result = writer.execute();
     CheckOutputFailure(result, fixture);
-    CHECK(writer.writeCalls == (writeBinary ? usize{1} : usize{0}));
-    CHECK(writer.matchingPrintCalls == 2);
+    CHECK(writer.write_calls == (writeBinary ? usize{1} : usize{0}));
+    CHECK(writer.matching_print_calls == 2);
     CheckClosedOnce(writer, fixture);
   }
   else
   {
-    FaultAvizoWriter<WriteAvizoUniformCoordinate> writer(fixture.dataStructure, fixture.handler, fixture.shouldCancel, &fixture.values);
-    writer.printFormat = "\n";
-    writer.failPrintAt = 2;
+    FaultAvizoWriter<WriteAvizoUniformCoordinate> writer(fixture.data_structure, fixture.handler, fixture.should_cancel, &fixture.values);
+    writer.print_format = "\n";
+    writer.fail_print_at = 2;
     const auto result = writer.execute();
     CheckOutputFailure(result, fixture);
-    CHECK(writer.writeCalls == (writeBinary ? usize{1} : usize{0}));
-    CHECK(writer.matchingPrintCalls == 2);
+    CHECK(writer.write_calls == (writeBinary ? usize{1} : usize{0}));
+    CHECK(writer.matching_print_calls == 2);
     CheckClosedOnce(writer, fixture);
   }
-  CHECK(fixture.source->readCalls == 1);
+  CHECK(fixture.source->read_calls == 1);
 }
 
 TEST_CASE("SimplnxCore::AvizoWriter: Rectilinear coordinate failures stop later axes", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   SECTION("Coordinate delimiter")
   {
     CheckTextFailure<WriteAvizoRectilinearCoordinate>("@2 # x coordinates, then y, then z\n", true, 2);
@@ -546,13 +546,13 @@ TEST_CASE("SimplnxCore::AvizoWriter: Rectilinear coordinate failures stop later 
   {
     const usize failedWrite = GENERATE(usize{2}, usize{3}, usize{4});
     AvizoFixture fixture(8, true);
-    FaultAvizoWriter<WriteAvizoRectilinearCoordinate> writer(fixture.dataStructure, fixture.handler, fixture.shouldCancel, &fixture.values);
-    writer.failWriteAt = failedWrite;
+    FaultAvizoWriter<WriteAvizoRectilinearCoordinate> writer(fixture.data_structure, fixture.handler, fixture.should_cancel, &fixture.values);
+    writer.fail_write_at = failedWrite;
     const auto result = writer.execute();
     CheckOutputFailure(result, fixture);
-    CHECK(writer.writeCalls == failedWrite);
-    CHECK(fixture.source->readCalls == 1);
-    CHECK(writer.flushCalls == 0);
+    CHECK(writer.write_calls == failedWrite);
+    CHECK(fixture.source->read_calls == 1);
+    CHECK(writer.flush_calls == 0);
     CheckClosedOnce(writer, fixture);
   }
   SECTION("Axis newline")
@@ -560,13 +560,13 @@ TEST_CASE("SimplnxCore::AvizoWriter: Rectilinear coordinate failures stop later 
     const usize failedAxis = GENERATE(usize{1}, usize{2}, usize{3});
     const bool writeBinary = GENERATE(false, true);
     AvizoFixture fixture(8, writeBinary);
-    FaultAvizoWriter<WriteAvizoRectilinearCoordinate> writer(fixture.dataStructure, fixture.handler, fixture.shouldCancel, &fixture.values);
-    writer.printFormat = "\n";
-    writer.failPrintAt = 2 + failedAxis;
+    FaultAvizoWriter<WriteAvizoRectilinearCoordinate> writer(fixture.data_structure, fixture.handler, fixture.should_cancel, &fixture.values);
+    writer.print_format = "\n";
+    writer.fail_print_at = 2 + failedAxis;
     const auto result = writer.execute();
     CheckOutputFailure(result, fixture);
-    CHECK(writer.writeCalls == (writeBinary ? 1 + failedAxis : usize{0}));
-    CHECK(writer.matchingPrintCalls == 2 + failedAxis);
+    CHECK(writer.write_calls == (writeBinary ? 1 + failedAxis : usize{0}));
+    CHECK(writer.matching_print_calls == 2 + failedAxis);
     CheckClosedOnce(writer, fixture);
   }
   SECTION("ASCII coordinate")
@@ -577,17 +577,17 @@ TEST_CASE("SimplnxCore::AvizoWriter: Rectilinear coordinate failures stop later 
 
 TEST_CASE("SimplnxCore::AvizoWriter: Flush and consuming close failures are checked", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool flushFails = GENERATE(false, true);
   const bool closeFails = GENERATE(false, true);
   AvizoFixture fixture(1, true);
-  FaultAvizoWriter<StageAvizoWriter> writer(fixture.dataStructure, fixture.handler, fixture.shouldCancel, &fixture.values);
-  writer.failFlush = flushFails;
-  writer.failClose = closeFails;
+  FaultAvizoWriter<StageAvizoWriter> writer(fixture.data_structure, fixture.handler, fixture.should_cancel, &fixture.values);
+  writer.fail_flush = flushFails;
+  writer.fail_close = closeFails;
   const auto result = writer.execute();
-  CHECK(writer.headerCalls == 1);
-  CHECK(writer.dataCalls == 1);
-  CHECK(writer.flushCalls == 1);
+  CHECK(writer.header_calls == 1);
+  CHECK(writer.data_calls == 1);
+  CHECK(writer.flush_calls == 1);
   CHECK(result.valid() == (!flushFails && !closeFails));
   if(flushFails || closeFails)
   {
@@ -604,20 +604,20 @@ TEST_CASE("SimplnxCore::AvizoWriter: Flush and consuming close failures are chec
 
 TEST_CASE("SimplnxCore::AvizoWriter: Stage Result errors precede consuming close errors", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool headerFails = GENERATE(false, true);
   AvizoFixture fixture(1, true);
-  FaultAvizoWriter<StageAvizoWriter> writer(fixture.dataStructure, fixture.handler, fixture.shouldCancel, &fixture.values);
+  FaultAvizoWriter<StageAvizoWriter> writer(fixture.data_structure, fixture.handler, fixture.should_cancel, &fixture.values);
   writer.fault = headerFails ? StageFault::HeaderResult : StageFault::DataResult;
-  writer.failClose = true;
+  writer.fail_close = true;
   const auto result = writer.execute();
   REQUIRE(result.invalid());
   REQUIRE(result.errors().size() == 2);
   CHECK(result.errors()[0].code == (headerFails ? -92562 : -92563));
-  CHECK(result.errors()[1].message.find(fixture.values.OutputFile.string()) != std::string::npos);
+  CHECK(result.errors()[1].message.find(fixture.values.output_file.string()) != std::string::npos);
   CHECK(result.errors()[1].message.find("close") != std::string::npos);
-  CHECK(writer.dataCalls == (headerFails ? usize{0} : usize{1}));
-  CHECK(writer.flushCalls == 0);
+  CHECK(writer.data_calls == (headerFails ? usize{0} : usize{1}));
+  CHECK(writer.flush_calls == 0);
   REQUIRE(result.warnings().size() == (headerFails ? usize{1} : usize{2}));
   CHECK(result.warnings().front().code == -92571);
   CheckClosedOnce(writer, fixture);
@@ -625,57 +625,57 @@ TEST_CASE("SimplnxCore::AvizoWriter: Stage Result errors precede consuming close
 
 TEST_CASE("SimplnxCore::AvizoWriter: Stage exceptions close once", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto fault = GENERATE(StageFault::HeaderStandard, StageFault::DataStandard, StageFault::HeaderUnknown, StageFault::DataUnknown);
   const bool closeFails = GENERATE(false, true);
   AvizoFixture fixture(1, true);
-  FaultAvizoWriter<StageAvizoWriter> writer(fixture.dataStructure, fixture.handler, fixture.shouldCancel, &fixture.values);
+  FaultAvizoWriter<StageAvizoWriter> writer(fixture.data_structure, fixture.handler, fixture.should_cancel, &fixture.values);
   writer.fault = fault;
-  writer.failClose = closeFails;
+  writer.fail_close = closeFails;
   const auto result = writer.execute();
   CheckOutputFailure(result, fixture);
   REQUIRE(result.invalid());
   CHECK(result.errors().size() == (closeFails ? usize{2} : usize{1}));
   const bool dataStage = fault == StageFault::DataStandard || fault == StageFault::DataUnknown;
   CHECK(result.errors().front().message.find(dataStage ? "data" : "header") != std::string::npos);
-  CHECK(writer.dataCalls == (dataStage ? usize{1} : usize{0}));
-  CHECK(writer.flushCalls == 0);
+  CHECK(writer.data_calls == (dataStage ? usize{1} : usize{0}));
+  CHECK(writer.flush_calls == 0);
   CHECK(result.warnings().size() == (dataStage ? usize{1} : usize{0}));
   CheckClosedOnce(writer, fixture);
 }
 
 TEST_CASE("SimplnxCore::AvizoWriter: Allocation exceptions preserve their type after cleanup", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto fault = GENERATE(StageFault::HeaderAllocation, StageFault::DataAllocation);
   const bool closeFails = GENERATE(false, true);
   AvizoFixture fixture(1, true);
-  FaultAvizoWriter<StageAvizoWriter> writer(fixture.dataStructure, fixture.handler, fixture.shouldCancel, &fixture.values);
+  FaultAvizoWriter<StageAvizoWriter> writer(fixture.data_structure, fixture.handler, fixture.should_cancel, &fixture.values);
   writer.fault = fault;
-  writer.failClose = closeFails;
+  writer.fail_close = closeFails;
   CHECK_THROWS_AS(writer.execute(), std::bad_alloc);
-  CHECK(writer.flushCalls == 0);
+  CHECK(writer.flush_calls == 0);
   CheckClosedOnce(writer, fixture);
 }
 
 TEST_CASE("SimplnxCore::AvizoWriter: Callback print exceptions and close exceptions retain ownership", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool printThrows = GENERATE(false, true);
   AvizoFixture fixture(1, true);
-  FaultAvizoWriter<WriteAvizoUniformCoordinate> writer(fixture.dataStructure, fixture.handler, fixture.shouldCancel, &fixture.values);
-  writer.failPrintAt = printThrows ? 1 : 0;
-  writer.throwFromPrint = printThrows;
-  writer.throwFromClose = !printThrows;
+  FaultAvizoWriter<WriteAvizoUniformCoordinate> writer(fixture.data_structure, fixture.handler, fixture.should_cancel, &fixture.values);
+  writer.fail_print_at = printThrows ? 1 : 0;
+  writer.throw_from_print = printThrows;
+  writer.throw_from_close = !printThrows;
   const auto result = writer.execute();
   CheckOutputFailure(result, fixture);
-  CHECK(fixture.source->readCalls == (printThrows ? usize{0} : usize{1}));
+  CHECK(fixture.source->read_calls == (printThrows ? usize{0} : usize{1}));
   CheckClosedOnce(writer, fixture);
 }
 
 TEST_CASE("SimplnxCore::AvizoWriter: Source warnings survive a later read error and close error", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool readFails = GENERATE(false, true);
   const bool closeFails = GENERATE(false, true);
   SECTION("Uniform")
@@ -690,39 +690,39 @@ TEST_CASE("SimplnxCore::AvizoWriter: Source warnings survive a later read error 
 
 TEST_CASE("SimplnxCore::AvizoWriter: Faults remain local to one writer", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   AvizoFixture failed(1, true);
   AvizoFixture healthy(1, true);
-  FaultAvizoWriter<WriteAvizoUniformCoordinate> first(failed.dataStructure, failed.handler, failed.shouldCancel, &failed.values);
-  FaultAvizoWriter<WriteAvizoUniformCoordinate> second(healthy.dataStructure, healthy.handler, healthy.shouldCancel, &healthy.values);
-  first.failWriteAt = 1;
+  FaultAvizoWriter<WriteAvizoUniformCoordinate> first(failed.data_structure, failed.handler, failed.should_cancel, &failed.values);
+  FaultAvizoWriter<WriteAvizoUniformCoordinate> second(healthy.data_structure, healthy.handler, healthy.should_cancel, &healthy.values);
+  first.fail_write_at = 1;
   const auto firstResult = first.execute();
   const auto secondResult = second.execute();
   REQUIRE(firstResult.invalid());
   REQUIRE(secondResult.valid());
-  CHECK(second.writeCalls == 1);
-  CHECK(second.flushCalls == 1);
+  CHECK(second.write_calls == 1);
+  CHECK(second.flush_calls == 1);
   CheckClosedOnce(first, failed);
   CheckClosedOnce(second, healthy);
 }
 
 TEST_CASE("SimplnxCore::AvizoWriter: Byte-count overflow stops before the transfer operation", "[SimplnxCore][AvizoWriter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool reverseOperands = GENERATE(false, true);
   AvizoFixture fixture(1, true);
-  FaultAvizoWriter<OverflowAvizoWriter> writer(fixture.dataStructure, fixture.handler, fixture.shouldCancel, &fixture.values);
+  FaultAvizoWriter<OverflowAvizoWriter> writer(fixture.data_structure, fixture.handler, fixture.should_cancel, &fixture.values);
   if(reverseOperands)
   {
-    std::swap(writer.elementSize, writer.elementCount);
+    std::swap(writer.element_size, writer.element_count);
   }
   // The test operation reports any call without accessing the one-byte source.
-  writer.rejectEveryWrite = true;
+  writer.reject_every_write = true;
   const auto result = writer.execute();
   CheckOutputFailure(result, fixture);
   REQUIRE(result.invalid());
   CHECK(result.errors().front().message.find(std::to_string(std::numeric_limits<usize>::max())) != std::string::npos);
-  CHECK(writer.writeCalls == 0);
-  CHECK(writer.flushCalls == 0);
+  CHECK(writer.write_calls == 0);
+  CHECK(writer.flush_calls == 0);
   CheckClosedOnce(writer, fixture);
 }

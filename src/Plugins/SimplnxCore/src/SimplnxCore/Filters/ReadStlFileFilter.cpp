@@ -63,7 +63,7 @@ Parameters ReadStlFileFilter::parameters() const
                                                           FileSystemPathParameter::PathType::InputFile));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ScaleOutput, "Scale Output Geometry", "Scale the output Triangle Geometry by the Scaling Factor", false));
-  params.insert(std::make_unique<Float32Parameter>(k_ScaleFactor, "Scale Factor", "The factor by which to scale the geometry", 1.0F));
+  params.insert(std::make_unique<Float32ParameterType>(k_ScaleFactor, "Scale Factor", "The factor by which to scale the geometry", 1.0F));
   params.linkParameters(k_ScaleOutput, k_ScaleFactor, true);
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_CreateFaceLabels_Key, "Generate Triangle Face Labels", "When true, the 'Face Labels' array will be created.", true));
 
@@ -93,14 +93,14 @@ IFilter::VersionType ReadStlFileFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadStlFileFilter::clone() const
+IFilter::UniquePointerType ReadStlFileFilter::clone() const
 {
   return std::make_unique<ReadStlFileFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                          const ExecutionContext& executionContext) const
+IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                          const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pStlFilePathValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilePath_Key);
   auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
@@ -114,36 +114,36 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& d
   nx::core::Result<OutputActions> resultOutputActions;
 
   // Validate that the STL File is binary and readable.
-  StlConstants::StlFileType stlFileType = StlUtilities::DetermineStlFileType(pStlFilePathValue);
-  if(stlFileType == StlConstants::StlFileType::ASCI)
+  stl_constants::StlFileType stlFileType = stl_utilities::DetermineStlFileType(pStlFilePathValue);
+  if(stlFileType == stl_constants::StlFileType::ASCI)
   {
     return MakePreflightErrorResult(
-        StlConstants::k_UnsupportedFileType,
+        stl_constants::k_UnsupportedFileType,
         fmt::format("The Input STL File '{}' is ASCII which is not currently supported. Please convert it to a binary STL file using another program.", pStlFilePathValue.string()));
   }
-  if(stlFileType == StlConstants::StlFileType::FileOpenError)
+  if(stlFileType == stl_constants::StlFileType::FileOpenError)
   {
-    return MakePreflightErrorResult(StlConstants::k_ErrorOpeningFile, fmt::format("Error opening the STL file '{}'.", pStlFilePathValue.string()));
+    return MakePreflightErrorResult(stl_constants::k_ErrorOpeningFile, fmt::format("Error opening the STL file '{}'.", pStlFilePathValue.string()));
   }
-  if(stlFileType == StlConstants::StlFileType::HeaderParseError)
+  if(stlFileType == stl_constants::StlFileType::HeaderParseError)
   {
-    return MakePreflightErrorResult(StlConstants::k_ErrorOpeningFile, fmt::format("Error reading the header from STL file '{}'.", pStlFilePathValue.string()));
+    return MakePreflightErrorResult(stl_constants::k_ErrorOpeningFile, fmt::format("Error reading the header from STL file '{}'.", pStlFilePathValue.string()));
   }
 
   // Now get the number of Triangles according to the STL Header
-  int32_t numTriangles = StlUtilities::NumFacesFromHeader(pStlFilePathValue);
+  int32_t numTriangles = stl_utilities::NumFacesFromHeader(pStlFilePathValue);
   if(numTriangles < 0)
   {
     return MakePreflightErrorResult(numTriangles, fmt::format("Error extracting the number of triangles from the STL file '{}'. Returned error code {}.", pStlFilePathValue.string(), numTriangles));
   }
 
   // Reject impossible triangle counts before creating actions that allocate the output arrays.
-  const StlConstants::StlFileCheck stlFileCheck = StlUtilities::SanityCheckFile(pStlFilePathValue);
+  const stl_constants::StlFileCheck stlFileCheck = stl_utilities::SanityCheckFile(pStlFilePathValue);
   if(stlFileCheck.error != 0)
   {
-    return MakePreflightErrorResult(stlFileCheck.error, stlFileCheck.errorMessage);
+    return MakePreflightErrorResult(stlFileCheck.error, stlFileCheck.error_message);
   }
-  numTriangles = stlFileCheck.numTriangles;
+  numTriangles = stlFileCheck.num_triangles;
 
   // This can happen in a LOT of STL files. Just means the writer didn't go back and update the header.
   if(numTriangles == 0)
@@ -159,8 +159,8 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& d
 
   // Create the Triangle Geometry action and store it
   {
-    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryAction>(pTriangleGeometryPath, numTriangles, 1, vertexMatrixName, faceMatrixName, TriangleGeom::k_SharedVertexListName,
-                                                                                       TriangleGeom::k_SharedFacesListName);
+    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryActionType>(pTriangleGeometryPath, numTriangles, 1, vertexMatrixName, faceMatrixName,
+                                                                                           TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
     auto faceNormalsPath = createTriangleGeometryAction->getFaceDataPath().createChildPath(faceNormalsName);
     resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
     // Create the face Normals DataArray action and store it
@@ -180,22 +180,22 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& d
   // the appropriate methods. (None to store for this filter... yet)
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadStlFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ReadStlFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                        const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadStlFileInputValues inputValues;
 
-  inputValues.stlFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilePath_Key);
-  inputValues.geometryPath = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
+  inputValues.stl_file_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_StlFilePath_Key);
+  inputValues.geometry_path = filterArgs.value<DataPath>(k_CreatedTriangleGeometryPath_Key);
   auto faceMatrixName = filterArgs.value<std::string>(k_FaceAttributeMatrixName_Key);
-  inputValues.faceGroupPath = inputValues.geometryPath.createChildPath(faceMatrixName);
-  inputValues.faceNormalsDataPath = inputValues.faceGroupPath.createChildPath(filterArgs.value<std::string>(k_FaceNormalsName_Key));
-  inputValues.scaleOutput = filterArgs.value<bool>(k_ScaleOutput);
-  inputValues.scaleFactor = filterArgs.value<float32>(k_ScaleFactor);
+  inputValues.face_group_path = inputValues.geometry_path.createChildPath(faceMatrixName);
+  inputValues.face_normals_data_path = inputValues.face_group_path.createChildPath(filterArgs.value<std::string>(k_FaceNormalsName_Key));
+  inputValues.scale_output = filterArgs.value<bool>(k_ScaleOutput);
+  inputValues.scale_factor = filterArgs.value<float32>(k_ScaleFactor);
 
   // The actual STL File Reading is placed in a separate class `ReadStlFile`
   Result<> result = ReadStlFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
@@ -210,7 +210,7 @@ Result<> ReadStlFileFilter::executeImpl(DataStructure& dataStructure, const Argu
   if(createFaceLabels)
   {
     auto faceLabelsName = filterArgs.value<std::string>(k_FaceLabelsName_Key);
-    auto* faceLabelDataStorePtr = dataStructure.getDataRefAs<Int32Array>(inputValues.faceGroupPath.createChildPath(faceLabelsName)).getDataStore();
+    auto* faceLabelDataStorePtr = dataStructure.getDataRefAs<Int32ArrayType>(inputValues.face_group_path.createChildPath(faceLabelsName)).getDataStore();
     usize numTuples = faceLabelDataStorePtr->getNumberOfTuples();
 
     for(usize idx = 0; idx < numTuples; idx++)
@@ -225,16 +225,16 @@ Result<> ReadStlFileFilter::executeImpl(DataStructure& dataStructure, const Argu
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_ScaleOutputKey = "ScaleOutput";
-constexpr StringLiteral k_ScaleFactorKey = "ScaleFactor";
-constexpr StringLiteral k_StlFilePathKey = "StlFilePath";
-constexpr StringLiteral k_SurfaceMeshDataContainerNameKey = "SurfaceMeshDataContainerName";
-constexpr StringLiteral k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
-constexpr StringLiteral k_FaceAttributeMatrixNameKey = "FaceAttributeMatrixName";
-constexpr StringLiteral k_FaceNormalsArrayNameKey = "FaceNormalsArrayName";
-} // namespace SIMPL
+constexpr StringLiteralType k_ScaleOutputKey = "ScaleOutput";
+constexpr StringLiteralType k_ScaleFactorKey = "ScaleFactor";
+constexpr StringLiteralType k_StlFilePathKey = "StlFilePath";
+constexpr StringLiteralType k_SurfaceMeshDataContainerNameKey = "SurfaceMeshDataContainerName";
+constexpr StringLiteralType k_VertexAttributeMatrixNameKey = "VertexAttributeMatrixName";
+constexpr StringLiteralType k_FaceAttributeMatrixNameKey = "FaceAttributeMatrixName";
+constexpr StringLiteralType k_FaceNormalsArrayNameKey = "FaceNormalsArrayName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadStlFileFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -243,29 +243,30 @@ Result<Arguments> ReadStlFileFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  Result<> scaleResult = SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ScaleOutputKey, k_ScaleOutput);
+  Result<> scaleResult = simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_ScaleOutputKey, k_ScaleOutput);
   if(scaleResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(scaleResult));
   }
-  Result<> factorResult = SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_ScaleFactorKey, k_ScaleFactor);
+  Result<> factorResult = simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_ScaleFactorKey, k_ScaleFactor);
   if(factorResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(factorResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_StlFilePathKey, k_StlFilePath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshDataContainerNameKey, k_CreatedTriangleGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::InputFileFilterParameterConverter>(args, json, simpl::k_StlFilePathKey, k_StlFilePath_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_SurfaceMeshDataContainerNameKey, k_CreatedTriangleGeometryPath_Key));
   Result<> vertAMResult =
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_VertexAttributeMatrixNameKey, k_VertexAttributeMatrixName_Key);
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixNameKey, k_VertexAttributeMatrixName_Key);
   if(vertAMResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(vertAMResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FaceAttributeMatrixNameKey, k_FaceAttributeMatrixName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_FaceNormalsArrayNameKey, k_FaceNormalsName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FaceAttributeMatrixNameKey, k_FaceAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FaceNormalsArrayNameKey, k_FaceNormalsName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -84,18 +84,18 @@ bool CheckedAdd(ValueT lhs, ValueT rhs, ValueT& sum)
  * @param overflowedQuantity Identifies the quantity that overflowed.
  * @return A working-set overflow error with the affected input context.
  */
-Result<ComputeKernelAvgMisorientationsWorkingSet> MakeWorkingSetOverflowResult(const SizeVec3& dimensions, const VectorInt32Parameter::ValueType& kernelSize, uint64 cacheBudgetBytes,
+Result<ComputeKernelAvgMisorientationsWorkingSet> MakeWorkingSetOverflowResult(const SizeVec3Type& dimensions, const VectorInt32ParameterType::ValueType& kernelSize, uint64 cacheBudgetBytes,
                                                                                const DataPath& imageGeometryPath, std::string_view overflowedQuantity)
 {
   return MakeErrorResult<ComputeKernelAvgMisorientationsWorkingSet>(
       k_WorkingSetOverflowError,
       fmt::format("Compute Kernel Average Misorientations cannot size its working set for Image Geometry '{}' with dimensions ({}) and kernel radius ({}, {}, {}) under cache budget {} bytes "
                   "because {} overflows.",
-                  imageGeometryPath.toString(), StringUtilities::formatDimensions3D(dimensions), kernelSize[0], kernelSize[1], kernelSize[2], cacheBudgetBytes, overflowedQuantity));
+                  imageGeometryPath.toString(), string_utilities::FormatDimensions3D(dimensions), kernelSize[0], kernelSize[1], kernelSize[2], cacheBudgetBytes, overflowedQuantity));
 }
 } // namespace
 
-Result<ComputeKernelAvgMisorientationsWorkingSet> CreateComputeKernelAvgMisorientationsWorkingSet(const SizeVec3& dimensions, const VectorInt32Parameter::ValueType& kernelSize,
+Result<ComputeKernelAvgMisorientationsWorkingSet> CreateComputeKernelAvgMisorientationsWorkingSet(const SizeVec3Type& dimensions, const VectorInt32ParameterType::ValueType& kernelSize,
                                                                                                   uint64 cacheBudgetBytes, uint64 cacheUsedBytes, const DataPath& imageGeometryPath)
 {
   if(kernelSize.size() != 3)
@@ -105,7 +105,7 @@ Result<ComputeKernelAvgMisorientationsWorkingSet> CreateComputeKernelAvgMisorien
         fmt::format(
             "Compute Kernel Average Misorientations cannot size its working set for Image Geometry '{}' with dimensions ({}) under cache budget {} bytes because kernel radius must contain exactly "
             "3 values (X, Y, Z), but {} values were provided: [{}].",
-            imageGeometryPath.toString(), StringUtilities::formatDimensions3D(dimensions), cacheBudgetBytes, kernelSize.size(), fmt::join(kernelSize, ", ")));
+            imageGeometryPath.toString(), string_utilities::FormatDimensions3D(dimensions), cacheBudgetBytes, kernelSize.size(), fmt::join(kernelSize, ", ")));
   }
   if(std::any_of(kernelSize.cbegin(), kernelSize.cend(), [](int32 radius) { return radius < 0; }))
   {
@@ -113,26 +113,26 @@ Result<ComputeKernelAvgMisorientationsWorkingSet> CreateComputeKernelAvgMisorien
         k_WorkingSetInputError,
         fmt::format("Compute Kernel Average Misorientations cannot size its working set for Image Geometry '{}' with dimensions ({}) and kernel radius ({}, {}, {}) under cache budget {} bytes "
                     "because all kernel radii must be nonnegative.",
-                    imageGeometryPath.toString(), StringUtilities::formatDimensions3D(dimensions), kernelSize[0], kernelSize[1], kernelSize[2], cacheBudgetBytes));
+                    imageGeometryPath.toString(), string_utilities::FormatDimensions3D(dimensions), kernelSize[0], kernelSize[1], kernelSize[2], cacheBudgetBytes));
   }
 
   ComputeKernelAvgMisorientationsWorkingSet plan;
 
   const uint64 cacheUsed = std::min(cacheUsedBytes, cacheBudgetBytes);
   const uint64 cacheAvailable = cacheBudgetBytes - cacheUsed;
-  plan.CapBytes = std::min(cacheBudgetBytes / 4, cacheAvailable / 2);
+  plan.cap_bytes = std::min(cacheBudgetBytes / 4, cacheAvailable / 2);
 
   const usize xPoints = dimensions[0];
   const usize yPoints = dimensions[1];
   const usize zPoints = dimensions[2];
 
-  if(!CheckedMultiply(xPoints, yPoints, plan.SliceTuples))
+  if(!CheckedMultiply(xPoints, yPoints, plan.slice_tuples))
   {
     return MakeWorkingSetOverflowResult(dimensions, kernelSize, cacheBudgetBytes, imageGeometryPath, "the slice tuple count");
   }
 
   usize totalTuples = 0;
-  if(!CheckedMultiply(plan.SliceTuples, zPoints, totalTuples))
+  if(!CheckedMultiply(plan.slice_tuples, zPoints, totalTuples))
   {
     return MakeWorkingSetOverflowResult(dimensions, kernelSize, cacheBudgetBytes, imageGeometryPath, "the total tuple count");
   }
@@ -150,12 +150,12 @@ Result<ComputeKernelAvgMisorientationsWorkingSet> CreateComputeKernelAvgMisorien
   {
     return MakeWorkingSetOverflowResult(dimensions, kernelSize, cacheBudgetBytes, imageGeometryPath, "the rolling-window slice count");
   }
-  plan.WindowSlices = std::min(zPoints, static_cast<usize>(fullWindowSlices));
+  plan.window_slices = std::min(zPoints, static_cast<usize>(fullWindowSlices));
 
   uint64 rollingWindowTuples = 0;
   uint64 rollingInputBytes = 0;
   uint64 focalAndOutputBytes = 0;
-  if(!CheckedMultiply(static_cast<uint64>(plan.WindowSlices), static_cast<uint64>(plan.SliceTuples), rollingWindowTuples))
+  if(!CheckedMultiply(static_cast<uint64>(plan.window_slices), static_cast<uint64>(plan.slice_tuples), rollingWindowTuples))
   {
     return MakeWorkingSetOverflowResult(dimensions, kernelSize, cacheBudgetBytes, imageGeometryPath, "the rolling-window tuple count");
   }
@@ -163,66 +163,66 @@ Result<ComputeKernelAvgMisorientationsWorkingSet> CreateComputeKernelAvgMisorien
   {
     return MakeWorkingSetOverflowResult(dimensions, kernelSize, cacheBudgetBytes, imageGeometryPath, "the rolling-window input byte count");
   }
-  if(!CheckedMultiply(static_cast<uint64>(plan.SliceTuples), k_OutputBytesPerTuple, focalAndOutputBytes))
+  if(!CheckedMultiply(static_cast<uint64>(plan.slice_tuples), k_OutputBytesPerTuple, focalAndOutputBytes))
   {
     return MakeWorkingSetOverflowResult(dimensions, kernelSize, cacheBudgetBytes, imageGeometryPath, "the focal/output byte count");
   }
-  if(!CheckedAdd(rollingInputBytes, focalAndOutputBytes, plan.RollingBytes))
+  if(!CheckedAdd(rollingInputBytes, focalAndOutputBytes, plan.rolling_bytes))
   {
     return MakeWorkingSetOverflowResult(dimensions, kernelSize, cacheBudgetBytes, imageGeometryPath, "the total rolling byte count");
   }
 
-  plan.UseRollingWindow = plan.RollingBytes <= plan.CapBytes;
-  if(plan.UseRollingWindow)
+  plan.use_rolling_window = plan.rolling_bytes <= plan.cap_bytes;
+  if(plan.use_rolling_window)
   {
     return {std::move(plan)};
   }
 
-  plan.BlockTuples = std::max<usize>(1, std::min(k_TargetBlockTuples, totalTuples));
+  plan.block_tuples = std::max<usize>(1, std::min(k_TargetBlockTuples, totalTuples));
 
   uint64 blockWorkingBytes = 0;
-  if(!CheckedMultiply(static_cast<uint64>(plan.BlockTuples), k_InputBytesPerTuple + k_OutputBytesPerTuple, blockWorkingBytes))
+  if(!CheckedMultiply(static_cast<uint64>(plan.block_tuples), k_InputBytesPerTuple + k_OutputBytesPerTuple, blockWorkingBytes))
   {
     return MakeWorkingSetOverflowResult(dimensions, kernelSize, cacheBudgetBytes, imageGeometryPath, "the bounded-block byte count");
   }
-  while(plan.BlockTuples > 1 && blockWorkingBytes > plan.CapBytes)
+  while(plan.block_tuples > 1 && blockWorkingBytes > plan.cap_bytes)
   {
-    plan.BlockTuples /= 2;
-    if(!CheckedMultiply(static_cast<uint64>(plan.BlockTuples), k_InputBytesPerTuple + k_OutputBytesPerTuple, blockWorkingBytes))
+    plan.block_tuples /= 2;
+    if(!CheckedMultiply(static_cast<uint64>(plan.block_tuples), k_InputBytesPerTuple + k_OutputBytesPerTuple, blockWorkingBytes))
     {
       return MakeWorkingSetOverflowResult(dimensions, kernelSize, cacheBudgetBytes, imageGeometryPath, "the bounded-block byte count");
     }
   }
 
-  if(!CheckedMultiply(static_cast<uint64>(plan.BlockTuples), k_OutputBytesPerTuple, focalAndOutputBytes))
+  if(!CheckedMultiply(static_cast<uint64>(plan.block_tuples), k_OutputBytesPerTuple, focalAndOutputBytes))
   {
     return MakeWorkingSetOverflowResult(dimensions, kernelSize, cacheBudgetBytes, imageGeometryPath, "the focal/output block byte count");
   }
   uint64 bytesPerInputSlot = 0;
-  if(!CheckedMultiply(static_cast<uint64>(plan.BlockTuples), k_InputBytesPerTuple, bytesPerInputSlot))
+  if(!CheckedMultiply(static_cast<uint64>(plan.block_tuples), k_InputBytesPerTuple, bytesPerInputSlot))
   {
     return MakeWorkingSetOverflowResult(dimensions, kernelSize, cacheBudgetBytes, imageGeometryPath, "the input-slot byte count");
   }
 
-  const uint64 bytesForInputSlots = plan.CapBytes > focalAndOutputBytes ? plan.CapBytes - focalAndOutputBytes : 0;
-  plan.CacheSlots = std::max<usize>(1, static_cast<usize>(bytesForInputSlots / bytesPerInputSlot));
+  const uint64 bytesForInputSlots = plan.cap_bytes > focalAndOutputBytes ? plan.cap_bytes - focalAndOutputBytes : 0;
+  plan.cache_slots = std::max<usize>(1, static_cast<usize>(bytesForInputSlots / bytesPerInputSlot));
 
   // Whole-row blocks align to X rows. The planner shrinks such blocks until the
   // cache retains the clamped Z/Y neighbor rows and avoids repeated eviction.
-  if(plan.BlockTuples >= xPoints)
+  if(plan.block_tuples >= xPoints)
   {
-    plan.BlockTuples = std::max(xPoints, (plan.BlockTuples / xPoints) * xPoints);
+    plan.block_tuples = std::max(xPoints, (plan.block_tuples / xPoints) * xPoints);
 
-    if(!CheckedMultiply(static_cast<uint64>(plan.BlockTuples), k_OutputBytesPerTuple, focalAndOutputBytes))
+    if(!CheckedMultiply(static_cast<uint64>(plan.block_tuples), k_OutputBytesPerTuple, focalAndOutputBytes))
     {
       return MakeWorkingSetOverflowResult(dimensions, kernelSize, cacheBudgetBytes, imageGeometryPath, "the focal/output block byte count");
     }
-    if(!CheckedMultiply(static_cast<uint64>(plan.BlockTuples), k_InputBytesPerTuple, bytesPerInputSlot))
+    if(!CheckedMultiply(static_cast<uint64>(plan.block_tuples), k_InputBytesPerTuple, bytesPerInputSlot))
     {
       return MakeWorkingSetOverflowResult(dimensions, kernelSize, cacheBudgetBytes, imageGeometryPath, "the input-slot byte count");
     }
-    const uint64 adjustedBytesForInputSlots = plan.CapBytes > focalAndOutputBytes ? plan.CapBytes - focalAndOutputBytes : 0;
-    plan.CacheSlots = std::max<usize>(1, static_cast<usize>(adjustedBytesForInputSlots / bytesPerInputSlot));
+    const uint64 adjustedBytesForInputSlots = plan.cap_bytes > focalAndOutputBytes ? plan.cap_bytes - focalAndOutputBytes : 0;
+    plan.cache_slots = std::max<usize>(1, static_cast<usize>(adjustedBytesForInputSlots / bytesPerInputSlot));
 
     uint64 doubledKernelYRadius = 0;
     uint64 fullWindowRows = 0;
@@ -233,27 +233,27 @@ Result<ComputeKernelAvgMisorientationsWorkingSet> CreateComputeKernelAvgMisorien
 
     const usize windowRows = std::min(yPoints, static_cast<usize>(fullWindowRows));
     usize requiredCacheSlots = 0;
-    if(!CheckedMultiply(plan.WindowSlices, windowRows, requiredCacheSlots))
+    if(!CheckedMultiply(plan.window_slices, windowRows, requiredCacheSlots))
     {
       return MakeWorkingSetOverflowResult(dimensions, kernelSize, cacheBudgetBytes, imageGeometryPath, "the bounded-cache neighbor-row working set");
     }
 
-    while(plan.BlockTuples > xPoints && plan.CacheSlots < requiredCacheSlots)
+    while(plan.block_tuples > xPoints && plan.cache_slots < requiredCacheSlots)
     {
-      const usize blockRows = plan.BlockTuples / xPoints;
-      plan.BlockTuples = std::max<usize>(1, blockRows / 2) * xPoints;
+      const usize blockRows = plan.block_tuples / xPoints;
+      plan.block_tuples = std::max<usize>(1, blockRows / 2) * xPoints;
 
-      if(!CheckedMultiply(static_cast<uint64>(plan.BlockTuples), k_OutputBytesPerTuple, focalAndOutputBytes))
+      if(!CheckedMultiply(static_cast<uint64>(plan.block_tuples), k_OutputBytesPerTuple, focalAndOutputBytes))
       {
         return MakeWorkingSetOverflowResult(dimensions, kernelSize, cacheBudgetBytes, imageGeometryPath, "the focal/output block byte count");
       }
-      if(!CheckedMultiply(static_cast<uint64>(plan.BlockTuples), k_InputBytesPerTuple, bytesPerInputSlot))
+      if(!CheckedMultiply(static_cast<uint64>(plan.block_tuples), k_InputBytesPerTuple, bytesPerInputSlot))
       {
         return MakeWorkingSetOverflowResult(dimensions, kernelSize, cacheBudgetBytes, imageGeometryPath, "the input-slot byte count");
       }
 
-      const uint64 remainingBytesForInputSlots = plan.CapBytes > focalAndOutputBytes ? plan.CapBytes - focalAndOutputBytes : 0;
-      plan.CacheSlots = std::max<usize>(1, static_cast<usize>(remainingBytesForInputSlots / bytesPerInputSlot));
+      const uint64 remainingBytesForInputSlots = plan.cap_bytes > focalAndOutputBytes ? plan.cap_bytes - focalAndOutputBytes : 0;
+      plan.cache_slots = std::max<usize>(1, static_cast<usize>(remainingBytesForInputSlots / bytesPerInputSlot));
     }
   }
 
@@ -275,10 +275,10 @@ constexpr usize k_FullyAssociativeCacheSlotLimit = 16;
  */
 struct SliceSlot
 {
-  usize Z = k_UnloadedSlice;
-  std::vector<int32> FeatureIds;
-  std::vector<int32> CellPhases;
-  std::vector<float32> Quats;
+  usize z = k_UnloadedSlice;
+  std::vector<int32> feature_ids;
+  std::vector<int32> cell_phases;
+  std::vector<float32> quats;
 };
 
 /**
@@ -290,13 +290,13 @@ struct SliceSlot
  */
 struct InputBlock
 {
-  usize BlockIndex = k_UnloadedBlock;
-  usize TupleStart = 0;
-  usize TupleCount = 0;
-  uint64 LastUse = 0;
-  std::vector<int32> FeatureIds;
-  std::vector<int32> CellPhases;
-  std::vector<float32> Quats;
+  usize block_index = k_UnloadedBlock;
+  usize tuple_start = 0;
+  usize tuple_count = 0;
+  uint64 last_use = 0;
+  std::vector<int32> feature_ids;
+  std::vector<int32> cell_phases;
+  std::vector<float32> quats;
 };
 
 /**
@@ -326,11 +326,11 @@ public:
   : m_FeatureIdsStore(featureIdsStore)
   , m_CellPhasesStore(cellPhasesStore)
   , m_QuatsStore(quatsStore)
-  , m_BlockTuples(plan.BlockTuples)
+  , m_BlockTuples(plan.block_tuples)
   , m_TotalTuples(totalTuples)
-  , m_Slots(plan.CacheSlots)
-  , m_SetCount(plan.CacheSlots <= k_FullyAssociativeCacheSlotLimit ? 1 : (plan.CacheSlots + 3) / 4)
-  , m_WaysPerSet(plan.CacheSlots <= k_FullyAssociativeCacheSlotLimit ? plan.CacheSlots : 4)
+  , m_Slots(plan.cache_slots)
+  , m_SetCount(plan.cache_slots <= k_FullyAssociativeCacheSlotLimit ? 1 : (plan.cache_slots + 3) / 4)
+  , m_WaysPerSet(plan.cache_slots <= k_FullyAssociativeCacheSlotLimit ? plan.cache_slots : 4)
   {
     assert(m_BlockTuples > 0);
     assert(!m_Slots.empty());
@@ -338,9 +338,9 @@ public:
 
     for(InputBlock& slot : m_Slots)
     {
-      slot.FeatureIds.resize(m_BlockTuples);
-      slot.CellPhases.resize(m_BlockTuples);
-      slot.Quats.resize(m_BlockTuples * 4);
+      slot.feature_ids.resize(m_BlockTuples);
+      slot.cell_phases.resize(m_BlockTuples);
+      slot.quats.resize(m_BlockTuples * 4);
     }
   }
 
@@ -362,48 +362,48 @@ public:
     // CacheSlots entries.
     const usize endWay = std::min(firstWay + m_WaysPerSet, m_Slots.size());
 
-    InputBlock* replacement = nullptr;
+    InputBlock* replacementPtr = nullptr;
     for(usize way = firstWay; way < endWay; way++)
     {
       InputBlock& slot = m_Slots[way];
-      if(slot.BlockIndex == blockIndex)
+      if(slot.block_index == blockIndex)
       {
-        slot.LastUse = m_NextUse++;
+        slot.last_use = m_NextUse++;
         return {&slot};
       }
 
-      if(slot.BlockIndex == k_UnloadedBlock)
+      if(slot.block_index == k_UnloadedBlock)
       {
-        replacement = &slot;
+        replacementPtr = &slot;
         break;
       }
-      if(replacement == nullptr || slot.LastUse < replacement->LastUse)
+      if(replacementPtr == nullptr || slot.last_use < replacementPtr->last_use)
       {
-        replacement = &slot;
+        replacementPtr = &slot;
       }
     }
 
-    assert(replacement != nullptr);
+    assert(replacementPtr != nullptr);
     const usize tupleStart = blockIndex * m_BlockTuples;
     const usize tupleCount = std::min(m_BlockTuples, m_TotalTuples - tupleStart);
-    if(Result<> result = m_FeatureIdsStore.copyIntoBuffer(tupleStart, nonstd::span<int32>(replacement->FeatureIds.data(), tupleCount)); result.invalid())
+    if(Result<> result = m_FeatureIdsStore.copyIntoBuffer(tupleStart, nonstd::span<int32>(replacementPtr->feature_ids.data(), tupleCount)); result.invalid())
     {
       return ConvertInvalidResult<const InputBlock*>(std::move(result));
     }
-    if(Result<> result = m_CellPhasesStore.copyIntoBuffer(tupleStart, nonstd::span<int32>(replacement->CellPhases.data(), tupleCount)); result.invalid())
+    if(Result<> result = m_CellPhasesStore.copyIntoBuffer(tupleStart, nonstd::span<int32>(replacementPtr->cell_phases.data(), tupleCount)); result.invalid())
     {
       return ConvertInvalidResult<const InputBlock*>(std::move(result));
     }
-    if(Result<> result = m_QuatsStore.copyIntoBuffer(tupleStart * 4, nonstd::span<float32>(replacement->Quats.data(), tupleCount * 4)); result.invalid())
+    if(Result<> result = m_QuatsStore.copyIntoBuffer(tupleStart * 4, nonstd::span<float32>(replacementPtr->quats.data(), tupleCount * 4)); result.invalid())
     {
       return ConvertInvalidResult<const InputBlock*>(std::move(result));
     }
 
-    replacement->BlockIndex = blockIndex;
-    replacement->TupleStart = tupleStart;
-    replacement->TupleCount = tupleCount;
-    replacement->LastUse = m_NextUse++;
-    return {replacement};
+    replacementPtr->block_index = blockIndex;
+    replacementPtr->tuple_start = tupleStart;
+    replacementPtr->tuple_count = tupleCount;
+    replacementPtr->last_use = m_NextUse++;
+    return {replacementPtr};
   }
 
 private:
@@ -511,7 +511,7 @@ private:
     const usize windowZMax = m_Plane + std::min(kernelZ, (m_ZPoints - 1) - m_Plane);
 
     const SliceSlot& focalSlice = m_SliceSlots[m_Plane % m_WindowSlices];
-    assert(focalSlice.Z == m_Plane);
+    assert(focalSlice.z == m_Plane);
 
     for(usize row = minRow; row < maxRow; row++)
     {
@@ -521,8 +521,8 @@ private:
       for(usize col = minCol; col < maxCol; col++)
       {
         const usize pointInSlice = row * m_XPoints + col;
-        const int32 featureId = focalSlice.FeatureIds[pointInSlice];
-        const int32 cellPhase = focalSlice.CellPhases[pointInSlice];
+        const int32 featureId = focalSlice.feature_ids[pointInSlice];
+        const int32 cellPhase = focalSlice.cell_phases[pointInSlice];
 
         if(featureId <= 0 || cellPhase <= 0)
         {
@@ -532,10 +532,10 @@ private:
 
         ebsdlib::QuatD q1;
         const usize q1Idx = pointInSlice * 4;
-        q1[0] = focalSlice.Quats[q1Idx];
-        q1[1] = focalSlice.Quats[q1Idx + 1];
-        q1[2] = focalSlice.Quats[q1Idx + 2];
-        q1[3] = focalSlice.Quats[q1Idx + 3];
+        q1[0] = focalSlice.quats[q1Idx];
+        q1[1] = focalSlice.quats[q1Idx + 1];
+        q1[2] = focalSlice.quats[q1Idx + 2];
+        q1[3] = focalSlice.quats[q1Idx + 3];
 
         const uint32 laueClass = m_CrystalStructures[static_cast<usize>(cellPhase)];
         float32 totalMisorientation = 0.0F;
@@ -549,26 +549,26 @@ private:
         for(usize nz = windowZMin;; nz++)
         {
           const SliceSlot& neighborSlice = m_SliceSlots[nz % m_WindowSlices];
-          assert(neighborSlice.Z == nz);
+          assert(neighborSlice.z == nz);
 
           for(usize ny = neighborYMin;; ny++)
           {
             for(usize nx = neighborXMin;; nx++)
             {
               const usize neighborInSlice = ny * m_XPoints + nx;
-              const int32 neighborFeatureId = neighborSlice.FeatureIds[neighborInSlice];
-              const bool neighborContributes = m_UseFeatureIds ? (neighborFeatureId == featureId) : (neighborFeatureId > 0 && neighborSlice.CellPhases[neighborInSlice] == cellPhase);
+              const int32 neighborFeatureId = neighborSlice.feature_ids[neighborInSlice];
+              const bool neighborContributes = m_UseFeatureIds ? (neighborFeatureId == featureId) : (neighborFeatureId > 0 && neighborSlice.cell_phases[neighborInSlice] == cellPhase);
               if(neighborContributes)
               {
                 const usize q2Idx = neighborInSlice * 4;
                 ebsdlib::QuatD q2;
-                q2[0] = neighborSlice.Quats[q2Idx];
-                q2[1] = neighborSlice.Quats[q2Idx + 1];
-                q2[2] = neighborSlice.Quats[q2Idx + 2];
-                q2[3] = neighborSlice.Quats[q2Idx + 3];
+                q2[0] = neighborSlice.quats[q2Idx];
+                q2[1] = neighborSlice.quats[q2Idx + 1];
+                q2[2] = neighborSlice.quats[q2Idx + 2];
+                q2[3] = neighborSlice.quats[q2Idx + 3];
 
                 ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass]->calculateMisorientation(q1, q2);
-                totalMisorientation += (axisAngle[3] * nx::core::Constants::k_180OverPiF);
+                totalMisorientation += (axisAngle[3] * nx::core::constants::k_180OverPiF);
                 numVoxel++;
               }
 
@@ -627,8 +627,8 @@ private:
 Result<> ExecuteRollingWindow(DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues& inputValues, const ComputeKernelAvgMisorientationsWorkingSet& plan,
                               const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.InputImageGeometry);
-  const SizeVec3 dimensions = imageGeom.getDimensions();
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.input_image_geometry);
+  const SizeVec3Type dimensions = imageGeom.getDimensions();
   const usize xPoints = dimensions[0];
   const usize yPoints = dimensions[1];
   const usize zPoints = dimensions[2];
@@ -640,15 +640,15 @@ Result<> ExecuteRollingWindow(DataStructure& dataStructure, const ComputeKernelA
     return {};
   }
 
-  const VectorInt32Parameter::ValueType kernelSize = inputValues.KernelSize;
+  const VectorInt32ParameterType::ValueType kernelSize = inputValues.kernel_size;
   const usize kZ = static_cast<usize>(kernelSize[2]);
 
-  const auto& cellPhasesStore = dataStructure.getDataRefAs<Int32Array>(inputValues.CellPhasesArrayPath).getDataStoreRef();
-  const auto& featureIdsStore = dataStructure.getDataRefAs<Int32Array>(inputValues.FeatureIdsArrayPath).getDataStoreRef();
-  const auto& quatsStore = dataStructure.getDataRefAs<Float32Array>(inputValues.QuatsArrayPath).getDataStoreRef();
-  auto& outputStore = dataStructure.getDataRefAs<Float32Array>(inputValues.KernelAverageMisorientationsArrayName).getDataStoreRef();
+  const auto& cellPhasesStore = dataStructure.getDataRefAs<Int32ArrayType>(inputValues.cell_phases_array_path).getDataStoreRef();
+  const auto& featureIdsStore = dataStructure.getDataRefAs<Int32ArrayType>(inputValues.feature_ids_array_path).getDataStoreRef();
+  const auto& quatsStore = dataStructure.getDataRefAs<Float32ArrayType>(inputValues.quats_array_path).getDataStoreRef();
+  auto& outputStore = dataStructure.getDataRefAs<Float32ArrayType>(inputValues.kernel_average_misorientations_array_name).getDataStoreRef();
 
-  const auto& crystalStructuresStore = dataStructure.getDataRefAs<UInt32Array>(inputValues.CrystalStructuresArrayPath).getDataStoreRef();
+  const auto& crystalStructuresStore = dataStructure.getDataRefAs<UInt32ArrayType>(inputValues.crystal_structures_array_path).getDataStoreRef();
   const usize numCrystalStructures = crystalStructuresStore.getNumberOfTuples();
   std::vector<uint32> crystalStructures(numCrystalStructures);
   if(Result<> result = crystalStructuresStore.copyIntoBuffer(0, nonstd::span<uint32>(crystalStructures.data(), crystalStructures.size())); result.invalid())
@@ -656,31 +656,31 @@ Result<> ExecuteRollingWindow(DataStructure& dataStructure, const ComputeKernelA
     return result;
   }
 
-  const usize quaternionSliceValues = plan.SliceTuples * 4;
-  std::vector<SliceSlot> sliceSlots(plan.WindowSlices);
+  const usize quaternionSliceValues = plan.slice_tuples * 4;
+  std::vector<SliceSlot> sliceSlots(plan.window_slices);
   for(SliceSlot& slot : sliceSlots)
   {
-    slot.FeatureIds.resize(plan.SliceTuples);
-    slot.CellPhases.resize(plan.SliceTuples);
-    slot.Quats.resize(quaternionSliceValues);
+    slot.feature_ids.resize(plan.slice_tuples);
+    slot.cell_phases.resize(plan.slice_tuples);
+    slot.quats.resize(quaternionSliceValues);
   }
-  std::vector<float32> outputSlice(plan.SliceTuples);
+  std::vector<float32> outputSlice(plan.slice_tuples);
 
   auto loadSlice = [&](usize z, SliceSlot& slot) -> Result<> {
-    const usize offset = z * plan.SliceTuples;
-    if(Result<> result = featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(slot.FeatureIds.data(), plan.SliceTuples)); result.invalid())
+    const usize offset = z * plan.slice_tuples;
+    if(Result<> result = featureIdsStore.copyIntoBuffer(offset, nonstd::span<int32>(slot.feature_ids.data(), plan.slice_tuples)); result.invalid())
     {
       return result;
     }
-    if(Result<> result = cellPhasesStore.copyIntoBuffer(offset, nonstd::span<int32>(slot.CellPhases.data(), plan.SliceTuples)); result.invalid())
+    if(Result<> result = cellPhasesStore.copyIntoBuffer(offset, nonstd::span<int32>(slot.cell_phases.data(), plan.slice_tuples)); result.invalid())
     {
       return result;
     }
-    if(Result<> result = quatsStore.copyIntoBuffer(offset * 4, nonstd::span<float32>(slot.Quats.data(), quaternionSliceValues)); result.invalid())
+    if(Result<> result = quatsStore.copyIntoBuffer(offset * 4, nonstd::span<float32>(slot.quats.data(), quaternionSliceValues)); result.invalid())
     {
       return result;
     }
-    slot.Z = z;
+    slot.z = z;
     return {};
   };
 
@@ -695,7 +695,7 @@ Result<> ExecuteRollingWindow(DataStructure& dataStructure, const ComputeKernelA
       return {};
     }
 
-    assert(plan.WindowSlices > 0);
+    assert(plan.window_slices > 0);
     const usize windowZMin = plane - std::min(plane, kZ);
     const usize windowZMax = plane + std::min(kZ, (zPoints - 1) - plane);
 
@@ -703,8 +703,8 @@ Result<> ExecuteRollingWindow(DataStructure& dataStructure, const ComputeKernelA
     // holds 2*kZ+1 slices or the entire volume when it is shorter.
     while(nextSliceToLoad <= windowZMax)
     {
-      SliceSlot& slot = sliceSlots[nextSliceToLoad % plan.WindowSlices];
-      assert(slot.Z == k_UnloadedSlice || slot.Z < windowZMin);
+      SliceSlot& slot = sliceSlots[nextSliceToLoad % plan.window_slices];
+      assert(slot.z == k_UnloadedSlice || slot.z < windowZMin);
       if(Result<> result = loadSlice(nextSliceToLoad, slot); result.invalid())
       {
         return result;
@@ -714,12 +714,12 @@ Result<> ExecuteRollingWindow(DataStructure& dataStructure, const ComputeKernelA
 
     ParallelData2DAlgorithm algorithm;
     algorithm.setRange(0, xPoints, 0, yPoints);
-    const RollingPlaneWorker worker(xPoints, yPoints, zPoints, plane, kernelSize[0], kernelSize[1], kernelSize[2], plan.SliceTuples, sliceSlots, plan.WindowSlices, inputValues.UseFeatureIds,
+    const RollingPlaneWorker worker(xPoints, yPoints, zPoints, plane, kernelSize[0], kernelSize[1], kernelSize[2], plan.slice_tuples, sliceSlots, plan.window_slices, inputValues.use_feature_ids,
                                     nonstd::span<const uint32>(crystalStructures.data(), crystalStructures.size()), nonstd::span<float32>(outputSlice.data(), outputSlice.size()));
     algorithm.execute(worker);
 
-    const usize planeOffset = plane * plan.SliceTuples;
-    if(Result<> result = outputStore.copyFromBuffer(planeOffset, nonstd::span<const float32>(outputSlice.data(), plan.SliceTuples)); result.invalid())
+    const usize planeOffset = plane * plan.slice_tuples;
+    if(Result<> result = outputStore.copyFromBuffer(planeOffset, nonstd::span<const float32>(outputSlice.data(), plan.slice_tuples)); result.invalid())
     {
       return result;
     }
@@ -745,8 +745,8 @@ Result<> ExecuteRollingWindow(DataStructure& dataStructure, const ComputeKernelA
 Result<> ExecuteBlockCache(DataStructure& dataStructure, const ComputeKernelAvgMisorientationsInputValues& inputValues, const ComputeKernelAvgMisorientationsWorkingSet& plan,
                            const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.InputImageGeometry);
-  const SizeVec3 dimensions = imageGeom.getDimensions();
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(inputValues.input_image_geometry);
+  const SizeVec3Type dimensions = imageGeom.getDimensions();
   const usize xPoints = dimensions[0];
   const usize yPoints = dimensions[1];
   const usize zPoints = dimensions[2];
@@ -758,17 +758,17 @@ Result<> ExecuteBlockCache(DataStructure& dataStructure, const ComputeKernelAvgM
     return {};
   }
 
-  const VectorInt32Parameter::ValueType kernelSize = inputValues.KernelSize;
+  const VectorInt32ParameterType::ValueType kernelSize = inputValues.kernel_size;
   const usize kZ = static_cast<usize>(kernelSize[2]);
   const usize kY = static_cast<usize>(kernelSize[1]);
   const usize kX = static_cast<usize>(kernelSize[0]);
 
-  const auto& cellPhasesStore = dataStructure.getDataRefAs<Int32Array>(inputValues.CellPhasesArrayPath).getDataStoreRef();
-  const auto& featureIdsStore = dataStructure.getDataRefAs<Int32Array>(inputValues.FeatureIdsArrayPath).getDataStoreRef();
-  const auto& quatsStore = dataStructure.getDataRefAs<Float32Array>(inputValues.QuatsArrayPath).getDataStoreRef();
-  auto& outputStore = dataStructure.getDataRefAs<Float32Array>(inputValues.KernelAverageMisorientationsArrayName).getDataStoreRef();
+  const auto& cellPhasesStore = dataStructure.getDataRefAs<Int32ArrayType>(inputValues.cell_phases_array_path).getDataStoreRef();
+  const auto& featureIdsStore = dataStructure.getDataRefAs<Int32ArrayType>(inputValues.feature_ids_array_path).getDataStoreRef();
+  const auto& quatsStore = dataStructure.getDataRefAs<Float32ArrayType>(inputValues.quats_array_path).getDataStoreRef();
+  auto& outputStore = dataStructure.getDataRefAs<Float32ArrayType>(inputValues.kernel_average_misorientations_array_name).getDataStoreRef();
 
-  const auto& crystalStructuresStore = dataStructure.getDataRefAs<UInt32Array>(inputValues.CrystalStructuresArrayPath).getDataStoreRef();
+  const auto& crystalStructuresStore = dataStructure.getDataRefAs<UInt32ArrayType>(inputValues.crystal_structures_array_path).getDataStoreRef();
   const usize numCrystalStructures = crystalStructuresStore.getNumberOfTuples();
   std::vector<uint32> crystalStructures(numCrystalStructures);
   if(Result<> result = crystalStructuresStore.copyIntoBuffer(0, nonstd::span<uint32>(crystalStructures.data(), crystalStructures.size())); result.invalid())
@@ -778,9 +778,9 @@ Result<> ExecuteBlockCache(DataStructure& dataStructure, const ComputeKernelAvgM
 
   std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
-  const usize totalTuples = plan.SliceTuples * zPoints;
+  const usize totalTuples = plan.slice_tuples * zPoints;
   InputBlockCache inputCache(featureIdsStore, cellPhasesStore, quatsStore, plan, totalTuples);
-  std::vector<float32> outputBlock(plan.BlockTuples);
+  std::vector<float32> outputBlock(plan.block_tuples);
   ThrottledMessageHandler progressThrottle(messageHandler);
   messageHandler.sendInfoMessage("Computing Kernel Average Misorientation Blocks");
   progressThrottle.reset(totalTuples, "Computing Kernel Average Misorientation Blocks");
@@ -792,37 +792,37 @@ Result<> ExecuteBlockCache(DataStructure& dataStructure, const ComputeKernelAvgM
       return {};
     }
 
-    const usize planeOffset = plane * plan.SliceTuples;
+    const usize planeOffset = plane * plan.slice_tuples;
     const usize windowZMin = plane - std::min(plane, kZ);
     const usize windowZMax = plane + std::min(kZ, (zPoints - 1) - plane);
 
-    for(usize pointInSliceStart = 0; pointInSliceStart < plan.SliceTuples;)
+    for(usize pointInSliceStart = 0; pointInSliceStart < plan.slice_tuples;)
     {
       if(shouldCancel)
       {
         return {};
       }
 
-      const usize focalCount = std::min(plan.BlockTuples, plan.SliceTuples - pointInSliceStart);
+      const usize focalCount = std::min(plan.block_tuples, plan.slice_tuples - pointInSliceStart);
       const usize focalTupleStart = planeOffset + pointInSliceStart;
 
-      const InputBlock* focalInputBlock = nullptr;
+      const InputBlock* focalInputBlockPtr = nullptr;
       for(usize focalOffset = 0; focalOffset < focalCount; focalOffset++)
       {
         const usize focalTuple = focalTupleStart + focalOffset;
-        if(focalInputBlock == nullptr || focalTuple < focalInputBlock->TupleStart || focalTuple >= focalInputBlock->TupleStart + focalInputBlock->TupleCount)
+        if(focalInputBlockPtr == nullptr || focalTuple < focalInputBlockPtr->tuple_start || focalTuple >= focalInputBlockPtr->tuple_start + focalInputBlockPtr->tuple_count)
         {
           auto blockResult = inputCache.getBlock(focalTuple);
           if(blockResult.invalid())
           {
             return ConvertResult(std::move(blockResult));
           }
-          focalInputBlock = blockResult.value();
+          focalInputBlockPtr = blockResult.value();
         }
 
-        const usize localFocalTuple = focalTuple - focalInputBlock->TupleStart;
-        const int32 featureId = focalInputBlock->FeatureIds[localFocalTuple];
-        const int32 cellPhase = focalInputBlock->CellPhases[localFocalTuple];
+        const usize localFocalTuple = focalTuple - focalInputBlockPtr->tuple_start;
+        const int32 featureId = focalInputBlockPtr->feature_ids[localFocalTuple];
+        const int32 cellPhase = focalInputBlockPtr->cell_phases[localFocalTuple];
 
         if(featureId <= 0 || cellPhase <= 0)
         {
@@ -832,10 +832,10 @@ Result<> ExecuteBlockCache(DataStructure& dataStructure, const ComputeKernelAvgM
 
         ebsdlib::QuatD q1;
         const usize q1Idx = localFocalTuple * 4;
-        q1[0] = focalInputBlock->Quats[q1Idx];
-        q1[1] = focalInputBlock->Quats[q1Idx + 1];
-        q1[2] = focalInputBlock->Quats[q1Idx + 2];
-        q1[3] = focalInputBlock->Quats[q1Idx + 3];
+        q1[0] = focalInputBlockPtr->quats[q1Idx];
+        q1[1] = focalInputBlockPtr->quats[q1Idx + 1];
+        q1[2] = focalInputBlockPtr->quats[q1Idx + 2];
+        q1[3] = focalInputBlockPtr->quats[q1Idx + 3];
 
         const uint32 laueClass = crystalStructures[static_cast<usize>(cellPhase)];
         float32 totalMisorientation = 0.0F;
@@ -854,7 +854,7 @@ Result<> ExecuteBlockCache(DataStructure& dataStructure, const ComputeKernelAvgM
         {
           for(usize ny = neighborYMin;; ny++)
           {
-            const usize neighborRowStart = nz * plan.SliceTuples + ny * xPoints;
+            const usize neighborRowStart = nz * plan.slice_tuples + ny * xPoints;
             usize segmentX = neighborXMin;
             while(segmentX < neighborXEnd)
             {
@@ -865,25 +865,25 @@ Result<> ExecuteBlockCache(DataStructure& dataStructure, const ComputeKernelAvgM
                 return ConvertResult(std::move(blockResult));
               }
               const InputBlock& neighborBlock = *blockResult.value();
-              const usize localSegmentStart = segmentTuple - neighborBlock.TupleStart;
-              const usize segmentCount = std::min(neighborXEnd - segmentX, neighborBlock.TupleCount - localSegmentStart);
+              const usize localSegmentStart = segmentTuple - neighborBlock.tuple_start;
+              const usize segmentCount = std::min(neighborXEnd - segmentX, neighborBlock.tuple_count - localSegmentStart);
 
               for(usize segmentOffset = 0; segmentOffset < segmentCount; segmentOffset++)
               {
                 const usize localNeighborTuple = localSegmentStart + segmentOffset;
-                const int32 neighborFeatureId = neighborBlock.FeatureIds[localNeighborTuple];
-                const bool neighborContributes = inputValues.UseFeatureIds ? (neighborFeatureId == featureId) : (neighborFeatureId > 0 && neighborBlock.CellPhases[localNeighborTuple] == cellPhase);
+                const int32 neighborFeatureId = neighborBlock.feature_ids[localNeighborTuple];
+                const bool neighborContributes = inputValues.use_feature_ids ? (neighborFeatureId == featureId) : (neighborFeatureId > 0 && neighborBlock.cell_phases[localNeighborTuple] == cellPhase);
                 if(neighborContributes)
                 {
                   const usize q2Idx = localNeighborTuple * 4;
                   ebsdlib::QuatD q2;
-                  q2[0] = neighborBlock.Quats[q2Idx];
-                  q2[1] = neighborBlock.Quats[q2Idx + 1];
-                  q2[2] = neighborBlock.Quats[q2Idx + 2];
-                  q2[3] = neighborBlock.Quats[q2Idx + 3];
+                  q2[0] = neighborBlock.quats[q2Idx];
+                  q2[1] = neighborBlock.quats[q2Idx + 1];
+                  q2[2] = neighborBlock.quats[q2Idx + 2];
+                  q2[3] = neighborBlock.quats[q2Idx + 3];
 
                   ebsdlib::AxisAngleDType axisAngle = orientationOps[laueClass]->calculateMisorientation(q1, q2);
-                  totalMisorientation += (axisAngle[3] * nx::core::Constants::k_180OverPiF);
+                  totalMisorientation += (axisAngle[3] * nx::core::constants::k_180OverPiF);
                   numVoxel++;
                 }
               }
@@ -929,12 +929,10 @@ ComputeKernelAvgMisorientationsScanline::ComputeKernelAvgMisorientationsScanline
 {
 }
 
-ComputeKernelAvgMisorientationsScanline::~ComputeKernelAvgMisorientationsScanline() noexcept = default;
-
 Result<> ComputeKernelAvgMisorientationsScanline::operator()()
 {
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometry);
-  const SizeVec3 dimensions = imageGeom.getDimensions();
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->input_image_geometry);
+  const SizeVec3Type dimensions = imageGeom.getDimensions();
   if(dimensions[0] == 0 || dimensions[1] == 0 || dimensions[2] == 0)
   {
     return {};
@@ -945,17 +943,17 @@ Result<> ComputeKernelAvgMisorientationsScanline::operator()()
     return validationResult;
   }
 
-  auto& cacheMemoryBudgetManager = CacheMemoryBudgetManager::instance();
+  auto& cacheMemoryBudgetManager = CacheMemoryBudgetManager::Instance();
   const uint64 cacheBudgetBytes = cacheMemoryBudgetManager.budgetBytes();
   const uint64 cacheUsedBytes = cacheMemoryBudgetManager.usedBytes();
-  auto planResult = CreateComputeKernelAvgMisorientationsWorkingSet(dimensions, m_InputValues->KernelSize, cacheBudgetBytes, cacheUsedBytes, m_InputValues->InputImageGeometry);
+  auto planResult = CreateComputeKernelAvgMisorientationsWorkingSet(dimensions, m_InputValues->kernel_size, cacheBudgetBytes, cacheUsedBytes, m_InputValues->input_image_geometry);
   if(planResult.invalid())
   {
     return ConvertResult(std::move(planResult));
   }
 
   const auto& plan = planResult.value();
-  if(plan.UseRollingWindow)
+  if(plan.use_rolling_window)
   {
     return ExecuteRollingWindow(m_DataStructure, *m_InputValues, plan, m_ShouldCancel, m_MessageHandler);
   }

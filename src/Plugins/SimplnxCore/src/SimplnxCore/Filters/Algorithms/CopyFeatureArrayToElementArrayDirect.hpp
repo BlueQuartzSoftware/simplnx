@@ -36,7 +36,7 @@ public:
   /**
    * @brief Destroys the non-owning in-memory algorithm.
    */
-  ~CopyFeatureArrayToElementArrayDirect() noexcept;
+  ~CopyFeatureArrayToElementArrayDirect() noexcept = default;
 
   CopyFeatureArrayToElementArrayDirect(const CopyFeatureArrayToElementArrayDirect&) = delete;
   CopyFeatureArrayToElementArrayDirect(CopyFeatureArrayToElementArrayDirect&&) noexcept = delete;

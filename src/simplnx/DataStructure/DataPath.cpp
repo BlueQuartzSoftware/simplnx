@@ -52,7 +52,7 @@ std::optional<DataPath> DataPath::FromString(std::string_view inputPath, char de
   {
     return DataPath{};
   }
-  auto parts = StringUtilities::split(inputPath, delimiter);
+  auto parts = string_utilities::Split(inputPath, delimiter);
   if(parts.empty())
   {
     return DataPath{};
@@ -101,7 +101,7 @@ DataPath DataPath::getParent() const
   return {(std::move(parentPath))};
 }
 
-DataPath DataPath::createChildPath(std::string name) const
+DataPath DataPath::createChildPath(const std::string& name) const
 {
   auto childDataPath = DataPath::FromString(name).value();
   auto subpath = childDataPath.m_Path;

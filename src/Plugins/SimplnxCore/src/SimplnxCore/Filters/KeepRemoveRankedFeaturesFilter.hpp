@@ -28,16 +28,16 @@ public:
   KeepRemoveRankedFeaturesFilter& operator=(KeepRemoveRankedFeaturesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_Operation_Key = "operation_index";
-  static inline constexpr StringLiteral k_RankFrom_Key = "rank_from_index";
-  static inline constexpr StringLiteral k_Criterion_Key = "selection_criterion_index";
-  static inline constexpr StringLiteral k_NumFeatures_Key = "num_features";
-  static inline constexpr StringLiteral k_Percent_Key = "percent";
-  static inline constexpr StringLiteral k_FillRemovedFeatures_Key = "fill_removed_features";
-  static inline constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static inline constexpr StringLiteral k_RankingArrayPath_Key = "ranking_array_path";
-  static inline constexpr StringLiteral k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
+  static constexpr StringLiteralType k_Operation_Key = "operation_index";
+  static constexpr StringLiteralType k_RankFrom_Key = "rank_from_index";
+  static constexpr StringLiteralType k_Criterion_Key = "selection_criterion_index";
+  static constexpr StringLiteralType k_NumFeatures_Key = "num_features";
+  static constexpr StringLiteralType k_Percent_Key = "percent";
+  static constexpr StringLiteralType k_FillRemovedFeatures_Key = "fill_removed_features";
+  static constexpr StringLiteralType k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteralType k_RankingArrayPath_Key = "ranking_array_path";
+  static constexpr StringLiteralType k_IgnoredDataArrayPaths_Key = "ignored_data_array_paths";
 
   /**
    * @brief Returns the name of the filter.
@@ -87,7 +87,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

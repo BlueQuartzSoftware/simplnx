@@ -24,10 +24,10 @@ void CleanupCreatedSupport(DataStructure& dataStructure, TriangleGeom& geometry,
     if(!childExisted[index])
     {
       // Look up the exact new ID even when a failed producer cleared its association.
-      const auto* child = dataStructure.getData(supportPaths[index]);
-      if(child != nullptr)
+      const auto* childPtr = dataStructure.getData(supportPaths[index]);
+      if(childPtr != nullptr)
       {
-        const auto createdId = child->getId();
+        const auto createdId = childPtr->getId();
         if(!dataStructure.removeData(createdId))
         {
           throw std::runtime_error(fmt::format("Cannot remove temporary support object {} from geometry '{}'.", createdId, geometryPath.toString()));
@@ -57,7 +57,6 @@ LabelTriangleGeometry::LabelTriangleGeometry(DataStructure& dataStructure, const
 }
 
 // -----------------------------------------------------------------------------
-LabelTriangleGeometry::~LabelTriangleGeometry() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& LabelTriangleGeometry::getCancel()
@@ -70,10 +69,10 @@ Result<> LabelTriangleGeometry::operator()()
 {
   // Scope other values since underlying arrays will be changed by the time they are need again
   std::vector<uint32> triangleCounts = {0, 0};
-  auto& triangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeomPath);
+  auto& triangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_geom_path);
   const std::array entryIds = {triangle.getElementNeighborsId(), triangle.getElementContainingVertId()};
-  const std::array childExisted = {m_DataStructure.getData(m_InputValues->TriangleGeomPath.createChildPath(TriangleGeom::k_EltNeighbors)) != nullptr,
-                                   m_DataStructure.getData(m_InputValues->TriangleGeomPath.createChildPath(TriangleGeom::k_EltsContainingVert)) != nullptr};
+  const std::array childExisted = {m_DataStructure.getData(m_InputValues->triangle_geom_path.createChildPath(TriangleGeom::k_EltNeighbors)) != nullptr,
+                                   m_DataStructure.getData(m_InputValues->triangle_geom_path.createChildPath(TriangleGeom::k_EltsContainingVert)) != nullptr};
 
   {
     usize numTris = triangle.getNumberOfFaces();
@@ -81,13 +80,13 @@ Result<> LabelTriangleGeometry::operator()()
     Result<> result = triangle.findElementNeighbors(false); // use auto since return time is a class declared typename
     if(result.invalid())
     {
-      CleanupCreatedSupport(m_DataStructure, triangle, m_InputValues->TriangleGeomPath, entryIds, childExisted);
+      CleanupCreatedSupport(m_DataStructure, triangle, m_InputValues->triangle_geom_path, entryIds, childExisted);
       return result;
     }
 
-    const TriangleGeom::ElementDynamicList* triangleNeighborsPtr = triangle.getElementNeighbors();
+    const TriangleGeom::ElementDynamicListType* triangleNeighborsPtr = triangle.getElementNeighbors();
 
-    auto& regionIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->RegionIdsPath)->getDataStoreRef();
+    auto& regionIdsStore = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->region_ids_path)->getDataStoreRef();
 
     usize chunkSize = 1000;
     std::vector<int32> triList(chunkSize, -1);
@@ -136,18 +135,18 @@ Result<> LabelTriangleGeometry::operator()()
     }
 
     // Resize the Triangle Region AttributeMatrix
-    Result<> resizeResult = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->TriangleAMPath)->resizeTuples(std::vector<usize>{triangleCounts.size()});
+    Result<> resizeResult = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->triangle_am_path)->resizeTuples(std::vector<usize>{triangleCounts.size()});
     if(resizeResult.invalid())
     {
-      CleanupCreatedSupport(m_DataStructure, triangle, m_InputValues->TriangleGeomPath, entryIds, childExisted);
+      CleanupCreatedSupport(m_DataStructure, triangle, m_InputValues->triangle_geom_path, entryIds, childExisted);
       return resizeResult;
     }
   }
 
-  CleanupCreatedSupport(m_DataStructure, triangle, m_InputValues->TriangleGeomPath, entryIds, childExisted);
+  CleanupCreatedSupport(m_DataStructure, triangle, m_InputValues->triangle_geom_path, entryIds, childExisted);
 
   // copy triangleCounts into the proper DataArray "NumTriangles" in the Feature Attribute Matrix
-  auto& numTrianglesStore = m_DataStructure.getDataAs<UInt64Array>(m_InputValues->NumTrianglesPath)->getDataStoreRef();
+  auto& numTrianglesStore = m_DataStructure.getDataAs<UInt64ArrayType>(m_InputValues->num_triangles_path)->getDataStoreRef();
   for(usize index = 0; index < numTrianglesStore.getSize(); index++)
   {
     numTrianglesStore[index] = static_cast<uint64>(triangleCounts[index]);

@@ -53,12 +53,12 @@ Parameters EbsdToH5EbsdFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Float32Parameter>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing between each slice of data", 1.0F));
-  params.insert(std::make_unique<ChoicesParameter>(k_StackingOrder_Key, "Stacking Order", "The order the files should be placed into the ", EbsdToH5EbsdInputConstants::k_LowToHigh,
-                                                   EbsdToH5EbsdInputConstants::k_StackingChoices));
+  params.insert(std::make_unique<Float32ParameterType>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing between each slice of data", 1.0F));
+  params.insert(std::make_unique<ChoicesParameter>(k_StackingOrder_Key, "Stacking Order", "The order the files should be placed into the ", ebsd_to_h5_ebsd_input_constants::k_LowToHigh,
+                                                   ebsd_to_h5_ebsd_input_constants::k_StackingChoices));
   params.insert(std::make_unique<ChoicesParameter>(k_ReferenceFrame_Key, "Reference Frame Options",
-                                                   "The reference frame transformation. 0=EDAX(.ang), 1=Oxford(.ctf), 2=No/Unknown Transformation, 3=HEDM-IceNine", EbsdToH5EbsdInputConstants::k_Edax,
-                                                   EbsdToH5EbsdInputConstants::k_TransformChoices));
+                                                   "The reference frame transformation. 0=EDAX(.ang), 1=Oxford(.ctf), 2=No/Unknown Transformation, 3=HEDM-IceNine",
+                                                   ebsd_to_h5_ebsd_input_constants::k_Edax, ebsd_to_h5_ebsd_input_constants::k_TransformChoices));
 
   params.insertSeparator(Parameters::Separator{"Output File"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output H5Ebsd File", "The path to the generated .h5ebsd file", fs::path(""),
@@ -79,14 +79,14 @@ IFilter::VersionType EbsdToH5EbsdFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer EbsdToH5EbsdFilter::clone() const
+IFilter::UniquePointerType EbsdToH5EbsdFilter::clone() const
 {
   return std::make_unique<EbsdToH5EbsdFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult EbsdToH5EbsdFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                           const ExecutionContext& executionContext) const
+IFilter::PreflightResult EbsdToH5EbsdFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                           const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto generatedFileListInfo = filterArgs.value<GeneratedFileListParameter::ValueType>(k_InputFileListInfo_Key);
   auto referenceFrame = filterArgs.value<ChoicesParameter::ValueType>(k_ReferenceFrame_Key);
@@ -97,14 +97,14 @@ IFilter::PreflightResult EbsdToH5EbsdFilter::preflightImpl(const DataStructure& 
 
   std::vector<PreflightValue> preflightUpdatedValues;
 
-  std::string lowerExtension = StringUtilities::toLower(generatedFileListInfo.fileExtension);
+  std::string lowerExtension = string_utilities::ToLower(generatedFileListInfo.file_extension);
 
   if(lowerExtension != ".ang" && lowerExtension != ".ctf")
   {
-    return {MakePreflightErrorResult(-60800, fmt::format("Only .ang and .ctf files are supported. Got '{}'", generatedFileListInfo.fileExtension))};
+    return {MakePreflightErrorResult(-60800, fmt::format("Only .ang and .ctf files are supported. Got '{}'", generatedFileListInfo.file_extension))};
   }
 
-  generatedFileListInfo.ordering = nx::core::FilePathGenerator::Ordering::LowToHigh;
+  generatedFileListInfo.ordering = nx::core::file_path_generator::Ordering::LowToHigh;
   std::vector<std::string> fileList = generatedFileListInfo.generate();
   if(fileList.empty())
   {
@@ -115,19 +115,19 @@ IFilter::PreflightResult EbsdToH5EbsdFilter::preflightImpl(const DataStructure& 
   std::stringstream description;
   switch(referenceFrame)
   {
-  case EbsdToH5EbsdInputConstants::k_Edax:
+  case ebsd_to_h5_ebsd_input_constants::k_Edax:
     description << "Manufacturer: " << "Edax - TSL" << "\n"
                 << "Sample Reference Transformation: " << "180 @ <010>" << "\n"
                 << "Euler Transformation: " << "90 @ <001>" << "\n";
     break;
 
-  case EbsdToH5EbsdInputConstants::k_Oxford:
+  case ebsd_to_h5_ebsd_input_constants::k_Oxford:
     description << "Manufacturer: " << "Oxford - HKL" << "\n"
                 << "Sample Reference Transformation: " << "180 @ <010>" << "\n"
                 << "Euler Transformation: " << "0 @ <001>" << "\n";
     break;
 
-  case EbsdToH5EbsdInputConstants::k_Hedm:
+  case ebsd_to_h5_ebsd_input_constants::k_Hedm:
     description << "Manufacturer: " << "HEDM - IceNine" << "\n"
                 << "Sample Reference Transformation: " << "0 @ <001>" << "\n"
                 << "Euler Transformation: " << "0 @ <001>" << "\n";
@@ -144,24 +144,24 @@ IFilter::PreflightResult EbsdToH5EbsdFilter::preflightImpl(const DataStructure& 
   preflightUpdatedValues.push_back({"Reference Type Notes", description.str()});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> EbsdToH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> EbsdToH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                         const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   EbsdToH5EbsdInputValues inputValues;
 
-  inputValues.ZSpacing = filterArgs.value<Float32Parameter::ValueType>(k_ZSpacing_Key);
-  inputValues.StackingOrder = filterArgs.value<ChoicesParameter::ValueType>(k_StackingOrder_Key);
-  inputValues.ReferenceFrame = filterArgs.value<ChoicesParameter::ValueType>(k_ReferenceFrame_Key);
-  inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
-  inputValues.InputFileListInfo = filterArgs.value<GeneratedFileListParameter::ValueType>(k_InputFileListInfo_Key);
+  inputValues.z_spacing = filterArgs.value<Float32ParameterType::ValueType>(k_ZSpacing_Key);
+  inputValues.stacking_order = filterArgs.value<ChoicesParameter::ValueType>(k_StackingOrder_Key);
+  inputValues.reference_frame = filterArgs.value<ChoicesParameter::ValueType>(k_ReferenceFrame_Key);
+  inputValues.output_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
+  inputValues.input_file_list_info = filterArgs.value<GeneratedFileListParameter::ValueType>(k_InputFileListInfo_Key);
   // ALWAYS use LowToHigh (no matter what the user happened to click in the UI). We need
   // the list ordered from low to high to be correct. The Stacking Order is a piece of
   // meta-data that is stored in the HDF5 file and used when reading the .h5ebsd file
-  inputValues.InputFileListInfo.ordering = nx::core::FilePathGenerator::Ordering::LowToHigh;
+  inputValues.input_file_list_info.ordering = nx::core::file_path_generator::Ordering::LowToHigh;
 
   return EbsdToH5Ebsd(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

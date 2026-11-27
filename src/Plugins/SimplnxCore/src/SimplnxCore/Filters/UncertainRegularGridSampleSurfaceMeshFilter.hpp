@@ -24,21 +24,21 @@ public:
   UncertainRegularGridSampleSurfaceMeshFilter& operator=(UncertainRegularGridSampleSurfaceMeshFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_TriangleGeometryPath_Key = "input_triangle_geometry_path";
-  static constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
-  static constexpr StringLiteral k_Spacing_Key = "spacing";
-  static constexpr StringLiteral k_Origin_Key = "origin";
-  static constexpr StringLiteral k_Uncertainty_Key = "uncertainty";
-  static constexpr StringLiteral k_ImageGeomPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_CellAMName_Key = "cell_attribute_matrix_name";
-  static constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
-  static constexpr StringLiteral k_UseSeed_Key = "use_seed";
-  static constexpr StringLiteral k_SeedValue_Key = "seed_value";
-  static constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
-  static constexpr StringLiteral k_Dimensions_Key = "dimensions";
+  static constexpr StringLiteralType k_TriangleGeometryPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteralType k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static constexpr StringLiteralType k_Spacing_Key = "spacing";
+  static constexpr StringLiteralType k_Origin_Key = "origin";
+  static constexpr StringLiteralType k_Uncertainty_Key = "uncertainty";
+  static constexpr StringLiteralType k_ImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_CellAMName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteralType k_FeatureIdsArrayName_Key = "feature_ids_array_name";
+  static constexpr StringLiteralType k_UseSeed_Key = "use_seed";
+  static constexpr StringLiteralType k_SeedValue_Key = "seed_value";
+  static constexpr StringLiteralType k_SeedArrayName_Key = "seed_array_name";
+  static constexpr StringLiteralType k_Dimensions_Key = "dimensions";
 
   // V2 Key
-  static constexpr StringLiteral k_OutputType_Key = "output_type_index";
+  static constexpr StringLiteralType k_OutputType_Key = "output_type_index";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -95,7 +95,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

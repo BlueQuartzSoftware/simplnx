@@ -54,9 +54,9 @@ Parameters SharedFeatureFaceFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the normals", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The DataPath to the FaceLabels values.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
 
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_FeatureFaceIdsArrayName_Key, "Feature Face Ids", "The name of the calculated Feature Face Ids DataArray", "SharedFeatureFaceId"));
@@ -79,14 +79,14 @@ IFilter::VersionType SharedFeatureFaceFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer SharedFeatureFaceFilter::clone() const
+IFilter::UniquePointerType SharedFeatureFaceFilter::clone() const
 {
   return std::make_unique<SharedFeatureFaceFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult SharedFeatureFaceFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult SharedFeatureFaceFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto triangleGeometryPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
   auto pFaceLabelsArrayPathValue = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
@@ -101,18 +101,18 @@ IFilter::PreflightResult SharedFeatureFaceFilter::preflightImpl(const DataStruct
 
   // Create the Face Data/FeatureIds Array
   {
-    const auto* faceLabelDataArray = dataStructure.getDataAs<Int32Array>(pFaceLabelsArrayPathValue);
-    if(nullptr == faceLabelDataArray)
+    const auto* faceLabelDataArrayPtr = dataStructure.getDataAs<Int32ArrayType>(pFaceLabelsArrayPathValue);
+    if(nullptr == faceLabelDataArrayPtr)
     {
       return IFilter::MakePreflightErrorResult(-12901, fmt::format("Face Labels does not exist at path '{}' or the path does not point to an Int32 Array", pFaceLabelsArrayPathValue.toString()));
     }
-    auto tupleShape = faceLabelDataArray->getTupleShape();
+    auto tupleShape = faceLabelDataArrayPtr->getTupleShape();
     auto faceDataGroupPathVector = pFaceLabelsArrayPathValue.getPathVector();
     faceDataGroupPathVector.pop_back();
     DataPath faceDataGroupPath = DataPath(faceDataGroupPathVector);
 
     DataPath createdArrayPath = faceDataGroupPath.createChildPath(featureFaceIdsArrayName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, faceLabelDataArray->getTupleShape(), std::vector<usize>{1}, createdArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, faceLabelDataArrayPtr->getTupleShape(), std::vector<usize>{1}, createdArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
@@ -137,32 +137,32 @@ IFilter::PreflightResult SharedFeatureFaceFilter::preflightImpl(const DataStruct
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> SharedFeatureFaceFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> SharedFeatureFaceFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                              const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   SharedFeatureFaceInputValues inputValues;
-  inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
-  inputValues.FaceLabelsArrayPath = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
+  inputValues.triangle_geometry_path = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
+  inputValues.face_labels_array_path = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
 
-  auto faceDataGroupPathVector = inputValues.FaceLabelsArrayPath.getPathVector();
+  auto faceDataGroupPathVector = inputValues.face_labels_array_path.getPathVector();
   faceDataGroupPathVector.pop_back();
   auto featureFaceIdsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_FeatureFaceIdsArrayName_Key);
   faceDataGroupPathVector.push_back(featureFaceIdsArrayName);
-  inputValues.FeatureFaceIdsArrayPath = DataPath(faceDataGroupPathVector);
+  inputValues.feature_face_ids_array_path = DataPath(faceDataGroupPathVector);
 
   auto grainBoundaryAttributeMatrixName = filterArgs.value<DataObjectNameParameter::ValueType>(k_GrainBoundaryAttributeMatrixName_Key);
-  inputValues.GrainBoundaryAttributeMatrixPath = inputValues.TriangleGeometryPath.createChildPath(grainBoundaryAttributeMatrixName);
+  inputValues.grain_boundary_attribute_matrix_path = inputValues.triangle_geometry_path.createChildPath(grainBoundaryAttributeMatrixName);
 
   auto featureNumTrianglesArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_FeatureNumTrianglesArrayName_Key);
-  inputValues.FeatureFaceNumTrianglesArrayPath = inputValues.GrainBoundaryAttributeMatrixPath.createChildPath(featureNumTrianglesArrayName);
+  inputValues.feature_face_num_triangles_array_path = inputValues.grain_boundary_attribute_matrix_path.createChildPath(featureNumTrianglesArrayName);
 
   auto featureFaceLabelsArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_FeatureFaceLabelsArrayName_Key);
-  inputValues.FeatureFaceLabelsArrayPath = inputValues.GrainBoundaryAttributeMatrixPath.createChildPath(featureFaceLabelsArrayName);
-  inputValues.ShouldRandomizeFeatureIds = filterArgs.value<bool>(k_RandomizeFeatures_Key);
+  inputValues.feature_face_labels_array_path = inputValues.grain_boundary_attribute_matrix_path.createChildPath(featureFaceLabelsArrayName);
+  inputValues.should_randomize_feature_ids = filterArgs.value<bool>(k_RandomizeFeatures_Key);
 
   return SharedFeatureFace(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

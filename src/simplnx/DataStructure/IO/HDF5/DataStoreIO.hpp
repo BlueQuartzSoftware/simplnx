@@ -13,11 +13,7 @@
 #include <numeric>
 #include <stdexcept>
 
-namespace nx::core
-{
-namespace HDF5
-{
-namespace DataStoreIO
+namespace nx::core::hdf5::data_store_io
 {
 
 /**
@@ -28,7 +24,7 @@ namespace DataStoreIO
  * @return Store or shape-attribute write errors.
  */
 template <typename T>
-inline Result<> WriteDataStore(nx::core::HDF5::DatasetIO& datasetWriter, const AbstractDataStore<T>& dataStore)
+inline Result<> WriteDataStore(nx::core::hdf5::DatasetIO& datasetWriter, const AbstractDataStore<T>& dataStore)
 {
   // if(!datasetWriter.isValid())
   //{
@@ -43,9 +39,9 @@ inline Result<> WriteDataStore(nx::core::HDF5::DatasetIO& datasetWriter, const A
   }
   auto warnings = std::move(writeResult.warnings());
 
-  const auto tupleShape = dataStore.getTupleShape();
-  const auto componentShape = dataStore.getComponentShape();
-  auto shapeResult = datasetWriter.writeVectorAttribute(IOConstants::k_TupleShapeTag, tupleShape);
+  const auto& tupleShape = dataStore.getTupleShape();
+  const auto& componentShape = dataStore.getComponentShape();
+  auto shapeResult = datasetWriter.writeVectorAttribute(io_constants::k_TupleShapeTag, tupleShape);
   if(shapeResult.invalid())
   {
     shapeResult.warnings().insert(shapeResult.warnings().begin(), std::make_move_iterator(warnings.begin()), std::make_move_iterator(warnings.end()));
@@ -55,7 +51,7 @@ inline Result<> WriteDataStore(nx::core::HDF5::DatasetIO& datasetWriter, const A
   {
     warnings.push_back(std::move(warning));
   }
-  shapeResult = datasetWriter.writeVectorAttribute(IOConstants::k_ComponentShapeTag, componentShape);
+  shapeResult = datasetWriter.writeVectorAttribute(io_constants::k_ComponentShapeTag, componentShape);
   if(shapeResult.invalid())
   {
     shapeResult.warnings().insert(shapeResult.warnings().begin(), std::make_move_iterator(warnings.begin()), std::make_move_iterator(warnings.end()));
@@ -85,15 +81,15 @@ inline Result<> WriteDataStore(nx::core::HDF5::DatasetIO& datasetWriter, const A
  * usize.
  */
 template <typename T>
-inline Result<std::shared_ptr<AbstractDataStore<T>>> ReadDataStoreIntoMemory(const nx::core::HDF5::DatasetIO& datasetReader)
+inline Result<std::shared_ptr<AbstractDataStore<T>>> ReadDataStoreIntoMemory(const nx::core::hdf5::DatasetIO& datasetReader)
 {
-  auto tupleShapeResult = IDataStoreIO::ReadTupleShape(datasetReader);
+  auto tupleShapeResult = i_data_store_io::ReadTupleShape(datasetReader);
   if(tupleShapeResult.invalid())
   {
     return ConvertInvalidResult<std::shared_ptr<AbstractDataStore<T>>>(std::move(tupleShapeResult));
   }
   auto warnings = std::move(tupleShapeResult.warnings());
-  auto componentShapeResult = IDataStoreIO::ReadComponentShape(datasetReader);
+  auto componentShapeResult = i_data_store_io::ReadComponentShape(datasetReader);
   if(componentShapeResult.invalid())
   {
     auto result = ConvertInvalidResult<std::shared_ptr<AbstractDataStore<T>>>(std::move(componentShapeResult));
@@ -127,10 +123,11 @@ inline Result<std::shared_ptr<AbstractDataStore<T>>> ReadDataStoreIntoMemory(con
   {
     Result<std::shared_ptr<AbstractDataStore<T>>> result;
     result.warnings() = std::move(warnings);
-    result.warnings().push_back(Warning{-89200, fmt::format("Unable to read dataset '{}' at path '{}': the file contains {} elements but the shape "
-                                                            "attributes indicate {} elements. This typically means the dataset is an out-of-core placeholder whose "
-                                                            "data is not stored inline; reading its full contents requires an out-of-core-enabled build.",
-                                                            datasetReader.getName(), datasetReader.getObjectPath(), physicalElements, expectedElements)});
+    result.warnings().push_back(Warning{.code = -89200,
+                                        .message = fmt::format("Unable to read dataset '{}' at path '{}': the file contains {} elements but the shape "
+                                                               "attributes indicate {} elements. This typically means the dataset is an out-of-core placeholder whose "
+                                                               "data is not stored inline; reading its full contents requires an out-of-core-enabled build.",
+                                                               datasetReader.getName(), datasetReader.getObjectPath(), physicalElements, expectedElements)});
     return result;
   }
 
@@ -153,6 +150,4 @@ inline Result<std::shared_ptr<AbstractDataStore<T>>> ReadDataStoreIntoMemory(con
   return result;
 }
 
-} // namespace DataStoreIO
-} // namespace HDF5
-} // namespace nx::core
+} // namespace nx::core::hdf5::data_store_io

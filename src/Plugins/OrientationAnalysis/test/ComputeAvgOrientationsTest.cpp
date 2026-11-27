@@ -79,20 +79,20 @@ constexpr uint32 k_CubicHigh = 1;
 constexpr uint32 k_Triclinic = 4;
 
 // Rz(theta) = (0, 0, sin(theta/2), cos(theta/2)) in (x,y,z,w) storage order.
-constexpr float32 k_Rz90_z = 0.7071067811865476f; // sin(45) = cos(45)
-constexpr float32 k_Rz45_z = 0.3826834323650898f; // sin(22.5)
-constexpr float32 k_Rz45_w = 0.9238795325112867f; // cos(22.5)
+constexpr float32 k_Rz90Z = 0.7071067811865476f; // sin(45) = cos(45)
+constexpr float32 k_Rz45Z = 0.3826834323650898f; // sin(22.5)
+constexpr float32 k_Rz45W = 0.9238795325112867f; // cos(22.5)
 
 // Cubic-equivalent z-rotation representations of the physical orientation Rz(30):
 // Rz(90) is a cubic symmetry operator, so Rz(30+90k) all describe the same orientation.
-constexpr float32 k_Rz30_z = 0.2588190451025208f;   // sin(15)
-constexpr float32 k_Rz30_w = 0.9659258262890683f;   // cos(15)
-constexpr float32 k_Rz120_z = 0.8660254037844386f;  // sin(60)
-constexpr float32 k_Rz120_w = 0.5f;                 // cos(60)
-constexpr float32 k_Rz210_z = 0.9659258262890683f;  // sin(105)
-constexpr float32 k_Rz210_w = -0.2588190451025208f; // cos(105)
-constexpr float32 k_Rz300_z = 0.5f;                 // sin(150)
-constexpr float32 k_Rz300_w = -0.8660254037844386f; // cos(150)
+constexpr float32 k_Rz30Z = 0.2588190451025208f;   // sin(15)
+constexpr float32 k_Rz30W = 0.9659258262890683f;   // cos(15)
+constexpr float32 k_Rz120Z = 0.8660254037844386f;  // sin(60)
+constexpr float32 k_Rz120W = 0.5f;                 // cos(60)
+constexpr float32 k_Rz210Z = 0.9659258262890683f;  // sin(105)
+constexpr float32 k_Rz210W = -0.2588190451025208f; // cos(105)
+constexpr float32 k_Rz300Z = 0.5f;                 // sin(150)
+constexpr float32 k_Rz300W = -0.8660254037844386f; // cos(150)
 
 // Build the image, input arrays, output feature matrix, and crystal structures.
 DataStructure BuildDataStructure(int32 numCells, int32 numFeatures, const std::vector<int32>& featureIds, const std::vector<int32>& phases, const std::vector<float32>& quats,
@@ -100,35 +100,35 @@ DataStructure BuildDataStructure(int32 numCells, int32 numFeatures, const std::v
 {
   DataStructure dataStructure;
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  imageGeom->setDimensions({static_cast<usize>(numCells), 1, 1});
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  imageGeomPtr->setDimensions({static_cast<usize>(numCells), 1, 1});
 
-  AttributeMatrix* cellDataAM = AttributeMatrix::Create(dataStructure, k_CellDataName, ShapeType{static_cast<usize>(numCells)}, imageGeom->getId());
+  AttributeMatrix* cellDataAmPtr = AttributeMatrix::Create(dataStructure, k_CellDataName, ShapeType{static_cast<usize>(numCells)}, imageGeomPtr->getId());
 
   {
     auto buffer = std::make_unique<int32[]>(featureIds.size());
     std::copy(featureIds.begin(), featureIds.end(), buffer.get());
-    DataArray<int32>::Create(dataStructure, k_FeatureIdsName, std::make_shared<Int32DataStore>(std::move(buffer), cellDataAM->getShape(), ShapeType{1}), cellDataAM->getId());
+    DataArray<int32>::Create(dataStructure, k_FeatureIdsName, std::make_shared<Int32DataStoreType>(std::move(buffer), cellDataAmPtr->getShape(), ShapeType{1}), cellDataAmPtr->getId());
   }
   {
     auto buffer = std::make_unique<int32[]>(phases.size());
     std::copy(phases.begin(), phases.end(), buffer.get());
-    DataArray<int32>::Create(dataStructure, k_PhasesName, std::make_shared<Int32DataStore>(std::move(buffer), cellDataAM->getShape(), ShapeType{1}), cellDataAM->getId());
+    DataArray<int32>::Create(dataStructure, k_PhasesName, std::make_shared<Int32DataStoreType>(std::move(buffer), cellDataAmPtr->getShape(), ShapeType{1}), cellDataAmPtr->getId());
   }
   {
     auto buffer = std::make_unique<float32[]>(quats.size());
     std::copy(quats.begin(), quats.end(), buffer.get());
-    DataArray<float32>::Create(dataStructure, k_QuatsName, std::make_shared<Float32DataStore>(std::move(buffer), cellDataAM->getShape(), ShapeType{4}), cellDataAM->getId());
+    DataArray<float32>::Create(dataStructure, k_QuatsName, std::make_shared<Float32DataStoreType>(std::move(buffer), cellDataAmPtr->getShape(), ShapeType{4}), cellDataAmPtr->getId());
   }
 
   // Preflight creates output arrays in Cell Feature Data.
-  AttributeMatrix::Create(dataStructure, k_FeatureDataName, ShapeType{static_cast<usize>(numFeatures)}, imageGeom->getId());
+  AttributeMatrix::Create(dataStructure, k_FeatureDataName, ShapeType{static_cast<usize>(numFeatures)}, imageGeomPtr->getId());
 
-  AttributeMatrix* ensembleAM = AttributeMatrix::Create(dataStructure, k_EnsembleDataName, ShapeType{crystalStructures.size()}, imageGeom->getId());
+  AttributeMatrix* ensembleAmPtr = AttributeMatrix::Create(dataStructure, k_EnsembleDataName, ShapeType{crystalStructures.size()}, imageGeomPtr->getId());
   {
     auto buffer = std::make_unique<uint32[]>(crystalStructures.size());
     std::copy(crystalStructures.begin(), crystalStructures.end(), buffer.get());
-    DataArray<uint32>::Create(dataStructure, k_CrystalStructuresName, std::make_shared<UInt32DataStore>(std::move(buffer), ensembleAM->getShape(), ShapeType{1}), ensembleAM->getId());
+    DataArray<uint32>::Create(dataStructure, k_CrystalStructuresName, std::make_shared<UInt32DataStoreType>(std::move(buffer), ensembleAmPtr->getShape(), ShapeType{1}), ensembleAmPtr->getId());
   }
 
   return dataStructure;
@@ -143,7 +143,7 @@ void SetInputArgs(Arguments& args)
   args.insertOrAssign(ComputeAvgOrientationsFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(k_FeatureDataPath));
 }
 
-void CheckQuat(const Float32Array& arr, usize feature, float32 x, float32 y, float32 z, float32 w, float32 margin)
+void CheckQuat(const Float32ArrayType& arr, usize feature, float32 x, float32 y, float32 z, float32 w, float32 margin)
 {
   const auto& store = arr.getDataStoreRef();
   REQUIRE(store.getValue(feature * 4 + 0) == Approx(x).margin(margin));
@@ -152,7 +152,7 @@ void CheckQuat(const Float32Array& arr, usize feature, float32 x, float32 y, flo
   REQUIRE(store.getValue(feature * 4 + 3) == Approx(w).margin(margin));
 }
 
-void CheckQuatNaN(const Float32Array& arr, usize feature)
+void CheckQuatNaN(const Float32ArrayType& arr, usize feature)
 {
   const auto& store = arr.getDataStoreRef();
   for(usize c = 0; c < 4; c++)
@@ -161,7 +161,7 @@ void CheckQuatNaN(const Float32Array& arr, usize feature)
   }
 }
 
-void CheckUnitNorthern(const Float32Array& arr, usize feature)
+void CheckUnitNorthern(const Float32ArrayType& arr, usize feature)
 {
   const auto& store = arr.getDataStoreRef();
   const double xq = store.getValue(feature * 4 + 0);
@@ -190,27 +190,27 @@ void ConfigureMethods(Arguments& args, bool useRodrigues, bool useVmf, bool useW
 ComputeAvgOrientationsInputValues CreateInputValues(bool useRodrigues, bool useVmf, bool useWatson)
 {
   ComputeAvgOrientationsInputValues inputValues;
-  inputValues.cellFeatureIdsArrayPath = k_FeatureIdsPath;
-  inputValues.cellPhasesArrayPath = k_PhasesPath;
-  inputValues.cellQuatsArrayPath = k_QuatsPath;
-  inputValues.crystalStructuresArrayPath = k_CrystalStructuresPath;
-  inputValues.useRodriguesAverage = useRodrigues;
-  inputValues.useVonMisesAverage = useVmf;
-  inputValues.useWatsonAverage = useWatson;
-  inputValues.avgQuatsArrayPath = k_FeatureDataPath.createChildPath(k_AvgQuatsName);
-  inputValues.avgEulerAnglesArrayPath = k_FeatureDataPath.createChildPath(k_AvgEulerName);
-  inputValues.VMFQuatsArrayPath = k_FeatureDataPath.createChildPath(k_VMFQuatsName);
-  inputValues.VMFEulerAnglesArrayPath = k_FeatureDataPath.createChildPath(k_VMFEulerName);
-  inputValues.VMFKappaArrayPath = k_FeatureDataPath.createChildPath(k_VMFKappaName);
-  inputValues.WatsonQuatsArrayPath = k_FeatureDataPath.createChildPath(k_WatsonQuatsName);
-  inputValues.WatsonEulerAnglesArrayPath = k_FeatureDataPath.createChildPath(k_WatsonEulerName);
-  inputValues.WatsonKappaArrayPath = k_FeatureDataPath.createChildPath(k_WatsonKappaName);
+  inputValues.cell_feature_ids_array_path = k_FeatureIdsPath;
+  inputValues.cell_phases_array_path = k_PhasesPath;
+  inputValues.cell_quats_array_path = k_QuatsPath;
+  inputValues.crystal_structures_array_path = k_CrystalStructuresPath;
+  inputValues.use_rodrigues_average = useRodrigues;
+  inputValues.use_von_mises_average = useVmf;
+  inputValues.use_watson_average = useWatson;
+  inputValues.avg_quats_array_path = k_FeatureDataPath.createChildPath(k_AvgQuatsName);
+  inputValues.avg_euler_angles_array_path = k_FeatureDataPath.createChildPath(k_AvgEulerName);
+  inputValues.vmf_quats_array_path = k_FeatureDataPath.createChildPath(k_VMFQuatsName);
+  inputValues.vmf_euler_angles_array_path = k_FeatureDataPath.createChildPath(k_VMFEulerName);
+  inputValues.vmf_kappa_array_path = k_FeatureDataPath.createChildPath(k_VMFKappaName);
+  inputValues.watson_quats_array_path = k_FeatureDataPath.createChildPath(k_WatsonQuatsName);
+  inputValues.watson_euler_angles_array_path = k_FeatureDataPath.createChildPath(k_WatsonEulerName);
+  inputValues.watson_kappa_array_path = k_FeatureDataPath.createChildPath(k_WatsonKappaName);
   return inputValues;
 }
 
 std::vector<float32> ReadFloatArray(const DataStructure& dataStructure, const DataPath& path)
 {
-  const auto& array = dataStructure.getDataRefAs<Float32Array>(path);
+  const auto& array = dataStructure.getDataRefAs<Float32ArrayType>(path);
   std::vector<float32> values(array.getSize());
   auto arrayReadResult = array.getDataStoreRef().copyIntoBuffer(0, nonstd::span<float32>(values.data(), values.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(arrayReadResult);
@@ -239,10 +239,10 @@ DataStructure BuildSingleOrientationMethodOracleData()
 {
   return BuildDataStructure(4, 4, {0, 1, 2, 3}, {0, 1, 1, 1},
                             {
-                                0.0F, 0.0F, 0.0F, 1.0F,         // F0 background
-                                0.0F, 0.0F, 0.0F, 1.0F,         // F1 identity
-                                0.0F, 0.0F, k_Rz90_z, k_Rz90_z, // F2 Rz90
-                                0.0F, 0.0F, k_Rz45_z, k_Rz45_w, // F3 Rz45
+                                0.0F, 0.0F, 0.0F, 1.0F,       // F0 background
+                                0.0F, 0.0F, 0.0F, 1.0F,       // F1 identity
+                                0.0F, 0.0F, k_Rz90Z, k_Rz90Z, // F2 Rz90
+                                0.0F, 0.0F, k_Rz45Z, k_Rz45W, // F3 Rz45
                             },
                             {k_Unknown, k_Triclinic});
 }
@@ -250,22 +250,22 @@ DataStructure BuildSingleOrientationMethodOracleData()
 void RequireSingleOrientationMethodOracle(const DataStructure& dataStructure, bool useRodrigues, bool useVmf, bool useWatson)
 {
   constexpr float32 k_QuatMargin = 1.0e-6F;
-  const auto requireSingleOrientationQuaternions = [&](const Float32Array& array) {
+  const auto requireSingleOrientationQuaternions = [&](const Float32ArrayType& array) {
     CheckQuat(array, 1, 0.0F, 0.0F, 0.0F, 1.0F, k_QuatMargin);
-    CheckQuat(array, 2, 0.0F, 0.0F, k_Rz90_z, k_Rz90_z, k_QuatMargin);
-    CheckQuat(array, 3, 0.0F, 0.0F, k_Rz45_z, k_Rz45_w, k_QuatMargin);
+    CheckQuat(array, 2, 0.0F, 0.0F, k_Rz90Z, k_Rz90Z, k_QuatMargin);
+    CheckQuat(array, 3, 0.0F, 0.0F, k_Rz45Z, k_Rz45W, k_QuatMargin);
   };
 
   if(useRodrigues)
   {
-    const auto& quaternions = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName));
+    const auto& quaternions = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_AvgQuatsName));
     CheckQuat(quaternions, 0, 0.0F, 0.0F, 0.0F, 1.0F, k_QuatMargin);
     requireSingleOrientationQuaternions(quaternions);
   }
 
   const auto requireDirectionalMethod = [&](const std::string& quaternionName, const std::string& kappaName) {
-    const auto& quaternions = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(quaternionName));
-    const auto& kappas = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(kappaName));
+    const auto& quaternions = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(quaternionName));
+    const auto& kappas = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(kappaName));
     CheckQuatNaN(quaternions, 0);
     REQUIRE(std::isnan(kappas.getDataStoreRef().getValue(0)));
     requireSingleOrientationQuaternions(quaternions);
@@ -289,33 +289,33 @@ DataStructure BuildResolverDataStructure(int32 numCells, int32 numFeatures, cons
                                          const std::vector<uint32>& crystalStructures)
 {
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({static_cast<usize>(numCells), 1, 1});
-  auto* cellData = AttributeMatrix::Create(dataStructure, k_CellDataName, {static_cast<usize>(numCells)}, imageGeom->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeom->setCellData(*cellData);
-  auto* featureData = AttributeMatrix::Create(dataStructure, k_FeatureDataName, {static_cast<usize>(numFeatures)}, imageGeom->getId());
-  REQUIRE(featureData != nullptr);
-  auto* ensembleData = AttributeMatrix::Create(dataStructure, k_EnsembleDataName, {crystalStructures.size()}, imageGeom->getId());
-  REQUIRE(ensembleData != nullptr);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({static_cast<usize>(numCells), 1, 1});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, k_CellDataName, {static_cast<usize>(numCells)}, imageGeomPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeomPtr->setCellData(*cellDataPtr);
+  auto* featureDataPtr = AttributeMatrix::Create(dataStructure, k_FeatureDataName, {static_cast<usize>(numFeatures)}, imageGeomPtr->getId());
+  REQUIRE(featureDataPtr != nullptr);
+  auto* ensembleDataPtr = AttributeMatrix::Create(dataStructure, k_EnsembleDataName, {crystalStructures.size()}, imageGeomPtr->getId());
+  REQUIRE(ensembleDataPtr != nullptr);
 
-  auto featureStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, {static_cast<usize>(numCells)}, {1});
-  auto phaseStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_PhasesPath, {static_cast<usize>(numCells)}, {1});
-  auto quaternionStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_QuatsPath, {static_cast<usize>(numCells)}, {4});
-  auto crystalStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, k_CrystalStructuresPath, {crystalStructures.size()}, {1});
+  auto featureStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, {static_cast<usize>(numCells)}, {1});
+  auto phaseStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_PhasesPath, {static_cast<usize>(numCells)}, {1});
+  auto quaternionStore = data_store_utilities::CreateDataStore<float32>(dataStructure, k_QuatsPath, {static_cast<usize>(numCells)}, {4});
+  auto crystalStore = data_store_utilities::CreateDataStore<uint32>(dataStructure, k_CrystalStructuresPath, {crystalStructures.size()}, {1});
   REQUIRE(featureStore != nullptr);
   REQUIRE(phaseStore != nullptr);
   REQUIRE(quaternionStore != nullptr);
   REQUIRE(crystalStore != nullptr);
-  auto* featureArray = Int32Array::Create(dataStructure, k_FeatureIdsName, featureStore, cellData->getId());
-  auto* phaseArray = Int32Array::Create(dataStructure, k_PhasesName, phaseStore, cellData->getId());
-  auto* quaternionArray = Float32Array::Create(dataStructure, k_QuatsName, quaternionStore, cellData->getId());
-  auto* crystalArray = UInt32Array::Create(dataStructure, k_CrystalStructuresName, crystalStore, ensembleData->getId());
-  REQUIRE(featureArray != nullptr);
-  REQUIRE(phaseArray != nullptr);
-  REQUIRE(quaternionArray != nullptr);
-  REQUIRE(crystalArray != nullptr);
+  auto* featureArrayPtr = Int32ArrayType::Create(dataStructure, k_FeatureIdsName, featureStore, cellDataPtr->getId());
+  auto* phaseArrayPtr = Int32ArrayType::Create(dataStructure, k_PhasesName, phaseStore, cellDataPtr->getId());
+  auto* quaternionArrayPtr = Float32ArrayType::Create(dataStructure, k_QuatsName, quaternionStore, cellDataPtr->getId());
+  auto* crystalArrayPtr = UInt32ArrayType::Create(dataStructure, k_CrystalStructuresName, crystalStore, ensembleDataPtr->getId());
+  REQUIRE(featureArrayPtr != nullptr);
+  REQUIRE(phaseArrayPtr != nullptr);
+  REQUIRE(quaternionArrayPtr != nullptr);
+  REQUIRE(crystalArrayPtr != nullptr);
   auto featureStoreWriteResult = featureStore->copyFromBuffer(0, nonstd::span<const int32>(featureIds.data(), featureIds.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(featureStoreWriteResult);
   auto phaseStoreWriteResult = phaseStore->copyFromBuffer(0, nonstd::span<const int32>(phases.data(), phases.size()));
@@ -337,7 +337,7 @@ public:
   {
   }
 
-  Result<> copyIntoBuffer(usize, nonstd::span<T>) const override
+  Result<> copyIntoBuffer(usize /*unused*/, nonstd::span<T> /*unused*/) const override
   {
     return MakeErrorResult(m_ErrorCode, "Injected ComputeAvgOrientations bulk-read failure");
   }
@@ -356,7 +356,7 @@ public:
   {
   }
 
-  Result<> copyFromBuffer(usize, nonstd::span<const T>) override
+  Result<> copyFromBuffer(usize /*unused*/, nonstd::span<const T> /*unused*/) override
   {
     return MakeErrorResult(m_ErrorCode, "Injected ComputeAvgOrientations bulk-write failure");
   }
@@ -425,17 +425,17 @@ public:
   {
   }
 
-  Result<> append(uint64, nonstd::span<const std::byte>, const std::atomic_bool&, const ExternalSortProgressCallback&) override
+  Result<> append(uint64 /*recordCount*/, nonstd::span<const std::byte> /*records*/, const std::atomic_bool& /*shouldCancel*/, const ExternalSortProgressCallbackType& /*progressCallback*/) override
   {
     return MakeErrorResult(m_ErrorCode, "Injected ComputeAvgOrientations external-sort append failure");
   }
 
-  Result<> finish(const std::atomic_bool&, const ExternalSortProgressCallback&) override
+  Result<> finish(const std::atomic_bool& /*shouldCancel*/, const ExternalSortProgressCallbackType& /*progressCallback*/) override
   {
     return {};
   }
 
-  Result<uint64> read(uint64, uint64, nonstd::span<std::byte>, const std::atomic_bool&) const override
+  Result<uint64> read(uint64 /*recordOffset*/, uint64 /*recordCount*/, nonstd::span<std::byte> /*records*/, const std::atomic_bool& /*shouldCancel*/) const override
   {
     return {uint64{0}};
   }
@@ -468,7 +468,7 @@ public:
     return true;
   }
 
-  Result<std::unique_ptr<IExternalSort>> createExternalSort(const ExternalSortConfig&) const override
+  Result<std::unique_ptr<IExternalSort>> createExternalSort(const ExternalSortConfig& /*config*/) const override
   {
     return {std::make_unique<FailingOrientationExternalSort>(m_ErrorCode)};
   }
@@ -503,10 +503,10 @@ private:
 
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Analytical Oracle", "[OrientationAnalysis][ComputeAvgOrientationsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Triclinic symmetry gives closed-form Rodrigues averages for single, mixed,
   // repeated, and empty features.
@@ -515,14 +515,14 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Analytical Ora
   const std::vector<int32> featureIds = {0, 1, 2, 3, 3, 4, 4, 4};
   const std::vector<int32> phases = {0, 1, 1, 1, 1, 1, 1, 1};
   const std::vector<float32> quats = {
-      0.0f, 0.0f, 0.0f,     1.0f,     // c0 identity
-      0.0f, 0.0f, 0.0f,     1.0f,     // c1 identity
-      0.0f, 0.0f, k_Rz90_z, k_Rz90_z, // c2 Rz90
-      0.0f, 0.0f, 0.0f,     1.0f,     // c3 identity
-      0.0f, 0.0f, k_Rz90_z, k_Rz90_z, // c4 Rz90
-      0.0f, 0.0f, k_Rz90_z, k_Rz90_z, // c5 Rz90
-      0.0f, 0.0f, k_Rz90_z, k_Rz90_z, // c6 Rz90
-      0.0f, 0.0f, k_Rz90_z, k_Rz90_z, // c7 Rz90
+      0.0f, 0.0f, 0.0f,    1.0f,    // c0 identity
+      0.0f, 0.0f, 0.0f,    1.0f,    // c1 identity
+      0.0f, 0.0f, k_Rz90Z, k_Rz90Z, // c2 Rz90
+      0.0f, 0.0f, 0.0f,    1.0f,    // c3 identity
+      0.0f, 0.0f, k_Rz90Z, k_Rz90Z, // c4 Rz90
+      0.0f, 0.0f, k_Rz90Z, k_Rz90Z, // c5 Rz90
+      0.0f, 0.0f, k_Rz90Z, k_Rz90Z, // c6 Rz90
+      0.0f, 0.0f, k_Rz90Z, k_Rz90Z, // c7 Rz90
   };
   const std::vector<uint32> crystalStructures = {k_Unknown, k_Triclinic};
 
@@ -545,26 +545,26 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Analytical Ora
   args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonKappaArrayName_Key, std::make_any<std::string>(k_WatsonKappaName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName)));
-  const auto& avgQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_AvgQuatsName)));
+  const auto& avgQuats = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_AvgQuatsName));
   constexpr float32 k_QuatTol = 1.0e-6f;
-  CheckQuat(avgQuats, 0, 0.0f, 0.0f, 0.0f, 1.0f, k_QuatTol);         // F0 background -> identity
-  CheckQuat(avgQuats, 1, 0.0f, 0.0f, 0.0f, 1.0f, k_QuatTol);         // F1 single identity
-  CheckQuat(avgQuats, 2, 0.0f, 0.0f, k_Rz90_z, k_Rz90_z, k_QuatTol); // F2 single Rz90
-  CheckQuat(avgQuats, 3, 0.0f, 0.0f, k_Rz45_z, k_Rz45_w, k_QuatTol); // F3 mean(identity,Rz90) = Rz45
-  CheckQuat(avgQuats, 4, 0.0f, 0.0f, k_Rz90_z, k_Rz90_z, k_QuatTol); // F4 3x Rz90 = Rz90
-  CheckQuat(avgQuats, 5, 0.0f, 0.0f, 0.0f, 1.0f, k_QuatTol);         // F5 empty -> identity
+  CheckQuat(avgQuats, 0, 0.0f, 0.0f, 0.0f, 1.0f, k_QuatTol);       // F0 background -> identity
+  CheckQuat(avgQuats, 1, 0.0f, 0.0f, 0.0f, 1.0f, k_QuatTol);       // F1 single identity
+  CheckQuat(avgQuats, 2, 0.0f, 0.0f, k_Rz90Z, k_Rz90Z, k_QuatTol); // F2 single Rz90
+  CheckQuat(avgQuats, 3, 0.0f, 0.0f, k_Rz45Z, k_Rz45W, k_QuatTol); // F3 mean(identity,Rz90) = Rz45
+  CheckQuat(avgQuats, 4, 0.0f, 0.0f, k_Rz90Z, k_Rz90Z, k_QuatTol); // F4 3x Rz90 = Rz90
+  CheckQuat(avgQuats, 5, 0.0f, 0.0f, 0.0f, 1.0f, k_QuatTol);       // F5 empty -> identity
 
   for(usize f = 0; f < static_cast<usize>(numFeatures); f++)
   {
     CheckUnitNorthern(avgQuats, f);
   }
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgEulerName)));
-  const auto& avgEuler = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgEulerName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_AvgEulerName)));
+  const auto& avgEuler = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_AvgEulerName));
   for(usize c = 0; c < 3; c++)
   {
     REQUIRE(avgEuler.getDataStoreRef().getValue(1 * 3 + c) == Approx(0.0f).margin(1.0e-6f)); // F1 identity
@@ -579,20 +579,20 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Analytical Ora
     REQUIRE(std::isfinite(avgEuler.getDataStoreRef().getValue(f * 3 + 2)));
   }
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_VMFQuatsName)));
-  const auto& vmfQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_VMFQuatsName));
-  const auto& vmfKappa = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_VMFKappaName));
-  const auto& watsonQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_WatsonQuatsName));
-  const auto& watsonKappa = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_WatsonKappaName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_VMFQuatsName)));
+  const auto& vmfQuats = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_VMFQuatsName));
+  const auto& vmfKappa = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_VMFKappaName));
+  const auto& watsonQuats = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_WatsonQuatsName));
+  const auto& watsonKappa = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_WatsonKappaName));
 
-  for(const Float32Array* arr : {&vmfQuats, &watsonQuats})
+  for(const Float32ArrayType* arrPtr : {&vmfQuats, &watsonQuats})
   {
-    CheckQuatNaN(*arr, 0);
-    CheckQuatNaN(*arr, 5);
-    CheckQuat(*arr, 1, 0.0f, 0.0f, 0.0f, 1.0f, 1.0e-6f);
-    CheckQuat(*arr, 2, 0.0f, 0.0f, k_Rz90_z, k_Rz90_z, 1.0e-6f);
-    CheckUnitNorthern(*arr, 3);
-    CheckUnitNorthern(*arr, 4);
+    CheckQuatNaN(*arrPtr, 0);
+    CheckQuatNaN(*arrPtr, 5);
+    CheckQuat(*arrPtr, 1, 0.0f, 0.0f, 0.0f, 1.0f, 1.0e-6f);
+    CheckQuat(*arrPtr, 2, 0.0f, 0.0f, k_Rz90Z, k_Rz90Z, 1.0e-6f);
+    CheckUnitNorthern(*arrPtr, 3);
+    CheckUnitNorthern(*arrPtr, 4);
   }
   REQUIRE(vmfKappa.getDataStoreRef().getValue(1) == Approx(0.0f).margin(1.0e-6f));
   REQUIRE(vmfKappa.getDataStoreRef().getValue(2) == Approx(0.0f).margin(1.0e-6f));
@@ -601,17 +601,17 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Analytical Ora
   REQUIRE(std::isnan(vmfKappa.getDataStoreRef().getValue(0)));
   REQUIRE(std::isnan(vmfKappa.getDataStoreRef().getValue(5)));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // EbsdLib DirectionalStats supplies the vMF and Watson reference values. The
 // tolerance allows float32 DataArray round-trip error.
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: vMF/Watson EbsdLib Reference Oracle", "[OrientationAnalysis][ComputeAvgOrientationsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // The 22 reference quaternions from EbsdLib DirectionalStatsTest detail::k_TestQuats,
   // in (x,y,z,w) order. All assigned to feature 1 (feature 0 is a background filler).
@@ -665,15 +665,15 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: vMF/Watson EbsdLib Refer
   args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonKappaArrayName_Key, std::make_any<std::string>(k_WatsonKappaName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_VMFQuatsName)));
-  const auto& vmfQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_VMFQuatsName));
-  const auto& vmfKappa = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_VMFKappaName));
-  const auto& watsonQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_WatsonQuatsName));
-  const auto& watsonKappa = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_WatsonKappaName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_VMFQuatsName)));
+  const auto& vmfQuats = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_VMFQuatsName));
+  const auto& vmfKappa = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_VMFKappaName));
+  const auto& watsonQuats = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_WatsonQuatsName));
+  const auto& watsonKappa = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_WatsonKappaName));
 
   // Tolerances loosened from EbsdLib's 1e-6 to absorb the float32 input round-trip.
   constexpr float32 k_QuatMargin = 5.0e-3f;
@@ -691,17 +691,17 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: vMF/Watson EbsdLib Refer
   CheckQuatNaN(vmfQuats, 0);
   CheckQuatNaN(watsonQuats, 0);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // Cubic-equivalent Rz(30+90k) values and the negative double-cover value must
 // average to Rz(30).
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Cubic Symmetry Invariant", "[OrientationAnalysis][ComputeAvgOrientationsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   const int32 numCells = 6;
   const int32 numFeatures = 2;
@@ -710,12 +710,12 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Cubic Symmetry
   // Deliberately scrambled order so the first-voxel reset operates on Rz(120),
   // not the base representation.
   const std::vector<float32> quats = {
-      0.0f, 0.0f, 0.0f,      1.0f,      // c0 background identity
-      0.0f, 0.0f, k_Rz120_z, k_Rz120_w, // c1 Rz(120) == Rz(30) * Rz(90)
-      0.0f, 0.0f, k_Rz30_z,  k_Rz30_w,  // c2 Rz(30)  base representation
-      0.0f, 0.0f, -k_Rz30_z, -k_Rz30_w, // c3 -Rz(30) double-cover representative
-      0.0f, 0.0f, k_Rz210_z, k_Rz210_w, // c4 Rz(210) == Rz(30) * Rz(180)
-      0.0f, 0.0f, k_Rz300_z, k_Rz300_w, // c5 Rz(300) == Rz(30) * Rz(270)
+      0.0f, 0.0f, 0.0f,     1.0f,     // c0 background identity
+      0.0f, 0.0f, k_Rz120Z, k_Rz120W, // c1 Rz(120) == Rz(30) * Rz(90)
+      0.0f, 0.0f, k_Rz30Z,  k_Rz30W,  // c2 Rz(30)  base representation
+      0.0f, 0.0f, -k_Rz30Z, -k_Rz30W, // c3 -Rz(30) double-cover representative
+      0.0f, 0.0f, k_Rz210Z, k_Rz210W, // c4 Rz(210) == Rz(30) * Rz(180)
+      0.0f, 0.0f, k_Rz300Z, k_Rz300W, // c5 Rz(300) == Rz(30) * Rz(270)
   };
   const std::vector<uint32> crystalStructures = {k_Unknown, k_CubicHigh};
 
@@ -737,35 +737,35 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Cubic Symmetry
   args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonKappaArrayName_Key, std::make_any<std::string>(k_WatsonKappaName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName)));
-  const auto& avgQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName));
-  CheckQuat(avgQuats, 1, 0.0f, 0.0f, k_Rz30_z, k_Rz30_w, 1.0e-5f);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_AvgQuatsName)));
+  const auto& avgQuats = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_AvgQuatsName));
+  CheckQuat(avgQuats, 1, 0.0f, 0.0f, k_Rz30Z, k_Rz30W, 1.0e-5f);
   CheckUnitNorthern(avgQuats, 1);
 
   // Euler invariant for a pure z-rotation: Phi ~= 0, all components finite.
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgEulerName)));
-  const auto& avgEuler = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgEulerName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_AvgEulerName)));
+  const auto& avgEuler = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_AvgEulerName));
   REQUIRE(std::isfinite(avgEuler.getDataStoreRef().getValue(1 * 3 + 0)));
   REQUIRE(avgEuler.getDataStoreRef().getValue(1 * 3 + 1) == Approx(0.0f).margin(1.0e-5f));
   REQUIRE(std::isfinite(avgEuler.getDataStoreRef().getValue(1 * 3 + 2)));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // Reversing identity and Rz(90) input order must not change the Rz(45) average.
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Voxel Ordering Independence", "[OrientationAnalysis][ComputeAvgOrientationsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   const std::vector<float32> quatIdentity = {0.0f, 0.0f, 0.0f, 1.0f};
-  const std::vector<float32> quatRz90 = {0.0f, 0.0f, k_Rz90_z, k_Rz90_z};
+  const std::vector<float32> quatRz90 = {0.0f, 0.0f, k_Rz90Z, k_Rz90Z};
 
   const std::string ordering = GENERATE("identity-first", "Rz90-first");
   DYNAMIC_SECTION("Ordering: " << ordering)
@@ -781,14 +781,14 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Voxel Ordering
     const std::vector<uint32> crystalStructures = {k_Unknown, k_Triclinic};
     DataStructure dataStructure = BuildDataStructure(2, 2, featureIds, phases, quats, crystalStructures);
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
-    scope.requireExpectedStore(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_PhasesPath));
-    scope.requireExpectedStore(dataStructure.getDataRefAs<Int32Array>(k_PhasesPath));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_QuatsPath));
-    scope.requireExpectedStore(dataStructure.getDataRefAs<Float32Array>(k_QuatsPath));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresPath));
-    scope.requireExpectedStore(dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_PhasesPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<Int32ArrayType>(k_PhasesPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_QuatsPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<Float32ArrayType>(k_QuatsPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(k_CrystalStructuresPath));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<UInt32ArrayType>(k_CrystalStructuresPath));
 
     ComputeAvgOrientationsFilter filter;
     Arguments args;
@@ -806,29 +806,29 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Rodrigues Voxel Ordering
     args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonKappaArrayName_Key, std::make_any<std::string>(k_WatsonKappaName));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName)));
-    const auto& avgQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_AvgQuatsName)));
+    const auto& avgQuats = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_AvgQuatsName));
     scope.requireExpectedStore(avgQuats);
-    CheckQuat(avgQuats, 1, 0.0f, 0.0f, k_Rz45_z, k_Rz45_w, 1.0e-6f);
+    CheckQuat(avgQuats, 1, 0.0f, 0.0f, k_Rz45Z, k_Rz45W, 1.0e-6f);
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgEulerName)));
-    scope.requireExpectedStore(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgEulerName)));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_AvgEulerName)));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_AvgEulerName)));
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 // vMF and Watson gathering must exclude phase-zero unindexed voxels.
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: vMF/Watson Ignores Phase-0 Voxels", "[OrientationAnalysis][ComputeAvgOrientationsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Phase-zero quaternions are garbage. Valid Rz90 samples must determine both
   // feature outputs.
@@ -837,11 +837,11 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: vMF/Watson Ignores Phase
   const std::vector<int32> featureIds = {1, 1, 2, 2, 2};
   const std::vector<int32> phases = {1, 0, 1, 1, 0};
   const std::vector<float32> quats = {
-      0.0f,  0.0f,   k_Rz90_z, k_Rz90_z, // c0 F1 phase 1: Rz90
-      0.62f, -0.41f, 0.55f,    -0.37f,   // c1 F1 phase 0: garbage
-      0.0f,  0.0f,   k_Rz90_z, k_Rz90_z, // c2 F2 phase 1: Rz90
-      0.0f,  0.0f,   k_Rz90_z, k_Rz90_z, // c3 F2 phase 1: Rz90
-      0.62f, -0.41f, 0.55f,    -0.37f,   // c4 F2 phase 0: garbage
+      0.0f,  0.0f,   k_Rz90Z, k_Rz90Z, // c0 F1 phase 1: Rz90
+      0.62f, -0.41f, 0.55f,   -0.37f,  // c1 F1 phase 0: garbage
+      0.0f,  0.0f,   k_Rz90Z, k_Rz90Z, // c2 F2 phase 1: Rz90
+      0.0f,  0.0f,   k_Rz90Z, k_Rz90Z, // c3 F2 phase 1: Rz90
+      0.62f, -0.41f, 0.55f,   -0.37f,  // c4 F2 phase 0: garbage
   };
   const std::vector<uint32> crystalStructures = {k_Unknown, k_Triclinic};
 
@@ -863,24 +863,24 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: vMF/Watson Ignores Phase
   args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonKappaArrayName_Key, std::make_any<std::string>(k_WatsonKappaName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_VMFQuatsName)));
-  const auto& vmfQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_VMFQuatsName));
-  const auto& vmfKappa = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_VMFKappaName));
-  const auto& watsonQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_WatsonQuatsName));
-  const auto& watsonKappa = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_WatsonKappaName));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_VMFQuatsName)));
+  const auto& vmfQuats = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_VMFQuatsName));
+  const auto& vmfKappa = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_VMFKappaName));
+  const auto& watsonQuats = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_WatsonQuatsName));
+  const auto& watsonKappa = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_WatsonKappaName));
 
-  for(const Float32Array* arr : {&vmfQuats, &watsonQuats})
+  for(const Float32ArrayType* arrPtr : {&vmfQuats, &watsonQuats})
   {
     // F1: the phase-0 garbage voxel must not defeat the single-voxel shortcut.
-    CheckQuat(*arr, 1, 0.0f, 0.0f, k_Rz90_z, k_Rz90_z, 1.0e-6f);
+    CheckQuat(*arrPtr, 1, 0.0f, 0.0f, k_Rz90Z, k_Rz90Z, 1.0e-6f);
     // F2: EM over the two identical counted voxels must land on Rz90 —
     // orientation equality via |dot(muhat, Rz90)| == 1, robust to double cover.
-    const auto& store = arr->getDataStoreRef();
-    const double dot = store.getValue(2 * 4 + 2) * k_Rz90_z + store.getValue(2 * 4 + 3) * k_Rz90_z;
+    const auto& store = arrPtr->getDataStoreRef();
+    const double dot = store.getValue(2 * 4 + 2) * k_Rz90Z + store.getValue(2 * 4 + 3) * k_Rz90Z;
     REQUIRE(std::abs(dot) == Approx(1.0).margin(1.0e-4));
     REQUIRE(store.getValue(2 * 4 + 0) == Approx(0.0).margin(1.0e-4));
     REQUIRE(store.getValue(2 * 4 + 1) == Approx(0.0).margin(1.0e-4));
@@ -890,22 +890,22 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: vMF/Watson Ignores Phase
   REQUIRE(watsonKappa.getDataStoreRef().getValue(1) == Approx(0.0f).margin(1.0e-6f));
 
   // Rodrigues must exclude the same phase-zero voxels.
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName)));
-  const auto& avgQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName));
-  CheckQuat(avgQuats, 1, 0.0f, 0.0f, k_Rz90_z, k_Rz90_z, 1.0e-6f);
-  CheckQuat(avgQuats, 2, 0.0f, 0.0f, k_Rz90_z, k_Rz90_z, 1.0e-6f);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_AvgQuatsName)));
+  const auto& avgQuats = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_AvgQuatsName));
+  CheckQuat(avgQuats, 1, 0.0f, 0.0f, k_Rz90Z, k_Rz90Z, 1.0e-6f);
+  CheckQuat(avgQuats, 2, 0.0f, 0.0f, k_Rz90Z, k_Rz90Z, 1.0e-6f);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // Both averaging paths must warn when crystal structures are unknown or phases
 // are out of range.
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Unknown Crystal Structure and Out-Of-Range Phase Guards", "[OrientationAnalysis][ComputeAvgOrientationsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Ensemble: phase 1 valid Triclinic, phase 2 Unknown (999).
   //  cell : feature, phase, quat            expectation
@@ -918,10 +918,10 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Unknown Crystal Structur
   const std::vector<int32> featureIds = {1, 2, 3, 1};
   const std::vector<int32> phases = {1, 2, 7, 7};
   const std::vector<float32> quats = {
-      0.0f,  0.0f,   k_Rz90_z, k_Rz90_z, // c0 valid
-      0.0f,  0.0f,   k_Rz90_z, k_Rz90_z, // c1 unknown xtal
-      0.0f,  0.0f,   k_Rz90_z, k_Rz90_z, // c2 OOB phase
-      0.62f, -0.41f, 0.55f,    -0.37f,   // c3 OOB phase, garbage quat
+      0.0f,  0.0f,   k_Rz90Z, k_Rz90Z, // c0 valid
+      0.0f,  0.0f,   k_Rz90Z, k_Rz90Z, // c1 unknown xtal
+      0.0f,  0.0f,   k_Rz90Z, k_Rz90Z, // c2 OOB phase
+      0.62f, -0.41f, 0.55f,   -0.37f,  // c3 OOB phase, garbage quat
   };
   const std::vector<uint32> crystalStructures = {k_Unknown, k_Triclinic, k_Unknown};
 
@@ -943,7 +943,7 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Unknown Crystal Structur
   args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonKappaArrayName_Key, std::make_any<std::string>(k_WatsonKappaName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -957,32 +957,32 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Unknown Crystal Structur
   REQUIRE(std::count(warningCodes.begin(), warningCodes.end(), -54672) > 0); // out-of-range phase
 
   // Rodrigues: F1 keeps only its valid voxel; F2/F3 fully dropped -> identity.
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName)));
-  const auto& avgQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_AvgQuatsName));
-  CheckQuat(avgQuats, 1, 0.0f, 0.0f, k_Rz90_z, k_Rz90_z, 1.0e-6f);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_AvgQuatsName)));
+  const auto& avgQuats = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_AvgQuatsName));
+  CheckQuat(avgQuats, 1, 0.0f, 0.0f, k_Rz90Z, k_Rz90Z, 1.0e-6f);
   CheckQuat(avgQuats, 2, 0.0f, 0.0f, 0.0f, 1.0f, 1.0e-6f);
   CheckQuat(avgQuats, 3, 0.0f, 0.0f, 0.0f, 1.0f, 1.0e-6f);
 
   // vMF/Watson: F1 single valid voxel -> shortcut; F2 (unknown xtal) and F3
   // (all voxels out-of-range phase) -> NaN.
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_VMFQuatsName)));
-  const auto& vmfQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_VMFQuatsName));
-  const auto& vmfKappa = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_VMFKappaName));
-  const auto& watsonQuats = dataStructure.getDataRefAs<Float32Array>(k_FeatureDataPath.createChildPath(k_WatsonQuatsName));
-  for(const Float32Array* arr : {&vmfQuats, &watsonQuats})
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_VMFQuatsName)));
+  const auto& vmfQuats = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_VMFQuatsName));
+  const auto& vmfKappa = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_VMFKappaName));
+  const auto& watsonQuats = dataStructure.getDataRefAs<Float32ArrayType>(k_FeatureDataPath.createChildPath(k_WatsonQuatsName));
+  for(const Float32ArrayType* arrPtr : {&vmfQuats, &watsonQuats})
   {
-    CheckQuat(*arr, 1, 0.0f, 0.0f, k_Rz90_z, k_Rz90_z, 1.0e-6f);
-    CheckQuatNaN(*arr, 2);
-    CheckQuatNaN(*arr, 3);
+    CheckQuat(*arrPtr, 1, 0.0f, 0.0f, k_Rz90Z, k_Rz90Z, 1.0e-6f);
+    CheckQuatNaN(*arrPtr, 2);
+    CheckQuatNaN(*arrPtr, 3);
   }
   REQUIRE(vmfKappa.getDataStoreRef().getValue(1) == Approx(0.0f).margin(1.0e-6f));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Direct and Scanline method parity", "[OrientationAnalysis][ComputeAvgOrientationsFilter][OOC]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto [useRodrigues, useVmf, useWatson] =
       GENERATE(std::make_tuple(true, false, false), std::make_tuple(false, true, false), std::make_tuple(false, false, true), std::make_tuple(false, true, true), std::make_tuple(true, true, true));
   CAPTURE(useRodrigues, useVmf, useWatson);
@@ -992,18 +992,18 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Direct and Scanline meth
   SetInputArgs(args);
   ConfigureMethods(args, useRodrigues, useVmf, useWatson);
 
-  const auto scenarios = UnitTest::SelectAlgorithmTestScenariosForInMemoryStores();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenarios = unit_test::SelectAlgorithmTestScenariosForInMemoryStores();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   {
-    UnitTest::AlgorithmTestScope scope(scenario);
+    unit_test::AlgorithmTestScope scope(scenario);
     DataStructure dataStructure = BuildSingleOrientationMethodOracleData();
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     RequireSingleOrientationMethodOracle(dataStructure, useRodrigues, useVmf, useWatson);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   // Each selected path has an independent oracle above. Both also compares all multi-sample outputs.
@@ -1012,19 +1012,19 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Direct and Scanline meth
     const std::vector<int32> featureIds = {0, 1, 1, 2, 2, 3, 3, 3};
     const std::vector<int32> phases = {1, 1, 1, 1, 2, 2, 2, 2};
     const std::vector<float32> quaternions = {
-        0.0F, 0.0F, 0.0F,     1.0F,     0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F, k_Rz90_z, k_Rz90_z, 0.0F, 0.0F, k_Rz45_z, k_Rz45_w,
-        0.0F, 0.0F, k_Rz90_z, k_Rz90_z, 0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F, k_Rz45_z, k_Rz45_w, 0.0F, 0.0F, k_Rz90_z, k_Rz90_z,
+        0.0F, 0.0F, 0.0F,    1.0F,    0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F, k_Rz90Z, k_Rz90Z, 0.0F, 0.0F, k_Rz45Z, k_Rz45W,
+        0.0F, 0.0F, k_Rz90Z, k_Rz90Z, 0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F, k_Rz45Z, k_Rz45W, 0.0F, 0.0F, k_Rz90Z, k_Rz90Z,
     };
     const std::vector<uint32> crystalStructures = {k_Unknown, k_Triclinic, k_Triclinic};
     ConfigureMethods(args, useRodrigues, useVmf, useWatson);
-    const auto executeScenario = [&](UnitTest::AlgorithmTestScenario parityScenario) {
-      UnitTest::AlgorithmTestScope scope(parityScenario);
+    const auto executeScenario = [&](unit_test::AlgorithmTestScenario parityScenario) {
+      unit_test::AlgorithmTestScope scope(parityScenario);
       DataStructure dataStructure = BuildDataStructure(8, 5, featureIds, phases, quaternions, crystalStructures);
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
       auto executeResult = scope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
       return dataStructure;
     };
     const DataStructure directData = executeScenario(scenarios.front());
@@ -1051,7 +1051,7 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Direct and Scanline meth
 
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: cross-chunk original tuple ordering parity", "[OrientationAnalysis][ComputeAvgOrientationsFilter][OOC]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   constexpr usize k_TupleCount = 65538;
   std::vector<int32> featureIds(k_TupleCount, 0);
   std::vector<int32> phases(k_TupleCount, 0);
@@ -1067,28 +1067,28 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: cross-chunk original tup
   phases[selectedTuples[0]] = 1;
   phases[selectedTuples[1]] = 1;
   phases[selectedTuples[2]] = 1;
-  quaternions[selectedTuples[1] * 4 + 2] = k_Rz90_z;
-  quaternions[selectedTuples[1] * 4 + 3] = k_Rz90_z;
-  quaternions[selectedTuples[2] * 4 + 2] = k_Rz45_z;
-  quaternions[selectedTuples[2] * 4 + 3] = k_Rz45_w;
+  quaternions[selectedTuples[1] * 4 + 2] = k_Rz90Z;
+  quaternions[selectedTuples[1] * 4 + 3] = k_Rz90Z;
+  quaternions[selectedTuples[2] * 4 + 2] = k_Rz45Z;
+  quaternions[selectedTuples[2] * 4 + 3] = k_Rz45W;
   const std::vector<uint32> crystalStructures = {k_Unknown, k_Triclinic};
   ComputeAvgOrientationsFilter filter;
   Arguments args;
   SetInputArgs(args);
   ConfigureMethods(args, true, true, true);
 
-  const auto scenarios = UnitTest::SelectAlgorithmTestScenariosForInMemoryStores();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenarios = unit_test::SelectAlgorithmTestScenariosForInMemoryStores();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario, selectedTuples);
   {
-    UnitTest::AlgorithmTestScope scope(scenario);
+    unit_test::AlgorithmTestScope scope(scenario);
     DataStructure dataStructure = BuildDataStructure(static_cast<int32>(k_TupleCount), 4, featureIds, phases, quaternions, crystalStructures);
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     RequireSingleOrientationMethodOracle(dataStructure, true, true, true);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   // Each selected path has an independent oracle above. Both also compares all multi-sample outputs.
@@ -1097,17 +1097,17 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: cross-chunk original tup
     // These three different orientations belong to one feature, in original tuple order.
     featureIds[selectedTuples[1]] = 1;
     featureIds[selectedTuples[2]] = 1;
-    quaternions[selectedTuples[0] * 4 + 2] = k_Rz30_z;
-    quaternions[selectedTuples[0] * 4 + 3] = k_Rz30_w;
+    quaternions[selectedTuples[0] * 4 + 2] = k_Rz30Z;
+    quaternions[selectedTuples[0] * 4 + 3] = k_Rz30W;
     ConfigureMethods(args, false, true, true);
-    const auto executeScenario = [&](UnitTest::AlgorithmTestScenario parityScenario) {
-      UnitTest::AlgorithmTestScope scope(parityScenario);
+    const auto executeScenario = [&](unit_test::AlgorithmTestScenario parityScenario) {
+      unit_test::AlgorithmTestScope scope(parityScenario);
       DataStructure dataStructure = BuildDataStructure(static_cast<int32>(k_TupleCount), 2, featureIds, phases, quaternions, crystalStructures);
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
       auto executeResult = scope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
       return dataStructure;
     };
     const DataStructure directData = executeScenario(scenarios.front());
@@ -1121,15 +1121,15 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: cross-chunk original tup
 
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: highest-index valid phase selects feature symmetry", "[OrientationAnalysis][ComputeAvgOrientationsFilter][OOC]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool validPhaseWins = GENERATE(true, false);
   CAPTURE(scenario, validPhaseWins);
   const std::vector<int32> featureIds = {1, 1};
   const std::vector<int32> phases = validPhaseWins ? std::vector<int32>{1, 2} : std::vector<int32>{2, 1};
-  const std::vector<float32> quaternions = {0.0F, 0.0F, k_Rz90_z, k_Rz90_z, 0.0F, 0.0F, k_Rz90_z, k_Rz90_z};
+  const std::vector<float32> quaternions = {0.0F, 0.0F, k_Rz90Z, k_Rz90Z, 0.0F, 0.0F, k_Rz90Z, k_Rz90Z};
   const std::vector<uint32> crystalStructures = {k_Unknown, k_Unknown, k_Triclinic};
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = BuildDataStructure(2, 2, featureIds, phases, quaternions, crystalStructures);
   ComputeAvgOrientationsFilter filter;
   Arguments args;
@@ -1143,12 +1143,12 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: highest-index valid phas
   {
     REQUIRE(vmf[4] == Approx(0.0F).margin(1.0e-6F));
     REQUIRE(vmf[5] == Approx(0.0F).margin(1.0e-6F));
-    REQUIRE(vmf[6] == Approx(k_Rz90_z).margin(1.0e-6F));
-    REQUIRE(vmf[7] == Approx(k_Rz90_z).margin(1.0e-6F));
+    REQUIRE(vmf[6] == Approx(k_Rz90Z).margin(1.0e-6F));
+    REQUIRE(vmf[7] == Approx(k_Rz90Z).margin(1.0e-6F));
     REQUIRE(watson[4] == Approx(0.0F).margin(1.0e-6F));
     REQUIRE(watson[5] == Approx(0.0F).margin(1.0e-6F));
-    REQUIRE(watson[6] == Approx(k_Rz90_z).margin(1.0e-6F));
-    REQUIRE(watson[7] == Approx(k_Rz90_z).margin(1.0e-6F));
+    REQUIRE(watson[6] == Approx(k_Rz90Z).margin(1.0e-6F));
+    REQUIRE(watson[7] == Approx(k_Rz90Z).margin(1.0e-6F));
   }
   else
   {
@@ -1163,8 +1163,8 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: highest-index valid phas
 
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: bounded fallback without external sort", "[OrientationAnalysis][ComputeAvgOrientationsFilter][OOC]")
 {
-  UnitTest::LoadPlugins();
-  if(DataStoreUtilities::GetIOCollection().hasExternalSortCapability())
+  unit_test::LoadPlugins();
+  if(data_store_utilities::GetIOCollection().hasExternalSortCapability())
   {
     SUCCEED("A registered external-sort provider selects the external-sort path instead of the fallback.");
     return;
@@ -1174,18 +1174,18 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: bounded fallback without
   SetInputArgs(args);
   ConfigureMethods(args, true, true, true);
 
-  const auto scenarios = UnitTest::SelectAlgorithmTestScenariosForInMemoryStores();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenarios = unit_test::SelectAlgorithmTestScenariosForInMemoryStores();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   {
-    UnitTest::AlgorithmTestScope scope(scenario);
+    unit_test::AlgorithmTestScope scope(scenario);
     DataStructure dataStructure = BuildSingleOrientationMethodOracleData();
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     RequireSingleOrientationMethodOracle(dataStructure, true, true, true);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   // Each selected path has an independent oracle above. Both also compares all multi-sample outputs.
@@ -1193,18 +1193,18 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: bounded fallback without
   {
     const std::vector<int32> featureIds = {0, 1, 1, 2, 2, 2};
     const std::vector<int32> phases = {0, 1, 1, 1, 1, 1};
-    const std::vector<float32> quaternions = {0.0F, 0.0F, 0.0F,     1.0F,     0.0F, 0.0F, 0.0F,     1.0F,     0.0F, 0.0F, k_Rz90_z, k_Rz90_z,
-                                              0.0F, 0.0F, k_Rz30_z, k_Rz30_w, 0.0F, 0.0F, k_Rz45_z, k_Rz45_w, 0.0F, 0.0F, k_Rz90_z, k_Rz90_z};
+    const std::vector<float32> quaternions = {0.0F, 0.0F, 0.0F,    1.0F,    0.0F, 0.0F, 0.0F,    1.0F,    0.0F, 0.0F, k_Rz90Z, k_Rz90Z,
+                                              0.0F, 0.0F, k_Rz30Z, k_Rz30W, 0.0F, 0.0F, k_Rz45Z, k_Rz45W, 0.0F, 0.0F, k_Rz90Z, k_Rz90Z};
     const std::vector<uint32> crystalStructures = {k_Unknown, k_Triclinic};
     ConfigureMethods(args, false, true, true);
-    const auto executeScenario = [&](UnitTest::AlgorithmTestScenario parityScenario) {
-      UnitTest::AlgorithmTestScope scope(parityScenario);
+    const auto executeScenario = [&](unit_test::AlgorithmTestScenario parityScenario) {
+      unit_test::AlgorithmTestScope scope(parityScenario);
       DataStructure dataStructure = BuildDataStructure(6, 4, featureIds, phases, quaternions, crystalStructures);
       auto preflightResult = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
       auto executeResult = scope.executeFilter(filter, dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
       return dataStructure;
     };
     const DataStructure directData = executeScenario(scenarios.front());
@@ -1218,9 +1218,9 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: bounded fallback without
 
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Scanline failures and cancellation", "[OrientationAnalysis][ComputeAvgOrientationsFilter][OOC]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenarios = UnitTest::SelectAlgorithmTestScenariosForInMemoryStores();
-  const auto scanlineScenario = std::find(scenarios.cbegin(), scenarios.cend(), UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
+  unit_test::LoadPlugins();
+  const auto scenarios = unit_test::SelectAlgorithmTestScenariosForInMemoryStores();
+  const auto scanlineScenario = std::find(scenarios.cbegin(), scenarios.cend(), unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
   if(scanlineScenario == scenarios.cend())
   {
     SUCCEED("Transfer-fault and cancellation assertions require the selected scanline scenario.");
@@ -1230,25 +1230,25 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Scanline failures and ca
   constexpr int32 k_WriteError = -924103;
   const std::vector<int32> featureIds = {0, 1};
   const std::vector<int32> phases = {0, 1};
-  const std::vector<float32> quaternions = {0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F, k_Rz90_z, k_Rz90_z};
+  const std::vector<float32> quaternions = {0.0F, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F, k_Rz90Z, k_Rz90Z};
   const std::vector<uint32> crystalStructures = {k_Unknown, k_Triclinic};
 
-  const auto createOutputs = [](DataStructure& dataStructure, std::shared_ptr<Float32AbstractDataStore> quaternionStore, std::shared_ptr<Float32AbstractDataStore> eulerStore) {
-    auto* featureData = dataStructure.getDataAs<AttributeMatrix>(k_FeatureDataPath);
-    REQUIRE(featureData != nullptr);
-    REQUIRE(Float32Array::Create(dataStructure, k_AvgQuatsName, std::move(quaternionStore), featureData->getId()) != nullptr);
-    REQUIRE(Float32Array::Create(dataStructure, k_AvgEulerName, std::move(eulerStore), featureData->getId()) != nullptr);
+  const auto createOutputs = [](DataStructure& dataStructure, std::shared_ptr<Float32AbstractDataStoreType> quaternionStore, std::shared_ptr<Float32AbstractDataStoreType> eulerStore) {
+    auto* featureDataPtr = dataStructure.getDataAs<AttributeMatrix>(k_FeatureDataPath);
+    REQUIRE(featureDataPtr != nullptr);
+    REQUIRE(Float32ArrayType::Create(dataStructure, k_AvgQuatsName, std::move(quaternionStore), featureDataPtr->getId()) != nullptr);
+    REQUIRE(Float32ArrayType::Create(dataStructure, k_AvgEulerName, std::move(eulerStore), featureDataPtr->getId()) != nullptr);
   };
 
   SECTION("bulk read failure")
   {
-    UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+    unit_test::AlgorithmTestScope scope(*scanlineScenario);
     DataStructure dataStructure = BuildDataStructure(2, 2, featureIds, phases, quaternions, crystalStructures);
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath));
-    auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(k_FeatureIdsPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath));
+    auto& featureIdsArray = dataStructure.getDataRefAs<Int32ArrayType>(k_FeatureIdsPath);
     auto featureIdsArraySetStoreResult = featureIdsArray.setDataStore(std::make_shared<FailingReadDataStore<int32>>(ShapeType{2}, ShapeType{1}, 1, k_ReadError));
     SIMPLNX_RESULT_REQUIRE_VALID(featureIdsArraySetStoreResult);
-    createOutputs(dataStructure, std::make_shared<Float32DataStore>(ShapeType{2}, ShapeType{4}, 0.0F), std::make_shared<Float32DataStore>(ShapeType{2}, ShapeType{3}, 0.0F));
+    createOutputs(dataStructure, std::make_shared<Float32DataStoreType>(ShapeType{2}, ShapeType{4}, 0.0F), std::make_shared<Float32DataStoreType>(ShapeType{2}, ShapeType{3}, 0.0F));
     ComputeAvgOrientationsInputValues inputValues = CreateInputValues(true, false, false);
     const std::atomic_bool shouldCancel = false;
     Result<> result = scope.execute([&] { return ComputeAvgOrientations(dataStructure, {}, shouldCancel, &inputValues)(); });
@@ -1258,10 +1258,10 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Scanline failures and ca
 
   SECTION("bulk write failure")
   {
-    UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+    unit_test::AlgorithmTestScope scope(*scanlineScenario);
     DataStructure dataStructure = BuildDataStructure(2, 2, featureIds, phases, quaternions, crystalStructures);
     createOutputs(dataStructure, std::make_shared<FailingWriteDataStore<float32>>(ShapeType{2}, ShapeType{4}, 0.0F, k_WriteError),
-                  std::make_shared<Float32DataStore>(ShapeType{2}, ShapeType{3}, 0.0F));
+                  std::make_shared<Float32DataStoreType>(ShapeType{2}, ShapeType{3}, 0.0F));
     ComputeAvgOrientationsInputValues inputValues = CreateInputValues(true, false, false);
     const std::atomic_bool shouldCancel = false;
     Result<> result = scope.execute([&] { return ComputeAvgOrientations(dataStructure, {}, shouldCancel, &inputValues)(); });
@@ -1271,57 +1271,57 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Scanline failures and ca
 
   SECTION("entry cancellation")
   {
-    UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+    unit_test::AlgorithmTestScope scope(*scanlineScenario);
     DataStructure dataStructure = BuildDataStructure(2, 2, featureIds, phases, quaternions, crystalStructures);
-    createOutputs(dataStructure, std::make_shared<Float32DataStore>(ShapeType{2}, ShapeType{4}, 71.0F), std::make_shared<Float32DataStore>(ShapeType{2}, ShapeType{3}, 72.0F));
+    createOutputs(dataStructure, std::make_shared<Float32DataStoreType>(ShapeType{2}, ShapeType{4}, 71.0F), std::make_shared<Float32DataStoreType>(ShapeType{2}, ShapeType{3}, 72.0F));
     ComputeAvgOrientationsInputValues inputValues = CreateInputValues(true, false, false);
     const std::atomic_bool shouldCancel = true;
     Result<> result = scope.execute([&] { return ComputeAvgOrientations(dataStructure, {}, shouldCancel, &inputValues)(); });
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    REQUIRE(ReadFloatArray(dataStructure, inputValues.avgQuatsArrayPath).front() == 71.0F);
-    REQUIRE(ReadFloatArray(dataStructure, inputValues.avgEulerAnglesArrayPath).front() == 72.0F);
+    REQUIRE(ReadFloatArray(dataStructure, inputValues.avg_quats_array_path).front() == 71.0F);
+    REQUIRE(ReadFloatArray(dataStructure, inputValues.avg_euler_angles_array_path).front() == 72.0F);
   }
 
   SECTION("mid-scan cancellation")
   {
     std::atomic_bool shouldCancel = false;
-    UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+    unit_test::AlgorithmTestScope scope(*scanlineScenario);
     DataStructure dataStructure = BuildDataStructure(2, 2, featureIds, phases, quaternions, crystalStructures);
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_PhasesPath));
-    auto& phasesArray = dataStructure.getDataRefAs<Int32Array>(k_PhasesPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_PhasesPath));
+    auto& phasesArray = dataStructure.getDataRefAs<Int32ArrayType>(k_PhasesPath);
     auto phasesArraySetStoreResult = phasesArray.setDataStore(std::make_shared<CancelAfterReadDataStore<int32>>(ShapeType{2}, ShapeType{1}, 1, shouldCancel));
     SIMPLNX_RESULT_REQUIRE_VALID(phasesArraySetStoreResult);
-    createOutputs(dataStructure, std::make_shared<Float32DataStore>(ShapeType{2}, ShapeType{4}, 73.0F), std::make_shared<Float32DataStore>(ShapeType{2}, ShapeType{3}, 74.0F));
+    createOutputs(dataStructure, std::make_shared<Float32DataStoreType>(ShapeType{2}, ShapeType{4}, 73.0F), std::make_shared<Float32DataStoreType>(ShapeType{2}, ShapeType{3}, 74.0F));
     ComputeAvgOrientationsInputValues inputValues = CreateInputValues(true, false, false);
     Result<> result = scope.execute([&] { return ComputeAvgOrientations(dataStructure, {}, shouldCancel, &inputValues)(); });
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     REQUIRE(shouldCancel.load());
-    REQUIRE(ReadFloatArray(dataStructure, inputValues.avgQuatsArrayPath).front() == 73.0F);
-    REQUIRE(ReadFloatArray(dataStructure, inputValues.avgEulerAnglesArrayPath).front() == 74.0F);
+    REQUIRE(ReadFloatArray(dataStructure, inputValues.avg_quats_array_path).front() == 73.0F);
+    REQUIRE(ReadFloatArray(dataStructure, inputValues.avg_euler_angles_array_path).front() == 74.0F);
   }
 
   SECTION("cancellation between output writes")
   {
     std::atomic_bool shouldCancel = false;
-    UnitTest::AlgorithmTestScope scope(*scanlineScenario);
+    unit_test::AlgorithmTestScope scope(*scanlineScenario);
     DataStructure dataStructure = BuildDataStructure(2, 2, featureIds, phases, quaternions, crystalStructures);
     createOutputs(dataStructure, std::make_shared<CancelAfterWriteDataStore<float32>>(ShapeType{2}, ShapeType{4}, 75.0F, shouldCancel),
-                  std::make_shared<Float32DataStore>(ShapeType{2}, ShapeType{3}, 76.0F));
+                  std::make_shared<Float32DataStoreType>(ShapeType{2}, ShapeType{3}, 76.0F));
     ComputeAvgOrientationsInputValues inputValues = CreateInputValues(true, false, false);
     Result<> result = scope.execute([&] { return ComputeAvgOrientations(dataStructure, {}, shouldCancel, &inputValues)(); });
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     REQUIRE(shouldCancel.load());
-    REQUIRE(ReadFloatArray(dataStructure, inputValues.avgQuatsArrayPath).front() != 75.0F);
-    REQUIRE(ReadFloatArray(dataStructure, inputValues.avgEulerAnglesArrayPath).front() == 76.0F);
+    REQUIRE(ReadFloatArray(dataStructure, inputValues.avg_quats_array_path).front() != 75.0F);
+    REQUIRE(ReadFloatArray(dataStructure, inputValues.avg_euler_angles_array_path).front() == 76.0F);
   }
 }
 
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: zero-cell and empty-feature outputs", "[OrientationAnalysis][ComputeAvgOrientationsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = BuildDataStructure(0, 2, {}, {}, {}, {k_Unknown, k_Triclinic});
   ComputeAvgOrientationsFilter filter;
   Arguments args;
@@ -1342,7 +1342,7 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: zero-cell and empty-feat
 // runtime backstop.
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: No Method Enabled Error", "[OrientationAnalysis][ComputeAvgOrientationsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const int32 numCells = 2;
   const int32 numFeatures = 2;
@@ -1369,27 +1369,27 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: No Method Enabled Error"
   args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonKappaArrayName_Key, std::make_any<std::string>(k_WatsonKappaName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -54673);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -54673);
 
   // Runtime backstop: invoking the algorithm directly (bypassing preflight) with no
   // method enabled must still fail with -54670 since no result array exists.
   ComputeAvgOrientationsInputValues inputValues;
-  inputValues.cellFeatureIdsArrayPath = k_FeatureIdsPath;
-  inputValues.cellPhasesArrayPath = k_PhasesPath;
-  inputValues.cellQuatsArrayPath = k_QuatsPath;
-  inputValues.crystalStructuresArrayPath = k_CrystalStructuresPath;
-  inputValues.useRodriguesAverage = false;
-  inputValues.useVonMisesAverage = false;
-  inputValues.useWatsonAverage = false;
-  inputValues.avgQuatsArrayPath = k_FeatureDataPath.createChildPath(k_AvgQuatsName);
-  inputValues.avgEulerAnglesArrayPath = k_FeatureDataPath.createChildPath(k_AvgEulerName);
-  inputValues.VMFQuatsArrayPath = k_FeatureDataPath.createChildPath(k_VMFQuatsName);
-  inputValues.VMFEulerAnglesArrayPath = k_FeatureDataPath.createChildPath(k_VMFEulerName);
-  inputValues.VMFKappaArrayPath = k_FeatureDataPath.createChildPath(k_VMFKappaName);
-  inputValues.WatsonQuatsArrayPath = k_FeatureDataPath.createChildPath(k_WatsonQuatsName);
-  inputValues.WatsonEulerAnglesArrayPath = k_FeatureDataPath.createChildPath(k_WatsonEulerName);
-  inputValues.WatsonKappaArrayPath = k_FeatureDataPath.createChildPath(k_WatsonKappaName);
+  inputValues.cell_feature_ids_array_path = k_FeatureIdsPath;
+  inputValues.cell_phases_array_path = k_PhasesPath;
+  inputValues.cell_quats_array_path = k_QuatsPath;
+  inputValues.crystal_structures_array_path = k_CrystalStructuresPath;
+  inputValues.use_rodrigues_average = false;
+  inputValues.use_von_mises_average = false;
+  inputValues.use_watson_average = false;
+  inputValues.avg_quats_array_path = k_FeatureDataPath.createChildPath(k_AvgQuatsName);
+  inputValues.avg_euler_angles_array_path = k_FeatureDataPath.createChildPath(k_AvgEulerName);
+  inputValues.vmf_quats_array_path = k_FeatureDataPath.createChildPath(k_VMFQuatsName);
+  inputValues.vmf_euler_angles_array_path = k_FeatureDataPath.createChildPath(k_VMFEulerName);
+  inputValues.vmf_kappa_array_path = k_FeatureDataPath.createChildPath(k_VMFKappaName);
+  inputValues.watson_quats_array_path = k_FeatureDataPath.createChildPath(k_WatsonQuatsName);
+  inputValues.watson_euler_angles_array_path = k_FeatureDataPath.createChildPath(k_WatsonEulerName);
+  inputValues.watson_kappa_array_path = k_FeatureDataPath.createChildPath(k_WatsonKappaName);
 
   const std::atomic_bool shouldCancel{false};
   Result<> algoResult = ComputeAvgOrientations(dataStructure, IFilter::MessageHandler{}, shouldCancel, &inputValues)();
@@ -1402,7 +1402,7 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: No Method Enabled Error"
 // added was removed in favor of this one — issue #1661.)
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Cell Array Tuple Mismatch Error (-651)", "[OrientationAnalysis][ComputeAvgOrientationsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Valid 4-cell structure, then add a Phases array with a mismatched tuple count (5).
   const std::vector<int32> featureIds = {0, 1, 1, 1};
@@ -1412,12 +1412,12 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Cell Array Tuple Mismatc
   DataStructure dataStructure = BuildDataStructure(4, 2, featureIds, phases, quats, crystalStructures);
 
   // Add a mismatched (5-tuple) Phases array under a separate AttributeMatrix.
-  auto* imageGeom = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
-  AttributeMatrix* badAM = AttributeMatrix::Create(dataStructure, "BadData", ShapeType{5}, imageGeom->getId());
+  auto* imageGeomPtr = dataStructure.getDataAs<ImageGeom>(k_ImageGeomPath);
+  AttributeMatrix* badAmPtr = AttributeMatrix::Create(dataStructure, "BadData", ShapeType{5}, imageGeomPtr->getId());
   {
     auto buffer = std::make_unique<int32[]>(5);
     std::fill_n(buffer.get(), 5, 1);
-    DataArray<int32>::Create(dataStructure, "PhasesBad", std::make_shared<Int32DataStore>(std::move(buffer), badAM->getShape(), ShapeType{1}), badAM->getId());
+    DataArray<int32>::Create(dataStructure, "PhasesBad", std::make_shared<Int32DataStoreType>(std::move(buffer), badAmPtr->getShape(), ShapeType{1}), badAmPtr->getId());
   }
   const DataPath badPhasesPath = k_ImageGeomPath.createChildPath("BadData").createChildPath("PhasesBad");
 
@@ -1438,8 +1438,8 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Cell Array Tuple Mismatc
   args.insertOrAssign(ComputeAvgOrientationsFilter::k_WatsonKappaArrayName_Key, std::make_any<std::string>(k_WatsonKappaName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -651);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -651);
 }
 
 // SIMPL Backwards Compatibility (kept, unchanged) — validates UUID + parameter
@@ -1447,8 +1447,8 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientations: Cell Array Tuple Mismatc
 TEST_CASE("OrientationAnalysis::ComputeAvgOrientationsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeAvgOrientationsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -1461,22 +1461,22 @@ TEST_CASE("OrientationAnalysis::ComputeAvgOrientationsFilter: SIMPL Backwards Co
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeAvgOrientationsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeAvgOrientationsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(ComputeAvgOrientationsFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ComputeAvgOrientationsFilter::k_CellFeatureAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
       CHECK(args.value<DataPath>(ComputeAvgOrientationsFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));

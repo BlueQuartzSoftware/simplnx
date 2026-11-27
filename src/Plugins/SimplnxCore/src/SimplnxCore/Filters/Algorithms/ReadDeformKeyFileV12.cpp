@@ -1,5 +1,7 @@
 #include "ReadDeformKeyFileV12.hpp"
 
+#include <cmath>
+
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/QuadGeom.hpp"
@@ -78,7 +80,7 @@ public:
         readProcessDefinition();
         continue;
       }
-      else if(tokens == k_StoppingAndStepControls)
+      if(tokens == k_StoppingAndStepControls)
       {
         // Skip the comment line that ends the header
         getNextLineTokens();
@@ -175,7 +177,7 @@ public:
       }
 
       // Unrecognized section
-      m_Filter->reportWarning(fmt::format("Warning at line {}: Unrecognized section", StringUtilities::number(m_LineCount)));
+      m_Filter->reportWarning(fmt::format("Warning at line {}: Unrecognized section", string_utilities::Number(m_LineCount)));
     }
 
     return {};
@@ -192,11 +194,11 @@ private:
   const bool m_Allocate;
   FileCache& m_Cache;
   usize m_LineCount = 0;
-  std::vector<std::string> m_UserDefinedVariables = {};
-  std::vector<DataPath> m_UserDefinedArrays = {};
+  std::vector<std::string> m_UserDefinedVariables;
+  std::vector<DataPath> m_UserDefinedArrays;
 
   // helper functions
-  [[nodiscard]] Result<> setTuple(usize tuple, Float32Array& data, const std::vector<std::string>& tokens, usize tokenOffset = 0)
+  [[nodiscard]] Result<> setTuple(usize tuple, Float32ArrayType& data, const std::vector<std::string>& tokens, usize tokenOffset = 0)
   {
     usize numComp = data.getNumberOfComponents();
     if(tokenOffset > tokens.size() || numComp > tokens.size() - tokenOffset)
@@ -207,7 +209,7 @@ private:
     }
     for(usize comp = 0; comp < numComp; comp++)
     {
-      float32 value;
+      float32 value = NAN;
       try
       {
         value = std::stof(tokens[tokenOffset + comp]);
@@ -222,14 +224,14 @@ private:
     return {};
   }
 
-  Result<> parse_ull(const std::string& token, usize& value) const
+  Result<> parseUll(const std::string& token, usize& value) const
   {
     try
     {
       value = std::stoull(token);
     } catch(const std::exception& e)
     {
-      std::string msg = fmt::format(R"(Error at line {}: Unable to convert string value "{}" to unsigned long long.  Threw standard exception with text: "{}")", StringUtilities::number(m_LineCount),
+      std::string msg = fmt::format(R"(Error at line {}: Unable to convert string value "{}" to unsigned long long.  Threw standard exception with text: "{}")", string_utilities::Number(m_LineCount),
                                     token, e.what());
       return MakeErrorResult(-2000, msg);
     }
@@ -242,9 +244,9 @@ private:
     std::vector<std::string> tokens; /* vector to store the split data */
     std::string buf;
     std::getline(m_InStream, buf);
-    buf = StringUtilities::trimmed(buf);
-    buf = StringUtilities::simplified(buf);
-    tokens = StringUtilities::split(buf, ' ');
+    buf = string_utilities::Trimmed(buf);
+    buf = string_utilities::Simplified(buf);
+    tokens = string_utilities::Split(buf, ' ');
     m_LineCount++;
 
     return tokens;
@@ -309,9 +311,9 @@ private:
   {
     std::string buf;
     std::getline(m_InStream, buf);
-    buf = StringUtilities::trimmed(buf);
-    buf = StringUtilities::simplified(buf);
-    auto tokens = StringUtilities::split(buf, ' ');
+    buf = string_utilities::Trimmed(buf);
+    buf = string_utilities::Simplified(buf);
+    auto tokens = string_utilities::Split(buf, ' ');
     m_LineCount++;
 
     if(tokens.size() != 3)
@@ -320,8 +322,8 @@ private:
       return {};
     }
 
-    usize numVars;
-    Result<> result = parse_ull(tokens.at(2), numVars);
+    usize numVars = 0;
+    Result<> result = parseUll(tokens.at(2), numVars);
     if(result.invalid())
     {
       return result;
@@ -331,9 +333,9 @@ private:
     for(usize i = 0; i < numVars; i++)
     {
       std::getline(m_InStream, buf);
-      buf = StringUtilities::trimmed(buf);
+      buf = string_utilities::Trimmed(buf);
       m_LineCount++;
-      std::string cleanedString = StringUtilities::replace(buf, "/", "|");
+      std::string cleanedString = string_utilities::Replace(buf, "/", "|");
       m_UserDefinedVariables[i] = cleanedString;
     }
 
@@ -375,9 +377,9 @@ private:
       }
       // We have replaced all the first 8 chars with spaces, so now tokenize and save the tokens
       {
-        line = StringUtilities::trimmed(line);
-        line = StringUtilities::simplified(line);
-        std::vector<std::string> tempTokens = StringUtilities::split(line, ' ');
+        line = string_utilities::Trimmed(line);
+        line = string_utilities::Simplified(line);
+        std::vector<std::string> tempTokens = string_utilities::Split(line, ' ');
         tokens.insert(tokens.end(), tempTokens.begin(), tempTokens.end());
       }
 
@@ -404,9 +406,9 @@ private:
         {
           tupleLineCount++;
           // We have replaced all the first 8 chars with spaces, so now tokenize and save the tokens
-          line = StringUtilities::trimmed(line);
-          line = StringUtilities::simplified(line);
-          std::vector<std::string> tempTokens = StringUtilities::split(line, ' ');
+          line = string_utilities::Trimmed(line);
+          line = string_utilities::Simplified(line);
+          std::vector<std::string> tempTokens = string_utilities::Split(line, ' ');
           tokens.insert(tokens.end(), tempTokens.begin(), tempTokens.end());
         }
       }
@@ -421,10 +423,10 @@ private:
         {
           DataArrayMetadata metadata = {};
           metadata.path = parentPath.createChildPath(userDefinedVariable);
-          metadata.tupleCount = arrayTupleSize;
-          metadata.componentCount = 1;
+          metadata.tuple_count = arrayTupleSize;
+          metadata.component_count = 1;
 
-          m_Cache.dataArrays.emplace_back(std::move(metadata));
+          m_Cache.data_arrays.emplace_back(std::move(metadata));
           m_UserDefinedArrays.emplace_back(parentPath.createChildPath(userDefinedVariable));
         }
       }
@@ -432,10 +434,10 @@ private:
       {
         DataArrayMetadata metadata = {};
         metadata.path = parentPath.createChildPath(dataArrayName);
-        metadata.tupleCount = arrayTupleSize;
-        metadata.componentCount = componentCount;
+        metadata.tuple_count = arrayTupleSize;
+        metadata.component_count = componentCount;
 
-        m_Cache.dataArrays.emplace_back(std::move(metadata));
+        m_Cache.data_arrays.emplace_back(std::move(metadata));
       }
 
       if(m_Allocate)
@@ -445,7 +447,7 @@ private:
         {
           for(usize i = 0; i < m_UserDefinedVariables.size(); i++)
           {
-            auto& data = m_DataStructure.getDataRefAs<Float32Array>(m_UserDefinedArrays[i]);
+            auto& data = m_DataStructure.getDataRefAs<Float32ArrayType>(m_UserDefinedArrays[i]);
             setResult = setTuple(0, data, tokens, i);
             if(setResult.invalid())
             {
@@ -455,7 +457,7 @@ private:
         }
         else
         {
-          auto& data = m_DataStructure.getDataRefAs<Float32Array>(parentPath.createChildPath(dataArrayName));
+          auto& data = m_DataStructure.getDataRefAs<Float32ArrayType>(parentPath.createChildPath(dataArrayName));
           setResult = setTuple(0, data, tokens);
         }
         if(setResult.invalid())
@@ -495,9 +497,9 @@ private:
           std::getline(m_InStream, compLineData);
           m_LineCount++;
           usize offset = (compLine == 0 ? 1 : 0);
-          compLineData = StringUtilities::trimmed(compLineData);
-          compLineData = StringUtilities::simplified(compLineData);
-          auto subTokens = StringUtilities::split(compLineData, ' ');
+          compLineData = string_utilities::Trimmed(compLineData);
+          compLineData = string_utilities::Simplified(compLineData);
+          auto subTokens = string_utilities::Split(compLineData, ' ');
           tokens.insert(tokens.end(), subTokens.begin() + static_cast<int64>(offset), subTokens.end());
         }
 
@@ -506,7 +508,7 @@ private:
         {
           for(usize i = 0; i < m_UserDefinedVariables.size(); i++)
           {
-            auto& data = m_DataStructure.getDataRefAs<Float32Array>(m_UserDefinedArrays[i]);
+            auto& data = m_DataStructure.getDataRefAs<Float32ArrayType>(m_UserDefinedArrays[i]);
             setResult = setTuple(tupleIndex, data, tokens, i);
             if(setResult.invalid())
             {
@@ -516,7 +518,7 @@ private:
         }
         else
         {
-          auto& data = m_DataStructure.getDataRefAs<Float32Array>(parentPath.createChildPath(dataArrayName));
+          auto& data = m_DataStructure.getDataRefAs<Float32ArrayType>(parentPath.createChildPath(dataArrayName));
           setResult = setTuple(tupleIndex, data, tokens);
         }
         if(setResult.invalid())
@@ -528,7 +530,7 @@ private:
     return {};
   }
 
-  Result<> readVertexCoordinates(AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertex, usize numVerts)
+  Result<> readVertexCoordinates(AbstractDataStore<IGeometry::SharedVertexListType::value_type>& vertex, usize numVerts)
   {
     std::string buf;
     std::vector<std::string> tokens; /* vector to store the split data */
@@ -549,7 +551,7 @@ private:
       } catch(const std::exception& e)
       {
         std::string msg = fmt::format(R"(Error at line {}: Unable to convert vertex coordinate {}'s 1st string value "{}" to float.  Threw standard exception with text: "{}")",
-                                      StringUtilities::number(m_LineCount), StringUtilities::number(i + 1), tokens[1], e.what());
+                                      string_utilities::Number(m_LineCount), string_utilities::Number(i + 1), tokens[1], e.what());
         return MakeErrorResult(-2001, std::move(msg));
       }
 
@@ -559,7 +561,7 @@ private:
       } catch(const std::exception& e)
       {
         std::string msg = fmt::format(R"(Error at line {}: Unable to convert vertex coordinate {}'s 2nd string value "{}" to float.  Threw standard exception with text: "{}")",
-                                      StringUtilities::number(m_LineCount), StringUtilities::number(i + 1), tokens[2], e.what());
+                                      string_utilities::Number(m_LineCount), string_utilities::Number(i + 1), tokens[2], e.what());
         return MakeErrorResult(-2002, std::move(msg));
       }
 
@@ -639,16 +641,16 @@ private:
       {
         return {};
       }
-      bool isWord;
+      bool isWord = false;
       std::vector<std::string> tokens;
       // Read the line. This line _Should_ be the start of "section" of data.
       {
         std::string buf;
         std::getline(m_InStream, buf);
         isWord = (buf[0] > 64 /*@ character */ && buf[0] < 91);
-        buf = StringUtilities::trimmed(buf);
-        buf = StringUtilities::simplified(buf);
-        tokens = StringUtilities::split(buf, ' ');
+        buf = string_utilities::Trimmed(buf);
+        buf = string_utilities::Simplified(buf);
+        tokens = string_utilities::Split(buf, ' ');
         m_LineCount++;
       }
 
@@ -672,8 +674,8 @@ private:
       if(word == k_VertexTitle)
       {
         vertHit = true;
-        usize numVerts;
-        Result<> result = parse_ull(tokens.at(2), numVerts);
+        usize numVerts = 0;
+        Result<> result = parseUll(tokens.at(2), numVerts);
         if(result.invalid())
         {
           m_Filter->reportWarning(result.errors().data()->message);
@@ -681,13 +683,13 @@ private:
         }
 
         // Set the number of vertices and then create vertices array and resize vertex attr mat.
-        m_Filter->updateProgress(fmt::format("DEFORM Data File: Number of Vertex Points = {}", StringUtilities::number(numVerts)));
-        m_Cache.vertexAttrMatTupleCount = numVerts;
+        m_Filter->updateProgress(fmt::format("DEFORM Data File: Number of Vertex Points = {}", string_utilities::Number(numVerts)));
+        m_Cache.vertex_attr_mat_tuple_count = numVerts;
 
         if(m_Allocate)
         {
           // Grab vertex list from quad geom
-          AbstractDataStore<IGeometry::SharedVertexList::value_type>& vertex = m_DataStructure.getDataAs<QuadGeom>(m_QuadGeomPath)->getVertices()->getDataStoreRef();
+          AbstractDataStore<IGeometry::SharedVertexListType::value_type>& vertex = m_DataStructure.getDataAs<QuadGeom>(m_QuadGeomPath)->getVertices()->getDataStoreRef();
 
           auto vertexResult = readVertexCoordinates(vertex, numVerts);
           if(vertexResult.invalid())
@@ -699,8 +701,8 @@ private:
       else if(word == k_CellTitle)
       {
         quadHit = true;
-        usize numCells;
-        Result<> result = parse_ull(tokens.at(2), numCells);
+        usize numCells = 0;
+        Result<> result = parseUll(tokens.at(2), numCells);
         if(result.invalid())
         {
           m_Filter->reportWarning(result.errors().data()->message);
@@ -708,8 +710,8 @@ private:
         }
 
         // Set the number of cells and then create cells array and resize cell attr mat.
-        m_Filter->updateProgress(fmt::format("DEFORM Data File: Number of Quad Cells = {}", StringUtilities::number(numCells)));
-        m_Cache.cellAttrMatTupleCount = numCells;
+        m_Filter->updateProgress(fmt::format("DEFORM Data File: Number of Quad Cells = {}", string_utilities::Number(numCells)));
+        m_Cache.cell_attr_mat_tuple_count = numCells;
 
         if(m_Allocate)
         {
@@ -727,8 +729,8 @@ private:
       {
         // This is most likely the beginning of a data array
         std::string dataArrayName = tokens.at(0);
-        usize tupleCount;
-        Result<> tupResult = parse_ull(tokens.at(2), tupleCount);
+        usize tupleCount = 0;
+        Result<> tupResult = parseUll(tokens.at(2), tupleCount);
         if(tupResult.invalid())
         {
           m_Filter->reportWarning(tupResult.errors().data()->message);
@@ -736,13 +738,13 @@ private:
         }
 
         Result<> readInResult;
-        if(tupleCount == m_Cache.vertexAttrMatTupleCount)
+        if(tupleCount == m_Cache.vertex_attr_mat_tuple_count)
         {
           m_Filter->updateProgress(fmt::format("Reading Vertex Data: {}", dataArrayName));
 
           readInResult = readDataArray(m_VertexAMPath, dataArrayName, tupleCount);
         }
-        else if(tupleCount == m_Cache.cellAttrMatTupleCount)
+        else if(tupleCount == m_Cache.cell_attr_mat_tuple_count)
         {
           m_Filter->updateProgress(fmt::format("Reading Cell Data: {}", dataArrayName));
 
@@ -761,13 +763,13 @@ private:
             {
               msg = fmt::format(
                   "Unable to read data: {}.  Its tuple size ({}) doesn't match the correct number of tuples to be a vertex array ({}), and the cell tuple count has not been read yet.  Skipping...",
-                  dataArrayName, tupleCount, m_Cache.vertexAttrMatTupleCount);
+                  dataArrayName, tupleCount, m_Cache.vertex_attr_mat_tuple_count);
             }
             else // quadHit == true
             {
               msg = fmt::format(
                   "Unable to read data: {}.  Its tuple size ({}) doesn't match the correct number of tuples to be a cell array ({}), and the vertex tuple count has not been read yet.  Skipping...",
-                  dataArrayName, tupleCount, m_Cache.cellAttrMatTupleCount);
+                  dataArrayName, tupleCount, m_Cache.cell_attr_mat_tuple_count);
             }
             m_Filter->reportWarning(msg);
           }
@@ -842,13 +844,13 @@ Result<> ReadDeformKeyFileV12::operator()(bool allocate)
    * have been passed in within inputValues are not valid as they have
    * not been created.
    */
-  std::ifstream inStream(m_InputValues->InputFilePath, std::ios_base::binary);
+  std::ifstream inStream(m_InputValues->input_file_path, std::ios_base::binary);
   if(!inStream.is_open())
   {
-    return MakeErrorResult(-2013, fmt::format("Unable to open the provided file to read at path : {}", m_InputValues->InputFilePath.string()));
+    return MakeErrorResult(-2013, fmt::format("Unable to open the provided file to read at path : {}", m_InputValues->input_file_path.string()));
   }
 
-  IOHandler handler = IOHandler(this, m_DataStructure, inStream, m_InputValues->QuadGeomPath, m_InputValues->VertexAMPath, m_InputValues->CellAMPath, allocate);
+  IOHandler handler = IOHandler(this, m_DataStructure, inStream, m_InputValues->quad_geom_path, m_InputValues->vertex_am_path, m_InputValues->cell_am_path, allocate);
 
   // Read from the file
   return handler.readDEFORMFile();

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <array>
 
 #include "ComputeVectorColors.hpp"
@@ -9,7 +10,6 @@
 #include <Eigen/Dense>
 #include <nonstd/span.hpp>
 
-#include <algorithm>
 #include <cmath>
 #include <memory>
 
@@ -96,15 +96,17 @@ Result<> ComputeVectorColorsInChunks(const AbstractDataStore<float32>& vectors, 
           array = array * -1.0f;
         }
 
-        float32 trend = std::atan2(array[1], array[0]) * (Constants::k_RadToDegF);
-        float32 plunge = std::acos(array[2]) * (Constants::k_RadToDegF);
+        float32 trend = std::atan2(array[1], array[0]) * (constants::k_RadToDegF);
+        float32 plunge = std::acos(array[2]) * (constants::k_RadToDegF);
         if(trend < 0.0f)
         {
           trend += 360.0f;
         }
 
         // Trend selects the RGB hue. Plunge blends that hue toward white.
-        float32 r = 0, g = 0, b = 0;
+        float32 r = 0;
+        float32 g = 0;
+        float32 b = 0;
         if(trend <= 120.0f)
         {
           r = 255.0f * ((120.0f - trend) / 120.0f);
@@ -131,23 +133,14 @@ Result<> ComputeVectorColorsInChunks(const AbstractDataStore<float32>& vectors, 
         r += (deltaR * ((90.0f - plunge) / 90.0f));
         g += (deltaG * ((90.0f - plunge) / 90.0f));
         b += (deltaB * ((90.0f - plunge) / 90.0f));
-        if(r > 255.0f)
-        {
-          r = 255.0f;
-        }
-        if(g > 255.0f)
-        {
-          g = 255.0f;
-        }
-        if(b > 255.0f)
-        {
-          b = 255.0f;
-        }
+        r = std::min(r, 255.0f);
+        g = std::min(g, 255.0f);
+        b = std::min(b, 255.0f);
 
-        Rgb argb = RgbColor::dRgb(static_cast<uint8>(r), static_cast<uint8>(g), static_cast<uint8>(b), 255);
-        (*colorsBuffer)[index] = RgbColor::dRed(argb);
-        (*colorsBuffer)[index + 1] = RgbColor::dGreen(argb);
-        (*colorsBuffer)[index + 2] = RgbColor::dBlue(argb);
+        RgbType argb = rgb_color::DRgb(static_cast<uint8>(r), static_cast<uint8>(g), static_cast<uint8>(b), 255);
+        (*colorsBuffer)[index] = rgb_color::DRed(argb);
+        (*colorsBuffer)[index + 1] = rgb_color::DGreen(argb);
+        (*colorsBuffer)[index + 2] = rgb_color::DBlue(argb);
       }
     }
 
@@ -170,8 +163,6 @@ ComputeVectorColors::ComputeVectorColors(DataStructure& dataStructure, const IFi
 {
 }
 
-ComputeVectorColors::~ComputeVectorColors() noexcept = default;
-
 const std::atomic_bool& ComputeVectorColors::getCancel()
 {
   return m_ShouldCancel;
@@ -184,25 +175,25 @@ Result<> ComputeVectorColors::operator()()
     return {};
   }
 
-  const auto& vectors = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->VectorsArrayPath).getDataStoreRef();
-  auto& cellVectorColors = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->CellVectorColorsArrayPath).getDataStoreRef();
+  const auto& vectors = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->vectors_array_path).getDataStoreRef();
+  auto& cellVectorColors = m_DataStructure.getDataRefAs<UInt8ArrayType>(m_InputValues->cell_vector_colors_array_path).getDataStoreRef();
 
-  if(!m_InputValues->UseMask)
+  if(!m_InputValues->use_mask)
   {
     return ComputeVectorColorsInChunks<uint8>(vectors, cellVectorColors, nullptr, m_ShouldCancel);
   }
 
-  const auto* maskArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);
-  if(maskArray != nullptr)
+  const auto* maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path);
+  if(maskArrayPtr != nullptr)
   {
-    switch(maskArray->getDataType())
+    switch(maskArrayPtr->getDataType())
     {
     case DataType::boolean: {
-      const auto& mask = maskArray->getIDataStoreRefAs<AbstractDataStore<bool>>();
+      const auto& mask = maskArrayPtr->getIDataStoreRefAs<AbstractDataStore<bool>>();
       return ComputeVectorColorsInChunks(vectors, cellVectorColors, &mask, m_ShouldCancel);
     }
     case DataType::uint8: {
-      const auto& mask = maskArray->getIDataStoreRefAs<AbstractDataStore<uint8>>();
+      const auto& mask = maskArrayPtr->getIDataStoreRefAs<AbstractDataStore<uint8>>();
       return ComputeVectorColorsInChunks(vectors, cellVectorColors, &mask, m_ShouldCancel);
     }
     default:
@@ -211,5 +202,5 @@ Result<> ComputeVectorColors::operator()()
   }
 
   // Filter validation rejects this state. Direct algorithm callers can still reach it.
-  return MakeErrorResult(-54700, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString()));
+  return MakeErrorResult(-54700, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->mask_array_path.toString()));
 }

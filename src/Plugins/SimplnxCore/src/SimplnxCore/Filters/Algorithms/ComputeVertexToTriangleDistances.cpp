@@ -1,12 +1,12 @@
 #include "ComputeVertexToTriangleDistances.hpp"
 
+#include "RTree/RTree.hpp"
 #include "simplnx/Common/Array.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataGroup.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
-#include "simplnx/Utilities/RTree.hpp"
 #include "simplnx/Utilities/ThrottledMessageHandler.hpp"
 
 #include <algorithm>
@@ -20,8 +20,8 @@ using namespace nx::core;
 namespace
 {
 using RTreeType = RTree<size_t, float, 3, float>;
-using SharedTriListT = AbstractDataStore<IGeometry::SharedTriList::value_type>;
-using SharedVertexListT = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+using SharedTriListTType = AbstractDataStore<IGeometry::SharedTriListType::value_type>;
+using SharedVertexListTType = AbstractDataStore<IGeometry::SharedVertexListType::value_type>;
 
 /**
  * @brief Caps candidate-box expansion attempts.
@@ -43,11 +43,11 @@ constexpr int32 k_MaxBoxExpansions = 64;
  * https://github.com/embree/embree/blob/master/tutorials/common/math/closest_point.h,
  * which has an Apache license.
  */
-Matrix3X1f closestPointTriangle(const Matrix3X1f& p, const Matrix3X1f& a, const Matrix3X1f& b, const Matrix3X1f& c)
+Matrix3X1fType ClosestPointTriangle(const Matrix3X1fType& p, const Matrix3X1fType& a, const Matrix3X1fType& b, const Matrix3X1fType& c)
 {
-  const Matrix3X1f ab = b - a;
-  const Matrix3X1f ac = c - a;
-  const Matrix3X1f ap = p - a;
+  const Matrix3X1fType ab = b - a;
+  const Matrix3X1fType ac = c - a;
+  const Matrix3X1fType ap = p - a;
 
   const float d1 = ab.dot(ap); // dot(ab, ap);
   const float d2 = ac.dot(ap); // dot(ac, ap);
@@ -56,7 +56,7 @@ Matrix3X1f closestPointTriangle(const Matrix3X1f& p, const Matrix3X1f& a, const 
     return a;
   }
 
-  const Matrix3X1f bp = p - b;
+  const Matrix3X1fType bp = p - b;
   const float d3 = ab.dot(bp); // dot(ab, bp);
   const float d4 = ac.dot(bp); // dot(ac, bp);
   if(d3 >= 0.f && d4 <= d3)
@@ -64,7 +64,7 @@ Matrix3X1f closestPointTriangle(const Matrix3X1f& p, const Matrix3X1f& a, const 
     return b;
   }
 
-  const Matrix3X1f cp = p - c;
+  const Matrix3X1fType cp = p - c;
   const float d5 = ab.dot(cp); // dot(ab, cp);
   const float d6 = ac.dot(cp); // dot(ac, cp);
   if(d6 >= 0.f && d5 <= d6)
@@ -96,7 +96,7 @@ Matrix3X1f closestPointTriangle(const Matrix3X1f& p, const Matrix3X1f& a, const 
   const float denominator = 1.f / (va + vb + vc);
   const float v = vb * denominator;
   const float w = vc * denominator;
-  const Matrix3X1f pointInTriangle = a + v * ab + w * ac;
+  const Matrix3X1fType pointInTriangle = a + v * ab + w * ac;
 
   return pointInTriangle;
 }
@@ -113,15 +113,16 @@ Matrix3X1f closestPointTriangle(const Matrix3X1f& p, const Matrix3X1f& a, const 
  *
  * The caller takes the square root after it chooses the closest triangle.
  */
-float32 PointTriangleDistance(const Matrix3X1f& point, const Matrix3X1f& vert0, const Matrix3X1f& vert1, const Matrix3X1f& vert2, const int64 triangle, const Float64AbstractDataStore& normals)
+float32 PointTriangleDistance(const Matrix3X1fType& point, const Matrix3X1fType& vert0, const Matrix3X1fType& vert1, const Matrix3X1fType& vert2, const int64 triangle,
+                              const Float64AbstractDataStoreType& normals)
 {
-  Matrix3X1f closestPointInTriangle = closestPointTriangle(point, vert0, vert1, vert2);
+  Matrix3X1fType closestPointInTriangle = ClosestPointTriangle(point, vert0, vert1, vert2);
 
   auto diffPoint = point - closestPointInTriangle;
   // The squared form avoids square roots for nonwinning candidates.
   float dist = diffPoint.dot(diffPoint);
 
-  Matrix3X1f normal = {static_cast<float32>(normals[3 * triangle + 0]), static_cast<float32>(normals[3 * triangle + 1]), static_cast<float32>(normals[3 * triangle + 2])};
+  Matrix3X1fType normal = {static_cast<float32>(normals[3 * triangle + 0]), static_cast<float32>(normals[3 * triangle + 1]), static_cast<float32>(normals[3 * triangle + 2])};
 
   float32 cosTheta = normal.cosTheta(diffPoint);
 
@@ -140,7 +141,7 @@ float32 PointTriangleDistance(const Matrix3X1f& point, const Matrix3X1f& vert0, 
  * @param halfExtent Specifies the box half extent.
  * @return Overlapping triangle indexes in RTree traversal order.
  */
-std::vector<size_t> FindTrianglesWithinBox(const RTreeType& rtree, const Matrix3X1f& center, float32 halfExtent)
+std::vector<size_t> FindTrianglesWithinBox(const RTreeType& rtree, const Matrix3X1fType& center, float32 halfExtent)
 {
   std::vector<size_t> candidateIds;
   std::function<bool(size_t)> collect = [&candidateIds](size_t triangleIndex) {
@@ -164,7 +165,7 @@ std::vector<size_t> FindTrianglesWithinBox(const RTreeType& rtree, const Matrix3
  * A real box finds triangles near a point because a zero-volume query rarely
  * overlaps a tight triangle bound. A later radius query provides the exact result.
  */
-std::vector<size_t> FindCandidateTrianglesByExpandingBox(const RTreeType& rtree, const Matrix3X1f& center, float32 initialHalfExtent)
+std::vector<size_t> FindCandidateTrianglesByExpandingBox(const RTreeType& rtree, const Matrix3X1fType& center, float32 initialHalfExtent)
 {
   float32 halfExtent = initialHalfExtent;
   for(int32 attempt = 0; attempt < k_MaxBoxExpansions; attempt++)
@@ -192,17 +193,17 @@ std::vector<size_t> FindCandidateTrianglesByExpandingBox(const RTreeType& rtree,
  * Ascending indexes and strict comparison retain the lowest index for an exact
  * distance tie. This matches an ascending brute-force scan.
  */
-void EvaluateClosestCandidate(nonstd::span<const size_t> candidateIds, const Matrix3X1f& point, const SharedTriListT& triangleList, const SharedVertexListT& triangleVertices,
-                              const Float64AbstractDataStore& normals, float32& bestSignedSquaredDistance, int64& bestTriangleId)
+void EvaluateClosestCandidate(nonstd::span<const size_t> candidateIds, const Matrix3X1fType& point, const SharedTriListTType& triangleList, const SharedVertexListTType& triangleVertices,
+                              const Float64AbstractDataStoreType& normals, float32& bestSignedSquaredDistance, int64& bestTriangleId)
 {
   for(const size_t t : candidateIds)
   {
     const auto p = static_cast<int64>(triangleList[t * 3 + 0]);
     const auto q = static_cast<int64>(triangleList[t * 3 + 1]);
     const auto r = static_cast<int64>(triangleList[t * 3 + 2]);
-    const Matrix3X1f v0(triangleVertices[p * 3 + 0], triangleVertices[p * 3 + 1], triangleVertices[p * 3 + 2]);
-    const Matrix3X1f v1(triangleVertices[q * 3 + 0], triangleVertices[q * 3 + 1], triangleVertices[q * 3 + 2]);
-    const Matrix3X1f v2(triangleVertices[r * 3 + 0], triangleVertices[r * 3 + 1], triangleVertices[r * 3 + 2]);
+    const Matrix3X1fType v0(triangleVertices[p * 3 + 0], triangleVertices[p * 3 + 1], triangleVertices[p * 3 + 2]);
+    const Matrix3X1fType v1(triangleVertices[q * 3 + 0], triangleVertices[q * 3 + 1], triangleVertices[q * 3 + 2]);
+    const Matrix3X1fType v2(triangleVertices[r * 3 + 0], triangleVertices[r * 3 + 1], triangleVertices[r * 3 + 2]);
 
     const float32 d = PointTriangleDistance(point, v0, v1, v2, static_cast<int64>(t), normals);
     if(std::abs(d) < std::abs(bestSignedSquaredDistance))
@@ -236,8 +237,8 @@ public:
    * @param initialSearchHalfExtent Seeds candidate-box expansion.
    * @param reportProgress Reports completed items through the synchronized callback.
    */
-  ComputeVertexToTriangleDistancesImpl(ComputeVertexToTriangleDistances* filter, const SharedTriListT& triangles, const SharedVertexListT& vertices, SharedVertexListT& sourcePoints,
-                                       Float32AbstractDataStore& distances, Int64AbstractDataStore& closestTri, const Float64AbstractDataStore& normals, const RTreeType rtree,
+  ComputeVertexToTriangleDistancesImpl(ComputeVertexToTriangleDistances* filter, const SharedTriListTType& triangles, const SharedVertexListTType& vertices, SharedVertexListTType& sourcePoints,
+                                       Float32AbstractDataStoreType& distances, Int64AbstractDataStoreType& closestTri, const Float64AbstractDataStoreType& normals, const RTreeType& rtree,
                                        float32 initialSearchHalfExtent, const std::function<void(usize)>& reportProgress)
   : m_Filter(filter)
   , m_SharedTriangleList(triangles)
@@ -284,7 +285,7 @@ public:
         return;
       }
 
-      const Matrix3X1f sourcePoint(m_SourcePoints[3 * v], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]);
+      const Matrix3X1fType sourcePoint(m_SourcePoints[3 * v], m_SourcePoints[3 * v + 1], m_SourcePoints[3 * v + 2]);
 
       float32 bestSignedSquaredDistance = std::numeric_limits<float32>::max();
       int64 bestTriangleId = -1;
@@ -352,12 +353,12 @@ public:
 
 private:
   ComputeVertexToTriangleDistances* m_Filter;
-  const SharedTriListT& m_SharedTriangleList;
-  const SharedVertexListT& m_TriangleVertices;
-  SharedVertexListT& m_SourcePoints;
-  Float32AbstractDataStore& m_Distances;
-  Int64AbstractDataStore& m_ClosestTri;
-  const Float64AbstractDataStore& m_Normals;
+  const SharedTriListTType& m_SharedTriangleList;
+  const SharedVertexListTType& m_TriangleVertices;
+  SharedVertexListTType& m_SourcePoints;
+  Float32AbstractDataStoreType& m_Distances;
+  Int64AbstractDataStoreType& m_ClosestTri;
+  const Float64AbstractDataStoreType& m_Normals;
   const RTreeType m_RTree;
   const float32 m_InitialSearchHalfExtent;
   const std::function<void(usize)>& m_ReportProgress;
@@ -370,7 +371,7 @@ private:
  * @param triId Identifies the triangle.
  * @param bounds Receives [xmin, ymin, zmin, xmax, ymax, zmax].
  */
-void GetBoundingBoxAtTri(const SharedTriListT& triList, const SharedVertexListT& vertList, size_t triId, nonstd::span<float> bounds)
+void GetBoundingBoxAtTri(const SharedTriListTType& triList, const SharedVertexListTType& vertList, size_t triId, nonstd::span<float> bounds)
 {
   size_t v0Index = triList[triId * 3 + 0] * 3;
   size_t v1Index = triList[triId * 3 + 1] * 3;
@@ -407,16 +408,16 @@ const std::atomic_bool& ComputeVertexToTriangleDistances::getCancel()
 
 Result<> ComputeVertexToTriangleDistances::operator()()
 {
-  auto& vertexGeom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->VertexDataContainer);
-  SharedVertexListT& sourceVertices = vertexGeom.getVertices()->getDataStoreRef();
+  auto& vertexGeom = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->vertex_data_container);
+  SharedVertexListTType& sourceVertices = vertexGeom.getVertices()->getDataStoreRef();
   usize totalElements = vertexGeom.getNumberOfVertices();
 
-  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleDataContainer);
-  auto numTris = static_cast<usize>(triangleGeom.getNumberOfFaces());
-  const SharedTriListT& triangles = triangleGeom.getFaces()->getDataStoreRef();
-  const SharedVertexListT& vertices = triangleGeom.getVertices()->getDataStoreRef();
+  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_data_container);
+  auto numTris = triangleGeom.getNumberOfFaces();
+  const SharedTriListTType& triangles = triangleGeom.getFaces()->getDataStoreRef();
+  const SharedVertexListTType& vertices = triangleGeom.getVertices()->getDataStoreRef();
 
-  RTreeType m_RTree;
+  RTreeType mRTree;
   // The largest bound extent seeds the first candidate box and reduces later
   // expansion attempts.
   std::vector<float> triBoundsArray(numTris * 6, 0.0F);
@@ -424,7 +425,7 @@ Result<> ComputeVertexToTriangleDistances::operator()()
   for(size_t triIndex = 0; triIndex < numTris; triIndex++)
   {
     GetBoundingBoxAtTri(triangles, vertices, triIndex, {triBoundsArray.data() + (6 * triIndex), 6});
-    m_RTree.Insert(triBoundsArray.data() + (6 * triIndex), triBoundsArray.data() + (6 * triIndex) + 3, triIndex);
+    mRTree.Insert(triBoundsArray.data() + (6 * triIndex), triBoundsArray.data() + (6 * triIndex) + 3, triIndex);
 
     const float32 extentX = triBoundsArray[6 * triIndex + 3] - triBoundsArray[6 * triIndex + 0];
     const float32 extentY = triBoundsArray[6 * triIndex + 4] - triBoundsArray[6 * triIndex + 1];
@@ -437,10 +438,10 @@ Result<> ComputeVertexToTriangleDistances::operator()()
     initialSearchHalfExtent = 1.0f;
   }
 
-  const auto& normalsArray = m_DataStructure.getDataAs<Float64Array>(m_InputValues->TriangleNormalsArrayPath)->getDataStoreRef();
-  auto& distancesArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->DistancesArrayPath)->getDataStoreRef();
+  const auto& normalsArray = m_DataStructure.getDataAs<Float64ArrayType>(m_InputValues->triangle_normals_array_path)->getDataStoreRef();
+  auto& distancesArray = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->distances_array_path)->getDataStoreRef();
   distancesArray.fill(std::numeric_limits<float32>::max());
-  auto& closestTriangleIdsArray = m_DataStructure.getDataAs<Int64Array>(m_InputValues->ClosestTriangleIdArrayPath)->getDataStoreRef();
+  auto& closestTriangleIdsArray = m_DataStructure.getDataAs<Int64ArrayType>(m_InputValues->closest_triangle_id_array_path)->getDataStoreRef();
   closestTriangleIdsArray.fill(-1); // No closest triangle found.
 
   const std::function<void(usize)> reportProgress = [this](usize count) { sendThreadSafeProgressMessage(count); };
@@ -451,13 +452,13 @@ Result<> ComputeVertexToTriangleDistances::operator()()
   dataAlg.setParallelizationEnabled(true);
   dataAlg.setRange(0, totalElements);
   dataAlg.execute(
-      ComputeVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVertices, distancesArray, closestTriangleIdsArray, normalsArray, m_RTree, initialSearchHalfExtent, reportProgress));
+      ComputeVertexToTriangleDistancesImpl(this, triangles, vertices, sourceVertices, distancesArray, closestTriangleIdsArray, normalsArray, mRTree, initialSearchHalfExtent, reportProgress));
 
   return {};
 }
 
 void ComputeVertexToTriangleDistances::sendThreadSafeProgressMessage(usize counter)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_Throttle.incrementPercent(counter);
 }

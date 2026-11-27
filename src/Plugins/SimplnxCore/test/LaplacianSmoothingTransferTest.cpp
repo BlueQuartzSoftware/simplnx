@@ -25,7 +25,7 @@ using namespace nx::core;
 namespace
 {
 /** @brief Stores the complete four-vertex coordinate oracle. */
-using Coordinates = std::array<float32, 12>;
+using CoordinatesType = std::array<float32, 12>;
 /** @brief Identifies the geometry changed by the public filter. */
 const DataPath k_GeometryPath{{"Mesh"}};
 /** @brief Identifies the coordinate payload supplied to writeback. */
@@ -35,16 +35,16 @@ const DataPath k_NodeTypesPath{{"Mesh", "Vertex Data", "Node Types"}};
 /** @brief Identifies the six supplied edges retained by EdgeGeom. */
 const DataPath k_EdgesPath{{"Mesh", "Edges"}};
 /** @brief Supplies a tetrahedron with centroid (1/2, 1/2, 1/2). */
-constexpr Coordinates k_InputCoordinates{0.0F, 0.0F, 0.0F, 2.0F, 0.0F, 0.0F, 0.0F, 2.0F, 0.0F, 0.0F, 0.0F, 2.0F};
+constexpr CoordinatesType k_InputCoordinates{0.0F, 0.0F, 0.0F, 2.0F, 0.0F, 0.0F, 0.0F, 2.0F, 0.0F, 0.0F, 0.0F, 2.0F};
 /** @brief Supplies the one-pass result for lambda 1/4 on the complete four-vertex graph. */
-constexpr Coordinates k_PlainCoordinates{1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 1.5F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 1.5F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 1.5F};
+constexpr CoordinatesType k_PlainCoordinates{1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 1.5F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 1.5F, 1.0F / 6.0F, 1.0F / 6.0F, 1.0F / 6.0F, 1.5F};
 /** @brief Supplies one Taubin pair with lambda 1/4 and mu factor -1. */
-constexpr Coordinates k_TaubinCoordinates{1.0F / 18.0F, 1.0F / 18.0F, 1.0F / 18.0F, 11.0F / 6.0F, 1.0F / 18.0F, 1.0F / 18.0F,
-                                          1.0F / 18.0F, 11.0F / 6.0F, 1.0F / 18.0F, 1.0F / 18.0F, 1.0F / 18.0F, 11.0F / 6.0F};
+constexpr CoordinatesType k_TaubinCoordinates{1.0F / 18.0F, 1.0F / 18.0F, 1.0F / 18.0F, 11.0F / 6.0F, 1.0F / 18.0F, 1.0F / 18.0F,
+                                              1.0F / 18.0F, 11.0F / 6.0F, 1.0F / 18.0F, 1.0F / 18.0F, 1.0F / 18.0F, 11.0F / 6.0F};
 /** @brief Supplies every edge once; each vertex has degree three. */
 constexpr std::array<IGeometry::MeshIndexType, 12> k_Edges{0, 1, 0, 2, 0, 3, 1, 2, 1, 3, 2, 3};
 /** @brief Makes every vertex use the default lambda. */
-constexpr std::array<int8, 4> k_NodeTypes{NodeType::Default, NodeType::Default, NodeType::Default, NodeType::Default};
+constexpr std::array<int8, 4> k_NodeTypes{node_type::k_Default, node_type::k_Default, node_type::k_Default, node_type::k_Default};
 /** @brief Distinguishes the injected store failure from the algorithm's contextual error. */
 constexpr int32 k_InjectedError = -95241;
 /** @brief Supplies the exact backend diagnostic that the filter must preserve. */
@@ -76,7 +76,10 @@ struct TransferCall
 };
 
 /** @brief Specifies the complete expected bulk order; failures permit only its corresponding prefix. */
-constexpr std::array<TransferCall, 4> k_CompleteTransfers{{{Transfer::ReadNodes, 0, 4}, {Transfer::ReadVertices, 0, 12}, {Transfer::ReadEdges, 0, 12}, {Transfer::WriteVertices, 0, 12}}};
+constexpr std::array<TransferCall, 4> k_CompleteTransfers{{{.operation = Transfer::ReadNodes, .offset = 0, .values = 4},
+                                                           {.operation = Transfer::ReadVertices, .offset = 0, .values = 12},
+                                                           {.operation = Transfer::ReadEdges, .offset = 0, .values = 12},
+                                                           {.operation = Transfer::WriteVertices, .offset = 0, .values = 12}}};
 
 /**
  * @struct FailureCase
@@ -86,13 +89,15 @@ struct FailureCase
 {
   const char* name;
   Transfer operation;
-  int32 contextCode;
-  usize expectedCalls;
+  int32 context_code;
+  usize expected_calls;
 };
 
 /** @brief Supplies independent stopping-order expectations for each bulk failure. */
-constexpr std::array<FailureCase, 4> k_FailureCases{
-    {{"node read", Transfer::ReadNodes, -560, 1}, {"vertex read", Transfer::ReadVertices, -561, 2}, {"edge read", Transfer::ReadEdges, -562, 3}, {"vertex write", Transfer::WriteVertices, -563, 4}}};
+constexpr std::array<FailureCase, 4> k_FailureCases{{{.name = "node read", .operation = Transfer::ReadNodes, .context_code = -560, .expected_calls = 1},
+                                                     {.name = "vertex read", .operation = Transfer::ReadVertices, .context_code = -561, .expected_calls = 2},
+                                                     {.name = "edge read", .operation = Transfer::ReadEdges, .context_code = -562, .expected_calls = 3},
+                                                     {.name = "vertex write", .operation = Transfer::WriteVertices, .context_code = -563, .expected_calls = 4}}};
 
 /**
  * @struct TransferTrace
@@ -167,7 +172,7 @@ public:
     if(m_Trace.armed)
     {
       m_Trace.calls.push_back({m_WriteOperation, startIndex, buffer.size()});
-      attemptedWrite.assign(buffer.begin(), buffer.end());
+      attempted_write.assign(buffer.begin(), buffer.end());
       if(m_Trace.failure == m_WriteOperation)
       {
         return MakeErrorResult(k_InjectedError, k_InjectedMessage);
@@ -177,7 +182,7 @@ public:
   }
 
   /** @brief Owns a copy of the last attempted write payload, including a refused write. */
-  std::vector<T> attemptedWrite;
+  std::vector<T> attempted_write;
 
 private:
   TransferTrace& m_Trace;
@@ -209,11 +214,11 @@ InputStores BuildGraph(DataStructure& dataStructure, TransferTrace& trace)
   auto* vertexDataPtr = AttributeMatrix::Create(dataStructure, "Vertex Data", {4}, geometryPtr->getId());
   REQUIRE(vertexDataPtr != nullptr);
   geometryPtr->setVertexAttributeMatrix(*vertexDataPtr);
-  InputStores stores{std::make_shared<RecordingStore<float32>>(4, 3, trace, Transfer::ReadVertices, Transfer::WriteVertices),
-                     std::make_shared<RecordingStore<int8>>(4, 1, trace, Transfer::ReadNodes, Transfer::WriteNodes),
-                     std::make_shared<RecordingStore<IGeometry::MeshIndexType>>(6, 2, trace, Transfer::ReadEdges, Transfer::WriteEdges)};
-  auto* verticesPtr = Float32Array::Create(dataStructure, k_VerticesPath.getTargetName(), stores.vertices, geometryPtr->getId());
-  auto* nodesPtr = Int8Array::Create(dataStructure, k_NodeTypesPath.getTargetName(), stores.nodes, vertexDataPtr->getId());
+  InputStores stores{.vertices = std::make_shared<RecordingStore<float32>>(4, 3, trace, Transfer::ReadVertices, Transfer::WriteVertices),
+                     .nodes = std::make_shared<RecordingStore<int8>>(4, 1, trace, Transfer::ReadNodes, Transfer::WriteNodes),
+                     .edges = std::make_shared<RecordingStore<IGeometry::MeshIndexType>>(6, 2, trace, Transfer::ReadEdges, Transfer::WriteEdges)};
+  auto* verticesPtr = Float32ArrayType::Create(dataStructure, k_VerticesPath.getTargetName(), stores.vertices, geometryPtr->getId());
+  auto* nodesPtr = Int8ArrayType::Create(dataStructure, k_NodeTypesPath.getTargetName(), stores.nodes, vertexDataPtr->getId());
   auto* edgesPtr = IGeometry::MeshIndexArrayType::Create(dataStructure, k_EdgesPath.getTargetName(), stores.edges, geometryPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   REQUIRE(nodesPtr != nullptr);
@@ -276,7 +281,7 @@ void CheckTransfers(const TransferTrace& trace, usize expectedCalls)
  * @param actual Supplies the captured write buffer, including a refused write.
  * @param expected Supplies the independently derived completed-pass coordinates.
  */
-void CheckPayload(const std::vector<float32>& actual, const Coordinates& expected)
+void CheckPayload(const std::vector<float32>& actual, const CoordinatesType& expected)
 {
   REQUIRE(actual.size() == expected.size());
   for(usize valueIdx = 0; valueIdx < expected.size(); ++valueIdx)
@@ -293,14 +298,14 @@ void CheckPayload(const std::vector<float32>& actual, const Coordinates& expecte
  * @param expected Supplies every expected coordinate.
  * @param exact Requires exact coordinate equality when no successful write is permitted.
  */
-void CheckGraph(const DataStructure& dataStructure, const InputStores& stores, const Coordinates& expected, bool exact)
+void CheckGraph(const DataStructure& dataStructure, const InputStores& stores, const CoordinatesType& expected, bool exact)
 {
   const EdgeGeom* geometryPtr = nullptr;
   REQUIRE_NOTHROW(geometryPtr = &dataStructure.getDataRefAs<EdgeGeom>(k_GeometryPath));
-  const Float32Array* verticesPtr = nullptr;
-  REQUIRE_NOTHROW(verticesPtr = &dataStructure.getDataRefAs<Float32Array>(k_VerticesPath));
-  const Int8Array* nodesPtr = nullptr;
-  REQUIRE_NOTHROW(nodesPtr = &dataStructure.getDataRefAs<Int8Array>(k_NodeTypesPath));
+  const Float32ArrayType* verticesPtr = nullptr;
+  REQUIRE_NOTHROW(verticesPtr = &dataStructure.getDataRefAs<Float32ArrayType>(k_VerticesPath));
+  const Int8ArrayType* nodesPtr = nullptr;
+  REQUIRE_NOTHROW(nodesPtr = &dataStructure.getDataRefAs<Int8ArrayType>(k_NodeTypesPath));
   const IGeometry::MeshIndexArrayType* edgesPtr = nullptr;
   REQUIRE_NOTHROW(edgesPtr = &dataStructure.getDataRefAs<IGeometry::MeshIndexArrayType>(k_EdgesPath));
   CHECK(geometryPtr->getVertices() == verticesPtr);
@@ -339,18 +344,18 @@ void CheckGraph(const DataStructure& dataStructure, const InputStores& stores, c
     CAPTURE(vertexIdx);
     CHECK(nodesPtr->getValue(vertexIdx) == k_NodeTypes[vertexIdx]);
   }
-  CHECK(stores.nodes->attemptedWrite.empty());
-  CHECK(stores.edges->attemptedWrite.empty());
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  CHECK(stores.nodes->attempted_write.empty());
+  CHECK(stores.edges->attempted_write.empty());
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
 TEST_CASE("SimplnxCore::LaplacianSmoothing: bulk failures stop at the failed transfer", "[SimplnxCore][LaplacianSmoothingFilter][LaplacianTransfer]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto failure = GENERATE(Catch::Generators::from_range(k_FailureCases));
   CAPTURE(failure.name);
-  const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+  const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
   TransferTrace trace;
   DataStructure dataStructure;
   const auto stores = BuildGraph(dataStructure, trace);
@@ -358,7 +363,7 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: bulk failures stop at the failed tra
   LaplacianSmoothingFilter filter;
   const auto args = MakeArguments(1, false);
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   trace.failure = failure.operation;
   trace.armed = true;
   const auto result = filter.execute(dataStructure, args).result;
@@ -367,29 +372,29 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: bulk failures stop at the failed tra
   CHECK(result.errors()[0].code == k_InjectedError);
   CHECK(result.errors()[0].message == k_InjectedMessage);
   CHECK(result.warnings().empty());
-  CHECK(result.errors()[1].code == failure.contextCode);
+  CHECK(result.errors()[1].code == failure.context_code);
   CHECK(result.errors()[1].message.find(failure.operation == Transfer::ReadNodes ? k_NodeTypesPath.toString() : k_GeometryPath.toString()) != std::string::npos);
-  CheckTransfers(trace, failure.expectedCalls);
+  CheckTransfers(trace, failure.expected_calls);
   if(failure.operation == Transfer::WriteVertices)
   {
-    CheckPayload(stores.vertices->attemptedWrite, k_PlainCoordinates);
+    CheckPayload(stores.vertices->attempted_write, k_PlainCoordinates);
   }
   else
   {
-    CHECK(stores.vertices->attemptedWrite.empty());
+    CHECK(stores.vertices->attempted_write.empty());
   }
   CheckGraph(dataStructure, stores, k_InputCoordinates, true);
 }
 
 TEST_CASE("SimplnxCore::LaplacianSmoothing: cancellation publishes completed passes and retains write failures", "[SimplnxCore][LaplacianSmoothingFilter][LaplacianCancellation]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const std::string schedule = GENERATE("after plain pass", "before Taubin second pass", "after Taubin pair");
   const bool failWrite = GENERATE(false, true);
   CAPTURE(schedule, failWrite);
   const bool useTaubin = schedule != "after plain pass";
   const auto& expected = schedule == "after Taubin pair" ? k_TaubinCoordinates : k_PlainCoordinates;
-  const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+  const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
   TransferTrace trace;
   DataStructure dataStructure;
   const auto stores = BuildGraph(dataStructure, trace);
@@ -397,7 +402,7 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: cancellation publishes completed pas
   LaplacianSmoothingFilter filter;
   const auto args = MakeArguments(2, useTaubin);
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   std::atomic_bool shouldCancel = false;
   std::vector<std::string> iterations;
   const IFilter::MessageHandler handler{[&](const IFilter::Message& message) {
@@ -445,17 +450,17 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: cancellation publishes completed pas
     CHECK(iterations.back().starts_with("Smoothing Iterations: 1/2"));
   }
   CheckTransfers(trace, k_CompleteTransfers.size());
-  CheckPayload(stores.vertices->attemptedWrite, expected);
+  CheckPayload(stores.vertices->attempted_write, expected);
   CheckGraph(dataStructure, stores, failWrite ? k_InputCoordinates : expected, failWrite);
 }
 
 TEST_CASE("SimplnxCore::LaplacianSmoothing: zero iterations and pre-cancellation do not write coordinates", "[SimplnxCore][LaplacianSmoothingFilter][LaplacianTransfer]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const std::string scenario = GENERATE("zero plain iterations", "zero Taubin iterations", "pre-cancelled");
   CAPTURE(scenario);
   const bool preCancelled = scenario == "pre-cancelled";
-  const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+  const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
   TransferTrace trace;
   DataStructure dataStructure;
   const auto stores = BuildGraph(dataStructure, trace);
@@ -463,7 +468,7 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: zero iterations and pre-cancellation
   LaplacianSmoothingFilter filter;
   const auto args = MakeArguments(preCancelled ? 2 : 0, scenario == "zero Taubin iterations");
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const std::atomic_bool shouldCancel = preCancelled;
   trace.armed = true;
   const auto result = filter.execute(dataStructure, args, nullptr, {}, shouldCancel).result;
@@ -492,21 +497,21 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: zero iterations and pre-cancellation
       CHECK(call.operation != Transfer::WriteEdges);
     }
   }
-  CHECK(stores.vertices->attemptedWrite.empty());
+  CHECK(stores.vertices->attempted_write.empty());
   CheckGraph(dataStructure, stores, k_InputCoordinates, true);
 }
 
 TEST_CASE("SimplnxCore::LaplacianSmoothing: missing vertices fail the direct algorithm guard", "[SimplnxCore][LaplacianSmoothingFilter][LaplacianTransfer]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
   DataStructure dataStructure;
   auto* geometryPtr = EdgeGeom::Create(dataStructure, k_GeometryPath.getTargetName());
   REQUIRE(geometryPtr != nullptr);
   REQUIRE(geometryPtr->getVertices() == nullptr);
   LaplacianSmoothingInputValues values{};
-  values.pTriangleGeometryDataPath = k_GeometryPath;
-  values.pSurfaceMeshNodeTypeArrayPath = k_NodeTypesPath;
+  values.p_triangle_geometry_data_path = k_GeometryPath;
+  values.p_surface_mesh_node_type_array_path = k_NodeTypesPath;
   const std::atomic_bool shouldCancel = false;
   const IFilter::MessageHandler handler{};
   Result<> result;
@@ -522,5 +527,5 @@ TEST_CASE("SimplnxCore::LaplacianSmoothing: missing vertices fail the direct alg
   CHECK(dataStructure.getData(k_VerticesPath) == nullptr);
   CHECK(dataStructure.getData(k_NodeTypesPath) == nullptr);
   CHECK(dataStructure.getData(k_EdgesPath) == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

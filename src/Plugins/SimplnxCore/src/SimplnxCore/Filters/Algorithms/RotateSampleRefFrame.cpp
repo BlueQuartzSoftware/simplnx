@@ -30,8 +30,6 @@ RotateSampleRefFrame::RotateSampleRefFrame(DataStructure& dataStructure, const I
 {
 }
 
-RotateSampleRefFrame::~RotateSampleRefFrame() noexcept = default;
-
 const std::atomic_bool& RotateSampleRefFrame::getCancel()
 {
   return m_ShouldCancel;
@@ -40,32 +38,32 @@ const std::atomic_bool& RotateSampleRefFrame::getCancel()
 Result<> RotateSampleRefFrame::operator()()
 {
   // Preflight actions have already cleared or copied the Feature Attribute Matrix.
-  auto& srcImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SourceGeometryPath);
-  auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->DestGeometryPath);
+  auto& srcImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->source_geometry_path);
+  auto& destImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->dest_geometry_path);
 
-  ImageRotationUtilities::Matrix4fR rotationMatrix;
+  image_rotation_utilities::Matrix4fRType rotationMatrix;
 
-  switch(static_cast<RotationRepresentationType>(m_InputValues->RotationRepresentationIndex))
+  switch(static_cast<RotationRepresentationType>(m_InputValues->rotation_representation_index))
   {
   case RotationRepresentationType::AxisAngle: {
-    rotationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(m_InputValues->RotationAxisAngle);
+    rotationMatrix = image_rotation_utilities::GenerateRotationTransformationMatrix(m_InputValues->rotation_axis_angle);
     break;
   }
   case RotationRepresentationType::RotationMatrix: {
-    rotationMatrix = ImageRotationUtilities::GenerateManualTransformationMatrix(m_InputValues->RotationMatrixTable);
+    rotationMatrix = image_rotation_utilities::GenerateManualTransformationMatrix(m_InputValues->rotation_matrix_table);
     break;
   }
   }
 
-  ImageRotationUtilities::RotateArgs rotateArgs = ImageRotationUtilities::CreateRotationArgs(srcImageGeom, rotationMatrix);
+  image_rotation_utilities::RotateArgs rotateArgs = image_rotation_utilities::CreateRotationArgs(srcImageGeom, rotationMatrix);
 
-  ImageRotationUtilities::FilterProgressCallback filterProgressCallback(m_MessageHandler, m_ShouldCancel);
+  image_rotation_utilities::FilterProgressCallback filterProgressCallback(m_MessageHandler, m_ShouldCancel);
 
   // Resident cell arrays rotate as independent tasks.
   ParallelTaskAlgorithm taskRunner;
   const DataPath srcCellDataAMPath = srcImageGeom.getCellDataPath();
   const auto& srcCellDataAM = srcImageGeom.getCellDataRef();
-  filterProgressCallback.resetProgress(srcCellDataAM.getSize() * static_cast<usize>(rotateArgs.outputDims[2]), "Interpolating Cell Arrays");
+  filterProgressCallback.resetProgress(srcCellDataAM.getSize() * static_cast<usize>(rotateArgs.output_dims[2]), "Interpolating Cell Arrays");
 
   const DataPath destCellDataAMPath = destImageGeom.getCellDataPath();
 
@@ -74,9 +72,9 @@ Result<> RotateSampleRefFrame::operator()()
   bool usesOutOfCoreStore = false;
   for(const auto& [dataId, srcDataObject] : srcCellDataAM)
   {
-    const auto* srcDataArray = m_DataStructure.getDataAs<IDataArray>(srcCellDataAMPath.createChildPath(srcDataObject->getName()));
-    const auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
-    usesOutOfCoreStore = usesOutOfCoreStore || IsOutOfCore(*srcDataArray) || IsOutOfCore(*destDataArray);
+    const auto* srcDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(srcCellDataAMPath.createChildPath(srcDataObject->getName()));
+    const auto* destDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
+    usesOutOfCoreStore = usesOutOfCoreStore || IsOutOfCore(*srcDataArrayPtr) || IsOutOfCore(*destDataArrayPtr);
   }
   const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
   RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
@@ -89,17 +87,17 @@ Result<> RotateSampleRefFrame::operator()()
       return {};
     }
 
-    const auto* srcDataArray = m_DataStructure.getDataAs<IDataArray>(srcCellDataAMPath.createChildPath(srcDataObject->getName()));
-    auto* destDataArray = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
+    const auto* srcDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(srcCellDataAMPath.createChildPath(srcDataObject->getName()));
+    auto* destDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(destCellDataAMPath.createChildPath(srcDataObject->getName()));
     filterProgressCallback.sendThreadSafeStatusMessage(fmt::format("Rotating Volume || Copying Data Array {}", srcDataObject->getName()));
 
-    ExecuteParallelFunction<ImageRotationUtilities::RotateImageGeometryWithNearestNeighbor>(srcDataArray->getDataType(), taskRunner, srcDataArray, destDataArray, rotateArgs, rotationMatrix,
-                                                                                            m_InputValues->SliceBySlice, &filterProgressCallback);
+    ExecuteParallelFunction<image_rotation_utilities::RotateImageGeometryWithNearestNeighbor>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr, rotateArgs, rotationMatrix,
+                                                                                              m_InputValues->slice_by_slice, &filterProgressCallback);
   }
 
   taskRunner.wait();
 
-  if(m_InputValues->KeepInputGeometryOrigin)
+  if(m_InputValues->keep_input_geometry_origin)
   {
     if(auto result = destImageGeom.setOrigin(srcImageGeom.getOrigin()); result.invalid())
     {

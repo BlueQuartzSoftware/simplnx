@@ -12,7 +12,6 @@ ReshapeDataArray::ReshapeDataArray(DataStructure& dataStructure, const IFilter::
 }
 
 // -----------------------------------------------------------------------------
-ReshapeDataArray::~ReshapeDataArray() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ReshapeDataArray::getCancel()
@@ -23,20 +22,20 @@ const std::atomic_bool& ReshapeDataArray::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ReshapeDataArray::operator()()
 {
-  auto outputArrayPath = m_InputValues->InputArrayPath.getParent().createChildPath(fmt::format(".{}", m_InputValues->InputArrayPath.getTargetName()));
+  auto outputArrayPath = m_InputValues->input_array_path.getParent().createChildPath(fmt::format(".{}", m_InputValues->input_array_path.getTargetName()));
   auto& outputArray = m_DataStructure.getDataRefAs<IArray>(outputArrayPath);
 
   std::string arrayTypeName = outputArray.getTypeName();
   switch(outputArray.getArrayType())
   {
   case IArray::ArrayType::DataArray: {
-    return ReshapeArray(m_DataStructure, m_InputValues->InputArrayPath, outputArrayPath, m_MessageHandler);
+    return ReshapeArray(m_DataStructure, m_InputValues->input_array_path, outputArrayPath, m_MessageHandler);
   }
   case IArray::ArrayType::StringArray: {
-    return ReshapeArrayImpl<StringArray>(m_DataStructure, m_InputValues->InputArrayPath, outputArrayPath, m_MessageHandler);
+    return ReshapeArrayImpl<StringArray>(m_DataStructure, m_InputValues->input_array_path, outputArrayPath, m_MessageHandler);
   }
   case IArray::ArrayType::NeighborListArray: {
-    return ReshapeNeighborList(m_DataStructure, m_InputValues->InputArrayPath, outputArrayPath, m_MessageHandler);
+    return ReshapeNeighborList(m_DataStructure, m_InputValues->input_array_path, outputArrayPath, m_MessageHandler);
   }
   case IArray::ArrayType::Any: {
     return MakeErrorResult(to_underlying(ReshapeDataArray::ErrorCodes::InputArrayEqualsAny),

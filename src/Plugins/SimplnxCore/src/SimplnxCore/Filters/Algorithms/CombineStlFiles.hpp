@@ -14,23 +14,23 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT CombineStlFilesInputValues
 {
-  FileSystemPathParameter::ValueType StlFilesPath;
-  DataPath TriangleDataContainerName;
-  DataPath FaceAttributeMatrixName;
-  DataPath FaceNormalsArrayName;
+  FileSystemPathParameter::ValueType stl_files_path;
+  DataPath triangle_data_container_name;
+  DataPath face_attribute_matrix_name;
+  DataPath face_normals_array_name;
 
-  DataPath PartNumberIndexArrayPath;
-  bool CreatePartNumbers;
+  DataPath part_number_index_array_path;
+  bool create_part_numbers{};
 
-  DataPath FaceLabelIndexArrayPath;
-  bool CreateFaceLabels;
+  DataPath face_label_index_array_path;
+  bool create_face_labels{};
 
-  DataPath VertexFileIndexArrayPath;
-  bool LabelVertices;
+  DataPath vertex_file_index_array_path;
+  bool label_vertices{};
 
-  DataObjectNameParameter::ValueType CellFeatureAttributeMatrixName;
-  DataObjectNameParameter::ValueType ActiveArrayName;
-  DataObjectNameParameter::ValueType FileListArrayName;
+  DataObjectNameParameter::ValueType cell_feature_attribute_matrix_name;
+  DataObjectNameParameter::ValueType active_array_name;
+  DataObjectNameParameter::ValueType file_list_array_name;
 };
 
 /**
@@ -42,7 +42,7 @@ class SIMPLNXCORE_EXPORT CombineStlFiles
 {
 public:
   CombineStlFiles(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CombineStlFilesInputValues* inputValues);
-  ~CombineStlFiles() noexcept;
+  ~CombineStlFiles() noexcept = default;
 
   CombineStlFiles(const CombineStlFiles&) = delete;
   CombineStlFiles(CombineStlFiles&&) noexcept = delete;

@@ -53,10 +53,10 @@ Parameters ReadTextDataArrayFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "File path that points to the imported file", fs::path("<file to import goes here>"),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::InputFile));
   params.insert(std::make_unique<NumericTypeParameter>(k_ScalarType_Key, "Input Numeric Type", "Data Type to interpret and store data into.", NumericType::int8));
-  params.insert(std::make_unique<UInt64Parameter>(k_NComp_Key, "Number of Components", "Number of columns", 1));
-  params.insert(std::make_unique<UInt64Parameter>(k_NSkipLines_Key, "Skip Header Lines", "Number of lines at the start of the file to skip", 0));
+  params.insert(std::make_unique<UInt64ParameterType>(k_NComp_Key, "Number of Components", "Number of columns", 1));
+  params.insert(std::make_unique<UInt64ParameterType>(k_NSkipLines_Key, "Skip Header Lines", "Number of lines at the start of the file to skip", 0));
   params.insert(std::make_unique<ChoicesParameter>(k_DelimiterChoice_Key, "Delimiter", "Delimiter for values on a line", 0,
-                                                   ChoicesParameter::Choices{", (comma)", "; (semicolon)", "  (space)", ": (colon)", "\\t (Tab)"}));
+                                                   ChoicesParameter::ChoicesType{", (comma)", "; (semicolon)", "  (space)", ": (colon)", "\\t (Tab)"}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Array"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_DataArrayPath_Key, "Created Array Path", "DataPath or Name for the underlying Data Array", DataPath{}));
@@ -85,13 +85,13 @@ IFilter::VersionType ReadTextDataArrayFilter::parametersVersion() const
   return 1;
 }
 
-IFilter::UniquePointer ReadTextDataArrayFilter::clone() const
+IFilter::UniquePointerType ReadTextDataArrayFilter::clone() const
 {
   return std::make_unique<ReadTextDataArrayFilter>();
 }
 
-IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto numericType = filterArgs.value<NumericType>(k_ScalarType_Key);
   auto arrayPath = filterArgs.value<DataPath>(k_DataArrayPath_Key);
@@ -103,13 +103,13 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
 
   if(nComp == 0)
   {
-    return MakePreflightErrorResult(DimensionConversion::k_ZeroComponents, "Number of Components (0) must be >= 1.");
+    return MakePreflightErrorResult(dimension_conversion::k_ZeroComponents, "Number of Components (0) must be >= 1.");
   }
 
   ShapeType tupleDims = {};
 
-  auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(arrayPath.getParent());
-  if(parentAM == nullptr)
+  const auto* parentAmPtr = dataStructure.getDataAs<AttributeMatrix>(arrayPath.getParent());
+  if(parentAmPtr == nullptr)
   {
     if(!useDims)
     {
@@ -117,24 +117,23 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
           -78602, fmt::format("The DataArray to be created '{}'is not within an AttributeMatrix, so the dimensions cannot be determined implicitly. Check Set Tuple Dimensions to set the dimensions",
                               arrayPath.toString()));
     }
-    else
+
+    auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, -78603);
+    if(dimensions.invalid())
     {
-      auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, -78603);
-      if(dimensions.invalid())
-      {
-        return {ConvertInvalidResult<OutputActions>(std::move(dimensions))};
-      }
-      tupleDims = std::move(dimensions.value());
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
     }
+    tupleDims = std::move(dimensions.value());
   }
   else
   {
-    tupleDims = parentAM->getShape();
+    tupleDims = parentAmPtr->getShape();
     if(useDims)
     {
       resultOutputActions.warnings().push_back(
-          Warning{-77604, "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
-                          "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
+          Warning{.code = -77604,
+                  .message = "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
+                             "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
     }
   }
 
@@ -144,32 +143,32 @@ IFilter::PreflightResult ReadTextDataArrayFilter::preflightImpl(const DataStruct
 
   resultOutputActions.value().appendAction(std::move(action));
 
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
-Result<> ReadTextDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ReadTextDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                              const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadTextDataArrayInputValues inputValues;
-  inputValues.InputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
-  inputValues.SkipLineCount = filterArgs.value<uint64>(k_NSkipLines_Key);
-  inputValues.DelimiterIndex = filterArgs.value<ChoicesParameter::ValueType>(k_DelimiterChoice_Key);
-  inputValues.OutputDataArrayPath = filterArgs.value<DataPath>(k_DataArrayPath_Key);
+  inputValues.input_file = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFile_Key);
+  inputValues.skip_line_count = filterArgs.value<uint64>(k_NSkipLines_Key);
+  inputValues.delimiter_index = filterArgs.value<ChoicesParameter::ValueType>(k_DelimiterChoice_Key);
+  inputValues.output_data_array_path = filterArgs.value<DataPath>(k_DataArrayPath_Key);
 
   return ReadTextDataArray(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_InputFileKey = "InputFile";
-constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
-constexpr StringLiteral k_NumberOfComponentsKey = "NumberOfComponents";
-constexpr StringLiteral k_SkipHeaderLinesKey = "SkipHeaderLines";
-constexpr StringLiteral k_DelimiterKey = "Delimiter";
-constexpr StringLiteral k_CreatedAttributeArrayPathKey = "CreatedAttributeArrayPath";
-} // namespace SIMPL
+constexpr StringLiteralType k_InputFileKey = "InputFile";
+constexpr StringLiteralType k_ScalarTypeKey = "ScalarType";
+constexpr StringLiteralType k_NumberOfComponentsKey = "NumberOfComponents";
+constexpr StringLiteralType k_SkipHeaderLinesKey = "SkipHeaderLines";
+constexpr StringLiteralType k_DelimiterKey = "Delimiter";
+constexpr StringLiteralType k_CreatedAttributeArrayPathKey = "CreatedAttributeArrayPath";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadTextDataArrayFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -178,12 +177,12 @@ Result<Arguments> ReadTextDataArrayFilter::FromSIMPLJson(const nlohmann::json& j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::InputFileFilterParameterConverter>(args, json, SIMPL::k_InputFileKey, k_InputFile_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::NumericTypeParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_ScalarType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_NumberOfComponentsKey, k_NComp_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_SkipHeaderLinesKey, k_NSkipLines_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_DelimiterKey, k_DelimiterChoice_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_CreatedAttributeArrayPathKey, k_DataArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::InputFileFilterParameterConverter>(args, json, simpl::k_InputFileKey, k_InputFile_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::NumericTypeParameterConverter>(args, json, simpl::k_ScalarTypeKey, k_ScalarType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_NumberOfComponentsKey, k_NComp_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_SkipHeaderLinesKey, k_NSkipLines_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_DelimiterKey, k_DelimiterChoice_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_CreatedAttributeArrayPathKey, k_DataArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

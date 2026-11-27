@@ -23,7 +23,6 @@
 #include <EbsdLib/LaueOps/LaueOps.h>
 
 #include <filesystem>
-namespace fs = std::filesystem;
 
 using namespace nx::core;
 
@@ -69,8 +68,8 @@ Parameters ReadH5OimDataFilter::parameters() const
   params.insert(std::make_unique<OEMEbsdScanSelectionParameter>(k_SelectedScanNames_Key, "Scan Names", "The name of the scan in the .h5 file. EDAX can store multiple scans in a single file",
                                                                 OEMEbsdScanSelectionParameter::ValueType{}, OEMEbsdScanSelectionParameter::EbsdReaderType::Oim,
                                                                 OEMEbsdScanSelectionParameter::ExtensionsType{".h5"}));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of the volume", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
-  params.insert(std::make_unique<Float32Parameter>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing in microns between each layer.", 1.0f));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Origin", "The origin of the volume", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
+  params.insert(std::make_unique<Float32ParameterType>(k_ZSpacing_Key, "Z Spacing (Microns)", "The spacing in microns between each layer.", 1.0f));
   params.insert(std::make_unique<BoolParameter>(k_ReadPatternData_Key, "Import Pattern Data", "Whether or not to import the pattern data", false));
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "The path to the created Image Geometry", DataPath({ImageGeom::k_TypeName})));
@@ -91,18 +90,18 @@ IFilter::VersionType ReadH5OimDataFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadH5OimDataFilter::clone() const
+IFilter::UniquePointerType ReadH5OimDataFilter::clone() const
 {
   return std::make_unique<ReadH5OimDataFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadH5OimDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                            const ExecutionContext& executionContext) const
+IFilter::PreflightResult ReadH5OimDataFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                            const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pSelectedScanNamesValue = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
   auto pZSpacingValue = filterArgs.value<float32>(k_ZSpacing_Key);
-  auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
+  auto pOriginValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Origin_Key);
   auto pReadPatternDataValue = filterArgs.value<bool>(k_ReadPatternData_Key);
   auto pImageGeometryNameValue = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
   auto pCellAttributeMatrixNameValue = filterArgs.value<std::string>(k_CellAttributeMatrixName_Key);
@@ -119,23 +118,23 @@ IFilter::PreflightResult ReadH5OimDataFilter::preflightImpl(const DataStructure&
   {
     return MakePreflightErrorResult(-9580, fmt::format("The Z Spacing field contains a value ({}) that is non-positive.  The Z Spacing field must be set to a positive value.", pZSpacingValue));
   }
-  if(pSelectedScanNamesValue.scanNames.empty())
+  if(pSelectedScanNamesValue.scan_names.empty())
   {
     return MakePreflightErrorResult(-9581, "At least one scan must be chosen.  Please select a scan from the list.");
   }
 
   // read in the necessary info from the input h5 file
   ebsdlib::H5OIMReader::Pointer reader = ebsdlib::H5OIMReader::New();
-  reader->setFileName(pSelectedScanNamesValue.inputFilePath.string());
+  reader->setFileName(pSelectedScanNamesValue.input_file_path.string());
   reader->setReadPatternData(pReadPatternDataValue);
-  reader->setHDF5Path(pSelectedScanNamesValue.scanNames.front());
+  reader->setHDF5Path(pSelectedScanNamesValue.scan_names.front());
   if(const int err = reader->readHeaderOnly(); err < 0)
   {
     return MakePreflightErrorResult(-9582, fmt::format("An error occurred while reading the header data\n{} : {}", err, reader->getErrorMessage()));
   }
 
   // create the Image Geometry and it's attribute matrices
-  const CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(reader->getXDimension()), static_cast<usize>(reader->getYDimension()), pSelectedScanNamesValue.scanNames.size()};
+  const CreateImageGeometryAction::DimensionType dims = {static_cast<usize>(reader->getXDimension()), static_cast<usize>(reader->getYDimension()), pSelectedScanNamesValue.scan_names.size()};
   const ShapeType tupleDims = {dims[2], dims[1], dims[0]};
   {
     CreateImageGeometryAction::SpacingType spacing = {reader->getXStep(), reader->getYStep(), pZSpacingValue};
@@ -144,8 +143,8 @@ IFilter::PreflightResult ReadH5OimDataFilter::preflightImpl(const DataStructure&
     resultOutputActions.value().appendAction(std::move(createDataGroupAction));
   }
 
-  EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::H5OIMReader>(*reader, preflightUpdatedValues);
-  EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5OIMReader>(*reader, preflightUpdatedValues);
+  ebsd_reader_utilities::GeneratePreflightScanInformation<ebsdlib::H5OIMReader>(*reader, preflightUpdatedValues);
+  ebsd_reader_utilities::GeneratePreflightPhaseInformation<ebsdlib::H5OIMReader>(*reader, preflightUpdatedValues);
 
   auto phases = reader->getPhaseVector();
   std::vector<usize> ensembleTupleDims{phases.size() + 1};
@@ -206,37 +205,37 @@ IFilter::PreflightResult ReadH5OimDataFilter::preflightImpl(const DataStructure&
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadH5OimDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ReadH5OimDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                          const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReadH5DataInputValues inputValues;
 
-  inputValues.SelectedScanNames = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
-  inputValues.ReadPatternData = filterArgs.value<bool>(k_ReadPatternData_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
-  inputValues.CellEnsembleAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
-  inputValues.CellAttributeMatrixPath = inputValues.ImageGeometryPath.createChildPath(filterArgs.value<std::string>(k_CellAttributeMatrixName_Key));
+  inputValues.selected_scan_names = filterArgs.value<OEMEbsdScanSelectionParameter::ValueType>(k_SelectedScanNames_Key);
+  inputValues.read_pattern_data = filterArgs.value<bool>(k_ReadPatternData_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
+  inputValues.cell_ensemble_attribute_matrix_path = inputValues.image_geometry_path.createChildPath(filterArgs.value<std::string>(k_CellEnsembleAttributeMatrixName_Key));
+  inputValues.cell_attribute_matrix_path = inputValues.image_geometry_path.createChildPath(filterArgs.value<std::string>(k_CellAttributeMatrixName_Key));
 
   return ReadH5OimData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_InputFileKey = "InputFile";
-constexpr StringLiteral k_SelectedScanNamesKey = "SelectedScanNames";
-constexpr StringLiteral k_ZSpacingKey = "ZSpacing";
-constexpr StringLiteral k_OriginKey = "Origin";
-constexpr StringLiteral k_ReadPatternDataKey = "ReadPatternData";
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
-constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
-} // namespace SIMPL
+constexpr StringLiteralType k_InputFileKey = "InputFile";
+constexpr StringLiteralType k_SelectedScanNamesKey = "SelectedScanNames";
+constexpr StringLiteralType k_ZSpacingKey = "ZSpacing";
+constexpr StringLiteralType k_OriginKey = "Origin";
+constexpr StringLiteralType k_ReadPatternDataKey = "ReadPatternData";
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteralType k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReadH5OimDataFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -246,14 +245,14 @@ Result<Arguments> ReadH5OimDataFilter::FromSIMPLJson(const nlohmann::json& json)
   std::vector<Result<>> results;
 
   results.push_back(
-      SIMPLConversion::Convert2Parameters<SIMPLConversion::OEMEbsdScanSelectionFilterParameterConverter>(args, json, SIMPL::k_InputFileKey, SIMPL::k_SelectedScanNamesKey, k_SelectedScanNames_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_ZSpacingKey, k_ZSpacing_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_OriginKey, k_Origin_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_ReadPatternDataKey, k_ReadPatternData_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+      simpl_conversion::Convert2Parameters<simpl_conversion::OEMEbsdScanSelectionFilterParameterConverter>(args, json, simpl::k_InputFileKey, simpl::k_SelectedScanNamesKey, k_SelectedScanNames_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_ZSpacingKey, k_ZSpacing_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(args, json, simpl::k_OriginKey, k_Origin_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_ReadPatternDataKey, k_ReadPatternData_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

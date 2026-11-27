@@ -20,22 +20,22 @@ namespace rt = recon_test;
 
 namespace
 {
-using CurvFilter = CurvatureFlowImageFilter;
+using CurvFilterType = CurvatureFlowImageFilter;
 
 // Sets the geometry, input, and output keys plus TimeStep and NumberOfIterations on the Arguments. The helper runs
 // preflight and execute, and requires that both steps succeed.
-void RunCurvatureFlow(IFilter& filter, DataStructure& ds, const DataPath& inputPath, float64 timeStep, uint32 numberOfIterations, const std::string& outputName = "Output")
+void RunCurvatureFlow(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, float64 timeStep, uint32 numberOfIterations, const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
-  args.insertOrAssign(CurvFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(CurvFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(CurvFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-  args.insertOrAssign(CurvFilter::k_TimeStep_Key, std::make_any<float64>(timeStep));
-  args.insertOrAssign(CurvFilter::k_NumberOfIterations_Key, std::make_any<uint32>(numberOfIterations));
-  auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  args.insertOrAssign(CurvFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(CurvFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(CurvFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  args.insertOrAssign(CurvFilterType::k_TimeStep_Key, std::make_any<float64>(timeStep));
+  args.insertOrAssign(CurvFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(numberOfIterations));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
@@ -65,38 +65,38 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: preflight guards", "[NXImageProcessing][CurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   SECTION("multi-component rejected")
   {
-    DataStructure ds;
-    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, std::vector<int32>(36, 0));
+    DataStructure dataStructure;
+    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(ds, vecPath, {1, 6, 6}, {3});
-    const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
-    DataArray<int32>::Create(ds, "Vec", vecStore, cellAM.getId());
+    auto vecStore = data_store_utilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
+    DataArray<int32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
-    CurvFilter filter;
+    CurvFilterType filter;
     Arguments args;
-    args.insertOrAssign(CurvFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(CurvFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
-    args.insertOrAssign(CurvFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(CurvFilter::k_TimeStep_Key, std::make_any<float64>(0.05));
-    args.insertOrAssign(CurvFilter::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
-    const auto result = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    args.insertOrAssign(CurvFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(CurvFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
+    args.insertOrAssign(CurvFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(CurvFilterType::k_TimeStep_Key, std::make_any<float64>(0.05));
+    args.insertOrAssign(CurvFilterType::k_NumberOfIterations_Key, std::make_any<uint32>(5u));
+    const auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("scalar input creates a SameAsInput output")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<uint8> field = MakeRamp<uint8>(6, 6, 1);
-    const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, 6, 6, 1, field);
-    CurvFilter filter;
-    RunCurvatureFlow(filter, ds, inputPath, 0.05, 5u);
+    const DataPath inputPath = rt::BuildImageFromPattern<uint8>(dataStructure, 6, 6, 1, field);
+    CurvFilterType filter;
+    RunCurvatureFlow(filter, dataStructure, inputPath, 0.05, 5u);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-    REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint8);
+    REQUIRE(dataStructure.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint8);
   }
 }
 
@@ -126,15 +126,17 @@ TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: ITK real-image golden (l
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::CurvatureFlowImageFilter: zero iterations is a no-op", "[NXImageProcessing][CurvatureFlowImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 8, DY = 8, DZ = 8;
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, DX, DY, DZ, MakeRamp<float32>(DX, DY, DZ));
-  CurvFilter filter;
-  RunCurvatureFlow(filter, ds, inputPath, /*timeStep=*/0.05, /*numberOfIterations=*/0u);
+  constexpr usize k_Dx = 8;
+  constexpr usize k_Dy = 8;
+  constexpr usize k_Dz = 8;
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, k_Dx, k_Dy, k_Dz, MakeRamp<float32>(k_Dx, k_Dy, k_Dz));
+  CurvFilterType filter;
+  RunCurvatureFlow(filter, dataStructure, inputPath, /*timeStep=*/0.05, /*numberOfIterations=*/0u);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  rt::RequireExact<float32>(ds.getDataRefAs<IDataArray>(outputPath), ds.getDataRefAs<IDataArray>(inputPath));
+  rt::RequireExact<float32>(dataStructure.getDataRefAs<IDataArray>(outputPath), dataStructure.getDataRefAs<IDataArray>(inputPath));
 }

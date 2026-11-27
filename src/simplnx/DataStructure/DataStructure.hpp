@@ -26,7 +26,7 @@ class DataGroup;
 class DataPath;
 class IDataStoreFormatResolver;
 
-namespace Constants
+namespace constants
 {
 
 inline const std::string k_ObjectTypeTag = "ObjectType";
@@ -38,7 +38,7 @@ inline const std::string k_ObjectIdTag = "ObjectId";
 inline const std::string k_NextIdTag = "NextObjectId";
 
 inline const std::string k_ImportableTag = "Importable";
-} // namespace Constants
+} // namespace constants
 
 /**
  * @class DataStructure
@@ -63,9 +63,9 @@ protected:
 public:
   using SignalType = nod::signal<void(DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>&)>;
 
-  using Iterator = DataMap::Iterator;
+  using iterator = DataMap::iterator;
 
-  using ConstIterator = DataMap::ConstIterator;
+  using const_iterator = DataMap::const_iterator;
 
   friend class DataMap;
   friend class DataObject;
@@ -113,14 +113,14 @@ public:
    * @return Shared owner that keeps the resolver alive after the default changes.
    * @pre Do not call while another thread changes the default resolver.
    */
-  static std::shared_ptr<const IDataStoreFormatResolver> getDefaultFormatResolver();
+  static std::shared_ptr<const IDataStoreFormatResolver> GetDefaultFormatResolver();
 
   /**
    * @brief Sets the process-wide storage-format resolver.
    * @param resolver Has no effect when null.
    * @pre Do not replace the resolver during concurrent resolver access.
    */
-  static void setDefaultFormatResolver(std::shared_ptr<const IDataStoreFormatResolver> resolver);
+  static void SetDefaultFormatResolver(std::shared_ptr<const IDataStoreFormatResolver> resolver);
 
   usize getSize() const;
 
@@ -145,7 +145,7 @@ public:
   DataObject* getData(DataObject::IdType identifier);
 
   template <class T>
-  inline T* getDataAs(DataObject::IdType identifier)
+  T* getDataAs(DataObject::IdType identifier)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<T*>(getData(identifier));
@@ -168,11 +168,11 @@ public:
   DataObject* getData(const std::optional<DataObject::IdType>& identifier);
 
   template <class T>
-  inline T* getDataAs(const std::optional<DataObject::IdType>& identifier)
+  T* getDataAs(const std::optional<DataObject::IdType>& identifier)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
-    auto* object = getData(identifier);
-    return dynamic_cast<T*>(object);
+    auto* objectPtr = getData(identifier);
+    return dynamic_cast<T*>(objectPtr);
   }
 
   /**
@@ -186,8 +186,8 @@ public:
   T* getDataAsUnsafe(const std::optional<DataObject::IdType>& identifier)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
-    auto* object = getData(identifier);
-    return static_cast<T*>(object);
+    auto* objectPtr = getData(identifier);
+    return static_cast<T*>(objectPtr);
   }
 
   DataObject* getData(const DataPath& path);
@@ -209,7 +209,7 @@ public:
   DataObject& getDataRef(DataObject::IdType identifier);
 
   template <class T>
-  inline T* getDataAs(const DataPath& path)
+  T* getDataAs(const DataPath& path)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<T*>(getData(path));
@@ -238,7 +238,7 @@ public:
    * @throws std::bad_cast if the object is incompatible with T.
    */
   template <class T>
-  inline T& getDataRefAs(const DataPath& path)
+  T& getDataRefAs(const DataPath& path)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<T&>(getDataRef(path));
@@ -292,7 +292,7 @@ public:
   DataObject* getData(const LinkedPath& path);
 
   template <class T>
-  inline T* getDataAs(const LinkedPath& path)
+  T* getDataAs(const LinkedPath& path)
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<T*>(getData(path));
@@ -315,7 +315,7 @@ public:
   const DataObject* getData(DataObject::IdType identifier) const;
 
   template <class T>
-  inline const T* getDataAs(DataObject::IdType identifier) const
+  const T* getDataAs(DataObject::IdType identifier) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T*>(getData(identifier));
@@ -338,7 +338,7 @@ public:
   const DataObject* getData(const std::optional<DataObject::IdType>& identifier) const;
 
   template <class T>
-  inline const T* getDataAs(const std::optional<DataObject::IdType>& identifier) const
+  const T* getDataAs(const std::optional<DataObject::IdType>& identifier) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T*>(getData(identifier));
@@ -377,7 +377,7 @@ public:
   const DataObject& getDataRef(DataObject::IdType identifier) const;
 
   template <class T>
-  inline const T* getDataAs(const DataPath& path) const
+  const T* getDataAs(const DataPath& path) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T*>(getData(path));
@@ -406,7 +406,7 @@ public:
    * @throws std::bad_cast if the object is incompatible with T.
    */
   template <class T>
-  inline const T& getDataRefAs(const DataPath& path) const
+  const T& getDataRefAs(const DataPath& path) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T&>(getDataRef(path));
@@ -460,7 +460,7 @@ public:
   const DataObject* getData(const LinkedPath& path) const;
 
   template <class T>
-  inline const T* getDataAs(const LinkedPath& path) const
+  const T* getDataAs(const LinkedPath& path) const
   {
     static_assert(std::is_base_of_v<DataObject, T>);
     return dynamic_cast<const T*>(getData(path));
@@ -590,13 +590,13 @@ public:
    */
   bool removeParent(DataObject::IdType targetId, DataObject::IdType parent);
 
-  Iterator begin();
+  iterator begin();
 
-  Iterator end();
+  iterator end();
 
-  ConstIterator begin() const;
+  const_iterator begin() const;
 
-  ConstIterator end() const;
+  const_iterator end() const;
 
   SignalType& getSignal();
 
@@ -756,7 +756,7 @@ public:
    * @return Independent object shell sharing only its value store.
    * @pre The caller excludes concurrent access to the source structure.
    */
-  [[nodiscard]] static std::shared_ptr<DataObject> makeImportPublicationCopy(DataObject& source);
+  [[nodiscard]] static std::shared_ptr<DataObject> MakeImportPublicationCopy(DataObject& source);
 
   /**
    * @brief Publishes selected prepared shells and rolls back exact placements on failure.
@@ -791,7 +791,7 @@ protected:
 
   bool insertIntoParent(const std::shared_ptr<DataObject>& dataObject, BaseGroup* parentGroup);
 
-  void setData(DataObject::IdType identifier, std::shared_ptr<DataObject> dataObject);
+  void setData(DataObject::IdType identifier, const std::shared_ptr<DataObject>& dataObject);
 
 private:
   /**
@@ -824,17 +824,17 @@ private:
    */
   struct ImportPublicationRecord
   {
-    std::shared_ptr<DataObject> Owner;
+    std::shared_ptr<DataObject> owner;
     std::shared_ptr<BaseGroup> Parent;
     DataObject::IdType Id = 0;
-    DataObject::IdType ParentId = 0;
+    DataObject::IdType parent_id = 0;
     DataPath Path;
-    std::shared_ptr<AbstractDataStructureMessage> RemovalMessage;
-    ImportInsertionStage Stage = ImportInsertionStage::None;
-    ImportCleanupStatus Cleanup = ImportCleanupStatus::Complete;
-    bool NotifyRemoval = false;
-    bool NotificationAttempted = false;
-    bool NotificationFailed = false;
+    std::shared_ptr<AbstractDataStructureMessage> removal_message;
+    ImportInsertionStage stage = ImportInsertionStage::None;
+    ImportCleanupStatus cleanup = ImportCleanupStatus::Complete;
+    bool notify_removal = false;
+    bool notification_attempted = false;
+    bool notification_failed = false;
   };
 
   /**
@@ -900,7 +900,7 @@ private:
    * @param sourceFile Supplies diagnostic context.
    * @pre result is invalid.
    */
-  static void appendImportCleanupDiagnostics(Result<>& result, const std::vector<ImportPublicationRecord>& records, const std::filesystem::path& sourceFile);
+  static void AppendImportCleanupDiagnostics(Result<>& result, const std::vector<ImportPublicationRecord>& records, const std::filesystem::path& sourceFile);
 
   /**
    * @brief Transfers failed transaction observations into action-local test storage.

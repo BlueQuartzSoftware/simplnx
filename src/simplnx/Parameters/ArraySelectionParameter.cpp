@@ -14,6 +14,7 @@
 #include <fmt/format.h>
 #include <fmt/ranges.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 using namespace nx::core;
 
@@ -24,12 +25,12 @@ template <>
  */
 struct fmt::formatter<nx::core::DataType>
 {
-  constexpr format_parse_context::iterator parse(format_parse_context& ctx)
+  static constexpr format_parse_context::iterator parse(format_parse_context& ctx)
   {
     return ctx.begin();
   }
 
-  format_context::iterator format(const nx::core::DataType& value, format_context& ctx) const
+  static format_context::iterator format(const nx::core::DataType& value, format_context& ctx)
   {
     return fmt::format_to(ctx.out(), "{}", nx::core::DataTypeToString(value));
   }
@@ -37,12 +38,12 @@ struct fmt::formatter<nx::core::DataType>
 
 namespace nx::core
 {
-ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes,
-                                                 AllowedComponentShapes requiredComps, DataLocation location)
+ArraySelectionParameter::ArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const AllowedTypeSetType& allowedTypes,
+                                                 AllowedComponentShapesType requiredComps, DataLocation location)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 , m_AllowedTypes(allowedTypes)
-, m_RequiredComponentShapes(requiredComps)
+, m_RequiredComponentShapes(std::move(requiredComps))
 , m_Location(location)
 {
   if(allowedTypes.empty())
@@ -57,7 +58,7 @@ Uuid ArraySelectionParameter::uuid() const
   return ParameterTraits<ArraySelectionParameter>::uuid;
 }
 
-IParameter::AcceptedTypes ArraySelectionParameter::acceptedTypes() const
+IParameter::AcceptedTypesType ArraySelectionParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -74,12 +75,12 @@ nlohmann::json ArraySelectionParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> ArraySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> ArraySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'ArraySelectionParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'ArraySelectionParameter' JSON Error: ";
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), name()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix.view(), name()));
   }
   auto jsonStrValue = json.get<std::string>();
   if(jsonStrValue.empty())
@@ -89,12 +90,12 @@ Result<std::any> ArraySelectionParameter::fromJsonImpl(const nlohmann::json& jso
   std::optional<DataPath> path = DataPath::FromString(jsonStrValue);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), jsonStrValue));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotValueType, fmt::format("{}Failed to parse '{}' as DataPath", k_Prefix.view(), jsonStrValue));
   }
   return {{std::move(*path)}};
 }
 
-IParameter::UniquePointer ArraySelectionParameter::clone() const
+IParameter::UniquePointerType ArraySelectionParameter::clone() const
 {
   return std::make_unique<ArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes, m_RequiredComponentShapes, m_Location);
 }
@@ -109,12 +110,12 @@ typename ArraySelectionParameter::ValueType ArraySelectionParameter::defaultPath
   return m_DefaultValue;
 }
 
-ArraySelectionParameter::AllowedTypes ArraySelectionParameter::allowedTypes() const
+ArraySelectionParameter::AllowedTypeSetType ArraySelectionParameter::allowedTypes() const
 {
   return m_AllowedTypes;
 }
 
-ArraySelectionParameter::AllowedComponentShapes ArraySelectionParameter::requiredComponentShapes() const
+ArraySelectionParameter::AllowedComponentShapesType ArraySelectionParameter::requiredComponentShapes() const
 {
   return m_RequiredComponentShapes;
 }
@@ -147,32 +148,32 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
 
   if(value.empty())
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateEmptyValue, fmt::format("{}DataPath cannot be empty", prefix));
   }
-  const DataObject* object = dataStructure.getData(value);
-  if(object == nullptr)
+  const DataObject* objectPtr = dataStructure.getData(value);
+  if(objectPtr == nullptr)
   {
-    return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
+    return nx::core::MakeErrorResult<>(nx::core::filter_parameter::constants::k_ValidateDoesNotExist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
-  const auto* iArrayPtr = dynamic_cast<const IArray*>(object);
+  const auto* iArrayPtr = dynamic_cast<const IArray*>(objectPtr);
   if(iArrayPtr == nullptr)
   {
-    return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, value.toString()));
+    return nx::core::MakeErrorResult<>(nx::core::filter_parameter::constants::k_ValidateTypeError, fmt::format("{}Object at path '{}' must be a DataArray.", prefix, value.toString()));
   }
 
   // StringArray has fixed string type and component shape. Numeric type,
   // component-shape, and storage-location rules apply only to IDataArray.
-  const auto* dataArray = dynamic_cast<const IDataArray*>(object);
-  if(dataArray != nullptr)
+  const auto* dataArrayPtr = dynamic_cast<const IDataArray*>(objectPtr);
+  if(dataArrayPtr != nullptr)
   {
     if(!m_AllowedTypes.empty())
     {
 
-      DataType dataType = dataArray->getDataType();
-      if(m_AllowedTypes.count(dataType) == 0)
+      DataType dataType = dataArrayPtr->getDataType();
+      if(!m_AllowedTypes.contains(dataType))
       {
-        return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_AllowedType_Error,
+        return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateAllowedTypeError,
                                          fmt::format("{}DataArray at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), dataType, m_AllowedTypes));
       }
     }
@@ -183,29 +184,29 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
       bool foundMatch = false;
       for(const auto& compShape : m_RequiredComponentShapes)
       {
-        if(compShape == dataArray->getComponentShape())
+        if(compShape == dataArrayPtr->getComponentShape())
         {
           foundMatch = true;
           break;
         }
-        compStr += StringUtilities::number(compShape[0]);
+        compStr += string_utilities::Number(compShape[0]);
         for(usize i = 1; i < compShape.size(); ++i)
         {
-          compStr += " x " + StringUtilities::number(compShape[i]);
+          compStr += " x " + string_utilities::Number(compShape[i]);
         }
         compStr += " or ";
       }
       if(!foundMatch)
       {
         compStr.erase(compStr.size() - 4); // Remove trailing " or "
-        return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_TupleShapeValue,
+        return nx::core::MakeErrorResult<>(nx::core::filter_parameter::constants::k_ValidateTupleShapeValue,
                                            fmt::format("{}Object at path '{}' must have a component shape of {}.", prefix, value.toString(), compStr));
       }
     }
 
     if(m_Location != DataLocation::Any)
     {
-      const IDataStore::StoreType storeType = dataArray->getStoreType();
+      const IDataStore::StoreType storeType = dataArrayPtr->getStoreType();
       const bool matches =
           (m_Location == DataLocation::InMemory && storeType == IDataStore::StoreType::InMemory) || (m_Location == DataLocation::OutOfCore && storeType == IDataStore::StoreType::OutOfCore);
       if(storeType != IDataStore::StoreType::Empty && !matches)
@@ -230,7 +231,7 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
           requestedLocationNamePtr = "out-of-core";
         }
 
-        return MakeErrorResult(FilterParameter::Constants::k_Validate_DataLocation_Error,
+        return MakeErrorResult(filter_parameter::constants::k_ValidateDataLocationError,
                                fmt::format("{}DataArray at path '{}' has '{}' storage; required storage is '{}'.", prefix, value.toString(), actualLocationNamePtr, requestedLocationNamePtr));
       }
     }
@@ -241,13 +242,13 @@ Result<> ArraySelectionParameter::validatePath(const DataStructure& dataStructur
 Result<std::any> ArraySelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
-  DataObject* object = dataStructure.getData(path);
-  return {{object}};
+  DataObject* objectPtr = dataStructure.getData(path);
+  return {{objectPtr}};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
-Result<DataArraySelectionFilterParameterConverter::ValueType> DataArraySelectionFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataArraySelectionFilterParameterConverter::ValueType> DataArraySelectionFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   auto dataContainerNameResult = ReadDataContainerName(json, "DataArraySelectionFilterParameter");
   if(dataContainerNameResult.invalid())
@@ -271,5 +272,5 @@ Result<DataArraySelectionFilterParameterConverter::ValueType> DataArraySelection
 
   return {std::move(dataPath)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

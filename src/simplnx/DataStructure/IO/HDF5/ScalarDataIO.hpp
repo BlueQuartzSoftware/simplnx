@@ -3,7 +3,7 @@
 #include "simplnx/DataStructure/IO/HDF5/IDataIO.hpp"
 #include "simplnx/DataStructure/ScalarData.hpp"
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 template <typename T>
 class ScalarDataIO : public IDataIO
@@ -25,8 +25,8 @@ public:
    * @param useEmptyDataStore = false
    * @return Result<>
    */
-  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& scalarName, DataObject::IdType importId,
-                    const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
+  Result<> readData(DataStructureReader& dataStructureReader, const GroupReaderType& parentGroup, const std::string& scalarName, DataObject::IdType importId,
+                    const std::optional<DataObject::IdType>& parentId, bool /*useEmptyDataStore*/ = false) const override
   {
     auto datasetReader = parentGroup.openDataset(scalarName);
 
@@ -38,8 +38,8 @@ public:
       return MakeErrorResult(-458, fmt::format("Failed to read ScalarData: {}", scalarName));
     }
 
-    ScalarData<T>* scalar = ScalarData<T>::Import(dataStructureReader.getDataStructure(), scalarName, importId, buffer[0], parentId);
-    if(scalar == nullptr)
+    ScalarData<T>* scalarPtr = ScalarData<T>::Import(dataStructureReader.getDataStructure(), scalarName, importId, buffer[0], parentId);
+    if(scalarPtr == nullptr)
     {
       return MakeErrorResult(-459, fmt::format("Failed to read ScalarData '{}'. No data imported", scalarName));
     }
@@ -55,11 +55,11 @@ public:
    * @param importable
    * @return Result<>
    */
-  Result<> writeData(DataStructureWriter& dataStructureWriter, const ScalarData<T>& scalarData, group_writer_type& parentGroup, bool importable) const
+  Result<> writeData(DataStructureWriter& dataStructureWriter, const ScalarData<T>& scalarData, GroupWriterType& parentGroup, bool importable) const
   {
     auto datasetWriter = parentGroup.createDataset(scalarData.getName());
 
-    nx::core::HDF5::DatasetIO::DimsType dims = {1};
+    nx::core::hdf5::DatasetIO::DimsType dims = {1};
     std::array<T, 1> dataVector = {scalarData.getValue()};
     Result<> h5Result = datasetWriter.writeSpan(dims, nonstd::span<const T>{dataVector});
     if(h5Result.invalid())
@@ -78,7 +78,7 @@ public:
    * @param parentWriter
    * @return Result<>
    */
-  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override
+  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, GroupWriterType& parentWriter) const override
   {
     return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
   }
@@ -98,4 +98,4 @@ public:
   ScalarDataIO& operator=(const ScalarDataIO& rhs) = delete;
   ScalarDataIO& operator=(ScalarDataIO&& rhs) = delete;
 };
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

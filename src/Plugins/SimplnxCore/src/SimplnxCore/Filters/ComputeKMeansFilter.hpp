@@ -24,17 +24,17 @@ public:
   ComputeKMeansFilter& operator=(ComputeKMeansFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_InitClusters_Key = "init_clusters";
-  static constexpr StringLiteral k_DistanceMetric_Key = "distance_metric_index";
-  static constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
-  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
-  static constexpr StringLiteral k_FeatureAMPath_Key = "feature_attribute_matrix_path";
-  static constexpr StringLiteral k_MeansArrayName_Key = "means_array_name";
-  static constexpr StringLiteral k_UseSeed_Key = "use_seed";
-  static constexpr StringLiteral k_SeedValue_Key = "seed_value";
-  static constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
+  static constexpr StringLiteralType k_InitClusters_Key = "init_clusters";
+  static constexpr StringLiteralType k_DistanceMetric_Key = "distance_metric_index";
+  static constexpr StringLiteralType k_UseMask_Key = "use_mask";
+  static constexpr StringLiteralType k_SelectedArrayPath_Key = "selected_array_path";
+  static constexpr StringLiteralType k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteralType k_FeatureIdsArrayName_Key = "feature_ids_array_name";
+  static constexpr StringLiteralType k_FeatureAMPath_Key = "feature_attribute_matrix_path";
+  static constexpr StringLiteralType k_MeansArrayName_Key = "means_array_name";
+  static constexpr StringLiteralType k_UseSeed_Key = "use_seed";
+  static constexpr StringLiteralType k_SeedValue_Key = "seed_value";
+  static constexpr StringLiteralType k_SeedArrayName_Key = "seed_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -91,7 +91,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

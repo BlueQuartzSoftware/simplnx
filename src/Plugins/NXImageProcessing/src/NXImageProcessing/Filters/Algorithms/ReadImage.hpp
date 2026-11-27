@@ -22,22 +22,22 @@ namespace nx::core
  */
 struct NXIMAGEPROCESSING_EXPORT ReadImageInputValues
 {
-  std::filesystem::path inputFilePath;
-  DataPath imageGeometryPath;
-  DataPath imageDataArrayPath;
-  std::string cellDataName;
-  bool changeOrigin = false;
-  bool centerOrigin = false;
-  FloatVec3 origin;
-  bool changeSpacing = false;
-  FloatVec3 spacing;
-  OriginSpacingProcessing originSpacingProcessing = OriginSpacingProcessing::Postprocessed;
-  bool changeDataType = false;
-  DataType imageDataType = DataType::uint8;
-  CropGeometryParameter::ValueType croppingOptions;
+  std::filesystem::path input_file_path;
+  DataPath image_geometry_path;
+  DataPath image_data_array_path;
+  std::string cell_data_name;
+  bool change_origin = false;
+  bool center_origin = false;
+  FloatVec3Type origin;
+  bool change_spacing = false;
+  FloatVec3Type spacing;
+  OriginSpacingProcessing origin_spacing_processing = OriginSpacingProcessing::Postprocessed;
+  bool change_data_type = false;
+  DataType image_data_type = DataType::uint8;
+  CropGeometryParameter::ValueType cropping_options;
   // ReadImageStack sets this programmatic hint to read only page 0 with Z equal to 1.
   // The hint applies to multi-page TIFF files and is not a user parameter.
-  bool readSinglePageOnly = false;
+  bool read_single_page_only = false;
 };
 
 /**
@@ -62,7 +62,7 @@ public:
   /**
    * @brief Destroys the non-owning reader.
    */
-  ~ReadImage() noexcept;
+  ~ReadImage() noexcept = default;
 
   ReadImage(const ReadImage&) = delete;
   ReadImage(ReadImage&&) noexcept = delete;

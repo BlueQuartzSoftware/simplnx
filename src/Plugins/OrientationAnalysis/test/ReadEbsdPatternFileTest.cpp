@@ -185,7 +185,7 @@ Arguments CreateArguments(const fs::path& inputFile, const DataPath& outputPath 
 
 TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Version 1 UP2 Manual Scan Dimensions", "[OrientationAnalysis][ReadEbsdPatternFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "read_ebsd_pattern_v1_manual.up2";
   auto fileGuard = MakeScopeGuard([&inputFile]() noexcept { fs::remove(inputFile); });
@@ -197,19 +197,19 @@ TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Version 1 UP2 Manual 
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt16Array>(k_OutputArrayPath));
-  const auto& patterns = dataStructure.getDataRefAs<UInt16Array>(k_OutputArrayPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt16ArrayType>(k_OutputArrayPath));
+  const auto& patterns = dataStructure.getDataRefAs<UInt16ArrayType>(k_OutputArrayPath);
   REQUIRE(patterns.getTupleShape() == ShapeType{2, 2});
   REQUIRE(patterns.getComponentShape() == ShapeType{12, 12});
   REQUIRE(patterns[0] == 1000);
   REQUIRE(patterns[575] == 1575);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Version 3 Header Geometry", "[OrientationAnalysis][ReadEbsdPatternFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "read_ebsd_pattern_v3.up1";
   auto fileGuard = MakeScopeGuard([&inputFile]() noexcept { fs::remove(inputFile); });
@@ -221,14 +221,14 @@ TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Version 3 Header Geom
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_OutputArrayPath));
-  const auto& patterns = dataStructure.getDataRefAs<UInt8Array>(k_OutputArrayPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(k_OutputArrayPath));
+  const auto& patterns = dataStructure.getDataRefAs<UInt8ArrayType>(k_OutputArrayPath);
   REQUIRE(patterns.getTupleShape() == ShapeType{2, 2});
   REQUIRE(patterns.getComponentShape() == ShapeType{12, 12});
   REQUIRE(patterns[0] == 17);
   REQUIRE(patterns[575] == static_cast<uint8>((575U + 17U) % 251U));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::EBSD Pattern Reader: Version 3 Metadata", "[OrientationAnalysis][ReadEbsdPatternFileFilter]")
@@ -243,21 +243,21 @@ TEST_CASE("OrientationAnalysis::EBSD Pattern Reader: Version 3 Metadata", "[Orie
   SIMPLNX_RESULT_REQUIRE_VALID(fileInfoResult);
 
   const EbsdPatternFileInfo& fileInfo = fileInfoResult.value();
-  REQUIRE(fileInfo.headerVersion == 3);
-  REQUIRE(fileInfo.pixelDataType == DataType::uint8);
-  REQUIRE(fileInfo.patternWidth == 12);
-  REQUIRE(fileInfo.patternHeight == 12);
-  REQUIRE(fileInfo.numberOfColumns == 2);
-  REQUIRE(fileInfo.numberOfRows == 2);
-  REQUIRE(fileInfo.numberOfPatterns == 4);
-  REQUIRE(fileInfo.xStep == 0.5);
-  REQUIRE(fileInfo.yStep == 0.75);
-  REQUIRE_FALSE(fileInfo.isHexagonal);
+  REQUIRE(fileInfo.header_version == 3);
+  REQUIRE(fileInfo.pixel_data_type == DataType::uint8);
+  REQUIRE(fileInfo.pattern_width == 12);
+  REQUIRE(fileInfo.pattern_height == 12);
+  REQUIRE(fileInfo.number_of_columns == 2);
+  REQUIRE(fileInfo.number_of_rows == 2);
+  REQUIRE(fileInfo.number_of_patterns == 4);
+  REQUIRE(fileInfo.x_step == 0.5);
+  REQUIRE(fileInfo.y_step == 0.75);
+  REQUIRE_FALSE(fileInfo.is_hexagonal);
 }
 
 TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Version 3 Extra Patterns Are Skipped", "[OrientationAnalysis][ReadEbsdPatternFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "read_ebsd_pattern_v3_extra.up1";
   auto fileGuard = MakeScopeGuard([&inputFile]() noexcept { fs::remove(inputFile); });
@@ -267,24 +267,24 @@ TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Version 3 Extra Patte
   ReadEbsdPatternFileFilter filter;
   const Arguments args = CreateArguments(inputFile);
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  REQUIRE_FALSE(preflightResult.outputActions.warnings().empty());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  REQUIRE_FALSE(preflightResult.output_actions.warnings().empty());
 
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   REQUIRE_FALSE(executeResult.result.warnings().empty());
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_OutputArrayPath));
-  const auto& patterns = dataStructure.getDataRefAs<UInt8Array>(k_OutputArrayPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(k_OutputArrayPath));
+  const auto& patterns = dataStructure.getDataRefAs<UInt8ArrayType>(k_OutputArrayPath);
   REQUIRE(patterns.getNumberOfTuples() == 4);
   REQUIRE(patterns.getSize() == 576);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Attribute Matrix Tuple Contract", "[OrientationAnalysis][ReadEbsdPatternFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "read_ebsd_pattern_attribute_matrix.up1";
   auto fileGuard = MakeScopeGuard([&inputFile]() noexcept { fs::remove(inputFile); });
@@ -293,8 +293,8 @@ TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Attribute Matrix Tupl
   SECTION("Matching tuple count inherits the Attribute Matrix shape")
   {
     DataStructure dataStructure;
-    auto* attributeMatrix = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{2, 2});
-    REQUIRE(attributeMatrix != nullptr);
+    auto* attributeMatrixPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{2, 2});
+    REQUIRE(attributeMatrixPtr != nullptr);
 
     const DataPath outputPath({"Cell Data", "Patterns"});
     ReadEbsdPatternFileFilter filter;
@@ -302,31 +302,31 @@ TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Attribute Matrix Tupl
     const auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(outputPath));
-    const auto& patterns = dataStructure.getDataRefAs<UInt8Array>(outputPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(outputPath));
+    const auto& patterns = dataStructure.getDataRefAs<UInt8ArrayType>(outputPath);
     REQUIRE(patterns.getTupleShape() == ShapeType{2, 2});
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Mismatching tuple count is rejected")
   {
     DataStructure dataStructure;
-    auto* attributeMatrix = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{3});
-    REQUIRE(attributeMatrix != nullptr);
+    auto* attributeMatrixPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{3});
+    REQUIRE(attributeMatrixPtr != nullptr);
 
     const DataPath outputPath({"Cell Data", "Patterns"});
     ReadEbsdPatternFileFilter filter;
     const Arguments args = CreateArguments(inputFile, outputPath);
     const auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == -78040);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().front().code == -78040);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Invalid Version 1 Scan Dimensions", "[OrientationAnalysis][ReadEbsdPatternFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "read_ebsd_pattern_invalid_scan.up1";
   auto fileGuard = MakeScopeGuard([&inputFile]() noexcept { fs::remove(inputFile); });
@@ -336,14 +336,14 @@ TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Invalid Version 1 Sca
   ReadEbsdPatternFileFilter filter;
   const Arguments args = CreateArguments(inputFile, k_OutputArrayPath, true, 3, 2);
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().front().code == -78043);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().front().code == -78043);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Malformed Files", "[OrientationAnalysis][ReadEbsdPatternFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "read_ebsd_pattern_malformed.up1";
   auto fileGuard = MakeScopeGuard([&inputFile]() noexcept { fs::remove(inputFile); });
@@ -355,32 +355,32 @@ TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Malformed Files", "[O
   {
     WriteCustomVersion1File(inputFile, 2, 12, 12, 16, 144);
     const auto preflightResult = filter.preflight(dataStructure, CreateArguments(inputFile));
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == k_UnsupportedUpVersionError);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().front().code == k_UnsupportedUpVersionError);
   }
 
   SECTION("Residual bytes are rejected")
   {
     WriteCustomVersion1File(inputFile, 1, 12, 12, 16, 145);
     const auto preflightResult = filter.preflight(dataStructure, CreateArguments(inputFile));
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == k_InvalidUpPayloadError);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().front().code == k_InvalidUpPayloadError);
   }
 
   SECTION("Data offset overlapping the header is rejected")
   {
     WriteCustomVersion1File(inputFile, 1, 12, 12, 12, 144);
     const auto preflightResult = filter.preflight(dataStructure, CreateArguments(inputFile));
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == k_InvalidUpDataOffsetError);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().front().code == k_InvalidUpDataOffsetError);
   }
 
   SECTION("Pattern dimensions outside the accepted range are rejected")
   {
     WriteCustomVersion1File(inputFile, 1, 11, 12, 16, 132);
     const auto preflightResult = filter.preflight(dataStructure, CreateArguments(inputFile));
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == k_InvalidUpDimensionsError);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().front().code == k_InvalidUpDimensionsError);
   }
 
   SECTION("A truncated version 3 grid is rejected")
@@ -388,19 +388,19 @@ TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Malformed Files", "[O
     WriteVersion3Up1File(inputFile);
     fs::resize_file(inputFile, 42 + 3 * 12 * 12);
     const auto preflightResult = filter.preflight(dataStructure, CreateArguments(inputFile));
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == k_InvalidUpPayloadError);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().front().code == k_InvalidUpPayloadError);
   }
 
   SECTION("Overflowing manual scan dimensions are rejected")
   {
     WriteVersion1Up1File(inputFile);
     const auto preflightResult = filter.preflight(dataStructure, CreateArguments(inputFile, k_OutputArrayPath, true, std::numeric_limits<uint64>::max(), 2));
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().front().code == EbsdPatternFileUtilities::k_SizeOverflowError);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().front().code == ebsd_pattern_file_utilities::k_SizeOverflowError);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::EBSD Pattern Reader: Factory Rejects Unsupported Extension", "[OrientationAnalysis][ReadEbsdPatternFileFilter]")
@@ -413,7 +413,7 @@ TEST_CASE("OrientationAnalysis::EBSD Pattern Reader: Factory Rejects Unsupported
 
 TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Probable Extension Mismatch", "[OrientationAnalysis][ReadEbsdPatternFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "read_ebsd_pattern_wrong_depth.up2";
   auto fileGuard = MakeScopeGuard([&inputFile]() noexcept { fs::remove(inputFile); });
@@ -422,14 +422,14 @@ TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Probable Extension Mi
   DataStructure dataStructure;
   ReadEbsdPatternFileFilter filter;
   const auto preflightResult = filter.preflight(dataStructure, CreateArguments(inputFile));
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().front().code == k_UpExtensionMismatchError);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().front().code == k_UpExtensionMismatchError);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Probable Wide Payload Extension Mismatch", "[OrientationAnalysis][ReadEbsdPatternFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "read_ebsd_pattern_wrong_wide_depth.up1";
   auto fileGuard = MakeScopeGuard([&inputFile]() noexcept { fs::remove(inputFile); });
@@ -438,34 +438,34 @@ TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Probable Wide Payload
   DataStructure dataStructure;
   ReadEbsdPatternFileFilter filter;
   const auto preflightResult = filter.preflight(dataStructure, CreateArguments(inputFile));
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().front().code == k_UpExtensionMismatchError);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().front().code == k_UpExtensionMismatchError);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Cancellation Before Payload Read", "[OrientationAnalysis][ReadEbsdPatternFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "read_ebsd_pattern_cancel.up1";
   auto fileGuard = MakeScopeGuard([&inputFile]() noexcept { fs::remove(inputFile); });
   WriteVersion1Up1File(inputFile);
 
   DataStructure dataStructure;
-  auto* outputArray = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, k_OutputArrayPath.getTargetName(), ShapeType{4}, ShapeType{12, 12});
-  REQUIRE(outputArray != nullptr);
+  auto* outputArrayPtr = UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, k_OutputArrayPath.getTargetName(), ShapeType{4}, ShapeType{12, 12});
+  REQUIRE(outputArrayPtr != nullptr);
 
   ReadEbsdPatternFileInputValues inputValues;
-  inputValues.inputFile = inputFile;
-  inputValues.outputArrayPath = k_OutputArrayPath;
+  inputValues.input_file = inputFile;
+  inputValues.output_array_path = k_OutputArrayPath;
   const std::atomic_bool shouldCancel{true};
   const auto executeResult = ReadEbsdPatternFile(dataStructure, inputValues, shouldCancel, {})();
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_OutputArrayPath));
-  const auto& patterns = dataStructure.getDataRefAs<UInt8Array>(k_OutputArrayPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(k_OutputArrayPath));
+  const auto& patterns = dataStructure.getDataRefAs<UInt8ArrayType>(k_OutputArrayPath);
   REQUIRE(patterns[0] == 0);
   REQUIRE(patterns[patterns.getSize() - 1] == 0);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::EBSD Pattern Reader: Version 3 Warnings", "[OrientationAnalysis][ReadEbsdPatternFileFilter]")
@@ -480,7 +480,7 @@ TEST_CASE("OrientationAnalysis::EBSD Pattern Reader: Version 3 Warnings", "[Orie
     SIMPLNX_RESULT_REQUIRE_VALID(readerResult);
     auto fileInfoResult = readerResult.value()->readFileInfo();
     SIMPLNX_RESULT_REQUIRE_VALID(fileInfoResult);
-    REQUIRE(fileInfoResult.value().headerVersion == 4);
+    REQUIRE(fileInfoResult.value().header_version == 4);
     REQUIRE(std::any_of(fileInfoResult.warnings().begin(), fileInfoResult.warnings().end(), [](const Warning& warning) { return warning.code == k_FutureUpVersionWarning; }));
   }
 
@@ -491,8 +491,8 @@ TEST_CASE("OrientationAnalysis::EBSD Pattern Reader: Version 3 Warnings", "[Orie
     SIMPLNX_RESULT_REQUIRE_VALID(readerResult);
     auto fileInfoResult = readerResult.value()->readFileInfo();
     SIMPLNX_RESULT_REQUIRE_VALID(fileInfoResult);
-    REQUIRE_FALSE(fileInfoResult.value().xStep.has_value());
-    REQUIRE_FALSE(fileInfoResult.value().yStep.has_value());
+    REQUIRE_FALSE(fileInfoResult.value().x_step.has_value());
+    REQUIRE_FALSE(fileInfoResult.value().y_step.has_value());
     REQUIRE(std::any_of(fileInfoResult.warnings().begin(), fileInfoResult.warnings().end(), [](const Warning& warning) { return warning.code == k_UnknownUpStepWarning; }));
   }
 
@@ -510,7 +510,7 @@ TEST_CASE("OrientationAnalysis::EBSD Pattern Reader: Version 3 Warnings", "[Orie
 
 TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Case Insensitive Extension", "[OrientationAnalysis][ReadEbsdPatternFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "read_ebsd_pattern_uppercase.UP1";
   auto fileGuard = MakeScopeGuard([&inputFile]() noexcept { fs::remove(inputFile); });
@@ -520,14 +520,14 @@ TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Case Insensitive Exte
   ReadEbsdPatternFileFilter filter;
   const auto executeResult = filter.execute(dataStructure, CreateArguments(inputFile));
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_OutputArrayPath));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(k_OutputArrayPath));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
 TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Version 1 Flat Preflight", "[OrientationAnalysis][ReadEbsdPatternFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputFile = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "read_ebsd_pattern_v1_flat.up1";
   auto fileGuard = MakeScopeGuard([&inputFile]() noexcept { fs::remove(inputFile); });
@@ -538,17 +538,17 @@ TEST_CASE("OrientationAnalysis::ReadEbsdPatternFileFilter: Version 1 Flat Prefli
   Arguments args = CreateArguments(inputFile);
 
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(k_OutputArrayPath));
-  const auto& patterns = dataStructure.getDataRefAs<UInt8Array>(k_OutputArrayPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(k_OutputArrayPath));
+  const auto& patterns = dataStructure.getDataRefAs<UInt8ArrayType>(k_OutputArrayPath);
   REQUIRE(patterns.getTupleShape() == ShapeType{4});
   REQUIRE(patterns.getComponentShape() == ShapeType{12, 12});
   REQUIRE(patterns.getNumberOfTuples() == 4);
   REQUIRE(patterns.getNumberOfComponents() == 144);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

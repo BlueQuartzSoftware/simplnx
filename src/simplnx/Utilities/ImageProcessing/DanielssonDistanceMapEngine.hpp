@@ -30,6 +30,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace nx::core::ImageProcessing
@@ -80,24 +81,24 @@ void ForEachAxisVisit(int64 n, Function&& function)
 {
   if(n <= 1)
   {
-    function(AxisVisit{0, 0});
+    function(AxisVisit{.coord = 0, .pull = 0});
     return;
   }
   for(int64 index = 1; index < n; ++index)
   {
-    function(AxisVisit{index, -1});
+    function(AxisVisit{.coord = index, .pull = -1});
   }
   for(int64 index = n - 2; index >= 0; --index)
   {
-    function(AxisVisit{index, 1});
+    function(AxisVisit{.coord = index, .pull = 1});
   }
 }
 
 struct Danielsson2DBufferPlan
 {
-  usize coreRows = 0;
-  usize coreCols = 0;
-  usize residentBytes = 0;
+  usize core_rows = 0;
+  usize core_cols = 0;
+  usize resident_bytes = 0;
   bool valid = false;
   bool overflow = false;
 };
@@ -151,36 +152,36 @@ inline bool DanielssonXYVisitArraysFit(usize nx, usize ny, usize visitArrayLimit
 struct DanielssonResidentMemoryAllocation
 {
   CacheMemoryBudgetManager::WorkingMemoryReservation reservation;
-  usize requiredBytes = 0;
+  usize required_bytes = 0;
 
   [[nodiscard]] bool holdsCompleteState() const noexcept
   {
-    return requiredBytes > 0 && reservation.sizeBytes() == requiredBytes;
+    return required_bytes > 0 && reservation.sizeBytes() == required_bytes;
   }
 };
 
 struct DanielssonResidentVectorPrefixPlan
 {
-  usize fixedBytes = 0;
-  usize vectorPlaneBytes = 0;
-  usize axisVisitBytes = 0;
-  usize residentPrefixPlanes = 0;
-  usize residentPrefixValues = 0;
-  usize residentPrefixBytes = 0;
-  usize residentBytes = 0;
+  usize fixed_bytes = 0;
+  usize vector_plane_bytes = 0;
+  usize axis_visit_bytes = 0;
+  usize resident_prefix_planes = 0;
+  usize resident_prefix_values = 0;
+  usize resident_prefix_bytes = 0;
+  usize resident_bytes = 0;
 };
 
 /** @brief Test-only transfer witness for the bounded 3-D vector scratch. */
 struct DanielssonVectorTransferStats
 {
-  usize scratchReads = 0;
-  usize scratchWrites = 0;
-  usize scratchReadValues = 0;
-  usize scratchWriteValues = 0;
-  usize scratchReadBytes = 0;
-  usize scratchWriteBytes = 0;
-  std::vector<usize> scratchReadPlanes;
-  std::vector<usize> scratchWritePlanes;
+  usize scratch_reads = 0;
+  usize scratch_writes = 0;
+  usize scratch_read_values = 0;
+  usize scratch_write_values = 0;
+  usize scratch_read_bytes = 0;
+  usize scratch_write_bytes = 0;
+  std::vector<usize> scratch_read_planes;
+  std::vector<usize> scratch_write_planes;
 };
 
 /**
@@ -256,10 +257,10 @@ private:
     {
       if(m_TransferStats != nullptr)
       {
-        ++m_TransferStats->scratchWrites;
-        m_TransferStats->scratchWriteValues += m_VectorValuesPerPlane;
-        m_TransferStats->scratchWriteBytes += m_VectorValuesPerPlane * sizeof(int32);
-        m_TransferStats->scratchWritePlanes.push_back(planeIndex);
+        ++m_TransferStats->scratch_writes;
+        m_TransferStats->scratch_write_values += m_VectorValuesPerPlane;
+        m_TransferStats->scratch_write_bytes += m_VectorValuesPerPlane * sizeof(int32);
+        m_TransferStats->scratch_write_planes.push_back(planeIndex);
       }
       return m_Scratch.copyFromBuffer(scratchOffset, values);
     }
@@ -267,10 +268,10 @@ private:
     {
       if(m_TransferStats != nullptr)
       {
-        ++m_TransferStats->scratchReads;
-        m_TransferStats->scratchReadValues += m_VectorValuesPerPlane;
-        m_TransferStats->scratchReadBytes += m_VectorValuesPerPlane * sizeof(int32);
-        m_TransferStats->scratchReadPlanes.push_back(planeIndex);
+        ++m_TransferStats->scratch_reads;
+        m_TransferStats->scratch_read_values += m_VectorValuesPerPlane;
+        m_TransferStats->scratch_read_bytes += m_VectorValuesPerPlane * sizeof(int32);
+        m_TransferStats->scratch_read_planes.push_back(planeIndex);
       }
       return m_Scratch.copyIntoBuffer(scratchOffset, values);
     }
@@ -284,7 +285,7 @@ private:
   DanielssonVectorTransferStats* m_TransferStats = nullptr;
 };
 
-inline bool DanielssonCanUseCompactVectorScratch(const SizeVec3& dims)
+inline bool DanielssonCanUseCompactVectorScratch(const SizeVec3Type& dims)
 {
   const usize maxDimension = std::max({dims[0], dims[1], dims[2]});
   return maxDimension <= static_cast<usize>(std::numeric_limits<int16>::max() / 2);
@@ -332,10 +333,10 @@ public:
     }
     if(m_TransferStats != nullptr)
     {
-      ++m_TransferStats->scratchReads;
-      m_TransferStats->scratchReadValues += m_VectorValuesPerPlane;
-      m_TransferStats->scratchReadBytes += m_VectorValuesPerPlane * sizeof(int16);
-      m_TransferStats->scratchReadPlanes.push_back(planeIndex);
+      ++m_TransferStats->scratch_reads;
+      m_TransferStats->scratch_read_values += m_VectorValuesPerPlane;
+      m_TransferStats->scratch_read_bytes += m_VectorValuesPerPlane * sizeof(int16);
+      m_TransferStats->scratch_read_planes.push_back(planeIndex);
     }
     const usize scratchOffset = planeIndex * m_VectorValuesPerPlane;
     if(Result<> result = m_Scratch.copyIntoBuffer(scratchOffset, nonstd::span<int16>(m_Staging.data(), m_VectorValuesPerPlane)); result.invalid())
@@ -374,10 +375,10 @@ public:
     }
     if(m_TransferStats != nullptr)
     {
-      ++m_TransferStats->scratchWrites;
-      m_TransferStats->scratchWriteValues += m_VectorValuesPerPlane;
-      m_TransferStats->scratchWriteBytes += m_VectorValuesPerPlane * sizeof(int16);
-      m_TransferStats->scratchWritePlanes.push_back(planeIndex);
+      ++m_TransferStats->scratch_writes;
+      m_TransferStats->scratch_write_values += m_VectorValuesPerPlane;
+      m_TransferStats->scratch_write_bytes += m_VectorValuesPerPlane * sizeof(int16);
+      m_TransferStats->scratch_write_planes.push_back(planeIndex);
     }
     return m_Scratch.copyFromBuffer(planeIndex * m_VectorValuesPerPlane, nonstd::span<const int16>(m_Staging.data(), m_VectorValuesPerPlane));
   }
@@ -406,7 +407,7 @@ private:
 };
 
 template <class T>
-Result<DanielssonResidentVectorPrefixPlan> CreateDanielssonResidentVectorPrefixPlan(const SizeVec3& dims, usize grantBytes)
+Result<DanielssonResidentVectorPrefixPlan> CreateDanielssonResidentVectorPrefixPlan(const SizeVec3Type& dims, usize grantBytes)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -430,7 +431,7 @@ Result<DanielssonResidentVectorPrefixPlan> CreateDanielssonResidentVectorPrefixP
       (!DanielssonCheckedMultiply(vectorPlaneValues, sizeof(int16), compactStagingBytes) || !DanielssonCheckedAdd(fixedBytes, compactStagingBytes, fixedBytes))))
   {
     return MakeErrorResult<DanielssonResidentVectorPrefixPlan>(
-        -8390, fmt::format("Danielsson resident vector-prefix plan overflows for dimensions {} and input element size {}.", StringUtilities::formatDimensions3D(dims), sizeof(T)));
+        -8390, fmt::format("Danielsson resident vector-prefix plan overflows for dimensions {} and input element size {}.", string_utilities::FormatDimensions3D(dims), sizeof(T)));
   }
 
   // The slab retains X/Y reflective-visit vectors only when their payload fits the fixed visit limit. WorkingMemory
@@ -440,7 +441,7 @@ Result<DanielssonResidentVectorPrefixPlan> CreateDanielssonResidentVectorPrefixP
     if(!DanielssonCheckedAdd(fixedBytes, axisVisitBytes, fixedBytes))
     {
       return MakeErrorResult<DanielssonResidentVectorPrefixPlan>(
-          -8390, fmt::format("Danielsson resident vector-prefix plan overflows while adding X/Y reflective-visit payload for dimensions {}.", StringUtilities::formatDimensions3D(dims)));
+          -8390, fmt::format("Danielsson resident vector-prefix plan overflows while adding X/Y reflective-visit payload for dimensions {}.", string_utilities::FormatDimensions3D(dims)));
     }
   }
   else
@@ -449,9 +450,9 @@ Result<DanielssonResidentVectorPrefixPlan> CreateDanielssonResidentVectorPrefixP
   }
 
   DanielssonResidentVectorPrefixPlan plan;
-  plan.fixedBytes = fixedBytes;
-  plan.vectorPlaneBytes = vectorPlaneBytes;
-  plan.axisVisitBytes = axisVisitBytes;
+  plan.fixed_bytes = fixedBytes;
+  plan.vector_plane_bytes = vectorPlaneBytes;
+  plan.axis_visit_bytes = axisVisitBytes;
   if(grantBytes < fixedBytes)
   {
     return {plan};
@@ -459,27 +460,27 @@ Result<DanielssonResidentVectorPrefixPlan> CreateDanielssonResidentVectorPrefixP
   // The turnaround retains the last forward state in the existing live plane buffer. Only planes 0..Z-3 can use the
   // optional resident prefix, so reserving more cannot reduce scratch transfers.
   const usize storableForwardPlanes = dims[2] > 2 ? dims[2] - 2 : 0;
-  plan.residentPrefixPlanes = std::min(storableForwardPlanes, (grantBytes - fixedBytes) / vectorPlaneBytes);
-  if(plan.residentPrefixPlanes == 0)
+  plan.resident_prefix_planes = std::min(storableForwardPlanes, (grantBytes - fixedBytes) / vectorPlaneBytes);
+  if(plan.resident_prefix_planes == 0)
   {
     return {plan};
   }
-  if(!DanielssonCheckedMultiply(plan.residentPrefixPlanes, vectorPlaneValues, plan.residentPrefixValues) ||
-     !DanielssonCheckedMultiply(plan.residentPrefixPlanes, vectorPlaneBytes, plan.residentPrefixBytes) || !DanielssonCheckedAdd(fixedBytes, plan.residentPrefixBytes, plan.residentBytes))
+  if(!DanielssonCheckedMultiply(plan.resident_prefix_planes, vectorPlaneValues, plan.resident_prefix_values) ||
+     !DanielssonCheckedMultiply(plan.resident_prefix_planes, vectorPlaneBytes, plan.resident_prefix_bytes) || !DanielssonCheckedAdd(fixedBytes, plan.resident_prefix_bytes, plan.resident_bytes))
   {
     return MakeErrorResult<DanielssonResidentVectorPrefixPlan>(-8390, fmt::format("Danielsson resident vector-prefix bytes overflow for dimensions {}, grant {}, fixed bytes {}, and prefix planes {}.",
-                                                                                  StringUtilities::formatDimensions3D(dims), grantBytes, fixedBytes, plan.residentPrefixPlanes));
+                                                                                  string_utilities::FormatDimensions3D(dims), grantBytes, fixedBytes, plan.resident_prefix_planes));
   }
   return {plan};
 }
 
-inline bool ShouldUseDanielssonResidentState(const SizeVec3& dims)
+inline bool ShouldUseDanielssonResidentState(const SizeVec3Type& dims)
 {
   return dims[2] > 1;
 }
 
 template <class T>
-Result<usize> CalculateDanielssonResidentWorkingMemoryBytes(const SizeVec3& dims)
+Result<usize> CalculateDanielssonResidentWorkingMemoryBytes(const SizeVec3Type& dims)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -523,13 +524,13 @@ Result<usize> CalculateDanielssonResidentWorkingMemoryBytes(const SizeVec3& dims
   {
     return MakeErrorResult<usize>(-8389, fmt::format("Danielsson distance-map dimensions ({}) and input element size ({} bytes) overflow while sizing the resident vector map, feature mask, input "
                                                      "transfer plane, output transfer plane, and axis visits.",
-                                                     StringUtilities::formatDimensions3D(dims), sizeof(T)));
+                                                     string_utilities::FormatDimensions3D(dims), sizeof(T)));
   }
   return {requiredBytes};
 }
 
 template <class T>
-Result<DanielssonResidentMemoryAllocation> ReserveDanielssonResidentWorkingMemory(const SizeVec3& dims)
+Result<DanielssonResidentMemoryAllocation> ReserveDanielssonResidentWorkingMemory(const SizeVec3Type& dims)
 {
   auto requiredResult = CalculateDanielssonResidentWorkingMemoryBytes<T>(dims);
   if(requiredResult.invalid())
@@ -546,12 +547,8 @@ inline bool Danielsson2DPeak(usize columns, usize rows, usize inputBytes, usize&
   usize core = 0;
   usize neighborRow = 0;
   usize total = 0;
-  if(!DanielssonCheckedMultiply(columns, rows, cells) || !DanielssonCheckedMultiply(cells, 3 * sizeof(int32) + inputBytes + sizeof(float32), core) ||
-     !DanielssonCheckedMultiply(columns, 3 * sizeof(int32), neighborRow) || !DanielssonCheckedAdd(core, neighborRow, total) || !DanielssonCheckedAdd(total, k_Danielsson2DFixedStateBytes, peak))
-  {
-    return false;
-  }
-  return true;
+  return !(!DanielssonCheckedMultiply(columns, rows, cells) || !DanielssonCheckedMultiply(cells, 3 * sizeof(int32) + inputBytes + sizeof(float32), core) ||
+           !DanielssonCheckedMultiply(columns, 3 * sizeof(int32), neighborRow) || !DanielssonCheckedAdd(core, neighborRow, total) || !DanielssonCheckedAdd(total, k_Danielsson2DFixedStateBytes, peak));
 }
 
 inline Danielsson2DBufferPlan BuildDanielsson2DBufferPlan(usize nx, usize ny, usize inputBytes, usize residentLimit = k_Danielsson2DResidentLimit)
@@ -593,18 +590,18 @@ inline Danielsson2DBufferPlan BuildDanielsson2DBufferPlan(usize nx, usize ny, us
     return low;
   };
 
-  plan.coreCols = largestFitting(nx, [inputBytes](usize columns, usize& peak) { return Danielsson2DPeak(columns, 1, inputBytes, peak); });
-  plan.coreRows = 1;
-  if(plan.coreCols == nx)
+  plan.core_cols = largestFitting(nx, [inputBytes](usize columns, usize& peak) { return Danielsson2DPeak(columns, 1, inputBytes, peak); });
+  plan.core_rows = 1;
+  if(plan.core_cols == nx)
   {
-    plan.coreRows = largestFitting(ny, [nx, inputBytes](usize rows, usize& peak) { return Danielsson2DPeak(nx, rows, inputBytes, peak); });
+    plan.core_rows = largestFitting(ny, [nx, inputBytes](usize rows, usize& peak) { return Danielsson2DPeak(nx, rows, inputBytes, peak); });
   }
-  if(!Danielsson2DPeak(plan.coreCols, plan.coreRows, inputBytes, plan.residentBytes))
+  if(!Danielsson2DPeak(plan.core_cols, plan.core_rows, inputBytes, plan.resident_bytes))
   {
     plan.overflow = true;
     return plan;
   }
-  plan.valid = plan.residentBytes <= residentLimit;
+  plan.valid = plan.resident_bytes <= residentLimit;
   return plan;
 }
 
@@ -676,7 +673,9 @@ inline void DanielssonUpdateCore(int32* hereV, const int32* thereV, int32 offX, 
   float64 norm2 = 0.0;
   if(useSpacing)
   {
-    const float64 t0 = static_cast<float64>(tx) * sp[0], t1 = static_cast<float64>(ty) * sp[1], t2 = static_cast<float64>(tz) * sp[2];
+    const float64 t0 = static_cast<float64>(tx) * sp[0];
+    const float64 t1 = static_cast<float64>(ty) * sp[1];
+    const float64 t2 = static_cast<float64>(tz) * sp[2];
     norm2 = t0 * t0 + t1 * t1 + t2 * t2;
   }
   else
@@ -714,7 +713,9 @@ inline void DanielssonUpdateCoreTracked(int32* hereV, float64& hereNorm, const i
   float64 norm2 = 0.0;
   if(useSpacing)
   {
-    const float64 t0 = static_cast<float64>(tx) * sp[0], t1 = static_cast<float64>(ty) * sp[1], t2 = static_cast<float64>(tz) * sp[2];
+    const float64 t0 = static_cast<float64>(tx) * sp[0];
+    const float64 t1 = static_cast<float64>(ty) * sp[1];
+    const float64 t2 = static_cast<float64>(tz) * sp[2];
     norm2 = t0 * t0 + t1 * t1 + t2 * t2;
   }
   else
@@ -742,23 +743,23 @@ inline void DanielssonRowPassGenerated(int32* rowVec, const int32* yNeighborVec,
 {
   auto visit = [&](int64 coordinate, int32 xPull) {
     const usize x = static_cast<usize>(coordinate);
-    int32* here = rowVec + x * 3;
-    if(DanielssonIsFeature(here))
+    int32* herePtr = rowVec + x * 3;
+    if(DanielssonIsFeature(herePtr))
     {
       return;
     }
-    float64 hereNorm = DanielssonVectorNorm(here, useSpacing, sp);
+    float64 hereNorm = DanielssonVectorNorm(herePtr, useSpacing, sp);
     if(xPull != 0)
     {
-      DanielssonUpdateCoreTracked(here, hereNorm, rowVec + static_cast<usize>(coordinate + xPull) * 3, xPull, 0, 0, useSpacing, sp);
+      DanielssonUpdateCoreTracked(herePtr, hereNorm, rowVec + static_cast<usize>(coordinate + xPull) * 3, xPull, 0, 0, useSpacing, sp);
     }
     if(ypull != 0)
     {
-      DanielssonUpdateCoreTracked(here, hereNorm, yNeighborVec + x * 3, 0, ypull, 0, useSpacing, sp);
+      DanielssonUpdateCoreTracked(herePtr, hereNorm, yNeighborVec + x * 3, 0, ypull, 0, useSpacing, sp);
     }
     if(zpull != 0)
     {
-      DanielssonUpdateCoreTracked(here, hereNorm, zNeighborVec + x * 3, 0, 0, zpull, useSpacing, sp);
+      DanielssonUpdateCoreTracked(herePtr, hereNorm, zNeighborVec + x * 3, 0, 0, zpull, useSpacing, sp);
     }
   };
   if(nX <= 1)
@@ -777,30 +778,30 @@ inline void DanielssonRowPassGenerated(int32* rowVec, const int32* yNeighborVec,
 }
 
 /** @brief Runs the reflective Y/X odometer for one plane without retaining X/Y visit arrays. */
-inline void DanielssonPlanePassGenerated(int32* planeVec, const int32* zNeighborVec, int32 zpull, int64 nX, int64 nY, bool useSpacing, const float64 sp[3],
+inline void DanielssonPlanePassGenerated(int32* planeVec, const int32* zNeighborVec, int32 zpull, int64 nX, int64 ny, bool useSpacing, const float64 sp[3],
                                          ThrottledMessageHandler* progressThrottle = nullptr)
 {
   auto visitRow = [&](int64 coordinate, int32 yPull) {
     const usize row = static_cast<usize>(coordinate);
-    int32* rowVec = planeVec + row * static_cast<usize>(nX) * 3;
-    const int32* yNeighborVec = yPull == 0 ? nullptr : planeVec + static_cast<usize>(coordinate + yPull) * static_cast<usize>(nX) * 3;
-    const int32* zRow = zpull == 0 ? nullptr : zNeighborVec + row * static_cast<usize>(nX) * 3;
-    DanielssonRowPassGenerated(rowVec, yNeighborVec, zRow, nX, yPull, zpull, useSpacing, sp);
+    int32* rowVecPtr = planeVec + row * static_cast<usize>(nX) * 3;
+    const int32* yNeighborVecPtr = yPull == 0 ? nullptr : planeVec + static_cast<usize>(coordinate + yPull) * static_cast<usize>(nX) * 3;
+    const int32* zRowPtr = zpull == 0 ? nullptr : zNeighborVec + row * static_cast<usize>(nX) * 3;
+    DanielssonRowPassGenerated(rowVecPtr, yNeighborVecPtr, zRowPtr, nX, yPull, zpull, useSpacing, sp);
     if(progressThrottle != nullptr)
     {
       progressThrottle->incrementPercent();
     }
   };
-  if(nY <= 1)
+  if(ny <= 1)
   {
     visitRow(0, 0);
     return;
   }
-  for(int64 y = 1; y < nY; ++y)
+  for(int64 y = 1; y < ny; ++y)
   {
     visitRow(y, -1);
   }
-  for(int64 y = nY - 2; y >= 0; --y)
+  for(int64 y = ny - 2; y >= 0; --y)
   {
     visitRow(y, 1);
   }
@@ -831,26 +832,26 @@ void DanielssonPlanePass(int32* planeVec, const int32* neighVec, const uint8* fe
           continue;
         }
       }
-      int32* hereV = planeVec + here2d * 3;
+      int32* hereVPtr = planeVec + here2d * 3;
       if constexpr(!UseFeatureMask)
       {
-        if(DanielssonIsFeature(hereV))
+        if(DanielssonIsFeature(hereVPtr))
         {
           continue;
         }
       }
-      float64 hereNorm = DanielssonVectorNorm(hereV, useSpacing, sp);
+      float64 hereNorm = DanielssonVectorNorm(hereVPtr, useSpacing, sp);
       if(xv.pull != 0)
       {
-        DanielssonUpdateCoreTracked(hereV, hereNorm, planeVec + (here2d + xv.pull) * 3, xv.pull, 0, 0, useSpacing, sp);
+        DanielssonUpdateCoreTracked(hereVPtr, hereNorm, planeVec + (here2d + xv.pull) * 3, xv.pull, 0, 0, useSpacing, sp);
       }
       if(yv.pull != 0)
       {
-        DanielssonUpdateCoreTracked(hereV, hereNorm, planeVec + (here2d + static_cast<int64>(yv.pull) * nX) * 3, 0, yv.pull, 0, useSpacing, sp);
+        DanielssonUpdateCoreTracked(hereVPtr, hereNorm, planeVec + (here2d + static_cast<int64>(yv.pull) * nX) * 3, 0, yv.pull, 0, useSpacing, sp);
       }
       if(zpull != 0)
       {
-        DanielssonUpdateCoreTracked(hereV, hereNorm, neighVec + here2d * 3, 0, 0, zpull, useSpacing, sp);
+        DanielssonUpdateCoreTracked(hereVPtr, hereNorm, neighVec + here2d * 3, 0, 0, zpull, useSpacing, sp);
       }
     }
     if(progressThrottle != nullptr)
@@ -885,12 +886,12 @@ inline float32 DanielssonDistance(const int32* v, bool squared, bool useSpacing,
 
 // The "unreached" init offset per axis: 2*maxLength for a real axis, 0 for a size-1 axis (so a 2D image contributes no
 // z term). Matches ITK's PrepareData (maxValue[j] = 2 * largest-dimension).
-inline void DanielssonInitMaxValue(int64 nX, int64 nY, int64 nZ, int32 maxV[3])
+inline void DanielssonInitMaxValue(int64 nX, int64 ny, int64 nz, int32 maxV[3])
 {
-  const int64 maxLength = std::max({nX, nY, nZ});
+  const int64 maxLength = std::max({nX, ny, nz});
   maxV[0] = (nX > 1) ? static_cast<int32>(2 * maxLength) : 0;
-  maxV[1] = (nY > 1) ? static_cast<int32>(2 * maxLength) : 0;
-  maxV[2] = (nZ > 1) ? static_cast<int32>(2 * maxLength) : 0;
+  maxV[1] = (ny > 1) ? static_cast<int32>(2 * maxLength) : 0;
+  maxV[2] = (nz > 1) ? static_cast<int32>(2 * maxLength) : 0;
 }
 
 /**
@@ -927,14 +928,14 @@ template <class T>
 class DanielssonDistanceInCore
 {
 public:
-  DanielssonDistanceInCore(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, SizeVec3 dims, bool squaredDistance, bool useSpacing, FloatVec3 spacing,
+  DanielssonDistanceInCore(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, SizeVec3Type dims, bool squaredDistance, bool useSpacing, FloatVec3Type spacing,
                            const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(inStore)
   , m_Out(outStore)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_Squared(squaredDistance)
   , m_UseSpacing(useSpacing)
-  , m_Spacing(spacing)
+  , m_Spacing(std::move(spacing))
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
   {
@@ -948,10 +949,10 @@ public:
   Result<> operator()()
   {
     const int64 nX = static_cast<int64>(m_Dims[0]);
-    const int64 nY = static_cast<int64>(m_Dims[1]);
-    const int64 nZ = static_cast<int64>(m_Dims[2]);
-    const usize slice = static_cast<usize>(nX * nY);
-    const usize vol = slice * static_cast<usize>(nZ);
+    const int64 ny = static_cast<int64>(m_Dims[1]);
+    const int64 nz = static_cast<int64>(m_Dims[2]);
+    const usize slice = static_cast<usize>(nX * ny);
+    const usize vol = slice * static_cast<usize>(nz);
     if(vol == 0)
     {
       return {};
@@ -965,7 +966,7 @@ public:
     m_MessageHandler.sendInfoMessage("Danielsson: Initializing Vectors");
     // Prepare the vector map and feature mask before the serial reflective propagation.
     int32 maxV[3];
-    detail::DanielssonInitMaxValue(nX, nY, nZ, maxV);
+    detail::DanielssonInitMaxValue(nX, ny, nz, maxV);
     auto vec = std::make_unique_for_overwrite<int32[]>(vol * 3);
     auto feature = std::make_unique_for_overwrite<uint8[]>(vol);
     const auto prepareData = [vectorValuesPtr = vec.get(), featureValuesPtr = feature.get(), maxX = maxV[0], maxY = maxV[1], maxZ = maxV[2]](const T* inputValuesPtr, usize valueOffset, usize count) {
@@ -991,7 +992,7 @@ public:
     else
     {
       auto inputPlane = std::make_unique_for_overwrite<T[]>(slice);
-      for(int64 z = 0; z < nZ; ++z)
+      for(int64 z = 0; z < nz; ++z)
       {
         if(m_ShouldCancel)
         {
@@ -1009,11 +1010,11 @@ public:
     // Propagate vectors with the serial reflective odometer in Z, Y, and X order.
     const float64 sp[3] = {static_cast<float64>(m_Spacing[0]), static_cast<float64>(m_Spacing[1]), static_cast<float64>(m_Spacing[2])};
     const std::vector<detail::AxisVisit> xVisits = detail::BuildAxisVisits(nX);
-    const std::vector<detail::AxisVisit> yVisits = detail::BuildAxisVisits(nY);
-    const std::vector<detail::AxisVisit> zVisits = detail::BuildAxisVisits(nZ);
+    const std::vector<detail::AxisVisit> yVisits = detail::BuildAxisVisits(ny);
+    const std::vector<detail::AxisVisit> zVisits = detail::BuildAxisVisits(nz);
 
     m_MessageHandler.sendInfoMessage("Danielsson: Propagating Vectors");
-    progressThrottle.reset(nZ == 1 ? yVisits.size() : zVisits.size(), nZ == 1 ? "Danielsson: Propagating Rows" : "Danielsson: Propagating Slices");
+    progressThrottle.reset(nz == 1 ? yVisits.size() : zVisits.size(), nz == 1 ? "Danielsson: Propagating Rows" : "Danielsson: Propagating Slices");
     usize completedVisits = 0;
     for(const detail::AxisVisit& zv : zVisits)
     {
@@ -1022,11 +1023,11 @@ public:
         return {};
       }
       const usize zBase = static_cast<usize>(zv.coord) * slice;
-      int32* planeVec = vec.get() + zBase * 3;
-      const int32* neighVec = (zv.pull != 0) ? (vec.get() + (static_cast<usize>(zv.coord + zv.pull) * slice) * 3) : nullptr;
-      const uint8* featurePlane = feature.get() + zBase;
-      detail::DanielssonPlanePass<true>(planeVec, neighVec, featurePlane, xVisits, yVisits, zv.pull, nX, m_UseSpacing, sp, nZ == 1 ? &progressThrottle : nullptr);
-      if(nZ != 1)
+      int32* planeVecPtr = vec.get() + zBase * 3;
+      const int32* neighVecPtr = (zv.pull != 0) ? (vec.get() + (static_cast<usize>(zv.coord + zv.pull) * slice) * 3) : nullptr;
+      const uint8* featurePlanePtr = feature.get() + zBase;
+      detail::DanielssonPlanePass<true>(planeVecPtr, neighVecPtr, featurePlanePtr, xVisits, yVisits, zv.pull, nX, m_UseSpacing, sp, nz == 1 ? &progressThrottle : nullptr);
+      if(nz != 1)
       {
         progressThrottle.updateCount(++completedVisits);
       }
@@ -1070,7 +1071,7 @@ public:
     }
 
     auto outputPlane = std::make_unique_for_overwrite<float32[]>(slice);
-    for(int64 z = 0; z < nZ; ++z)
+    for(int64 z = 0; z < nz; ++z)
     {
       if(m_ShouldCancel)
       {
@@ -1089,10 +1090,10 @@ public:
 private:
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<float32>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   bool m_Squared;
   bool m_UseSpacing;
-  FloatVec3 m_Spacing;
+  FloatVec3Type m_Spacing;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };
@@ -1102,13 +1103,13 @@ template <class T>
 class DanielssonDistance2DBounded
 {
 public:
-  DanielssonDistance2DBounded(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, bool squaredDistance, bool useSpacing, FloatVec3 spacing, const std::atomic_bool& shouldCancel,
-                              usize residentLimit, ThrottledMessageHandler* progressThrottle = nullptr)
+  DanielssonDistance2DBounded(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, bool squaredDistance, bool useSpacing, FloatVec3Type spacing,
+                              const std::atomic_bool& shouldCancel, usize residentLimit, ThrottledMessageHandler* progressThrottle = nullptr)
   : m_In(inStore)
   , m_Out(outStore)
   , m_Squared(squaredDistance)
   , m_UseSpacing(useSpacing)
-  , m_Spacing(spacing)
+  , m_Spacing(std::move(spacing))
   , m_ShouldCancel(shouldCancel)
   , m_ResidentLimit2D(residentLimit)
   , m_ProgressThrottle(progressThrottle)
@@ -1117,11 +1118,11 @@ public:
 
   Result<> operator()(usize nx, usize ny)
   {
-    return RunBounded2D(nx, ny);
+    return runBounded2D(nx, ny);
   }
 
 private:
-  Result<> ReadVectorScratch(const ITemporaryRecordStore& store, uint64 recordOffset, uint64 recordCount, nonstd::span<int32> vectors, nonstd::span<float32> staging, bool compactScratch,
+  Result<> readVectorScratch(const ITemporaryRecordStore& store, uint64 recordOffset, uint64 recordCount, nonstd::span<int32> vectors, nonstd::span<float32> staging, bool compactScratch,
                              std::string_view context) const
   {
     if(m_ShouldCancel)
@@ -1149,13 +1150,13 @@ private:
       }
       if(compactScratch)
       {
-        const auto* encoded = reinterpret_cast<const std::byte*>(staging.data());
+        const auto* encodedPtr = reinterpret_cast<const std::byte*>(staging.data());
         for(usize index = 0; index < cellCount; ++index)
         {
           int16 x = 0;
           int16 y = 0;
-          std::memcpy(&x, encoded + index * 2 * sizeof(int16), sizeof(int16));
-          std::memcpy(&y, encoded + (index * 2 + 1) * sizeof(int16), sizeof(int16));
+          std::memcpy(&x, encodedPtr + index * 2 * sizeof(int16), sizeof(int16));
+          std::memcpy(&y, encodedPtr + (index * 2 + 1) * sizeof(int16), sizeof(int16));
           vectors[index * 3] = x;
           vectors[index * 3 + 1] = y;
           vectors[index * 3 + 2] = 0;
@@ -1168,7 +1169,7 @@ private:
     return {};
   }
 
-  Result<> WriteVectorScratch(ITemporaryRecordStore& store, uint64 recordOffset, uint64 recordCount, nonstd::span<const int32> vectors, nonstd::span<float32> staging, bool compactScratch,
+  Result<> writeVectorScratch(ITemporaryRecordStore& store, uint64 recordOffset, uint64 recordCount, nonstd::span<const int32> vectors, nonstd::span<float32> staging, bool compactScratch,
                               std::string_view context) const
   {
     if(m_ShouldCancel)
@@ -1184,13 +1185,13 @@ private:
       }
       if(compactScratch)
       {
-        auto* encoded = reinterpret_cast<std::byte*>(staging.data());
+        auto* encodedPtr = reinterpret_cast<std::byte*>(staging.data());
         for(usize index = 0; index < cellCount; ++index)
         {
           const int16 x = static_cast<int16>(vectors[index * 3]);
           const int16 y = static_cast<int16>(vectors[index * 3 + 1]);
-          std::memcpy(encoded + index * 2 * sizeof(int16), &x, sizeof(int16));
-          std::memcpy(encoded + (index * 2 + 1) * sizeof(int16), &y, sizeof(int16));
+          std::memcpy(encodedPtr + index * 2 * sizeof(int16), &x, sizeof(int16));
+          std::memcpy(encodedPtr + (index * 2 + 1) * sizeof(int16), &y, sizeof(int16));
         }
       }
       auto bytes = compactScratch ? nonstd::span<const std::byte>(reinterpret_cast<const std::byte*>(staging.data()), cellCount * 2 * sizeof(int16)) :
@@ -1219,7 +1220,7 @@ private:
     }
   }
 
-  void FillDistances(nonstd::span<const int32> vectors, nonstd::span<float32> distances, const float64 spacing[3]) const
+  void fillDistances(nonstd::span<const int32> vectors, nonstd::span<float32> distances, const float64 spacing[3]) const
   {
     for(usize index = 0; index < distances.size(); ++index)
     {
@@ -1227,7 +1228,7 @@ private:
     }
   }
 
-  Result<> RunFullWidth2D(ITemporaryRecordStore& vecStore, usize nx, usize ny, usize coreRows, usize outputChunkRows, bool compactScratch, const int32 maxValue[3], const float64 spacing[3])
+  Result<> runFullWidth2D(ITemporaryRecordStore& vecStore, usize nx, usize ny, usize coreRows, usize outputChunkRows, bool compactScratch, const int32 maxValue[3], const float64 spacing[3])
   {
     if(ny == 1)
     {
@@ -1240,7 +1241,7 @@ private:
       }
       InitializeVectors(input, vectors, maxValue);
       detail::DanielssonRowPassGenerated(vectors.data(), static_cast<const int32*>(nullptr), static_cast<const int32*>(nullptr), static_cast<int64>(nx), 0, 0, m_UseSpacing, spacing);
-      FillDistances(vectors, output, spacing);
+      fillDistances(vectors, output, spacing);
       return m_Out.copyFromBuffer(0, nonstd::span<const float32>(output.data(), output.size()));
     }
 
@@ -1254,7 +1255,7 @@ private:
       }
       InitializeVectors(carryInput, carryVectors, maxValue);
     }
-    if(Result<> result = WriteVectorScratch(vecStore, 0, 1, nonstd::span<const int32>(carryVectors.data(), carryVectors.size()), outputBlock, compactScratch, "2D lower endpoint initialization");
+    if(Result<> result = writeVectorScratch(vecStore, 0, 1, nonstd::span<const int32>(carryVectors.data(), carryVectors.size()), outputBlock, compactScratch, "2D lower endpoint initialization");
        result.invalid())
     {
       return result;
@@ -1287,11 +1288,11 @@ private:
         {
           return {};
         }
-        int32* currentRow = vectorBlock.data() + localRow * nx * 3;
-        const int32* neighborRow = localRow == 0 ? carryVectors.data() : vectorBlock.data() + (localRow - 1) * nx * 3;
-        detail::DanielssonRowPassGenerated(currentRow, neighborRow, static_cast<const int32*>(nullptr), static_cast<int64>(nx), -1, 0, m_UseSpacing, spacing);
+        int32* currentRowPtr = vectorBlock.data() + localRow * nx * 3;
+        const int32* neighborRowPtr = localRow == 0 ? carryVectors.data() : vectorBlock.data() + (localRow - 1) * nx * 3;
+        detail::DanielssonRowPassGenerated(currentRowPtr, neighborRowPtr, static_cast<const int32*>(nullptr), static_cast<int64>(nx), -1, 0, m_UseSpacing, spacing);
       }
-      if(Result<> result = WriteVectorScratch(vecStore, yBegin, rowCount, nonstd::span<const int32>(vectorBlock.data(), cellCount * 3), nonstd::span<float32>(outputBlock.data(), cellCount),
+      if(Result<> result = writeVectorScratch(vecStore, yBegin, rowCount, nonstd::span<const int32>(vectorBlock.data(), cellCount * 3), nonstd::span<float32>(outputBlock.data(), cellCount),
                                               compactScratch, "2D forward row block");
          result.invalid())
       {
@@ -1309,7 +1310,7 @@ private:
       m_ProgressThrottle->reset(ny, "Danielsson: Backward Rows");
     }
     // The upper endpoint is not revisited by the backward Y sweep. Retain it as the first neighbor carry.
-    if(Result<> result = ReadVectorScratch(vecStore, ny - 1, 1, nonstd::span<int32>(carryVectors.data(), carryVectors.size()), outputBlock, compactScratch, "2D upper endpoint output");
+    if(Result<> result = readVectorScratch(vecStore, ny - 1, 1, nonstd::span<int32>(carryVectors.data(), carryVectors.size()), outputBlock, compactScratch, "2D upper endpoint output");
        result.invalid())
     {
       return result;
@@ -1322,7 +1323,7 @@ private:
         return {};
       }
       const usize cellCount = rowCount * nx;
-      if(Result<> result = ReadVectorScratch(vecStore, yBegin, rowCount, nonstd::span<int32>(vectorBlock.data(), cellCount * 3), nonstd::span<float32>(outputBlock.data(), cellCount), compactScratch,
+      if(Result<> result = readVectorScratch(vecStore, yBegin, rowCount, nonstd::span<int32>(vectorBlock.data(), cellCount * 3), nonstd::span<float32>(outputBlock.data(), cellCount), compactScratch,
                                              "2D backward row block");
          result.invalid())
       {
@@ -1334,11 +1335,11 @@ private:
         {
           return {};
         }
-        int32* currentRow = vectorBlock.data() + localRow * nx * 3;
-        const int32* neighborRow = localRow + 1 == rowCount ? carryVectors.data() : vectorBlock.data() + (localRow + 1) * nx * 3;
-        detail::DanielssonRowPassGenerated(currentRow, neighborRow, static_cast<const int32*>(nullptr), static_cast<int64>(nx), 1, 0, m_UseSpacing, spacing);
+        int32* currentRowPtr = vectorBlock.data() + localRow * nx * 3;
+        const int32* neighborRowPtr = localRow + 1 == rowCount ? carryVectors.data() : vectorBlock.data() + (localRow + 1) * nx * 3;
+        detail::DanielssonRowPassGenerated(currentRowPtr, neighborRowPtr, static_cast<const int32*>(nullptr), static_cast<int64>(nx), 1, 0, m_UseSpacing, spacing);
       }
-      FillDistances(nonstd::span<const int32>(vectorBlock.data(), cellCount * 3), nonstd::span<float32>(outputBlock.data(), cellCount), spacing);
+      fillDistances(nonstd::span<const int32>(vectorBlock.data(), cellCount * 3), nonstd::span<float32>(outputBlock.data(), cellCount), spacing);
       return {};
     };
 
@@ -1355,7 +1356,7 @@ private:
           return result;
         }
       }
-      FillDistances(carryVectors, nonstd::span<float32>(outputBlock.data() + cellCount, nx), spacing);
+      fillDistances(carryVectors, nonstd::span<float32>(outputBlock.data() + cellCount, nx), spacing);
       if(Result<> result = m_Out.copyFromBuffer(edgeChunkBegin * nx, nonstd::span<const float32>(outputBlock.data(), (rowCount + 1) * nx)); result.invalid())
       {
         return result;
@@ -1368,7 +1369,7 @@ private:
     }
     else
     {
-      FillDistances(carryVectors, nonstd::span<float32>(outputBlock.data(), nx), spacing);
+      fillDistances(carryVectors, nonstd::span<float32>(outputBlock.data(), nx), spacing);
       if(Result<> result = m_Out.copyFromBuffer((ny - 1) * nx, nonstd::span<const float32>(outputBlock.data(), nx)); result.invalid())
       {
         return result;
@@ -1398,7 +1399,7 @@ private:
     return {};
   }
 
-  Result<> InitializeTiledRow(ITemporaryRecordStore& vecStore, usize nx, usize y, usize coreCols, usize tileCount, bool compactScratch, const int32 maxValue[3])
+  Result<> initializeTiledRow(ITemporaryRecordStore& vecStore, usize nx, usize y, usize coreCols, usize tileCount, bool compactScratch, const int32 maxValue[3])
   {
     std::vector<T> input(coreCols);
     std::vector<int32> vectors(coreCols * 3);
@@ -1416,7 +1417,7 @@ private:
       }
       InitializeVectors(nonstd::span<const T>(input.data(), columnCount), nonstd::span<int32>(vectors.data(), columnCount * 3), maxValue);
       const usize recordOffset = y * tileCount + xBegin / coreCols;
-      if(Result<> result = WriteVectorScratch(vecStore, recordOffset, 1, nonstd::span<const int32>(vectors.data(), vectors.size()), staging, compactScratch, "2D tiled row initialization");
+      if(Result<> result = writeVectorScratch(vecStore, recordOffset, 1, nonstd::span<const int32>(vectors.data(), vectors.size()), staging, compactScratch, "2D tiled row initialization");
          result.invalid())
       {
         return result;
@@ -1425,7 +1426,7 @@ private:
     return {};
   }
 
-  Result<> WriteTiledDistanceRow(const ITemporaryRecordStore& vecStore, usize nx, usize y, usize coreCols, usize tileCount, bool compactScratch, const float64 spacing[3])
+  Result<> writeTiledDistanceRow(const ITemporaryRecordStore& vecStore, usize nx, usize y, usize coreCols, usize tileCount, bool compactScratch, const float64 spacing[3])
   {
     std::vector<int32> vectors(coreCols * 3);
     std::vector<float32> output(coreCols);
@@ -1437,11 +1438,11 @@ private:
       }
       const usize columnCount = std::min(coreCols, nx - xBegin);
       const usize recordOffset = y * tileCount + xBegin / coreCols;
-      if(Result<> result = ReadVectorScratch(vecStore, recordOffset, 1, nonstd::span<int32>(vectors.data(), vectors.size()), output, compactScratch, "2D tiled endpoint output"); result.invalid())
+      if(Result<> result = readVectorScratch(vecStore, recordOffset, 1, nonstd::span<int32>(vectors.data(), vectors.size()), output, compactScratch, "2D tiled endpoint output"); result.invalid())
       {
         return result;
       }
-      FillDistances(nonstd::span<const int32>(vectors.data(), columnCount * 3), nonstd::span<float32>(output.data(), columnCount), spacing);
+      fillDistances(nonstd::span<const int32>(vectors.data(), columnCount * 3), nonstd::span<float32>(output.data(), columnCount), spacing);
       if(Result<> result = m_Out.copyFromBuffer(y * nx + xBegin, nonstd::span<const float32>(output.data(), columnCount)); result.invalid())
       {
         return result;
@@ -1450,7 +1451,7 @@ private:
     return {};
   }
 
-  Result<> ProcessTiledRow(ITemporaryRecordStore& vecStore, usize nx, usize y, int32 yPull, usize coreCols, usize tileCount, bool initializeCurrent, bool writeDistance, bool compactScratch,
+  Result<> processTiledRow(ITemporaryRecordStore& vecStore, usize nx, usize y, int32 yPull, usize coreCols, usize tileCount, bool initializeCurrent, bool writeDistance, bool compactScratch,
                            const int32 maxValue[3], const float64 spacing[3])
   {
     std::vector<T> input(coreCols);
@@ -1470,28 +1471,28 @@ private:
         }
         InitializeVectors(nonstd::span<const T>(input.data(), 1), nonstd::span<int32>(current.data(), 3), maxValue);
       }
-      else if(Result<> result = ReadVectorScratch(vecStore, y * tileCount, 1, nonstd::span<int32>(current.data(), current.size()), output, compactScratch, "2D one-column current row");
+      else if(Result<> result = readVectorScratch(vecStore, y * tileCount, 1, nonstd::span<int32>(current.data(), current.size()), output, compactScratch, "2D one-column current row");
               result.invalid())
       {
         return result;
       }
       if(yPull != 0)
       {
-        if(Result<> result = ReadVectorScratch(vecStore, neighborY * tileCount, 1, nonstd::span<int32>(neighbor.data(), neighbor.size()), output, compactScratch, "2D one-column neighbor row");
+        if(Result<> result = readVectorScratch(vecStore, neighborY * tileCount, 1, nonstd::span<int32>(neighbor.data(), neighbor.size()), output, compactScratch, "2D one-column neighbor row");
            result.invalid())
         {
           return result;
         }
       }
       detail::DanielssonRowPassGenerated(current.data(), yPull == 0 ? nullptr : neighbor.data(), static_cast<const int32*>(nullptr), 1, yPull, 0, m_UseSpacing, spacing);
-      if(Result<> result = WriteVectorScratch(vecStore, y * tileCount, 1, nonstd::span<const int32>(current.data(), current.size()), output, compactScratch, "2D one-column current row");
+      if(Result<> result = writeVectorScratch(vecStore, y * tileCount, 1, nonstd::span<const int32>(current.data(), current.size()), output, compactScratch, "2D one-column current row");
          result.invalid())
       {
         return result;
       }
       if(writeDistance)
       {
-        FillDistances(nonstd::span<const int32>(current.data(), 3), nonstd::span<float32>(output.data(), 1), spacing);
+        fillDistances(nonstd::span<const int32>(current.data(), 3), nonstd::span<float32>(output.data(), 1), spacing);
         return m_Out.copyFromBuffer(y, nonstd::span<const float32>(output.data(), 1));
       }
       return {};
@@ -1514,14 +1515,14 @@ private:
         InitializeVectors(nonstd::span<const T>(input.data(), columnCount), nonstd::span<int32>(current.data(), columnCount * 3), maxValue);
       }
       else if(Result<> result =
-                  ReadVectorScratch(vecStore, y * tileCount + xBegin / coreCols, 1, nonstd::span<int32>(current.data(), current.size()), output, compactScratch, "2D tiled X-forward current row");
+                  readVectorScratch(vecStore, y * tileCount + xBegin / coreCols, 1, nonstd::span<int32>(current.data(), current.size()), output, compactScratch, "2D tiled X-forward current row");
               result.invalid())
       {
         return result;
       }
       if(yPull != 0)
       {
-        if(Result<> result = ReadVectorScratch(vecStore, neighborY * tileCount + xBegin / coreCols, 1, nonstd::span<int32>(neighbor.data(), neighbor.size()), output, compactScratch,
+        if(Result<> result = readVectorScratch(vecStore, neighborY * tileCount + xBegin / coreCols, 1, nonstd::span<int32>(neighbor.data(), neighbor.size()), output, compactScratch,
                                                "2D tiled X-forward neighbor row");
            result.invalid())
         {
@@ -1531,20 +1532,20 @@ private:
       const usize localBegin = xBegin == 0 ? 1 : 0;
       for(usize localX = localBegin; localX < columnCount; ++localX)
       {
-        int32* here = current.data() + localX * 3;
-        if(detail::DanielssonIsFeature(here))
+        int32* herePtr = current.data() + localX * 3;
+        if(detail::DanielssonIsFeature(herePtr))
         {
           continue;
         }
-        const int32* left = localX == 0 ? xCarry.data() : current.data() + (localX - 1) * 3;
-        detail::DanielssonUpdateCore(here, left, -1, 0, 0, m_UseSpacing, spacing);
+        const int32* leftPtr = localX == 0 ? xCarry.data() : current.data() + (localX - 1) * 3;
+        detail::DanielssonUpdateCore(herePtr, leftPtr, -1, 0, 0, m_UseSpacing, spacing);
         if(yPull != 0)
         {
-          detail::DanielssonUpdateCore(here, neighbor.data() + localX * 3, 0, yPull, 0, m_UseSpacing, spacing);
+          detail::DanielssonUpdateCore(herePtr, neighbor.data() + localX * 3, 0, yPull, 0, m_UseSpacing, spacing);
         }
       }
       if(Result<> result =
-             WriteVectorScratch(vecStore, y * tileCount + xBegin / coreCols, 1, nonstd::span<const int32>(current.data(), current.size()), output, compactScratch, "2D tiled X-forward current row");
+             writeVectorScratch(vecStore, y * tileCount + xBegin / coreCols, 1, nonstd::span<const int32>(current.data(), current.size()), output, compactScratch, "2D tiled X-forward current row");
          result.invalid())
       {
         return result;
@@ -1563,7 +1564,7 @@ private:
       const usize tileIndex = reverseTile;
       const usize xBegin = tileIndex * coreCols;
       const usize columnCount = std::min(coreCols, nx - xBegin);
-      if(Result<> result = ReadVectorScratch(vecStore, y * tileCount + tileIndex, 1, nonstd::span<int32>(current.data(), current.size()), output, compactScratch, "2D tiled X-backward current row");
+      if(Result<> result = readVectorScratch(vecStore, y * tileCount + tileIndex, 1, nonstd::span<int32>(current.data(), current.size()), output, compactScratch, "2D tiled X-backward current row");
          result.invalid())
       {
         return result;
@@ -1571,7 +1572,7 @@ private:
       if(yPull != 0)
       {
         if(Result<> result =
-               ReadVectorScratch(vecStore, neighborY * tileCount + tileIndex, 1, nonstd::span<int32>(neighbor.data(), neighbor.size()), output, compactScratch, "2D tiled X-backward neighbor row");
+               readVectorScratch(vecStore, neighborY * tileCount + tileIndex, 1, nonstd::span<int32>(neighbor.data(), neighbor.size()), output, compactScratch, "2D tiled X-backward neighbor row");
            result.invalid())
         {
           return result;
@@ -1581,27 +1582,27 @@ private:
       for(; localX >= 0; --localX)
       {
         const usize localIndex = static_cast<usize>(localX);
-        int32* here = current.data() + localIndex * 3;
-        if(detail::DanielssonIsFeature(here))
+        int32* herePtr = current.data() + localIndex * 3;
+        if(detail::DanielssonIsFeature(herePtr))
         {
           continue;
         }
-        const int32* right = localIndex + 1 == columnCount ? xCarry.data() : current.data() + (localIndex + 1) * 3;
-        detail::DanielssonUpdateCore(here, right, 1, 0, 0, m_UseSpacing, spacing);
+        const int32* rightPtr = localIndex + 1 == columnCount ? xCarry.data() : current.data() + (localIndex + 1) * 3;
+        detail::DanielssonUpdateCore(herePtr, rightPtr, 1, 0, 0, m_UseSpacing, spacing);
         if(yPull != 0)
         {
-          detail::DanielssonUpdateCore(here, neighbor.data() + localIndex * 3, 0, yPull, 0, m_UseSpacing, spacing);
+          detail::DanielssonUpdateCore(herePtr, neighbor.data() + localIndex * 3, 0, yPull, 0, m_UseSpacing, spacing);
         }
       }
       if(Result<> result =
-             WriteVectorScratch(vecStore, y * tileCount + tileIndex, 1, nonstd::span<const int32>(current.data(), current.size()), output, compactScratch, "2D tiled X-backward current row");
+             writeVectorScratch(vecStore, y * tileCount + tileIndex, 1, nonstd::span<const int32>(current.data(), current.size()), output, compactScratch, "2D tiled X-backward current row");
          result.invalid())
       {
         return result;
       }
       if(writeDistance)
       {
-        FillDistances(nonstd::span<const int32>(current.data(), columnCount * 3), nonstd::span<float32>(output.data(), columnCount), spacing);
+        fillDistances(nonstd::span<const int32>(current.data(), columnCount * 3), nonstd::span<float32>(output.data(), columnCount), spacing);
         if(Result<> result = m_Out.copyFromBuffer(y * nx + xBegin, nonstd::span<const float32>(output.data(), columnCount)); result.invalid())
         {
           return result;
@@ -1613,13 +1614,13 @@ private:
     return {};
   }
 
-  Result<> RunTiled2D(ITemporaryRecordStore& vecStore, usize nx, usize ny, usize coreCols, usize tileCount, bool compactScratch, const int32 maxValue[3], const float64 spacing[3])
+  Result<> runTiled2D(ITemporaryRecordStore& vecStore, usize nx, usize ny, usize coreCols, usize tileCount, bool compactScratch, const int32 maxValue[3], const float64 spacing[3])
   {
     if(ny == 1)
     {
-      return ProcessTiledRow(vecStore, nx, 0, 0, coreCols, tileCount, true, true, compactScratch, maxValue, spacing);
+      return processTiledRow(vecStore, nx, 0, 0, coreCols, tileCount, true, true, compactScratch, maxValue, spacing);
     }
-    if(Result<> result = InitializeTiledRow(vecStore, nx, 0, coreCols, tileCount, compactScratch, maxValue); result.invalid())
+    if(Result<> result = initializeTiledRow(vecStore, nx, 0, coreCols, tileCount, compactScratch, maxValue); result.invalid())
     {
       return result;
     }
@@ -1629,7 +1630,7 @@ private:
     }
     for(usize y = 1; y < ny; ++y)
     {
-      if(Result<> result = ProcessTiledRow(vecStore, nx, y, -1, coreCols, tileCount, true, false, compactScratch, maxValue, spacing); result.invalid())
+      if(Result<> result = processTiledRow(vecStore, nx, y, -1, coreCols, tileCount, true, false, compactScratch, maxValue, spacing); result.invalid())
       {
         return result;
       }
@@ -1638,7 +1639,7 @@ private:
         m_ProgressThrottle->updatePercent(y + 1);
       }
     }
-    if(Result<> result = WriteTiledDistanceRow(vecStore, nx, ny - 1, coreCols, tileCount, compactScratch, spacing); result.invalid())
+    if(Result<> result = writeTiledDistanceRow(vecStore, nx, ny - 1, coreCols, tileCount, compactScratch, spacing); result.invalid())
     {
       return result;
     }
@@ -1648,7 +1649,7 @@ private:
     }
     for(usize y = ny - 1; y-- > 0;)
     {
-      if(Result<> result = ProcessTiledRow(vecStore, nx, y, 1, coreCols, tileCount, false, true, compactScratch, maxValue, spacing); result.invalid())
+      if(Result<> result = processTiledRow(vecStore, nx, y, 1, coreCols, tileCount, false, true, compactScratch, maxValue, spacing); result.invalid())
       {
         return result;
       }
@@ -1660,7 +1661,7 @@ private:
     return {};
   }
 
-  Result<> RunBounded2D(usize nx, usize ny)
+  Result<> runBounded2D(usize nx, usize ny)
   {
     const detail::Danielsson2DBufferPlan plan = detail::BuildDanielsson2DBufferPlan(nx, ny, sizeof(T), m_ResidentLimit2D);
     if(plan.overflow)
@@ -1677,23 +1678,23 @@ private:
     const bool compactScratch = maxDimension <= static_cast<usize>(std::numeric_limits<int16>::max() / 2);
     const usize scratchComponents = compactScratch ? 2 : 3;
     const usize scratchValueBytes = compactScratch ? sizeof(int16) : sizeof(int32);
-    const usize tileCount = 1 + (nx - 1) / plan.coreCols;
+    const usize tileCount = 1 + (nx - 1) / plan.core_cols;
     usize recordValues = 0;
     usize recordSize = 0;
     usize recordCount = 0;
-    if(!detail::DanielssonCheckedMultiply(plan.coreCols, scratchComponents, recordValues) || !detail::DanielssonCheckedMultiply(recordValues, scratchValueBytes, recordSize) ||
+    if(!detail::DanielssonCheckedMultiply(plan.core_cols, scratchComponents, recordValues) || !detail::DanielssonCheckedMultiply(recordValues, scratchValueBytes, recordSize) ||
        !detail::DanielssonCheckedMultiply(ny, tileCount, recordCount) || recordSize > std::numeric_limits<uint64>::max() || recordCount > std::numeric_limits<uint64>::max())
     {
       return MakeErrorResult(-8385, fmt::format("Danielsson distance-map 2D vector-scratch layout cannot represent dimensions {} x {} due to arithmetic overflow.", nx, ny));
     }
     TemporaryRecordStoreConfig config;
-    config.recordSize = static_cast<uint64>(recordSize);
-    config.maxRecordsPerBatch = static_cast<uint64>(plan.coreCols == nx ? plan.coreRows : 1);
-    config.initialRecordCount = static_cast<uint64>(recordCount);
+    config.record_size = static_cast<uint64>(recordSize);
+    config.max_records_per_batch = static_cast<uint64>(plan.core_cols == nx ? plan.core_rows : 1);
+    config.initial_record_count = static_cast<uint64>(recordCount);
     std::unique_ptr<ITemporaryRecordStore> vecStore;
     try
     {
-      auto storeResult = DataStoreUtilities::CreateTemporaryRecordStore(config);
+      auto storeResult = data_store_utilities::CreateTemporaryRecordStore(config);
       if(storeResult.invalid())
       {
         const std::string message = storeResult.errors().empty() ? "provider returned an unspecified error" : storeResult.errors().front().message;
@@ -1715,9 +1716,9 @@ private:
     int32 maxValue[3];
     detail::DanielssonInitMaxValue(static_cast<int64>(nx), static_cast<int64>(ny), 1, maxValue);
     const float64 spacing[3] = {static_cast<float64>(m_Spacing[0]), static_cast<float64>(m_Spacing[1]), static_cast<float64>(m_Spacing[2])};
-    if(plan.coreCols == nx)
+    if(plan.core_cols == nx)
     {
-      usize blockRows = plan.coreRows;
+      usize blockRows = plan.core_rows;
       usize outputChunkRows = 0;
       const std::optional<ShapeType> outputChunkShape = m_Out.getChunkShape();
       if(outputChunkShape.has_value() && outputChunkShape->size() >= 3 && (*outputChunkShape)[0] == 1 && (*outputChunkShape)[1] > 0 && (*outputChunkShape)[1] <= blockRows &&
@@ -1726,16 +1727,16 @@ private:
         outputChunkRows = (*outputChunkShape)[1];
         blockRows = (blockRows / outputChunkRows) * outputChunkRows;
       }
-      return RunFullWidth2D(*vecStore, nx, ny, blockRows, outputChunkRows, compactScratch, maxValue, spacing);
+      return runFullWidth2D(*vecStore, nx, ny, blockRows, outputChunkRows, compactScratch, maxValue, spacing);
     }
-    return RunTiled2D(*vecStore, nx, ny, plan.coreCols, tileCount, compactScratch, maxValue, spacing);
+    return runTiled2D(*vecStore, nx, ny, plan.core_cols, tileCount, compactScratch, maxValue, spacing);
   }
 
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<float32>& m_Out;
   bool m_Squared;
   bool m_UseSpacing;
-  FloatVec3 m_Spacing;
+  FloatVec3Type m_Spacing;
   const std::atomic_bool& m_ShouldCancel;
   usize m_ResidentLimit2D = detail::k_Danielsson2DResidentLimit;
   ThrottledMessageHandler* m_ProgressThrottle = nullptr;
@@ -1754,15 +1755,15 @@ template <class T>
 class DanielssonDistanceSlab
 {
 public:
-  DanielssonDistanceSlab(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, SizeVec3 dims, bool squaredDistance, bool useSpacing, FloatVec3 spacing,
+  DanielssonDistanceSlab(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, SizeVec3Type dims, bool squaredDistance, bool useSpacing, FloatVec3Type spacing,
                          const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize residentLimit2D = detail::k_Danielsson2DResidentLimit,
                          usize visitArrayLimit = detail::k_DanielssonVisitArrayLimit, usize residentPrefixPlanes = 0, detail::DanielssonVectorTransferStats* transferStats = nullptr)
   : m_In(inStore)
   , m_Out(outStore)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_Squared(squaredDistance)
   , m_UseSpacing(useSpacing)
-  , m_Spacing(spacing)
+  , m_Spacing(std::move(spacing))
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
   , m_ResidentLimit2D(residentLimit2D)
@@ -1780,10 +1781,10 @@ public:
   Result<> operator()()
   {
     const int64 nX = static_cast<int64>(m_Dims[0]);
-    const int64 nY = static_cast<int64>(m_Dims[1]);
-    const int64 nZ = static_cast<int64>(m_Dims[2]);
-    const usize slice = static_cast<usize>(nX * nY);
-    const usize vol = slice * static_cast<usize>(nZ);
+    const int64 ny = static_cast<int64>(m_Dims[1]);
+    const int64 nz = static_cast<int64>(m_Dims[2]);
+    const usize slice = static_cast<usize>(nX * ny);
+    const usize vol = slice * static_cast<usize>(nz);
     if(vol == 0)
     {
       return {};
@@ -1796,10 +1797,10 @@ public:
     ThrottledMessageHandler progressThrottle(m_MessageHandler);
     m_MessageHandler.sendInfoMessage("Danielsson: Propagating Distances");
     const bool hasOutOfCoreEndpoint = m_In.getStoreType() == IDataStore::StoreType::OutOfCore || m_Out.getStoreType() == IDataStore::StoreType::OutOfCore;
-    if(nZ == 1 && hasOutOfCoreEndpoint)
+    if(nz == 1 && hasOutOfCoreEndpoint)
     {
       DanielssonDistance2DBounded<T> bounded2D(m_In, m_Out, m_Squared, m_UseSpacing, m_Spacing, m_ShouldCancel, m_ResidentLimit2D, &progressThrottle);
-      return bounded2D(static_cast<usize>(nX), static_cast<usize>(nY));
+      return bounded2D(static_cast<usize>(nX), static_cast<usize>(ny));
     }
 
     // A disk-backed endpoint makes the full-volume vector map disk-backed too, whatever its resolved data format.
@@ -1810,13 +1811,13 @@ public:
     // the prior behavior.
     const bool useRawScratch = hasOutOfCoreEndpoint;
     const std::string workingDataFormat = detail::SelectDanielssonWorkingDataFormat(m_In.getStoreType(), m_In.getDataFormat(), m_Out.getStoreType(), m_Out.getDataFormat());
-    const usize storableForwardPlanes = nZ > 2 ? static_cast<usize>(nZ - 2) : 0;
+    const usize storableForwardPlanes = nz > 2 ? static_cast<usize>(nz - 2) : 0;
     const usize prefixPlanes = std::min(m_ResidentPrefixPlanes, storableForwardPlanes);
     usize prefixValues = 0;
     if(!detail::DanielssonCheckedMultiply(prefixPlanes, slice, prefixValues) || !detail::DanielssonCheckedMultiply(prefixValues, usize{3}, prefixValues) ||
        prefixValues > std::numeric_limits<usize>::max() / sizeof(int32))
     {
-      return MakeErrorResult(-8390, fmt::format("Danielsson resident vector prefix overflows for {} prefix planes and dimensions {}.", prefixPlanes, StringUtilities::formatDimensions3D(m_Dims)));
+      return MakeErrorResult(-8390, fmt::format("Danielsson resident vector prefix overflows for {} prefix planes and dimensions {}.", prefixPlanes, string_utilities::FormatDimensions3D(m_Dims)));
     }
     const bool compactScratch = detail::DanielssonCanUseCompactVectorScratch(m_Dims);
     const usize vectorPlaneValues = slice * 3;
@@ -1845,8 +1846,8 @@ public:
       }
       else
       {
-        compactVecStore =
-            DataStoreUtilities::CreateDataStoreWithFormat<int16>(workingDataFormat, std::vector<usize>{static_cast<usize>(nZ), static_cast<usize>(nY), static_cast<usize>(nX)}, std::vector<usize>{3});
+        compactVecStore = data_store_utilities::CreateDataStoreWithFormat<int16>(workingDataFormat, std::vector<usize>{static_cast<usize>(nz), static_cast<usize>(ny), static_cast<usize>(nX)},
+                                                                                 std::vector<usize>{3});
         compactVectorPlanesCompressed.emplace(*compactVecStore, residentPrefix, compactStaging, prefixPlanes, vectorPlaneValues, m_ShouldCancel, m_TransferStats);
       }
     }
@@ -1863,21 +1864,21 @@ public:
     else
     {
       fullVecStore =
-          DataStoreUtilities::CreateDataStoreWithFormat<int32>(workingDataFormat, std::vector<usize>{static_cast<usize>(nZ), static_cast<usize>(nY), static_cast<usize>(nX)}, std::vector<usize>{3});
+          data_store_utilities::CreateDataStoreWithFormat<int32>(workingDataFormat, std::vector<usize>{static_cast<usize>(nz), static_cast<usize>(ny), static_cast<usize>(nX)}, std::vector<usize>{3});
       fullVectorPlanesCompressed.emplace(*fullVecStore, residentPrefix, prefixPlanes, vectorPlaneValues, m_ShouldCancel, m_TransferStats);
     }
 
     int32 maxV[3];
-    detail::DanielssonInitMaxValue(nX, nY, nZ, maxV);
+    detail::DanielssonInitMaxValue(nX, ny, nz, maxV);
     const float64 sp[3] = {static_cast<float64>(m_Spacing[0]), static_cast<float64>(m_Spacing[1]), static_cast<float64>(m_Spacing[2])};
     usize axisVisitBytes = 0;
-    const bool useVisitArrays = detail::DanielssonXYVisitArraysFit(static_cast<usize>(nX), static_cast<usize>(nY), m_VisitArrayLimit, axisVisitBytes);
+    const bool useVisitArrays = detail::DanielssonXYVisitArraysFit(static_cast<usize>(nX), static_cast<usize>(ny), m_VisitArrayLimit, axisVisitBytes);
     std::vector<detail::AxisVisit> xVisits;
     std::vector<detail::AxisVisit> yVisits;
     if(useVisitArrays)
     {
       xVisits = detail::BuildAxisVisits(nX);
-      yVisits = detail::BuildAxisVisits(nY);
+      yVisits = detail::BuildAxisVisits(ny);
     }
 
     std::vector<T> inPlane(slice);
@@ -1930,11 +1931,11 @@ public:
     const auto passPlane = [&](int32* current, const int32* neighbor, int32 zPull) {
       if(useVisitArrays)
       {
-        detail::DanielssonPlanePass<false>(current, neighbor, nullptr, xVisits, yVisits, zPull, nX, m_UseSpacing, sp, nZ == 1 ? &progressThrottle : nullptr);
+        detail::DanielssonPlanePass<false>(current, neighbor, nullptr, xVisits, yVisits, zPull, nX, m_UseSpacing, sp, nz == 1 ? &progressThrottle : nullptr);
       }
       else
       {
-        detail::DanielssonPlanePassGenerated(current, neighbor, zPull, nX, nY, m_UseSpacing, sp, nZ == 1 ? &progressThrottle : nullptr);
+        detail::DanielssonPlanePassGenerated(current, neighbor, zPull, nX, ny, m_UseSpacing, sp, nz == 1 ? &progressThrottle : nullptr);
       }
     };
     const auto writeDistances = [&](int64 z, nonstd::span<const int32> vectors) -> Result<> {
@@ -1960,13 +1961,13 @@ public:
     {
       return result;
     }
-    if(nZ == 1)
+    if(nz == 1)
     {
-      progressThrottle.reset(nY > 1 ? static_cast<usize>(2 * nY - 2) : 1, "Danielsson: Propagating Rows");
+      progressThrottle.reset(ny > 1 ? static_cast<usize>(2 * ny - 2) : 1, "Danielsson: Propagating Rows");
       passPlane(vecPlane.data(), nullptr, 0);
       return writeDistances(0, vecPlane);
     }
-    if(nZ > 2)
+    if(nz > 2)
     {
       if(Result<> result = writeVectorPlane(0, nonstd::span<const int32>(vecPlane.data(), slice * 3)); result.invalid())
       {
@@ -1974,17 +1975,17 @@ public:
       }
     }
     std::swap(vecPlane, neighPlane);
-    progressThrottle.reset(static_cast<usize>(nZ), "Danielsson: Forward Slices");
-    for(int64 z = 1; z < nZ; ++z)
+    progressThrottle.reset(static_cast<usize>(nz), "Danielsson: Forward Slices");
+    for(int64 z = 1; z < nz; ++z)
     {
       if(Result<> result = initializePlane(z); result.invalid())
       {
         return result;
       }
       passPlane(vecPlane.data(), neighPlane.data(), -1);
-      if(z + 1 < nZ)
+      if(z + 1 < nz)
       {
-        if(z < nZ - 2)
+        if(z < nz - 2)
         {
           if(Result<> result = writeVectorPlane(static_cast<usize>(z), nonstd::span<const int32>(vecPlane.data(), slice * 3)); result.invalid())
           {
@@ -2000,8 +2001,8 @@ public:
     }
 
     m_MessageHandler.sendInfoMessage("Danielsson: Backward Pass");
-    progressThrottle.reset(static_cast<usize>(nZ), "Danielsson: Backward Slices");
-    if(Result<> result = writeDistances(nZ - 1, vecPlane); result.invalid())
+    progressThrottle.reset(static_cast<usize>(nz), "Danielsson: Backward Slices");
+    if(Result<> result = writeDistances(nz - 1, vecPlane); result.invalid())
     {
       return result;
     }
@@ -2012,7 +2013,7 @@ public:
     // The second-to-last forward state remains in neighPlane at the turnaround. Finish and output it before reading
     // the older forward states from scratch. This removes one complete scratch transfer pair.
     passPlane(neighPlane.data(), vecPlane.data(), 1);
-    if(Result<> result = writeDistances(nZ - 2, neighPlane); result.invalid())
+    if(Result<> result = writeDistances(nz - 2, neighPlane); result.invalid())
     {
       return result;
     }
@@ -2021,7 +2022,7 @@ public:
       progressThrottle.updateCount(2);
     }
     std::swap(vecPlane, neighPlane);
-    for(int64 z = nZ - 3; z >= 0; --z)
+    for(int64 z = nz - 3; z >= 0; --z)
     {
       if(m_ShouldCancel)
       {
@@ -2039,7 +2040,7 @@ public:
       std::swap(vecPlane, neighPlane);
       if(!m_ShouldCancel)
       {
-        progressThrottle.updateCount(static_cast<usize>(nZ - z));
+        progressThrottle.updateCount(static_cast<usize>(nz - z));
       }
     }
     return {};
@@ -2048,10 +2049,10 @@ public:
 private:
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<float32>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   bool m_Squared;
   bool m_UseSpacing;
-  FloatVec3 m_Spacing;
+  FloatVec3Type m_Spacing;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
   usize m_ResidentLimit2D = detail::k_Danielsson2DResidentLimit;
@@ -2064,14 +2065,14 @@ template <class T>
 class DanielssonDistanceWorkingMemory
 {
 public:
-  DanielssonDistanceWorkingMemory(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, SizeVec3 dims, bool squaredDistance, bool useSpacing, FloatVec3 spacing,
+  DanielssonDistanceWorkingMemory(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, SizeVec3Type dims, bool squaredDistance, bool useSpacing, FloatVec3Type spacing,
                                   const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(inStore)
   , m_Out(outStore)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_Squared(squaredDistance)
   , m_UseSpacing(useSpacing)
-  , m_Spacing(spacing)
+  , m_Spacing(std::move(spacing))
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
   {
@@ -2105,9 +2106,9 @@ public:
           return ConvertInvalidResult<void>(std::move(prefixPlanResult));
         }
         const detail::DanielssonResidentVectorPrefixPlan& prefixPlan = prefixPlanResult.value();
-        if(prefixPlan.residentPrefixPlanes > 0)
+        if(prefixPlan.resident_prefix_planes > 0)
         {
-          allocation.reservation.shrinkTo(static_cast<uint64>(prefixPlan.residentBytes));
+          allocation.reservation.shrinkTo(static_cast<uint64>(prefixPlan.resident_bytes));
           return DanielssonDistanceSlab<T>{m_In,
                                            m_Out,
                                            m_Dims,
@@ -2118,7 +2119,7 @@ public:
                                            m_MessageHandler,
                                            detail::k_Danielsson2DResidentLimit,
                                            detail::k_DanielssonVisitArrayLimit,
-                                           prefixPlan.residentPrefixPlanes}();
+                                           prefixPlan.resident_prefix_planes}();
         }
       }
     }
@@ -2128,10 +2129,10 @@ public:
 private:
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<float32>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   bool m_Squared;
   bool m_UseSpacing;
-  FloatVec3 m_Spacing;
+  FloatVec3Type m_Spacing;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 };
@@ -2144,8 +2145,8 @@ private:
  * unemitted Voronoi label map), so it is not forwarded to the engine.
  */
 template <class T>
-Result<> ApplyDanielssonDistanceMap(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3& dims, bool /*inputIsBinary*/, bool squaredDistance, bool useSpacing,
-                                    FloatVec3 spacing, const IDataArray& inArray, IDataArray& outArray, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+Result<> ApplyDanielssonDistanceMap(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3Type& dims, bool /*inputIsBinary*/, bool squaredDistance, bool useSpacing,
+                                    const FloatVec3Type& spacing, const IDataArray& inArray, IDataArray& outArray, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   if(std::max({dims[0], dims[1], dims[2]}) > detail::k_DanielssonMaxDimension)
   {

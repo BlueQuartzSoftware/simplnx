@@ -11,12 +11,12 @@
 namespace
 {
 namespace fs = std::filesystem;
-using nx::core::UnitTest::ProcessTestProfile;
+using nx::core::unit_test::ProcessTestProfile;
 
-std::optional<std::string> environmentValue(const char* name)
+std::optional<std::string> EnvironmentValue(const char* name)
 {
-  const char* value = std::getenv(name);
-  return value == nullptr ? std::nullopt : std::optional<std::string>(value);
+  const char* valuePtr = std::getenv(name);
+  return valuePtr == nullptr ? std::nullopt : std::optional<std::string>(valuePtr);
 }
 
 struct LateWitness
@@ -26,12 +26,12 @@ struct LateWitness
   LateWitness& operator=(const LateWitness&) = default;
 
   // Rvalues copy the path so the source keeps its shutdown check.
-  LateWitness(LateWitness&& other)
+  LateWitness(LateWitness&& other) noexcept
   : LateWitness(static_cast<const LateWitness&>(other))
   {
   }
 
-  LateWitness& operator=(LateWitness&& other)
+  LateWitness& operator=(LateWitness&& other) noexcept
   {
     return *this = static_cast<const LateWitness&>(other);
   }
@@ -46,14 +46,14 @@ struct LateWitness
     }
     try
     {
-      const char* home = std::getenv(ProcessTestProfile::homeVariable());
-      if(fs::exists(root) || home == nullptr || fs::path(home) != root)
+      const char* homePtr = std::getenv(ProcessTestProfile::HomeVariable());
+      if(fs::exists(root) || homePtr == nullptr || fs::path(homePtr) != root)
       {
         std::_Exit(86);
       }
       // This static observer uses retained routing without accessing Application.
-      fs::create_directories(fs::path(home));
-      std::ofstream stream(fs::path(home) / "late-witness.txt");
+      fs::create_directories(fs::path(homePtr));
+      std::ofstream stream(fs::path(homePtr) / "late-witness.txt");
       stream << "isolated after removal";
       stream.close();
       if(!stream)
@@ -67,7 +67,7 @@ struct LateWitness
   }
 };
 
-LateWitness s_LateWitness;
+LateWitness SLateWitness;
 } // namespace
 
 int main(int argc, char* argv[])
@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
   std::array<std::optional<std::string>, 7> before;
   for(size_t index = 0; index < names.size(); ++index)
   {
-    before[index] = environmentValue(names[index]);
+    before[index] = EnvironmentValue(names[index]);
   }
   ProcessTestProfile profile;
   std::string error;
@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
   }
   for(size_t index = 0; index < names.size(); ++index)
   {
-    if(std::string(names[index]) != ProcessTestProfile::homeVariable() && environmentValue(names[index]) != before[index])
+    if(std::string(names[index]) != ProcessTestProfile::HomeVariable() && EnvironmentValue(names[index]) != before[index])
     {
       std::cerr << "Unrelated environment variable changed: " << names[index] << '\n';
       return 4;
@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
   }
   else if(mode == "late")
   {
-    s_LateWitness.root = root;
+    SLateWitness.root = root;
   }
   else if(mode != "success" && mode != "failure" && mode != "status-256-success")
   {

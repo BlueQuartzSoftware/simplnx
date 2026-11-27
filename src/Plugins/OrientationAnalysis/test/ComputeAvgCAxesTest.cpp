@@ -19,7 +19,7 @@
 #include "OrientationAnalysis/OrientationAnalysis_test_dirs.hpp"
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 namespace fs = std::filesystem;
 
 namespace compute_avg_caxis_class1
@@ -39,13 +39,13 @@ const std::string k_ComputedAvgCAxesName = "ComputedAvgCAxes";
 
 TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Class 1 Oracle (hand-built dataset)", "[OrientationAnalysis][ComputeAvgCAxesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_avg_c_axis.tar.gz", "compute_avg_c_axis");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_avg_c_axis.tar.gz", "compute_avg_c_axis");
 
   const fs::path inputFile = fs::path(unit_test::k_TestFilesDir.view()) / "compute_avg_c_axis" / "data" / "compute_avg_caxes_inputs.dream3d";
 
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFile);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFile);
 
   ComputeAvgCAxesFilter filter;
   Arguments args;
@@ -57,14 +57,14 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Class 1 Oracle (hand-buil
   args.insertOrAssign(ComputeAvgCAxesFilter::k_AvgCAxesArrayName_Key, std::make_any<std::string>(compute_avg_caxis_class1::k_ComputedAvgCAxesName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   const DataPath avgCAxesPath = compute_avg_caxis_class1::k_CellFeatureDataPath.createChildPath(compute_avg_caxis_class1::k_ComputedAvgCAxesName);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(avgCAxesPath));
-  const auto& avgCAxes = dataStructure.getDataRefAs<Float32Array>(avgCAxesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(avgCAxesPath));
+  const auto& avgCAxes = dataStructure.getDataRefAs<Float32ArrayType>(avgCAxesPath);
   REQUIRE(avgCAxes.getNumberOfTuples() == 8);
   REQUIRE(avgCAxes.getNumberOfComponents() == 3);
 
@@ -80,8 +80,8 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Class 1 Oracle (hand-buil
 
   struct ExpectedFeature
   {
-    int32 featureId;
-    bool isNaN;
+    int32 feature_id;
+    bool is_na_n;
     float32 x;
     float32 y;
     float32 z;
@@ -89,24 +89,24 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Class 1 Oracle (hand-buil
   };
 
   const std::vector<ExpectedFeature> expected = {
-      {0, true, 0.0f, 0.0f, 0.0f, "F0: placeholder feature, never referenced -> counter==0 -> NaN"},
-      {1, false, 0.0f, 0.0f, 1.0f, "F1: single cell, identity quaternion"},
-      {2, false, 0.0f, k_SqrtThreeOverTwo, 0.5f, "F2: single cell, +60 deg about +X"},
-      {3, false, 0.0f, 0.0f, 1.0f, "F3: three aligned identity cells -- trivial average"},
-      {4, false, 0.0f, 0.0f, 1.0f, "F4: antipodal pair -- antipodal-flip resolves to (0,0,1)"},
-      {5, true, 0.0f, 0.0f, 0.0f, "F5: declared feature, no cells reference it -> counter==0 -> NaN"},
-      {6, true, 0.0f, 0.0f, 0.0f, "F6: sole cell is non-hex (Cubic_High) -> counter==0 -> NaN"},
+      {.feature_id = 0, .is_na_n = true, .x = 0.0f, .y = 0.0f, .z = 0.0f, .description = "F0: placeholder feature, never referenced -> counter==0 -> NaN"},
+      {.feature_id = 1, .is_na_n = false, .x = 0.0f, .y = 0.0f, .z = 1.0f, .description = "F1: single cell, identity quaternion"},
+      {.feature_id = 2, .is_na_n = false, .x = 0.0f, .y = k_SqrtThreeOverTwo, .z = 0.5f, .description = "F2: single cell, +60 deg about +X"},
+      {.feature_id = 3, .is_na_n = false, .x = 0.0f, .y = 0.0f, .z = 1.0f, .description = "F3: three aligned identity cells -- trivial average"},
+      {.feature_id = 4, .is_na_n = false, .x = 0.0f, .y = 0.0f, .z = 1.0f, .description = "F4: antipodal pair -- antipodal-flip resolves to (0,0,1)"},
+      {.feature_id = 5, .is_na_n = true, .x = 0.0f, .y = 0.0f, .z = 0.0f, .description = "F5: declared feature, no cells reference it -> counter==0 -> NaN"},
+      {.feature_id = 6, .is_na_n = true, .x = 0.0f, .y = 0.0f, .z = 0.0f, .description = "F6: sole cell is non-hex (Cubic_High) -> counter==0 -> NaN"},
   };
 
   for(const auto& exp : expected)
   {
     DYNAMIC_SECTION(exp.description)
     {
-      const usize idx = 3 * static_cast<usize>(exp.featureId);
+      const usize idx = 3 * static_cast<usize>(exp.feature_id);
       const float32 x = avgCAxes[idx];
       const float32 y = avgCAxes[idx + 1];
       const float32 z = avgCAxes[idx + 2];
-      if(exp.isNaN)
+      if(exp.is_na_n)
       {
         REQUIRE(std::isnan(x));
         REQUIRE(std::isnan(y));
@@ -163,12 +163,12 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Class 1 Oracle (hand-buil
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: genuine HDF5 4096-block tail oracle", "[OrientationAnalysis][ComputeAvgCAxesFilter][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
 
   constexpr usize k_BlockTuples = 4096;
@@ -179,7 +179,7 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: genuine HDF5 4096-block t
   constexpr float32 k_SqrtThreeOverTwo = 0.8660254F;
   constexpr float32 k_Tolerance = 1.0E-5F;
 
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
 
   const DataPath cellDataPath({"CellData"});
   const DataPath featureDataPath({"CellFeatureData"});
@@ -191,26 +191,26 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: genuine HDF5 4096-block t
   const DataPath avgCAxesPath = featureDataPath.createChildPath("AvgCAxes");
 
   DataStructure dataStructure;
-  auto* cellData = AttributeMatrix::Create(dataStructure, cellDataPath.getTargetName(), {k_CellTuples});
-  auto* featureData = AttributeMatrix::Create(dataStructure, featureDataPath.getTargetName(), {k_FeatureTuples});
-  auto* ensembleData = AttributeMatrix::Create(dataStructure, ensembleDataPath.getTargetName(), {2});
-  REQUIRE(cellData != nullptr);
-  REQUIRE(featureData != nullptr);
-  REQUIRE(ensembleData != nullptr);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, cellDataPath.getTargetName(), {k_CellTuples});
+  auto* featureDataPtr = AttributeMatrix::Create(dataStructure, featureDataPath.getTargetName(), {k_FeatureTuples});
+  auto* ensembleDataPtr = AttributeMatrix::Create(dataStructure, ensembleDataPath.getTargetName(), {2});
+  REQUIRE(cellDataPtr != nullptr);
+  REQUIRE(featureDataPtr != nullptr);
+  REQUIRE(ensembleDataPtr != nullptr);
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureIdsPath, {k_CellTuples}, {1});
-  auto quatsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, quatsPath, {k_CellTuples}, {4});
-  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, phasesPath, {k_CellTuples}, {1});
-  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, crystalStructuresPath, {2}, {1});
+  auto featureIdsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, featureIdsPath, {k_CellTuples}, {1});
+  auto quatsStore = data_store_utilities::CreateDataStore<float32>(dataStructure, quatsPath, {k_CellTuples}, {4});
+  auto phasesStore = data_store_utilities::CreateDataStore<int32>(dataStructure, phasesPath, {k_CellTuples}, {1});
+  auto crystalStructuresStore = data_store_utilities::CreateDataStore<uint32>(dataStructure, crystalStructuresPath, {2}, {1});
 
-  auto* featureIds = Int32Array::Create(dataStructure, featureIdsPath.getTargetName(), featureIdsStore, cellData->getId());
-  auto* quats = Float32Array::Create(dataStructure, quatsPath.getTargetName(), quatsStore, cellData->getId());
-  auto* phases = Int32Array::Create(dataStructure, phasesPath.getTargetName(), phasesStore, cellData->getId());
-  auto* crystalStructures = UInt32Array::Create(dataStructure, crystalStructuresPath.getTargetName(), crystalStructuresStore, ensembleData->getId());
-  REQUIRE(featureIds != nullptr);
-  REQUIRE(quats != nullptr);
-  REQUIRE(phases != nullptr);
-  REQUIRE(crystalStructures != nullptr);
+  auto* featureIdsPtr = Int32ArrayType::Create(dataStructure, featureIdsPath.getTargetName(), featureIdsStore, cellDataPtr->getId());
+  auto* quatsPtr = Float32ArrayType::Create(dataStructure, quatsPath.getTargetName(), quatsStore, cellDataPtr->getId());
+  auto* phasesPtr = Int32ArrayType::Create(dataStructure, phasesPath.getTargetName(), phasesStore, cellDataPtr->getId());
+  auto* crystalStructuresPtr = UInt32ArrayType::Create(dataStructure, crystalStructuresPath.getTargetName(), crystalStructuresStore, ensembleDataPtr->getId());
+  REQUIRE(featureIdsPtr != nullptr);
+  REQUIRE(quatsPtr != nullptr);
+  REQUIRE(phasesPtr != nullptr);
+  REQUIRE(crystalStructuresPtr != nullptr);
 
   std::vector<int32> featureIdsValues(k_CellTuples, 0);
   std::vector<int32> phaseValues(k_CellTuples, 1);
@@ -226,18 +226,18 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: genuine HDF5 4096-block t
   quaternionValues[k_TailTuple * 4 + 3] = k_SqrtThreeOverTwo;
   const std::array<uint32, 2> crystalStructureValues = {ebsdlib::CrystalStructure::UnknownCrystalStructure, ebsdlib::CrystalStructure::Hexagonal_High};
 
-  auto featureIdsWriteResult = featureIds->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(featureIdsValues.data(), featureIdsValues.size()));
+  auto featureIdsWriteResult = featureIdsPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(featureIdsValues.data(), featureIdsValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(featureIdsWriteResult);
-  auto phasesWriteResult = phases->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(phaseValues.data(), phaseValues.size()));
+  auto phasesWriteResult = phasesPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const int32>(phaseValues.data(), phaseValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(phasesWriteResult);
-  auto quatsWriteResult = quats->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(quaternionValues.data(), quaternionValues.size()));
+  auto quatsWriteResult = quatsPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const float32>(quaternionValues.data(), quaternionValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(quatsWriteResult);
-  auto crystalStructuresWriteResult = crystalStructures->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(crystalStructureValues.data(), crystalStructureValues.size()));
+  auto crystalStructuresWriteResult = crystalStructuresPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint32>(crystalStructureValues.data(), crystalStructureValues.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(crystalStructuresWriteResult);
 
-  REQUIRE(featureIds->getDataStoreRef().getDataFormat() == "HDF5-OOC");
-  REQUIRE(phases->getDataStoreRef().getDataFormat() == "HDF5-OOC");
-  REQUIRE(quats->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(featureIdsPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(phasesPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE(quatsPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC");
 
   ComputeAvgCAxesFilter filter;
   Arguments args;
@@ -249,13 +249,13 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: genuine HDF5 4096-block t
   args.insertOrAssign(ComputeAvgCAxesFilter::k_AvgCAxesArrayName_Key, std::make_any<std::string>(avgCAxesPath.getTargetName()));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   REQUIRE(executeResult.result.warnings().empty());
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(avgCAxesPath));
-  const auto& avgCAxes = dataStructure.getDataRefAs<Float32Array>(avgCAxesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(avgCAxesPath));
+  const auto& avgCAxes = dataStructure.getDataRefAs<Float32ArrayType>(avgCAxesPath);
   REQUIRE(avgCAxes.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   REQUIRE(avgCAxes.getTupleShape() == ShapeType{k_FeatureTuples});
   REQUIRE(avgCAxes.getComponentShape() == ShapeType{3});
@@ -269,24 +269,24 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: genuine HDF5 4096-block t
   REQUIRE(avgCAxes[4] == Approx(0.5F).margin(k_Tolerance));
   REQUIRE(avgCAxes[5] == Approx(k_SqrtThreeOverTwo).margin(k_Tolerance));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter:No_Hex_Phase", "[OrientationAnalysis][ComputeAvgCAxesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Reuse the Class 1 hand-built input. Mutate the ensemble CrystalStructures
   // array so phase 1 (originally Hexagonal_High = 0) becomes Cubic_High = 1.
   // Phase 2 is already Cubic_High, so after this mutation no ensemble phase
   // is hexagonal and the algorithm must emit -76402.
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_avg_c_axis.tar.gz", "compute_avg_c_axis");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_avg_c_axis.tar.gz", "compute_avg_c_axis");
 
   const fs::path inputFile = fs::path(unit_test::k_TestFilesDir.view()) / "compute_avg_c_axis" / "data" / "compute_avg_caxes_inputs.dream3d";
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFile);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFile);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(compute_avg_caxis_class1::k_CrystalStructuresPath));
-  auto& crystalStructs = dataStructure.getDataRefAs<UInt32Array>(compute_avg_caxis_class1::k_CrystalStructuresPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(compute_avg_caxis_class1::k_CrystalStructuresPath));
+  auto& crystalStructs = dataStructure.getDataRefAs<UInt32ArrayType>(compute_avg_caxis_class1::k_CrystalStructuresPath);
   crystalStructs[1] = 1; // Hexagonal_High -> Cubic_High
 
   ComputeAvgCAxesFilter filter;
@@ -299,41 +299,41 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter:No_Hex_Phase", "[Orientati
   args.insertOrAssign(ComputeAvgCAxesFilter::k_AvgCAxesArrayName_Key, std::make_any<std::string>(compute_avg_caxis_class1::k_ComputedAvgCAxesName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
   REQUIRE(executeResult.result.errors().size() == 1);
   REQUIRE(executeResult.result.errors()[0].code == -76402);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Preflight Error - Cell array tuple count mismatch (-6400)", "[OrientationAnalysis][ComputeAvgCAxesFilter][preflight]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Build a minimal synthetic DataStructure where the three cell-level arrays that
   // are validated together (Quats, FeatureIds, CellPhases) do NOT all share the same
   // tuple count. This drives the validateNumberOfTuples() guard in preflightImpl that
   // emits error -6400.
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "DataContainer");
-  imageGeom->setDimensions({10, 1, 1});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "DataContainer");
+  imageGeomPtr->setDimensions({10, 1, 1});
 
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, cellAM->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {10}, {1}, cellAM->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {10}, imageGeomPtr->getId());
+  unit_test::CreateTestDataArray<float32>(dataStructure, "Quats", {10}, {4}, cellAmPtr->getId());
+  unit_test::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {10}, {1}, cellAmPtr->getId());
 
   // CellPhases lives in a separate AttributeMatrix with a deliberately different tuple
   // count (9 != 10) so the cross-array tuple-count check fails.
-  auto* mismatchAM = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAM->getId());
+  auto* mismatchAmPtr = AttributeMatrix::Create(dataStructure, "MismatchData", {9}, imageGeomPtr->getId());
+  unit_test::CreateTestDataArray<int32>(dataStructure, "Phases", {9}, {1}, mismatchAmPtr->getId());
 
-  auto* ensembleAM = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAM->getId());
+  auto* ensembleAmPtr = AttributeMatrix::Create(dataStructure, "CellEnsembleData", {2}, imageGeomPtr->getId());
+  unit_test::CreateTestDataArray<uint32>(dataStructure, "CrystalStructures", {2}, {1}, ensembleAmPtr->getId());
 
-  AttributeMatrix::Create(dataStructure, "CellFeatureData", {5}, imageGeom->getId());
+  AttributeMatrix::Create(dataStructure, "CellFeatureData", {5}, imageGeomPtr->getId());
 
   ComputeAvgCAxesFilter filter;
   Arguments args;
@@ -345,16 +345,16 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Preflight Error - Cell ar
   args.insertOrAssign(ComputeAvgCAxesFilter::k_AvgCAxesArrayName_Key, std::make_any<std::string>("AvgCAxes"));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -6400);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -6400);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeAvgCAxesFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -367,22 +367,22 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: SIMPL Backwards Compatibi
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeAvgCAxesFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeAvgCAxesFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       // The feature attribute matrix is derived from the legacy AvgCAxesArrayPath (the created array),
       // and the AvgCAxes array name comes from that same path.
       CHECK(args.value<DataPath>(ComputeAvgCAxesFilter::k_CellFeatureAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));
@@ -399,7 +399,7 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: SIMPL Backwards Compatibi
 
 TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Phase Index Bounds", "[OrientationAnalysis][ComputeAvgCAxesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   constexpr usize k_NumVoxels = 2;
   constexpr usize k_NumFeatures = 2;
@@ -407,7 +407,7 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Phase Index Bounds", "[Or
   const int32 invalidPhaseIdx = GENERATE(-1, static_cast<int32>(k_NumCrystalStructures));
   const bool invalidParticipatingPhase = GENERATE(false, true);
   CAPTURE(invalidPhaseIdx, invalidParticipatingPhase);
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
 
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
@@ -423,8 +423,8 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Phase Index Bounds", "[Or
   const DataPath featureDataPath = imageGeomPath.createChildPath("CellFeatureData");
   const DataPath ensembleDataPath = imageGeomPath.createChildPath("CellEnsembleData");
 
-  auto quatsStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, cellDataPath.createChildPath("Quats"), cellTupleShape, {4});
-  auto* quatsArrayPtr = Float32Array::Create(dataStructure, "Quats", quatsStore, cellDataPtr->getId());
+  auto quatsStore = data_store_utilities::CreateDataStore<float32>(dataStructure, cellDataPath.createChildPath("Quats"), cellTupleShape, {4});
+  auto* quatsArrayPtr = Float32ArrayType::Create(dataStructure, "Quats", quatsStore, cellDataPtr->getId());
   if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
   {
     REQUIRE(quatsArrayPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC");
@@ -433,18 +433,18 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Phase Index Bounds", "[Or
   (*quatsArrayPtr)[3] = 1.0F;
   (*quatsArrayPtr)[7] = 1.0F;
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, cellDataPath.createChildPath("FeatureIds"), cellTupleShape, {1});
-  auto* featureIdsArrayPtr = Int32Array::Create(dataStructure, "FeatureIds", featureIdsStore, cellDataPtr->getId());
+  auto featureIdsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, cellDataPath.createChildPath("FeatureIds"), cellTupleShape, {1});
+  auto* featureIdsArrayPtr = Int32ArrayType::Create(dataStructure, "FeatureIds", featureIdsStore, cellDataPtr->getId());
   (*featureIdsArrayPtr)[0] = 0;
   (*featureIdsArrayPtr)[1] = 1;
 
-  auto cellPhasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, cellDataPath.createChildPath("Phases"), cellTupleShape, {1});
-  auto* cellPhasesArrayPtr = Int32Array::Create(dataStructure, "Phases", cellPhasesStore, cellDataPtr->getId());
+  auto cellPhasesStore = data_store_utilities::CreateDataStore<int32>(dataStructure, cellDataPath.createChildPath("Phases"), cellTupleShape, {1});
+  auto* cellPhasesArrayPtr = Int32ArrayType::Create(dataStructure, "Phases", cellPhasesStore, cellDataPtr->getId());
   (*cellPhasesArrayPtr)[0] = invalidParticipatingPhase ? 0 : invalidPhaseIdx;
   (*cellPhasesArrayPtr)[1] = invalidParticipatingPhase ? invalidPhaseIdx : 1;
 
-  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(dataStructure, ensembleDataPath.createChildPath("CrystalStructures"), ShapeType{k_NumCrystalStructures}, {1});
-  auto* crystalStructuresArrayPtr = UInt32Array::Create(dataStructure, "CrystalStructures", crystalStructuresStore, ensembleDataPtr->getId());
+  auto crystalStructuresStore = data_store_utilities::CreateDataStore<uint32>(dataStructure, ensembleDataPath.createChildPath("CrystalStructures"), ShapeType{k_NumCrystalStructures}, {1});
+  auto* crystalStructuresArrayPtr = UInt32ArrayType::Create(dataStructure, "CrystalStructures", crystalStructuresStore, ensembleDataPtr->getId());
   (*crystalStructuresArrayPtr)[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
   (*crystalStructuresArrayPtr)[1] = ebsdlib::CrystalStructure::Hexagonal_High;
 
@@ -468,5 +468,5 @@ TEST_CASE("OrientationAnalysis::ComputeAvgCAxesFilter: Phase Index Bounds", "[Or
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

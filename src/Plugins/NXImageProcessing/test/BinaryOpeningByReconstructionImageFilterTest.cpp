@@ -22,42 +22,43 @@ namespace rt = recon_test;
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-computed remove-dot vs restore-square", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 11;
-  constexpr usize DY = 11;
-  constexpr usize DZ = 1;
-  constexpr int32 bg = 0;
-  constexpr int32 fg = 1;
+  constexpr usize k_Dx = 11;
+  constexpr usize k_Dy = 11;
+  constexpr usize k_Dz = 1;
+  constexpr int32 k_Bg = 0;
+  constexpr int32 k_Fg = 1;
 
-  std::vector<int32> pattern(DX * DY * DZ, bg);
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, k_Bg);
   // A 5x5 foreground square (interior) -- larger than a radius-1 Ball, so it survives erosion and is regrown.
   for(usize y = 3; y <= 7; ++y)
   {
     for(usize x = 3; x <= 7; ++x)
     {
-      pattern[rt::FlatIndex(x, y, 0, DX, DY)] = fg;
+      pattern[rt::FlatIndex(x, y, 0, k_Dx, k_Dy)] = k_Fg;
     }
   }
   // An isolated 1-voxel foreground dot -- smaller than the structuring element, so erosion removes it with no seed.
-  pattern[rt::FlatIndex(9, 1, 0, DX, DY)] = fg;
+  pattern[rt::FlatIndex(9, 1, 0, k_Dx, k_Dy)] = k_Fg;
 
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
 
   BinaryOpeningByReconstructionImageFilter filter;
   rt::RunReconstructionFilter<BinaryOpeningByReconstructionImageFilter>(
-      filter, ds, inputPath, rt::BinaryReconParamSetter<BinaryOpeningByReconstructionImageFilter>(static_cast<ChoicesParameter::ValueType>(ImageProcessing::KernelType::Ball), {1, 1, 1}, 1.0, 0.0),
+      filter, dataStructure, inputPath,
+      rt::BinaryReconParamSetter<BinaryOpeningByReconstructionImageFilter>(static_cast<ChoicesParameter::ValueType>(ImageProcessing::KernelType::Ball), {1, 1, 1}, 1.0, 0.0),
       /*fullyConnected=*/false, /*height=*/0.0);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
 
-  REQUIRE(outStore.getValue(rt::FlatIndex(9, 1, 0, DX, DY)) == bg); // isolated dot removed
-  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, DX, DY)) == fg); // square center preserved
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, DX, DY)) == fg); // square corner regrown (a plain opening would round it off)
-  REQUIRE(outStore.getValue(rt::FlatIndex(9, 9, 0, DX, DY)) == bg); // untouched background
+  REQUIRE(outStore.getValue(rt::FlatIndex(9, 1, 0, k_Dx, k_Dy)) == k_Bg); // isolated dot removed
+  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, k_Dx, k_Dy)) == k_Fg); // square center preserved
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Fg); // square corner regrown (a plain opening would round it off)
+  REQUIRE(outStore.getValue(rt::FlatIndex(9, 9, 0, k_Dx, k_Dy)) == k_Bg); // untouched background
 }
 
 // -----------------------------------------------------------------------------
@@ -71,50 +72,52 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-com
 TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-computed remove-dot vs restore-square (both algorithm paths)",
           "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  constexpr usize DX = 11, DY = 11, DZ = 1;
-  constexpr int32 bg = 0;
-  constexpr int32 fg = 1;
-  std::vector<int32> pattern(DX * DY * DZ, bg);
+  constexpr usize k_Dx = 11;
+  constexpr usize k_Dy = 11;
+  constexpr usize k_Dz = 1;
+  constexpr int32 k_Bg = 0;
+  constexpr int32 k_Fg = 1;
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, k_Bg);
   for(usize y = 3; y <= 7; ++y)
   {
     for(usize x = 3; x <= 7; ++x)
     {
-      pattern[rt::FlatIndex(x, y, 0, DX, DY)] = fg; // 5x5 foreground square -- larger than the SE, regrown exactly
+      pattern[rt::FlatIndex(x, y, 0, k_Dx, k_Dy)] = k_Fg; // 5x5 foreground square -- larger than the SE, regrown exactly
     }
   }
-  pattern[rt::FlatIndex(9, 1, 0, DX, DY)] = fg; // isolated 1-voxel foreground dot -- smaller than the SE, removed
+  pattern[rt::FlatIndex(9, 1, 0, k_Dx, k_Dy)] = k_Fg; // isolated 1-voxel foreground dot -- smaller than the SE, removed
 
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
-  scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
 
   BinaryOpeningByReconstructionImageFilter filter;
   Arguments args;
   args.insertOrAssign(BinaryOpeningByReconstructionImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(inputPath.getParent().getParent()));
   args.insertOrAssign(BinaryOpeningByReconstructionImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(BinaryOpeningByReconstructionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  const rt::ReconParamSetter setter =
+  const rt::ReconParamSetterType setter =
       rt::BinaryReconParamSetter<BinaryOpeningByReconstructionImageFilter>(static_cast<ChoicesParameter::ValueType>(ImageProcessing::KernelType::Ball), {1, 1, 1}, 1.0, 0.0);
   setter(args, /*fullyConnected=*/false, /*height=*/0.0);
 
-  auto executeResult = scope.executeFilter(filter, ds, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  auto& outArray = ds.getDataRefAs<DataArray<int32>>(outputPath);
+  auto& outArray = dataStructure.getDataRefAs<DataArray<int32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
-  REQUIRE(outStore.getValue(rt::FlatIndex(9, 1, 0, DX, DY)) == bg); // isolated dot removed
-  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, DX, DY)) == fg); // square center preserved
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, DX, DY)) == fg); // square corner regrown
-  REQUIRE(outStore.getValue(rt::FlatIndex(9, 9, 0, DX, DY)) == bg); // untouched background
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  REQUIRE(outStore.getValue(rt::FlatIndex(9, 1, 0, k_Dx, k_Dy)) == k_Bg); // isolated dot removed
+  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, k_Dx, k_Dy)) == k_Fg); // square center preserved
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Fg); // square corner regrown
+  REQUIRE(outStore.getValue(rt::FlatIndex(9, 9, 0, k_Dx, k_Dy)) == k_Bg); // untouched background
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -131,40 +134,43 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: hand-com
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: Annulus clamp-to-mask (enclosed hole stays background)", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 11, DY = 11, DZ = 1;
-  constexpr int32 bg = 0;
-  constexpr int32 fg = 1;
-  std::vector<int32> pattern(DX * DY * DZ, bg);
+  constexpr usize k_Dx = 11;
+  constexpr usize k_Dy = 11;
+  constexpr usize k_Dz = 1;
+  constexpr int32 k_Bg = 0;
+  constexpr int32 k_Fg = 1;
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, k_Bg);
   for(usize y = 2; y <= 8; ++y) // 7x7 solid foreground block (strictly binary: only bg/fg)
   {
     for(usize x = 2; x <= 8; ++x)
     {
-      pattern[rt::FlatIndex(x, y, 0, DX, DY)] = fg;
+      pattern[rt::FlatIndex(x, y, 0, k_Dx, k_Dy)] = k_Fg;
     }
   }
-  pattern[rt::FlatIndex(5, 5, 0, DX, DY)] = bg; // single fully-enclosed background hole -> Annulus erode marks it fg (stray marker)
+  pattern[rt::FlatIndex(5, 5, 0, k_Dx, k_Dy)] = k_Bg; // single fully-enclosed background hole -> Annulus erode marks it fg (stray marker)
 
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
 
   BinaryOpeningByReconstructionImageFilter filter;
   rt::RunReconstructionFilter<BinaryOpeningByReconstructionImageFilter>(
-      filter, ds, inputPath, rt::BinaryReconParamSetter<BinaryOpeningByReconstructionImageFilter>(static_cast<ChoicesParameter::ValueType>(ImageProcessing::KernelType::Annulus), {1, 1, 1}, 1.0, 0.0),
+      filter, dataStructure, inputPath,
+      rt::BinaryReconParamSetter<BinaryOpeningByReconstructionImageFilter>(static_cast<ChoicesParameter::ValueType>(ImageProcessing::KernelType::Annulus), {1, 1, 1}, 1.0, 0.0),
       /*fullyConnected=*/false, /*height=*/0.0);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
 
   // The stray-marker hole (clamped back to the mask) must stay background -- the exact behavior the clamp-to-mask
   // branch guarantees.
-  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, DX, DY)) == bg);
+  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, k_Dx, k_Dy)) == k_Bg);
   // The surrounding block's connected component is restored (interior seeds survived the Annulus erode), so the
   // reconstruction genuinely ran rather than collapsing to all-background.
-  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, DX, DY)) == fg);
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, DX, DY)) == fg);
+  REQUIRE(outStore.getValue(rt::FlatIndex(2, 2, 0, k_Dx, k_Dy)) == k_Fg);
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Fg);
 
   // Output is strictly binary AND anti-extensive (every output-foreground voxel was input-foreground). A clamp
   // failure would leak a stray marker into background, violating one of these.
@@ -172,10 +178,10 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: Annulus 
   {
     const int32 outValue = outStore.getValue(i);
     INFO("clamp-to-mask index=" << i << " out=" << outValue << " in=" << pattern[i]);
-    REQUIRE((outValue == bg || outValue == fg));
-    if(outValue == fg)
+    REQUIRE((outValue == k_Bg || outValue == k_Fg));
+    if(outValue == k_Fg)
     {
-      REQUIRE(pattern[i] == fg);
+      REQUIRE(pattern[i] == k_Fg);
     }
   }
 }
@@ -190,11 +196,11 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: Annulus 
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: preflight rejects float32 input", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, 8, 8, 8, std::vector<float32>(8 * 8 * 8, 1.0f));
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 8, 8, 8, std::vector<float32>(8 * 8 * 8, 1.0f));
 
   BinaryOpeningByReconstructionImageFilter filter;
   Arguments args;
@@ -203,8 +209,8 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: prefligh
   args.insertOrAssign(BinaryOpeningByReconstructionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(BinaryOpeningByReconstructionImageFilter::k_ForegroundValue_Key, std::make_any<float64>(1.0));
   args.insertOrAssign(BinaryOpeningByReconstructionImageFilter::k_BackgroundValue_Key, std::make_any<float64>(0.0));
-  const auto result = filter.preflight(ds, args);
-  REQUIRE(result.outputActions.invalid()); // float32 is not an IntegerOnly type
+  const auto result = filter.preflight(dataStructure, args);
+  REQUIRE(result.output_actions.invalid()); // float32 is not an IntegerOnly type
 }
 
 TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: FromSIMPLJson", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
@@ -239,8 +245,8 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: FromSIMP
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: preflight fg/bg range guard", "[NXImageProcessing][BinaryOpeningByReconstructionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr int32 k_NonFiniteBinaryValue = -8570;
   constexpr int32 k_BinaryValueOutOfRange = -8571;
@@ -248,8 +254,8 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: prefligh
   constexpr int32 k_ForegroundEqualsBackground = -8579;
 
   // uint8 input so the IntegerOnly + scalar preflight passes; the guard then validates fg/bg against [0, 255].
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, 8, 8, 8, rt::MakePlateauPattern<uint8>(8, 8, 8));
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<uint8>(dataStructure, 8, 8, 8, rt::MakePlateauPattern<uint8>(8, 8, 8));
 
   auto makeArgs = [&](float64 fg, float64 bg) {
     Arguments args;
@@ -265,44 +271,44 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: prefligh
 
   SECTION("valid fg/bg preflights cleanly")
   {
-    auto result = filter.preflight(ds, makeArgs(1.0, 0.0));
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    auto result = filter.preflight(dataStructure, makeArgs(1.0, 0.0));
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
 
   SECTION("non-finite fg is rejected")
   {
-    auto result = filter.preflight(ds, makeArgs(std::numeric_limits<float64>::infinity(), 0.0));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_NonFiniteBinaryValue);
+    auto result = filter.preflight(dataStructure, makeArgs(std::numeric_limits<float64>::infinity(), 0.0));
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_NonFiniteBinaryValue);
   }
 
   SECTION("out-of-range fg (negative, invalid for uint8) is rejected")
   {
-    auto result = filter.preflight(ds, makeArgs(-1.0, 0.0));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_BinaryValueOutOfRange);
+    auto result = filter.preflight(dataStructure, makeArgs(-1.0, 0.0));
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_BinaryValueOutOfRange);
   }
 
   SECTION("out-of-range bg (above uint8 max) is rejected")
   {
-    auto result = filter.preflight(ds, makeArgs(1.0, 300.0));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_BinaryValueOutOfRange);
+    auto result = filter.preflight(dataStructure, makeArgs(1.0, 300.0));
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_BinaryValueOutOfRange);
   }
 
   SECTION("fractional fg emits a truncation warning but preflights valid")
   {
-    auto result = filter.preflight(ds, makeArgs(0.5, 0.0));
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-    REQUIRE(!result.outputActions.warnings().empty());
-    REQUIRE(result.outputActions.warnings().front().code == k_BinaryValueTruncated);
+    auto result = filter.preflight(dataStructure, makeArgs(0.5, 0.0));
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+    REQUIRE(!result.output_actions.warnings().empty());
+    REQUIRE(result.output_actions.warnings().front().code == k_BinaryValueTruncated);
   }
 
   SECTION("fg == bg is rejected")
   {
-    auto result = filter.preflight(ds, makeArgs(1.0, 1.0));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == k_ForegroundEqualsBackground);
+    auto result = filter.preflight(dataStructure, makeArgs(1.0, 1.0));
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == k_ForegroundEqualsBackground);
   }
 }
 
@@ -323,14 +329,14 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: prefligh
 TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: ITK real-image golden (BinaryOpeningByReconstruction) -- documented contract divergence",
           "[NXImageProcessing][ItkGolden][BinaryOpeningByReconstructionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
 
-  DataStructure ds;
-  const Result<> readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath("2th_cthead1.png"), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const Result<> readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath("2th_cthead1.png"), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
 
   Arguments args;
@@ -343,9 +349,9 @@ TEST_CASE("NXImageProcessing::BinaryOpeningByReconstructionImageFilter: ITK real
   args.insertOrAssign(BinaryOpeningByReconstructionImageFilter::k_ForegroundValue_Key, std::make_any<float64>(200.0));
 
   BinaryOpeningByReconstructionImageFilter filter;
-  const auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  const auto executeResult = filter.execute(dataStructure, args);
   REQUIRE(executeResult.result.invalid());                      // non-strictly-binary input (value 100) is rejected
   REQUIRE(executeResult.result.errors().front().code == -8002); // the documented binary-input contract error
 }

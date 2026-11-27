@@ -26,11 +26,12 @@
 
 using namespace nx::core;
 using namespace H5Support;
-using namespace GrainMapper3DUtilities;
-namespace GM3DConst = GrainMapper3DUtilities::Constants;
+using namespace grain_mapper_3d_utilities;
+namespace gm_3d_dataset_constants = grain_mapper_3d_utilities::constants;
 
 namespace
 {
+constexpr uint32 k_UnknownCrystalStructure = 999; // Sentinel for an invalid ensemble entry.
 constexpr usize k_MaximumTransferValues = 65536;
 
 /**
@@ -51,7 +52,7 @@ constexpr usize k_MaximumTransferValues = 65536;
  * materializing a complete volume dataset.
  */
 template <typename T, typename Callback>
-Result<> ReadDatasetInBatches(const nx::core::HDF5::DatasetIO& datasetReader, const std::string& datasetName, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
+Result<> ReadDatasetInBatches(const nx::core::hdf5::DatasetIO& datasetReader, const std::string& datasetName, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
                               usize maximumValues, Callback&& callback, const std::function<Result<>(Result<>)>& transformReadError = {})
 {
   const auto dimensions = datasetReader.getDimensions();
@@ -181,19 +182,14 @@ Result<> ReadDatasetInBatches(const nx::core::HDF5::DatasetIO& datasetReader, co
  * report a percentage would add a second full copy of the volume and remove that codec.
  */
 template <typename T>
-Result<> FillDataArrayAnnounced(DataStructure& dataStructure, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetIO& datasetReader, const std::atomic_bool& shouldCancel,
+Result<> FillDataArrayAnnounced(DataStructure& dataStructure, const DataPath& dataArrayPath, const nx::core::hdf5::DatasetIO& datasetReader, const std::atomic_bool& shouldCancel,
                                 const IFilter::MessageHandler& messageHandler)
 {
   messageHandler.sendInfoMessage(fmt::format("Importing Dataset {}", dataArrayPath.getTargetName()));
-  return nx::core::HDF5::Support::FillDataArray<T>(dataStructure, dataArrayPath, datasetReader, std::nullopt, std::nullopt, &shouldCancel);
+  return nx::core::hdf5::Support::FillDataArray<T>(dataStructure, dataArrayPath, datasetReader, std::nullopt, std::nullopt, &shouldCancel);
 }
 
 } // namespace
-
-namespace ebsdlib::CrystalStructure
-{
-inline constexpr uint32_t UnknownCrystalStructure = 999; // Sentinel for an invalid ensemble entry.
-}
 
 ReadGrainMapper3D::ReadGrainMapper3D(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadGrainMapper3DInputValues* inputValues)
 : m_DataStructure(dataStructure)
@@ -210,7 +206,7 @@ const std::atomic_bool& ReadGrainMapper3D::getCancel()
 
 Result<> ReadGrainMapper3D::copyPhaseInformation(GrainMapperReader& reader, hid_t fileId) const
 {
-  if(!m_InputValues->ReadDctData)
+  if(!m_InputValues->read_dct_data)
   {
     return {};
   }
@@ -221,40 +217,40 @@ Result<> ReadGrainMapper3D::copyPhaseInformation(GrainMapperReader& reader, hid_
   }
 
   auto phases = reader.getPhaseVector();
-  DataPath cellEnsembleAMPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellEnsembleAttributeMatrixName);
+  DataPath cellEnsembleAMPath = m_InputValues->dct_image_geometry_path.createChildPath(m_InputValues->dct_cell_ensemble_attribute_matrix_name);
 
   // Use the standard EBSD ensemble names that downstream orientation filters expect.
-  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(cellEnsembleAMPath.createChildPath(GM3DConstants::k_CrystalStructures));
-  auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(cellEnsembleAMPath.createChildPath(GM3DConstants::k_MaterialName));
-  auto& latticeConstantsArray = m_DataStructure.getDataRefAs<Float32Array>(cellEnsembleAMPath.createChildPath(GM3DConstants::k_LatticeConstants));
-  Float32Array::store_type* latticeConstants = latticeConstantsArray.getDataStore();
-  auto& universalHermannMauguin = m_DataStructure.getDataRefAs<StringArray>(cellEnsembleAMPath.createChildPath(GM3DConstants::k_UniversalHermannMauguin));
+  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32ArrayType>(cellEnsembleAMPath.createChildPath(gm_3d_constants::k_CrystalStructures));
+  auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(cellEnsembleAMPath.createChildPath(gm_3d_constants::k_MaterialName));
+  auto& latticeConstantsArray = m_DataStructure.getDataRefAs<Float32ArrayType>(cellEnsembleAMPath.createChildPath(gm_3d_constants::k_LatticeConstants));
+  Float32ArrayType::StoreType* latticeConstantsPtr = latticeConstantsArray.getDataStore();
+  auto& universalHermannMauguin = m_DataStructure.getDataRefAs<StringArray>(cellEnsembleAMPath.createChildPath(gm_3d_constants::k_UniversalHermannMauguin));
 
-  crystalStructures[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
+  crystalStructures[0] = k_UnknownCrystalStructure;
   materialNames[0] = "Invalid Phase";
-  latticeConstants->setComponent(0, 0, 0.0f);
-  latticeConstants->setComponent(0, 1, 0.0f);
-  latticeConstants->setComponent(0, 2, 0.0f);
-  latticeConstants->setComponent(0, 3, 0.0f);
-  latticeConstants->setComponent(0, 4, 0.0f);
-  latticeConstants->setComponent(0, 5, 0.0f);
+  latticeConstantsPtr->setComponent(0, 0, 0.0f);
+  latticeConstantsPtr->setComponent(0, 1, 0.0f);
+  latticeConstantsPtr->setComponent(0, 2, 0.0f);
+  latticeConstantsPtr->setComponent(0, 3, 0.0f);
+  latticeConstantsPtr->setComponent(0, 4, 0.0f);
+  latticeConstantsPtr->setComponent(0, 5, 0.0f);
   universalHermannMauguin[0] = "Invalid Phase";
   int32 index = 1;
   for(const auto& phase : phases)
   {
     const int32 phaseId = index++;
-    crystalStructures[phaseId] = GrainMapper3DUtilities::GetLaueIndexFromSpaceGroup(phase.SpaceGroup);
-    materialNames[phaseId] = phase.Name;
-    std::vector<double> lc = phase.UnitCell;
+    crystalStructures[phaseId] = grain_mapper_3d_utilities::GetLaueIndexFromSpaceGroup(phase.space_group);
+    materialNames[phaseId] = phase.name;
+    std::vector<double> lc = phase.unit_cell;
 
-    latticeConstants->setComponent(phaseId, 0, static_cast<float32>(lc[0]));
-    latticeConstants->setComponent(phaseId, 1, static_cast<float32>(lc[1]));
-    latticeConstants->setComponent(phaseId, 2, static_cast<float32>(lc[2]));
-    latticeConstants->setComponent(phaseId, 3, static_cast<float32>(lc[3]));
-    latticeConstants->setComponent(phaseId, 4, static_cast<float32>(lc[4]));
-    latticeConstants->setComponent(phaseId, 5, static_cast<float32>(lc[5]));
+    latticeConstantsPtr->setComponent(phaseId, 0, static_cast<float32>(lc[0]));
+    latticeConstantsPtr->setComponent(phaseId, 1, static_cast<float32>(lc[1]));
+    latticeConstantsPtr->setComponent(phaseId, 2, static_cast<float32>(lc[2]));
+    latticeConstantsPtr->setComponent(phaseId, 3, static_cast<float32>(lc[3]));
+    latticeConstantsPtr->setComponent(phaseId, 4, static_cast<float32>(lc[4]));
+    latticeConstantsPtr->setComponent(phaseId, 5, static_cast<float32>(lc[5]));
 
-    universalHermannMauguin[phaseId] = phase.UniversalHermannMauguin;
+    universalHermannMauguin[phaseId] = phase.universal_hermann_mauguin;
   }
 
   return {};
@@ -262,22 +258,22 @@ Result<> ReadGrainMapper3D::copyPhaseInformation(GrainMapperReader& reader, hid_
 
 Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId) const
 {
-  if(!m_InputValues->ReadDctData)
+  if(!m_InputValues->read_dct_data)
   {
     return {};
   }
 
-  hid_t labDctGid = H5Gopen(fileId, GM3DConst::k_LabDCTGroupName.c_str(), H5P_DEFAULT);
+  hid_t labDctGid = H5Gopen(fileId, gm_3d_dataset_constants::k_LabDCTGroupName.c_str(), H5P_DEFAULT);
   if(labDctGid < 0)
   {
-    return MakeErrorResult(-89300, fmt::format("ReadGrainMapper3D: Error opening '{}' group.", GM3DConst::k_LabDCTGroupName));
+    return MakeErrorResult(-89300, fmt::format("ReadGrainMapper3D: Error opening '{}' group.", gm_3d_dataset_constants::k_LabDCTGroupName));
   }
   auto groupSentinel = H5Support::H5ScopedGroupSentinel(labDctGid, true);
 
-  hid_t dataGid = H5Gopen(labDctGid, GM3DConst::k_DataGroupName.c_str(), H5P_DEFAULT);
+  hid_t dataGid = H5Gopen(labDctGid, gm_3d_dataset_constants::k_DataGroupName.c_str(), H5P_DEFAULT);
   if(dataGid < 0)
   {
-    return MakeErrorResult(-89301, fmt::format("ReadGrainMapper3D: Error opening '/LabDCT/{}' group.", GM3DConst::k_DataGroupName));
+    return MakeErrorResult(-89301, fmt::format("ReadGrainMapper3D: Error opening '/LabDCT/{}' group.", gm_3d_dataset_constants::k_DataGroupName));
   }
   groupSentinel.addGroupId(dataGid);
 
@@ -308,13 +304,13 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
   Result<> result;
 
   // Convert phase IDs from the file's uint8 representation to the requested int32 array.
-  if(m_InputValues->ConvertPhaseData && (std::count(dctDataSets.begin(), dctDataSets.end(), GM3DConst::k_PhaseIdName) > 0))
+  if(m_InputValues->convert_phase_data && (std::count(dctDataSets.begin(), dctDataSets.end(), gm_3d_dataset_constants::k_PhaseIdName) > 0))
   {
-    uint8DataSets.erase(GM3DConst::k_PhaseIdName);
-    DataPath dataArrayPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellAttributeMatrixName).createChildPath(GM3DConst::k_PhaseIdName);
-    auto& phaseI32 = m_DataStructure.getDataRefAs<Int32Array>(dataArrayPath).getDataStoreRef();
-    nx::core::HDF5::DatasetIO datasetReader(dataGid, GM3DConst::k_PhaseIdName);
-    auto conversionResult = ReadDatasetInBatches<uint8>(datasetReader, GM3DConst::k_PhaseIdName, m_ShouldCancel, m_MessageHandler, k_MaximumTransferValues,
+    uint8DataSets.erase(gm_3d_dataset_constants::k_PhaseIdName);
+    DataPath dataArrayPath = m_InputValues->dct_image_geometry_path.createChildPath(m_InputValues->dct_cell_attribute_matrix_name).createChildPath(gm_3d_dataset_constants::k_PhaseIdName);
+    auto& phaseI32 = m_DataStructure.getDataRefAs<Int32ArrayType>(dataArrayPath).getDataStoreRef();
+    nx::core::hdf5::DatasetIO datasetReader(dataGid, gm_3d_dataset_constants::k_PhaseIdName);
+    auto conversionResult = ReadDatasetInBatches<uint8>(datasetReader, gm_3d_dataset_constants::k_PhaseIdName, m_ShouldCancel, m_MessageHandler, k_MaximumTransferValues,
                                                         [&phaseI32, &dataArrayPath](nonstd::span<const uint8> source, usize offset) -> Result<> {
                                                           if(offset > phaseI32.getSize() || source.size() > phaseI32.getSize() - offset)
                                                           {
@@ -331,15 +327,15 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
   }
 
   // Convert each Rodrigues triple to a unit axis and magnitude.
-  if(m_InputValues->ConvertOrientationData && (std::count(dctDataSets.begin(), dctDataSets.end(), GM3DConst::k_RodriguesName) > 0))
+  if(m_InputValues->convert_orientation_data && (std::count(dctDataSets.begin(), dctDataSets.end(), gm_3d_dataset_constants::k_RodriguesName) > 0))
   {
-    floatDataSets.erase(GM3DConst::k_RodriguesName);
-    DataPath dataArrayPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellAttributeMatrixName).createChildPath(GM3DConst::k_RodriguesName);
-    auto& rodData = m_DataStructure.getDataRefAs<Float32Array>(dataArrayPath).getDataStoreRef();
-    nx::core::HDF5::DatasetIO datasetReader(dataGid, GM3DConst::k_RodriguesName);
+    floatDataSets.erase(gm_3d_dataset_constants::k_RodriguesName);
+    DataPath dataArrayPath = m_InputValues->dct_image_geometry_path.createChildPath(m_InputValues->dct_cell_attribute_matrix_name).createChildPath(gm_3d_dataset_constants::k_RodriguesName);
+    auto& rodData = m_DataStructure.getDataRefAs<Float32ArrayType>(dataArrayPath).getDataStoreRef();
+    nx::core::hdf5::DatasetIO datasetReader(dataGid, gm_3d_dataset_constants::k_RodriguesName);
     constexpr usize k_RodriguesSourceBatchValues = (k_MaximumTransferValues / 4) * 3;
     auto conversionResult = ReadDatasetInBatches<float32>(
-        datasetReader, GM3DConst::k_RodriguesName, m_ShouldCancel, m_MessageHandler, k_RodriguesSourceBatchValues,
+        datasetReader, gm_3d_dataset_constants::k_RodriguesName, m_ShouldCancel, m_MessageHandler, k_RodriguesSourceBatchValues,
         [&rodData, &dataArrayPath](nonstd::span<const float32> source, usize sourceOffset) -> Result<> {
           if(source.size() % 3 != 0)
           {
@@ -373,7 +369,7 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
     }
   }
 
-  if(m_InputValues->ConvertIPFColors)
+  if(m_InputValues->convert_ipf_colors)
   {
     for(const auto& dataSetName : dctDataSets)
     {
@@ -383,9 +379,9 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
         continue;
       }
       floatDataSets.erase(dataSetName);
-      DataPath dataArrayPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellAttributeMatrixName).createChildPath(dataSetName);
-      auto& ipfUint8 = m_DataStructure.getDataRefAs<UInt8Array>(dataArrayPath).getDataStoreRef();
-      nx::core::HDF5::DatasetIO datasetReader(dataGid, dataSetName);
+      DataPath dataArrayPath = m_InputValues->dct_image_geometry_path.createChildPath(m_InputValues->dct_cell_attribute_matrix_name).createChildPath(dataSetName);
+      auto& ipfUint8 = m_DataStructure.getDataRefAs<UInt8ArrayType>(dataArrayPath).getDataStoreRef();
+      nx::core::hdf5::DatasetIO datasetReader(dataGid, dataSetName);
       constexpr usize k_IpfSourceBatchValues = (k_MaximumTransferValues / 3) * 3;
       auto conversionResult = ReadDatasetInBatches<float32>(
           datasetReader, dataSetName, m_ShouldCancel, m_MessageHandler, k_IpfSourceBatchValues, [&ipfUint8, &dataArrayPath](nonstd::span<const float32> source, usize offset) -> Result<> {
@@ -410,13 +406,13 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
     }
   }
 
-  if(m_InputValues->ConvertOrientationData && (std::count(dctDataSets.begin(), dctDataSets.end(), GM3DConst::k_QuaternionName) > 0))
+  if(m_InputValues->convert_orientation_data && (std::count(dctDataSets.begin(), dctDataSets.end(), gm_3d_dataset_constants::k_QuaternionName) > 0))
   {
-    floatDataSets.erase(GM3DConst::k_QuaternionName);
-    DataPath dataArrayPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellAttributeMatrixName).createChildPath(GM3DConst::k_QuaternionName);
-    auto& quatData = m_DataStructure.getDataRefAs<Float32Array>(dataArrayPath).getDataStoreRef();
-    nx::core::HDF5::DatasetIO datasetReader(dataGid, GM3DConst::k_QuaternionName);
-    auto conversionResult = ReadDatasetInBatches<float32>(datasetReader, GM3DConst::k_QuaternionName, m_ShouldCancel, m_MessageHandler, k_MaximumTransferValues,
+    floatDataSets.erase(gm_3d_dataset_constants::k_QuaternionName);
+    DataPath dataArrayPath = m_InputValues->dct_image_geometry_path.createChildPath(m_InputValues->dct_cell_attribute_matrix_name).createChildPath(gm_3d_dataset_constants::k_QuaternionName);
+    auto& quatData = m_DataStructure.getDataRefAs<Float32ArrayType>(dataArrayPath).getDataStoreRef();
+    nx::core::hdf5::DatasetIO datasetReader(dataGid, gm_3d_dataset_constants::k_QuaternionName);
+    auto conversionResult = ReadDatasetInBatches<float32>(datasetReader, gm_3d_dataset_constants::k_QuaternionName, m_ShouldCancel, m_MessageHandler, k_MaximumTransferValues,
                                                           [&quatData, &dataArrayPath](nonstd::span<const float32> source, usize offset) -> Result<> {
                                                             if(source.size() % 4 != 0 || offset > quatData.getSize() || source.size() > quatData.getSize() - offset)
                                                             {
@@ -442,9 +438,9 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
   // Stream datasets that do not require representation conversion.
   for(const auto& dataSetName : dctDataSets)
   {
-    DataPath dataArrayPath = m_InputValues->DctImageGeometryPath.createChildPath(m_InputValues->DctCellAttributeMatrixName).createChildPath(dataSetName);
+    DataPath dataArrayPath = m_InputValues->dct_image_geometry_path.createChildPath(m_InputValues->dct_cell_attribute_matrix_name).createChildPath(dataSetName);
 
-    nx::core::HDF5::DatasetIO datasetReader(dataGid, dataSetName);
+    nx::core::hdf5::DatasetIO datasetReader(dataGid, dataSetName);
 
     if(std::count(floatDataSets.begin(), floatDataSets.end(), dataSetName) > 0)
     {
@@ -467,35 +463,35 @@ Result<> ReadGrainMapper3D::copyDctData(GrainMapperReader& reader, hid_t fileId)
   return {};
 }
 
-Result<> ReadGrainMapper3D::copyAbsorptionData(GrainMapperReader& reader, hid_t fileId) const
+Result<> ReadGrainMapper3D::copyAbsorptionData(GrainMapperReader& /*reader*/, hid_t fileId) const
 {
-  if(!m_InputValues->ReadAbsorptionData)
+  if(!m_InputValues->read_absorption_data)
   {
     return {};
   }
-  hid_t gid = H5Gopen(fileId, GM3DConst::k_AbsorptionCTName.c_str(), H5P_DEFAULT);
+  hid_t gid = H5Gopen(fileId, gm_3d_dataset_constants::k_AbsorptionCTName.c_str(), H5P_DEFAULT);
   if(gid < 0)
   {
-    return MakeErrorResult(-89350, fmt::format("ReadGrainMapper3D: Error opening '{}' group.", GM3DConst::k_AbsorptionCTName));
+    return MakeErrorResult(-89350, fmt::format("ReadGrainMapper3D: Error opening '{}' group.", gm_3d_dataset_constants::k_AbsorptionCTName));
   }
   auto groupSentinel = H5Support::H5ScopedGroupSentinel(gid, true);
 
   DataPath dataArrayPath =
-      m_InputValues->AbsorptionImageGeometryPath.createChildPath(m_InputValues->AbsorptionCellAttributeMatrixName).createChildPath(GrainMapper3DUtilities::Constants::k_DataGroupName);
+      m_InputValues->absorption_image_geometry_path.createChildPath(m_InputValues->absorption_cell_attribute_matrix_name).createChildPath(grain_mapper_3d_utilities::constants::k_DataGroupName);
 
-  nx::core::HDF5::DatasetIO datasetReader(gid, GM3DConst::k_DataGroupName);
+  nx::core::hdf5::DatasetIO datasetReader(gid, gm_3d_dataset_constants::k_DataGroupName);
 
   return FillDataArrayAnnounced<uint16>(m_DataStructure, dataArrayPath, datasetReader, m_ShouldCancel, m_MessageHandler);
 }
 
 Result<> ReadGrainMapper3D::operator()()
 {
-  GrainMapperReader reader(m_InputValues->InputFile.string(), m_InputValues->ReadDctData, m_InputValues->ReadAbsorptionData);
+  GrainMapperReader reader(m_InputValues->input_file.string(), m_InputValues->read_dct_data, m_InputValues->read_absorption_data);
 
-  hid_t fileId = H5Support::H5Utilities::openFile(m_InputValues->InputFile.string(), true);
+  hid_t fileId = H5Support::H5Utilities::openFile(m_InputValues->input_file.string(), true);
   if(fileId < 0)
   {
-    return MakeErrorResult(-89350, fmt::format("Grain Mapper 3D File '{}' could not be opened.", m_InputValues->InputFile.string()));
+    return MakeErrorResult(-89350, fmt::format("Grain Mapper 3D File '{}' could not be opened.", m_InputValues->input_file.string()));
   }
   auto sentinel = H5Support::H5ScopedFileSentinel(fileId, false);
 

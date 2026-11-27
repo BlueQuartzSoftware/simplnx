@@ -45,12 +45,12 @@ constexpr usize k_CancelPollStride = 1ULL << 20;
  * @param messageHandler Throttled progress messages.
  * @return The number of vacated cells seen in this pass. Zero means the fill is complete.
  */
-usize IdentifyNeighbors(const ImageGeom& imageGeom, const Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel,
+usize IdentifyNeighbors(const ImageGeom& imageGeom, const Int32AbstractDataStoreType& featureIds, std::vector<int32>& storageArray, const std::atomic_bool& shouldCancel,
                         const IFilter::MessageHandler& messageHandler)
 {
   ThrottledMessageHandler progressThrottle(messageHandler);
 
-  SizeVec3 uDims = imageGeom.getDimensions();
+  SizeVec3Type uDims = imageGeom.getDimensions();
 
   std::array<int64, 3> dims = {
       static_cast<int64>(uDims[0]),
@@ -58,9 +58,9 @@ usize IdentifyNeighbors(const ImageGeom& imageGeom, const Int32AbstractDataStore
       static_cast<int64>(uDims[2]),
   };
 
-  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
-  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3DType>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = InitializeFaceNeighborOffsets(dims);
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> k_FaceNeighborInternalIdx = InitializeFaceNeighborInternalIdx();
 
   usize unresolvedCellCount = 0;
 
@@ -102,8 +102,8 @@ usize IdentifyNeighbors(const ImageGeom& imageGeom, const Int32AbstractDataStore
         std::array<int32, k_NumFaceNeighbors> discoveredFeatures{};
         usize discoveredCount = 0;
 
-        const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
-        for(const auto& faceIndex : faceNeighborInternalIdx)
+        const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = ComputeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+        for(const auto& faceIndex : k_FaceNeighborInternalIdx)
         {
           if(!isValidFaceNeighbor[faceIndex])
           {
@@ -157,7 +157,7 @@ usize IdentifyNeighbors(const ImageGeom& imageGeom, const Int32AbstractDataStore
  * @return Error -45437 if the tuple count differs from totalCells, error -45435 naming the first
  * cell whose value is outside [0, totalFeatures), otherwise valid.
  */
-Result<> ValidateFeatureIds(const Int32AbstractDataStore& featureIds, usize totalCells, usize totalFeatures, const DataPath& featureIdsPath, const DataPath& featureAttributeMatrixPath,
+Result<> ValidateFeatureIds(const Int32AbstractDataStoreType& featureIds, usize totalCells, usize totalFeatures, const DataPath& featureIdsPath, const DataPath& featureAttributeMatrixPath,
                             const std::atomic_bool& shouldCancel)
 {
   const usize totalPoints = featureIds.getNumberOfTuples();
@@ -196,7 +196,7 @@ Result<> ValidateFeatureIds(const Int32AbstractDataStore& featureIds, usize tota
  * @return One entry per feature, true for features that survive. Empty when every feature is flagged;
  * in that case nothing was modified.
  */
-std::vector<bool> FlagFeatures(Int32AbstractDataStore& featureIds, const std::vector<bool>& flaggedFeatures, const bool fillRemovedFeatures)
+std::vector<bool> FlagFeatures(Int32AbstractDataStoreType& featureIds, const std::vector<bool>& flaggedFeatures, const bool fillRemovedFeatures)
 {
   bool good = false;
   usize totalPoints = featureIds.getNumberOfTuples();
@@ -246,7 +246,7 @@ std::vector<bool> FlagFeatures(Int32AbstractDataStore& featureIds, const std::ve
  * @param shouldCancel Polled once per cell.
  * @return The number of cells that received a copy. Zero means the pass made no progress.
  */
-usize FindVoxelArrays(const Int32AbstractDataStore& featureIds, const std::vector<int32>& neighbors, std::vector<std::shared_ptr<IDataArray>>& voxelArrays, const std::atomic_bool& shouldCancel)
+usize FindVoxelArrays(const Int32AbstractDataStoreType& featureIds, const std::vector<int32>& neighbors, std::vector<std::shared_ptr<IDataArray>>& voxelArrays, const std::atomic_bool& shouldCancel)
 {
   const usize totalPoints = featureIds.getNumberOfTuples();
   usize filledCellCount = 0;
@@ -276,28 +276,28 @@ usize FindVoxelArrays(const Int32AbstractDataStore& featureIds, const std::vecto
 }
 } // namespace
 
-namespace nx::core::FeatureRemovalUtilities
+namespace nx::core::feature_removal_utilities
 {
 // -----------------------------------------------------------------------------
-Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<bool>& flaggedFeatures, const RemovalArgs& args, const IFilter::MessageHandler& messageHandler,
+Result<> RemoveFlaggedFeatures(DataStructure& dataStructure, const std::vector<bool>& flaggedFeatures, const RemovalArgs& args, const IFilter::MessageHandler& messageHandler,
                                const std::atomic_bool& shouldCancel)
 {
-  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(args.ImageGeometryPath);
-  auto& featureIds = dataStructure.getDataAs<Int32Array>(args.FeatureIdsArrayPath)->getDataStoreRef();
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(args.image_geometry_path);
+  auto& featureIds = dataStructure.getDataAs<Int32ArrayType>(args.feature_ids_array_path)->getDataStoreRef();
 
   Result<> result;
 
-  messageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Beginning Feature Removal")});
+  messageHandler.sendMessage(IFilter::ProgressMessageType{IFilter::Message::Type::Info, fmt::format("Beginning Feature Removal")});
 
   // Tuple 0 is the unused feature, so fewer than two tuples means there is no feature to keep.
   if(flaggedFeatures.size() < 2)
   {
     return MakeErrorResult(k_AllFeaturesFlaggedError, fmt::format("The feature Attribute Matrix '{}' has {} tuple(s). Tuple 0 is the unused feature, so at least 2 tuples are required for a "
                                                                   "feature to survive the removal. No data was modified.",
-                                                                  args.FeatureAttributeMatrixPath.toString(), flaggedFeatures.size()));
+                                                                  args.feature_attribute_matrix_path.toString(), flaggedFeatures.size()));
   }
 
-  Result<> validation = ValidateFeatureIds(featureIds, imageGeom.getNumberOfCells(), flaggedFeatures.size(), args.FeatureIdsArrayPath, args.FeatureAttributeMatrixPath, shouldCancel);
+  Result<> validation = ValidateFeatureIds(featureIds, imageGeom.getNumberOfCells(), flaggedFeatures.size(), args.feature_ids_array_path, args.feature_attribute_matrix_path, shouldCancel);
   if(validation.invalid())
   {
     return validation;
@@ -308,11 +308,11 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
     return {};
   }
 
-  std::vector<bool> activeObjects = FlagFeatures(featureIds, flaggedFeatures, args.FillRemovedFeatures);
+  std::vector<bool> activeObjects = FlagFeatures(featureIds, flaggedFeatures, args.fill_removed_features);
   if(activeObjects.empty())
   {
     return MakeErrorResult(k_AllFeaturesFlaggedError, fmt::format("All {} feature(s) in '{}' were flagged and would all be removed. At least one feature must remain. No data was modified.",
-                                                                  flaggedFeatures.size() - 1, args.FeatureAttributeMatrixPath.toString()));
+                                                                  flaggedFeatures.size() - 1, args.feature_attribute_matrix_path.toString()));
   }
 
   if(shouldCancel)
@@ -320,25 +320,26 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
     return {};
   }
 
-  if(args.FillRemovedFeatures)
+  if(args.fill_removed_features)
   {
     // The Feature Ids array is the array being filled. Ignoring it would leave every vacated cell
     // negative forever, so it is always copied even when the caller lists it.
     std::vector<DataPath> ignoredPaths;
-    ignoredPaths.reserve(args.IgnoredDataArrayPaths.size());
-    for(const DataPath& path : args.IgnoredDataArrayPaths)
+    ignoredPaths.reserve(args.ignored_data_array_paths.size());
+    for(const DataPath& path : args.ignored_data_array_paths)
     {
-      if(path == args.FeatureIdsArrayPath)
+      if(path == args.feature_ids_array_path)
       {
-        result.warnings().push_back(Warning{k_FeatureIdsCannotBeIgnoredWarning, fmt::format("The Feature Ids array '{}' was listed in the arrays to ignore. It is the array being filled and "
-                                                                                            "cannot be ignored, so it was removed from the list.",
-                                                                                            path.toString())});
+        result.warnings().push_back(Warning{.code = k_FeatureIdsCannotBeIgnoredWarning,
+                                            .message = fmt::format("The Feature Ids array '{}' was listed in the arrays to ignore. It is the array being filled and "
+                                                                   "cannot be ignored, so it was removed from the list.",
+                                                                   path.toString())});
         continue;
       }
       ignoredPaths.push_back(path);
     }
     // The set of cell arrays does not change during the fill, so build the list once.
-    std::vector<std::shared_ptr<IDataArray>> voxelArrays = GenerateDataArrayList(dataStructure, args.FeatureIdsArrayPath, ignoredPaths);
+    std::vector<std::shared_ptr<IDataArray>> voxelArrays = GenerateDataArrayList(dataStructure, args.feature_ids_array_path, ignoredPaths);
 
     // One int32 per cell. Declared here rather than at function scope because only the fill path
     // uses it; hoisting it would cost a 4 GB allocation on a 1000^3 volume even with fill disabled,
@@ -349,7 +350,7 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
     while(true)
     {
       count++;
-      messageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Entering iteration number {}...", count)});
+      messageHandler.sendMessage(IFilter::ProgressMessageType{IFilter::Message::Type::Info, fmt::format("Entering iteration number {}...", count)});
       std::fill(neighbors.begin(), neighbors.end(), -1);
       const usize unresolvedCellCount = IdentifyNeighbors(imageGeom, featureIds, neighbors, shouldCancel, messageHandler);
 
@@ -362,7 +363,7 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
         break;
       }
 
-      messageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Filling {} bad voxels...", unresolvedCellCount)});
+      messageHandler.sendMessage(IFilter::ProgressMessageType{IFilter::Message::Type::Info, fmt::format("Filling {} bad voxels...", unresolvedCellCount)});
       const usize filledCellCount = FindVoxelArrays(featureIds, neighbors, voxelArrays, shouldCancel);
 
       if(shouldCancel)
@@ -379,7 +380,7 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
                                fmt::format("Fill iteration {} could not fill any of the {} remaining vacated cell(s) in the Feature Ids array '{}' because none of them has a face neighbor that "
                                            "belongs to a surviving feature. This happens when every cell belongs to a flagged feature and the unflagged feature(s) own no cells. Unflag a "
                                            "feature that owns cells, or disable 'Fill-in Removed Features'. THE FOLLOWING ARRAY HAS BEEN MODIFIED: '{}' (removed cells are set to -1).",
-                                           count, unresolvedCellCount, args.FeatureIdsArrayPath.toString(), args.FeatureIdsArrayPath.toString()));
+                                           count, unresolvedCellCount, args.feature_ids_array_path.toString(), args.feature_ids_array_path.toString()));
       }
     }
   }
@@ -389,8 +390,8 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
     return {};
   }
 
-  messageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Stripping excess inactive objects from model...")});
-  Result<> removeResult = RemoveInactiveObjects(dataStructure, args.FeatureAttributeMatrixPath, activeObjects, featureIds, flaggedFeatures.size(), messageHandler, shouldCancel);
+  messageHandler.sendMessage(IFilter::ProgressMessageType{IFilter::Message::Type::Info, fmt::format("Stripping excess inactive objects from model...")});
+  Result<> removeResult = RemoveInactiveObjects(dataStructure, args.feature_attribute_matrix_path, activeObjects, featureIds, flaggedFeatures.size(), messageHandler, shouldCancel);
   if(removeResult.invalid())
   {
     return removeResult;
@@ -400,4 +401,4 @@ Result<> removeFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
 
   return result;
 }
-} // namespace nx::core::FeatureRemovalUtilities
+} // namespace nx::core::feature_removal_utilities

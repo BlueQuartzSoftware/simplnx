@@ -27,9 +27,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #else
+#include <cstdio>
+#include <cstdlib>
 #include <pwd.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
 #endif
 
@@ -39,8 +39,8 @@ namespace nx::core
 namespace
 {
 constexpr int64 k_LargeDataSize = 1073741824; // 1 GB
-constexpr StringLiteral k_Plugin_Key = "plugins";
-constexpr StringLiteral k_DefaultFileName = "preferences.json";
+constexpr StringLiteralType k_Plugin_Key = "plugins";
+constexpr StringLiteralType k_DefaultFileName = "preferences.json";
 constexpr int64 k_ReducedDataStructureSize = 3221225472; // 3 GB
 constexpr bool k_AutoRangeComputationDefault = false;
 
@@ -52,12 +52,12 @@ constexpr int32 k_RepairedOocSizeGBWarning = -592;
 // Correctly rounded division gives the double nearest to 17179869183.99, which is also the parsed JSON value.
 constexpr double k_MaxOocSizeGB = static_cast<double>(Preferences::k_MaxOocSizeHundredths) / 100.0;
 
-constexpr StringLiteral k_FailedToCreateDirectory_Message = "Failed to create the parent directory when saving Preferences. Check that the path is valid and writable.";
-constexpr StringLiteral k_FileDoesNotExist_Message = "Preferences file does not exist";
-constexpr StringLiteral k_FileCouldNotOpen_Message = "Could not open Preferences file";
-constexpr StringLiteral k_JsonParseError_Message = "Parsing the JSON Preferences file failed.";
+constexpr StringLiteralType k_FailedToCreateDirectoryMessage = "Failed to create the parent directory when saving Preferences. Check that the path is valid and writable.";
+constexpr StringLiteralType k_FileDoesNotExistMessage = "Preferences file does not exist";
+constexpr StringLiteralType k_FileCouldNotOpenMessage = "Could not open Preferences file";
+constexpr StringLiteralType k_JsonParseErrorMessage = "Parsing the JSON Preferences file failed.";
 
-std::string_view oocSizeLabel(const std::string& name)
+std::string_view OocSizeLabel(const std::string& name)
 {
   if(name == Preferences::k_LargeDataSize_Key)
   {
@@ -76,8 +76,8 @@ std::string_view oocSizeLabel(const std::string& name)
  */
 struct OocSizeKeys
 {
-  std::string bytesKey;
-  std::string gbKey;
+  std::string bytes_key;
+  std::string gb_key;
 };
 
 /**
@@ -86,8 +86,8 @@ struct OocSizeKeys
  */
 std::array<OocSizeKeys, 2> oocSizeKeys()
 {
-  return {OocSizeKeys{std::string(Preferences::k_LargeDataSize_Key), std::string(Preferences::k_LargeDataSizeGB_Key)},
-          OocSizeKeys{std::string(Preferences::k_LargeDataStructureSize_Key), std::string(Preferences::k_LargeDataStructureSizeGB_Key)}};
+  return {OocSizeKeys{.bytes_key = std::string(Preferences::k_LargeDataSize_Key), .gb_key = std::string(Preferences::k_LargeDataSizeGB_Key)},
+          OocSizeKeys{.bytes_key = std::string(Preferences::k_LargeDataStructureSize_Key), .gb_key = std::string(Preferences::k_LargeDataStructureSizeGB_Key)}};
 }
 
 /**
@@ -95,7 +95,7 @@ std::array<OocSizeKeys, 2> oocSizeKeys()
  * @param hundredths Value in hundredths of a GB.
  * @return Text such as "1.00" or "17179869183.99".
  */
-std::string formatHundredthsAsGB(uint64 hundredths)
+std::string FormatHundredthsAsGb(uint64 hundredths)
 {
   return fmt::format("{}.{:02}", hundredths / 100, hundredths % 100);
 }
@@ -107,7 +107,7 @@ std::string formatHundredthsAsGB(uint64 hundredths)
  *
  * A value above 0 that rounds to 0 hundredths becomes 1 (0.01 GB).
  */
-std::optional<uint64> savedGBToHundredths(const nlohmann::json& value)
+std::optional<uint64> SavedGbToHundredths(const nlohmann::json& value)
 {
   if(!value.is_number())
   {
@@ -115,7 +115,7 @@ std::optional<uint64> savedGBToHundredths(const nlohmann::json& value)
   }
   const double gigabytes = value.get<double>();
   // NaN fails both comparisons. The range check also rejects infinity before the integer conversion.
-  if(!(gigabytes >= 0.0 && gigabytes <= k_MaxOocSizeGB))
+  if(gigabytes < 0.0 || gigabytes > k_MaxOocSizeGB)
   {
     return std::nullopt;
   }
@@ -127,7 +127,7 @@ std::optional<uint64> savedGBToHundredths(const nlohmann::json& value)
   return hundredths;
 }
 
-std::string_view jsonTypeName(const nlohmann::json& value)
+std::string_view JsonTypeName(const nlohmann::json& value)
 {
   if(value.is_number_unsigned())
   {
@@ -144,7 +144,7 @@ std::string_view jsonTypeName(const nlohmann::json& value)
   return value.type_name();
 }
 
-bool canRenderExact(const nlohmann::json& value, std::size_t& remaining, int depth)
+bool CanRenderExact(const nlohmann::json& value, std::size_t& remaining, int depth)
 {
   if(depth > 3 || remaining < 32)
   {
@@ -177,7 +177,7 @@ bool canRenderExact(const nlohmann::json& value, std::size_t& remaining, int dep
         }
         remaining -= 6 * iter.key().size();
       }
-      if(!canRenderExact(iter.value(), remaining, depth + 1))
+      if(!CanRenderExact(iter.value(), remaining, depth + 1))
       {
         return false;
       }
@@ -196,7 +196,7 @@ bool canRenderExact(const nlohmann::json& value, std::size_t& remaining, int dep
   return true;
 }
 
-std::string boundedPreview(const nlohmann::json& value, int depth)
+std::string BoundedPreview(const nlohmann::json& value, int depth)
 {
   if(value.is_number_float())
   {
@@ -224,7 +224,7 @@ std::string boundedPreview(const nlohmann::json& value, int depth)
   {
     if(depth >= 2)
     {
-      return fmt::format("[{} with {} entries]", jsonTypeName(value), value.size());
+      return fmt::format("[{} with {} entries]", JsonTypeName(value), value.size());
     }
     std::string preview = value.is_object() ? "{" : "[";
     std::size_t shown = 0;
@@ -244,7 +244,7 @@ std::string boundedPreview(const nlohmann::json& value, int depth)
         }
         preview += ":";
       }
-      preview += boundedPreview(iter.value(), depth + 1);
+      preview += BoundedPreview(iter.value(), depth + 1);
     }
     if(value.size() > shown)
     {
@@ -265,10 +265,10 @@ std::string boundedPreview(const nlohmann::json& value, int depth)
   return value.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
 }
 
-std::string boundedJsonValue(const nlohmann::json& value)
+std::string BoundedJsonValue(const nlohmann::json& value)
 {
   std::size_t remaining = 256;
-  if(canRenderExact(value, remaining, 0))
+  if(CanRenderExact(value, remaining, 0))
   {
     return value.dump(-1, ' ', false, nlohmann::json::error_handler_t::replace);
   }
@@ -279,9 +279,9 @@ std::string boundedJsonValue(const nlohmann::json& value)
   }
   if(value.is_array() || value.is_object())
   {
-    return fmt::format("{} with {} entries; preview {} [truncated]", jsonTypeName(value), value.size(), boundedPreview(value, 0));
+    return fmt::format("{} with {} entries; preview {} [truncated]", JsonTypeName(value), value.size(), BoundedPreview(value, 0));
   }
-  return boundedPreview(value, 0);
+  return BoundedPreview(value, 0);
 }
 
 /**
@@ -295,13 +295,13 @@ std::string boundedJsonValue(const nlohmann::json& value)
  * The GB key takes precedence, and the function does not validate a byte key next to it.
  * A legacy byte value that ValidateOocSizeValue() accepts moves to the nearest grid value.
  */
-std::optional<uint64> readSavedOocSize(const nlohmann::json& document, const OocSizeKeys& keys, uint64 defaultBytes, std::vector<Warning>& warnings)
+std::optional<uint64> ReadSavedOocSize(const nlohmann::json& document, const OocSizeKeys& keys, uint64 defaultBytes, std::vector<Warning>& warnings)
 {
-  const std::string_view label = oocSizeLabel(keys.bytesKey);
-  if(document.contains(keys.gbKey))
+  const std::string_view label = OocSizeLabel(keys.bytes_key);
+  if(document.contains(keys.gb_key))
   {
-    const nlohmann::json& saved = document.at(keys.gbKey);
-    const std::optional<uint64> hundredths = savedGBToHundredths(saved);
+    const nlohmann::json& saved = document.at(keys.gb_key);
+    const std::optional<uint64> hundredths = SavedGbToHundredths(saved);
     if(hundredths.has_value())
     {
       return Preferences::OocSizeHundredthsToBytes(*hundredths);
@@ -309,13 +309,13 @@ std::optional<uint64> readSavedOocSize(const nlohmann::json& document, const Ooc
     warnings.push_back(Warning{.code = k_RepairedOocSizeGBWarning,
                                .message = fmt::format("Preferences: saved {} ('{}') value {} (JSON type {}) is invalid. Allowed domain: 0 to {} GB. Using the default: {} GB. Review this "
                                                       "value in Preferences > Out of Core.",
-                                                      label, keys.gbKey, boundedJsonValue(saved), jsonTypeName(saved), formatHundredthsAsGB(Preferences::k_MaxOocSizeHundredths),
-                                                      formatHundredthsAsGB(Preferences::OocSizeBytesToHundredths(defaultBytes)))});
+                                                      label, keys.gb_key, BoundedJsonValue(saved), JsonTypeName(saved), FormatHundredthsAsGb(Preferences::k_MaxOocSizeHundredths),
+                                                      FormatHundredthsAsGb(Preferences::OocSizeBytesToHundredths(defaultBytes)))});
     return std::nullopt;
   }
 
-  const nlohmann::json& saved = document.at(keys.bytesKey);
-  const auto validation = Preferences::ValidateOocSizeValue(keys.bytesKey, saved);
+  const nlohmann::json& saved = document.at(keys.bytes_key);
+  const auto validation = Preferences::ValidateOocSizeValue(keys.bytes_key, saved);
   if(validation.valid())
   {
     return Preferences::OocSizeHundredthsToBytes(Preferences::OocSizeBytesToHundredths(validation.value()));
@@ -323,7 +323,7 @@ std::optional<uint64> readSavedOocSize(const nlohmann::json& document, const Ooc
   warnings.push_back(Warning{.code = k_RepairedOocSizeWarning,
                              .message = fmt::format("Preferences: saved {} ('{}') value {} (JSON type {}) is invalid. Allowed domain: 0 to {} bytes. Using the default: {} bytes. Review this value in "
                                                     "Preferences > Out of Core.",
-                                                    label, keys.bytesKey, boundedJsonValue(saved), jsonTypeName(saved), std::numeric_limits<uint64>::max(), defaultBytes)});
+                                                    label, keys.bytes_key, BoundedJsonValue(saved), JsonTypeName(saved), std::numeric_limits<uint64>::max(), defaultBytes)});
   return std::nullopt;
 }
 
@@ -331,17 +331,17 @@ std::optional<uint64> readSavedOocSize(const nlohmann::json& document, const Ooc
  * @brief Returns the current user's home directory.
  * @return Home directory from the platform environment or account database.
  */
-std::filesystem::path getHomeDirectory()
+std::filesystem::path GetHomeDirectory()
 {
 #ifdef _WIN32
   return getenv("USERPROFILE");
 #else
-  const char* homedir;
-  if((homedir = getenv("HOME")) == NULL)
+  const char* homedirPtr = nullptr;
+  if((homedirPtr = getenv("HOME")) == nullptr)
   {
-    homedir = getpwuid(getuid())->pw_dir;
+    homedirPtr = getpwuid(getuid())->pw_dir;
   }
-  return std::filesystem::path(homedir);
+  return std::filesystem::path(homedirPtr);
 #endif
 }
 } // namespace
@@ -349,20 +349,20 @@ std::filesystem::path getHomeDirectory()
 std::filesystem::path Preferences::DefaultFilePath(const std::string& applicationName)
 {
 #if defined(__APPLE__)
-  return getHomeDirectory() / "Library/Preferences" / applicationName / k_DefaultFileName.str();
+  return GetHomeDirectory() / "Library/Preferences" / applicationName / k_DefaultFileName.str();
 #elif defined(_WIN32)
-  return getHomeDirectory() / "AppData/Local" / applicationName / k_DefaultFileName.str();
+  return GetHomeDirectory() / "AppData/Local" / applicationName / k_DefaultFileName.str();
 #else
-  return getHomeDirectory() / ".config/" / applicationName / k_DefaultFileName.str();
+  return GetHomeDirectory() / ".config/" / applicationName / k_DefaultFileName.str();
 #endif
 }
 
 Result<uint64> Preferences::ValidateOocSizeValue(const std::string& name, const nlohmann::json& value)
 {
-  const std::string_view label = oocSizeLabel(name);
+  const std::string_view label = OocSizeLabel(name);
   if(label.empty())
   {
-    return MakeErrorResult<uint64>(k_InvalidOocSizeCode, fmt::format("Preferences size key '{}' is not supported for value {} (JSON type {}).", name, boundedJsonValue(value), jsonTypeName(value)));
+    return MakeErrorResult<uint64>(k_InvalidOocSizeCode, fmt::format("Preferences size key '{}' is not supported for value {} (JSON type {}).", name, BoundedJsonValue(value), JsonTypeName(value)));
   }
   if(value.is_number_unsigned())
   {
@@ -376,8 +376,8 @@ Result<uint64> Preferences::ValidateOocSizeValue(const std::string& name, const 
       return {static_cast<uint64>(signedValue)};
     }
   }
-  return MakeErrorResult<uint64>(k_InvalidOocSizeCode, fmt::format("Preferences {} ('{}') value {} (JSON type {}) is invalid. Allowed domain: 0 to {} bytes.", label, name, boundedJsonValue(value),
-                                                                   jsonTypeName(value), std::numeric_limits<uint64>::max()));
+  return MakeErrorResult<uint64>(k_InvalidOocSizeCode, fmt::format("Preferences {} ('{}') value {} (JSON type {}) is invalid. Allowed domain: 0 to {} bytes.", label, name, BoundedJsonValue(value),
+                                                                   JsonTypeName(value), std::numeric_limits<uint64>::max()));
 }
 
 Preferences::Preferences()
@@ -396,7 +396,7 @@ void Preferences::setDefaultValues()
 
   {
     std::filesystem::path tempDir = std::filesystem::temp_directory_path() / "simplnx";
-    m_DefaultValues[k_OoCTempDirectory_ID] = tempDir.string();
+    m_DefaultValues[k_OoCTempDirectoryId] = tempDir.string();
   }
 
   updateMemoryDefaults();
@@ -407,14 +407,14 @@ void Preferences::setDefaultValues()
   m_DefaultValues[k_AutoRangeComputation_Key] = k_AutoRangeComputationDefault;
 }
 
-void Preferences::addDefaultValues(std::string pluginName, std::string valueName, const nlohmann::json& value)
+void Preferences::addDefaultValues(const std::string& pluginName, std::string valueName, const nlohmann::json& value)
 {
   auto& pluginGroup = m_DefaultValues[k_Plugin_Key];
   if(!pluginGroup.contains(pluginName))
   {
     pluginGroup[pluginName] = nlohmann::json::object();
   }
-  pluginGroup[pluginName][valueName] = value;
+  pluginGroup[pluginName][std::move(valueName)] = value;
 }
 
 void Preferences::clear()
@@ -460,7 +460,7 @@ nlohmann::json Preferences::value(const std::string& name) const
   {
     return m_Values[name];
   }
-  else if(m_DefaultValues.contains(name))
+  if(m_DefaultValues.contains(name))
   {
     return m_DefaultValues[name];
   }
@@ -501,14 +501,14 @@ nlohmann::json Preferences::pluginValue(const std::string& pluginName, const std
   {
     return m_Values[k_Plugin_Key][pluginName][valueName];
   }
-  else if(pluginContainsDefault(pluginName, valueName))
+  if(pluginContainsDefault(pluginName, valueName))
   {
     return m_DefaultValues[k_Plugin_Key][pluginName][valueName];
   }
 
   return {};
 }
-nlohmann::json Preferences::defaultPluginValue(const std::string& pluginName, const std::string& valueName) const
+nlohmann::json Preferences::defaultPluginValue(const std::string& /*pluginName*/, const std::string& valueName) const
 {
   if(m_DefaultValues[k_Plugin_Key].contains(valueName))
   {
@@ -527,26 +527,26 @@ Result<> Preferences::saveToFile(const std::filesystem::path& filepath) const
 {
   if(!std::filesystem::exists(filepath.parent_path()) && !std::filesystem::create_directories(filepath.parent_path()))
   {
-    return MakeErrorResult(Preferences::k_FailedToCreateDirectory_Code, k_FailedToCreateDirectory_Message);
+    return MakeErrorResult(Preferences::k_FailedToCreateDirectoryCode, k_FailedToCreateDirectoryMessage);
   }
 
   std::ofstream fileStream(filepath);
   if(!fileStream.is_open())
   {
-    return MakeErrorResult(Preferences::k_FileCouldNotOpen_Code, k_FileCouldNotOpen_Message);
+    return MakeErrorResult(Preferences::k_FileCouldNotOpenCode, k_FileCouldNotOpenMessage);
   }
 
   // The file stores the out-of-core size thresholds in GB. Memory keeps them in bytes.
   nlohmann::json document = m_Values;
   for(const auto& keys : oocSizeKeys())
   {
-    if(!document.contains(keys.bytesKey))
+    if(!document.contains(keys.bytes_key))
     {
       continue;
     }
-    const uint64 bytes = document.at(keys.bytesKey).get<uint64>();
-    document.erase(keys.bytesKey);
-    document[keys.gbKey] = static_cast<double>(OocSizeBytesToHundredths(bytes)) / 100.0;
+    const uint64 bytes = document.at(keys.bytes_key).get<uint64>();
+    document.erase(keys.bytes_key);
+    document[keys.gb_key] = static_cast<double>(OocSizeBytesToHundredths(bytes)) / 100.0;
   }
 
   fileStream << document;
@@ -557,41 +557,41 @@ Result<> Preferences::loadFromFile(const std::filesystem::path& filepath)
 {
   if(!std::filesystem::exists(filepath))
   {
-    return MakeErrorResult(Preferences::k_FileDoesNotExist_Code, k_FileDoesNotExist_Message);
+    return MakeErrorResult(Preferences::k_FileDoesNotExistCode, k_FileDoesNotExistMessage);
   }
 
   std::ifstream fileStream(filepath);
   if(!fileStream.is_open())
   {
-    return MakeErrorResult(Preferences::k_FileCouldNotOpen_Code, k_FileCouldNotOpen_Message);
+    return MakeErrorResult(Preferences::k_FileCouldNotOpenCode, k_FileCouldNotOpenMessage);
   }
 
   nlohmann::json parsedResult = nlohmann::json::parse(fileStream, nullptr, false);
   if(parsedResult.is_discarded())
   {
-    return MakeErrorResult(Preferences::k_JsonParseError_Code, k_JsonParseError_Message);
+    return MakeErrorResult(Preferences::k_JsonParseErrorCode, k_JsonParseErrorMessage);
   }
 
   if(!parsedResult.is_object())
   {
-    return MakeErrorResult(k_InvalidRootCode, fmt::format("Preferences file '{}' has a JSON {} root. Expected a JSON object.", filepath.string(), jsonTypeName(parsedResult)));
+    return MakeErrorResult(k_InvalidRootCode, fmt::format("Preferences file '{}' has a JSON {} root. Expected a JSON object.", filepath.string(), JsonTypeName(parsedResult)));
   }
 
   Result<> result;
   for(const auto& keys : oocSizeKeys())
   {
-    if(!parsedResult.contains(keys.gbKey) && !parsedResult.contains(keys.bytesKey))
+    if(!parsedResult.contains(keys.gb_key) && !parsedResult.contains(keys.bytes_key))
     {
       continue;
     }
     // Validate the selected representation before the keys are removed. An invalid value stores
     // nothing, so the default applies.
-    const std::optional<uint64> gridBytes = readSavedOocSize(parsedResult, keys, defaultValueAs<uint64>(keys.bytesKey), result.warnings());
-    parsedResult.erase(keys.gbKey);
-    parsedResult.erase(keys.bytesKey);
+    const std::optional<uint64> gridBytes = ReadSavedOocSize(parsedResult, keys, defaultValueAs<uint64>(keys.bytes_key), result.warnings());
+    parsedResult.erase(keys.gb_key);
+    parsedResult.erase(keys.bytes_key);
     if(gridBytes.has_value())
     {
-      parsedResult[keys.bytesKey] = *gridBytes;
+      parsedResult[keys.bytes_key] = *gridBytes;
     }
   }
 
@@ -673,7 +673,7 @@ void Preferences::updateMemoryDefaults()
 {
   // Reserve two single-array thresholds for the operating system and application.
   const uint64 minimumRemaining = 2 * defaultValueAs<uint64>(k_LargeDataSize_Key);
-  const uint64 totalMemory = Memory::GetTotalMemory();
+  const uint64 totalMemory = memory_utilities::GetTotalMemory();
   uint64 targetValue = totalMemory - minimumRemaining;
 
   // Low-memory systems use half of RAM when the reservation is too large.
@@ -693,12 +693,12 @@ uint64 Preferences::largeDataStructureSize() const
 
 std::string Preferences::oocTempDirectory() const
 {
-  return value(k_OoCTempDirectory_ID).get<std::string>();
+  return value(k_OoCTempDirectoryId).get<std::string>();
 }
 
 void Preferences::setOocTempDirectory(const std::string& path)
 {
-  setValue(k_OoCTempDirectory_ID, path);
+  setValue(k_OoCTempDirectoryId, path);
   // Registered managers use this base directory for session backing files. In-core
   // builds have no out-of-core manager, so the collection update has no effect.
   Application::GetOrCreateInstance()->getIOCollection().setBaseDirectory(std::filesystem::path(path));
@@ -717,7 +717,7 @@ void Preferences::setAutoRangeComputation(bool enabled)
 uint64 Preferences::cacheMemoryBudgetBytes() const
 {
   // Read m_Values directly so the fallback uses the current system-RAM default.
-  return m_Values.value(k_CacheMemoryBudgetBytes_Key, CacheMemoryBudgetManager::defaultBudgetBytes());
+  return m_Values.value(k_CacheMemoryBudgetBytes_Key, CacheMemoryBudgetManager::DefaultBudgetBytes());
 }
 
 void Preferences::setCacheMemoryBudgetBytes(uint64 bytes)

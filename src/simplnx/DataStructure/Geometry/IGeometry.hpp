@@ -16,17 +16,17 @@ public:
 
   using MeshIndexType = uint64;
   using MeshIndexArrayType = DataArray<MeshIndexType>;
-  using SharedVertexList = Float32Array;
-  using SharedEdgeList = MeshIndexArrayType;
-  using SharedFaceList = MeshIndexArrayType;
-  using SharedTriList = MeshIndexArrayType;
-  using SharedQuadList = MeshIndexArrayType;
-  using SharedTetList = MeshIndexArrayType;
-  using SharedHexList = MeshIndexArrayType;
-  using ElementDynamicList = DynamicListArray<uint16, MeshIndexType>;
+  using SharedVertexListType = Float32ArrayType;
+  using SharedEdgeListType = MeshIndexArrayType;
+  using SharedFaceListType = MeshIndexArrayType;
+  using SharedTriListType = MeshIndexArrayType;
+  using SharedQuadListType = MeshIndexArrayType;
+  using SharedTetListType = MeshIndexArrayType;
+  using SharedHexListType = MeshIndexArrayType;
+  using ElementDynamicListType = DynamicListArray<uint16, MeshIndexType>;
 
-  static inline constexpr StringLiteral k_VoxelSizes = "Voxel Sizes";
-  static inline constexpr StringLiteral k_TypeName = "IGeometry";
+  static constexpr StringLiteralType k_VoxelSizes = "Voxel Sizes";
+  static constexpr StringLiteralType k_TypeName = "IGeometry";
 
   /* We are leveraging the bounded nature of the following enum to expedite processing
    *
@@ -48,37 +48,37 @@ public:
     Hexahedral = 7u
   };
 
-  inline static constexpr std::array<StringLiteral, 8> k_GeomTypeStrings = {"Image", "RectGrid", "Vertex", "Edge", "Triangle", "Quad", "Tetrahedral", "Hexahedral"};
+  static constexpr std::array<StringLiteralType, 8> k_GeomTypeStrings = {"Image", "RectGrid", "Vertex", "Edge", "Triangle", "Quad", "Tetrahedral", "Hexahedral"};
 
   enum class LengthUnit : EnumType
   {
-    Yoctometer,
-    Zeptometer,
-    Attometer,
-    Femtometer,
-    Picometer,
-    Nanometer,
-    Micrometer,
-    Millimeter,
-    Centimeter,
-    Decimeter,
-    Meter,
-    Decameter,
-    Hectometer,
-    Kilometer,
-    Megameter,
-    Gigameter,
-    Terameter,
-    Petameter,
-    Exameter,
-    Zettameter,
-    Yottameter,
-    Angstrom,
-    Mil,
-    Inch,
-    Foot,
-    Mile,
-    Fathom,
+    Yoctometer = 0,
+    Zeptometer = 1,
+    Attometer = 2,
+    Femtometer = 3,
+    Picometer = 4,
+    Nanometer = 5,
+    Micrometer = 6,
+    Millimeter = 7,
+    Centimeter = 8,
+    Decimeter = 9,
+    Meter = 10,
+    Decameter = 11,
+    Hectometer = 12,
+    Kilometer = 13,
+    Megameter = 14,
+    Gigameter = 15,
+    Terameter = 16,
+    Petameter = 17,
+    Exameter = 18,
+    Zettameter = 19,
+    Yottameter = 20,
+    Angstrom = 21,
+    Mil = 22,
+    Inch = 23,
+    Foot = 24,
+    Mile = 25,
+    Fathom = 26,
     Unspecified = 100U,
     Unknown = 101U
   };
@@ -86,7 +86,7 @@ public:
   IGeometry() = delete;
 
   IGeometry(const IGeometry&) = default;
-  IGeometry(IGeometry&&) = default;
+  IGeometry(IGeometry&&) noexcept = default;
 
   IGeometry& operator=(const IGeometry&) = delete;
   IGeometry& operator=(IGeometry&&) noexcept = delete;
@@ -118,19 +118,19 @@ public:
    * @brief Returns a pointer to the array containing element sizes.
    * @return const Float32Array* Pointer to the element sizes array, or nullptr if not available
    */
-  const Float32Array* getElementSizes() const;
+  const Float32ArrayType* getElementSizes() const;
 
   /**
    * @brief Returns the optional ID of the element sizes array.
    * @return OptionalId The ID of the element sizes array if it exists
    */
-  OptionalId getElementSizesId() const;
+  OptionalIdType getElementSizesId() const;
 
   /**
    * @brief Sets the ID of the element sizes array.
    * @param sizesId The ID of the element sizes array
    */
-  void setElementSizesId(const OptionalId& sizesId);
+  void setElementSizesId(const OptionalIdType& sizesId);
 
   /**
    * @brief Deletes the element sizes array from the geometry.
@@ -139,16 +139,16 @@ public:
 
   /**
    * @brief Returns the parametric center of the geometry element.
-   * @return Point3D<float64> The parametric center coordinates
+   * @return Vec3<float64> The parametric center coordinates
    */
-  virtual Point3D<float64> getParametricCenter() const = 0;
+  virtual Vec3<float64> getParametricCenter() const = 0;
 
   /**
    * @brief Calculates shape functions at the given parametric coordinates.
    * @param pCoords The parametric coordinates
    * @param shape Output array to store the calculated shape function values
    */
-  virtual void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const = 0;
+  virtual void getShapeFunctions(const Vec3<float64>& pCoords, float64* shape) const = 0;
 
   /**
    * @brief Returns the dimensionality of the units used by the geometry.
@@ -274,12 +274,12 @@ protected:
   template <class T>
   std::optional<IdType> adoptCopiedChild(const DataPath& copyPath, const std::string& childName)
   {
-    const auto* childCopy = getDataStructureRef().template getDataAs<T>(copyPath.createChildPath(childName));
-    if(childCopy == nullptr)
+    const auto* childCopyPtr = getDataStructureRef().template getDataAs<T>(copyPath.createChildPath(childName));
+    if(childCopyPtr == nullptr)
     {
       return {};
     }
-    return childCopy->getId();
+    return childCopyPtr->getId();
   }
 
   /**

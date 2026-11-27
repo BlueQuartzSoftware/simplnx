@@ -21,7 +21,7 @@ BaseGroup::BaseGroup(const BaseGroup& other)
 {
 }
 
-BaseGroup::BaseGroup(BaseGroup&& other)
+BaseGroup::BaseGroup(BaseGroup&& other) noexcept
 : DataObject(std::move(other))
 , m_DataMap(std::move(other.m_DataMap))
 {
@@ -109,7 +109,7 @@ bool BaseGroup::canInsert(const DataObject* obj) const
   {
     return false;
   }
-  if(const auto* objGroup = dynamic_cast<const BaseGroup*>(obj); objGroup != nullptr && objGroup->isParentOf(this))
+  if(const auto* objGroupPtr = dynamic_cast<const BaseGroup*>(obj); objGroupPtr != nullptr && objGroupPtr->isParentOf(this))
   {
     return false;
   }
@@ -122,12 +122,12 @@ void BaseGroup::setDataStructure(DataStructure* dataStructure)
   m_DataMap.setDataStructure(dataStructure);
 }
 
-BaseGroup::Iterator BaseGroup::find(const std::string& name)
+BaseGroup::iterator BaseGroup::find(const std::string& name)
 {
   return m_DataMap.find(name);
 }
 
-BaseGroup::ConstIterator BaseGroup::find(const std::string& name) const
+BaseGroup::const_iterator BaseGroup::find(const std::string& name) const
 {
   return m_DataMap.find(name);
 }
@@ -187,19 +187,19 @@ void BaseGroup::clear()
   m_DataMap.clear();
 }
 
-BaseGroup::Iterator BaseGroup::begin()
+BaseGroup::iterator BaseGroup::begin()
 {
   return m_DataMap.begin();
 }
-BaseGroup::Iterator BaseGroup::end()
+BaseGroup::iterator BaseGroup::end()
 {
   return m_DataMap.end();
 }
-BaseGroup::ConstIterator BaseGroup::begin() const
+BaseGroup::const_iterator BaseGroup::begin() const
 {
   return m_DataMap.begin();
 }
-BaseGroup::ConstIterator BaseGroup::end() const
+BaseGroup::const_iterator BaseGroup::end() const
 {
   return m_DataMap.end();
 }
@@ -220,34 +220,34 @@ const std::set<BaseGroup::GroupType>& BaseGroup::GetAllGeometryGroupTypes()
 
 std::set<std::string> BaseGroup::StringListFromGroupType(const std::set<GroupType>& groupTypes)
 {
-  static const std::map<GroupType, std::string> k_TypeToStringMap = {{GroupType::BaseGroup, "BaseGroup"},
-                                                                     {GroupType::DataGroup, "DataGroup"},
-                                                                     {GroupType::AttributeMatrix, "AttributeMatrix"},
-                                                                     {GroupType::IGeometry, "IGeometry"},
-                                                                     {GroupType::IGridGeometry, "IGridGeometry"},
-                                                                     {GroupType::RectGridGeom, "RectGridGeom"},
-                                                                     {GroupType::ImageGeom, "ImageGeom"},
-                                                                     {GroupType::INodeGeometry0D, "INodeGeometry0D"},
-                                                                     {GroupType::VertexGeom, "VertexGeom"},
-                                                                     {GroupType::INodeGeometry1D, "INodeGeometry1D"},
-                                                                     {GroupType::EdgeGeom, "EdgeGeom"},
-                                                                     {GroupType::INodeGeometry2D, "INodeGeometry2D"},
-                                                                     {GroupType::QuadGeom, "QuadGeom"},
-                                                                     {GroupType::TriangleGeom, "TriangleGeom"},
-                                                                     {GroupType::INodeGeometry3D, "INodeGeometry3D"},
-                                                                     {GroupType::HexahedralGeom, "HexahedralGeom"},
-                                                                     {GroupType::TetrahedralGeom, "TetrahedralGeom"},
-                                                                     {GroupType::Unknown, "Unknown"}};
+  static const std::map<GroupType, std::string> kTypeToStringMap = {{GroupType::BaseGroup, "BaseGroup"},
+                                                                    {GroupType::DataGroup, "DataGroup"},
+                                                                    {GroupType::AttributeMatrix, "AttributeMatrix"},
+                                                                    {GroupType::IGeometry, "IGeometry"},
+                                                                    {GroupType::IGridGeometry, "IGridGeometry"},
+                                                                    {GroupType::RectGridGeom, "RectGridGeom"},
+                                                                    {GroupType::ImageGeom, "ImageGeom"},
+                                                                    {GroupType::INodeGeometry0D, "INodeGeometry0D"},
+                                                                    {GroupType::VertexGeom, "VertexGeom"},
+                                                                    {GroupType::INodeGeometry1D, "INodeGeometry1D"},
+                                                                    {GroupType::EdgeGeom, "EdgeGeom"},
+                                                                    {GroupType::INodeGeometry2D, "INodeGeometry2D"},
+                                                                    {GroupType::QuadGeom, "QuadGeom"},
+                                                                    {GroupType::TriangleGeom, "TriangleGeom"},
+                                                                    {GroupType::INodeGeometry3D, "INodeGeometry3D"},
+                                                                    {GroupType::HexahedralGeom, "HexahedralGeom"},
+                                                                    {GroupType::TetrahedralGeom, "TetrahedralGeom"},
+                                                                    {GroupType::Unknown, "Unknown"}};
 
   std::set<std::string> stringValues;
   for(auto groupType : groupTypes)
   {
-    stringValues.insert(k_TypeToStringMap.at(groupType));
+    stringValues.insert(kTypeToStringMap.at(groupType));
   }
   return stringValues;
 }
 
-std::vector<std::string> BaseGroup::GetChildrenNames()
+std::vector<std::string> BaseGroup::getChildrenNames()
 {
   return m_DataMap.getNames();
 }
@@ -257,7 +257,7 @@ void BaseGroup::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType,
   m_DataMap.updateIds(updatedIdsMap);
 }
 
-std::vector<DataObject::IdType> BaseGroup::GetChildrenIds()
+std::vector<DataObject::IdType> BaseGroup::getChildrenIds()
 {
   return m_DataMap.getKeys();
 }

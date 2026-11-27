@@ -11,7 +11,7 @@
 #include <cmath>
 
 using namespace nx::core;
-using namespace nx::core::OrientationUtilities;
+using namespace nx::core::orientation_utilities;
 
 ComputeCAxisLocations::ComputeCAxisLocations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                              ComputeCAxisLocationsInputValues* inputValues)
@@ -22,8 +22,6 @@ ComputeCAxisLocations::ComputeCAxisLocations(DataStructure& dataStructure, const
 {
 }
 
-ComputeCAxisLocations::~ComputeCAxisLocations() noexcept = default;
-
 const std::atomic_bool& ComputeCAxisLocations::getCancel()
 {
   return m_ShouldCancel;
@@ -31,7 +29,7 @@ const std::atomic_bool& ComputeCAxisLocations::getCancel()
 
 Result<> ComputeCAxisLocations::operator()()
 {
-  const auto& crystalStructuresArrayRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  const auto& crystalStructuresArrayRef = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
   bool allPhasesHexagonal = true;
   bool noPhasesHexagonal = true;
   for(usize phaseIdx = 1; phaseIdx < crystalStructuresArrayRef.size(); ++phaseIdx)
@@ -55,9 +53,9 @@ Result<> ComputeCAxisLocations::operator()()
   }
   auto mergeWarnings = [&result](Result<> ioResult) { return MergeResults(std::move(result), std::move(ioResult)); };
 
-  const auto& quatsArrayRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
-  const auto& cellPhasesArrayRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  auto& cAxisLocationsArrayRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CAxisLocationsArrayName);
+  const auto& quatsArrayRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->quats_array_path);
+  const auto& cellPhasesArrayRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+  auto& cAxisLocationsArrayRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->c_axis_locations_array_name);
 
   const usize totalPoints = quatsArrayRef.getNumberOfTuples();
 
@@ -73,8 +71,8 @@ Result<> ComputeCAxisLocations::operator()()
   const Eigen::Vector3f cAxis{0.0f, 0.0f, 1.0f};
   Eigen::Vector3f c1{0.0f, 0.0f, 0.0f};
 
-  auto& quatsStoreRef = quatsArrayRef.getDataStoreRef();
-  auto& cellPhasesStoreRef = cellPhasesArrayRef.getDataStoreRef();
+  const auto& quatsStoreRef = quatsArrayRef.getDataStoreRef();
+  const auto& cellPhasesStoreRef = cellPhasesArrayRef.getDataStoreRef();
   auto& cAxisLocationsStoreRef = cAxisLocationsArrayRef.getDataStoreRef();
 
   for(usize chunkStart = 0; chunkStart < totalPoints; chunkStart += k_ChunkSize)
@@ -105,8 +103,8 @@ Result<> ComputeCAxisLocations::operator()()
       if(currentPhaseIdx < 0 || static_cast<usize>(currentPhaseIdx) >= numCrystalStructures)
       {
         return MakeErrorResult(-3524, fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in [0, {}).",
-                                                  m_InputValues->CellPhasesArrayPath.toString(), currentPhaseIdx, chunkStart + chunkTupleIdx, m_InputValues->CrystalStructuresArrayPath.toString(),
-                                                  numCrystalStructures, numCrystalStructures));
+                                                  m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, chunkStart + chunkTupleIdx,
+                                                  m_InputValues->crystal_structures_array_path.toString(), numCrystalStructures, numCrystalStructures));
       }
       const auto crystalStructureType = crystalStructuresCache[currentPhaseIdx];
       if(crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_High || crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_Low)

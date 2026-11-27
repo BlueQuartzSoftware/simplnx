@@ -22,21 +22,21 @@ namespace nx::core
  */
 struct SIMPLNX_EXPORT ResampleImageGeomInputValues
 {
-  ChoicesParameter::ValueType ResamplingMode = 0;
-  std::vector<float32> Spacing;
-  std::vector<float32> Scaling;
-  std::vector<uint64> ExactDimensions;
-  DataPath SelectedImageGeometryPath;
-  DataPath CellDataGroupPath;
-  bool RemoveOriginalImageGeom;
-  DataPath CreatedImageGeometryPath;
+  ChoicesParameter::ValueType resampling_mode = 0;
+  std::vector<float32> spacing;
+  std::vector<float32> scaling;
+  std::vector<uint64> exact_dimensions;
+  DataPath selected_image_geometry_path;
+  DataPath cell_data_group_path;
+  bool remove_original_image_geom{};
+  DataPath created_image_geometry_path;
   // Recreate the Feature AM with no arrays; required for RenumberFeatures.
-  bool ClearFeatureAttributeMatrix = false;
+  bool clear_feature_attribute_matrix = false;
   // Report unchanged Feature data only for callers that request this information.
-  bool ReportUnclearedFeatureData = false;
-  bool RenumberFeatures;
-  DataPath FeatureIdsArrayPath;
-  DataPath CellFeatureAttributeMatrix;
+  bool report_uncleared_feature_data = false;
+  bool renumber_features{};
+  DataPath feature_ids_array_path;
+  DataPath cell_feature_attribute_matrix;
 };
 
 /**
@@ -100,7 +100,7 @@ private:
   const IFilter::MessageHandler& m_MessageHandler;
 
   // The mutex serializes worker access to the non-thread-safe throttle.
-  mutable std::mutex m_ProgressMessage_Mutex;
+  mutable std::mutex m_ProgressMessageMutex;
 
   // Throttles progress updates from array workers.
   ThrottledMessageHandler m_Throttle;

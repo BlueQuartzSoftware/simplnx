@@ -28,10 +28,10 @@ namespace nx::core
 class SIMPLNX_EXPORT BaseGroup : public DataObject
 {
 public:
-  using Iterator = typename DataMap::Iterator;
-  using ConstIterator = typename DataMap::ConstIterator;
+  using iterator = typename DataMap::iterator;
+  using const_iterator = typename DataMap::const_iterator;
 
-  static inline constexpr StringLiteral k_TypeName = "BaseGroup";
+  static constexpr StringLiteralType k_TypeName = "BaseGroup";
 
   enum class GroupType : uint32
   {
@@ -67,7 +67,7 @@ public:
    * the provided BaseGroup.
    * @param other The BaseGroup to move from
    */
-  BaseGroup(BaseGroup&& other);
+  BaseGroup(BaseGroup&& other) noexcept;
 
   /**
    * @brief Destroys the BaseGroup and removes it from the list of it's
@@ -194,7 +194,7 @@ public:
    * @param name The name of the child to find
    * @return Iterator to the child if found, end() otherwise
    */
-  Iterator find(const std::string& name);
+  iterator find(const std::string& name);
 
   /**
    * @brief Returns a ConstIterator to the child with the specified name. If no
@@ -205,7 +205,7 @@ public:
    * @param name The name of the child to find
    * @return ConstIterator to the child if found, end() otherwise
    */
-  ConstIterator find(const std::string& name) const;
+  const_iterator find(const std::string& name) const;
 
   /**
    * @brief Searches the group for all DataObjects of the templated type.
@@ -297,13 +297,13 @@ public:
    * the use of the returned iterator.
    * @return Iterator to the beginning of the container
    */
-  Iterator begin();
+  iterator begin();
 
   /**
    * @brief Returns an iterator to the end of the container.
    * @return Iterator to the end of the container
    */
-  Iterator end();
+  iterator end();
 
   /**
    * @brief Returns a const iterator to the beginning of the container.
@@ -312,13 +312,13 @@ public:
    * the use of the returned iterator.
    * @return ConstIterator to the beginning of the container
    */
-  ConstIterator begin() const;
+  const_iterator begin() const;
 
   /**
    * @brief Returns a const iterator to the end of the container.
    * @return ConstIterator to the end of the container
    */
-  ConstIterator end() const;
+  const_iterator end() const;
 
   /**
    * @brief Returns a reference to the set of all BaseGroup GroupTypes.
@@ -342,12 +342,12 @@ public:
   /**
    * @brief Querys the DataMap for the object names in m_DataMap
    */
-  std::vector<std::string> GetChildrenNames();
+  std::vector<std::string> getChildrenNames();
 
   /**
    * @brief Querys the DataMap for the object ids in m_DataMap
    */
-  std::vector<DataObject::IdType> GetChildrenIds();
+  std::vector<DataObject::IdType> getChildrenIds();
 
 protected:
   /**

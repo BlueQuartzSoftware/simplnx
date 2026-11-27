@@ -75,11 +75,11 @@ Parameters NormalizeToConstantImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Float64Parameter>(k_Constant_Key, "Constant", "Set/get the normalization constant.", 1.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_Constant_Key, "Constant", "Set/get the normalization constant.", 1.0));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
@@ -91,12 +91,12 @@ IFilter::VersionType NormalizeToConstantImageFilter::parametersVersion() const
 {
   return 1;
 }
-IFilter::UniquePointer NormalizeToConstantImageFilter::clone() const
+IFilter::UniquePointerType NormalizeToConstantImageFilter::clone() const
 {
   return std::make_unique<NormalizeToConstantImageFilter>();
 }
-IFilter::PreflightResult NormalizeToConstantImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult NormalizeToConstantImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -104,11 +104,11 @@ IFilter::PreflightResult NormalizeToConstantImageFilter::preflightImpl(const Dat
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions =
-      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
-  return {std::move(resultOutputActions)};
+      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64Type>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+  return {.output_actions = std::move(resultOutputActions)};
 }
-Result<> NormalizeToConstantImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> NormalizeToConstantImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
   auto outputArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputImageArrayName_Key);
@@ -117,7 +117,7 @@ Result<> NormalizeToConstantImageFilter::executeImpl(DataStructure& dataStructur
   auto constant = filterArgs.value<float64>(k_Constant_Key);
 
   const NormalizeToConstantOperation operation{constant};
-  return ImageProcessing::ExecuteTwoPassImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel,
-                                                                                                                 messageHandler);
+  return ImageProcessing::ExecuteTwoPassImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64Type>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel,
+                                                                                                                     messageHandler);
 }
 } // namespace nx::core

@@ -45,7 +45,7 @@ Parameters MorphologicalWatershedImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Float64Parameter>(k_Level_Key, "Level", "Set the 'level' variable to the filter", 0.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_Level_Key, "Level", "Set the 'level' variable to the filter", 0.0));
   params.insert(std::make_unique<BoolParameter>(
       k_MarkWatershedLine_Key, "MarkWatershedLine",
       "Set/Get whether the watershed pixel must be marked or not. Default is true. Set it to false do not only avoid writing watershed pixels, it also decrease algorithm complexity.", true));
@@ -56,7 +56,7 @@ Parameters MorphologicalWatershedImageFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
 
@@ -70,13 +70,13 @@ IFilter::VersionType MorphologicalWatershedImageFilter::parametersVersion() cons
 {
   return 1;
 }
-IFilter::UniquePointer MorphologicalWatershedImageFilter::clone() const
+IFilter::UniquePointerType MorphologicalWatershedImageFilter::clone() const
 {
   return std::make_unique<MorphologicalWatershedImageFilter>();
 }
 
-IFilter::PreflightResult MorphologicalWatershedImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult MorphologicalWatershedImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                          const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -84,14 +84,14 @@ IFilter::PreflightResult MorphologicalWatershedImageFilter::preflightImpl(const 
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   // requireScalar=true: watershed segmentation is defined on scalar images. The output is a FIXED uint32 label image
-  // (matching the legacy ITK FilterOutputType), so AlwaysUInt32 maps every input type to a uint32 output array.
+  // (matching the legacy ITK FilterOutputType), so AlwaysUInt32Type maps every input type to a uint32 output array.
   // AllNumeric admits every scalar type (the legacy ScalarPixelIdTypeList, incl. float32/float64). There is no
   // minimum-dimension requirement (no dim guard follows).
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt32>(
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt32Type>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   if(resultOutputActions.invalid())
   {
-    return {std::move(resultOutputActions)};
+    return {.output_actions = std::move(resultOutputActions)};
   }
 
   // Resident watershed retains the exact RAM flood and its available-memory guard. OOC watershed uses bounded
@@ -103,11 +103,11 @@ IFilter::PreflightResult MorphologicalWatershedImageFilter::preflightImpl(const 
   Result<OutputActions> memoryCheck;
   if(inputIsOutOfCore)
   {
-    if(!DataStoreUtilities::GetIOCollection().hasTemporaryRecordStoreCapability())
+    if(!data_store_utilities::GetIOCollection().hasTemporaryRecordStoreCapability())
     {
-      return {MakeErrorResult<OutputActions>(
-          -79048,
-          fmt::format("Morphological watershed input '{}' is planned out-of-core, but no temporary-record storage provider is registered for the external flood.", selectedInputArray.toString()))};
+      return {.output_actions = MakeErrorResult<OutputActions>(
+                  -79048, fmt::format("Morphological watershed input '{}' is planned out-of-core, but no temporary-record storage provider is registered for the external flood.",
+                                      selectedInputArray.toString()))};
     }
   }
   else
@@ -117,18 +117,18 @@ IFilter::PreflightResult MorphologicalWatershedImageFilter::preflightImpl(const 
   }
   if(memoryCheck.invalid())
   {
-    return {std::move(memoryCheck)};
+    return {.output_actions = std::move(memoryCheck)};
   }
   for(auto& warning : memoryCheck.warnings())
   {
     resultOutputActions.warnings().push_back(std::move(warning));
   }
 
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
-Result<> MorphologicalWatershedImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> MorphologicalWatershedImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -145,14 +145,14 @@ Result<> MorphologicalWatershedImageFilter::executeImpl(DataStructure& dataStruc
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_LevelKey = "Level";
-constexpr StringLiteral k_MarkWatershedLineKey = "MarkWatershedLine";
-constexpr StringLiteral k_FullyConnectedKey = "FullyConnected";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+constexpr StringLiteralType k_LevelKey = "Level";
+constexpr StringLiteralType k_MarkWatershedLineKey = "MarkWatershedLine";
+constexpr StringLiteralType k_FullyConnectedKey = "FullyConnected";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_NewCellArrayNameKey = "NewCellArrayName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> MorphologicalWatershedImageFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -161,12 +161,12 @@ Result<Arguments> MorphologicalWatershedImageFilter::FromSIMPLJson(const nlohman
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_LevelKey, k_Level_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_MarkWatershedLineKey, k_MarkWatershedLine_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_FullyConnectedKey, k_FullyConnected_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_LevelKey, k_Level_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_MarkWatershedLineKey, k_MarkWatershedLine_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_FullyConnectedKey, k_FullyConnected_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

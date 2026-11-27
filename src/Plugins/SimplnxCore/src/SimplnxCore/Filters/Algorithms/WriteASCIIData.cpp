@@ -34,12 +34,11 @@ WriteASCIIData::WriteASCIIData(DataStructure& dataStructure, const IFilter::Mess
 }
 
 // -----------------------------------------------------------------------------
-WriteASCIIData::~WriteASCIIData() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> WriteASCIIData::operator()()
 {
-  auto headerOption = m_InputValues->HeaderOptionIndex;
+  auto headerOption = m_InputValues->header_option_index;
   bool includeHeaders = false;
   bool includeIndex = false;
 
@@ -71,13 +70,13 @@ Result<> WriteASCIIData::operator()()
   }
   }
 
-  const std::string delimiter = OStreamUtilities::DelimiterToString(m_InputValues->DelimiterIndex);
-  auto selectedDataArrayPaths = m_InputValues->InputDataArrayPaths;
-  auto fileType = m_InputValues->OutputStyleIndex;
+  const std::string delimiter = o_stream_utilities::DelimiterToString(m_InputValues->delimiter_index);
+  auto selectedDataArrayPaths = m_InputValues->input_data_array_paths;
+  auto fileType = m_InputValues->output_style_index;
 
   if(fileType == k_SingleFile)
   {
-    auto atomicFileResult = AtomicFile::Create(m_InputValues->OutputPath);
+    auto atomicFileResult = AtomicFile::Create(m_InputValues->output_path);
     if(atomicFileResult.invalid())
     {
       return ConvertResult(std::move(atomicFileResult));
@@ -102,7 +101,7 @@ Result<> WriteASCIIData::operator()()
         return MakeErrorResult(-11021, fmt::format("Unable to create output file {}", outputPath.string()));
       }
 
-      OStreamUtilities::PrintDataSetsToSingleFile(outStrm, selectedDataArrayPaths, m_DataStructure, m_MessageHandler, m_ShouldCancel, delimiter, includeIndex, includeHeaders);
+      o_stream_utilities::PrintDataSetsToSingleFile(outStrm, selectedDataArrayPaths, m_DataStructure, m_MessageHandler, m_ShouldCancel, delimiter, includeIndex, includeHeaders);
     }
 
     if(m_ShouldCancel)
@@ -118,9 +117,9 @@ Result<> WriteASCIIData::operator()()
 
   if(fileType == k_MultipleFiles)
   {
-    auto directoryPath = m_InputValues->OutputDir;
-    auto fileExtension = m_InputValues->FileExtension;
-    auto maxTuplePerLine = m_InputValues->MaxValPerLine;
+    auto directoryPath = m_InputValues->output_dir;
+    auto fileExtension = m_InputValues->file_extension;
+    auto maxTuplePerLine = m_InputValues->max_val_per_line;
 
     if(!fs::exists(directoryPath))
     {
@@ -131,8 +130,8 @@ Result<> WriteASCIIData::operator()()
                                fmt::format("Unable to create output directory '{}'. Operating system returned error '{}' with message\n    '{}'", directoryPath.string(), err.value(), err.message()));
       }
     }
-    return OStreamUtilities::PrintDataSetsToMultipleFiles(selectedDataArrayPaths, m_DataStructure, directoryPath.string(), m_MessageHandler, m_ShouldCancel, fileExtension, false, delimiter,
-                                                          includeIndex, includeHeaders, maxTuplePerLine);
+    return o_stream_utilities::PrintDataSetsToMultipleFiles(selectedDataArrayPaths, m_DataStructure, directoryPath.string(), m_MessageHandler, m_ShouldCancel, fileExtension, false, delimiter,
+                                                            includeIndex, includeHeaders, maxTuplePerLine);
   }
 
   return {};

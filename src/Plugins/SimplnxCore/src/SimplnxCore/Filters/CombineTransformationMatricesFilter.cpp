@@ -54,8 +54,8 @@ Parameters CombineTransformationMatricesFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_InputArrays_Key, "Input Matrices", "The list of Attribute Arrays that represent Square Matrices of all the same dimensions",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
-                                                               MultiArraySelectionParameter::AllowedDataTypes{DataType::float32}));
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::AllowedDataTypesType{DataType::float32}));
 
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputArray_Key, "Output Array", "The output array that contains the output from the operations.", DataPath({""})));
@@ -70,14 +70,14 @@ IFilter::VersionType CombineTransformationMatricesFilter::parametersVersion() co
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CombineTransformationMatricesFilter::clone() const
+IFilter::UniquePointerType CombineTransformationMatricesFilter::clone() const
 {
   return std::make_unique<CombineTransformationMatricesFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CombineTransformationMatricesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult CombineTransformationMatricesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                            const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto inputArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputArrays_Key);
   auto outputArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_OutputArray_Key);
@@ -109,9 +109,10 @@ IFilter::PreflightResult CombineTransformationMatricesFilter::preflightImpl(cons
     auto totalElements = inputDataArray.getNumberOfTuples() * inputDataArray.getNumberOfComponents();
     if(totalElements != 16)
     {
-      return {MakeErrorResult<OutputActions>(to_underlying(CombineTransformationMatrices::ErrorCodes::WrongElementCount),
-                                             fmt::format("Input transformation matrix at path '{}' has {} total elements ({} tuples * {} components), but it MUST have 16 total elements.",
-                                                         inputArrayPaths[i].toString(), totalElements, inputDataArray.getNumberOfTuples(), inputDataArray.getNumberOfComponents()))};
+      return {.output_actions =
+                  MakeErrorResult<OutputActions>(to_underlying(CombineTransformationMatrices::ErrorCodes::WrongElementCount),
+                                                 fmt::format("Input transformation matrix at path '{}' has {} total elements ({} tuples * {} components), but it MUST have 16 total elements.",
+                                                             inputArrayPaths[i].toString(), totalElements, inputDataArray.getNumberOfTuples(), inputDataArray.getNumberOfComponents()))};
     }
 
     for(usize j = i + 1; j < inputArrayPaths.size(); ++j)
@@ -150,16 +151,16 @@ IFilter::PreflightResult CombineTransformationMatricesFilter::preflightImpl(cons
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> CombineTransformationMatricesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> CombineTransformationMatricesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CombineTransformationMatricesInputValues inputValues;
-  inputValues.SelectedPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputArrays_Key);
-  inputValues.OutputPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_OutputArray_Key);
+  inputValues.selected_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputArrays_Key);
+  inputValues.output_path = filterArgs.value<ArrayCreationParameter::ValueType>(k_OutputArray_Key);
 
   return CombineTransformationMatrices(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

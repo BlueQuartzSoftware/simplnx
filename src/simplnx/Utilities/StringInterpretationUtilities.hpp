@@ -12,7 +12,7 @@
 #include <sstream>
 #include <string>
 
-namespace nx::core::StringInterpretationUtilities
+namespace nx::core::string_interpretation_utilities
 {
 namespace detail
 {
@@ -182,4 +182,4 @@ Result<T> Convert(const std::string& input)
 }
 
 SIMPLNX_EXPORT Result<> CheckValueConverts(DataType type, const std::string& value);
-} // namespace nx::core::StringInterpretationUtilities
+} // namespace nx::core::string_interpretation_utilities

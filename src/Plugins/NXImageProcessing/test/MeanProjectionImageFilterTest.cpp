@@ -21,16 +21,16 @@ using namespace nx::core;
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::MeanProjectionImageFilter: Independent oracle (in-memory)", "[NXImageProcessing][MeanProjectionImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const uint32 projDim = GENERATE(uint32{0}, uint32{1}, uint32{2});
   const bool performInPlace = GENERATE(false, true);
   CAPTURE(projDim, performInPlace);
 
-  constexpr usize D = 32;
-  DataStructure ds;
-  const DataPath inputPath = ip_test::BuildRampImage<float32>(ds, D, 0.0, 1.0);
+  constexpr usize k_D = 32;
+  DataStructure dataStructure;
+  const DataPath inputPath = ip_test::BuildRampImage<float32>(dataStructure, k_D, 0.0, 1.0);
 
   MeanProjectionImageFilter filter;
   Arguments args;
@@ -41,37 +41,37 @@ TEST_CASE("NXImageProcessing::MeanProjectionImageFilter: Independent oracle (in-
   args.insertOrAssign(MeanProjectionImageFilter::k_OutputImageGeomName_Key, std::make_any<std::string>("Projected Image"));
   args.insertOrAssign(MeanProjectionImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
 
-  auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputArrayPath = performInPlace ? DataPath({"Image Geometry", "CellData", "Output"}) : DataPath({"Projected Image", "CellData", "Output"});
-  auto& outArray = ds.getDataRefAs<DataArray<float64>>(outputArrayPath);
+  auto& outArray = dataStructure.getDataRefAs<DataArray<float64>>(outputArrayPath);
   const auto& outStore = outArray.getDataStoreRef();
-  const usize numSlots = D * D;
+  const usize numSlots = k_D * k_D;
   REQUIRE(outStore.getSize() == numSlots);
 
   // Mean of the arithmetic-sequence column, decomposed by the collapsed-slot -> (non-projected coords) map.
-  constexpr float64 Dd = static_cast<float64>(D);
-  const float64 midOffset = (Dd - 1.0) / 2.0; // mean of {0,1,...,D-1}
+  constexpr float64 k_Dd = static_cast<float64>(k_D);
+  const float64 midOffset = (k_Dd - 1.0) / 2.0; // mean of {0,1,...,D-1}
   auto expectedForSlot = [&](usize s) -> float64 {
     switch(projDim)
     {
     case 0: { // collapse X: slot = z*D + y ; mean over x of (z*D^2 + y*D + x)
-      const auto z = static_cast<float64>(s / D);
-      const auto y = static_cast<float64>(s % D);
-      return z * Dd * Dd + y * Dd + midOffset;
+      const auto z = static_cast<float64>(s / k_D);
+      const auto y = static_cast<float64>(s % k_D);
+      return z * k_Dd * k_Dd + y * k_Dd + midOffset;
     }
     case 1: { // collapse Y: slot = z*D + x ; mean over y of (z*D^2 + y*D + x)
-      const auto z = static_cast<float64>(s / D);
-      const auto x = static_cast<float64>(s % D);
-      return z * Dd * Dd + x + Dd * midOffset;
+      const auto z = static_cast<float64>(s / k_D);
+      const auto x = static_cast<float64>(s % k_D);
+      return z * k_Dd * k_Dd + x + k_Dd * midOffset;
     }
     default: { // collapse Z: slot = y*D + x ; mean over z of (z*D^2 + y*D + x)
-      const auto y = static_cast<float64>(s / D);
-      const auto x = static_cast<float64>(s % D);
-      return y * Dd + x + Dd * Dd * midOffset;
+      const auto y = static_cast<float64>(s / k_D);
+      const auto x = static_cast<float64>(s % k_D);
+      return y * k_Dd + x + k_Dd * k_Dd * midOffset;
     }
     }
   };
@@ -106,13 +106,13 @@ TEST_CASE("NXImageProcessing::MeanProjectionImageFilter: Independent oracle (in-
     UNSCOPED_INFO(fmt::format("slot={} got={} expected={}", badSlot, badGot, badExp));
   }
   REQUIRE(allMatch);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
 // ITK-sourced real-image golden test (plan Task 5) -- duplicates ITKMeanProjectionImageTest.cpp(z_projection):
 // RA-Float.nrrd, projection dimension 2 (Z), compared against the stored Float64 baseline (double, 64x64x1) at
-// tol 1e-4. Mean is a Float64 reducer (AlwaysFloat64), only ALGEBRAICALLY equal to ITK's two-pass, hence the
+// tol 1e-4. Mean is a Float64 reducer (AlwaysFloat64Type), only ALGEBRAICALLY equal to ITK's two-pass, hence the
 // tolerant baseline comparator rather than md5/bit-exact.
 // The projection collapses Z, so the OUTPUT (in-place, in the collapsed "Image Geometry") owns the reduced
 // 64x64x1 array that matches the baseline's dims -- the geometry resolution for risk #2.

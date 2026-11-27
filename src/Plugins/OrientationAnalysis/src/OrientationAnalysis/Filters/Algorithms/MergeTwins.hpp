@@ -20,19 +20,19 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT MergeTwinsInputValues
 {
-  DataPath ContiguousNeighborListArrayPath;
-  float32 AxisTolerance;
-  float32 AngleTolerance;
-  DataPath FeaturePhasesArrayPath;
-  DataPath AvgQuatsArrayPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath CellParentIdsArrayPath;
-  DataPath NewCellFeatureAttributeMatrixPath;
-  DataPath FeatureParentIdsArrayPath;
-  DataPath ActiveArrayPath;
-  uint64 Seed;
-  bool RandomizeParentIds = false;
+  DataPath contiguous_neighbor_list_array_path;
+  float32 axis_tolerance{};
+  float32 angle_tolerance{};
+  DataPath feature_phases_array_path;
+  DataPath avg_quats_array_path;
+  DataPath feature_ids_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath cell_parent_ids_array_path;
+  DataPath new_cell_feature_attribute_matrix_path;
+  DataPath feature_parent_ids_array_path;
+  DataPath active_array_path;
+  uint64 seed{};
+  bool randomize_parent_ids = false;
 };
 
 /**
@@ -86,8 +86,8 @@ private:
 
   std::vector<ebsdlib::LaueOps::Pointer> m_OrientationOps;
 
-  std::mt19937_64 m_Generator = {};
-  std::uniform_real_distribution<float32> m_Distribution = {};
+  std::mt19937_64 m_Generator;
+  std::uniform_real_distribution<float32> m_Distribution;
 
   /**
    * @brief Groups connected twin features.

@@ -18,9 +18,9 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT SplitDataArrayByComponentInputValues
 {
-  DataPath InputArrayPath;
-  std::string SplitArraysSuffix;
-  std::vector<usize> ExtractComponents;
+  DataPath input_array_path;
+  std::string split_arrays_suffix;
+  std::vector<usize> extract_components;
 };
 
 /**
@@ -54,7 +54,7 @@ public:
   /**
    * @brief Destroys the component-split algorithm.
    */
-  ~SplitDataArrayByComponent() noexcept;
+  ~SplitDataArrayByComponent() noexcept = default;
 
   SplitDataArrayByComponent(const SplitDataArrayByComponent&) = delete;
   SplitDataArrayByComponent(SplitDataArrayByComponent&&) noexcept = delete;

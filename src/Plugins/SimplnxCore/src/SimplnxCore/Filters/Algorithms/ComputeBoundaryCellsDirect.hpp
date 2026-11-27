@@ -30,7 +30,7 @@ public:
    * @pre All arguments outlive this executor.
    */
   ComputeBoundaryCellsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const ComputeBoundaryCellsInputValues* inputValues);
-  ~ComputeBoundaryCellsDirect() noexcept;
+  ~ComputeBoundaryCellsDirect() noexcept = default;
 
   ComputeBoundaryCellsDirect(const ComputeBoundaryCellsDirect&) = delete;
   ComputeBoundaryCellsDirect(ComputeBoundaryCellsDirect&&) noexcept = delete;

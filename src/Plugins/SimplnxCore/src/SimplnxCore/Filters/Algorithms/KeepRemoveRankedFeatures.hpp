@@ -39,16 +39,16 @@ enum class RankCriterion : uint64
 
 struct SIMPLNXCORE_EXPORT KeepRemoveRankedFeaturesInputValues
 {
-  uint64 Operation;
-  uint64 RankFrom;
-  uint64 Criterion;
-  uint64 NumFeatures;
-  float64 Percent;
-  bool FillRemovedFeatures;
-  DataPath ImageGeometryPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath RankingArrayPath;
-  MultiArraySelectionParameter::ValueType IgnoredDataArrayPaths;
+  uint64 operation{};
+  uint64 rank_from{};
+  uint64 criterion{};
+  uint64 num_features{};
+  float64 percent{};
+  bool fill_removed_features{};
+  DataPath image_geometry_path;
+  DataPath feature_ids_array_path;
+  DataPath ranking_array_path;
+  MultiArraySelectionParameter::ValueType ignored_data_array_paths;
 };
 
 /**
@@ -59,7 +59,7 @@ class SIMPLNXCORE_EXPORT KeepRemoveRankedFeatures
 {
 public:
   KeepRemoveRankedFeatures(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, KeepRemoveRankedFeaturesInputValues* inputValues);
-  ~KeepRemoveRankedFeatures() noexcept;
+  ~KeepRemoveRankedFeatures() noexcept = default;
 
   KeepRemoveRankedFeatures(const KeepRemoveRankedFeatures&) = delete;
   KeepRemoveRankedFeatures(KeepRemoveRankedFeatures&&) noexcept = delete;

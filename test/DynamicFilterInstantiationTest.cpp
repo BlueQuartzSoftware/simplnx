@@ -10,18 +10,18 @@
  */
 TEST_CASE("Filter List Instantiation")
 {
-  UnitTest::LoadPlugins();
-  auto* filterList = nx::core::Application::Instance()->getFilterList();
-  REQUIRE(filterList != nullptr);
+  unit_test::LoadPlugins();
+  auto* filterListPtr = nx::core::Application::Instance()->getFilterList();
+  REQUIRE(filterListPtr != nullptr);
 
-  const auto& handles = filterList->getFilterHandles();
+  const auto& handles = filterListPtr->getFilterHandles();
   REQUIRE(!handles.empty());
 
   nx::core::DataStructure dataStructure;
 
   for(const auto& handle : handles)
   {
-    auto filter = filterList->createFilter(handle);
+    auto filter = filterListPtr->createFilter(handle);
     REQUIRE(filter != nullptr);
 
     UNSCOPED_INFO(fmt::format("Filter List Instantiation::{} Instantiation. [simplnx][{}]", filter->className(), filter->name()));
@@ -38,8 +38,8 @@ TEST_CASE("Filter List Instantiation")
     REQUIRE(!filter->defaultTags().empty());
 
     auto preflightResult = filter->preflight(dataStructure, args);
-    REQUIRE((preflightResult.outputActions.valid() || preflightResult.outputActions.invalid())); // Preflight exists
+    REQUIRE((preflightResult.output_actions.valid() || preflightResult.output_actions.invalid())); // Preflight exists
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

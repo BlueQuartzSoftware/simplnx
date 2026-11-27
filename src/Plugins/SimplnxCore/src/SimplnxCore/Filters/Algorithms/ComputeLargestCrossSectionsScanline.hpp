@@ -32,7 +32,7 @@ public:
   /**
    * @brief Destroys the non-owning bulk-I/O algorithm.
    */
-  ~ComputeLargestCrossSectionsScanline() noexcept;
+  ~ComputeLargestCrossSectionsScanline() noexcept = default;
 
   ComputeLargestCrossSectionsScanline(const ComputeLargestCrossSectionsScanline&) = delete;
   ComputeLargestCrossSectionsScanline(ComputeLargestCrossSectionsScanline&&) noexcept = delete;

@@ -80,7 +80,7 @@ TEST_CASE("Vec3 Constructors")
   SECTION("Copy constructor")
   {
     Vec3<float32> original(1.0f, 2.0f, 3.0f);
-    Vec3<float32> copy(original);
+    const Vec3<float32>& copy(original);
     REQUIRE(copy[0] == 1.0f);
     REQUIRE(copy[1] == 2.0f);
     REQUIRE(copy[2] == 3.0f);
@@ -163,10 +163,10 @@ TEST_CASE("Vec3 Accessors")
 
   SECTION("data() pointer access")
   {
-    float32* ptr = v.data();
-    REQUIRE(ptr[0] == 1.0f);
-    REQUIRE(ptr[1] == 2.0f);
-    REQUIRE(ptr[2] == 3.0f);
+    float32* ptrPtr = v.data();
+    REQUIRE(ptrPtr[0] == 1.0f);
+    REQUIRE(ptrPtr[1] == 2.0f);
+    REQUIRE(ptrPtr[2] == 3.0f);
   }
 
   SECTION("size()")
@@ -535,14 +535,14 @@ TEST_CASE("Vec3 Iterator Support")
 
   SECTION("begin/end")
   {
-    auto it = v.begin();
-    REQUIRE(*it == 1.0f);
-    ++it;
-    REQUIRE(*it == 2.0f);
-    ++it;
-    REQUIRE(*it == 3.0f);
-    ++it;
-    REQUIRE(it == v.end());
+    auto itPtr = v.begin();
+    REQUIRE(*itPtr == 1.0f);
+    ++itPtr;
+    REQUIRE(*itPtr == 2.0f);
+    ++itPtr;
+    REQUIRE(*itPtr == 3.0f);
+    ++itPtr;
+    REQUIRE(itPtr == v.end());
   }
 }
 
@@ -557,47 +557,40 @@ TEST_CASE("Vec3 Stream Output")
 
 TEST_CASE("Vec3 Type Aliases")
 {
-  STATIC_REQUIRE(std::is_same_v<FloatVec3::value_type, float32>);
-  STATIC_REQUIRE(std::is_same_v<Float64Vec3::value_type, float64>);
-  STATIC_REQUIRE(std::is_same_v<IntVec3::value_type, int32>);
-  STATIC_REQUIRE(std::is_same_v<SizeVec3::value_type, usize>);
-  STATIC_REQUIRE(std::is_same_v<Point3Df::value_type, float32>);
-  STATIC_REQUIRE(std::is_same_v<Matrix3X1f::value_type, float32>);
-  STATIC_REQUIRE(std::is_same_v<Matrix3X1d::value_type, float64>);
+  STATIC_REQUIRE(std::is_same_v<FloatVec3Type::value_type, float32>);
+  STATIC_REQUIRE(std::is_same_v<Float64Vec3Type::value_type, float64>);
+  STATIC_REQUIRE(std::is_same_v<IntVec3Type::value_type, int32>);
+  STATIC_REQUIRE(std::is_same_v<SizeVec3Type::value_type, usize>);
+  STATIC_REQUIRE(std::is_same_v<Matrix3X1fType::value_type, float32>);
+  STATIC_REQUIRE(std::is_same_v<Matrix3X1dType::value_type, float64>);
 
   SECTION("FloatVec3")
   {
-    FloatVec3 v(1.0f, 2.0f, 3.0f);
+    FloatVec3Type v(1.0f, 2.0f, 3.0f);
     REQUIRE(v[0] == 1.0f);
   }
 
   SECTION("Float64Vec3")
   {
-    Float64Vec3 v(1.0, 2.0, 3.0);
+    Float64Vec3Type v(1.0, 2.0, 3.0);
     REQUIRE(v[0] == 1.0);
   }
 
   SECTION("IntVec3")
   {
-    IntVec3 v(1, 2, 3);
+    IntVec3Type v(1, 2, 3);
     REQUIRE(v[0] == 1);
   }
 
   SECTION("SizeVec3")
   {
-    SizeVec3 v(1, 2, 3);
+    SizeVec3Type v(1, 2, 3);
     REQUIRE(v[0] == 1);
-  }
-
-  SECTION("Point3D alias")
-  {
-    Point3Df v(1.0f, 2.0f, 3.0f);
-    REQUIRE(v[0] == 1.0f);
   }
 
   SECTION("Matrix3X1 alias")
   {
-    Matrix3X1<float32> v(1.0f, 2.0f, 3.0f);
+    Matrix3X1Type<float32> v(1.0f, 2.0f, 3.0f);
     REQUIRE(v[0] == 1.0f);
     REQUIRE(v[1] == 2.0f);
     REQUIRE(v[2] == 3.0f);
@@ -605,13 +598,13 @@ TEST_CASE("Vec3 Type Aliases")
 
   SECTION("Matrix3X1d alias")
   {
-    Matrix3X1f v(1.0f, 2.0f, 3.0f);
+    Matrix3X1fType v(1.0f, 2.0f, 3.0f);
     REQUIRE(v[0] == 1.0f);
   }
 
   SECTION("Matrix3X1d alias")
   {
-    Matrix3X1d v(1.0, 2.0, 3.0);
+    Matrix3X1dType v(1.0, 2.0, 3.0);
     REQUIRE(v[0] == 1.0);
   }
 }

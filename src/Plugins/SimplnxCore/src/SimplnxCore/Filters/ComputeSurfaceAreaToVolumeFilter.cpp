@@ -68,13 +68,13 @@ Parameters ComputeSurfaceAreaToVolumeFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_NumCellsArrayPath_Key, "Number of Cells", "Number of Cells that are owned by the Feature. This value does not place any distinction between Cells that may be of a different size",
-      DataPath({"Cell Feature Data", "NumElements"}), ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+      DataPath({"Cell Feature Data", "NumElements"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_SurfaceAreaVolumeRatioArrayName_Key, "Surface Area to Volume Ratio",
                                                           "Ratio of surface area to volume for each Feature. The units are inverse length", "SurfaceAreaVolumeRatio"));
@@ -92,14 +92,14 @@ IFilter::VersionType ComputeSurfaceAreaToVolumeFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeSurfaceAreaToVolumeFilter::clone() const
+IFilter::UniquePointerType ComputeSurfaceAreaToVolumeFilter::clone() const
 {
   return std::make_unique<ComputeSurfaceAreaToVolumeFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
   auto pNumCellsArrayPathValue = filterArgs.value<DataPath>(k_NumCellsArrayPath_Key);
@@ -110,7 +110,7 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
   // ArraySelectionParameter also accepts StringArray and NeighborList for numeric selections.
   // Keep the local type checks until the parameter validates supported array kinds.
   // TODO(#1833): Revisit these guards after the shared fix preserves generic array support.
-  const auto* featureIdsPtr = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
+  const auto* featureIdsPtr = dataStructure.getDataAs<Int32ArrayType>(pFeatureIdsArrayPathValue);
   if(featureIdsPtr == nullptr)
   {
     const auto& selectedObject = dataStructure.getDataRefAs<DataObject>(pFeatureIdsArrayPathValue);
@@ -120,7 +120,7 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
   auto tupleCountResult = ValidateCellTupleCount(imageGeom, pImageGeometryPathValue, featureIdsPtr->getNumberOfTuples(), pFeatureIdsArrayPathValue, -12804);
   if(tupleCountResult.invalid())
   {
-    return {.outputActions = ConvertInvalidResult<OutputActions>(std::move(tupleCountResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(tupleCountResult))};
   }
 
   PreflightResult preflightResult;
@@ -128,19 +128,19 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
   nx::core::Result<OutputActions> resultOutputActions;
 
   // Get the Cell Data Array, so we get the tuple shape correct
-  const auto* featureDataArray = dataStructure.getDataAs<Int32Array>(pNumCellsArrayPathValue);
-  if(nullptr == featureDataArray)
+  const auto* featureDataArrayPtr = dataStructure.getDataAs<Int32ArrayType>(pNumCellsArrayPathValue);
+  if(nullptr == featureDataArrayPtr)
   {
     return MakePreflightErrorResult(-12801, fmt::format("{} Data Array is not of the correct type. Select a DataArray object.", pNumCellsArrayPathValue.toString()));
   }
-  const auto* cellFeatureData = dataStructure.getDataAs<AttributeMatrix>(pNumCellsArrayPathValue.getParent());
-  if(cellFeatureData == nullptr)
+  const auto* cellFeatureDataPtr = dataStructure.getDataAs<AttributeMatrix>(pNumCellsArrayPathValue.getParent());
+  if(cellFeatureDataPtr == nullptr)
   {
     return MakePreflightErrorResult(-12802, fmt::format("The selected number of cells array {} is not located in an attribute matrix. Make sure you have selected the number of cells array "
                                                         "located in the cell feature attribute matrix of the selected geometry",
                                                         pNumCellsArrayPathValue.toString()));
   }
-  ShapeType tupleShape = cellFeatureData->getShape();
+  ShapeType tupleShape = cellFeatureDataPtr->getShape();
   // Create the SurfaceAreaVolumeRatio
   {
     auto arrayPath = pNumCellsArrayPathValue.replaceName(filterArgs.value<std::string>(k_SurfaceAreaVolumeRatioArrayName_Key));
@@ -158,35 +158,35 @@ IFilter::PreflightResult ComputeSurfaceAreaToVolumeFilter::preflightImpl(const D
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeSurfaceAreaToVolumeFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeSurfaceAreaToVolumeFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeSurfaceAreaToVolumeInputValues inputValues;
 
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  inputValues.NumCellsArrayPath = filterArgs.value<DataPath>(k_NumCellsArrayPath_Key);
-  inputValues.SurfaceAreaVolumeRatioArrayName = inputValues.NumCellsArrayPath.replaceName(filterArgs.value<std::string>(k_SurfaceAreaVolumeRatioArrayName_Key));
-  inputValues.CalculateSphericity = filterArgs.value<bool>(k_CalculateSphericity_Key);
-  inputValues.SphericityArrayName = inputValues.NumCellsArrayPath.replaceName(filterArgs.value<std::string>(k_SphericityArrayName_Key));
-  inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  inputValues.num_cells_array_path = filterArgs.value<DataPath>(k_NumCellsArrayPath_Key);
+  inputValues.surface_area_volume_ratio_array_name = inputValues.num_cells_array_path.replaceName(filterArgs.value<std::string>(k_SurfaceAreaVolumeRatioArrayName_Key));
+  inputValues.calculate_sphericity = filterArgs.value<bool>(k_CalculateSphericity_Key);
+  inputValues.sphericity_array_name = inputValues.num_cells_array_path.replaceName(filterArgs.value<std::string>(k_SphericityArrayName_Key));
+  inputValues.input_image_geometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   return ComputeSurfaceAreaToVolume(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_NumCellsArrayPathKey = "NumCellsArrayPath";
-constexpr StringLiteral k_SurfaceAreaVolumeRatioArrayNameKey = "SurfaceAreaVolumeRatioArrayName";
-constexpr StringLiteral k_CalculateSphericityKey = "CalculateSphericity";
-constexpr StringLiteral k_SphericityArrayNameKey = "SphericityArrayName";
-} // namespace SIMPL
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_NumCellsArrayPathKey = "NumCellsArrayPath";
+constexpr StringLiteralType k_SurfaceAreaVolumeRatioArrayNameKey = "SurfaceAreaVolumeRatioArrayName";
+constexpr StringLiteralType k_CalculateSphericityKey = "CalculateSphericity";
+constexpr StringLiteralType k_SphericityArrayNameKey = "SphericityArrayName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeSurfaceAreaToVolumeFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -195,14 +195,14 @@ Result<Arguments> ComputeSurfaceAreaToVolumeFilter::FromSIMPLJson(const nlohmann
 
   std::vector<Result<>> results;
 
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey,
+                                                                                                                                        k_SelectedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_NumCellsArrayPathKey, k_NumCellsArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_SelectedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_NumCellsArrayPathKey, k_NumCellsArrayPath_Key));
-  results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SurfaceAreaVolumeRatioArrayNameKey, k_SurfaceAreaVolumeRatioArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_CalculateSphericityKey, k_CalculateSphericity_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_SphericityArrayNameKey, k_SphericityArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SurfaceAreaVolumeRatioArrayNameKey, k_SurfaceAreaVolumeRatioArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_CalculateSphericityKey, k_CalculateSphericity_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SphericityArrayNameKey, k_SphericityArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

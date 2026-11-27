@@ -36,25 +36,25 @@ struct FindThresholdFunctor
    * mask chunks.
    */
   template <class T>
-  Result<> operator()(const IDataArray* inputObject, const Float32AbstractDataStore& gradMag, BoolAbstractDataStore& maskStore, const std::atomic_bool& shouldCancel)
+  Result<> operator()(const IDataArray* inputObject, const Float32AbstractDataStoreType& gradMag, BoolAbstractDataStoreType& maskStore, const std::atomic_bool& shouldCancel)
   {
     const auto& inputData = inputObject->template getIDataStoreRefAs<AbstractDataStore<T>>();
     const usize numTuples = inputData.getNumberOfTuples();
-    constexpr usize kTuplesPerBatch = 65536;
-    auto inputBuffer = std::make_unique<T[]>(kTuplesPerBatch);
-    auto gradientBuffer = std::make_unique<float32[]>(kTuplesPerBatch);
-    auto maskBuffer = std::make_unique<bool[]>(kTuplesPerBatch);
+    constexpr usize k_TuplesPerBatch = 65536;
+    auto inputBuffer = std::make_unique<T[]>(k_TuplesPerBatch);
+    auto gradientBuffer = std::make_unique<float32[]>(k_TuplesPerBatch);
+    auto maskBuffer = std::make_unique<bool[]>(k_TuplesPerBatch);
     float numerator = 0;
     float denominator = 0;
 
     // Sequential tuple order preserves the established float accumulation result.
-    for(usize start = 0; start < numTuples; start += kTuplesPerBatch)
+    for(usize start = 0; start < numTuples; start += k_TuplesPerBatch)
     {
       if(shouldCancel)
       {
         return {};
       }
-      const usize count = std::min(kTuplesPerBatch, numTuples - start);
+      const usize count = std::min(k_TuplesPerBatch, numTuples - start);
       auto result = inputData.copyIntoBuffer(start, nonstd::span<T>(inputBuffer.get(), count));
       if(result.invalid())
       {
@@ -74,13 +74,13 @@ struct FindThresholdFunctor
 
     float threshold = numerator / denominator;
 
-    for(usize start = 0; start < numTuples; start += kTuplesPerBatch)
+    for(usize start = 0; start < numTuples; start += k_TuplesPerBatch)
     {
       if(shouldCancel)
       {
         return {};
       }
-      const usize count = std::min(kTuplesPerBatch, numTuples - start);
+      const usize count = std::min(k_TuplesPerBatch, numTuples - start);
       auto result = inputData.copyIntoBuffer(start, nonstd::span<T>(inputBuffer.get(), count));
       if(result.invalid())
       {
@@ -110,23 +110,21 @@ RobustAutomaticThreshold::RobustAutomaticThreshold(DataStructure& dataStructure,
 {
 }
 
-RobustAutomaticThreshold::~RobustAutomaticThreshold() noexcept = default;
-
 Result<> RobustAutomaticThreshold::operator()()
 {
-  const auto* inputArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->InputArrayPath);
-  const auto* gradientArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->GradientArrayPath);
-  auto* maskArray = m_DataStructure.getDataAs<BoolArray>(m_InputValues->InputArrayPath.replaceName(m_InputValues->CreatedMaskName));
-  const auto& gradientStoreRef = gradientArray->getDataStoreRef();
-  auto& maskStoreRef = maskArray->getDataStoreRef();
+  const auto* inputArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->input_array_path);
+  const auto* gradientArrayPtr = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->gradient_array_path);
+  auto* maskArrayPtr = m_DataStructure.getDataAs<BoolArrayType>(m_InputValues->input_array_path.replaceName(m_InputValues->created_mask_name));
+  const auto& gradientStoreRef = gradientArrayPtr->getDataStoreRef();
+  auto& maskStoreRef = maskArrayPtr->getDataStoreRef();
 
   if(m_ShouldCancel)
   {
     return {};
   }
 
-  const bool usesOutOfCoreStore = AnyOutOfCore({inputArray, gradientArray, maskArray});
+  const bool usesOutOfCoreStore = AnyOutOfCore({inputArrayPtr, gradientArrayPtr, maskArrayPtr});
   const bool useOutOfCorePath = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
   RecordAlgorithmPathExecution(useOutOfCorePath ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
-  return ExecuteDataFunctionNoBool(FindThresholdFunctor{}, inputArray->getDataType(), inputArray, gradientStoreRef, maskStoreRef, m_ShouldCancel);
+  return ExecuteDataFunctionNoBool(FindThresholdFunctor{}, inputArrayPtr->getDataType(), inputArrayPtr, gradientStoreRef, maskStoreRef, m_ShouldCancel);
 }

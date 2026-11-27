@@ -54,12 +54,12 @@ inline std::vector<nx::core::usize> BuildSparseFeatureSurfaceData(nx::core::Data
   auto* featureAMPtr = AttributeMatrix::Create(dataStructure, featurePath.getTargetName(), featureShape, geomPtr->getId());
   REQUIRE(featureAMPtr != nullptr);
 
-  auto idsStorePtr = DataStoreUtilities::CreateDataStore<int32>(dataStructure, idsPath, cellShape, {1});
-  auto countsStorePtr = DataStoreUtilities::CreateDataStore<int32>(dataStructure, countsPath, featureShape, {1});
+  auto idsStorePtr = data_store_utilities::CreateDataStore<int32>(dataStructure, idsPath, cellShape, {1});
+  auto countsStorePtr = data_store_utilities::CreateDataStore<int32>(dataStructure, countsPath, featureShape, {1});
   REQUIRE(idsStorePtr != nullptr);
   REQUIRE(countsStorePtr != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, idsPath.getTargetName(), idsStorePtr, cellAMPtr->getId()) != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, countsPath.getTargetName(), countsStorePtr, featureAMPtr->getId()) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, idsPath.getTargetName(), idsStorePtr, cellAMPtr->getId()) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, countsPath.getTargetName(), countsStorePtr, featureAMPtr->getId()) != nullptr);
   if(numFeatures == 0)
   {
     return {};
@@ -111,10 +111,10 @@ void CheckSparseFeatureSurfaceMetrics(ScopeT& scope, nx::core::usize numFeatures
   const DataPath countsPath = featurePath.createChildPath("NumCells");
   const DataPath ratioPath = featurePath.createChildPath("SurfaceAreaVolumeRatio");
   const DataPath sphericityPath = featurePath.createChildPath("Sphericity");
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(idsPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(countsPath));
-  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32Array>(idsPath));
-  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32Array>(countsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(idsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(countsPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32ArrayType>(idsPath));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32ArrayType>(countsPath));
 
   const ComputeSurfaceAreaToVolumeFilter filter;
   Arguments args = filter.getDefaultArguments();
@@ -125,8 +125,8 @@ void CheckSparseFeatureSurfaceMetrics(ScopeT& scope, nx::core::usize numFeatures
   const auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(ratioPath));
-  const auto& ratios = dataStructure.getDataRefAs<Float32Array>(ratioPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(ratioPath));
+  const auto& ratios = dataStructure.getDataRefAs<Float32ArrayType>(ratioPath);
   scope.requireExpectedStore(ratios);
   CHECK(ratios.getTupleShape() == ShapeType{numFeatures});
   CHECK(ratios.getComponentShape() == ShapeType{1});
@@ -149,8 +149,8 @@ void CheckSparseFeatureSurfaceMetrics(ScopeT& scope, nx::core::usize numFeatures
   }
   if(calculateSphericity)
   {
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(sphericityPath));
-    const auto& sphericity = dataStructure.getDataRefAs<Float32Array>(sphericityPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(sphericityPath));
+    const auto& sphericity = dataStructure.getDataRefAs<Float32ArrayType>(sphericityPath);
     scope.requireExpectedStore(sphericity);
     CHECK(sphericity.getTupleShape() == ShapeType{numFeatures});
     CHECK(sphericity.getComponentShape() == ShapeType{1});
@@ -178,16 +178,16 @@ void CheckSparseFeatureSurfaceMetrics(ScopeT& scope, nx::core::usize numFeatures
   {
     CHECK(dataStructure.getData(sphericityPath) == nullptr);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // A wrong X/Y face weight changes the physical area of this interior box.
 template <class ScopeT>
-std::array<nx::core::float32, 3> CheckInteriorPairSurfaceMetrics(ScopeT& scope, nx::core::usize pairAxis, const nx::core::FloatVec3& spacing, bool calculateSphericity, bool singleSlice = false,
+std::array<nx::core::float32, 3> CheckInteriorPairSurfaceMetrics(ScopeT& scope, nx::core::usize pairAxis, const nx::core::FloatVec3Type& spacing, bool calculateSphericity, bool singleSlice = false,
                                                                  nx::core::int32 suppliedPairCount = 2)
 {
   using namespace nx::core;
-  const SizeVec3 dimensions = singleSlice ? SizeVec3{5, 5, 1} : SizeVec3{5, 5, 5};
+  const SizeVec3Type dimensions = singleSlice ? SizeVec3Type{5, 5, 1} : SizeVec3Type{5, 5, 5};
   DataStructure dataStructure;
   const DataPath geomPath({"ImageGeom"});
   const DataPath cellPath = geomPath.createChildPath("CellData");
@@ -199,10 +199,10 @@ std::array<nx::core::float32, 3> CheckInteriorPairSurfaceMetrics(ScopeT& scope, 
   const ShapeType cellShape = {dimensions[2], dimensions[1], dimensions[0]};
   const ShapeType featureShape = {3};
   const ShapeType componentShape = {1};
-  const FloatVec3 origin = {-1.0f, 4.0f, 7.0f};
+  const FloatVec3Type origin = {-1.0f, 4.0f, 7.0f};
   REQUIRE(pairAxis < (singleSlice ? 2 : 3));
-  constexpr usize pairFeature = 2;
-  constexpr int32 enclosingFeature = 1;
+  constexpr usize k_PairFeature = 2;
+  constexpr int32 k_EnclosingFeature = 1;
   const usize cellCount = dimensions[0] * dimensions[1] * dimensions[2];
 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeom");
@@ -216,28 +216,28 @@ std::array<nx::core::float32, 3> CheckInteriorPairSurfaceMetrics(ScopeT& scope, 
   auto* featureAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, "CellFeatureData", featureShape, imageGeomPtr->getId());
   REQUIRE(featureAttributeMatrixPtr != nullptr);
 
-  auto idsStorePtr = DataStoreUtilities::CreateDataStore<int32>(dataStructure, idsPath, cellShape, componentShape);
-  auto countsStorePtr = DataStoreUtilities::CreateDataStore<int32>(dataStructure, countsPath, featureShape, componentShape);
+  auto idsStorePtr = data_store_utilities::CreateDataStore<int32>(dataStructure, idsPath, cellShape, componentShape);
+  auto countsStorePtr = data_store_utilities::CreateDataStore<int32>(dataStructure, countsPath, featureShape, componentShape);
   REQUIRE(idsStorePtr != nullptr);
   REQUIRE(countsStorePtr != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "FeatureIds", idsStorePtr, cellAttributeMatrixPtr->getId()) != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "NumCells", countsStorePtr, featureAttributeMatrixPtr->getId()) != nullptr);
-  std::vector<int32> labels(cellCount, enclosingFeature);
+  REQUIRE(Int32ArrayType::Create(dataStructure, "FeatureIds", idsStorePtr, cellAttributeMatrixPtr->getId()) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, "NumCells", countsStorePtr, featureAttributeMatrixPtr->getId()) != nullptr);
+  std::vector<int32> labels(cellCount, k_EnclosingFeature);
   const std::array<usize, 3> first = {2, 2, singleSlice ? usize{0} : usize{2}};
   auto second = first;
   second.at(pairAxis)++;
-  labels[(((first[2] * dimensions[1]) + first[1]) * dimensions[0]) + first[0]] = static_cast<int32>(pairFeature);
-  labels[(((second[2] * dimensions[1]) + second[1]) * dimensions[0]) + second[0]] = static_cast<int32>(pairFeature);
+  labels[(((first[2] * dimensions[1]) + first[1]) * dimensions[0]) + first[0]] = static_cast<int32>(k_PairFeature);
+  labels[(((second[2] * dimensions[1]) + second[1]) * dimensions[0]) + second[0]] = static_cast<int32>(k_PairFeature);
   const std::array<int32, 3> counts = {0, singleSlice ? 23 : 123, suppliedPairCount};
   auto idsWrite = idsStorePtr->copyFromBuffer(0, nonstd::span<const int32>(labels.data(), labels.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(idsWrite);
   auto countsWrite = countsStorePtr->copyFromBuffer(0, nonstd::span<const int32>(counts.data(), counts.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(countsWrite);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(idsPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(countsPath));
-  const auto& ids = dataStructure.getDataRefAs<Int32Array>(idsPath);
-  const auto& numCells = dataStructure.getDataRefAs<Int32Array>(countsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(idsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(countsPath));
+  const auto& ids = dataStructure.getDataRefAs<Int32ArrayType>(idsPath);
+  const auto& numCells = dataStructure.getDataRefAs<Int32ArrayType>(countsPath);
   scope.requireExpectedStore(ids);
   scope.requireExpectedStore(numCells);
   const auto idsFormat = ids.getDataFormat();
@@ -252,7 +252,7 @@ std::array<nx::core::float32, 3> CheckInteriorPairSurfaceMetrics(ScopeT& scope, 
   args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_SurfaceAreaVolumeRatioArrayName_Key, std::make_any<std::string>("SurfaceAreaVolumeRatio"));
   args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_SphericityArrayName_Key, std::make_any<std::string>("Sphericity"));
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
@@ -263,13 +263,13 @@ std::array<nx::core::float32, 3> CheckInteriorPairSurfaceMetrics(ScopeT& scope, 
   const double area = 2.0 * ((singleSlice ? 0.0 : sides[0] * sides[1]) + (sides[0] * sides[2]) + (sides[1] * sides[2]));
   const double voxelVolume = static_cast<double>(spacing[0]) * spacing[1] * spacing[2];
   std::array<double, 3> volumes = {0.0, 0.0, 0.0};
-  volumes[pairFeature] = suppliedPairCount * voxelVolume;
-  volumes[enclosingFeature] = (singleSlice ? 23.0 : 123.0) * voxelVolume;
+  volumes[k_PairFeature] = suppliedPairCount * voxelVolume;
+  volumes[k_EnclosingFeature] = (singleSlice ? 23.0 : 123.0) * voxelVolume;
   CAPTURE(pairAxis, spacing[0], spacing[1], spacing[2], calculateSphericity, singleSlice, suppliedPairCount, area);
   REQUIRE(area > 0.0);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(ratioPath));
-  const auto& ratios = dataStructure.getDataRefAs<Float32Array>(ratioPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(ratioPath));
+  const auto& ratios = dataStructure.getDataRefAs<Float32ArrayType>(ratioPath);
   scope.requireExpectedStore(ratios);
   CHECK(ratios.getTupleShape() == featureShape);
   CHECK(ratios.getComponentShape() == componentShape);
@@ -293,8 +293,8 @@ std::array<nx::core::float32, 3> CheckInteriorPairSurfaceMetrics(ScopeT& scope, 
   std::array<float32, 3> sphericityValues = {};
   if(calculateSphericity)
   {
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(sphericityPath));
-    const auto& sphericity = dataStructure.getDataRefAs<Float32Array>(sphericityPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(sphericityPath));
+    const auto& sphericity = dataStructure.getDataRefAs<Float32ArrayType>(sphericityPath);
     scope.requireExpectedStore(sphericity);
     CHECK(sphericity.getTupleShape() == featureShape);
     CHECK(sphericity.getComponentShape() == componentShape);
@@ -352,7 +352,7 @@ std::array<nx::core::float32, 3> CheckInteriorPairSurfaceMetrics(ScopeT& scope, 
   CHECK(finalGeom.getOrigin() == origin);
   CHECK(cellAttributeMatrixPtr->getShape() == cellShape);
   CHECK(featureAttributeMatrixPtr->getShape() == featureShape);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
   return sphericityValues;
 }
 
@@ -360,11 +360,11 @@ template <class ScopeT>
 void CheckScaleInvariantSphericity(ScopeT& scope)
 {
   using namespace nx::core;
-  const auto reference = CheckInteriorPairSurfaceMetrics(scope, 0, FloatVec3{2.0f, 3.0f, 5.0f}, true);
+  const auto reference = CheckInteriorPairSurfaceMetrics(scope, 0, FloatVec3Type{2.0f, 3.0f, 5.0f}, true);
   for(const int exponent : {-20, 20})
   {
     CAPTURE(exponent);
-    const FloatVec3 spacing = {std::ldexp(2.0f, exponent), std::ldexp(3.0f, exponent), std::ldexp(5.0f, exponent)};
+    const FloatVec3Type spacing = {std::ldexp(2.0f, exponent), std::ldexp(3.0f, exponent), std::ldexp(5.0f, exponent)};
     // The pair helper independently checks each scale against the equal-volume sphere oracle.
     const auto scaled = CheckInteriorPairSurfaceMetrics(scope, 0, spacing, true);
     for(usize feature = 1; feature < reference.size(); feature++)
@@ -376,11 +376,11 @@ void CheckScaleInvariantSphericity(ScopeT& scope)
 }
 // A connected plate with long, separated teeth exposes repeated decimal-area accumulation.
 template <class ScopeT>
-void CheckConnectedCombSurfaceMetrics(ScopeT& scope, const nx::core::FloatVec3& spacing, bool calculateSphericity)
+void CheckConnectedCombSurfaceMetrics(ScopeT& scope, const nx::core::FloatVec3Type& spacing, bool calculateSphericity)
 {
   using namespace nx::core;
   DataStructure dataStructure;
-  const SizeVec3 dimensions = {137, 113, 37};
+  const SizeVec3Type dimensions = {137, 113, 37};
   const ShapeType cellShape = {dimensions[2], dimensions[1], dimensions[0]};
   const ShapeType featureShape = {2};
   const ShapeType componentShape = {1};
@@ -391,30 +391,30 @@ void CheckConnectedCombSurfaceMetrics(ScopeT& scope, const nx::core::FloatVec3& 
   const DataPath countsPath = featurePath.createChildPath("NumCells");
   const DataPath ratioPath = featurePath.createChildPath("SurfaceAreaVolumeRatio");
   const DataPath sphericityPath = featurePath.createChildPath("Sphericity");
-  const FloatVec3 origin = {-1.0f, 4.0f, 7.0f};
+  const FloatVec3Type origin = {-1.0f, 4.0f, 7.0f};
   const usize cellCount = dimensions[0] * dimensions[1] * dimensions[2];
 
   // The x=1 backing plate is 111 by 35. Each odd (y,z) location extends a tooth
   // another 134 cells along X. All teeth connect through the plate and the entire
   // comb has a one-cell background border, so no exterior-domain faces enter the oracle.
-  constexpr int32 plateY = 111;
-  constexpr int32 plateZ = 35;
-  constexpr int32 toothLength = 134;
-  constexpr int32 teethY = 56;
-  constexpr int32 teethZ = 18;
-  constexpr int32 combCellCount = (plateY * plateZ) + (toothLength * teethY * teethZ);
-  constexpr std::array<int32, 3> normalFaceCounts = {2 * plateY * plateZ, (2 * plateZ) + (2 * toothLength * teethY * teethZ), (2 * plateY) + (2 * toothLength * teethY * teethZ)};
-  STATIC_REQUIRE(combCellCount == 138957);
-  STATIC_REQUIRE(normalFaceCounts[0] == 7770);
-  STATIC_REQUIRE(normalFaceCounts[1] == 270214);
-  STATIC_REQUIRE(normalFaceCounts[2] == 270366);
-  const std::array<int32, 2> counts = {static_cast<int32>(cellCount) - combCellCount, combCellCount};
+  constexpr int32 k_PlateY = 111;
+  constexpr int32 k_PlateZ = 35;
+  constexpr int32 k_ToothLength = 134;
+  constexpr int32 k_TeethY = 56;
+  constexpr int32 k_TeethZ = 18;
+  constexpr int32 k_CombCellCount = (k_PlateY * k_PlateZ) + (k_ToothLength * k_TeethY * k_TeethZ);
+  constexpr std::array<int32, 3> k_NormalFaceCounts = {2 * k_PlateY * k_PlateZ, (2 * k_PlateZ) + (2 * k_ToothLength * k_TeethY * k_TeethZ), (2 * k_PlateY) + (2 * k_ToothLength * k_TeethY * k_TeethZ)};
+  STATIC_REQUIRE(k_CombCellCount == 138957);
+  STATIC_REQUIRE(k_NormalFaceCounts[0] == 7770);
+  STATIC_REQUIRE(k_NormalFaceCounts[1] == 270214);
+  STATIC_REQUIRE(k_NormalFaceCounts[2] == 270366);
+  const std::array<int32, 2> counts = {static_cast<int32>(cellCount) - k_CombCellCount, k_CombCellCount};
   std::vector<int32> labels(cellCount, 0);
-  for(usize zIndex = 1; zIndex <= plateZ; zIndex++)
+  for(usize zIndex = 1; zIndex <= k_PlateZ; zIndex++)
   {
-    for(usize yIndex = 1; yIndex <= plateY; yIndex++)
+    for(usize yIndex = 1; yIndex <= k_PlateY; yIndex++)
     {
-      for(usize xIndex = 1; xIndex <= toothLength + 1; xIndex++)
+      for(usize xIndex = 1; xIndex <= k_ToothLength + 1; xIndex++)
       {
         if(xIndex == 1 || (yIndex % 2 == 1 && zIndex % 2 == 1))
         {
@@ -423,7 +423,7 @@ void CheckConnectedCombSurfaceMetrics(ScopeT& scope, const nx::core::FloatVec3& 
       }
     }
   }
-  REQUIRE(std::count(labels.begin(), labels.end(), int32{1}) == combCellCount);
+  REQUIRE(std::count(labels.begin(), labels.end(), int32{1}) == k_CombCellCount);
 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeom");
   REQUIRE(imageGeomPtr != nullptr);
@@ -435,21 +435,21 @@ void CheckConnectedCombSurfaceMetrics(ScopeT& scope, const nx::core::FloatVec3& 
   imageGeomPtr->setCellData(*cellAttributeMatrixPtr);
   auto* featureAttributeMatrixPtr = AttributeMatrix::Create(dataStructure, "CellFeatureData", featureShape, imageGeomPtr->getId());
   REQUIRE(featureAttributeMatrixPtr != nullptr);
-  auto idsStorePtr = DataStoreUtilities::CreateDataStore<int32>(dataStructure, idsPath, cellShape, componentShape);
-  auto countsStorePtr = DataStoreUtilities::CreateDataStore<int32>(dataStructure, countsPath, featureShape, componentShape);
+  auto idsStorePtr = data_store_utilities::CreateDataStore<int32>(dataStructure, idsPath, cellShape, componentShape);
+  auto countsStorePtr = data_store_utilities::CreateDataStore<int32>(dataStructure, countsPath, featureShape, componentShape);
   REQUIRE(idsStorePtr != nullptr);
   REQUIRE(countsStorePtr != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "FeatureIds", idsStorePtr, cellAttributeMatrixPtr->getId()) != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "NumCells", countsStorePtr, featureAttributeMatrixPtr->getId()) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, "FeatureIds", idsStorePtr, cellAttributeMatrixPtr->getId()) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, "NumCells", countsStorePtr, featureAttributeMatrixPtr->getId()) != nullptr);
   auto idsWrite = idsStorePtr->copyFromBuffer(0, nonstd::span<const int32>(labels.data(), labels.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(idsWrite);
   auto countsWrite = countsStorePtr->copyFromBuffer(0, nonstd::span<const int32>(counts.data(), counts.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(countsWrite);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(idsPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(countsPath));
-  const auto& ids = dataStructure.getDataRefAs<Int32Array>(idsPath);
-  const auto& numCells = dataStructure.getDataRefAs<Int32Array>(countsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(idsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(countsPath));
+  const auto& ids = dataStructure.getDataRefAs<Int32ArrayType>(idsPath);
+  const auto& numCells = dataStructure.getDataRefAs<Int32ArrayType>(countsPath);
   scope.requireExpectedStore(ids);
   scope.requireExpectedStore(numCells);
   const auto idsFormat = ids.getDataFormat();
@@ -464,18 +464,18 @@ void CheckConnectedCombSurfaceMetrics(ScopeT& scope, const nx::core::FloatVec3& 
   args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_SurfaceAreaVolumeRatioArrayName_Key, std::make_any<std::string>("SurfaceAreaVolumeRatio"));
   args.insertOrAssign(ComputeSurfaceAreaToVolumeFilter::k_SphericityArrayName_Key, std::make_any<std::string>("Sphericity"));
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
   // Count entire plate and tooth faces analytically; do not repeat the production neighbor scan.
   const std::array<double, 3> physicalSpacing = {spacing[0], spacing[1], spacing[2]};
-  const double area = (normalFaceCounts[0] * physicalSpacing[1] * physicalSpacing[2]) + (normalFaceCounts[1] * physicalSpacing[0] * physicalSpacing[2]) +
-                      (normalFaceCounts[2] * physicalSpacing[0] * physicalSpacing[1]);
-  const double volume = combCellCount * physicalSpacing[0] * physicalSpacing[1] * physicalSpacing[2];
+  const double area = (k_NormalFaceCounts[0] * physicalSpacing[1] * physicalSpacing[2]) + (k_NormalFaceCounts[1] * physicalSpacing[0] * physicalSpacing[2]) +
+                      (k_NormalFaceCounts[2] * physicalSpacing[0] * physicalSpacing[1]);
+  const double volume = k_CombCellCount * physicalSpacing[0] * physicalSpacing[1] * physicalSpacing[2];
   CAPTURE(spacing[0], spacing[1], spacing[2], calculateSphericity, area, volume);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(ratioPath));
-  const auto& ratios = dataStructure.getDataRefAs<Float32Array>(ratioPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(ratioPath));
+  const auto& ratios = dataStructure.getDataRefAs<Float32ArrayType>(ratioPath);
   scope.requireExpectedStore(ratios);
   CHECK(ratios.getTupleShape() == featureShape);
   CHECK(ratios.getComponentShape() == componentShape);
@@ -486,8 +486,8 @@ void CheckConnectedCombSurfaceMetrics(ScopeT& scope, const nx::core::FloatVec3& 
   CHECK(ratioValues[1] == Approx(area / volume).epsilon(1.0e-6));
   if(calculateSphericity)
   {
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(sphericityPath));
-    const auto& sphericity = dataStructure.getDataRefAs<Float32Array>(sphericityPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(sphericityPath));
+    const auto& sphericity = dataStructure.getDataRefAs<Float32ArrayType>(sphericityPath);
     scope.requireExpectedStore(sphericity);
     CHECK(sphericity.getTupleShape() == featureShape);
     CHECK(sphericity.getComponentShape() == componentShape);
@@ -528,6 +528,6 @@ void CheckConnectedCombSurfaceMetrics(ScopeT& scope, const nx::core::FloatVec3& 
   CHECK(finalGeom.getOrigin() == origin);
   CHECK(cellAttributeMatrixPtr->getShape() == cellShape);
   CHECK(featureAttributeMatrixPtr->getShape() == featureShape);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace surface_area_to_volume_test

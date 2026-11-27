@@ -40,9 +40,9 @@ public:
    * @param distMetric Selects the tuple distance function.
    * @pre All arguments outlive this calculation.
    */
-  SilhouetteTemplate(const IDataArray& inputIDataArray, Float64AbstractDataStore& outputDataArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& maskDataArray, bool useMask,
-                     usize numClusters, const std::vector<usize>& featureIds, ClusterUtilities::DistanceMetric distMetric)
-  : m_InputData(inputIDataArray.template getIDataStoreRefAs<AbstractDataStoreT>())
+  SilhouetteTemplate(const IDataArray& inputIDataArray, Float64AbstractDataStoreType& outputDataArray, const std::unique_ptr<mask_compare_utilities::MaskCompare>& maskDataArray, bool useMask,
+                     usize numClusters, const std::vector<usize>& featureIds, cluster_utilities::DistanceMetric distMetric)
+  : m_InputData(inputIDataArray.template getIDataStoreRefAs<AbstractDataStoreTType>())
   , m_OutputData(outputDataArray)
   , m_FeatureIds(featureIds)
   , m_Mask(maskDataArray)
@@ -84,7 +84,7 @@ public:
         {
           if(!m_UseMask || m_Mask->isTrue(j))
           {
-            clusterDist[i][m_FeatureIds[j]] += ClusterUtilities::GetDistance(m_InputData, numCompDims * i, m_InputData, numCompDims * j, numCompDims, m_DistMetric);
+            clusterDist[i][m_FeatureIds[j]] += cluster_utilities::GetDistance(m_InputData, numCompDims * i, m_InputData, numCompDims * j, numCompDims, m_DistMetric);
           }
         }
       }
@@ -141,29 +141,27 @@ public:
   }
 
 private:
-  using AbstractDataStoreT = AbstractDataStore<T>;
-  const AbstractDataStoreT& m_InputData;
-  Float64AbstractDataStore& m_OutputData;
+  using AbstractDataStoreTType = AbstractDataStore<T>;
+  const AbstractDataStoreTType& m_InputData;
+  Float64AbstractDataStoreType& m_OutputData;
   const std::vector<usize>& m_FeatureIds;
-  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
+  const std::unique_ptr<mask_compare_utilities::MaskCompare>& m_Mask;
   bool m_UseMask = false;
   usize m_NumClusters;
-  ClusterUtilities::DistanceMetric m_DistMetric;
+  cluster_utilities::DistanceMetric m_DistMetric;
 };
 } // namespace
 
-SilhouetteDirect::SilhouetteDirect(DataStructure& dataStructure, const IFilter::MessageHandler&, const std::atomic_bool&, const SilhouetteInputValues* inputValues)
+SilhouetteDirect::SilhouetteDirect(DataStructure& dataStructure, const IFilter::MessageHandler& /*unused*/, const std::atomic_bool& /*unused*/, const SilhouetteInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
 {
 }
 
-SilhouetteDirect::~SilhouetteDirect() noexcept = default;
-
 Result<> SilhouetteDirect::operator()()
 {
   // Dense indices keep sparse Cluster Ids within the distance table. Cluster zero retains index zero.
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getDataStoreRef();
   std::unordered_map<int32, usize> clusterIndices;
   std::vector<usize> denseFeatureIds(featureIds.getNumberOfTuples(), 0);
   for(usize tupleIdx = 0; tupleIdx < featureIds.getNumberOfTuples(); tupleIdx++)
@@ -171,8 +169,8 @@ Result<> SilhouetteDirect::operator()()
     const int32 clusterId = featureIds[tupleIdx];
     if(clusterId < 0)
     {
-      return MakeErrorResult(-54081, fmt::format("Cluster Ids DataArray '{}' contains negative value {} at tuple {}. Cluster Ids must be nonnegative.", m_InputValues->FeatureIdsArrayPath.toString(),
-                                                 clusterId, tupleIdx));
+      return MakeErrorResult(-54081, fmt::format("Cluster Ids DataArray '{}' contains negative value {} at tuple {}. Cluster Ids must be nonnegative.",
+                                                 m_InputValues->feature_ids_array_path.toString(), clusterId, tupleIdx));
     }
     if(clusterId > 0)
     {
@@ -182,21 +180,21 @@ Result<> SilhouetteDirect::operator()()
   }
 
   // Avoid a cell-sized synthetic all-true mask when masking is disabled.
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
-  if(m_InputValues->UseMask)
+  std::unique_ptr<mask_compare_utilities::MaskCompare> maskCompare;
+  if(m_InputValues->use_mask)
   {
     try
     {
-      maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+      maskCompare = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->mask_array_path);
     } catch(const std::out_of_range&)
     {
-      return MakeErrorResult(-54080, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString()));
+      return MakeErrorResult(-54080, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->mask_array_path.toString()));
     }
   }
 
-  const auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  auto& outputStore = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->SilhouetteArrayPath).getDataStoreRef();
-  RunTemplateClass<SilhouetteTemplate, types::NoBooleanType>(clusteringArray.getDataType(), clusteringArray, outputStore, maskCompare, m_InputValues->UseMask, clusterIndices.size(), denseFeatureIds,
-                                                             m_InputValues->DistanceMetric);
+  const auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->clustering_array_path);
+  auto& outputStore = m_DataStructure.getDataRefAs<Float64ArrayType>(m_InputValues->silhouette_array_path).getDataStoreRef();
+  RunTemplateClass<SilhouetteTemplate, types::NoBooleanType>(clusteringArray.getDataType(), clusteringArray, outputStore, maskCompare, m_InputValues->use_mask, clusterIndices.size(), denseFeatureIds,
+                                                             m_InputValues->distance_metric);
   return {};
 }

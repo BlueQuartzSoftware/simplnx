@@ -218,26 +218,24 @@ InitializeImageGeomCellData::InitializeImageGeomCellData(DataStructure& dataStru
 {
 }
 
-InitializeImageGeomCellData::~InitializeImageGeomCellData() noexcept = default;
-
 Result<> InitializeImageGeomCellData::operator()()
 {
-  auto cellArrayPaths = m_InputValues->CellArrays;
-  auto imageGeomPath = m_InputValues->InputImageGeometryPath;
-  auto minPoint = m_InputValues->MinPoint;
-  auto maxPoint = m_InputValues->MaxPoint;
-  auto initTypeIndex = m_InputValues->InitTypeIndex;
-  auto initValue = m_InputValues->InitValue;
-  auto initRangeVec = m_InputValues->InitRange;
+  auto cellArrayPaths = m_InputValues->cell_arrays;
+  auto imageGeomPath = m_InputValues->input_image_geometry_path;
+  auto minPoint = m_InputValues->min_point;
+  auto maxPoint = m_InputValues->max_point;
+  auto initTypeIndex = m_InputValues->init_type_index;
+  auto initValue = m_InputValues->init_value;
+  auto initRangeVec = m_InputValues->init_range;
 
-  auto seed = m_InputValues->SeedValue;
-  if(!m_InputValues->UseSeed)
+  auto seed = m_InputValues->seed_value;
+  if(!m_InputValues->use_seed)
   {
     seed = static_cast<std::mt19937_64::result_type>(std::chrono::steady_clock::now().time_since_epoch().count());
   }
 
   // Store the effective seed so random output can be reproduced.
-  m_DataStructure.getDataRefAs<UInt64Array>(DataPath({m_InputValues->SeedArrayName}))[0] = seed;
+  m_DataStructure.getDataRefAs<UInt64ArrayType>(DataPath({m_InputValues->seed_array_name}))[0] = seed;
 
   uint64 xMin = minPoint.at(0);
   uint64 yMin = minPoint.at(1);

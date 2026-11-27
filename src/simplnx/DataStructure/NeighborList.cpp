@@ -29,7 +29,7 @@ NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& n
 }
 
 template <typename T>
-NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& dataStore, IdType importId)
+NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<StoreType>& dataStore, IdType importId)
 : INeighborList(dataStructure, name, importId)
 , m_Store(dataStore)
 , m_IsAllocated(true)
@@ -38,7 +38,7 @@ NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& n
 }
 
 template <typename T>
-NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& dataStore)
+NeighborList<T>::NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<StoreType>& dataStore)
 : INeighborList(dataStructure, name)
 , m_Store(dataStore)
 , m_IsAllocated(true)
@@ -58,7 +58,7 @@ NeighborList<T>* NeighborList<T>::Create(DataStructure& dataStructure, const std
 }
 
 template <typename T>
-NeighborList<T>* NeighborList<T>::Create(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& listStore, const std::optional<IdType>& parentId)
+NeighborList<T>* NeighborList<T>::Create(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<StoreType>& listStore, const std::optional<IdType>& parentId)
 {
   if(listStore == nullptr)
   {
@@ -85,7 +85,7 @@ NeighborList<T>* NeighborList<T>::Import(DataStructure& dataStructure, const std
 }
 
 template <typename T>
-NeighborList<T>* NeighborList<T>::Import(DataStructure& dataStructure, const std::string& name, IdType importId, const std::shared_ptr<store_type>& dataStore, const std::optional<IdType>& parentId)
+NeighborList<T>* NeighborList<T>::Import(DataStructure& dataStructure, const std::string& name, IdType importId, const std::shared_ptr<StoreType>& dataStore, const std::optional<IdType>& parentId)
 {
   auto data = std::shared_ptr<NeighborList>(new NeighborList(dataStructure, name, dataStore, importId));
   if(!AttemptToAddObject(dataStructure, data, parentId))
@@ -112,15 +112,15 @@ NeighborList<T>& NeighborList<T>::operator=(const NeighborList<T>& rhs)
     return *this;
   }
 
-  const auto* destination = getDataStructure();
+  const auto* destinationPtr = getDataStructure();
   const auto paths = getDataPaths();
-  if(destination == nullptr || paths.empty() || destination->getData(paths.front()) != this)
+  if(destinationPtr == nullptr || paths.empty() || destinationPtr->getData(paths.front()) != this)
   {
     throw std::runtime_error("NeighborList assignment to '" + getName() + "' requires an available destination array path");
   }
   // Tuple count supplies the existing lower-bound estimate without reading any list values.
   const auto bytes = CalculateStoreCopyBytes(rhs.getTupleShape(), ShapeType{1}, sizeof(T));
-  const auto format = ArrayCreationUtilities::ResolveStorageFormat(*destination, paths.front(), GetDataType<T>(), bytes, "");
+  const auto format = array_creation_utilities::ResolveStorageFormat(*destinationPtr, paths.front(), GetDataType<T>(), bytes, "");
   m_Store = rhs.m_Store->deepCopy(format);
   m_IsAllocated = rhs.m_IsAllocated;
   m_InitValue = rhs.m_InitValue;
@@ -154,10 +154,10 @@ std::shared_ptr<DataObject> NeighborList<T>::deepCopy(const DataPath& copyPath)
   }
   // This lower-bound estimate avoids reading lists merely to select destination storage.
   const auto bytes = CalculateStoreCopyBytes(getTupleShape(), ShapeType{1}, sizeof(T));
-  const auto format = ArrayCreationUtilities::ResolveStorageFormat(dataStruct, copyPath, GetDataType<T>(), bytes, "");
+  const auto format = array_creation_utilities::ResolveStorageFormat(dataStruct, copyPath, GetDataType<T>(), bytes, "");
   auto copiedStore = m_Store->deepCopy(format);
   // Insertion assigns the identifier for the copy.
-  auto copy = std::shared_ptr<NeighborList<T>>(new NeighborList<T>(dataStruct, copyPath.getTargetName(), std::shared_ptr<store_type>(std::move(copiedStore))));
+  auto copy = std::shared_ptr<NeighborList<T>>(new NeighborList<T>(dataStruct, copyPath.getTargetName(), std::shared_ptr<StoreType>(std::move(copiedStore))));
   copy->setNumNeighborsArrayName(getNumNeighborsArrayName());
   if(dataStruct.insert(copy, copyPath.getParent()))
   {
@@ -203,15 +203,15 @@ int32 NeighborList<T>::eraseTuples(const std::vector<usize>& idxs)
     }
   }
 
-  const auto* destination = getDataStructure();
+  const auto* destinationPtr = getDataStructure();
   const auto paths = getDataPaths();
-  if(destination == nullptr || paths.empty() || destination->getData(paths.front()) != this)
+  if(destinationPtr == nullptr || paths.empty() || destinationPtr->getData(paths.front()) != this)
   {
     return k_MissingCopyDestinationError;
   }
   // Parent order selects the first available path. The estimate does not read list values.
   const auto bytes = CalculateStoreCopyBytes(getTupleShape(), ShapeType{1}, sizeof(T));
-  const auto format = ArrayCreationUtilities::ResolveStorageFormat(*destination, paths.front(), GetDataType<T>(), bytes, "");
+  const auto format = array_creation_utilities::ResolveStorageFormat(*destinationPtr, paths.front(), GetDataType<T>(), bytes, "");
   auto copy = m_Store->deepCopy(format);
   Result<> resizeResult = copy->resizeTuples(ShapeType{static_cast<ShapeType::value_type>(arraySize - indicesSize)});
   if(resizeResult.invalid())
@@ -288,7 +288,7 @@ bool NeighborList<T>::empty() const
 }
 
 template <typename T>
-void NeighborList<T>::setNumberOfComponents(int32 nc)
+void NeighborList<T>::setNumberOfComponents(int32 /*nc*/)
 {
   throw std::runtime_error(fmt::format("{}:({}): NeighborLists do NOT have components", __FILE__, __LINE__));
 }
@@ -472,13 +472,13 @@ Result<> NeighborList<T>::flushChecked() const
 }
 
 template <typename T>
-std::shared_ptr<typename NeighborList<T>::store_type> NeighborList<T>::getStore() const
+std::shared_ptr<typename NeighborList<T>::StoreType> NeighborList<T>::getStore() const
 {
   return m_Store;
 }
 
 template <typename T>
-void NeighborList<T>::setStore(const std::shared_ptr<store_type>& store)
+void NeighborList<T>::setStore(const std::shared_ptr<StoreType>& store)
 {
   m_Store = store;
 }
@@ -613,7 +613,7 @@ std::string NeighborList<T>::toString(usize tupleIndex, usize compIndex, const s
 template <class T>
 bool NeighborList<T>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value)
 {
-  Result<T> result = nx::core::StringInterpretationUtilities::Convert<T>(value);
+  Result<T> result = nx::core::string_interpretation_utilities::Convert<T>(value);
   if(result.invalid())
   {
     return false;

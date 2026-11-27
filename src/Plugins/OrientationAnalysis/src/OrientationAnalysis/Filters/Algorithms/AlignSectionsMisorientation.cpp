@@ -29,9 +29,9 @@ Result<> AlignSectionsMisorientation::operator()()
   {
     return {};
   }
-  const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
+  const auto& gridGeom = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->image_geometry_path);
 
-  return execute(gridGeom.getDimensions(), m_InputValues->ImageGeometryPath);
+  return execute(gridGeom.getDimensions(), m_InputValues->image_geometry_path);
 }
 
 Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, std::vector<int64>& yShifts)
@@ -40,18 +40,18 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, st
   // OOC dispatch must cover every array touched by shift discovery or the
   // subsequent ImageGeom cell-array shift.
   {
-    const auto& quatsCheck = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->quatsArrayPath);
-    const auto& cellPhasesCheck = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
-    const auto& crystalStructuresCheck = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
+    const auto& quatsCheck = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->quats_array_path);
+    const auto& cellPhasesCheck = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+    const auto& crystalStructuresCheck = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
     usesOutOfCoreStore = IsOutOfCore(quatsCheck) || IsOutOfCore(cellPhasesCheck) || IsOutOfCore(crystalStructuresCheck);
-    if(m_InputValues->UseMask)
+    if(m_InputValues->use_mask)
     {
-      usesOutOfCoreStore = usesOutOfCoreStore || IsOutOfCore(m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath));
+      usesOutOfCoreStore = usesOutOfCoreStore || IsOutOfCore(m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->mask_array_path));
     }
-    for(const auto& path : getSelectedDataPaths(m_InputValues->ImageGeometryPath))
+    for(const auto& path : getSelectedDataPaths(m_InputValues->image_geometry_path))
     {
-      const auto* array = m_DataStructure.getDataAs<IDataArray>(path);
-      usesOutOfCoreStore = usesOutOfCoreStore || (array != nullptr && IsOutOfCore(*array));
+      const auto* arrayPtr = m_DataStructure.getDataAs<IDataArray>(path);
+      usesOutOfCoreStore = usesOutOfCoreStore || (arrayPtr != nullptr && IsOutOfCore(*arrayPtr));
     }
     if(!ForceInCoreAlgorithm() && (ForceOocAlgorithm() || usesOutOfCoreStore))
     {
@@ -62,28 +62,28 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, st
 
   RecordAlgorithmPathExecution(AlgorithmPath::InCore, usesOutOfCoreStore);
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare = nullptr;
-  if(m_InputValues->UseMask)
+  std::unique_ptr<mask_compare_utilities::MaskCompare> maskCompare = nullptr;
+  if(m_InputValues->use_mask)
   {
     try
     {
-      maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+      maskCompare = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->mask_array_path);
     } catch(const std::out_of_range& exception)
     {
       // This fallback supports callers that bypass parameter preflight.
-      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
+      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->mask_array_path.toString());
       return MakeErrorResult(-53900, message);
     }
   }
 
-  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
+  auto* gridGeomPtr = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->image_geometry_path);
 
-  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
-  const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->quatsArrayPath);
-  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
+  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+  const auto& quats = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->quats_array_path);
+  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
   const usize numCrystalStructures = crystalStructures.getNumberOfTuples();
 
-  SizeVec3 udims = gridGeom->getDimensions();
+  SizeVec3Type udims = gridGeomPtr->getDimensions();
 
   std::array<int64, 3> dims = {
       static_cast<int64>(udims[0]),
@@ -99,13 +99,13 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, st
   const auto halfDim0 = static_cast<int64>(dims[0] * 0.5f);
   const auto halfDim1 = static_cast<int64>(dims[1] * 0.5f);
 
-  float64 deg2Rad = (nx::core::numbers::pi / 180.0);
+  float64 deg2Rad = (nx::core::numbers::k_Pi / 180.0);
   ThrottledMessageHandler progressThrottle(getThreadSafeMessageHandler());
-  if(m_InputValues->StoreAlignmentShifts)
+  if(m_InputValues->store_alignment_shifts)
   {
-    auto& slicesStore = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->SlicesArrayPath)->getDataStoreRef();
-    auto& relativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->RelativeShiftsArrayPath)->getDataStoreRef();
-    auto& cumulativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->CumulativeShiftsArrayPath)->getDataStoreRef();
+    auto& slicesStore = m_DataStructure.getDataAs<UInt32ArrayType>(m_InputValues->slices_array_path)->getDataStoreRef();
+    auto& relativeShiftsStore = m_DataStructure.getDataAs<Int64ArrayType>(m_InputValues->relative_shifts_array_path)->getDataStoreRef();
+    auto& cumulativeShiftsStore = m_DataStructure.getDataAs<Int64ArrayType>(m_InputValues->cumulative_shifts_array_path)->getDataStoreRef();
     for(int64 iter = 1; iter < dims[2]; iter++)
     {
       progressThrottle.updatePercent("Determining Shifts", iter, dims[2]);
@@ -123,7 +123,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, st
 
       std::fill(misorients.begin(), misorients.end(), false);
 
-      float32 misorientationTolerance = static_cast<float32>(m_InputValues->misorientationTolerance * deg2Rad);
+      float32 misorientationTolerance = static_cast<float32>(m_InputValues->misorientation_tolerance * deg2Rad);
 
       while(newxshift != oldxshift || newyshift != oldyshift)
       {
@@ -149,7 +149,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, st
                     count++;
                     int64 refposition = ((slice + 1) * dims[0] * dims[1]) + (l * dims[0]) + n;
                     int64 curposition = (slice * dims[0] * dims[1]) + ((l + j + oldyshift) * dims[0]) + (n + k + oldxshift);
-                    if(!m_InputValues->UseMask || maskCompare->bothTrue(refposition, curposition))
+                    if(!m_InputValues->use_mask || maskCompare->bothTrue(refposition, curposition))
                     {
                       float32 angle = std::numeric_limits<float32>::max();
                       const int32 referencePhaseIdx = cellPhases[refposition];
@@ -161,7 +161,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, st
                           return MakeErrorResult(-53901,
                                                  fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in "
                                                              "[0, {}).",
-                                                             m_InputValues->cellPhasesArrayPath.toString(), referencePhaseIdx, refposition, m_InputValues->crystalStructuresArrayPath.toString(),
+                                                             m_InputValues->cell_phases_array_path.toString(), referencePhaseIdx, refposition, m_InputValues->crystal_structures_array_path.toString(),
                                                              numCrystalStructures, numCrystalStructures));
                         }
                         if(static_cast<usize>(currentPhaseIdx) >= numCrystalStructures)
@@ -169,7 +169,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, st
                           return MakeErrorResult(-53901,
                                                  fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in "
                                                              "[0, {}).",
-                                                             m_InputValues->cellPhasesArrayPath.toString(), currentPhaseIdx, curposition, m_InputValues->crystalStructuresArrayPath.toString(),
+                                                             m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, curposition, m_InputValues->crystal_structures_array_path.toString(),
                                                              numCrystalStructures, numCrystalStructures));
                         }
                         ebsdlib::QuatD quat1(quats[refposition * 4], quats[refposition * 4 + 1], quats[refposition * 4 + 2], quats[refposition * 4 + 3]); // Makes a copy into voxQuat!!!!
@@ -187,7 +187,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, st
                         disorientation++;
                       }
                     }
-                    if(m_InputValues->UseMask)
+                    if(m_InputValues->use_mask)
                     {
                       if(maskCompare->isTrue(refposition) && !maskCompare->isTrue(curposition))
                       {
@@ -247,7 +247,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, st
 
       std::fill(misorients.begin(), misorients.end(), false);
 
-      float32 misorientationTolerance = static_cast<float32>(m_InputValues->misorientationTolerance * deg2Rad);
+      float32 misorientationTolerance = static_cast<float32>(m_InputValues->misorientation_tolerance * deg2Rad);
 
       while(newxshift != oldxshift || newyshift != oldyshift)
       {
@@ -273,7 +273,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, st
                     count++;
                     int64 refposition = ((slice + 1) * dims[0] * dims[1]) + (l * dims[0]) + n;
                     int64 curposition = (slice * dims[0] * dims[1]) + ((l + j + oldyshift) * dims[0]) + (n + k + oldxshift);
-                    if(!m_InputValues->UseMask || maskCompare->bothTrue(refposition, curposition))
+                    if(!m_InputValues->use_mask || maskCompare->bothTrue(refposition, curposition))
                     {
                       float32 angle = std::numeric_limits<float32>::max();
                       const int32 referencePhaseIdx = cellPhases[refposition];
@@ -285,7 +285,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, st
                           return MakeErrorResult(-53901,
                                                  fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in "
                                                              "[0, {}).",
-                                                             m_InputValues->cellPhasesArrayPath.toString(), referencePhaseIdx, refposition, m_InputValues->crystalStructuresArrayPath.toString(),
+                                                             m_InputValues->cell_phases_array_path.toString(), referencePhaseIdx, refposition, m_InputValues->crystal_structures_array_path.toString(),
                                                              numCrystalStructures, numCrystalStructures));
                         }
                         if(static_cast<usize>(currentPhaseIdx) >= numCrystalStructures)
@@ -293,7 +293,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, st
                           return MakeErrorResult(-53901,
                                                  fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in "
                                                              "[0, {}).",
-                                                             m_InputValues->cellPhasesArrayPath.toString(), currentPhaseIdx, curposition, m_InputValues->crystalStructuresArrayPath.toString(),
+                                                             m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, curposition, m_InputValues->crystal_structures_array_path.toString(),
                                                              numCrystalStructures, numCrystalStructures));
                         }
                         ebsdlib::QuatD quat1(quats[refposition * 4], quats[refposition * 4 + 1], quats[refposition * 4 + 2], quats[refposition * 4 + 3]); // Makes a copy into voxQuat!!!!
@@ -311,7 +311,7 @@ Result<> AlignSectionsMisorientation::findShifts(std::vector<int64>& xShifts, st
                         disorientation++;
                       }
                     }
-                    if(m_InputValues->UseMask)
+                    if(m_InputValues->use_mask)
                     {
                       if(maskCompare->isTrue(refposition) && !maskCompare->isTrue(curposition))
                       {
@@ -353,9 +353,9 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64>& xShifts,
   // Bulk reads avoid per-element OOC mask access.
   const AbstractDataStore<uint8>* maskUInt8StorePtr = nullptr;
   const AbstractDataStore<bool>* maskBoolStorePtr = nullptr;
-  if(m_InputValues->UseMask)
+  if(m_InputValues->use_mask)
   {
-    const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
+    const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->mask_array_path);
     if(maskArray.getDataType() == DataType::uint8)
     {
       maskUInt8StorePtr = &dynamic_cast<const DataArray<uint8>&>(maskArray).getDataStoreRef();
@@ -366,17 +366,17 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64>& xShifts,
     }
     else
     {
-      return MakeErrorResult(-53900, fmt::format("Mask Array is not Bool or UInt8: {}", m_InputValues->MaskArrayPath.toString()));
+      return MakeErrorResult(-53900, fmt::format("Mask Array is not Bool or UInt8: {}", m_InputValues->mask_array_path.toString()));
     }
   }
 
-  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
+  auto* gridGeomPtr = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->image_geometry_path);
 
-  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->cellPhasesArrayPath);
-  const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->quatsArrayPath);
-  const auto& crystalStructuresArray = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->crystalStructuresArrayPath);
-  auto& cellPhasesStore = cellPhases.getDataStoreRef();
-  auto& quatsStore = quats.getDataStoreRef();
+  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+  const auto& quats = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->quats_array_path);
+  const auto& crystalStructuresArray = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
+  const auto& cellPhasesStore = cellPhases.getDataStoreRef();
+  const auto& quatsStore = quats.getDataStoreRef();
 
   // The local ensemble cache avoids hot-loop store access.
   const auto& crystalStructuresStore = crystalStructuresArray.getDataStoreRef();
@@ -388,7 +388,7 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64>& xShifts,
     return crystalReadResult;
   }
 
-  SizeVec3 udims = gridGeom->getDimensions();
+  SizeVec3Type udims = gridGeomPtr->getDimensions();
 
   std::array<int64, 3> dims = {
       static_cast<int64>(udims[0]),
@@ -403,7 +403,7 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64>& xShifts,
   const auto halfDim0 = static_cast<int64>(dims[0] * 0.5f);
   const auto halfDim1 = static_cast<int64>(dims[1] * 0.5f);
 
-  float64 deg2Rad = (nx::core::numbers::pi / 180.0);
+  float64 deg2Rad = (nx::core::numbers::k_Pi / 180.0);
 
   const int64 sliceVoxels = dims[0] * dims[1];
 
@@ -414,7 +414,7 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64>& xShifts,
   std::vector<uint8> refMaskBuf;
   std::vector<uint8> curMaskBuf;
   std::unique_ptr<bool[]> boolMaskBuffer;
-  if(m_InputValues->UseMask)
+  if(m_InputValues->use_mask)
   {
     refMaskBuf.resize(sliceVoxels, 1);
     curMaskBuf.resize(sliceVoxels, 1);
@@ -427,11 +427,11 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64>& xShifts,
   AbstractDataStore<uint32>* slicesStorePtr = nullptr;
   AbstractDataStore<int64>* relativeShiftsStorePtr = nullptr;
   AbstractDataStore<int64>* cumulativeShiftsStorePtr = nullptr;
-  if(m_InputValues->StoreAlignmentShifts)
+  if(m_InputValues->store_alignment_shifts)
   {
-    slicesStorePtr = &m_DataStructure.getDataAs<UInt32Array>(m_InputValues->SlicesArrayPath)->getDataStoreRef();
-    relativeShiftsStorePtr = &m_DataStructure.getDataAs<Int64Array>(m_InputValues->RelativeShiftsArrayPath)->getDataStoreRef();
-    cumulativeShiftsStorePtr = &m_DataStructure.getDataAs<Int64Array>(m_InputValues->CumulativeShiftsArrayPath)->getDataStoreRef();
+    slicesStorePtr = &m_DataStructure.getDataAs<UInt32ArrayType>(m_InputValues->slices_array_path)->getDataStoreRef();
+    relativeShiftsStorePtr = &m_DataStructure.getDataAs<Int64ArrayType>(m_InputValues->relative_shifts_array_path)->getDataStoreRef();
+    cumulativeShiftsStorePtr = &m_DataStructure.getDataAs<Int64ArrayType>(m_InputValues->cumulative_shifts_array_path)->getDataStoreRef();
   }
 
   // The first pair uses the top slice as its reference.
@@ -439,23 +439,31 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64>& xShifts,
     int64 firstRefOffset = (dims[2] - 1) * sliceVoxels;
     auto phaseReadResult = cellPhasesStore.copyIntoBuffer(firstRefOffset, nonstd::span<int32>(refPhasesBuf.data(), sliceVoxels));
     if(phaseReadResult.invalid())
+    {
       return phaseReadResult;
+    }
     auto quatReadResult = quatsStore.copyIntoBuffer(firstRefOffset * 4, nonstd::span<float32>(refQuatsBuf.data(), sliceVoxels * 4));
     if(quatReadResult.invalid())
+    {
       return quatReadResult;
-    if(m_InputValues->UseMask)
+    }
+    if(m_InputValues->use_mask)
     {
       if(maskUInt8StorePtr != nullptr)
       {
         auto maskReadResult = maskUInt8StorePtr->copyIntoBuffer(firstRefOffset, nonstd::span<uint8>(refMaskBuf.data(), sliceVoxels));
         if(maskReadResult.invalid())
+        {
           return maskReadResult;
+        }
       }
       else if(maskBoolStorePtr != nullptr)
       {
         auto maskReadResult = maskBoolStorePtr->copyIntoBuffer(firstRefOffset, nonstd::span<bool>(boolMaskBuffer.get(), sliceVoxels));
         if(maskReadResult.invalid())
+        {
           return maskReadResult;
+        }
         for(int64 idx = 0; idx < sliceVoxels; idx++)
         {
           refMaskBuf[idx] = boolMaskBuffer[idx] ? 1 : 0;
@@ -477,23 +485,31 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64>& xShifts,
     int64 curOffset = slice * sliceVoxels;
     auto phaseReadResult = cellPhasesStore.copyIntoBuffer(curOffset, nonstd::span<int32>(curPhasesBuf.data(), sliceVoxels));
     if(phaseReadResult.invalid())
+    {
       return phaseReadResult;
+    }
     auto quatReadResult = quatsStore.copyIntoBuffer(curOffset * 4, nonstd::span<float32>(curQuatsBuf.data(), sliceVoxels * 4));
     if(quatReadResult.invalid())
+    {
       return quatReadResult;
-    if(m_InputValues->UseMask)
+    }
+    if(m_InputValues->use_mask)
     {
       if(maskUInt8StorePtr != nullptr)
       {
         auto maskReadResult = maskUInt8StorePtr->copyIntoBuffer(curOffset, nonstd::span<uint8>(curMaskBuf.data(), sliceVoxels));
         if(maskReadResult.invalid())
+        {
           return maskReadResult;
+        }
       }
       else if(maskBoolStorePtr != nullptr)
       {
         auto maskReadResult = maskBoolStorePtr->copyIntoBuffer(curOffset, nonstd::span<bool>(boolMaskBuffer.get(), sliceVoxels));
         if(maskReadResult.invalid())
+        {
           return maskReadResult;
+        }
         for(int64 idx = 0; idx < sliceVoxels; idx++)
         {
           curMaskBuf[idx] = boolMaskBuffer[idx] ? 1 : 0;
@@ -509,7 +525,7 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64>& xShifts,
 
     std::fill(misorients.begin(), misorients.end(), false);
 
-    float32 misorientationTolerance = static_cast<float32>(m_InputValues->misorientationTolerance * deg2Rad);
+    float32 misorientationTolerance = static_cast<float32>(m_InputValues->misorientation_tolerance * deg2Rad);
 
     while(newxshift != oldxshift || newyshift != oldyshift)
     {
@@ -536,7 +552,7 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64>& xShifts,
                   int64 refLocalIdx = l * dims[0] + n;
                   int64 curLocalIdx = (l + j + oldyshift) * dims[0] + (n + k + oldxshift);
 
-                  bool maskOk = !m_InputValues->UseMask || (refMaskBuf[refLocalIdx] != 0 && curMaskBuf[curLocalIdx] != 0);
+                  bool maskOk = !m_InputValues->use_mask || (refMaskBuf[refLocalIdx] != 0 && curMaskBuf[curLocalIdx] != 0);
                   if(maskOk)
                   {
                     float32 angle = std::numeric_limits<float32>::max();
@@ -550,15 +566,15 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64>& xShifts,
                       {
                         return MakeErrorResult(-53901, fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in "
                                                                    "[0, {}).",
-                                                                   m_InputValues->cellPhasesArrayPath.toString(), referencePhaseIdx, referenceVoxelIdx,
-                                                                   m_InputValues->crystalStructuresArrayPath.toString(), numCrystalStructures, numCrystalStructures));
+                                                                   m_InputValues->cell_phases_array_path.toString(), referencePhaseIdx, referenceVoxelIdx,
+                                                                   m_InputValues->crystal_structures_array_path.toString(), numCrystalStructures, numCrystalStructures));
                       }
                       if(static_cast<usize>(currentPhaseIdx) >= numCrystalStructures)
                       {
                         return MakeErrorResult(-53901, fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in "
                                                                    "[0, {}).",
-                                                                   m_InputValues->cellPhasesArrayPath.toString(), currentPhaseIdx, currentVoxelIdx,
-                                                                   m_InputValues->crystalStructuresArrayPath.toString(), numCrystalStructures, numCrystalStructures));
+                                                                   m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, currentVoxelIdx,
+                                                                   m_InputValues->crystal_structures_array_path.toString(), numCrystalStructures, numCrystalStructures));
                       }
                       ebsdlib::QuatD quat1(refQuatsBuf[refLocalIdx * 4], refQuatsBuf[refLocalIdx * 4 + 1], refQuatsBuf[refLocalIdx * 4 + 2], refQuatsBuf[refLocalIdx * 4 + 3]);
                       const uint32 referenceLaueIndex = crystalStructures[referencePhaseIdx];
@@ -575,7 +591,7 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64>& xShifts,
                       disorientation++;
                     }
                   }
-                  if(m_InputValues->UseMask)
+                  if(m_InputValues->use_mask)
                   {
                     if(refMaskBuf[refLocalIdx] != 0 && curMaskBuf[curLocalIdx] == 0)
                     {
@@ -607,7 +623,7 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64>& xShifts,
     xShifts[iter] = xShifts[iter - 1] + newxshift;
     yShifts[iter] = yShifts[iter - 1] + newyshift;
 
-    if(m_InputValues->StoreAlignmentShifts)
+    if(m_InputValues->store_alignment_shifts)
     {
       usize xIndex = iter * 2;
       usize yIndex = (iter * 2) + 1;
@@ -622,7 +638,7 @@ Result<> AlignSectionsMisorientation::findShiftsOoc(std::vector<int64>& xShifts,
     // Reuse the current slice as the next reference without another read.
     std::swap(refQuatsBuf, curQuatsBuf);
     std::swap(refPhasesBuf, curPhasesBuf);
-    if(m_InputValues->UseMask)
+    if(m_InputValues->use_mask)
     {
       std::swap(refMaskBuf, curMaskBuf);
     }

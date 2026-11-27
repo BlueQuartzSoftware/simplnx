@@ -9,15 +9,15 @@ namespace nx::core
 {
 struct SIMPLNXCORE_EXPORT PointSampleEdgeGeometryInputValues
 {
-  float32 ScanVectorSamplingRes;
-  DataPath ScanVectorGeometryPath;
-  DataPath SampledVertexGeometryPath;
-  bool CalculateCumulativeSampleDistance;
-  std::string CumulativeSampleDistanceArrayName;
-  std::string EdgeIdsArrayName;
-  DataPath pVertexGroupDataPath;
-  MultiArraySelectionParameter::ValueType pSelectedDataArrayPaths;
-  MultiArraySelectionParameter::ValueType pCreatedDataArrayPaths;
+  float32 scan_vector_sampling_res{};
+  DataPath scan_vector_geometry_path;
+  DataPath sampled_vertex_geometry_path;
+  bool calculate_cumulative_sample_distance{};
+  std::string cumulative_sample_distance_array_name;
+  std::string edge_ids_array_name;
+  DataPath p_vertex_group_data_path;
+  MultiArraySelectionParameter::ValueType p_selected_data_array_paths;
+  MultiArraySelectionParameter::ValueType p_created_data_array_paths;
 };
 
 /**
@@ -27,7 +27,7 @@ class SIMPLNXCORE_EXPORT PointSampleEdgeGeometry
 {
 public:
   PointSampleEdgeGeometry(DataStructure& dataStructure, PointSampleEdgeGeometryInputValues* inputValues, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel);
-  ~PointSampleEdgeGeometry() noexcept;
+  ~PointSampleEdgeGeometry() noexcept = default;
 
   PointSampleEdgeGeometry(const PointSampleEdgeGeometry&) = delete;
   PointSampleEdgeGeometry(PointSampleEdgeGeometry&&) noexcept = delete;

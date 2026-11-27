@@ -29,15 +29,15 @@
 #include <string>
 #include <string_view>
 
-namespace IdentifySampleBenchmarkTest
+namespace identify_sample_benchmark_test
 {
 using namespace nx::core;
 constexpr usize k_Dimension = 200;
 constexpr usize k_XyValues = k_Dimension * k_Dimension;
 constexpr uint64 k_DefaultBudget = 536870912;
 constexpr usize k_RequestedThreads = 8;
-using Clock = std::chrono::steady_clock;
-using Json = nlohmann::json;
+using ClockType = std::chrono::steady_clock;
+using JsonType = nlohmann::json;
 
 /**
  * @brief Parses a positive uint64 field with at most twenty decimal digits.
@@ -70,13 +70,13 @@ inline uint64 ParsePositiveDecimal(std::string_view text, std::string_view name)
  */
 inline uint64 ReadPositiveEnvironment(const char* name, uint64 fallback)
 {
-  const char* raw = std::getenv(name);
-  if(raw == nullptr)
+  const char* rawPtr = std::getenv(name);
+  if(rawPtr == nullptr)
   {
     return fallback;
   }
   usize length = 0;
-  while(length <= 20 && raw[length] != '\0')
+  while(length <= 20 && rawPtr[length] != '\0')
   {
     length++;
   }
@@ -84,7 +84,7 @@ inline uint64 ReadPositiveEnvironment(const char* name, uint64 fallback)
   {
     throw std::invalid_argument(std::string(name) + " exceeds twenty decimal digits");
   }
-  return ParsePositiveDecimal(std::string_view(raw, length), name);
+  return ParsePositiveDecimal(std::string_view(rawPtr, length), name);
 }
 
 inline int64 UtcMilliseconds()
@@ -129,7 +129,7 @@ inline ProcessIo ReadProcessIo() noexcept
   return result;
 }
 
-inline Json ProcessIoDelta(const ProcessIo& before, const ProcessIo& after)
+inline JsonType ProcessIoDelta(const ProcessIo& before, const ProcessIo& after)
 {
   if(!before.available || !after.available)
   {
@@ -153,12 +153,12 @@ class BudgetRestore
 {
 public:
   BudgetRestore()
-  : m_Original(CacheMemoryBudgetManager::instance().budgetBytes())
+  : m_Original(CacheMemoryBudgetManager::Instance().budgetBytes())
   {
   }
   ~BudgetRestore()
   {
-    CacheMemoryBudgetManager::instance().setBudgetBytes(m_Original);
+    CacheMemoryBudgetManager::Instance().setBudgetBytes(m_Original);
   }
   BudgetRestore(const BudgetRestore&) = delete;
   BudgetRestore(BudgetRestore&&) = delete;
@@ -186,18 +186,18 @@ template <class T>
 DataStructure CreateBenchmarkFixture()
 {
   DataStructure data;
-  auto* image = ImageGeom::Create(data, IdentifySampleBatchTest::k_ImagePath.getTargetName());
-  REQUIRE(image != nullptr);
-  image->setDimensions({k_Dimension, k_Dimension, k_Dimension});
-  REQUIRE(image->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-  REQUIRE(image->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-  auto* cells = AttributeMatrix::Create(data, "CellData", {k_Dimension, k_Dimension, k_Dimension}, image->getId());
-  REQUIRE(cells != nullptr);
-  image->setCellData(*cells);
-  auto store = DataStoreUtilities::CreateDataStore<T>(data, IdentifySampleBatchTest::k_MaskPath, cells->getShape(), ShapeType{1});
+  auto* imagePtr = ImageGeom::Create(data, identify_sample_batch_test::k_ImagePath.getTargetName());
+  REQUIRE(imagePtr != nullptr);
+  imagePtr->setDimensions({k_Dimension, k_Dimension, k_Dimension});
+  REQUIRE(imagePtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+  REQUIRE(imagePtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
+  auto* cellsPtr = AttributeMatrix::Create(data, "CellData", {k_Dimension, k_Dimension, k_Dimension}, imagePtr->getId());
+  REQUIRE(cellsPtr != nullptr);
+  imagePtr->setCellData(*cellsPtr);
+  auto store = data_store_utilities::CreateDataStore<T>(data, identify_sample_batch_test::k_MaskPath, cellsPtr->getShape(), ShapeType{1});
   REQUIRE(store != nullptr);
-  auto* mask = DataArray<T>::Create(data, "Mask", store, cells->getId());
-  REQUIRE(mask != nullptr);
+  auto* maskPtr = DataArray<T>::Create(data, "Mask", store, cellsPtr->getId());
+  REQUIRE(maskPtr != nullptr);
   auto xy = std::make_unique<T[]>(k_XyValues);
   for(usize z = 0; z < k_Dimension; z++)
   {
@@ -223,11 +223,11 @@ DataStructure CreateBenchmarkFixture()
 template <class T>
 void RequireResidentOutput(const DataStructure& data, bool fillHoles)
 {
-  REQUIRE_NOTHROW(data.getDataRefAs<ImageGeom>(IdentifySampleBatchTest::k_ImagePath));
-  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
-  const auto& image = data.getDataRefAs<ImageGeom>(IdentifySampleBatchTest::k_ImagePath);
-  const auto& mask = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath);
-  REQUIRE(image.getDimensions() == SizeVec3(k_Dimension, k_Dimension, k_Dimension));
+  REQUIRE_NOTHROW(data.getDataRefAs<ImageGeom>(identify_sample_batch_test::k_ImagePath));
+  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath));
+  const auto& image = data.getDataRefAs<ImageGeom>(identify_sample_batch_test::k_ImagePath);
+  const auto& mask = data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath);
+  REQUIRE(image.getDimensions() == SizeVec3Type(k_Dimension, k_Dimension, k_Dimension));
   const ShapeType expectedShape{k_Dimension, k_Dimension, k_Dimension};
   REQUIRE(mask.getTupleShape() == expectedShape);
   REQUIRE(mask.getComponentShape() == ShapeType{1});
@@ -251,7 +251,7 @@ void RequireResidentOutput(const DataStructure& data, bool fillHoles)
     }
   }
   REQUIRE(trueCount == (fillHoles ? 5120000ULL : 5119800ULL));
-  UnitTest::CheckArraysInheritTupleDims(data);
+  unit_test::CheckArraysInheritTupleDims(data);
 }
 /**
  * @struct LogicalCounters
@@ -265,42 +265,42 @@ struct LogicalCounters
   const IDataArray* selected = nullptr;
   uint64 reads = 0;
   uint64 writes = 0;
-  uint64 readSuccess = 0;
-  uint64 writeSuccess = 0;
-  uint64 readValues = 0;
-  uint64 writeValues = 0;
-  uint64 maximumSpan = 0;
+  uint64 read_success = 0;
+  uint64 write_success = 0;
+  uint64 read_values = 0;
+  uint64 write_values = 0;
+  uint64 maximum_span = 0;
   uint64 active = 0;
   uint64 concurrent = 0;
-  uint64 planeLive = 0;
-  uint64 xyLive = 0;
-  uint64 namedCarrierPeak = 0;
-  uint64 allocationEvents = 0;
-  uint64 releaseEvents = 0;
-  uint64 reservationMin = std::numeric_limits<uint64>::max();
-  uint64 reservationMax = 0;
+  uint64 plane_live = 0;
+  uint64 xy_live = 0;
+  uint64 named_carrier_peak = 0;
+  uint64 allocation_events = 0;
+  uint64 release_events = 0;
+  uint64 reservation_min = std::numeric_limits<uint64>::max();
+  uint64 reservation_max = 0;
   bool invalid = false;
 
-  uint64 extraLiveBytes = 0;
-  uint64 extraPeakBytes = 0;
-  uint64 extraAllocatedBytes = 0;
-  uint64 extraAllocationCount = 0;
-  uint64 extraReleaseCount = 0;
-  uint64 extraRequestCount = 0;
-  uint64 extraGrantCount = 0;
-  uint64 extraRetainCount = 0;
-  uint64 extraReservationReleaseCount = 0;
-  uint64 extraRequestedBytes = 0;
-  uint64 extraRequestedMaxBytes = 0;
-  uint64 extraGrantedBytes = 0;
-  uint64 extraGrantedMaxBytes = 0;
-  uint64 extraRetainedBytes = 0;
-  uint64 extraRetainedMaxBytes = 0;
-  uint64 batchCount = 0;
-  uint64 batchPlanes = 0;
-  uint64 minimumBatchWidth = std::numeric_limits<uint64>::max();
-  uint64 maximumBatchWidth = 0;
-  bool invalidExtraAccounting = false;
+  uint64 extra_live_bytes = 0;
+  uint64 extra_peak_bytes = 0;
+  uint64 extra_allocated_bytes = 0;
+  uint64 extra_allocation_count = 0;
+  uint64 extra_release_count = 0;
+  uint64 extra_request_count = 0;
+  uint64 extra_grant_count = 0;
+  uint64 extra_retain_count = 0;
+  uint64 extra_reservation_release_count = 0;
+  uint64 extra_requested_bytes = 0;
+  uint64 extra_requested_max_bytes = 0;
+  uint64 extra_granted_bytes = 0;
+  uint64 extra_granted_max_bytes = 0;
+  uint64 extra_retained_bytes = 0;
+  uint64 extra_retained_max_bytes = 0;
+  uint64 batch_count = 0;
+  uint64 batch_planes = 0;
+  uint64 minimum_batch_width = std::numeric_limits<uint64>::max();
+  uint64 maximum_batch_width = 0;
+  bool invalid_extra_accounting = false;
 
   /**
    * @brief Records transfers and actual buffer lifetimes without allocating memory.
@@ -324,24 +324,24 @@ struct LogicalCounters
       return;
     }
     const uint64 bytes = static_cast<uint64>(values) * elementBytes;
-    const uint64 reserved = CacheMemoryBudgetManager::instance().reservedWorkingMemoryBytes();
-    counts.reservationMin = std::min(counts.reservationMin, reserved);
-    counts.reservationMax = std::max(counts.reservationMax, reserved);
+    const uint64 reserved = CacheMemoryBudgetManager::Instance().reservedWorkingMemoryBytes();
+    counts.reservation_min = std::min(counts.reservation_min, reserved);
+    counts.reservation_max = std::max(counts.reservation_max, reserved);
     switch(event)
     {
     case IdentifySampleSliceEventForTesting::ReadBegin:
     case IdentifySampleSliceEventForTesting::WriteBegin:
       counts.concurrent = std::max(counts.concurrent, ++counts.active);
-      counts.maximumSpan = std::max(counts.maximumSpan, static_cast<uint64>(values));
+      counts.maximum_span = std::max(counts.maximum_span, static_cast<uint64>(values));
       if(event == IdentifySampleSliceEventForTesting::ReadBegin)
       {
         counts.reads++;
-        counts.readValues += values;
+        counts.read_values += values;
       }
       else
       {
         counts.writes++;
-        counts.writeValues += values;
+        counts.write_values += values;
       }
       break;
     case IdentifySampleSliceEventForTesting::ReadEnd:
@@ -354,90 +354,90 @@ struct LogicalCounters
       counts.active--;
       if(event == IdentifySampleSliceEventForTesting::ReadEnd)
       {
-        counts.readSuccess += static_cast<uint64>(success);
+        counts.read_success += static_cast<uint64>(success);
       }
       else
       {
-        counts.writeSuccess += static_cast<uint64>(success);
+        counts.write_success += static_cast<uint64>(success);
       }
       break;
     case IdentifySampleSliceEventForTesting::PlaneAllocated:
     case IdentifySampleSliceEventForTesting::XyAllocated: {
-      auto& live = event == IdentifySampleSliceEventForTesting::PlaneAllocated ? counts.planeLive : counts.xyLive;
+      auto& live = event == IdentifySampleSliceEventForTesting::PlaneAllocated ? counts.plane_live : counts.xy_live;
       counts.invalid = counts.invalid || live != 0;
       live = bytes;
-      counts.namedCarrierPeak = std::max(counts.namedCarrierPeak, counts.planeLive + counts.xyLive);
-      counts.allocationEvents++;
+      counts.named_carrier_peak = std::max(counts.named_carrier_peak, counts.plane_live + counts.xy_live);
+      counts.allocation_events++;
       break;
     }
     case IdentifySampleSliceEventForTesting::PlaneReleased:
     case IdentifySampleSliceEventForTesting::XyReleased: {
-      auto& live = event == IdentifySampleSliceEventForTesting::PlaneReleased ? counts.planeLive : counts.xyLive;
+      auto& live = event == IdentifySampleSliceEventForTesting::PlaneReleased ? counts.plane_live : counts.xy_live;
       counts.invalid = counts.invalid || live != bytes;
       live = 0;
-      counts.releaseEvents++;
+      counts.release_events++;
       break;
     }
     case IdentifySampleSliceEventForTesting::ExtraBytesRequested:
-      counts.invalidExtraAccounting = counts.invalidExtraAccounting || elementBytes != 1 || !success || counts.m_ExtraPhase != ExtraPhase::None || counts.extraLiveBytes != 0;
+      counts.invalid_extra_accounting = counts.invalid_extra_accounting || elementBytes != 1 || !success || counts.m_ExtraPhase != ExtraPhase::None || counts.extra_live_bytes != 0;
       counts.m_ExtraPhase = ExtraPhase::Requested;
       counts.m_RequestedBytes = bytes;
       counts.m_GrantedBytes = 0;
       counts.m_ExtraOwnerObserved = false;
       counts.m_BatchWidthObserved = false;
-      counts.extraRequestCount++;
-      counts.addExtraTotal(counts.extraRequestedBytes, bytes);
-      counts.extraRequestedMaxBytes = std::max(counts.extraRequestedMaxBytes, bytes);
+      counts.extra_request_count++;
+      counts.addExtraTotal(counts.extra_requested_bytes, bytes);
+      counts.extra_requested_max_bytes = std::max(counts.extra_requested_max_bytes, bytes);
       break;
     case IdentifySampleSliceEventForTesting::ExtraBytesGranted:
-      counts.invalidExtraAccounting = counts.invalidExtraAccounting || elementBytes != 1 || !success || counts.m_ExtraPhase != ExtraPhase::Requested || bytes > counts.m_RequestedBytes;
+      counts.invalid_extra_accounting = counts.invalid_extra_accounting || elementBytes != 1 || !success || counts.m_ExtraPhase != ExtraPhase::Requested || bytes > counts.m_RequestedBytes;
       counts.m_ExtraPhase = ExtraPhase::Granted;
       counts.m_GrantedBytes = bytes;
-      counts.extraGrantCount++;
-      counts.addExtraTotal(counts.extraGrantedBytes, bytes);
-      counts.extraGrantedMaxBytes = std::max(counts.extraGrantedMaxBytes, bytes);
+      counts.extra_grant_count++;
+      counts.addExtraTotal(counts.extra_granted_bytes, bytes);
+      counts.extra_granted_max_bytes = std::max(counts.extra_granted_max_bytes, bytes);
       break;
     case IdentifySampleSliceEventForTesting::ExtraBytesRetained:
-      counts.invalidExtraAccounting = counts.invalidExtraAccounting || elementBytes != 1 || !success || counts.m_ExtraPhase != ExtraPhase::Granted || bytes > counts.m_GrantedBytes;
-      counts.invalidExtraAccounting = counts.invalidExtraAccounting || (counts.planeLive == 0 ? bytes != 0 : bytes % counts.planeLive != 0);
+      counts.invalid_extra_accounting = counts.invalid_extra_accounting || elementBytes != 1 || !success || counts.m_ExtraPhase != ExtraPhase::Granted || bytes > counts.m_GrantedBytes;
+      counts.invalid_extra_accounting = counts.invalid_extra_accounting || (counts.plane_live == 0 ? bytes != 0 : bytes % counts.plane_live != 0);
       counts.m_ExtraPhase = ExtraPhase::Retained;
-      counts.extraRetainedBytes = bytes;
-      counts.extraRetainCount++;
-      counts.extraRetainedMaxBytes = std::max(counts.extraRetainedMaxBytes, bytes);
+      counts.extra_retained_bytes = bytes;
+      counts.extra_retain_count++;
+      counts.extra_retained_max_bytes = std::max(counts.extra_retained_max_bytes, bytes);
       break;
     case IdentifySampleSliceEventForTesting::ExtraPlanesAllocated:
-      counts.invalidExtraAccounting = counts.invalidExtraAccounting || !success || counts.m_ExtraPhase != ExtraPhase::Retained || counts.m_ExtraOwnerObserved || counts.m_BatchWidthObserved ||
-                                      counts.extraLiveBytes != 0 || bytes == 0 || bytes != counts.extraRetainedBytes;
+      counts.invalid_extra_accounting = counts.invalid_extra_accounting || !success || counts.m_ExtraPhase != ExtraPhase::Retained || counts.m_ExtraOwnerObserved || counts.m_BatchWidthObserved ||
+                                        counts.extra_live_bytes != 0 || bytes == 0 || bytes != counts.extra_retained_bytes;
       counts.m_ExtraOwnerObserved = true;
-      counts.extraLiveBytes = bytes;
-      counts.extraPeakBytes = std::max(counts.extraPeakBytes, bytes);
-      counts.addExtraTotal(counts.extraAllocatedBytes, bytes);
-      counts.extraAllocationCount++;
+      counts.extra_live_bytes = bytes;
+      counts.extra_peak_bytes = std::max(counts.extra_peak_bytes, bytes);
+      counts.addExtraTotal(counts.extra_allocated_bytes, bytes);
+      counts.extra_allocation_count++;
       break;
     case IdentifySampleSliceEventForTesting::ExtraPlanesReleased:
-      counts.invalidExtraAccounting = counts.invalidExtraAccounting || !success || counts.m_ExtraPhase != ExtraPhase::Retained || !counts.m_ExtraOwnerObserved || bytes == 0 ||
-                                      counts.extraLiveBytes != bytes || bytes > counts.extraRetainedBytes;
-      counts.extraLiveBytes = 0;
-      counts.extraReleaseCount++;
+      counts.invalid_extra_accounting = counts.invalid_extra_accounting || !success || counts.m_ExtraPhase != ExtraPhase::Retained || !counts.m_ExtraOwnerObserved || bytes == 0 ||
+                                        counts.extra_live_bytes != bytes || bytes > counts.extra_retained_bytes;
+      counts.extra_live_bytes = 0;
+      counts.extra_release_count++;
       break;
     case IdentifySampleSliceEventForTesting::BatchWidth: {
-      const uint64 expectedWidth = counts.planeLive == 0 ? 1 : 1 + counts.extraRetainedBytes / counts.planeLive;
-      counts.invalidExtraAccounting = counts.invalidExtraAccounting || elementBytes != 1 || !success || counts.m_ExtraPhase != ExtraPhase::Retained || counts.m_BatchWidthObserved || values < 1 ||
-                                      values > 8 || values != expectedWidth || counts.extraLiveBytes != counts.extraRetainedBytes;
+      const uint64 expectedWidth = counts.plane_live == 0 ? 1 : 1 + counts.extra_retained_bytes / counts.plane_live;
+      counts.invalid_extra_accounting = counts.invalid_extra_accounting || elementBytes != 1 || !success || counts.m_ExtraPhase != ExtraPhase::Retained || counts.m_BatchWidthObserved || values < 1 ||
+                                        values > 8 || values != expectedWidth || counts.extra_live_bytes != counts.extra_retained_bytes;
       counts.m_BatchWidthObserved = true;
-      counts.batchCount++;
-      counts.addExtraTotal(counts.batchPlanes, values);
-      counts.minimumBatchWidth = std::min(counts.minimumBatchWidth, static_cast<uint64>(values));
-      counts.maximumBatchWidth = std::max(counts.maximumBatchWidth, static_cast<uint64>(values));
+      counts.batch_count++;
+      counts.addExtraTotal(counts.batch_planes, values);
+      counts.minimum_batch_width = std::min(counts.minimum_batch_width, static_cast<uint64>(values));
+      counts.maximum_batch_width = std::max(counts.maximum_batch_width, static_cast<uint64>(values));
       break;
     }
     case IdentifySampleSliceEventForTesting::ExtraReservationReleased:
       // The token returns its grant only after the extra array releases its values.
-      counts.invalidExtraAccounting =
-          counts.invalidExtraAccounting || elementBytes != 1 || !success || counts.m_ExtraPhase != ExtraPhase::Retained || counts.extraLiveBytes != 0 || bytes != counts.extraRetainedBytes;
-      counts.extraRetainedBytes = 0;
+      counts.invalid_extra_accounting =
+          counts.invalid_extra_accounting || elementBytes != 1 || !success || counts.m_ExtraPhase != ExtraPhase::Retained || counts.extra_live_bytes != 0 || bytes != counts.extra_retained_bytes;
+      counts.extra_retained_bytes = 0;
       counts.m_ExtraPhase = ExtraPhase::None;
-      counts.extraReservationReleaseCount++;
+      counts.extra_reservation_release_count++;
       break;
     }
   }
@@ -446,42 +446,42 @@ struct LogicalCounters
    * @brief Reports observed counts and peaks with separate extra-plane ownership fields.
    * @return Measurements for the selected mask, excluding total process memory.
    */
-  Json describe() const
+  JsonType describe() const
   {
     return {{"read_calls", reads},
             {"write_calls", writes},
-            {"successful_read_calls", readSuccess},
-            {"successful_write_calls", writeSuccess},
-            {"read_values", readValues},
-            {"write_values", writeValues},
-            {"maximum_span_values", maximumSpan},
+            {"successful_read_calls", read_success},
+            {"successful_write_calls", write_success},
+            {"read_values", read_values},
+            {"write_values", write_values},
+            {"maximum_span_values", maximum_span},
             {"outer_concurrency", concurrent},
-            {"original_plane_and_xy_requested_peak_bytes", namedCarrierPeak},
-            {"carrier_allocation_events", allocationEvents},
-            {"carrier_release_events", releaseEvents},
-            {"working_reservation_min_bytes", reservationMin},
-            {"working_reservation_max_bytes", reservationMax},
+            {"original_plane_and_xy_requested_peak_bytes", named_carrier_peak},
+            {"carrier_allocation_events", allocation_events},
+            {"carrier_release_events", release_events},
+            {"working_reservation_min_bytes", reservation_min},
+            {"working_reservation_max_bytes", reservation_max},
             {"extra_plane_allocation_observation", "actual extra-array ownership; excludes original carriers, CCL records, and backend memory"},
-            {"extra_plane_live_bytes", extraLiveBytes},
-            {"extra_plane_peak_bytes", extraPeakBytes},
-            {"extra_plane_allocated_bytes", extraAllocatedBytes},
-            {"extra_plane_allocation_events", extraAllocationCount},
-            {"extra_plane_release_events", extraReleaseCount},
-            {"extra_request_events", extraRequestCount},
-            {"extra_grant_events", extraGrantCount},
-            {"extra_retain_events", extraRetainCount},
-            {"extra_reservation_release_events", extraReservationReleaseCount},
-            {"extra_requested_bytes", extraRequestedBytes},
-            {"extra_requested_max_bytes", extraRequestedMaxBytes},
-            {"extra_granted_bytes", extraGrantedBytes},
-            {"extra_granted_max_bytes", extraGrantedMaxBytes},
-            {"extra_retained_live_bytes", extraRetainedBytes},
-            {"extra_retained_max_bytes", extraRetainedMaxBytes},
-            {"batch_count", batchCount},
-            {"batch_planes", batchPlanes},
-            {"minimum_batch_width", batchCount == 0 ? 0 : minimumBatchWidth},
-            {"maximum_batch_width", maximumBatchWidth},
-            {"extra_accounting_invalid", invalidExtraAccounting}};
+            {"extra_plane_live_bytes", extra_live_bytes},
+            {"extra_plane_peak_bytes", extra_peak_bytes},
+            {"extra_plane_allocated_bytes", extra_allocated_bytes},
+            {"extra_plane_allocation_events", extra_allocation_count},
+            {"extra_plane_release_events", extra_release_count},
+            {"extra_request_events", extra_request_count},
+            {"extra_grant_events", extra_grant_count},
+            {"extra_retain_events", extra_retain_count},
+            {"extra_reservation_release_events", extra_reservation_release_count},
+            {"extra_requested_bytes", extra_requested_bytes},
+            {"extra_requested_max_bytes", extra_requested_max_bytes},
+            {"extra_granted_bytes", extra_granted_bytes},
+            {"extra_granted_max_bytes", extra_granted_max_bytes},
+            {"extra_retained_live_bytes", extra_retained_bytes},
+            {"extra_retained_max_bytes", extra_retained_max_bytes},
+            {"batch_count", batch_count},
+            {"batch_planes", batch_planes},
+            {"minimum_batch_width", batch_count == 0 ? 0 : minimum_batch_width},
+            {"maximum_batch_width", maximum_batch_width},
+            {"extra_accounting_invalid", invalid_extra_accounting}};
   }
 
 private:
@@ -511,7 +511,7 @@ private:
   {
     if(amount > std::numeric_limits<uint64>::max() - total)
     {
-      invalidExtraAccounting = true;
+      invalid_extra_accounting = true;
       return;
     }
     total += amount;
@@ -526,31 +526,31 @@ private:
 template <class T>
 void RequireFullWidthYzBatchObservations(const LogicalCounters& counts)
 {
-  constexpr uint64 expectedBatches = k_Dimension / 8;
-  constexpr uint64 expectedExtraBytes = 7 * k_XyValues * sizeof(T);
+  constexpr uint64 k_ExpectedBatches = k_Dimension / 8;
+  constexpr uint64 k_ExpectedExtraBytes = 7 * k_XyValues * sizeof(T);
   static_assert(k_Dimension % 8 == 0);
-  REQUIRE_FALSE(counts.invalidExtraAccounting);
-  REQUIRE(counts.extraLiveBytes == 0);
-  REQUIRE(counts.extraRetainedBytes == 0);
-  REQUIRE(counts.extraAllocationCount == expectedBatches);
-  REQUIRE(counts.extraReleaseCount == expectedBatches);
-  REQUIRE(counts.extraRequestCount == expectedBatches);
-  REQUIRE(counts.extraGrantCount == expectedBatches);
-  REQUIRE(counts.extraRetainCount == expectedBatches);
-  REQUIRE(counts.extraReservationReleaseCount == expectedBatches);
-  REQUIRE(counts.extraAllocatedBytes == expectedBatches * expectedExtraBytes);
-  REQUIRE(counts.extraPeakBytes == expectedExtraBytes);
-  REQUIRE(counts.extraRequestedBytes == expectedBatches * expectedExtraBytes);
-  REQUIRE(counts.extraRequestedMaxBytes == expectedExtraBytes);
-  REQUIRE(counts.extraGrantedBytes == expectedBatches * expectedExtraBytes);
-  REQUIRE(counts.extraGrantedMaxBytes == expectedExtraBytes);
-  REQUIRE(counts.extraRetainedMaxBytes == expectedExtraBytes);
-  REQUIRE(counts.extraPeakBytes <= counts.extraRetainedMaxBytes);
-  REQUIRE(counts.extraRetainedMaxBytes <= counts.extraGrantedMaxBytes);
-  REQUIRE(counts.batchCount == expectedBatches);
-  REQUIRE(counts.batchPlanes == k_Dimension);
-  REQUIRE(counts.minimumBatchWidth == 8);
-  REQUIRE(counts.maximumBatchWidth == 8);
+  REQUIRE_FALSE(counts.invalid_extra_accounting);
+  REQUIRE(counts.extra_live_bytes == 0);
+  REQUIRE(counts.extra_retained_bytes == 0);
+  REQUIRE(counts.extra_allocation_count == k_ExpectedBatches);
+  REQUIRE(counts.extra_release_count == k_ExpectedBatches);
+  REQUIRE(counts.extra_request_count == k_ExpectedBatches);
+  REQUIRE(counts.extra_grant_count == k_ExpectedBatches);
+  REQUIRE(counts.extra_retain_count == k_ExpectedBatches);
+  REQUIRE(counts.extra_reservation_release_count == k_ExpectedBatches);
+  REQUIRE(counts.extra_allocated_bytes == k_ExpectedBatches * k_ExpectedExtraBytes);
+  REQUIRE(counts.extra_peak_bytes == k_ExpectedExtraBytes);
+  REQUIRE(counts.extra_requested_bytes == k_ExpectedBatches * k_ExpectedExtraBytes);
+  REQUIRE(counts.extra_requested_max_bytes == k_ExpectedExtraBytes);
+  REQUIRE(counts.extra_granted_bytes == k_ExpectedBatches * k_ExpectedExtraBytes);
+  REQUIRE(counts.extra_granted_max_bytes == k_ExpectedExtraBytes);
+  REQUIRE(counts.extra_retained_max_bytes == k_ExpectedExtraBytes);
+  REQUIRE(counts.extra_peak_bytes <= counts.extra_retained_max_bytes);
+  REQUIRE(counts.extra_retained_max_bytes <= counts.extra_granted_max_bytes);
+  REQUIRE(counts.batch_count == k_ExpectedBatches);
+  REQUIRE(counts.batch_planes == k_Dimension);
+  REQUIRE(counts.minimum_batch_width == 8);
+  REQUIRE(counts.maximum_batch_width == 8);
 }
 
-} // namespace IdentifySampleBenchmarkTest
+} // namespace identify_sample_benchmark_test

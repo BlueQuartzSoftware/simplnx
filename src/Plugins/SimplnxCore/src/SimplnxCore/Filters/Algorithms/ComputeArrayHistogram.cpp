@@ -303,11 +303,11 @@ public:
         return readResult;
       }
 
-      modes = StatisticsCalculations::findModes(selectedValues);
+      modes = statistics_calculations::FindModes(selectedValues);
     }
     else
     {
-      modes = StatisticsCalculations::findModes(m_InputStore);
+      modes = statistics_calculations::FindModes(m_InputStore);
     }
 
     if(m_ShouldCancel)
@@ -332,7 +332,7 @@ public:
         m_ModalBinRanges.addEntry(0, binRanges.front());
         m_ModalBinRanges.addEntry(0, binRanges.back());
       }
-      else if(const auto modalRange = StatisticsCalculations::findModalBinRange(mode, m_HistMin, m_Increment, m_NumBins, nonstd::span<const T>(binRanges.data(), binRanges.size()));
+      else if(const auto modalRange = statistics_calculations::FindModalBinRange(mode, m_HistMin, m_Increment, m_NumBins, nonstd::span<const T>(binRanges.data(), binRanges.size()));
               modalRange.has_value())
       {
         m_ModalBinRanges.addEntry(0, modalRange->first);
@@ -590,7 +590,7 @@ Result<> CalculateModalRangesScanlineImpl(const AbstractDataStore<T>& inputStore
         modalBinRanges.addEntry(0, binRanges.front());
         modalBinRanges.addEntry(0, binRanges.back());
       }
-      else if(const auto modalRange = StatisticsCalculations::findModalBinRange(mode, histMin, increment, numBins, binRangeSpan); modalRange.has_value())
+      else if(const auto modalRange = statistics_calculations::FindModalBinRange(mode, histMin, increment, numBins, binRangeSpan); modalRange.has_value())
       {
         modalBinRanges.addEntry(0, modalRange->first);
         modalBinRanges.addEntry(0, modalRange->second);
@@ -655,13 +655,13 @@ struct ComputeHistogramFunctor
     const usize numValues = inputStore.getSize();
     BufferedValueReader<T> reader(inputStore, maskArray, shouldCancel);
 
-    std::pair<T, T> range = {static_cast<T>(inputValues.MinRange), static_cast<T>(inputValues.MaxRange)};
-    if(inputValues.UserDefinedRange && inputValues.MinRange > inputValues.MaxRange)
+    std::pair<T, T> range = {static_cast<T>(inputValues.min_range), static_cast<T>(inputValues.max_range)};
+    if(inputValues.user_defined_range && inputValues.min_range > inputValues.max_range)
     {
       return MakeErrorResult(-23760,
-                             fmt::format("GenerateHistogramFunctor: The range min value is larger than the max value. Min value: {} | Max Value: {}", inputValues.MinRange, inputValues.MaxRange));
+                             fmt::format("GenerateHistogramFunctor: The range min value is larger than the max value. Min value: {} | Max Value: {}", inputValues.min_range, inputValues.max_range));
     }
-    if(!inputValues.UserDefinedRange)
+    if(!inputValues.user_defined_range)
     {
       bool hasValue = false;
       Result<> rangeResult = reader.forEach(numValues, [&](T value, usize) {
@@ -687,10 +687,10 @@ struct ComputeHistogramFunctor
       range.second += static_cast<T>(1.0);
     }
 
-    const int32 numBins = inputValues.NumberOfBins;
-    const float32 increment = HistogramUtilities::serial::CalculateIncrement(range.first, range.second, numBins);
+    const int32 numBins = inputValues.number_of_bins;
+    const float32 increment = histogram_utilities::serial::CalculateIncrement(range.first, range.second, numBins);
     auto binRanges = std::make_unique<T[]>(static_cast<usize>(numBins) * 2);
-    HistogramUtilities::serial::FillBinRanges(binRanges, range, numBins, increment);
+    histogram_utilities::serial::FillBinRanges(binRanges, range, numBins, increment);
     Result<> rangesResult = binRangesStore.copyFromBuffer(0, nonstd::span<const T>(binRanges.get(), static_cast<usize>(numBins) * 2));
     if(rangesResult.invalid())
     {
@@ -700,7 +700,7 @@ struct ComputeHistogramFunctor
     auto counts = std::make_unique<uint64[]>(static_cast<usize>(numBins));
     std::fill_n(counts.get(), numBins, uint64{0});
     Result<> histogramResult = reader.forEach(numValues, [&](T value, usize) {
-      const auto bin = HistogramUtilities::serial::CalculateBin(value, range.first, increment);
+      const auto bin = histogram_utilities::serial::CalculateBin(value, range.first, increment);
       if((bin >= 0) && (bin < numBins))
       {
         counts[static_cast<usize>(bin)]++;
@@ -720,9 +720,9 @@ struct ComputeHistogramFunctor
     {
       return countsResult;
     }
-    const auto maxElement = std::max_element(counts.get(), counts.get() + numBins);
-    mostPopulatedStore.setComponent(0, 0, static_cast<uint64>(std::distance(counts.get(), maxElement)));
-    mostPopulatedStore.setComponent(0, 1, *maxElement);
+    auto* const maxElementPtr = std::max_element(counts.get(), counts.get() + numBins);
+    mostPopulatedStore.setComponent(0, 0, static_cast<uint64>(std::distance(counts.get(), maxElementPtr)));
+    mostPopulatedStore.setComponent(0, 1, *maxElementPtr);
 
     if(modalBinRanges != nullptr)
     {
@@ -754,38 +754,36 @@ ComputeArrayHistogram::ComputeArrayHistogram(DataStructure& dataStructure, const
 {
 }
 
-ComputeArrayHistogram::~ComputeArrayHistogram() noexcept = default;
-
 Result<> ComputeArrayHistogram::operator()()
 {
-  const IDataArray* maskArray = nullptr;
-  if(m_InputValues->MaskPath.has_value())
+  const IDataArray* maskArrayPtr = nullptr;
+  if(m_InputValues->mask_path.has_value())
   {
-    maskArray = &m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskPath.value());
+    maskArrayPtr = &m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->mask_path.value());
   }
 
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;
 
-  for(usize index = 0; index < m_InputValues->SelectedArrayPaths.size(); index++)
+  for(usize index = 0; index < m_InputValues->selected_array_paths.size(); index++)
   {
     if(m_ShouldCancel)
     {
       return {};
     }
 
-    const auto& inputData = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SelectedArrayPaths[index]);
-    auto& binRanges = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->CreatedBinRangeDataPaths.at(index));
-    auto& counts = m_DataStructure.getDataRefAs<DataArray<uint64>>(m_InputValues->CreatedHistogramCountsDataPaths.at(index)).getDataStoreRef();
-    auto& mostPopulated = m_DataStructure.getDataRefAs<DataArray<uint64>>(m_InputValues->CreatedBinMostPopulatedDataPaths.at(index)).getDataStoreRef();
-    INeighborList* modalBinRanges = nullptr;
-    if(m_InputValues->CreatedBinModalRangesDataPaths.has_value())
+    const auto& inputData = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->selected_array_paths[index]);
+    auto& binRanges = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->created_bin_range_data_paths.at(index));
+    auto& counts = m_DataStructure.getDataRefAs<DataArray<uint64>>(m_InputValues->created_histogram_counts_data_paths.at(index)).getDataStoreRef();
+    auto& mostPopulated = m_DataStructure.getDataRefAs<DataArray<uint64>>(m_InputValues->created_bin_most_populated_data_paths.at(index)).getDataStoreRef();
+    INeighborList* modalBinRangesPtr = nullptr;
+    if(m_InputValues->created_bin_modal_ranges_data_paths.has_value())
     {
-      modalBinRanges = &m_DataStructure.getDataRefAs<INeighborList>(m_InputValues->CreatedBinModalRangesDataPaths->at(index));
+      modalBinRangesPtr = &m_DataStructure.getDataRefAs<INeighborList>(m_InputValues->created_bin_modal_ranges_data_paths->at(index));
     }
 
     usize overflow = 0;
-    Result<> result =
-        ExecuteDataFunctionNoBool(ComputeHistogramFunctor{}, inputData.getDataType(), inputData, binRanges, counts, mostPopulated, modalBinRanges, maskArray, *m_InputValues, m_ShouldCancel, overflow);
+    Result<> result = ExecuteDataFunctionNoBool(ComputeHistogramFunctor{}, inputData.getDataType(), inputData, binRanges, counts, mostPopulated, modalBinRangesPtr, maskArrayPtr, *m_InputValues,
+                                                m_ShouldCancel, overflow);
     if(result.invalid())
     {
       return result;

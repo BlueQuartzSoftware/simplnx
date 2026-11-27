@@ -13,9 +13,9 @@
 #ifdef SIMPLNX_NXIMAGEPROCESSING_BENCH_HAS_OOC
 // Only present in the OOC harness build (where the SimplnxOoc target exists). These wire up the disk-backed
 // "HDF5-OOC" backend so `--mode ooc` produces real out-of-core stores; the standalone build compiles none of it.
-#include "SimplnxOoc/OocDataIOManager.hpp"         // SimplnxOoc::registerIOManager / SimplnxOoc::shutdown
-#include "SimplnxOoc/PreferenceFormatResolver.hpp" // SimplnxOoc::PreferenceFormatResolver
-#include "simplnx/DataStructure/DataStructure.hpp" // DataStructure::setDefaultFormatResolver
+#include "SimplnxOoc/OocDataIOManager.hpp"         // simplnx_ooc::RegisterIoManager / simplnx_ooc::Shutdown
+#include "SimplnxOoc/PreferenceFormatResolver.hpp" // simplnx_ooc::PreferenceFormatResolver
+#include "simplnx/DataStructure/DataStructure.hpp" // DataStructure::SetDefaultFormatResolver
 
 #include <memory>
 #endif
@@ -35,22 +35,22 @@ namespace
 {
 struct CliOptions
 {
-  std::string mode = "incore";       // incore | ooc
-  usize targetVoxels = 256000000ULL; // ~256M voxels
-  usize zSlices = 256;
-  bool force2D = false;
-  std::optional<uint32> projectionAxis;
+  std::string mode = "incore";        // incore | ooc
+  usize target_voxels = 256000000ULL; // ~256M voxels
+  usize z_slices = 256;
+  bool force_2d = false;
+  std::optional<uint32> projection_axis;
   int warmup = 1;
   int repeats = 3;
-  bool oocOnly = false;
-  std::optional<uint64> cacheMemoryBudgetBytes;
-  std::optional<uint64> workingMemoryBytes;
-  std::string filters = "subset"; // subset | all | <name>[,<name>...]
-  std::string outCsv;             // CSV output path (enables the full run + CSV write)
-  bool requireNewResult = false;  // Exit nonzero if the selected new-filter configuration does not produce a timing.
-  bool doMerge = false;           // --merge <incoreCsv> <oocCsv> : join two CSVs, no filters run
-  std::string mergeIncoreCsv;
-  std::string mergeOocCsv;
+  bool ooc_only = false;
+  std::optional<uint64> cache_memory_budget_bytes;
+  std::optional<uint64> working_memory_bytes;
+  std::string filters = "subset";  // subset | all | <name>[,<name>...]
+  std::string out_csv;             // CSV output path (enables the full run + CSV write)
+  bool require_new_result = false; // Exit nonzero if the selected new-filter configuration does not produce a timing.
+  bool do_merge = false;           // --merge <incoreCsv> <oocCsv> : join two CSVs, no filters run
+  std::string merge_incore_csv;
+  std::string merge_ooc_csv;
 };
 
 std::string FirstErrorMessage(const std::vector<Error>& errors)
@@ -105,15 +105,15 @@ int main(int argc, char** argv)
       }
       else if(arg == "--target-voxels" && NextValue(argc, argv, i, value))
       {
-        opts.targetVoxels = std::stoull(value);
+        opts.target_voxels = std::stoull(value);
       }
       else if(arg == "--z-slices" && NextValue(argc, argv, i, value))
       {
-        opts.zSlices = std::stoull(value);
+        opts.z_slices = std::stoull(value);
       }
       else if(arg == "--force-2d")
       {
-        opts.force2D = true;
+        opts.force_2d = true;
       }
       else if(arg == "--projection-axis")
       {
@@ -128,7 +128,7 @@ int main(int argc, char** argv)
           fmt::print("--projection-axis must be 0, 1, or 2 (got '{}')\n", value);
           return 1;
         }
-        opts.projectionAxis = static_cast<uint32>(parsedAxis);
+        opts.projection_axis = static_cast<uint32>(parsedAxis);
       }
       else if(arg == "--warmup" && NextValue(argc, argv, i, value))
       {
@@ -155,7 +155,7 @@ int main(int argc, char** argv)
           fmt::print("--cache-memory-budget-bytes requires a positive integer byte count. Received {}.\n", parsedBytes);
           return 1;
         }
-        opts.cacheMemoryBudgetBytes = parsedBytes;
+        opts.cache_memory_budget_bytes = parsedBytes;
       }
       else if(arg == "--working-memory-bytes")
       {
@@ -174,11 +174,11 @@ int main(int argc, char** argv)
           fmt::print("--working-memory-bytes requires a positive integer byte count\n");
           return 1;
         }
-        opts.workingMemoryBytes = parsedBytes;
+        opts.working_memory_bytes = parsedBytes;
       }
       else if(arg == "--ooc-only")
       {
-        opts.oocOnly = true;
+        opts.ooc_only = true;
       }
       else if(arg == "--merge")
       {
@@ -188,9 +188,9 @@ int main(int argc, char** argv)
           fmt::print("--merge requires two CSV paths: --merge <incore.csv> <ooc.csv>\n");
           return 1;
         }
-        opts.doMerge = true;
-        opts.mergeIncoreCsv = value;
-        opts.mergeOocCsv = second;
+        opts.do_merge = true;
+        opts.merge_incore_csv = value;
+        opts.merge_ooc_csv = second;
       }
       else if(arg == "--filters" && NextValue(argc, argv, i, value))
       {
@@ -198,11 +198,11 @@ int main(int argc, char** argv)
       }
       else if(arg == "--require-new-result")
       {
-        opts.requireNewResult = true;
+        opts.require_new_result = true;
       }
       else if(arg == "--out" && NextValue(argc, argv, i, value))
       {
-        opts.outCsv = value;
+        opts.out_csv = value;
       }
       else if(arg == "--help" || arg == "-h")
       {
@@ -224,20 +224,20 @@ int main(int argc, char** argv)
 
   // --- Merge mode: pure CSV join (no plugins, no filter runs). Joins an in-core-build CSV and an OOC-build CSV on
   //     filter+type into --out, recomputing the ratio columns. ---
-  if(opts.doMerge)
+  if(opts.do_merge)
   {
-    if(opts.outCsv.empty())
+    if(opts.out_csv.empty())
     {
       fmt::print("--merge requires --out <merged.csv>\n");
       return 1;
     }
-    const Result<> mergeResult = ip_bench::MergeCsv(opts.mergeIncoreCsv, opts.mergeOocCsv, opts.outCsv);
+    const Result<> mergeResult = ip_bench::MergeCsv(opts.merge_incore_csv, opts.merge_ooc_csv, opts.out_csv);
     if(mergeResult.invalid())
     {
       fmt::print("Merge failed: {}\n", FirstErrorMessage(mergeResult.errors()));
       return 1;
     }
-    fmt::print("Merged '{}' + '{}' -> '{}'\n", opts.mergeIncoreCsv, opts.mergeOocCsv, opts.outCsv);
+    fmt::print("Merged '{}' + '{}' -> '{}'\n", opts.merge_incore_csv, opts.merge_ooc_csv, opts.out_csv);
     return 0;
   }
 
@@ -246,23 +246,23 @@ int main(int argc, char** argv)
     fmt::print("--mode must be 'incore' or 'ooc' (got '{}')\n", opts.mode);
     return 1;
   }
-  if(opts.oocOnly && opts.mode != "ooc")
+  if(opts.ooc_only && opts.mode != "ooc")
   {
     fmt::print("--ooc-only requires --mode ooc, but received mode '{}'.\n", opts.mode);
     return 1;
   }
   const DataStorageMode storeMode = (opts.mode == "ooc") ? DataStorageMode::ForceOutOfCore : DataStorageMode::ForceInCore;
   std::optional<ImageProcessing::ScopedWorkingMemoryTuningOverride> workingMemoryOverride;
-  if(opts.workingMemoryBytes.has_value())
+  if(opts.working_memory_bytes.has_value())
   {
-    workingMemoryOverride.emplace(*opts.workingMemoryBytes);
+    workingMemoryOverride.emplace(*opts.working_memory_bytes);
   }
 
   // --- Load ALL plugins from the build's plugin directory (same dir as this exe). This resolves the
   //     NXImageProcessing filters through the FilterList. ---
   auto app = Application::GetOrCreateInstance();
-  auto& cacheBudgetManager = CacheMemoryBudgetManager::instance();
-  const uint64 requestedCacheBudgetBytes = opts.cacheMemoryBudgetBytes.value_or(app->getPreferences()->cacheMemoryBudgetBytes());
+  auto& cacheBudgetManager = CacheMemoryBudgetManager::Instance();
+  const uint64 requestedCacheBudgetBytes = opts.cache_memory_budget_bytes.value_or(app->getPreferences()->cacheMemoryBudgetBytes());
   const bool cacheBudgetClamped = cacheBudgetManager.setBudgetBytes(requestedCacheBudgetBytes);
   if(cacheBudgetClamped)
   {
@@ -280,8 +280,8 @@ int main(int argc, char** argv)
   // stores. Mirrors SimplnxOoc's unit-test bootstrap: the ForceOutOfCore preference set below is INERT without BOTH
   // the registered manager AND the resolver that maps that preference to the "HDF5-OOC" format. Only compiled in the
   // OOC harness build; the standalone build has no backend, so its OOC column self-skips (as designed).
-  SimplnxOoc::registerIOManager(app->getIOCollection());
-  DataStructure::setDefaultFormatResolver(std::make_shared<SimplnxOoc::PreferenceFormatResolver>());
+  simplnx_ooc::RegisterIoManager(app->getIOCollection());
+  DataStructure::SetDefaultFormatResolver(std::make_shared<simplnx_ooc::PreferenceFormatResolver>());
   fmt::print("OOC backend registered: yes\n");
 #endif
 
@@ -335,23 +335,23 @@ int main(int argc, char** argv)
     }
   }
 
-  const std::string projectionAxis = opts.projectionAxis.has_value() ? std::to_string(*opts.projectionAxis) : "default";
-  const std::string workingMemoryBytes = opts.workingMemoryBytes.has_value() ? std::to_string(*opts.workingMemoryBytes) : "default";
+  const std::string projectionAxis = opts.projection_axis.has_value() ? std::to_string(*opts.projection_axis) : "default";
+  const std::string workingMemoryBytes = opts.working_memory_bytes.has_value() ? std::to_string(*opts.working_memory_bytes) : "default";
   fmt::print("Config: mode={} target-voxels={} z-slices={} force-2d={} projection-axis={} warmup={} repeats={} cache-memory-budget-bytes={} maximum-working-memory-bytes={} working-memory-bytes={} "
              "ooc-only={} filters={}\n",
-             opts.mode, opts.targetVoxels, opts.zSlices, opts.force2D, projectionAxis, opts.warmup, opts.repeats, cacheBudgetManager.budgetBytes(), cacheBudgetManager.maximumWorkingMemoryBytes(),
-             workingMemoryBytes, opts.oocOnly, opts.filters);
+             opts.mode, opts.target_voxels, opts.z_slices, opts.force_2d, projectionAxis, opts.warmup, opts.repeats, cacheBudgetManager.budgetBytes(), cacheBudgetManager.maximumWorkingMemoryBytes(),
+             workingMemoryBytes, opts.ooc_only, opts.filters);
 
   // --- Run the two-config sweep (per-filter error isolation lives in RunFilterBenchmark). ---
   ip_bench::SweepOptions sweep;
-  sweep.targetVoxels = opts.targetVoxels;
-  sweep.minZSlices = opts.zSlices;
-  sweep.force2D = opts.force2D;
-  sweep.projectionAxis = opts.projectionAxis;
+  sweep.target_voxels = opts.target_voxels;
+  sweep.min_z_slices = opts.z_slices;
+  sweep.force_2d = opts.force_2d;
+  sweep.projection_axis = opts.projection_axis;
   sweep.warmup = opts.warmup;
   sweep.repeats = opts.repeats;
-  sweep.oocRequested = (storeMode == DataStorageMode::ForceOutOfCore);
-  sweep.oocOnly = opts.oocOnly;
+  sweep.ooc_requested = (storeMode == DataStorageMode::ForceOutOfCore);
+  sweep.ooc_only = opts.ooc_only;
 
   std::vector<ip_bench::BenchmarkRow> rows;
   try
@@ -366,12 +366,12 @@ int main(int argc, char** argv)
   // Always print the optimization-priority summary to the console.
   ip_bench::PrintSummary(rows);
 
-  if(opts.requireNewResult)
+  if(opts.require_new_result)
   {
     bool missingResult = false;
     for(const ip_bench::BenchmarkRow& row : rows)
     {
-      const bool hasResult = sweep.oocRequested ? row.newOocMs.has_value() : row.newIncoreMs.has_value();
+      const bool hasResult = sweep.ooc_requested ? row.new_ooc_ms.has_value() : row.new_incore_ms.has_value();
       if(!hasResult)
       {
         fmt::print("Required new-filter result missing for '{}': {}\n", row.filter, row.notes.empty() ? "no diagnostic was recorded" : row.notes);
@@ -381,26 +381,26 @@ int main(int argc, char** argv)
     if(missingResult)
     {
 #ifdef SIMPLNX_NXIMAGEPROCESSING_BENCH_HAS_OOC
-      SimplnxOoc::shutdown();
+      simplnx_ooc::Shutdown();
 #endif
       return 1;
     }
   }
 
   // Write the CSV only when --out is supplied.
-  if(!opts.outCsv.empty())
+  if(!opts.out_csv.empty())
   {
-    const Result<> csvResult = ip_bench::WriteCsv(opts.outCsv, rows);
+    const Result<> csvResult = ip_bench::WriteCsv(opts.out_csv, rows);
     if(csvResult.invalid())
     {
-      fmt::print("\nFailed to write CSV '{}': {}\n", opts.outCsv, FirstErrorMessage(csvResult.errors()));
+      fmt::print("\nFailed to write CSV '{}': {}\n", opts.out_csv, FirstErrorMessage(csvResult.errors()));
       return 1;
     }
-    fmt::print("\nWrote CSV: {}\n", opts.outCsv);
+    fmt::print("\nWrote CSV: {}\n", opts.out_csv);
   }
 
 #ifdef SIMPLNX_NXIMAGEPROCESSING_BENCH_HAS_OOC
-  SimplnxOoc::shutdown(); // flush dirty chunks + release OOC session files before exit
+  simplnx_ooc::Shutdown(); // flush dirty chunks + release OOC session files before exit
 #endif
 
   return 0;

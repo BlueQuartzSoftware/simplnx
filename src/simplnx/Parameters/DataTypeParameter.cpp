@@ -73,7 +73,7 @@ Uuid DataTypeParameter::uuid() const
   return ParameterTraits<DataTypeParameter>::uuid;
 }
 
-IParameter::AcceptedTypes DataTypeParameter::acceptedTypes() const
+IParameter::AcceptedTypesType DataTypeParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -91,18 +91,18 @@ nlohmann::json DataTypeParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> DataTypeParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> DataTypeParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'DataTypeParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'DataTypeParameter' JSON Error: ";
   if(!json.is_number())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a number", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a number", k_Prefix, name()));
   }
   auto type = json.get<ValueType>();
   return {{type}};
 }
 
-IParameter::UniquePointer DataTypeParameter::clone() const
+IParameter::UniquePointerType DataTypeParameter::clone() const
 {
   return std::make_unique<DataTypeParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -123,7 +123,7 @@ Result<> DataTypeParameter::validate(const std::any& value) const
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 /*
 enum class Type : int32_t
@@ -143,7 +143,7 @@ enum class Type : int32_t
 };
 */
 
-Result<ScalarTypeParameterConverter::ValueType> ScalarTypeParameterConverter::convert(const nlohmann::json& json)
+Result<ScalarTypeParameterConverter::ValueType> ScalarTypeParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_number_integer())
   {
@@ -165,5 +165,5 @@ Result<ScalarTypeParameterConverter::ValueType> ScalarTypeParameterConverter::co
 
   return {static_cast<DataType>(value)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

@@ -19,7 +19,7 @@
 #include <utility>
 #include <vector>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 /**
  * @brief Runs one body invocation for each local chunk position.
@@ -145,4 +145,4 @@ void ParallelLoadChunks(nonstd::span<const uint64> chunkIndices, const std::func
     std::rethrow_exception(firstError);
   }
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

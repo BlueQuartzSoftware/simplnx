@@ -17,8 +17,8 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT CombineNodeBasedGeometriesInputValues
 {
-  std::vector<DataPath> InputGeometryPaths;
-  DataPath OutputGeometryPath;
+  std::vector<DataPath> input_geometry_paths;
+  DataPath output_geometry_path;
 };
 
 /**
@@ -28,7 +28,7 @@ class SIMPLNXCORE_EXPORT CombineNodeBasedGeometries
 {
 public:
   CombineNodeBasedGeometries(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CombineNodeBasedGeometriesInputValues* inputValues);
-  ~CombineNodeBasedGeometries() noexcept;
+  ~CombineNodeBasedGeometries() noexcept = default;
 
   CombineNodeBasedGeometries(const CombineNodeBasedGeometries&) = delete;
   CombineNodeBasedGeometries(CombineNodeBasedGeometries&&) noexcept = delete;

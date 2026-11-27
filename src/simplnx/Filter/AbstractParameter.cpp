@@ -1,11 +1,13 @@
 #include "AbstractParameter.hpp"
 
+#include <utility>
+
 namespace nx::core
 {
-AbstractParameter::AbstractParameter(const std::string& name, const std::string& humanName, const std::string& helpText)
-: m_Name(name)
-, m_HumanName(humanName)
-, m_HelpText(helpText)
+AbstractParameter::AbstractParameter(std::string name, std::string humanName, std::string helpText)
+: m_Name(std::move(name))
+, m_HumanName(std::move(humanName))
+, m_HelpText(std::move(helpText))
 {
   if(m_Name.empty())
   {

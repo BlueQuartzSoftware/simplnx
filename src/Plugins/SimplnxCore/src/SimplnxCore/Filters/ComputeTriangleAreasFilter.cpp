@@ -12,6 +12,7 @@
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
+#include <algorithm>
 #include <array>
 #include <limits>
 #include <memory>
@@ -70,7 +71,7 @@ Parameters ComputeTriangleAreasFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the face areas", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Output Face Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_CalculatedAreasDataName_Key, "Created Face Areas", "The complete path to the array storing the calculated face areas", "Face Areas"));
 
@@ -84,14 +85,14 @@ IFilter::VersionType ComputeTriangleAreasFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeTriangleAreasFilter::clone() const
+IFilter::UniquePointerType ComputeTriangleAreasFilter::clone() const
 {
   return std::make_unique<ComputeTriangleAreasFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeTriangleAreasFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeTriangleAreasFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                   const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
   auto pCalculatedAreasName = filterArgs.value<std::string>(k_CalculatedAreasDataName_Key);
@@ -100,41 +101,41 @@ IFilter::PreflightResult ComputeTriangleAreasFilter::preflightImpl(const DataStr
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  const auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
+  const auto* triangleGeomPtr = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
 
-  const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
-  if(faceAttributeMatrix == nullptr)
+  const AttributeMatrix* faceAttributeMatrixPtr = triangleGeomPtr->getFaceAttributeMatrix();
+  if(faceAttributeMatrixPtr == nullptr)
   {
-    return {MakeErrorResult<OutputActions>(k_MissingFeatureAttributeMatrix,
-                                           fmt::format("Could not find Triangle Face Attribute Matrix with in the Triangle Geometry '{}'", pTriangleGeometryDataPath.toString()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(k_MissingFeatureAttributeMatrix,
+                                                             fmt::format("Could not find Triangle Face Attribute Matrix with in the Triangle Geometry '{}'", pTriangleGeometryDataPath.toString()))};
   }
   {
-    DataPath createArrayDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pCalculatedAreasName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{1}, createArrayDataPath);
+    DataPath createArrayDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrixPtr->getName()).createChildPath(pCalculatedAreasName);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeomPtr->getNumberOfFaces()}, std::vector<usize>{1}, createArrayDataPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeTriangleAreasFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeTriangleAreasFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto pCalculatedAreasName = filterArgs.value<std::string>(k_CalculatedAreasDataName_Key);
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_TriangleGeometryDataPath_Key);
 
-  const TriangleGeom* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
-  const AttributeMatrix* faceAttributeMatrix = triangleGeom->getFaceAttributeMatrix();
+  const TriangleGeom* triangleGeomPtr = dataStructure.getDataAs<TriangleGeom>(pTriangleGeometryDataPath);
+  const AttributeMatrix* faceAttributeMatrixPtr = triangleGeomPtr->getFaceAttributeMatrix();
 
-  DataPath pCalculatedAreasDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pCalculatedAreasName);
-  auto& areaStore = dataStructure.getDataAs<Float64Array>(pCalculatedAreasDataPath)->getDataStoreRef();
+  DataPath pCalculatedAreasDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrixPtr->getName()).createChildPath(pCalculatedAreasName);
+  auto& areaStore = dataStructure.getDataAs<Float64ArrayType>(pCalculatedAreasDataPath)->getDataStoreRef();
 
-  const auto& triStore = triangleGeom->getFaces()->getDataStoreRef();
-  const auto& vertStore = triangleGeom->getVertices()->getDataStoreRef();
-  const DataPath trianglePath = pTriangleGeometryDataPath.createChildPath(triangleGeom->getFaces()->getName());
-  const DataPath vertexPath = pTriangleGeometryDataPath.createChildPath(triangleGeom->getVertices()->getName());
-  const usize numTris = triangleGeom->getNumberOfFaces();
+  const auto& triStore = triangleGeomPtr->getFaces()->getDataStoreRef();
+  const auto& vertStore = triangleGeomPtr->getVertices()->getDataStoreRef();
+  const DataPath trianglePath = pTriangleGeometryDataPath.createChildPath(triangleGeomPtr->getFaces()->getName());
+  const DataPath vertexPath = pTriangleGeometryDataPath.createChildPath(triangleGeomPtr->getVertices()->getName());
+  const usize numTris = triangleGeomPtr->getNumberOfFaces();
 
   const auto addIoContext = [](Result<> result, const DataPath& path, usize offset, usize count, const char* operation) {
     for(auto& error : result.errors())
@@ -170,14 +171,8 @@ Result<> ComputeTriangleAreasFilter::executeImpl(DataStructure& dataStructure, c
     for(usize i = 0; i < chunkCount * 3; i++)
     {
       const uint64 v = triBuf[i];
-      if(v < minVertIdx)
-      {
-        minVertIdx = v;
-      }
-      if(v > maxVertIdx)
-      {
-        maxVertIdx = v;
-      }
+      minVertIdx = std::min(v, minVertIdx);
+      maxVertIdx = std::max(v, maxVertIdx);
     }
 
     // Bounded index spans preserve a bulk coordinate read. Sparse spans use the serial fallback.
@@ -211,13 +206,13 @@ Result<> ComputeTriangleAreasFilter::executeImpl(DataStructure& dataStructure, c
           const usize o1 = static_cast<usize>(triBufPtr[i * 3 + 1] - baseVertIdx) * 3;
           const usize o2 = static_cast<usize>(triBufPtr[i * 3 + 2] - baseVertIdx) * 3;
 
-          const Point3Df p0{vertBufPtr[o0], vertBufPtr[o0 + 1], vertBufPtr[o0 + 2]};
-          const Point3Df p1{vertBufPtr[o1], vertBufPtr[o1 + 1], vertBufPtr[o1 + 2]};
-          const Point3Df p2{vertBufPtr[o2], vertBufPtr[o2 + 1], vertBufPtr[o2 + 2]};
+          const FloatVec3Type p0{vertBufPtr[o0], vertBufPtr[o0 + 1], vertBufPtr[o0 + 2]};
+          const FloatVec3Type p1{vertBufPtr[o1], vertBufPtr[o1 + 1], vertBufPtr[o1 + 2]};
+          const FloatVec3Type p2{vertBufPtr[o2], vertBufPtr[o2 + 1], vertBufPtr[o2 + 2]};
 
-          const Point3Df vecA = (p0 - p1).toArray();
-          const Point3Df vecB = (p0 - p2).toArray();
-          const Point3Df cross = vecA.cross(vecB);
+          const FloatVec3Type vecA = (p0 - p1).toArray();
+          const FloatVec3Type vecB = (p0 - p2).toArray();
+          const FloatVec3Type cross = vecA.cross(vecB);
           areaBufPtr[i] = 0.5F * cross.magnitude();
         }
       });
@@ -252,12 +247,12 @@ Result<> ComputeTriangleAreasFilter::executeImpl(DataStructure& dataStructure, c
         {
           return addIoContext(std::move(ioResult), vertexPath, v2 * 3, 3, "Bulk read failed");
         }
-        const Point3Df p0{v0Buf[0], v0Buf[1], v0Buf[2]};
-        const Point3Df p1{v1Buf[0], v1Buf[1], v1Buf[2]};
-        const Point3Df p2{v2Buf[0], v2Buf[1], v2Buf[2]};
-        const Point3Df vecA = (p0 - p1).toArray();
-        const Point3Df vecB = (p0 - p2).toArray();
-        const Point3Df cross = vecA.cross(vecB);
+        const FloatVec3Type p0{v0Buf[0], v0Buf[1], v0Buf[2]};
+        const FloatVec3Type p1{v1Buf[0], v1Buf[1], v1Buf[2]};
+        const FloatVec3Type p2{v2Buf[0], v2Buf[1], v2Buf[2]};
+        const FloatVec3Type vecA = (p0 - p1).toArray();
+        const FloatVec3Type vecB = (p0 - p2).toArray();
+        const FloatVec3Type cross = vecA.cross(vecB);
         areaBuf[i] = 0.5F * cross.magnitude();
       }
     }
@@ -274,10 +269,10 @@ Result<> ComputeTriangleAreasFilter::executeImpl(DataStructure& dataStructure, c
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_SurfaceMeshTriangleAreasArrayPathKey = "SurfaceMeshTriangleAreasArrayPath";
-} // namespace SIMPL
+constexpr StringLiteralType k_SurfaceMeshTriangleAreasArrayPathKey = "SurfaceMeshTriangleAreasArrayPath";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeTriangleAreasFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -286,10 +281,10 @@ Result<Arguments> ComputeTriangleAreasFilter::FromSIMPLJson(const nlohmann::json
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleAreasArrayPathKey,
-                                                                                                                                      k_TriangleGeometryDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshTriangleAreasArrayPathKey,
-                                                                                                                                  k_CalculatedAreasDataName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleAreasArrayPathKey,
+                                                                                                                                        k_TriangleGeometryDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleAreasArrayPathKey,
+                                                                                                                                    k_CalculatedAreasDataName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

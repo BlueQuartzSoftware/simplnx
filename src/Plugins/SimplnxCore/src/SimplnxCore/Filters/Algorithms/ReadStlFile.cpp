@@ -25,39 +25,37 @@ ReadStlFile::ReadStlFile(DataStructure& dataStructure, const IFilter::MessageHan
 {
 }
 
-ReadStlFile::~ReadStlFile() noexcept = default;
-
 Result<> ReadStlFile::operator()()
 {
-  const std::string stlFilePathStr = m_InputValues->stlFilePath.string();
+  const std::string stlFilePathStr = m_InputValues->stl_file_path.string();
 
   // Inspect the file before reading it. This parses the header and triangle count and, more
   // importantly, decides whether the per-triangle "attribute byte count" fields in this file are
   // real byte lengths or vendor garbage that must be ignored. See StlUtilities::SanityCheckFile().
-  const StlConstants::StlFileCheck stlFileCheck = StlUtilities::SanityCheckFile(m_InputValues->stlFilePath);
+  const stl_constants::StlFileCheck stlFileCheck = stl_utilities::SanityCheckFile(m_InputValues->stl_file_path);
   if(stlFileCheck.error != 0)
   {
-    return MakeErrorResult(stlFileCheck.error, stlFileCheck.errorMessage);
+    return MakeErrorResult(stlFileCheck.error, stlFileCheck.error_message);
   }
-  const int32_t triCount = stlFileCheck.numTriangles;
-  const uintmax_t stlFileSize = stlFileCheck.fileSize;
+  const int32_t triCount = stlFileCheck.num_triangles;
+  const uintmax_t stlFileSize = stlFileCheck.file_size;
 
   // Open File
-  FILE* f = std::fopen(stlFilePathStr.c_str(), "rb");
-  if(nullptr == f)
+  FILE* fPtr = std::fopen(stlFilePathStr.c_str(), "rb");
+  if(nullptr == fPtr)
   {
-    return MakeErrorResult(StlConstants::k_ErrorOpeningFile, fmt::format("Error opening STL file '{}'", stlFilePathStr));
+    return MakeErrorResult(stl_constants::k_ErrorOpeningFile, fmt::format("Error opening STL file '{}'", stlFilePathStr));
   }
-  StlUtilities::StlFileSentinel fileSentinel(f); // Will ensure that the file is closed when this method returns
+  stl_utilities::StlFileSentinel fileSentinel(fPtr); // Will ensure that the file is closed when this method returns
 
   // Skip past the 80 byte header and the triangle count. SanityCheckFile() already parsed both,
   // so there is no reason to read them a second time.
-  if(std::fseek(f, static_cast<long>(StlConstants::k_StlFixedHeaderBytes), SEEK_SET) != 0)
+  if(std::fseek(fPtr, static_cast<long>(stl_constants::k_StlFixedHeaderBytes), SEEK_SET) != 0)
   {
-    return MakeErrorResult(StlConstants::k_StlHeaderParseError, fmt::format("Error seeking past the {} byte header of STL file '{}'", StlConstants::k_StlFixedHeaderBytes, stlFilePathStr));
+    return MakeErrorResult(stl_constants::k_StlHeaderParseError, fmt::format("Error seeking past the {} byte header of STL file '{}'", stl_constants::k_StlFixedHeaderBytes, stlFilePathStr));
   }
 
-  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->geometryPath);
+  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->geometry_path);
 
   Result<> resizeResult = triangleGeom.resizeFaceList(triCount);
   if(resizeResult.invalid())
@@ -70,16 +68,16 @@ Result<> ReadStlFile::operator()()
     return resizeResult;
   }
 
-  using SharedTriList = AbstractDataStore<IGeometry::MeshIndexArrayType::value_type>;
-  using SharedVertList = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+  using SharedTriListType = AbstractDataStore<IGeometry::MeshIndexArrayType::value_type>;
+  using SharedVertListType = AbstractDataStore<IGeometry::SharedVertexListType::value_type>;
 
-  SharedTriList& triangles = triangleGeom.getFaces()->getDataStoreRef();
-  SharedVertList& nodes = triangleGeom.getVertices()->getDataStoreRef();
+  SharedTriListType& triangles = triangleGeom.getFaces()->getDataStoreRef();
+  SharedVertListType& nodes = triangleGeom.getVertices()->getDataStoreRef();
 
-  auto& faceNormalsStore = m_DataStructure.getDataAs<Float64Array>(m_InputValues->faceNormalsDataPath)->getDataStoreRef();
+  auto& faceNormalsStore = m_DataStructure.getDataAs<Float64ArrayType>(m_InputValues->face_normals_data_path)->getDataStoreRef();
 
   // Read the triangles
-  std::array<float, StlConstants::k_StlElementCount> fileVert = {0.0F};
+  std::array<float, stl_constants::k_StlElementCount> fileVert = {0.0F};
   uint16_t attrByteCount = 0;
 
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;
@@ -92,7 +90,7 @@ Result<> ReadStlFile::operator()()
   // (ftello, ftello64, _ftelli64). Nothing here needs any of that. Every read below advances the
   // offset by a known amount, so the offset can simply be computed, which is both exact and
   // portable. It starts just past the header and triangle count that were skipped above.
-  uintmax_t fileOffset = StlConstants::k_StlFixedHeaderBytes;
+  uintmax_t fileOffset = stl_constants::k_StlFixedHeaderBytes;
 
   // Check progress every 10,000 triangles to reduce work in the read loop.
   constexpr int32_t k_ProgressStride = 10000;
@@ -111,37 +109,37 @@ Result<> ReadStlFile::operator()()
       std::string msg = fmt::format(
           "Trying to read at file position {} >= file size {}.\n  File Header: '{}'\n  Header Triangle Count: {}  Current Triangle: {}\n  The STL File does not conform to the STL file specification.",
           fileOffset, stlFileSize, stlFileCheck.header, triCount, t);
-      return MakeErrorResult(StlConstants::k_StlFileLengthError, msg);
+      return MakeErrorResult(stl_constants::k_StlFileLengthError, msg);
     }
 
     // Read the Vertices and Normal (12 total float32 = 48 Bytes)
-    size_t objsRead = std::fread(fileVert.data(), sizeof(float), StlConstants::k_StlElementCount, f); // Read the Triangle
-    if(StlConstants::k_StlElementCount != objsRead)
+    size_t objsRead = std::fread(fileVert.data(), sizeof(float), stl_constants::k_StlElementCount, fPtr); // Read the Triangle
+    if(stl_constants::k_StlElementCount != objsRead)
     {
-      std::string msg = fmt::format("Error reading Triangle '{}' from STL file '{}'. Object Count was {} and should have been {}", t, stlFilePathStr, objsRead, StlConstants::k_StlElementCount);
-      return MakeErrorResult(StlConstants::k_TriangleParseError, msg);
+      std::string msg = fmt::format("Error reading Triangle '{}' from STL file '{}'. Object Count was {} and should have been {}", t, stlFilePathStr, objsRead, stl_constants::k_StlElementCount);
+      return MakeErrorResult(stl_constants::k_TriangleParseError, msg);
     }
     // Read the Uint16 value. This value is supposed to represent the number of bytes following
     // a triangle that are file- or vendor-specific metadata
     // Lots of writers/vendors do NOT set this properly, which can cause problems.
-    objsRead = std::fread(&attrByteCount, sizeof(uint16_t), 1, f); // Read the Triangle Attribute Data length
+    objsRead = std::fread(&attrByteCount, sizeof(uint16_t), 1, fPtr); // Read the Triangle Attribute Data length
     if(objsRead != 1)
     {
       std::string msg = fmt::format("Error reading Number of attributes for triangle '{}' from STL file '{}'. uint16 count was {} and should have been 1", t, stlFilePathStr, objsRead);
-      return MakeErrorResult(StlConstants::k_AttributeParseError, msg);
+      return MakeErrorResult(stl_constants::k_AttributeParseError, msg);
     }
-    fileOffset += StlConstants::k_StlTriangleBytes;
+    fileOffset += stl_constants::k_StlTriangleBytes;
 
     // The file size told us this file really does carry attribute payload bytes, so the count is
     // an actual length and the payload has to be skipped. When the flag is false the count is
     // vendor garbage (a packed color, for example) and seeking on it would desynchronize the read.
-    if(attrByteCount > 0 && stlFileCheck.attributePayloadPresent)
+    if(attrByteCount > 0 && stlFileCheck.attribute_payload_present)
     {
       // Skip past the Triangle Attribute data since we don't know how to read it anyway
-      if(std::fseek(f, static_cast<long>(attrByteCount), SEEK_CUR) != 0)
+      if(std::fseek(fPtr, static_cast<long>(attrByteCount), SEEK_CUR) != 0)
       {
         std::string msg = fmt::format("Error seeking past the {} attribute bytes that follow triangle '{}' in STL file '{}'", attrByteCount, t, stlFilePathStr);
-        return MakeErrorResult(StlConstants::k_AttributeParseError, msg);
+        return MakeErrorResult(stl_constants::k_AttributeParseError, msg);
       }
       fileOffset += attrByteCount;
     }
@@ -163,6 +161,6 @@ Result<> ReadStlFile::operator()()
     triangles[t * 3 + 2] = 3 * t + 2;
   }
 
-  return GeometryUtilities::EliminateDuplicateNodes(triangleGeom, m_InputValues->scaleOutput ? std::optional<float32>(m_InputValues->scaleFactor) : std::nullopt);
+  return geometry_utilities::EliminateDuplicateNodes(triangleGeom, m_InputValues->scale_output ? std::optional<float32>(m_InputValues->scale_factor) : std::nullopt);
   // The fileSentinel will ensure the FILE* is closed.
 }

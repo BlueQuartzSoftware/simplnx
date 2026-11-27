@@ -3,13 +3,13 @@
 using namespace nx::core;
 
 // -----------------------------------------------------------------------------
-std::map<int32, std::vector<usize>> MontageUtilities::Burn(int32 tolerance, const std::vector<int32>& input)
+std::map<int32, std::vector<usize>> montage_utilities::Burn(int32 tolerance, const std::vector<int32>& input)
 {
   int32 halfTol = tolerance / 2;
   usize count = input.size();
   int32 seed = input[0];
   std::vector<bool> visited(input.size(), false);
-  std::map<int32, std::vector<usize>> avg_indices;
+  std::map<int32, std::vector<usize>> avgIndices;
 
   bool completed = false;
   while(!completed)
@@ -30,7 +30,7 @@ std::map<int32, std::vector<usize>> MontageUtilities::Burn(int32 tolerance, cons
       avg = avg + input.at(v);
     }
     avg = avg / static_cast<int32>(values.size());
-    avg_indices[avg] = values;
+    avgIndices[avg] = values;
     seed = 0;
     completed = true;
     for(usize i = 0; i < count; i++)
@@ -43,11 +43,11 @@ std::map<int32, std::vector<usize>> MontageUtilities::Burn(int32 tolerance, cons
       }
     }
   }
-  return avg_indices;
+  return avgIndices;
 }
 
 // -----------------------------------------------------------------------------
-int32 MontageUtilities::CalculatePaddingDigits(usize count)
+int32 montage_utilities::CalculatePaddingDigits(usize count)
 {
   int32 zeroPadding = 0;
   if(count > 0)

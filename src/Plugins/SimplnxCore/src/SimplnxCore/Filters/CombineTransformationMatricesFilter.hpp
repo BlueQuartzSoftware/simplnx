@@ -24,8 +24,8 @@ public:
   CombineTransformationMatricesFilter& operator=(CombineTransformationMatricesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_InputArrays_Key = "input_arrays";
-  static constexpr StringLiteral k_OutputArray_Key = "output_array_path";
+  static constexpr StringLiteralType k_InputArrays_Key = "input_arrays";
+  static constexpr StringLiteralType k_OutputArray_Key = "output_array_path";
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
    * @param json
@@ -81,7 +81,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

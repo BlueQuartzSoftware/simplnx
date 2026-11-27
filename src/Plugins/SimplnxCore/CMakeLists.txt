@@ -423,7 +423,6 @@ target_link_libraries(${PLUGIN_NAME} PRIVATE reproc++)
 set(PLUGIN_EXTRA_SOURCES
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/AbaqusElementSets.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/AbaqusElementSets.cpp"
-    "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/nanoflann.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.hpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/StlUtilities.cpp"
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/utils/AvizoWriter.hpp"
@@ -453,6 +452,8 @@ set(PLUGIN_EXTRA_SOURCES
     "${${PLUGIN_NAME}_SOURCE_DIR}/src/${PLUGIN_NAME}/Filters/Algorithms/DBSCANCommon.hpp"
 
 )
+target_sources(${PLUGIN_NAME} PRIVATE "${SIMPLNX_THIRD_PARTY_DIR}/nanoflann/nanoflann.hpp")
+source_group("3rdParty/nanoflann" FILES "${SIMPLNX_THIRD_PARTY_DIR}/nanoflann/nanoflann.hpp")
 
 target_sources(${PLUGIN_NAME}
   PRIVATE

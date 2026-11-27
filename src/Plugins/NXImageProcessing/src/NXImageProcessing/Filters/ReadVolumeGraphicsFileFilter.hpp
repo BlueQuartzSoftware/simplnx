@@ -28,10 +28,10 @@ public:
   ReadVolumeGraphicsFileFilter& operator=(ReadVolumeGraphicsFileFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_VGHeaderFile_Key = "vg_header_file";
-  static constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
-  static constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
-  static constexpr StringLiteral k_DensityArrayName_Key = "density_array_name";
+  static constexpr StringLiteralType k_VGHeaderFile_Key = "vg_header_file";
+  static constexpr StringLiteralType k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
+  static constexpr StringLiteralType k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteralType k_DensityArrayName_Key = "density_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -42,10 +42,10 @@ public:
 
   struct HeaderMetadata
   {
-    SizeVec3 Dimensions;
-    FloatVec3 Spacing;
-    IGeometry::LengthUnit Units = IGeometry::LengthUnit::Unspecified;
-    std::string DataFilePath;
+    SizeVec3Type dimensions;
+    FloatVec3Type spacing;
+    IGeometry::LengthUnit units = IGeometry::LengthUnit::Unspecified;
+    std::string data_file_path;
   };
 
   /**
@@ -96,7 +96,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

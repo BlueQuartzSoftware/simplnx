@@ -16,7 +16,7 @@ namespace nx::core
 class SIMPLNX_EXPORT DataRenamedMessage : public AbstractDataStructureMessage
 {
 public:
-  static const MessageType MsgType = 3;
+  static const MessageType k_MsgType = 3;
 
   /**
    * @brief Constructs a DataRenamedMessage specifying which DataObject was
@@ -26,7 +26,7 @@ public:
    * @param prevName
    * @param newName
    */
-  DataRenamedMessage(const DataStructure* dataStructure, DataObject::IdType dataId, const std::string& prevName, const std::string& newName);
+  DataRenamedMessage(const DataStructure* dataStructure, DataObject::IdType dataId, std::string prevName, std::string newName);
 
   /**
    * @brief Creates a copy of the target DataRenamedMessage.

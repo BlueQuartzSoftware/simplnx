@@ -40,15 +40,15 @@ Timing RunTimed(const std::function<void()>& exec, int warmup, int repeats);
  */
 struct SweepOptions
 {
-  usize targetVoxels = 256000000ULL;    ///< Lower bound on the tiled voxel count.
-  usize minZSlices = 256;               ///< Lower bound on the tiled Z extent.
-  bool force2D = false;                 ///< When true, tile source slice zero into a Z=1 destination.
-  int warmup = 1;                       ///< Un-timed iterations before timing.
-  int repeats = 3;                      ///< Timed iterations per (filter, config).
-  bool oocRequested = false;            ///< True when the CLI requested --mode ooc.
-  bool oocOnly = false;                 ///< Skip InCore timings when only the OOC result is needed.
-  int64 oocThreshold = 1024;            ///< large_data_size threshold applied with ForceOutOfCore.
-  std::optional<uint32> projectionAxis; ///< Optional axis override applied only to flagged projection specs.
+  usize target_voxels = 256000000ULL;    ///< Lower bound on the tiled voxel count.
+  usize min_z_slices = 256;              ///< Lower bound on the tiled Z extent.
+  bool force_2d = false;                 ///< When true, tile source slice zero into a Z=1 destination.
+  int warmup = 1;                        ///< Un-timed iterations before timing.
+  int repeats = 3;                       ///< Timed iterations per (filter, config).
+  bool ooc_requested = false;            ///< True when the CLI requested --mode ooc.
+  bool ooc_only = false;                 ///< Skip InCore timings when only the OOC result is needed.
+  int64 ooc_threshold = 1024;            ///< large_data_size threshold applied with ForceOutOfCore.
+  std::optional<uint32> projection_axis; ///< Optional axis override applied only to flagged projection specs.
 };
 
 /**
@@ -56,13 +56,13 @@ struct SweepOptions
  */
 struct BenchmarkRow
 {
-  std::string filter;                ///< Filter display name.
-  std::string type;                  ///< Input array DataType, or "" if the input could not be built.
-  std::string inDims;                ///< Tiled input dimensions "XxYxZ".
-  uint64 inVoxels = 0;               ///< Tiled input voxel count.
-  std::optional<double> newIncoreMs; ///< In-core median ms.
-  std::optional<double> newOocMs;    ///< Out-of-core median ms (nullopt = skipped).
-  std::string notes;                 ///< Per-config skip reasons / error messages.
+  std::string filter;                  ///< Filter display name.
+  std::string type;                    ///< Input array DataType, or "" if the input could not be built.
+  std::string in_dims;                 ///< Tiled input dimensions "XxYxZ".
+  uint64 in_voxels = 0;                ///< Tiled input voxel count.
+  std::optional<double> new_incore_ms; ///< In-core median ms.
+  std::optional<double> new_ooc_ms;    ///< Out-of-core median ms (nullopt = skipped).
+  std::string notes;                   ///< Per-config skip reasons / error messages.
 };
 
 /**

@@ -17,9 +17,9 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT RobustAutomaticThresholdInputValues
 {
-  DataObjectNameParameter::ValueType CreatedMaskName;
-  ArraySelectionParameter::ValueType GradientArrayPath;
-  ArraySelectionParameter::ValueType InputArrayPath;
+  DataObjectNameParameter::ValueType created_mask_name;
+  ArraySelectionParameter::ValueType gradient_array_path;
+  ArraySelectionParameter::ValueType input_array_path;
 };
 
 /**
@@ -51,7 +51,7 @@ public:
   /**
    * @brief Destroys the automatic-threshold algorithm.
    */
-  ~RobustAutomaticThreshold() noexcept;
+  ~RobustAutomaticThreshold() noexcept = default;
 
   RobustAutomaticThreshold(const RobustAutomaticThreshold&) = delete;
   RobustAutomaticThreshold(RobustAutomaticThreshold&&) noexcept = delete;

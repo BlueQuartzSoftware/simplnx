@@ -44,7 +44,7 @@ public:
    * @param pathType
    * @param acceptAllExtensions
    */
-  FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const ExtensionsType& extensionsType, PathType pathType,
+  FileSystemPathParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, ExtensionsType extensionsType, PathType pathType,
                           bool acceptAllExtensions = false);
 
   ~FileSystemPathParameter() override = default;
@@ -65,7 +65,7 @@ public:
    * @brief
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief
@@ -77,7 +77,7 @@ public:
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -176,17 +176,17 @@ private:
   ValueType m_DefaultValue;
   PathType m_PathType;
   ExtensionsType m_AvailableExtensions;
-  bool m_acceptAllExtensions = false;
+  bool m_AcceptAllExtensions = false;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT InputFileFilterParameterConverter
 {
   using ParameterType = FileSystemPathParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT OutputFileFilterParameterConverter
@@ -194,9 +194,9 @@ struct SIMPLNX_EXPORT OutputFileFilterParameterConverter
   using ParameterType = FileSystemPathParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::FileSystemPathParameter, "f9a93f3d-21ef-43a1-a958-e57cbf3b2909");

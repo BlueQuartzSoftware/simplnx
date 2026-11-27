@@ -39,13 +39,13 @@ Parameters MinMaxCurvatureFlowImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Float64Parameter>(k_TimeStep_Key, "Time Step", "The timestep between iteration updates", 0.05));
-  params.insert(std::make_unique<UInt32Parameter>(k_NumberOfIterations_Key, "Number Of Iterations", "The number of update iterations ", 5u));
-  params.insert(std::make_unique<Int32Parameter>(k_StencilRadius_Key, "Stencil Radius", "Set/Get the stencil radius.", 2));
+  params.insert(std::make_unique<Float64ParameterType>(k_TimeStep_Key, "Time Step", "The timestep between iteration updates", 0.05));
+  params.insert(std::make_unique<UInt32ParameterType>(k_NumberOfIterations_Key, "Number Of Iterations", "The number of update iterations ", 5u));
+  params.insert(std::make_unique<Int32ParameterType>(k_StencilRadius_Key, "Stencil Radius", "Set/Get the stencil radius.", 2));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetFloatingScalarTypes()));
 
@@ -59,13 +59,13 @@ IFilter::VersionType MinMaxCurvatureFlowImageFilter::parametersVersion() const
 {
   return 1;
 }
-IFilter::UniquePointer MinMaxCurvatureFlowImageFilter::clone() const
+IFilter::UniquePointerType MinMaxCurvatureFlowImageFilter::clone() const
 {
   return std::make_unique<MinMaxCurvatureFlowImageFilter>();
 }
 
-IFilter::PreflightResult MinMaxCurvatureFlowImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult MinMaxCurvatureFlowImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -77,11 +77,11 @@ IFilter::PreflightResult MinMaxCurvatureFlowImageFilter::preflightImpl(const Dat
   // unlike CurvatureFlow, the min/max threshold comparison requires a floating-point pixel type.
   Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::FloatingScalar, ImageProcessing::SameAsInput>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
-Result<> MinMaxCurvatureFlowImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> MinMaxCurvatureFlowImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);

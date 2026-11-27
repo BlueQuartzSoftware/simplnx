@@ -56,42 +56,42 @@ const Uuid k_WriteImageUuid = FilterTraits<WriteImageFilter>::uuid;
 
 struct Options
 {
-  DataStorageMode storageMode = DataStorageMode::ForceInCore;
+  DataStorageMode storage_mode = DataStorageMode::ForceInCore;
   int warmup = 1;
   int repeats = 3;
-  fs::path outputRoot;
-  fs::path csvPath;
+  fs::path output_root;
+  fs::path csv_path;
   std::string cases = "direct-xy,direct-xz,direct-yz,color-tiff,color-png";
-  bool retainOutput = false;
+  bool retain_output = false;
 };
 
 struct OocCounters
 {
-  uint64 returnedExtentReads = 0;
-  uint64 callerExtentReads = 0;
-  uint64 chunkCacheMisses = 0;
-  uint64 metadataBatches = 0;
+  uint64 returned_extent_reads = 0;
+  uint64 caller_extent_reads = 0;
+  uint64 chunk_cache_misses = 0;
+  uint64 metadata_batches = 0;
 };
 
 struct OutputStats
 {
-  uint64 fileCount = 0;
-  uint64 byteCount = 0;
+  uint64 file_count = 0;
+  uint64 byte_count = 0;
 };
 
 struct TimingRow
 {
   std::string mode;
   std::string writer;
-  std::string caseName;
-  std::string dataType;
-  std::string dataFormat;
-  std::string chunkShape;
-  std::vector<double> samplesMs;
-  double medianMs = 0.0;
-  double minimumMs = 0.0;
+  std::string case_name;
+  std::string data_type;
+  std::string data_format;
+  std::string chunk_shape;
+  std::vector<double> samples_ms;
+  double median_ms = 0.0;
+  double minimum_ms = 0.0;
   OutputStats output;
-  OocCounters counterDelta;
+  OocCounters counter_delta;
 };
 
 std::string FirstError(const Result<>& result)
@@ -131,11 +131,11 @@ Result<Options> ParseOptions(int argc, char** argv)
       {
         if(value == "incore")
         {
-          options.storageMode = DataStorageMode::ForceInCore;
+          options.storage_mode = DataStorageMode::ForceInCore;
         }
         else if(value == "ooc")
         {
-          options.storageMode = DataStorageMode::ForceOutOfCore;
+          options.storage_mode = DataStorageMode::ForceOutOfCore;
         }
         else
         {
@@ -144,11 +144,11 @@ Result<Options> ParseOptions(int argc, char** argv)
       }
       else if(argument == "--output-root" && NextValue(argc, argv, index, value))
       {
-        options.outputRoot = value;
+        options.output_root = value;
       }
       else if(argument == "--csv" && NextValue(argc, argv, index, value))
       {
-        options.csvPath = value;
+        options.csv_path = value;
       }
       else if(argument == "--cases" && NextValue(argc, argv, index, value))
       {
@@ -156,7 +156,7 @@ Result<Options> ParseOptions(int argc, char** argv)
       }
       else if(argument == "--retain-output")
       {
-        options.retainOutput = true;
+        options.retain_output = true;
       }
       else if(argument == "--warmup" && NextValue(argc, argv, index, value))
       {
@@ -181,7 +181,7 @@ Result<Options> ParseOptions(int argc, char** argv)
     }
   }
 
-  if(options.outputRoot.empty() || options.csvPath.empty())
+  if(options.output_root.empty() || options.csv_path.empty())
   {
     return MakeErrorResult<Options>(-9304, "Both --output-root and --csv are required.");
   }
@@ -230,38 +230,38 @@ T DeterministicValue(usize index)
 template <typename T>
 Result<> BuildInput(DataStructure& dataStructure, DataStorageMode storageMode)
 {
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomPath.getTargetName());
-  if(imageGeom == nullptr)
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomPath.getTargetName());
+  if(imageGeomPtr == nullptr)
   {
     return MakeErrorResult(-9310, fmt::format("Could not create benchmark Image Geometry '{}'.", k_ImageGeomPath.toString()));
   }
-  imageGeom->setDimensions({k_DimX, k_DimY, k_DimZ});
-  if(auto result = imageGeom->setSpacing({0.25F, 0.5F, 0.75F}); result.invalid())
+  imageGeomPtr->setDimensions({k_DimX, k_DimY, k_DimZ});
+  if(auto result = imageGeomPtr->setSpacing({0.25F, 0.5F, 0.75F}); result.invalid())
   {
     return result;
   }
-  if(auto result = imageGeom->setOrigin({1.0F, 2.0F, 3.0F}); result.invalid())
+  if(auto result = imageGeomPtr->setOrigin({1.0F, 2.0F, 3.0F}); result.invalid())
   {
     return result;
   }
 
-  auto* cellData = AttributeMatrix::Create(dataStructure, k_CellDataPath.getTargetName(), {k_DimZ, k_DimY, k_DimX}, imageGeom->getId());
-  if(cellData == nullptr)
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, k_CellDataPath.getTargetName(), {k_DimZ, k_DimY, k_DimX}, imageGeomPtr->getId());
+  if(cellDataPtr == nullptr)
   {
     return MakeErrorResult(-9311, fmt::format("Could not create benchmark Attribute Matrix '{}'.", k_CellDataPath.toString()));
   }
-  imageGeom->setCellData(*cellData);
+  imageGeomPtr->setCellData(*cellDataPtr);
 
   std::shared_ptr<AbstractDataStore<T>> store;
   {
     ip_bench::BenchmarkPreferenceSnapshot preferences(*Application::Instance()->getPreferences(), storageMode);
-    store = DataStoreUtilities::CreateDataStore<T>(dataStructure, k_InputArrayPath, {k_DimZ, k_DimY, k_DimX}, {1});
+    store = data_store_utilities::CreateDataStore<T>(dataStructure, k_InputArrayPath, {k_DimZ, k_DimY, k_DimX}, {1});
   }
   if(store == nullptr)
   {
     return MakeErrorResult(-9312, fmt::format("Could not create the '{}' benchmark store for '{}'.", DataTypeToString(GetDataType<T>()), k_InputArrayPath.toString()));
   }
-  if(DataArray<T>::Create(dataStructure, k_InputArrayPath.getTargetName(), store, cellData->getId()) == nullptr)
+  if(DataArray<T>::Create(dataStructure, k_InputArrayPath.getTargetName(), store, cellDataPtr->getId()) == nullptr)
   {
     return MakeErrorResult(-9313, fmt::format("Could not create benchmark Data Array '{}'.", k_InputArrayPath.toString()));
   }
@@ -297,7 +297,7 @@ template <typename T>
 OocCounters ReadOocCounters(const AbstractDataStore<T>& store)
 {
 #ifdef SIMPLNX_WRITE_IMAGE_BENCH_HAS_OOC
-  if(const auto* oocStore = dynamic_cast<const SimplnxOoc::HDF5ChunkedStore<T>*>(&store); oocStore != nullptr)
+  if(const auto* oocStore = dynamic_cast<const simplnx_ooc::HDF5ChunkedStore<T>*>(&store); oocStore != nullptr)
   {
     return {oocStore->getReturnedExtentReadCount(), oocStore->getCallerProvidedExtentReadCount(), oocStore->getParallelChunkCacheMissCount(), oocStore->getParallelChunkMetadataBatchCount()};
   }
@@ -307,15 +307,17 @@ OocCounters ReadOocCounters(const AbstractDataStore<T>& store)
 
 OocCounters SubtractCounters(const OocCounters& after, const OocCounters& before)
 {
-  return {after.returnedExtentReads - before.returnedExtentReads, after.callerExtentReads - before.callerExtentReads, after.chunkCacheMisses - before.chunkCacheMisses,
-          after.metadataBatches - before.metadataBatches};
+  return {.returned_extent_reads = after.returned_extent_reads - before.returned_extent_reads,
+          .caller_extent_reads = after.caller_extent_reads - before.caller_extent_reads,
+          .chunk_cache_misses = after.chunk_cache_misses - before.chunk_cache_misses,
+          .metadata_batches = after.metadata_batches - before.metadata_batches};
 }
 
 template <typename T>
 std::string ChunkShape(const AbstractDataStore<T>& store)
 {
 #ifdef SIMPLNX_WRITE_IMAGE_BENCH_HAS_OOC
-  if(const auto* oocStore = dynamic_cast<const SimplnxOoc::HDF5ChunkedStore<T>*>(&store); oocStore != nullptr)
+  if(const auto* oocStore = dynamic_cast<const simplnx_ooc::HDF5ChunkedStore<T>*>(&store); oocStore != nullptr)
   {
     const std::optional<ShapeType> shapeResult = oocStore->getChunkShape();
     if(!shapeResult.has_value())
@@ -345,8 +347,8 @@ OutputStats MeasureOutput(const fs::path& directory)
   {
     if(entry.is_regular_file())
     {
-      ++stats.fileCount;
-      stats.byteCount += entry.file_size();
+      ++stats.file_count;
+      stats.byte_count += entry.file_size();
     }
   }
   return stats;
@@ -376,36 +378,36 @@ Arguments CreateWriterArguments(IFilter& filter, usize plane, const fs::path& ou
   arguments.insertOrAssign("file_name", std::make_any<fs::path>(outputPath));
   arguments.insertOrAssign("index_offset", std::make_any<uint64>(0));
   arguments.insertOrAssign("plane_index", std::make_any<ChoicesParameter::ValueType>(plane));
-  arguments.insertOrAssign("total_index_digits", std::make_any<Int32Parameter::ValueType>(4));
+  arguments.insertOrAssign("total_index_digits", std::make_any<Int32ParameterType::ValueType>(4));
   arguments.insertOrAssign("leading_digit_character", std::make_any<StringParameter::ValueType>("0"));
   arguments.insertOrAssign("create_color_table", std::make_any<bool>(createColorTable));
-  arguments.insertOrAssign("selected_preset", std::make_any<std::string>(ColorTableUtilities::GetDefaultRGBPresetName()));
+  arguments.insertOrAssign("selected_preset", std::make_any<std::string>(color_table_utilities::GetDefaultRGBPresetName()));
   arguments.insertOrAssign("use_mask", std::make_any<bool>(false));
   arguments.insertOrAssign("add_scale_bar", std::make_any<bool>(false));
   return arguments;
 }
 
 template <typename T>
-Result<TimingRow> RunCase(DataStructure& dataStructure, const Options& options, const Uuid& writerUuid, std::string writerName, std::string caseName, usize plane, std::string extension,
+Result<TimingRow> RunCase(DataStructure& dataStructure, const Options& options, const Uuid& writerUuid, std::string writerName, std::string caseName, usize plane, const std::string& extension,
                           bool createColorTable)
 {
-  IFilter::UniquePointer filter = Application::Instance()->getFilterList()->createFilter(writerUuid);
+  IFilter::UniquePointerType filter = Application::Instance()->getFilterList()->createFilter(writerUuid);
   if(filter == nullptr)
   {
     return MakeErrorResult<TimingRow>(-9322, fmt::format("Could not create the '{}' writer with UUID '{}'.", writerName, writerUuid.str()));
   }
 
-  const fs::path caseDirectory = options.outputRoot / fmt::format("{}-{}", writerName, caseName);
+  const fs::path caseDirectory = options.output_root / fmt::format("{}-{}", writerName, caseName);
   if(Result<> resetResult = ResetOutputDirectory(caseDirectory); resetResult.invalid())
   {
     return ConvertResultTo<TimingRow>(std::move(resetResult), {});
   }
   Arguments arguments = CreateWriterArguments(*filter, plane, caseDirectory / ("slice" + extension), createColorTable);
   IFilter::PreflightResult preflightResult = filter->preflight(dataStructure, arguments);
-  if(preflightResult.outputActions.invalid())
+  if(preflightResult.output_actions.invalid())
   {
     return MakeErrorResult<TimingRow>(-9323, fmt::format("The '{}' writer failed preflight for case '{}': {}", writerName, caseName,
-                                                         preflightResult.outputActions.errors().empty() ? "no error message" : preflightResult.outputActions.errors().front().message));
+                                                         preflightResult.output_actions.errors().empty() ? "no error message" : preflightResult.output_actions.errors().front().message));
   }
 
   const auto& store = dataStructure.getDataRefAs<DataArray<T>>(k_InputArrayPath).getDataStoreRef();
@@ -435,7 +437,7 @@ Result<TimingRow> RunCase(DataStructure& dataStructure, const Options& options, 
   }
   const OocCounters after = ReadOocCounters(store);
 
-  if(!options.retainOutput)
+  if(!options.retain_output)
   {
     if(Result<> resetResult = ResetOutputDirectory(caseDirectory); resetResult.invalid())
     {
@@ -446,17 +448,17 @@ Result<TimingRow> RunCase(DataStructure& dataStructure, const Options& options, 
   std::vector<double> sorted = samples;
   std::sort(sorted.begin(), sorted.end());
   TimingRow row;
-  row.mode = options.storageMode == DataStorageMode::ForceOutOfCore ? "ooc" : "incore";
+  row.mode = options.storage_mode == DataStorageMode::ForceOutOfCore ? "ooc" : "incore";
   row.writer = std::move(writerName);
-  row.caseName = std::move(caseName);
-  row.dataType = std::string(DataTypeToString(GetDataType<T>()));
-  row.dataFormat = store.getDataFormat().empty() ? "InMemory" : store.getDataFormat();
-  row.chunkShape = ChunkShape(store);
-  row.samplesMs = std::move(samples);
-  row.medianMs = sorted[sorted.size() / 2];
-  row.minimumMs = sorted.front();
+  row.case_name = std::move(caseName);
+  row.data_type = std::string(DataTypeToString(GetDataType<T>()));
+  row.data_format = store.getDataFormat().empty() ? "InMemory" : store.getDataFormat();
+  row.chunk_shape = ChunkShape(store);
+  row.samples_ms = std::move(samples);
+  row.median_ms = sorted[sorted.size() / 2];
+  row.minimum_ms = sorted.front();
   row.output = outputStats;
-  row.counterDelta = SubtractCounters(after, before);
+  row.counter_delta = SubtractCounters(after, before);
   return {std::move(row)};
 }
 
@@ -481,32 +483,33 @@ Result<> AppendCsv(const fs::path& csvPath, const std::vector<TimingRow>& rows, 
   }
   for(const TimingRow& row : rows)
   {
-    output << row.mode << ',' << row.writer << ',' << row.caseName << ',' << row.dataType << ',' << k_DimX << 'x' << k_DimY << 'x' << k_DimZ << ',' << k_VoxelCount << ',' << warmup << ',' << repeats;
+    output << row.mode << ',' << row.writer << ',' << row.case_name << ',' << row.data_type << ',' << k_DimX << 'x' << k_DimY << 'x' << k_DimZ << ',' << k_VoxelCount << ',' << warmup << ','
+           << repeats;
     for(usize index = 0; index < 3; ++index)
     {
       output << ',';
-      if(index < row.samplesMs.size())
+      if(index < row.samples_ms.size())
       {
-        output << fmt::format("{:.3f}", row.samplesMs[index]);
+        output << fmt::format("{:.3f}", row.samples_ms[index]);
       }
     }
-    output << ',' << fmt::format("{:.3f}", row.medianMs) << ',' << fmt::format("{:.3f}", row.minimumMs) << ',' << row.output.fileCount << ',' << row.output.byteCount << ',' << row.dataFormat << ','
-           << row.chunkShape << ',' << row.counterDelta.returnedExtentReads << ',' << row.counterDelta.callerExtentReads << ',' << row.counterDelta.chunkCacheMisses << ','
-           << row.counterDelta.metadataBatches << '\n';
+    output << ',' << fmt::format("{:.3f}", row.median_ms) << ',' << fmt::format("{:.3f}", row.minimum_ms) << ',' << row.output.file_count << ',' << row.output.byte_count << ',' << row.data_format
+           << ',' << row.chunk_shape << ',' << row.counter_delta.returned_extent_reads << ',' << row.counter_delta.caller_extent_reads << ',' << row.counter_delta.chunk_cache_misses << ','
+           << row.counter_delta.metadata_batches << '\n';
   }
   return {};
 }
 
 void PrintRow(const TimingRow& row)
 {
-  fmt::print("mode={} writer={} case={} type={} median_ms={:.3f} samples_ms=", row.mode, row.writer, row.caseName, row.dataType, row.medianMs);
-  for(usize index = 0; index < row.samplesMs.size(); ++index)
+  fmt::print("mode={} writer={} case={} type={} median_ms={:.3f} samples_ms=", row.mode, row.writer, row.case_name, row.data_type, row.median_ms);
+  for(usize index = 0; index < row.samples_ms.size(); ++index)
   {
-    fmt::print("{}{:.3f}", index == 0 ? "" : ";", row.samplesMs[index]);
+    fmt::print("{}{:.3f}", index == 0 ? "" : ";", row.samples_ms[index]);
   }
-  fmt::print(" files={} bytes={} format={} chunk={} returned_extent_reads={} caller_extent_reads={} chunk_cache_misses={} metadata_batches={}\n", row.output.fileCount, row.output.byteCount,
-             row.dataFormat, row.chunkShape.empty() ? "n/a" : row.chunkShape, row.counterDelta.returnedExtentReads, row.counterDelta.callerExtentReads, row.counterDelta.chunkCacheMisses,
-             row.counterDelta.metadataBatches);
+  fmt::print(" files={} bytes={} format={} chunk={} returned_extent_reads={} caller_extent_reads={} chunk_cache_misses={} metadata_batches={}\n", row.output.file_count, row.output.byte_count,
+             row.data_format, row.chunk_shape.empty() ? "n/a" : row.chunk_shape, row.counter_delta.returned_extent_reads, row.counter_delta.caller_extent_reads, row.counter_delta.chunk_cache_misses,
+             row.counter_delta.metadata_batches);
 }
 
 template <typename T>
@@ -526,11 +529,11 @@ Result<> AddCase(std::vector<TimingRow>& rows, DataStructure& dataStructure, con
 Result<> RunDirectCases(const Options& options, const std::vector<std::string>& cases, std::vector<TimingRow>& rows)
 {
   DataStructure dataStructure;
-  if(Result<> buildResult = BuildInput<uint8>(dataStructure, options.storageMode); buildResult.invalid())
+  if(Result<> buildResult = BuildInput<uint8>(dataStructure, options.storage_mode); buildResult.invalid())
   {
     return buildResult;
   }
-  const std::string mode = options.storageMode == DataStorageMode::ForceOutOfCore ? "OOC" : "in-core";
+  const std::string mode = options.storage_mode == DataStorageMode::ForceOutOfCore ? "OOC" : "in-core";
   fmt::print("Built {} uint8 input: {}x{}x{} = {} voxels, format={}\n", mode, k_DimX, k_DimY, k_DimZ, k_VoxelCount, dataStructure.getDataRefAs<DataArray<uint8>>(k_InputArrayPath).getDataFormat());
 
   const std::array<std::tuple<std::string, usize>, 3> directCases = {{{"direct-xy", 0}, {"direct-xz", 1}, {"direct-yz", 2}}};
@@ -555,11 +558,11 @@ Result<> RunColorCases(const Options& options, const std::vector<std::string>& c
     return {};
   }
   DataStructure dataStructure;
-  if(Result<> buildResult = BuildInput<float32>(dataStructure, options.storageMode); buildResult.invalid())
+  if(Result<> buildResult = BuildInput<float32>(dataStructure, options.storage_mode); buildResult.invalid())
   {
     return buildResult;
   }
-  const std::string mode = options.storageMode == DataStorageMode::ForceOutOfCore ? "OOC" : "in-core";
+  const std::string mode = options.storage_mode == DataStorageMode::ForceOutOfCore ? "OOC" : "in-core";
   fmt::print("Built {} float32 input: {}x{}x{} = {} voxels, format={}\n", mode, k_DimX, k_DimY, k_DimZ, k_VoxelCount, dataStructure.getDataRefAs<DataArray<float32>>(k_InputArrayPath).getDataFormat());
 
   if(HasCase(cases, "color-tiff"))
@@ -604,11 +607,11 @@ int main(int argc, char** argv)
   }
 
 #ifdef SIMPLNX_WRITE_IMAGE_BENCH_HAS_OOC
-  SimplnxOoc::registerIOManager(application->getIOCollection());
-  DataStructure::setDefaultFormatResolver(std::make_shared<SimplnxOoc::PreferenceFormatResolver>());
+  simplnx_ooc::RegisterIoManager(application->getIOCollection());
+  DataStructure::SetDefaultFormatResolver(std::make_shared<simplnx_ooc::PreferenceFormatResolver>());
 #endif
 
-  if(options.storageMode == DataStorageMode::ForceOutOfCore && !DataStoreUtilities::GetIOCollection().anyManagerFinalizesImport())
+  if(options.storage_mode == DataStorageMode::ForceOutOfCore && !data_store_utilities::GetIOCollection().anyManagerFinalizesImport())
   {
     fmt::print(stderr, "The OOC benchmark requires a registered disk-backed IO manager.\n");
     return 1;
@@ -628,7 +631,7 @@ int main(int argc, char** argv)
     fmt::print(stderr, "Color benchmark failed: {}\n", FirstError(colorResult));
     return 1;
   }
-  Result<> csvResult = AppendCsv(options.csvPath, rows, options.warmup, options.repeats);
+  Result<> csvResult = AppendCsv(options.csv_path, rows, options.warmup, options.repeats);
   if(csvResult.invalid())
   {
     fmt::print(stderr, "Could not write benchmark CSV: {}\n", FirstError(csvResult));
@@ -636,7 +639,7 @@ int main(int argc, char** argv)
   }
 
 #ifdef SIMPLNX_WRITE_IMAGE_BENCH_HAS_OOC
-  SimplnxOoc::shutdown();
+  simplnx_ooc::Shutdown();
 #endif
   return 0;
 }

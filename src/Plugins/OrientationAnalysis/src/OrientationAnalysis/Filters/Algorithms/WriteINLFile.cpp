@@ -32,7 +32,7 @@ constexpr usize k_EulerComponents = 3;
  * @param symmetry Simplnx crystal-structure value.
  * @return Matching TSL phase symmetry, or UnknownSymmetry when unsupported.
  */
-uint32 mapCrystalSymmetryToTslSymmetry(uint32 symmetry)
+uint32 MapCrystalSymmetryToTslSymmetry(uint32 symmetry)
 {
   switch(symmetry)
   {
@@ -72,8 +72,6 @@ WriteINLFile::WriteINLFile(DataStructure& dataStructure, const IFilter::MessageH
 {
 }
 
-WriteINLFile::~WriteINLFile() noexcept = default;
-
 const std::atomic_bool& WriteINLFile::getCancel()
 {
   return m_ShouldCancel;
@@ -82,32 +80,32 @@ const std::atomic_bool& WriteINLFile::getCancel()
 Result<> WriteINLFile::operator()()
 {
   // Create the destination directory before opening and truncating the file.
-  Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->OutputFile.parent_path());
+  Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->output_file.parent_path());
   if(createDirectoriesResult.invalid())
   {
     return createDirectoriesResult;
   }
 
-  std::ofstream fout(m_InputValues->OutputFile, std::ios_base::out | std::ios_base::binary);
+  std::ofstream fout(m_InputValues->output_file, std::ios_base::out | std::ios_base::binary);
   if(!fout.is_open())
   {
-    return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", m_InputValues->OutputFile.string()));
+    return MakeErrorResult(-74100, fmt::format("Error creating and opening output file at path: {}", m_InputValues->output_file.string()));
   }
 
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeomPath);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geom_path);
 
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  const auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->CellEulerAnglesArrayPath);
-  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  const auto& numFeatures = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->NumFeaturesArrayPath);
-  auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->MaterialNameArrayPath);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
+  const auto& eulerAngles = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->cell_euler_angles_array_path);
+  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
+  const auto& numFeatures = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->num_features_array_path);
+  auto& materialNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->material_name_array_path);
 
   const usize totalPoints = featureIds.getNumberOfTuples();
 
-  const SizeVec3 dims = imageGeom.getDimensions();
-  const FloatVec3 res = imageGeom.getSpacing();
-  const FloatVec3 origin = imageGeom.getOrigin();
+  const SizeVec3Type dims = imageGeom.getDimensions();
+  const FloatVec3Type res = imageGeom.getSpacing();
+  const FloatVec3Type origin = imageGeom.getOrigin();
   const usize totalCells = imageGeom.getNumberOfCells();
 
   const auto& featureIdsStore = featureIds.getDataStoreRef();
@@ -116,13 +114,13 @@ Result<> WriteINLFile::operator()()
 
   // Concrete DataStore instances bypass staging unless tests force the bulk path.
   // Other store implementations retain bounded sequential reads.
-  const auto* directFeatureIdsStore = dynamic_cast<const Int32DataStore*>(&featureIdsStore);
-  const auto* directEulerAnglesStore = dynamic_cast<const Float32DataStore*>(&eulerAnglesStore);
-  const auto* directCellPhasesStore = dynamic_cast<const Int32DataStore*>(&cellPhasesStore);
+  const auto* directFeatureIdsStorePtr = dynamic_cast<const Int32DataStoreType*>(&featureIdsStore);
+  const auto* directEulerAnglesStorePtr = dynamic_cast<const Float32DataStoreType*>(&eulerAnglesStore);
+  const auto* directCellPhasesStorePtr = dynamic_cast<const Int32DataStoreType*>(&cellPhasesStore);
   const bool forceBulkAccess = !ForceInCoreAlgorithm() && ForceOocAlgorithm();
-  const bool useDirectFeatureIds = !forceBulkAccess && directFeatureIdsStore != nullptr;
-  const bool useDirectEulerAngles = !forceBulkAccess && directEulerAnglesStore != nullptr;
-  const bool useDirectCellPhases = !forceBulkAccess && directCellPhasesStore != nullptr;
+  const bool useDirectFeatureIds = !forceBulkAccess && directFeatureIdsStorePtr != nullptr;
+  const bool useDirectEulerAngles = !forceBulkAccess && directEulerAnglesStorePtr != nullptr;
+  const bool useDirectCellPhases = !forceBulkAccess && directCellPhasesStorePtr != nullptr;
   const bool useDirectCellData = useDirectFeatureIds && useDirectEulerAngles && useDirectCellPhases;
   const bool usesOutOfCoreStore = AnyOutOfCore({&featureIds, &eulerAngles, &cellPhases});
   RecordAlgorithmPathExecution(useDirectCellData ? AlgorithmPath::InCore : AlgorithmPath::OutOfCore, usesOutOfCoreStore);
@@ -165,10 +163,10 @@ Result<> WriteINLFile::operator()()
     }
 
     const usize tupleCount = std::min(k_ChunkTuples, totalPoints - tupleOffset);
-    const int32* featureIdsChunk = nullptr;
+    const int32* featureIdsChunkPtr = nullptr;
     if(useDirectFeatureIds)
     {
-      featureIdsChunk = directFeatureIdsStore->data() + tupleOffset;
+      featureIdsChunkPtr = directFeatureIdsStorePtr->data() + tupleOffset;
     }
     else if(Result<> readResult = featureIdsStore.copyIntoBuffer(tupleOffset, nonstd::span<int32>(featureIdsBuffer.get(), tupleCount)); readResult.invalid())
     {
@@ -176,10 +174,10 @@ Result<> WriteINLFile::operator()()
     }
     else
     {
-      featureIdsChunk = featureIdsBuffer.get();
+      featureIdsChunkPtr = featureIdsBuffer.get();
     }
 
-    uniqueFeatureIds.insert(featureIdsChunk, featureIdsChunk + tupleCount);
+    uniqueFeatureIds.insert(featureIdsChunkPtr, featureIdsChunkPtr + tupleCount);
   }
   if(m_ShouldCancel)
   {
@@ -210,7 +208,7 @@ Result<> WriteINLFile::operator()()
   for(uint32 i = 1; i < materialCount; ++i)
   {
     headerBuffer << "# Phase_" << i << ": " << materialNames[i].c_str() << "\n";
-    headerBuffer << "# Symmetry_" << i << ": " << mapCrystalSymmetryToTslSymmetry(crystalStructuresCache[i]) << "\n";
+    headerBuffer << "# Symmetry_" << i << ": " << MapCrystalSymmetryToTslSymmetry(crystalStructuresCache[i]) << "\n";
     headerBuffer << "# Features_" << i << ": " << numFeaturesCache[i] << "\n";
     headerBuffer << "#\n";
   }
@@ -224,7 +222,7 @@ Result<> WriteINLFile::operator()()
   fout.write(header.data(), static_cast<std::streamsize>(header.size()));
   if(!fout)
   {
-    return MakeErrorResult(-74101, fmt::format("Failed writing INL output file '{}'. Check available disk space and write permissions.", m_InputValues->OutputFile.string()));
+    return MakeErrorResult(-74101, fmt::format("Failed writing INL output file '{}'. Check available disk space and write permissions.", m_InputValues->output_file.string()));
   }
 
   std::ostringstream textBuffer;
@@ -239,10 +237,10 @@ Result<> WriteINLFile::operator()()
     }
 
     const usize tupleCount = std::min(k_ChunkTuples, totalCells - tupleOffset);
-    const int32* featureIdsChunk = nullptr;
+    const int32* featureIdsChunkPtr = nullptr;
     if(useDirectFeatureIds)
     {
-      featureIdsChunk = directFeatureIdsStore->data() + tupleOffset;
+      featureIdsChunkPtr = directFeatureIdsStorePtr->data() + tupleOffset;
     }
     else if(Result<> readResult = featureIdsStore.copyIntoBuffer(tupleOffset, nonstd::span<int32>(featureIdsBuffer.get(), tupleCount)); readResult.invalid())
     {
@@ -250,13 +248,13 @@ Result<> WriteINLFile::operator()()
     }
     else
     {
-      featureIdsChunk = featureIdsBuffer.get();
+      featureIdsChunkPtr = featureIdsBuffer.get();
     }
 
-    const float32* eulerAnglesChunk = nullptr;
+    const float32* eulerAnglesChunkPtr = nullptr;
     if(useDirectEulerAngles)
     {
-      eulerAnglesChunk = directEulerAnglesStore->data() + (tupleOffset * k_EulerComponents);
+      eulerAnglesChunkPtr = directEulerAnglesStorePtr->data() + (tupleOffset * k_EulerComponents);
     }
     else if(Result<> readResult = eulerAnglesStore.copyIntoBuffer(tupleOffset * k_EulerComponents, nonstd::span<float32>(eulerAnglesBuffer.get(), tupleCount * k_EulerComponents));
             readResult.invalid())
@@ -265,13 +263,13 @@ Result<> WriteINLFile::operator()()
     }
     else
     {
-      eulerAnglesChunk = eulerAnglesBuffer.get();
+      eulerAnglesChunkPtr = eulerAnglesBuffer.get();
     }
 
-    const int32* cellPhasesChunk = nullptr;
+    const int32* cellPhasesChunkPtr = nullptr;
     if(useDirectCellPhases)
     {
-      cellPhasesChunk = directCellPhasesStore->data() + tupleOffset;
+      cellPhasesChunkPtr = directCellPhasesStorePtr->data() + tupleOffset;
     }
     else if(Result<> readResult = cellPhasesStore.copyIntoBuffer(tupleOffset, nonstd::span<int32>(cellPhasesBuffer.get(), tupleCount)); readResult.invalid())
     {
@@ -279,7 +277,7 @@ Result<> WriteINLFile::operator()()
     }
     else
     {
-      cellPhasesChunk = cellPhasesBuffer.get();
+      cellPhasesChunkPtr = cellPhasesBuffer.get();
     }
 
     if(!useDirectCellData)
@@ -296,16 +294,16 @@ Result<> WriteINLFile::operator()()
     for(usize chunkIndex = 0; chunkIndex < tupleCount; chunkIndex++)
     {
       const usize eulerOffset = chunkIndex * k_EulerComponents;
-      const float32 phi1 = eulerAnglesChunk[eulerOffset];
-      const float32 phi = eulerAnglesChunk[eulerOffset + 1];
-      const float32 phi2 = eulerAnglesChunk[eulerOffset + 2];
+      const float32 phi1 = eulerAnglesChunkPtr[eulerOffset];
+      const float32 phi = eulerAnglesChunkPtr[eulerOffset + 1];
+      const float32 phi2 = eulerAnglesChunkPtr[eulerOffset + 2];
       const float64 xPos = origin[0] + (static_cast<float64>(x) * res[0]);
       const float64 yPos = origin[1] + (static_cast<float64>(y) * res[1]);
       const float64 zPos = origin[2] + (static_cast<float64>(z) * res[2]);
-      const int32 phaseId = cellPhasesChunk[chunkIndex];
-      const uint32 symmetry = phaseId > 0 ? mapCrystalSymmetryToTslSymmetry(crystalStructuresCache[phaseId]) : ebsdlib::Ang::PhaseSymmetry::UnknownSymmetry;
+      const int32 phaseId = cellPhasesChunkPtr[chunkIndex];
+      const uint32 symmetry = phaseId > 0 ? MapCrystalSymmetryToTslSymmetry(crystalStructuresCache[phaseId]) : ebsdlib::Ang::PhaseSymmetry::UnknownSymmetry;
 
-      textStream << phi1 << " " << phi << " " << phi2 << " " << xPos << " " << yPos << " " << zPos << " " << featureIdsChunk[chunkIndex] << " " << phaseId << " " << symmetry << "\n";
+      textStream << phi1 << " " << phi << " " << phi2 << " " << xPos << " " << yPos << " " << zPos << " " << featureIdsChunkPtr[chunkIndex] << " " << phaseId << " " << symmetry << "\n";
 
       x++;
       if(x == dims[0])
@@ -327,14 +325,14 @@ Result<> WriteINLFile::operator()()
     }
     if(!fout)
     {
-      return MakeErrorResult(-74101, fmt::format("Failed writing INL output file '{}'. Check available disk space and write permissions.", m_InputValues->OutputFile.string()));
+      return MakeErrorResult(-74101, fmt::format("Failed writing INL output file '{}'. Check available disk space and write permissions.", m_InputValues->output_file.string()));
     }
   }
 
   fout.flush();
   if(!fout)
   {
-    return MakeErrorResult(-74101, fmt::format("Failed writing INL output file '{}'. Check available disk space and write permissions.", m_InputValues->OutputFile.string()));
+    return MakeErrorResult(-74101, fmt::format("Failed writing INL output file '{}'. Check available disk space and write permissions.", m_InputValues->output_file.string()));
   }
 
   return {};

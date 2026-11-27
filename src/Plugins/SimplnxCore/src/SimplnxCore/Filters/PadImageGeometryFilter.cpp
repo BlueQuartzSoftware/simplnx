@@ -34,10 +34,11 @@ constexpr std::array<std::array<int32, 2>, 3> k_NegativePadding = {{{-86019, -86
 constexpr int32 k_PaddedDimensionsWarning = -86031;
 constexpr int32 k_PaddedOriginWarning = -86032;
 
-Result<SizeVec3> ValidatePaddingParameters(const ImageGeom& srcGeom, const PadImageGeometryInputValues& inputValues)
+Result<SizeVec3Type> ValidatePaddingParameters(const ImageGeom& srcGeom, const PadImageGeometryInputValues& inputValues)
 {
-  const std::array<bool, 3> active = {inputValues.PadInX, inputValues.PadInY, inputValues.PadInZ};
-  const std::array<std::reference_wrapper<const VectorInt32Parameter::ValueType>, 3> vectors = {std::cref(inputValues.XMinMax), std::cref(inputValues.YMinMax), std::cref(inputValues.ZMinMax)};
+  const std::array<bool, 3> active = {inputValues.pad_in_x, inputValues.pad_in_y, inputValues.pad_in_z};
+  const std::array<std::reference_wrapper<const VectorInt32ParameterType::ValueType>, 3> vectors = {std::cref(inputValues.x_min_max), std::cref(inputValues.y_min_max),
+                                                                                                    std::cref(inputValues.z_min_max)};
   std::array<std::array<int32, 2>, 3> padding{};
   for(usize axis = 0; axis < 3; ++axis)
   {
@@ -50,13 +51,13 @@ Result<SizeVec3> ValidatePaddingParameters(const ImageGeom& srcGeom, const PadIm
     {
       if(values[side] < 0)
       {
-        return MakeErrorResult<SizeVec3>(k_NegativePadding[axis][side],
-                                         fmt::format("Parameter '{} Min & Max Padding' {} value {} must be nonnegative.", "XYZ"[axis], side == 0 ? "Min" : "Max", values[side]));
+        return MakeErrorResult<SizeVec3Type>(k_NegativePadding[axis][side],
+                                             fmt::format("Parameter '{} Min & Max Padding' {} value {} must be nonnegative.", "XYZ"[axis], side == 0 ? "Min" : "Max", values[side]));
       }
       padding[axis][side] = values[side];
     }
   }
-  return GeometryUtilities::ComputePaddedDimensions(srcGeom.getDimensions(), padding, active);
+  return geometry_utilities::ComputePaddedDimensions(srcGeom.getDimensions(), padding, active);
 }
 
 } // namespace
@@ -109,19 +110,19 @@ Parameters PadImageGeometryFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_PadYDim_Key, "Pad Y Dimension", "Enable padding in the Y dimension.", true));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_PadZDim_Key, "Pad Z Dimension", "Enable padding in the Z dimension.", true));
 
-  params.insert(std::make_unique<VectorInt32Parameter>(k_XMinMax_Key, "X Min & Max Padding (in voxels)", "The Min and Max padding for X Axis", std::vector<int32>{0, 0},
-                                                       std::vector<std::string>{"X Min", "X Max"}));
-  params.insert(std::make_unique<VectorInt32Parameter>(k_YMinMax_Key, "Y Min & Max Padding (in voxels)", "The Min and Max padding for Y Axis", std::vector<int32>{0, 0},
-                                                       std::vector<std::string>{"Y Min", "Y Max"}));
-  params.insert(std::make_unique<VectorInt32Parameter>(k_ZMinMax_Key, "Z Min & Max Padding (in voxels)", "The Min and Max padding for Z Axis", std::vector<int32>{0, 0},
-                                                       std::vector<std::string>{"Z Min", "Z Max"}));
-  params.insert(std::make_unique<Int32Parameter>(k_DefaultFillValue_Key, "Default Padding Value", "The value to apply to the added elements in each of the cell data arrays", 0));
+  params.insert(std::make_unique<VectorInt32ParameterType>(k_XMinMax_Key, "X Min & Max Padding (in voxels)", "The Min and Max padding for X Axis", std::vector<int32>{0, 0},
+                                                           std::vector<std::string>{"X Min", "X Max"}));
+  params.insert(std::make_unique<VectorInt32ParameterType>(k_YMinMax_Key, "Y Min & Max Padding (in voxels)", "The Min and Max padding for Y Axis", std::vector<int32>{0, 0},
+                                                           std::vector<std::string>{"Y Min", "Y Max"}));
+  params.insert(std::make_unique<VectorInt32ParameterType>(k_ZMinMax_Key, "Z Min & Max Padding (in voxels)", "The Min and Max padding for Z Axis", std::vector<int32>{0, 0},
+                                                           std::vector<std::string>{"Z Min", "Z Max"}));
+  params.insert(std::make_unique<Int32ParameterType>(k_DefaultFillValue_Key, "Default Padding Value", "The value to apply to the added elements in each of the cell data arrays", 0));
   params.insert(std::make_unique<BoolParameter>(k_UpdateOrigin_Key, "Update Origin", "Should the origin of the Image Geometry be updated", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_PerformInPlace_Key, "Perform In Place", "Removes the original Image Geometry after filter is completed", true));
 
   params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_AttributeMatrixPath_Key, "Cell Data", "The Attribute Matrix that holds the cell data for the geometry", DataPath{}));
 
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
@@ -145,21 +146,21 @@ IFilter::VersionType PadImageGeometryFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer PadImageGeometryFilter::clone() const
+IFilter::UniquePointerType PadImageGeometryFilter::clone() const
 {
   return std::make_unique<PadImageGeometryFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                               const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto srcImagePath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   auto destImagePath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
 
-  auto pXMinMaxValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_XMinMax_Key);
-  auto pYMinMaxValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_YMinMax_Key);
-  auto pZMinMaxValue = filterArgs.value<VectorInt32Parameter::ValueType>(k_ZMinMax_Key);
+  auto pXMinMaxValue = filterArgs.value<VectorInt32ParameterType::ValueType>(k_XMinMax_Key);
+  auto pYMinMaxValue = filterArgs.value<VectorInt32ParameterType::ValueType>(k_YMinMax_Key);
+  auto pZMinMaxValue = filterArgs.value<VectorInt32ParameterType::ValueType>(k_ZMinMax_Key);
   auto pUpdateOriginValue = filterArgs.value<bool>(k_UpdateOrigin_Key);
   auto pAttributeMatrixPathValue = filterArgs.value<DataPath>(k_AttributeMatrixPath_Key);
   auto pPerformInPlace = filterArgs.value<bool>(k_PerformInPlace_Key);
@@ -170,7 +171,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
 
   if(!pPadXDim && !pPadYDim && !pPadZDim)
   {
-    return {MakeErrorResult<OutputActions>(-4010, "At least one dimension must be selected to pad!")};
+    return {.output_actions = MakeErrorResult<OutputActions>(-4010, "At least one dimension must be selected to pad!")};
   }
 
   Result<OutputActions> resultOutputActions;
@@ -183,23 +184,23 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
   auto srcSpacing = srcImageGeom.getSpacing();
 
   PadImageGeometryInputValues validationInput{};
-  validationInput.XMinMax = pXMinMaxValue;
-  validationInput.YMinMax = pYMinMaxValue;
-  validationInput.ZMinMax = pZMinMaxValue;
-  validationInput.PadInX = pPadXDim;
-  validationInput.PadInY = pPadYDim;
-  validationInput.PadInZ = pPadZDim;
+  validationInput.x_min_max = pXMinMaxValue;
+  validationInput.y_min_max = pYMinMaxValue;
+  validationInput.z_min_max = pZMinMaxValue;
+  validationInput.pad_in_x = pPadXDim;
+  validationInput.pad_in_y = pPadYDim;
+  validationInput.pad_in_z = pPadZDim;
   auto dimensions = ValidatePaddingParameters(srcImageGeom, validationInput);
-  SizeVec3 destGeomDims = srcDims;
-  FloatVec3 targetOrigin = srcOrigin;
+  SizeVec3Type destGeomDims = srcDims;
+  FloatVec3Type targetOrigin = srcOrigin;
   bool useSourceOrigin = false;
   if(dimensions.invalid())
   {
     // Parameter diagnostics precede the shared dimension-overflow diagnostics.
     const auto& error = dimensions.errors().front();
-    if(error.code != GeometryUtilities::k_PaddedExtentOverflowError && error.code != GeometryUtilities::k_PaddedTupleOverflowError)
+    if(error.code != geometry_utilities::k_PaddedExtentOverflowError && error.code != geometry_utilities::k_PaddedTupleOverflowError)
     {
-      return {ConvertInvalidResult<OutputActions>(std::move(dimensions))};
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
     }
     resultOutputActions.warnings().push_back({k_PaddedDimensionsWarning, error.message + " Execution checks final dimensions; preflight uses source dimensions and origin."});
     useSourceOrigin = true;
@@ -211,7 +212,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
   if(pUpdateOriginValue)
   {
     const std::array<bool, 3> active = {pPadXDim, pPadYDim, pPadZDim};
-    const std::array<std::reference_wrapper<const VectorInt32Parameter::ValueType>, 3> vectors = {std::cref(pXMinMaxValue), std::cref(pYMinMaxValue), std::cref(pZMinMaxValue)};
+    const std::array<std::reference_wrapper<const VectorInt32ParameterType::ValueType>, 3> vectors = {std::cref(pXMinMaxValue), std::cref(pYMinMaxValue), std::cref(pZMinMaxValue)};
     for(usize axis = 0; axis < 3; ++axis)
     {
       if(!active[axis])
@@ -263,12 +264,12 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
   // not need to manually copy these arrays to the destination image geometry
   {
     // Get the name of the Cell Attribute Matrix, so we can use that in the CreateImageGeometryAction
-    const AttributeMatrix* selectedCellData = srcImageGeom.getCellData();
-    if(selectedCellData == nullptr)
+    const AttributeMatrix* selectedCellDataPtr = srcImageGeom.getCellData();
+    if(selectedCellDataPtr == nullptr)
     {
-      return {MakeErrorResult<OutputActions>(-4014, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
+      return {.output_actions = MakeErrorResult<OutputActions>(-4014, fmt::format("'{}' must have cell data attribute matrix", srcImagePath.toString()))};
     }
-    std::string cellDataName = selectedCellData->getName();
+    std::string cellDataName = selectedCellDataPtr->getName();
     ignorePaths.push_back(srcImagePath.createChildPath(cellDataName));
 
     resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(destImagePath, destGeomDims.toContainer<CreateImageGeometryAction::DimensionType>(),
@@ -278,7 +279,7 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
     // Now loop over each array in the source image geometry's cell attribute matrix and create the corresponding arrays
     // in the destination image geometry's attribute matrix
     DataPath newCellAttributeMatrixPath = destImagePath.createChildPath(cellDataName);
-    for(const auto& [identifier, object] : *selectedCellData)
+    for(const auto& [identifier, object] : *selectedCellDataPtr)
     {
       const auto& srcArray = dynamic_cast<const IDataArray&>(*object);
       DataType dataType = srcArray.getDataType();
@@ -294,9 +295,9 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
     cropOptionsStr.append(pPadZDim ? "Z" : "");
     preflightUpdatedValues.push_back({"Pad Dimensions", cropOptionsStr});
 
-    preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(srcImageGeom.getDimensions(), srcImageGeom.getSpacing(),
-                                                                                                                          srcImageGeom.getOrigin(), srcImageGeom.getUnits())});
-    preflightUpdatedValues.push_back({"Padded Image Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(
+    preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(srcImageGeom.getDimensions(), srcImageGeom.getSpacing(),
+                                                                                                                           srcImageGeom.getOrigin(), srcImageGeom.getUnits())});
+    preflightUpdatedValues.push_back({"Padded Image Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(
                                                                         destGeomDims, srcSpacing.toContainer<CreateImageGeometryAction::SpacingType>(), targetOrigin, srcImageGeom.getUnits())});
   }
 
@@ -343,58 +344,60 @@ IFilter::PreflightResult PadImageGeometryFilter::preflightImpl(const DataStructu
      ((pPadXDim && (pXMinMaxValue[0] > 0 || pXMinMaxValue[1] > 0)) || (pPadYDim && (pYMinMaxValue[0] > 0 || pYMinMaxValue[1] > 0)) || (pPadZDim && (pZMinMaxValue[0] > 0 || pZMinMaxValue[1] > 0))))
   {
     resultOutputActions.warnings().emplace_back(Warning{
-        -67401,
-        fmt::format("Default Padding Value is {}. This value is written into every Cell Data Array, including any Feature Ids array. The added cells then belong to Feature {}, so any Feature "
-                    "data computed before this filter is no longer correct for that Feature. A negative value, or a value larger than the last Feature Id, creates Feature Ids that are not valid. "
-                    "Use 0 to add background cells.",
-                    pDefaultFillValue, pDefaultFillValue)});
+        .code = -67401,
+        .message =
+            fmt::format("Default Padding Value is {}. This value is written into every Cell Data Array, including any Feature Ids array. The added cells then belong to Feature {}, so any Feature "
+                        "data computed before this filter is no longer correct for that Feature. A negative value, or a value larger than the last Feature Id, creates Feature Ids that are not valid. "
+                        "Use 0 to add background cells.",
+                        pDefaultFillValue, pDefaultFillValue)});
   }
 
   if(!pUpdateOriginValue && hasCopiedAttributeMatrix && ((pPadXDim && pXMinMaxValue[0] > 0) || (pPadYDim && pYMinMaxValue[0] > 0) || (pPadZDim && pZMinMaxValue[0] > 0)))
   {
     resultOutputActions.warnings().emplace_back(Warning{
-        -67402, "Update Origin is OFF and padding is added on the minimum side. The existing cells move to new physical coordinates. Values stored in physical coordinates in the copied Attribute "
-                "Matrices, such as Feature Centroids, no longer match the cells. Turn on Update Origin to keep the cells in place, or recompute those values."});
+        .code = -67402,
+        .message = "Update Origin is OFF and padding is added on the minimum side. The existing cells move to new physical coordinates. Values stored in physical coordinates in the copied Attribute "
+                   "Matrices, such as Feature Centroids, no longer match the cells. Turn on Update Origin to keep the cells in place, or recompute those values."});
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> PadImageGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> PadImageGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   PadImageGeometryInputValues inputValues;
 
-  inputValues.SelectedImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  inputValues.CreatedOutputPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
+  inputValues.selected_image_geometry_path = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.created_output_path = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
 
-  inputValues.XMinMax = filterArgs.value<VectorInt32Parameter::ValueType>(k_XMinMax_Key);
-  inputValues.YMinMax = filterArgs.value<VectorInt32Parameter::ValueType>(k_YMinMax_Key);
-  inputValues.ZMinMax = filterArgs.value<VectorInt32Parameter::ValueType>(k_ZMinMax_Key);
-  inputValues.DefaultFillValue = filterArgs.value<int32>(k_DefaultFillValue_Key);
-  inputValues.UpdateOrigin = filterArgs.value<bool>(k_UpdateOrigin_Key);
-  inputValues.AttributeMatrixPath = filterArgs.value<DataPath>(k_AttributeMatrixPath_Key);
-  inputValues.RemoveOriginalGeometry = filterArgs.value<bool>(k_PerformInPlace_Key);
-  inputValues.PadInX = filterArgs.value<BoolParameter::ValueType>(k_PadXDim_Key);
-  inputValues.PadInY = filterArgs.value<BoolParameter::ValueType>(k_PadYDim_Key);
-  inputValues.PadInZ = filterArgs.value<BoolParameter::ValueType>(k_PadZDim_Key);
+  inputValues.x_min_max = filterArgs.value<VectorInt32ParameterType::ValueType>(k_XMinMax_Key);
+  inputValues.y_min_max = filterArgs.value<VectorInt32ParameterType::ValueType>(k_YMinMax_Key);
+  inputValues.z_min_max = filterArgs.value<VectorInt32ParameterType::ValueType>(k_ZMinMax_Key);
+  inputValues.default_fill_value = filterArgs.value<int32>(k_DefaultFillValue_Key);
+  inputValues.update_origin = filterArgs.value<bool>(k_UpdateOrigin_Key);
+  inputValues.attribute_matrix_path = filterArgs.value<DataPath>(k_AttributeMatrixPath_Key);
+  inputValues.remove_original_geometry = filterArgs.value<bool>(k_PerformInPlace_Key);
+  inputValues.pad_in_x = filterArgs.value<BoolParameter::ValueType>(k_PadXDim_Key);
+  inputValues.pad_in_y = filterArgs.value<BoolParameter::ValueType>(k_PadYDim_Key);
+  inputValues.pad_in_z = filterArgs.value<BoolParameter::ValueType>(k_PadZDim_Key);
 
   return PadImageGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_AttributeMatrixPathKey = "AttributeMatrixPath";
-constexpr StringLiteral k_DefaultFillValueKey = "DefaultFillValue";
-constexpr StringLiteral k_UpdateOriginKey = "UpdateOrigin";
-constexpr StringLiteral k_XMinMaxKey = "XMinMax";
-constexpr StringLiteral k_YMinMaxKey = "YMinMax";
-constexpr StringLiteral k_ZMinMaxKey = "ZMinMax";
-} // namespace SIMPL
+constexpr StringLiteralType k_AttributeMatrixPathKey = "AttributeMatrixPath";
+constexpr StringLiteralType k_DefaultFillValueKey = "DefaultFillValue";
+constexpr StringLiteralType k_UpdateOriginKey = "UpdateOrigin";
+constexpr StringLiteralType k_XMinMaxKey = "XMinMax";
+constexpr StringLiteralType k_YMinMaxKey = "YMinMax";
+constexpr StringLiteralType k_ZMinMaxKey = "ZMinMax";
+} // namespace simpl
 } // namespace
 
 //------------------------------------------------------------------------------
@@ -404,14 +407,14 @@ Result<Arguments> PadImageGeometryFilter::FromSIMPLJson(const nlohmann::json& js
 
   std::vector<Result<>> results;
 
-  results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeMatrixPathKey, k_SelectedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeMatrixPathKey, k_AttributeMatrixPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_DefaultFillValueKey, k_DefaultFillValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_UpdateOriginKey, k_UpdateOrigin_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec2FilterParameterConverter>(args, json, SIMPL::k_XMinMaxKey, k_XMinMax_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec2FilterParameterConverter>(args, json, SIMPL::k_YMinMaxKey, k_YMinMax_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntVec2FilterParameterConverter>(args, json, SIMPL::k_ZMinMaxKey, k_ZMinMax_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_AttributeMatrixPathKey,
+                                                                                                                                        k_SelectedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_AttributeMatrixPathKey, k_AttributeMatrixPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_DefaultFillValueKey, k_DefaultFillValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_UpdateOriginKey, k_UpdateOrigin_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntVec2FilterParameterConverterType>(args, json, simpl::k_XMinMaxKey, k_XMinMax_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntVec2FilterParameterConverterType>(args, json, simpl::k_YMinMaxKey, k_YMinMax_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntVec2FilterParameterConverterType>(args, json, simpl::k_ZMinMaxKey, k_ZMinMax_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

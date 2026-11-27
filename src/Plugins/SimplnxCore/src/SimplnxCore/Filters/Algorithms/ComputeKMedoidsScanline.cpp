@@ -87,7 +87,7 @@ class KMedoidsTemplate
 {
 public:
   KMedoidsTemplate(ComputeKMedoidsScanline* filter, const IDataArray* inputArray, IDataArray* medoidsArray, const IDataArray* maskArray, bool useMask, usize clusters,
-                   Int32AbstractDataStore& featureIds, ClusterUtilities::DistanceMetric metric, std::mt19937_64::result_type seed)
+                   Int32AbstractDataStoreType& featureIds, cluster_utilities::DistanceMetric metric, std::mt19937_64::result_type seed)
   : m_Filter(filter)
   , m_Input(inputArray->template getIDataStoreRefAs<AbstractDataStore<T>>())
   , m_Medoids(medoidsArray->template getIDataStoreRefAs<AbstractDataStore<T>>())
@@ -298,7 +298,7 @@ private:
         float64 minimum = std::numeric_limits<float64>::max();
         for(usize cluster = 0; cluster < m_Clusters; cluster++)
         {
-          const float64 distance = ClusterUtilities::GetDistance(input, local * dims, medoids, (cluster + 1) * dims, dims, m_Metric);
+          const float64 distance = cluster_utilities::GetDistance(input, local * dims, medoids, (cluster + 1) * dims, dims, m_Metric);
           if(distance < minimum)
           {
             minimum = distance;
@@ -330,9 +330,12 @@ private:
   Result<> optimizeClusters(usize tuples, usize dims, std::vector<usize>& medoidIndices, std::vector<float64>& costs)
   {
     costs.assign(m_Clusters, std::numeric_limits<float64>::max());
-    std::vector<T> candidate(k_TileTuples * dims), inner(k_TileTuples * dims);
-    std::vector<int32> candidateIds(k_TileTuples), innerIds(k_TileTuples);
-    std::vector<uint8> candidateMask(k_TileTuples), innerMask(k_TileTuples);
+    std::vector<T> candidate(k_TileTuples * dims);
+    std::vector<T> inner(k_TileTuples * dims);
+    std::vector<int32> candidateIds(k_TileTuples);
+    std::vector<int32> innerIds(k_TileTuples);
+    std::vector<uint8> candidateMask(k_TileTuples);
+    std::vector<uint8> innerMask(k_TileTuples);
     std::vector<float64> candidateCosts(k_TileTuples);
     for(usize candidateOffset = 0; candidateOffset < tuples; candidateOffset += k_TileTuples)
     {
@@ -369,7 +372,7 @@ private:
           {
             if(innerMask[innerLocal] != 0 && innerIds[innerLocal] == candidateIds[candidateLocal])
             {
-              candidateCosts[candidateLocal] += ClusterUtilities::GetDistance(candidate, candidateLocal * dims, inner, innerLocal * dims, dims, m_Metric);
+              candidateCosts[candidateLocal] += cluster_utilities::GetDistance(candidate, candidateLocal * dims, inner, innerLocal * dims, dims, m_Metric);
             }
           }
         }
@@ -426,7 +429,8 @@ private:
    */
   Result<> writeMedoids(usize tuples, usize dims, const std::vector<usize>& medoidIndices)
   {
-    std::vector<T> input(k_TileTuples * dims), medoids((m_Clusters + 1) * dims);
+    std::vector<T> input(k_TileTuples * dims);
+    std::vector<T> medoids((m_Clusters + 1) * dims);
     std::vector<uint8> found(m_Clusters, 0);
     for(usize offset = 0; offset < tuples; offset += k_TileTuples)
     {
@@ -442,7 +446,7 @@ private:
       }
       for(usize cluster = 0; cluster < m_Clusters; cluster++)
       {
-        if(!found[cluster] && medoidIndices[cluster] >= offset && medoidIndices[cluster] < offset + count)
+        if((found[cluster] == 0u) && medoidIndices[cluster] >= offset && medoidIndices[cluster] < offset + count)
         {
           std::copy_n(input.data() + (medoidIndices[cluster] - offset) * dims, dims, medoids.data() + (cluster + 1) * dims);
           found[cluster] = 1;
@@ -461,8 +465,8 @@ private:
   AbstractDataStore<T>& m_Medoids;
   MaskReader m_Mask;
   usize m_Clusters = 0;
-  Int32AbstractDataStore& m_FeatureIds;
-  ClusterUtilities::DistanceMetric m_Metric;
+  Int32AbstractDataStoreType& m_FeatureIds;
+  cluster_utilities::DistanceMetric m_Metric;
   std::mt19937_64::result_type m_Seed;
 };
 } // namespace
@@ -476,8 +480,6 @@ ComputeKMedoidsScanline::ComputeKMedoidsScanline(DataStructure& dataStructure, c
 {
 }
 
-ComputeKMedoidsScanline::~ComputeKMedoidsScanline() noexcept = default;
-
 void ComputeKMedoidsScanline::updateProgress(const std::string& message)
 {
   m_MessageHandler.sendMessage(IFilter::Message::Type::Info, message);
@@ -490,14 +492,14 @@ const std::atomic_bool& ComputeKMedoidsScanline::getCancel()
 
 Result<> ComputeKMedoidsScanline::operator()()
 {
-  auto* clustering = m_DataStructure.getDataAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  auto* medoids = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MedoidsArrayPath);
-  auto* mask = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
-  if(m_InputValues->UseMask && (mask == nullptr || (mask->getDataType() != DataType::boolean && mask->getDataType() != DataType::uint8)))
+  auto* clusteringPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->clustering_array_path);
+  auto* medoidsPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->medoids_array_path);
+  auto* maskPtr = m_InputValues->use_mask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path) : nullptr;
+  if(m_InputValues->use_mask && (maskPtr == nullptr || (maskPtr->getDataType() != DataType::boolean && maskPtr->getDataType() != DataType::uint8)))
   {
     return MakeErrorResult(-54070, "Mask array must exist and have Bool or UInt8 data type.");
   }
-  return RunTemplateClass<KMedoidsTemplate, types::NoBooleanType>(clustering->getDataType(), this, clustering, medoids, mask, m_InputValues->UseMask, m_InputValues->InitClusters,
-                                                                  m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef(), m_InputValues->DistanceMetric,
-                                                                  m_InputValues->Seed);
+  return RunTemplateClass<KMedoidsTemplate, types::NoBooleanType>(clusteringPtr->getDataType(), this, clusteringPtr, medoidsPtr, maskPtr, m_InputValues->use_mask, m_InputValues->init_clusters,
+                                                                  m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path)->getDataStoreRef(), m_InputValues->distance_metric,
+                                                                  m_InputValues->seed);
 }

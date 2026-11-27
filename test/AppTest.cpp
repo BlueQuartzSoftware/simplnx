@@ -95,8 +95,8 @@ TEST_CASE("Application::loadPreferences", "[Application]")
   SECTION("Preferences object is created after load")
   {
     app->loadPreferences();
-    auto* prefs = app->getPreferences();
-    REQUIRE(prefs != nullptr);
+    auto* prefsPtr = app->getPreferences();
+    REQUIRE(prefsPtr != nullptr);
   }
 }
 
@@ -151,7 +151,7 @@ TEST_CASE("Application::loadPreferences from a specified path", "[Application]")
 
     REQUIRE(result.invalid());
     REQUIRE_FALSE(result.errors().empty());
-    REQUIRE(result.errors()[0].code == Preferences::k_FileDoesNotExist_Code);
+    REQUIRE(result.errors()[0].code == Preferences::k_FileDoesNotExistCode);
   }
 }
 
@@ -171,11 +171,11 @@ TEST_CASE("Application::savePreferences", "[Application]")
   {
     // Ensure preferences are loaded
     app->loadPreferences();
-    auto* prefs = app->getPreferences();
-    REQUIRE(prefs != nullptr);
+    auto* prefsPtr = app->getPreferences();
+    REQUIRE(prefsPtr != nullptr);
 
     // Set a value and save
-    prefs->setValue("test_key", 42);
+    prefsPtr->setValue("test_key", 42);
     auto result = app->savePreferences();
     REQUIRE((result.valid() || result.invalid()));
   }
@@ -238,7 +238,7 @@ TEST_CASE("Application::loadPlugins", "[Application]")
     {
       auto plugins = app->getPluginList();
       // If plugins loaded successfully, there should be at least one
-      REQUIRE(plugins.size() > 0);
+      REQUIRE(!plugins.empty());
     }
   }
 }
@@ -249,8 +249,8 @@ TEST_CASE("Application::getFilterList", "[Application]")
 
   SECTION("FilterList is never null")
   {
-    auto* filterList = app->getFilterList();
-    REQUIRE(filterList != nullptr);
+    auto* filterListPtr = app->getFilterList();
+    REQUIRE(filterListPtr != nullptr);
   }
 
   SECTION("FilterList contains filters after loading plugins")
@@ -258,9 +258,9 @@ TEST_CASE("Application::getFilterList", "[Application]")
     auto result = app->loadPlugins(SIMPLNX_BUILD_DIR, true);
     if(result.valid())
     {
-      auto* filterList = app->getFilterList();
-      auto handles = filterList->getFilterHandles();
-      REQUIRE(handles.size() > 0);
+      auto* filterListPtr = app->getFilterList();
+      auto handles = filterListPtr->getFilterHandles();
+      REQUIRE(!handles.empty());
     }
   }
 }
@@ -274,8 +274,8 @@ TEST_CASE("Application::getPlugin", "[Application]")
   {
     // Create a random UUID that should not exist
     Uuid randomUuid = Uuid::FromString("00000000-0000-0000-0000-000000000000").value();
-    auto* plugin = app->getPlugin(randomUuid);
-    REQUIRE(plugin == nullptr);
+    const auto* pluginPtr = app->getPlugin(randomUuid);
+    REQUIRE(pluginPtr == nullptr);
   }
 
   SECTION("Get loaded plugin by UUID")
@@ -283,11 +283,11 @@ TEST_CASE("Application::getPlugin", "[Application]")
     auto plugins = app->getPluginList();
     if(!plugins.empty())
     {
-      auto* firstPlugin = *plugins.begin();
-      auto uuid = firstPlugin->getId();
-      auto* foundPlugin = app->getPlugin(uuid);
-      REQUIRE(foundPlugin != nullptr);
-      REQUIRE(foundPlugin == firstPlugin);
+      auto* firstPluginPtr = *plugins.begin();
+      auto uuid = firstPluginPtr->getId();
+      const auto* foundPluginPtr = app->getPlugin(uuid);
+      REQUIRE(foundPluginPtr != nullptr);
+      REQUIRE(foundPluginPtr == firstPluginPtr);
     }
   }
 }
@@ -436,13 +436,13 @@ TEST_CASE("Application::Singleton Lifecycle", "[Application]")
     Application::DeleteInstance();
 
     auto app1 = Application::GetOrCreateInstance();
-    auto* prefs1 = app1->getPreferences();
+    auto* prefs1Ptr = app1->getPreferences();
 
     auto app2 = Application::GetOrCreateInstance();
-    auto* prefs2 = app2->getPreferences();
+    auto* prefs2Ptr = app2->getPreferences();
 
     REQUIRE(app1 == app2);
-    REQUIRE(prefs1 == prefs2);
+    REQUIRE(prefs1Ptr == prefs2Ptr);
 
     Application::DeleteInstance();
   }

@@ -11,7 +11,7 @@
 
 #include <algorithm>
 
-namespace nx::core::Sampling
+namespace nx::core::sampling
 {
 /**
  * @brief Scans destination Feature Ids without changing the arrays or Feature AM.
@@ -34,7 +34,7 @@ namespace nx::core::Sampling
     return MakeErrorResult(-600, "The number of Features is 0 and should be greater than 0");
   }
 
-  const auto& destFeatureIds = dataStructure.getDataRefAs<Int32Array>(destFeatureIdsArrayPath).getDataStoreRef();
+  const auto& destFeatureIds = dataStructure.getDataRefAs<Int32ArrayType>(destFeatureIdsArrayPath).getDataStoreRef();
   activeObjects.assign(totalFeatures, false);
   const usize totalPoints = destFeatureIds.getNumberOfTuples();
   constexpr usize k_BatchSize = 40000;
@@ -94,7 +94,7 @@ inline Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& d
   {
     return scanResult;
   }
-  auto& destFeatureIds = dataStructure.getDataRefAs<Int32Array>(destFeatureIdsArrayPath).getDataStoreRef();
+  auto& destFeatureIds = dataStructure.getDataRefAs<Int32ArrayType>(destFeatureIdsArrayPath).getDataStoreRef();
   return MergeResults(std::move(scanResult), RemoveInactiveObjects(dataStructure, destFeatureAttributeMatrixPath, activeObjects, destFeatureIds, activeObjects.size(), messageHandler, shouldCancel));
 }
 
@@ -116,7 +116,7 @@ inline Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& n
                                  const DataPath& destFeatureIdsArrayPath, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel = false)
 {
   const auto& destImageGeom = dataStructure.getDataRefAs<ImageGeom>(newGeomPath);
-  const auto& destFeatureIds = dataStructure.getDataRefAs<Int32Array>(destFeatureIdsArrayPath);
+  const auto& destFeatureIds = dataStructure.getDataRefAs<Int32ArrayType>(destFeatureIdsArrayPath);
   if(destImageGeom.getNumberOfCells() != destFeatureIds.getNumberOfTuples())
   {
     return MakeErrorResult(-606, fmt::format("Image geometry '{}' has {} cells, but destination Feature Ids array '{}' has {} tuples. Provide one Feature Ids tuple per image cell.",
@@ -124,4 +124,4 @@ inline Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& n
   }
   return RenumberFeatures(dataStructure, destCellFeatAttributeMatrixPath, featureIdsArrayPath, destFeatureIdsArrayPath, messageHandler, shouldCancel);
 }
-} // namespace nx::core::Sampling
+} // namespace nx::core::sampling

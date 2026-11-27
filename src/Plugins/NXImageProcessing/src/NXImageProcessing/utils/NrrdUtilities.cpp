@@ -301,63 +301,63 @@ std::optional<std::pair<bool, bool>> NrrdSpaceOriginFlip(const std::string& spac
   struct SpaceEntry
   {
     std::string_view name;
-    bool negateX;
-    bool negateY;
+    bool negate_x;
+    bool negate_y;
   };
   // Full teem equivalence set (NrrdIO/enumsNrrd.c). RAS -> negate X,Y; LAS -> negate X;
   // every other recognized space -> no change (matches ITK's switch default). Anything
   // not listed here is an unrecognized space and errors, exactly as teem does.
   static constexpr SpaceEntry k_Spaces[] = {
       // right-anterior-superior (RAS): R->L, A->P
-      {"right-anterior-superior", true, true},
-      {"right anterior superior", true, true},
-      {"rightanteriorsuperior", true, true},
-      {"ras", true, true},
+      {.name = "right-anterior-superior", .negate_x = true, .negate_y = true},
+      {.name = "right anterior superior", .negate_x = true, .negate_y = true},
+      {.name = "rightanteriorsuperior", .negate_x = true, .negate_y = true},
+      {.name = "ras", .negate_x = true, .negate_y = true},
       // left-anterior-superior (LAS): R->L
-      {"left-anterior-superior", true, false},
-      {"left anterior superior", true, false},
-      {"leftanteriorsuperior", true, false},
-      {"las", true, false},
+      {.name = "left-anterior-superior", .negate_x = true, .negate_y = false},
+      {.name = "left anterior superior", .negate_x = true, .negate_y = false},
+      {.name = "leftanteriorsuperior", .negate_x = true, .negate_y = false},
+      {.name = "las", .negate_x = true, .negate_y = false},
       // left-posterior-superior (LPS): already ITK's target frame
-      {"left-posterior-superior", false, false},
-      {"left posterior superior", false, false},
-      {"leftposteriorsuperior", false, false},
-      {"lps", false, false},
+      {.name = "left-posterior-superior", .negate_x = false, .negate_y = false},
+      {.name = "left posterior superior", .negate_x = false, .negate_y = false},
+      {.name = "leftposteriorsuperior", .negate_x = false, .negate_y = false},
+      {.name = "lps", .negate_x = false, .negate_y = false},
       // *-time variants: ITK has no well-defined LPS conversion (default: no change)
-      {"right-anterior-superior-time", false, false},
-      {"right anterior superior time", false, false},
-      {"rightanteriorsuperiortime", false, false},
-      {"rast", false, false},
-      {"left-anterior-superior-time", false, false},
-      {"left anterior superior time", false, false},
-      {"leftanteriorsuperiortime", false, false},
-      {"last", false, false},
-      {"left-posterior-superior-time", false, false},
-      {"left posterior superior time", false, false},
-      {"leftposteriorsuperiortime", false, false},
-      {"lpst", false, false},
+      {.name = "right-anterior-superior-time", .negate_x = false, .negate_y = false},
+      {.name = "right anterior superior time", .negate_x = false, .negate_y = false},
+      {.name = "rightanteriorsuperiortime", .negate_x = false, .negate_y = false},
+      {.name = "rast", .negate_x = false, .negate_y = false},
+      {.name = "left-anterior-superior-time", .negate_x = false, .negate_y = false},
+      {.name = "left anterior superior time", .negate_x = false, .negate_y = false},
+      {.name = "leftanteriorsuperiortime", .negate_x = false, .negate_y = false},
+      {.name = "last", .negate_x = false, .negate_y = false},
+      {.name = "left-posterior-superior-time", .negate_x = false, .negate_y = false},
+      {.name = "left posterior superior time", .negate_x = false, .negate_y = false},
+      {.name = "leftposteriorsuperiortime", .negate_x = false, .negate_y = false},
+      {.name = "lpst", .negate_x = false, .negate_y = false},
       // scanner-xyz / 3D-handed frames: no LPS conversion (default: no change)
-      {"scanner-xyz", false, false},
-      {"scanner-xyz-time", false, false},
-      {"scanner-xyzt", false, false},
-      {"3d-right-handed", false, false},
-      {"3d right handed", false, false},
-      {"3drighthanded", false, false},
-      {"3d-left-handed", false, false},
-      {"3d left handed", false, false},
-      {"3dlefthanded", false, false},
-      {"3d-right-handed-time", false, false},
-      {"3d right handed time", false, false},
-      {"3drighthandedtime", false, false},
-      {"3d-left-handed-time", false, false},
-      {"3d left handed time", false, false},
-      {"3dlefthandedtime", false, false},
+      {.name = "scanner-xyz", .negate_x = false, .negate_y = false},
+      {.name = "scanner-xyz-time", .negate_x = false, .negate_y = false},
+      {.name = "scanner-xyzt", .negate_x = false, .negate_y = false},
+      {.name = "3d-right-handed", .negate_x = false, .negate_y = false},
+      {.name = "3d right handed", .negate_x = false, .negate_y = false},
+      {.name = "3drighthanded", .negate_x = false, .negate_y = false},
+      {.name = "3d-left-handed", .negate_x = false, .negate_y = false},
+      {.name = "3d left handed", .negate_x = false, .negate_y = false},
+      {.name = "3dlefthanded", .negate_x = false, .negate_y = false},
+      {.name = "3d-right-handed-time", .negate_x = false, .negate_y = false},
+      {.name = "3d right handed time", .negate_x = false, .negate_y = false},
+      {.name = "3drighthandedtime", .negate_x = false, .negate_y = false},
+      {.name = "3d-left-handed-time", .negate_x = false, .negate_y = false},
+      {.name = "3d left handed time", .negate_x = false, .negate_y = false},
+      {.name = "3dlefthandedtime", .negate_x = false, .negate_y = false},
   };
   for(const auto& entry : k_Spaces)
   {
     if(s == entry.name)
     {
-      return std::make_pair(entry.negateX, entry.negateY);
+      return std::make_pair(entry.negate_x, entry.negate_y);
     }
   }
   return std::nullopt;
@@ -379,13 +379,13 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
     return MakeErrorResult<NrrdMetadata>(-35701, fmt::format("NRRD file '{}' is empty or unreadable.", pathStr));
   }
   line = StripCR(line);
-  if(line.rfind("NRRD", 0) != 0)
+  if(!line.starts_with("NRRD"))
   {
     return MakeErrorResult<NrrdMetadata>(-35702, fmt::format("File '{}' is not a NRRD file (first line '{}' does not begin with 'NRRD').", pathStr, line));
   }
 
   NrrdMetadata md;
-  md.filePath = pathStr;
+  md.file_path = pathStr;
   md.version = (line.size() >= 8 && std::isdigit(static_cast<unsigned char>(line[7])) != 0) ? (line[7] - '0') : 0;
 
   std::string typeStr;
@@ -407,7 +407,7 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
     line = StripCR(line);
     if(line.empty())
     {
-      md.dataStartOffset = static_cast<usize>(in.tellg());
+      md.data_start_offset = static_cast<usize>(in.tellg());
       headerTerminated = true;
       break;
     }
@@ -487,17 +487,17 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
         const auto token = ToLower(tok);
         if(token == "nan" || token == "+nan" || token == "-nan")
         {
-          spacings.push_back(std::nullopt);
+          spacings.emplace_back(std::nullopt);
           continue;
         }
         try
         {
           usize parsed = 0;
           const auto spacing = std::stod(tok, &parsed);
-          spacings.push_back(parsed == tok.size() ? spacing : std::nan(""));
+          spacings.emplace_back(parsed == tok.size() ? spacing : std::nan(""));
         } catch(const std::logic_error&)
         {
-          spacings.push_back(std::nan(""));
+          spacings.emplace_back(std::nan(""));
         }
       }
     }
@@ -575,10 +575,10 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
     }
   }
 
-  md.dataType = typeInfo->first;
-  md.elementSize = typeInfo->second;
-  md.typeString = typeStr;
-  md.rawSizes = sizes;
+  md.data_type = typeInfo->first;
+  md.element_size = typeInfo->second;
+  md.type_string = typeStr;
+  md.raw_sizes = sizes;
 
   // ---- component (interleaved) axis detection: must be the fastest axis (axis 0) ----
   usize componentAxis = std::numeric_limits<usize>::max();
@@ -605,17 +605,17 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
         -35707, fmt::format("NRRD '{}': the component/vector axis (index {}) must be the fastest axis (index 0) to map to interleaved simplnx components.", pathStr, componentAxis));
   }
   const bool hasComponentAxis = (componentAxis == 0);
-  md.componentCount = hasComponentAxis ? sizes[0] : 1;
+  md.component_count = hasComponentAxis ? sizes[0] : 1;
   const usize spatialStart = hasComponentAxis ? 1 : 0;
-  md.spatialDim = dimension - spatialStart;
-  if(md.spatialDim != 2 && md.spatialDim != 3)
+  md.spatial_dim = dimension - spatialStart;
+  if(md.spatial_dim != 2 && md.spatial_dim != 3)
   {
-    return MakeErrorResult<NrrdMetadata>(-35708, fmt::format("NRRD '{}': spatial dimension {} is unsupported (only 2D and 3D images are read).", pathStr, md.spatialDim));
+    return MakeErrorResult<NrrdMetadata>(-35708, fmt::format("NRRD '{}': spatial dimension {} is unsupported (only 2D and 3D images are read).", pathStr, md.spatial_dim));
   }
 
   // ---- dimensions [X,Y,Z] (Z=1 for 2D) ----
   md.dimensions = {1, 1, 1};
-  for(usize s = 0; s < md.spatialDim; s++)
+  for(usize s = 0; s < md.spatial_dim; s++)
   {
     md.dimensions[s] = sizes[spatialStart + s];
   }
@@ -624,7 +624,7 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
   md.spacing = {1.0f, 1.0f, 1.0f};
   if(!spaceDirTokens.empty())
   {
-    for(usize s = 0; s < md.spatialDim; s++)
+    for(usize s = 0; s < md.spatial_dim; s++)
     {
       const usize axis = spatialStart + s;
       if(axis >= spaceDirTokens.size())
@@ -659,14 +659,14 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
         }
         if(std::fabs(vec[c]) > 1.0e-6 * std::max(mag, 1.0e-6))
         {
-          md.affineHasRotation = true;
+          md.affine_has_rotation = true;
         }
       }
     }
   }
   else if(!spacings.empty())
   {
-    for(usize s = 0; s < md.spatialDim; s++)
+    for(usize s = 0; s < md.spatial_dim; s++)
     {
       const usize axis = spatialStart + s;
       if(axis >= spacings.size())
@@ -679,7 +679,7 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
 
   // ---- origin ----
   md.origin = {0.0f, 0.0f, 0.0f};
-  for(usize s = 0; s < md.spatialDim && s < spaceOrigin.size(); s++)
+  for(usize s = 0; s < md.spatial_dim && s < spaceOrigin.size(); s++)
   {
     md.origin[s] = static_cast<float32>(spaceOrigin[s]);
   }
@@ -711,7 +711,7 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
   // this case ("type (...) and encoding (...) require endian info") rather than
   // assuming a default byte order, so we match that behavior exactly instead of
   // silently assuming host order (which would be a silent ITK divergence).
-  if(md.elementSize > 1)
+  if(md.element_size > 1)
   {
     if(endianStr.empty())
     {
@@ -719,8 +719,8 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
           -35713, fmt::format("NRRD '{}' stores a multi-byte type ('{}') with '{}' encoding but is missing the required 'endian' field (expected 'little' or 'big').", pathStr, typeStr, encodingStr));
     }
     const bool fileIsLittle = (endianStr == "little");
-    const bool hostIsLittle = (nx::core::checkEndian() == nx::core::endian::little);
-    md.byteSwapRequired = (fileIsLittle != hostIsLittle);
+    const bool hostIsLittle = (nx::core::CheckEndian() == nx::core::endian::little);
+    md.byte_swap_required = (fileIsLittle != hostIsLittle);
   }
 
   // ---- attached vs detached data ----
@@ -732,7 +732,7 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
     // contains spaces (e.g. "data file: my scan.raw") is valid -- teem takes the
     // whole remainder of the line as one filename -- so it must NOT be misread as
     // a multi-file spec (the previous whitespace-count check did exactly that).
-    if(dfLower == "list" || dfLower.rfind("list ", 0) == 0 || dataFileField.find('%') != std::string::npos)
+    if(dfLower == "list" || dfLower.starts_with("list ") || dataFileField.find('%') != std::string::npos)
     {
       return MakeErrorResult<NrrdMetadata>(-35709, fmt::format("NRRD '{}': detached 'data file' LIST / multi-file / sprintf forms are not supported.", pathStr));
     }
@@ -742,8 +742,8 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
       return MakeErrorResult<NrrdMetadata>(-35710, fmt::format("NRRD '{}': detached data file '{}' does not exist.", pathStr, df.string()));
     }
     md.detached = true;
-    md.dataFilePath = df;
-    md.dataStartOffset = 0;
+    md.data_file_path = df;
+    md.data_start_offset = 0;
   }
   else
   {
@@ -752,7 +752,7 @@ Result<NrrdMetadata> ReadNrrdHeader(const std::filesystem::path& filePath)
       return MakeErrorResult<NrrdMetadata>(-35703, fmt::format("NRRD '{}' has no blank line terminating the header and no detached data file.", pathStr));
     }
     md.detached = false;
-    md.dataFilePath = filePath;
+    md.data_file_path = filePath;
   }
 
   return {md};
@@ -762,16 +762,16 @@ Result<std::unique_ptr<NrrdDataReader>> NrrdDataReader::Create(const NrrdMetadat
 {
   auto reader = std::unique_ptr<NrrdDataReader>(new NrrdDataReader());
   reader->m_Encoding = md.encoding;
-  reader->m_FilePath = md.dataFilePath.string();
-  reader->m_Stream.open(md.dataFilePath, std::ios::binary);
+  reader->m_FilePath = md.data_file_path.string();
+  reader->m_Stream.open(md.data_file_path, std::ios::binary);
   if(!reader->m_Stream.is_open())
   {
     return MakeErrorResult<std::unique_ptr<NrrdDataReader>>(-35730, fmt::format("Could not open NRRD data file for reading: '{}'", reader->m_FilePath));
   }
-  reader->m_Stream.seekg(static_cast<std::streamoff>(md.dataStartOffset), std::ios::beg);
+  reader->m_Stream.seekg(static_cast<std::streamoff>(md.data_start_offset), std::ios::beg);
   if(!reader->m_Stream.good())
   {
-    return MakeErrorResult<std::unique_ptr<NrrdDataReader>>(-35730, fmt::format("Failed to seek to NRRD data offset {} in '{}'", md.dataStartOffset, reader->m_FilePath));
+    return MakeErrorResult<std::unique_ptr<NrrdDataReader>>(-35730, fmt::format("Failed to seek to NRRD data offset {} in '{}'", md.data_start_offset, reader->m_FilePath));
   }
   if(md.encoding == Encoding::Gzip)
   {

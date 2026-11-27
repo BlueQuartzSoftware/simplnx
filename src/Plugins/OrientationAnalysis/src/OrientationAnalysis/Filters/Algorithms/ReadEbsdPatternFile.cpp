@@ -19,8 +19,6 @@ ReadEbsdPatternFile::ReadEbsdPatternFile(DataStructure& dataStructure, const Rea
 {
 }
 
-ReadEbsdPatternFile::~ReadEbsdPatternFile() noexcept = default;
-
 Result<> ReadEbsdPatternFile::operator()()
 {
   if(m_ShouldCancel)
@@ -28,7 +26,7 @@ Result<> ReadEbsdPatternFile::operator()()
     return {};
   }
 
-  auto readerResult = CreateEbsdPatternFileReader(m_InputValues.inputFile);
+  auto readerResult = CreateEbsdPatternFileReader(m_InputValues.input_file);
   if(readerResult.invalid())
   {
     return ConvertResult(std::move(readerResult));
@@ -40,21 +38,21 @@ Result<> ReadEbsdPatternFile::operator()()
     return ConvertResult(std::move(fileInfoResult));
   }
 
-  auto& outputArrayRef = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues.outputArrayPath);
-  if(m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues.outputArrayPath.getParent()) == nullptr)
+  auto& outputArrayRef = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues.output_array_path);
+  if(m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues.output_array_path.getParent()) == nullptr)
   {
     ShapeType expectedTupleShape;
-    if(fileInfoResult.value().headerVersion == 1 && m_InputValues.setScanDimensions)
+    if(fileInfoResult.value().header_version == 1 && m_InputValues.set_scan_dimensions)
     {
-      expectedTupleShape = {static_cast<usize>(m_InputValues.numberOfRows), static_cast<usize>(m_InputValues.numberOfColumns)};
+      expectedTupleShape = {static_cast<usize>(m_InputValues.number_of_rows), static_cast<usize>(m_InputValues.number_of_columns)};
     }
-    else if(fileInfoResult.value().headerVersion == 1)
+    else if(fileInfoResult.value().header_version == 1)
     {
-      expectedTupleShape = {static_cast<usize>(fileInfoResult.value().numberOfPatterns)};
+      expectedTupleShape = {static_cast<usize>(fileInfoResult.value().number_of_patterns)};
     }
     else
     {
-      expectedTupleShape = {static_cast<usize>(fileInfoResult.value().numberOfRows.value()), static_cast<usize>(fileInfoResult.value().numberOfColumns.value())};
+      expectedTupleShape = {static_cast<usize>(fileInfoResult.value().number_of_rows.value()), static_cast<usize>(fileInfoResult.value().number_of_columns.value())};
     }
 
     if(outputArrayRef.getTupleShape() != expectedTupleShape)
@@ -62,7 +60,7 @@ Result<> ReadEbsdPatternFile::operator()()
       return MakeErrorResult(
           -78045, fmt::format("Output DataArray '{}' has tuple shape [{}], but the current metadata in EBSD pattern file '{}' requires tuple shape [{}]. The file may have changed since "
                               "preflight.",
-                              m_InputValues.outputArrayPath.toString(), fmt::join(outputArrayRef.getTupleShape(), ", "), m_InputValues.inputFile.string(), fmt::join(expectedTupleShape, ", ")));
+                              m_InputValues.output_array_path.toString(), fmt::join(outputArrayRef.getTupleShape(), ", "), m_InputValues.input_file.string(), fmt::join(expectedTupleShape, ", ")));
     }
   }
   Result<> readResult = readerResult.value()->readPatternData(fileInfoResult.value(), outputArrayRef, m_ShouldCancel, m_MessageHandler);

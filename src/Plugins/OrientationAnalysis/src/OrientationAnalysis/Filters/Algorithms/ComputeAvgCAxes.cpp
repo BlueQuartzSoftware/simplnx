@@ -14,7 +14,7 @@
 #include <algorithm>
 
 using namespace nx::core;
-using namespace nx::core::OrientationUtilities;
+using namespace nx::core::orientation_utilities;
 
 namespace
 {
@@ -29,12 +29,10 @@ ComputeAvgCAxes::ComputeAvgCAxes(DataStructure& dataStructure, const IFilter::Me
 {
 }
 
-ComputeAvgCAxes::~ComputeAvgCAxes() noexcept = default;
-
 Result<> ComputeAvgCAxes::operator()()
 {
   // The local ensemble cache avoids cell-loop store access.
-  const auto& crystalStructuresStoreRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath).getDataStoreRef();
+  const auto& crystalStructuresStoreRef = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path).getDataStoreRef();
   const usize numCrystalStructures = crystalStructuresStoreRef.getSize();
   auto crystalStructuresCache = std::make_unique<uint32[]>(numCrystalStructures);
   if(Result<> ioResult = crystalStructuresStoreRef.copyIntoBuffer(0, nonstd::span<uint32>(crystalStructuresCache.get(), numCrystalStructures)); ioResult.invalid())
@@ -66,10 +64,10 @@ Result<> ComputeAvgCAxes::operator()()
   auto mergeWarnings = [&result](Result<> ioResult) { return MergeResults(std::move(result), std::move(ioResult)); };
 
   // Cell data uses chunked bulk I/O to avoid per-element OOC access.
-  const auto& featureIdsStoreRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
-  const auto& quatsStoreRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath).getDataStoreRef();
-  const auto& cellPhasesStoreRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath).getDataStoreRef();
-  auto& avgCAxesStoreRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgCAxesArrayPath).getDataStoreRef();
+  const auto& featureIdsStoreRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getDataStoreRef();
+  const auto& quatsStoreRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->quats_array_path).getDataStoreRef();
+  const auto& cellPhasesStoreRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path).getDataStoreRef();
+  auto& avgCAxesStoreRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->avg_c_axes_array_path).getDataStoreRef();
 
   const usize totalPoints = featureIdsStoreRef.getNumberOfTuples();
   const usize totalFeatures = avgCAxesStoreRef.getNumberOfTuples();
@@ -89,7 +87,7 @@ Result<> ComputeAvgCAxes::operator()()
   auto cellPhasesChunk = std::make_unique<int32[]>(k_ChunkSize);
   auto quatsChunk = std::make_unique<float32[]>(k_ChunkSize * 4);
 
-  m_MessageHandler.sendMessage({IFilter::Message::Type::Info, "Computing cell contributions"});
+  m_MessageHandler.sendMessage({.type = IFilter::Message::Type::Info, .message = "Computing cell contributions"});
 
   usize tupleIdx = 0;
   while(tupleIdx < totalPoints)
@@ -123,8 +121,8 @@ Result<> ComputeAvgCAxes::operator()()
         if(currentPhaseIdx < 0 || static_cast<usize>(currentPhaseIdx) >= numCrystalStructures)
         {
           return MakeErrorResult(-76404, fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in [0, {}).",
-                                                     m_InputValues->CellPhasesArrayPath.toString(), currentPhaseIdx, tupleIdx + chunkTupleIdx, m_InputValues->CrystalStructuresArrayPath.toString(),
-                                                     numCrystalStructures, numCrystalStructures));
+                                                     m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, tupleIdx + chunkTupleIdx,
+                                                     m_InputValues->crystal_structures_array_path.toString(), numCrystalStructures, numCrystalStructures));
         }
         const auto crystalStructureType = crystalStructuresCache[currentPhaseIdx];
         const usize cAxesIndex = 3 * static_cast<usize>(currentFeatureIdx);
@@ -153,7 +151,7 @@ Result<> ComputeAvgCAxes::operator()()
         curCAxis.normalize();
 
         // Antiparallel c axes represent the same hexagonal direction.
-        float64 w = ImageRotationUtilities::CosBetweenVectors(c1, curCAxis);
+        float64 w = image_rotation_utilities::CosBetweenVectors(c1, curCAxis);
         if(w < 0.0)
         {
           c1 *= -1.0f;
@@ -168,7 +166,7 @@ Result<> ComputeAvgCAxes::operator()()
     tupleIdx += chunkTuples;
   }
 
-  m_MessageHandler.sendMessage({IFilter::Message::Type::Info, "Computing final feature average C-Axis values"});
+  m_MessageHandler.sendMessage({.type = IFilter::Message::Type::Info, .message = "Computing final feature average C-Axis values"});
 
   for(usize featureIdx = 0; featureIdx < totalFeatures; featureIdx++)
   {

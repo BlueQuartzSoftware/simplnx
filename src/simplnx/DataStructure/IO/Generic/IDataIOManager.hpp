@@ -17,14 +17,15 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 class DataStructureWriter;
 class FileIO;
 class GroupIO;
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5
 
 namespace nx::core
 {
@@ -59,17 +60,17 @@ public:
   /**
    * @brief Names a DataObject factory identifier.
    */
-  using factory_id_type = std::string;
+  using FactoryIdType = std::string;
 
   /**
    * @brief Shares ownership of a registered DataObject factory.
    */
-  using factory_ptr = std::shared_ptr<IDataFactory>;
+  using FactoryPtrType = std::shared_ptr<IDataFactory>;
 
   /**
    * @brief Maps factory identifiers to shared factories.
    */
-  using factory_collection = std::map<factory_id_type, factory_ptr>;
+  using FactoryCollectionType = std::map<FactoryIdType, FactoryPtrType>;
 
   /**
    * @brief Names a callback that creates a writable numeric store.
@@ -77,36 +78,36 @@ public:
    * The callback takes the numeric type, shapes, optional chunk-shape hint, and initialization policy.
    * The callback transfers store ownership to its caller.
    */
-  using DataStoreCreateFnc = std::function<std::unique_ptr<IDataStore>(DataType, const ShapeType&, const ShapeType&, const std::optional<ShapeType>&, DataStoreInitializationMode)>;
+  using DataStoreCreateFncType = std::function<std::unique_ptr<IDataStore>(DataType, const ShapeType&, const ShapeType&, const std::optional<ShapeType>&, DataStoreInitializationMode)>;
 
   /**
    * @brief Names a callback that creates a writable NeighborList store.
    *
    * The callback transfers ownership to its caller.
    */
-  using ListStoreCreateFnc = std::function<std::unique_ptr<IListStore>(DataType, const ShapeType&)>;
+  using ListStoreCreateFncType = std::function<std::unique_ptr<IListStore>(DataType, const ShapeType&)>;
 
   /**
    * @brief Names a callback that creates a StringArray backing store.
    *
    * The callback transfers ownership to its caller.
    */
-  using StringStoreCreateFnc = std::function<std::unique_ptr<AbstractStringStore>(const ShapeType& tupleShape)>;
+  using StringStoreCreateFncType = std::function<std::unique_ptr<AbstractStringStore>(const ShapeType& tupleShape)>;
 
   /**
    * @brief Maps format names to numeric-store factories.
    */
-  using DataStoreCreationMap = std::map<std::string, DataStoreCreateFnc>;
+  using DataStoreCreationMapType = std::map<std::string, DataStoreCreateFncType>;
 
   /**
    * @brief Maps format names to NeighborList-store factories.
    */
-  using ListStoreCreationMap = std::map<std::string, ListStoreCreateFnc>;
+  using ListStoreCreationMapType = std::map<std::string, ListStoreCreateFncType>;
 
   /**
    * @brief Maps format names to StringArray-store factories.
    */
-  using StringStoreCreationMap = std::map<std::string, StringStoreCreateFnc>;
+  using StringStoreCreationMapType = std::map<std::string, StringStoreCreateFncType>;
 
   /**
    * @brief Destroys the I/O manager.
@@ -125,14 +126,14 @@ public:
    * @brief Returns a snapshot of registered DataObject factories.
    * @return Factory map that shares ownership with this manager.
    */
-  factory_collection getFactories() const;
+  FactoryCollectionType getFactories() const;
 
   /**
    * @brief Returns a factory for one DataObject type.
    * @param typeName DataObject factory identifier.
    * @return Shared factory, or null when typeName is not registered.
    */
-  factory_ptr getFactory(factory_id_type typeName) const;
+  FactoryPtrType getFactory(const FactoryIdType& typeName) const;
 
   /**
    * @brief Returns a registered factory cast to a selected type.
@@ -141,7 +142,7 @@ public:
    * @return Shared factory cast to T, or null when the factory is absent or incompatible.
    */
   template <typename T>
-  std::shared_ptr<T> getFactoryAs(factory_id_type typeName) const
+  std::shared_ptr<T> getFactoryAs(FactoryIdType typeName) const
   {
     return std::dynamic_pointer_cast<T>(getFactory(typeName));
   }
@@ -164,7 +165,7 @@ public:
    * @brief Returns a snapshot of numeric-store factories.
    * @return Factory map that copies callback ownership.
    */
-  DataStoreCreationMap getDataStoreCreationFunctions();
+  DataStoreCreationMapType getDataStoreCreationFunctions();
 
   bool hasDataStoreCreationFnc(const std::string& type) const;
 
@@ -174,7 +175,7 @@ public:
    * @return Registered callback for type.
    * @throws std::out_of_range if type is not registered.
    */
-  DataStoreCreateFnc dataStoreCreationFnc(const std::string& type) const;
+  DataStoreCreateFncType dataStoreCreationFnc(const std::string& type) const;
 
   bool hasListStoreCreationFnc(const std::string& type) const;
 
@@ -184,7 +185,7 @@ public:
    * @return Registered callback for type.
    * @throws std::out_of_range if type is not registered.
    */
-  ListStoreCreateFnc listStoreCreationFnc(const std::string& type) const;
+  ListStoreCreateFncType listStoreCreationFnc(const std::string& type) const;
 
   bool hasStringStoreCreationFnc(const std::string& type) const;
 
@@ -193,7 +194,7 @@ public:
    * @param type Format identifier to look up.
    * @return Registered callback, or an empty callback when type is not registered.
    */
-  StringStoreCreateFnc stringStoreCreationFnc(const std::string& type) const;
+  StringStoreCreateFncType stringStoreCreationFnc(const std::string& type) const;
 
   /**
    * @brief Reports whether this manager finalizes deferred DREAM3D imports.
@@ -218,7 +219,7 @@ public:
    * sweep eagerly loads those remaining placeholders in memory. The manager must
    * not retain fileReader after this call.
    */
-  virtual Result<> onImportFinalize([[maybe_unused]] DataStructure& dataStructure, [[maybe_unused]] const std::vector<DataPath>& paths, [[maybe_unused]] const HDF5::FileIO& fileReader)
+  virtual Result<> onImportFinalize([[maybe_unused]] DataStructure& dataStructure, [[maybe_unused]] const std::vector<DataPath>& paths, [[maybe_unused]] const hdf5::FileIO& fileReader)
   {
     return {};
   }
@@ -230,7 +231,7 @@ public:
    * @param parentGroup Destination group borrowed for this call.
    * @return Write result when handled, or std::nullopt to use normal serialization.
    */
-  virtual std::optional<Result<>> onRecoveryWrite([[maybe_unused]] HDF5::DataStructureWriter& writer, [[maybe_unused]] const DataObject* dataObject, [[maybe_unused]] HDF5::GroupIO& parentGroup)
+  virtual std::optional<Result<>> onRecoveryWrite([[maybe_unused]] hdf5::DataStructureWriter& writer, [[maybe_unused]] const DataObject* dataObject, [[maybe_unused]] hdf5::GroupIO& parentGroup)
   {
     return std::nullopt;
   }
@@ -314,26 +315,26 @@ protected:
    * @param type Format identifier to register.
    * @param creationFnc Callback that replaces any existing callback for type.
    */
-  void addDataStoreCreationFnc(const std::string& type, DataStoreCreateFnc creationFnc);
+  void addDataStoreCreationFnc(const std::string& type, DataStoreCreateFncType creationFnc);
 
   /**
    * @brief Registers a NeighborList-store creation callback.
    * @param type Format identifier to register.
    * @param creationFnc Callback that replaces any existing callback for type.
    */
-  void addListStoreCreationFnc(const std::string& type, ListStoreCreateFnc creationFnc);
+  void addListStoreCreationFnc(const std::string& type, ListStoreCreateFncType creationFnc);
 
   /**
    * @brief Registers a StringArray-store creation callback.
    * @param type Format identifier to register.
    * @param creationFnc Callback that replaces any existing callback for type.
    */
-  void addStringStoreCreationFnc(const std::string& type, StringStoreCreateFnc creationFnc);
+  void addStringStoreCreationFnc(const std::string& type, StringStoreCreateFncType creationFnc);
 
 private:
-  factory_collection m_FactoryCollection;
-  DataStoreCreationMap m_DataStoreCreationMap;
-  ListStoreCreationMap m_ListStoreCreationMap;
-  StringStoreCreationMap m_StringStoreCreationMap;
+  FactoryCollectionType m_FactoryCollection;
+  DataStoreCreationMapType m_DataStoreCreationMap;
+  ListStoreCreationMapType m_ListStoreCreationMap;
+  StringStoreCreationMapType m_StringStoreCreationMap;
 };
 } // namespace nx::core

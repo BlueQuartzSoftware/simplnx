@@ -22,26 +22,26 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT CropImageGeometryInputValues
 {
-  GeometrySelectionParameter::ValueType InputImageGeometryPath;
-  DataGroupCreationParameter::ValueType OutputImageGeometryPath;
-  ArraySelectionParameter::ValueType FeatureIdsPath;
-  VectorUInt64Parameter::ValueType MinVoxel;
-  VectorUInt64Parameter::ValueType MaxVoxel;
-  BoolParameter::ValueType ClearFeatureAttributeMatrix;
-  BoolParameter::ValueType RenumberFeatures;
-  AttributeMatrixSelectionParameter::ValueType CellFeatureAttributeMatrixPath;
-  BoolParameter::ValueType RemoveOriginalGeometry;
-  BoolParameter::ValueType CropXDim;
-  BoolParameter::ValueType CropYDim;
-  BoolParameter::ValueType CropZDim;
+  GeometrySelectionParameter::ValueType input_image_geometry_path;
+  DataGroupCreationParameter::ValueType output_image_geometry_path;
+  ArraySelectionParameter::ValueType feature_ids_path;
+  VectorUInt64ParameterType::ValueType min_voxel;
+  VectorUInt64ParameterType::ValueType max_voxel;
+  BoolParameter::ValueType clear_feature_attribute_matrix{};
+  BoolParameter::ValueType renumber_features{};
+  AttributeMatrixSelectionParameter::ValueType cell_feature_attribute_matrix_path;
+  BoolParameter::ValueType remove_original_geometry{};
+  BoolParameter::ValueType crop_x_dim{};
+  BoolParameter::ValueType crop_y_dim{};
+  BoolParameter::ValueType crop_z_dim{};
 
   // Preflight computes these inclusive voxel indices.
-  uint64 XMin;
-  uint64 XMax;
-  uint64 YMin;
-  uint64 YMax;
-  uint64 ZMin;
-  uint64 ZMax;
+  uint64 x_min{};
+  uint64 x_max{};
+  uint64 y_min{};
+  uint64 y_max{};
+  uint64 z_min{};
+  uint64 z_max{};
 };
 
 /**
@@ -67,7 +67,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   CropImageGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CropImageGeometryInputValues* inputValues);
-  ~CropImageGeometry() noexcept;
+  ~CropImageGeometry() noexcept = default;
 
   CropImageGeometry(const CropImageGeometry&) = delete;
   CropImageGeometry(CropImageGeometry&&) noexcept = delete;

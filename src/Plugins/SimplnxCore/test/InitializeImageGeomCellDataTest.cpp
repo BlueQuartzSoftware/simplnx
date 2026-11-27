@@ -58,25 +58,25 @@ DataStructure CreateDataStructure(const std::vector<usize>& imageDims = k_ImageD
 {
   DataStructure dataStructure;
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomPath.getTargetName());
-  REQUIRE(imageGeom != nullptr);
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomPath.getTargetName());
+  REQUIRE(imageGeomPtr != nullptr);
 
-  imageGeom->setDimensions(imageDims);
+  imageGeomPtr->setDimensions(imageDims);
   const std::vector<usize> arrayDims(imageDims.crbegin(), imageDims.crend());
 
-  auto int32Store = useConfiguredStores ? DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_Int32ArrayPath, arrayDims, k_ComponentDims) :
-                                          std::make_shared<Int32DataStore>(arrayDims, k_ComponentDims, std::nullopt);
-  Int32Array* int32Array = Int32Array::Create(dataStructure, k_Int32ArrayPath.getTargetName(), int32Store, imageGeom->getId());
-  REQUIRE(int32Array != nullptr);
+  auto int32Store = useConfiguredStores ? data_store_utilities::CreateDataStore<int32>(dataStructure, k_Int32ArrayPath, arrayDims, k_ComponentDims) :
+                                          std::make_shared<Int32DataStoreType>(arrayDims, k_ComponentDims, std::nullopt);
+  Int32ArrayType* int32ArrayPtr = Int32ArrayType::Create(dataStructure, k_Int32ArrayPath.getTargetName(), int32Store, imageGeomPtr->getId());
+  REQUIRE(int32ArrayPtr != nullptr);
 
-  int32Array->fill(0);
+  int32ArrayPtr->fill(0);
 
-  auto float32Store = useConfiguredStores ? DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_Float32ArrayPath, arrayDims, k_ComponentDims) :
-                                            std::make_shared<Float32DataStore>(arrayDims, k_ComponentDims, std::nullopt);
-  Float32Array* float32Array = Float32Array::Create(dataStructure, k_Float32ArrayPath.getTargetName(), float32Store, imageGeom->getId());
-  REQUIRE(float32Array != nullptr);
+  auto float32Store = useConfiguredStores ? data_store_utilities::CreateDataStore<float32>(dataStructure, k_Float32ArrayPath, arrayDims, k_ComponentDims) :
+                                            std::make_shared<Float32DataStoreType>(arrayDims, k_ComponentDims, std::nullopt);
+  Float32ArrayType* float32ArrayPtr = Float32ArrayType::Create(dataStructure, k_Float32ArrayPath.getTargetName(), float32Store, imageGeomPtr->getId());
+  REQUIRE(float32ArrayPtr != nullptr);
 
-  float32Array->fill(0.0f);
+  float32ArrayPtr->fill(0.0f);
 
   return dataStructure;
 }
@@ -84,10 +84,10 @@ DataStructure CreateDataStructure(const std::vector<usize>& imageDims = k_ImageD
 template <class T>
 std::vector<T> ReadValues(const DataStructure& dataStructure, const DataPath& path)
 {
-  const DataArray<T>* array = nullptr;
-  REQUIRE_NOTHROW(array = &dataStructure.getDataRefAs<DataArray<T>>(path));
-  std::vector<T> values(array->getNumberOfTuples() * array->getNumberOfComponents());
-  auto arrayReadResult = array->getDataStoreRef().copyIntoBuffer(0, nonstd::span<T>(values.data(), values.size()));
+  const DataArray<T>* arrayPtr = nullptr;
+  REQUIRE_NOTHROW(arrayPtr = &dataStructure.getDataRefAs<DataArray<T>>(path));
+  std::vector<T> values(arrayPtr->getNumberOfTuples() * arrayPtr->getNumberOfComponents());
+  auto arrayReadResult = arrayPtr->getDataStoreRef().copyIntoBuffer(0, nonstd::span<T>(values.data(), values.size()));
   SIMPLNX_RESULT_REQUIRE_VALID(arrayReadResult);
   return values;
 }
@@ -141,22 +141,22 @@ std::vector<T> ExpectedValues(const std::vector<usize>& imageDims, uint64 xMin, 
 
 struct InitializationOutputs
 {
-  std::vector<int32> int32Values;
-  std::vector<float32> float32Values;
+  std::vector<int32> int32_values;
+  std::vector<float32> float32_values;
 };
 
-InitializationOutputs ExecuteInitialization(UnitTest::AlgorithmTestScenario scenario, const std::vector<usize>& imageDims, InitializeImageGeomCellDataFilter::InitType initType, float64 initValue,
+InitializationOutputs ExecuteInitialization(unit_test::AlgorithmTestScenario scenario, const std::vector<usize>& imageDims, InitializeImageGeomCellDataFilter::InitType initType, float64 initValue,
                                             std::pair<float64, float64> initRange, uint64 seed, bool useConfiguredStores)
 {
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure = CreateDataStructure(imageDims, useConfiguredStores);
   const auto cellArrayPaths = std::vector<DataPath>{k_Int32ArrayPath, k_Float32ArrayPath};
-  const IDataArray* int32Array = nullptr;
-  const IDataArray* float32Array = nullptr;
-  REQUIRE_NOTHROW(int32Array = &dataStructure.getDataRefAs<IDataArray>(k_Int32ArrayPath));
-  REQUIRE_NOTHROW(float32Array = &dataStructure.getDataRefAs<IDataArray>(k_Float32ArrayPath));
-  scope.requireExpectedStore(*int32Array);
-  scope.requireExpectedStore(*float32Array);
+  const IDataArray* int32ArrayPtr = nullptr;
+  const IDataArray* float32ArrayPtr = nullptr;
+  REQUIRE_NOTHROW(int32ArrayPtr = &dataStructure.getDataRefAs<IDataArray>(k_Int32ArrayPath));
+  REQUIRE_NOTHROW(float32ArrayPtr = &dataStructure.getDataRefAs<IDataArray>(k_Float32ArrayPath));
+  scope.requireExpectedStore(*int32ArrayPtr);
+  scope.requireExpectedStore(*float32ArrayPtr);
 
   InitializeImageGeomCellDataFilter filter;
   constexpr uint64 k_XMin = 1;
@@ -168,14 +168,14 @@ InitializationOutputs ExecuteInitialization(UnitTest::AlgorithmTestScenario scen
   Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, k_XMin, k_YMin, k_ZMin, xMax, yMax, zMax, initType, initValue, initRange, seed);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const UInt64Array* storedSeed = nullptr;
-  REQUIRE_NOTHROW(storedSeed = &dataStructure.getDataRefAs<UInt64Array>(DataPath({"InitializeImageGeomCellData Seed"})));
-  REQUIRE((*storedSeed)[0] == seed);
-  return {ReadValues<int32>(dataStructure, k_Int32ArrayPath), ReadValues<float32>(dataStructure, k_Float32ArrayPath)};
+  const UInt64ArrayType* storedSeedPtr = nullptr;
+  REQUIRE_NOTHROW(storedSeedPtr = &dataStructure.getDataRefAs<UInt64ArrayType>(DataPath({"InitializeImageGeomCellData Seed"})));
+  REQUIRE((*storedSeedPtr)[0] == seed);
+  return {.int32_values = ReadValues<int32>(dataStructure, k_Int32ArrayPath), .float32_values = ReadValues<float32>(dataStructure, k_Float32ArrayPath)};
 }
 
 template <class T, class PredicateT>
@@ -229,7 +229,7 @@ struct IsDataWithinInclusiveRangeFunctor
 
 TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: Bounded Bulk Write Semantics", "[SimplnxCore][InitializeImageGeomCellDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   constexpr uint64 k_Seed = 8421;
   const std::vector<usize> imageDims = {22000, 3, 2};
@@ -240,34 +240,34 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: Bounded Bulk Write Se
   const uint64 yMax = imageDims[1] - 1;
   const uint64 zMax = imageDims[2] - 1;
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
 
   SECTION("Manual")
   {
     const auto actual = ExecuteInitialization(scenario, imageDims, InitializeImageGeomCellDataFilter::InitType::Manual, 42.0, {0.0, 0.0}, k_Seed, true);
-    REQUIRE(actual.int32Values == ExpectedValues<int32>(imageDims, k_XMin, k_YMin, k_ZMin, xMax, yMax, zMax, InitializeImageGeomCellDataFilter::InitType::Manual, 42.0, {0.0, 0.0}, k_Seed));
-    REQUIRE(actual.float32Values == ExpectedValues<float32>(imageDims, k_XMin, k_YMin, k_ZMin, xMax, yMax, zMax, InitializeImageGeomCellDataFilter::InitType::Manual, 42.0, {0.0, 0.0}, k_Seed + 1));
+    REQUIRE(actual.int32_values == ExpectedValues<int32>(imageDims, k_XMin, k_YMin, k_ZMin, xMax, yMax, zMax, InitializeImageGeomCellDataFilter::InitType::Manual, 42.0, {0.0, 0.0}, k_Seed));
+    REQUIRE(actual.float32_values == ExpectedValues<float32>(imageDims, k_XMin, k_YMin, k_ZMin, xMax, yMax, zMax, InitializeImageGeomCellDataFilter::InitType::Manual, 42.0, {0.0, 0.0}, k_Seed + 1));
   }
 
   SECTION("Random")
   {
     const auto actual = ExecuteInitialization(scenario, imageDims, InitializeImageGeomCellDataFilter::InitType::Random, 0.0, {0.0, 0.0}, k_Seed, true);
-    REQUIRE(actual.int32Values == ExpectedValues<int32>(imageDims, k_XMin, k_YMin, k_ZMin, xMax, yMax, zMax, InitializeImageGeomCellDataFilter::InitType::Random, 0.0, {0.0, 0.0}, k_Seed));
-    REQUIRE(actual.float32Values == ExpectedValues<float32>(imageDims, k_XMin, k_YMin, k_ZMin, xMax, yMax, zMax, InitializeImageGeomCellDataFilter::InitType::Random, 0.0, {0.0, 0.0}, k_Seed + 1));
+    REQUIRE(actual.int32_values == ExpectedValues<int32>(imageDims, k_XMin, k_YMin, k_ZMin, xMax, yMax, zMax, InitializeImageGeomCellDataFilter::InitType::Random, 0.0, {0.0, 0.0}, k_Seed));
+    REQUIRE(actual.float32_values == ExpectedValues<float32>(imageDims, k_XMin, k_YMin, k_ZMin, xMax, yMax, zMax, InitializeImageGeomCellDataFilter::InitType::Random, 0.0, {0.0, 0.0}, k_Seed + 1));
   }
 }
 
 #if SIMPLNX_TEST_ALGORITHM_PATH == 0
 TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: Direct and Forced OOC Parity", "[SimplnxCore][InitializeImageGeomCellDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   constexpr uint64 k_Seed = 8421;
   const std::vector<usize> imageDims = {22000, 3, 2};
-  const auto scenarios = UnitTest::SelectAlgorithmTestScenariosForInMemoryStores();
-  const auto directScenario = std::find(scenarios.cbegin(), scenarios.cend(), UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore);
-  const auto forcedScenario = std::find(scenarios.cbegin(), scenarios.cend(), UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
+  const auto scenarios = unit_test::SelectAlgorithmTestScenariosForInMemoryStores();
+  const auto directScenario = std::find(scenarios.cbegin(), scenarios.cend(), unit_test::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore);
+  const auto forcedScenario = std::find(scenarios.cbegin(), scenarios.cend(), unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);
   REQUIRE(directScenario != scenarios.cend());
   REQUIRE(forcedScenario != scenarios.cend());
 
@@ -275,42 +275,42 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: Direct and Forced OOC
   {
     const auto direct = ExecuteInitialization(*directScenario, imageDims, InitializeImageGeomCellDataFilter::InitType::Manual, 42.0, {0.0, 0.0}, k_Seed, true);
     const auto forced = ExecuteInitialization(*forcedScenario, imageDims, InitializeImageGeomCellDataFilter::InitType::Manual, 42.0, {0.0, 0.0}, k_Seed, true);
-    REQUIRE(forced.int32Values == direct.int32Values);
-    REQUIRE(forced.float32Values == direct.float32Values);
+    REQUIRE(forced.int32_values == direct.int32_values);
+    REQUIRE(forced.float32_values == direct.float32_values);
   }
 
   SECTION("Random")
   {
     const auto direct = ExecuteInitialization(*directScenario, imageDims, InitializeImageGeomCellDataFilter::InitType::Random, 0.0, {0.0, 0.0}, k_Seed, true);
     const auto forced = ExecuteInitialization(*forcedScenario, imageDims, InitializeImageGeomCellDataFilter::InitType::Random, 0.0, {0.0, 0.0}, k_Seed, true);
-    REQUIRE(forced.int32Values == direct.int32Values);
-    REQUIRE(forced.float32Values == direct.float32Values);
+    REQUIRE(forced.int32_values == direct.int32_values);
+    REQUIRE(forced.float32_values == direct.float32_values);
   }
 }
 #endif
 
 TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(Manual)", "[SimplnxCore][InitializeImageGeomCellDataFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   InitializeImageGeomCellDataFilter filter;
   DataStructure dataStructure = CreateDataStructure();
 
-  constexpr uint64 xMin = 3;
-  constexpr uint64 yMin = 4;
-  constexpr uint64 zMin = 0;
-  constexpr uint64 xMax = 13;
-  constexpr uint64 yMax = 14;
-  constexpr uint64 zMax = 24;
-  constexpr float64 initValue = 42.0;
+  constexpr uint64 k_XMin = 3;
+  constexpr uint64 k_YMin = 4;
+  constexpr uint64 k_ZMin = 0;
+  constexpr uint64 k_XMax = 13;
+  constexpr uint64 k_YMax = 14;
+  constexpr uint64 k_ZMax = 24;
+  constexpr float64 k_InitValue = 42.0;
   const std::vector<DataPath> cellArrayPaths = {k_Int32ArrayPath, k_Float32ArrayPath};
-  Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeImageGeomCellDataFilter::InitType::Manual, initValue, {0.0, 0.0});
+  Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, k_XMin, k_YMin, k_ZMin, k_XMax, k_YMax, k_ZMax, InitializeImageGeomCellDataFilter::InitType::Manual, k_InitValue, {0.0, 0.0});
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -323,35 +323,35 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(Manual)", "[SimplnxCor
     DataType type = dataStore.getDataType();
 
     // Values inside the range must change. Values outside it must remain unchanged.
-    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));                                                    // No bool
-    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initValue));                                                 // No bool
-    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0)); // No bool
+    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, 0, k_XMin - 1, 0, k_YMin - 1, 0, k_ZMin - 1, 0.0));                                                    // No bool
+    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, k_XMin, k_XMax, k_YMin, k_YMax, k_ZMin, k_ZMax, k_InitValue));                                         // No bool
+    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, k_XMax + 1, k_ImageDims[0] - 1, k_YMax + 1, k_ImageDims[1] - 1, k_ZMax + 1, k_ImageDims[2] - 1, 0.0)); // No bool
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(Random)", "[SimplnxCore][InitializeImageGeomCellDataFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   InitializeImageGeomCellDataFilter filter;
   DataStructure dataStructure = CreateDataStructure();
 
-  constexpr uint64 xMin = 3;
-  constexpr uint64 yMin = 4;
-  constexpr uint64 zMin = 0;
-  constexpr uint64 xMax = 13;
-  constexpr uint64 yMax = 14;
-  constexpr uint64 zMax = 24;
+  constexpr uint64 k_XMin = 3;
+  constexpr uint64 k_YMin = 4;
+  constexpr uint64 k_ZMin = 0;
+  constexpr uint64 k_XMax = 13;
+  constexpr uint64 k_YMax = 14;
+  constexpr uint64 k_ZMax = 24;
   const std::vector<DataPath> cellArrayPaths = {k_Int32ArrayPath, k_Float32ArrayPath};
-  Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeImageGeomCellDataFilter::InitType::Random, 0.0, {0.0, 0.0});
+  Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, k_XMin, k_YMin, k_ZMin, k_XMax, k_YMax, k_ZMax, InitializeImageGeomCellDataFilter::InitType::Random, 0.0, {0.0, 0.0});
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -365,35 +365,35 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(Random)", "[SimplnxCor
 
     // Values outside the range must remain unchanged. The range values are random.
 
-    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));                                                    // No bool
-    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0)); // No bool
+    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, 0, k_XMin - 1, 0, k_YMin - 1, 0, k_ZMin - 1, 0.0));                                                    // No bool
+    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, k_XMax + 1, k_ImageDims[0] - 1, k_YMax + 1, k_ImageDims[1] - 1, k_ZMax + 1, k_ImageDims[2] - 1, 0.0)); // No bool
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(RandomWithRange)", "[SimplnxCore][InitializeImageGeomCellDataFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   InitializeImageGeomCellDataFilter filter;
   DataStructure dataStructure = CreateDataStructure();
 
-  constexpr uint64 xMin = 3;
-  constexpr uint64 yMin = 4;
-  constexpr uint64 zMin = 0;
-  constexpr uint64 xMax = 13;
-  constexpr uint64 yMax = 14;
-  constexpr uint64 zMax = 24;
-  constexpr std::pair<float64, float64> initRange = {1.0, 25.0};
+  constexpr uint64 k_XMin = 3;
+  constexpr uint64 k_YMin = 4;
+  constexpr uint64 k_ZMin = 0;
+  constexpr uint64 k_XMax = 13;
+  constexpr uint64 k_YMax = 14;
+  constexpr uint64 k_ZMax = 24;
+  constexpr std::pair<float64, float64> k_InitRange = {1.0, 25.0};
   const std::vector<DataPath> cellArrayPaths = {k_Int32ArrayPath, k_Float32ArrayPath};
-  Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, xMin, yMin, zMin, xMax, yMax, zMax, InitializeImageGeomCellDataFilter::InitType::RandomWithRange, 0.0, initRange);
+  Arguments args = CreateArgs(cellArrayPaths, k_ImageGeomPath, k_XMin, k_YMin, k_ZMin, k_XMax, k_YMax, k_ZMax, InitializeImageGeomCellDataFilter::InitType::RandomWithRange, 0.0, k_InitRange);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -406,19 +406,19 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter(RandomWithRange)", "[S
     DataType type = dataStore.getDataType();
 
     // Values inside the range must use the requested range. Values outside it must remain unchanged.
-    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, 0, xMin - 1, 0, yMin - 1, 0, zMin - 1, 0.0));                                                    // No bool
-    REQUIRE(ExecuteNeighborFunction(IsDataWithinInclusiveRangeFunctor{}, type, dataStore, xMin, xMax, yMin, yMax, zMin, zMax, initRange));                                          // No bool
-    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, xMax + 1, k_ImageDims[0] - 1, yMax + 1, k_ImageDims[1] - 1, zMax + 1, k_ImageDims[2] - 1, 0.0)); // No bool
+    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, 0, k_XMin - 1, 0, k_YMin - 1, 0, k_ZMin - 1, 0.0));                                                    // No bool
+    REQUIRE(ExecuteNeighborFunction(IsDataWithinInclusiveRangeFunctor{}, type, dataStore, k_XMin, k_XMax, k_YMin, k_YMax, k_ZMin, k_ZMax, k_InitRange));                                  // No bool
+    REQUIRE(ExecuteNeighborFunction(DoesRangeEqualValueFunctor{}, type, dataStore, k_XMax + 1, k_ImageDims[0] - 1, k_YMax + 1, k_ImageDims[1] - 1, k_ZMax + 1, k_ImageDims[2] - 1, 0.0)); // No bool
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: SIMPL Backwards Compatibility", "[SimplnxCore][InitializeImageGeomCellDataFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -431,20 +431,20 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: SIMPL Backwards Compa
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<InitializeImageGeomCellDataFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<InitializeImageGeomCellDataFilter>::uuid);
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<ChoicesParameter::ValueType>(InitializeImageGeomCellDataFilter::k_InitType_Key) == 0);
       CHECK(args.value<float64>(InitializeImageGeomCellDataFilter::k_InitValue_Key) == 2.5);
       CHECK(args.value<std::vector<float64>>(InitializeImageGeomCellDataFilter::k_InitRange_Key) == std::vector<float64>{0.0, 1.0});
@@ -488,13 +488,13 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: Geometry cell tuple c
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12 && !shortSecondInput)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     REQUIRE(errorRef.code == -3557);
     const DataPath expectedPath = tuples != 12 ? inputPath : secondPath;
     const usize expectedTuples = tuples != 12 ? tuples : usize{10};
@@ -517,7 +517,7 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: External tuple shapes
   imageGeomPtr->setCellData(*cellAMPtr);
   auto* otherAMPtr = AttributeMatrix::Create(dataStructure, "Other Data", tupleShape);
   REQUIRE(otherAMPtr != nullptr);
-  REQUIRE(Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Values", tupleShape, ShapeType{1}, otherAMPtr->getId()) != nullptr);
+  REQUIRE(Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "Values", tupleShape, ShapeType{1}, otherAMPtr->getId()) != nullptr);
 
   InitializeImageGeomCellDataFilter filter;
   Arguments args;
@@ -527,6 +527,6 @@ TEST_CASE("SimplnxCore::InitializeImageGeomCellDataFilter: External tuple shapes
   args.insertOrAssign(InitializeImageGeomCellDataFilter::k_MaxPoint_Key, std::make_any<std::vector<uint64>>(std::vector<uint64>{2, 3, 0}));
 
   const auto result = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

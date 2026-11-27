@@ -14,14 +14,14 @@ class SIMPLNX_EXPORT TetrahedralGeom : public INodeGeometry3D
 public:
   friend class DataStructure;
 
-  static inline constexpr usize k_NumEdgeVerts = 2;
-  static inline constexpr usize k_NumFaceVerts = 3;
-  static inline constexpr usize k_NumVerts = 4;
-  static inline constexpr StringLiteral k_VoxelSizes = "Tet Volumes";
-  static inline constexpr StringLiteral k_EltsContainingVert = "Elements Containing Vert";
-  static inline constexpr StringLiteral k_EltNeighbors = "Tet Neighbors";
-  static inline constexpr StringLiteral k_EltCentroids = "Tet Centroids";
-  static inline constexpr StringLiteral k_TypeName = "TetrahedralGeom";
+  static constexpr usize k_NumEdgeVerts = 2;
+  static constexpr usize k_NumFaceVerts = 3;
+  static constexpr usize k_NumVerts = 4;
+  static constexpr StringLiteralType k_VoxelSizes = "Tet Volumes";
+  static constexpr StringLiteralType k_EltsContainingVert = "Elements Containing Vert";
+  static constexpr StringLiteralType k_EltNeighbors = "Tet Neighbors";
+  static constexpr StringLiteralType k_EltCentroids = "Tet Centroids";
+  static constexpr StringLiteralType k_TypeName = "TetrahedralGeom";
 
   /**
    * @brief Creates a new TetrahedralGeom in the specified DataStructure.
@@ -52,7 +52,7 @@ public:
    * @brief Move constructor.
    * @param other The TetrahedralGeom to move from
    */
-  TetrahedralGeom(TetrahedralGeom&& other) = default;
+  TetrahedralGeom(TetrahedralGeom&& other) noexcept = default;
 
   ~TetrahedralGeom() noexcept override = default;
 
@@ -157,16 +157,16 @@ public:
 
   /**
    * @brief Returns the parametric center of a tetrahedral element.
-   * @return Point3D<float64> The parametric center coordinates
+   * @return Vec3<float64> The parametric center coordinates
    */
-  Point3D<float64> getParametricCenter() const override;
+  Vec3<float64> getParametricCenter() const override;
 
   /**
    * @brief Calculates shape functions at the given parametric coordinates.
    * @param pCoords The parametric coordinates
    * @param shape Output array to store the calculated shape function values
    */
-  void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
+  void getShapeFunctions(const Vec3<float64>& pCoords, float64* shape) const override;
 
   /**
    * @brief finds the shared edges (no duplicates) of each tetrahedron in the

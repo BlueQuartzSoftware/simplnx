@@ -5,14 +5,11 @@
 #include <H5Gpublic.h>
 #include <H5Ppublic.h>
 
-#include <H5Gpublic.h>
-#include <H5Ppublic.h>
-
 #include <fmt/format.h>
 
 #include <string>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 class FileIO;
 class DatasetIO;
@@ -225,4 +222,4 @@ protected:
 
 private:
 };
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

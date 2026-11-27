@@ -34,7 +34,7 @@ LinkedPath::~LinkedPath() = default;
 
 bool LinkedPath::isValid() const
 {
-  if(!m_DataStructure)
+  if(m_DataStructure == nullptr)
   {
     return false;
   }
@@ -64,7 +64,7 @@ DataPath LinkedPath::toDataPath() const
   {
     names[i] = getNameAt(i);
   }
-  return DataPath(names);
+  return {names};
 }
 
 usize LinkedPath::getLength() const
@@ -104,12 +104,12 @@ std::string LinkedPath::getName() const
 
 std::string LinkedPath::getNameAt(usize index) const
 {
-  const DataObject* data = getDataAt(index);
-  if(data == nullptr)
+  const DataObject* dataPtr = getDataAt(index);
+  if(dataPtr == nullptr)
   {
     return "[ missing ]";
   }
-  return data->getName();
+  return dataPtr->getName();
 }
 
 std::string LinkedPath::toString(const std::string& div) const

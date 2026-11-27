@@ -14,39 +14,39 @@ EBSDSegmentFeatures::EBSDSegmentFeatures(DataStructure& dataStructure, const IFi
 , m_InputValues(inputValues)
 {
   m_OrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
-  m_IsPeriodic = inputValues->IsPeriodic;
+  m_IsPeriodic = inputValues->is_periodic;
 }
 
 EBSDSegmentFeatures::~EBSDSegmentFeatures() noexcept = default;
 
 Result<> EBSDSegmentFeatures::operator()()
 {
-  this->m_NeighborScheme = m_InputValues->NeighborScheme;
-  auto* gridGeom = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->ImageGeometryPath);
+  this->m_NeighborScheme = m_InputValues->neighbor_scheme;
+  auto* gridGeomPtr = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->image_geometry_path);
 
-  m_QuatsArray = m_DataStructure.getDataAs<Float32Array>(m_InputValues->QuatsArrayPath);
-  m_CellPhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  if(m_InputValues->UseMask)
+  m_QuatsArray = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->quats_array_path);
+  m_CellPhases = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+  if(m_InputValues->use_mask)
   {
     try
     {
-      m_GoodVoxelsArray = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+      m_GoodVoxelsArray = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->mask_array_path);
     } catch(const std::out_of_range& exception)
     {
       // This fallback supports callers that bypass parameter preflight.
-      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
+      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->mask_array_path.toString());
       return MakeErrorResult(-485090, message);
     }
   }
-  m_CrystalStructures = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  m_CrystalStructures = m_DataStructure.getDataAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
 
   // Validate positive, unmasked Phases with slice-sized reads before the boolean neighbor callback uses them.
   const usize numCrystalStructures = m_CrystalStructures->getNumberOfTuples();
-  const SizeVec3 dimensions = gridGeom->getDimensions();
+  const SizeVec3Type dimensions = gridGeomPtr->getDimensions();
   const usize scanBatchSize = std::max<usize>(1, static_cast<usize>(dimensions[0]) * static_cast<usize>(dimensions[1]));
   std::vector<int32> cellPhasesBuffer(scanBatchSize);
   std::vector<uint8> maskBuffer(scanBatchSize, 1);
-  IDataArray* maskArray = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
+  IDataArray* maskArrayPtr = m_InputValues->use_mask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path) : nullptr;
   auto& cellPhasesStoreRef = m_CellPhases->getDataStoreRef();
   const usize numCells = cellPhasesStoreRef.getNumberOfTuples();
   for(usize offset = 0; offset < numCells; offset += scanBatchSize)
@@ -56,17 +56,17 @@ Result<> EBSDSegmentFeatures::operator()()
     {
       return phaseReadResult;
     }
-    if(maskArray != nullptr && maskArray->getDataType() == DataType::uint8)
+    if(maskArrayPtr != nullptr && maskArrayPtr->getDataType() == DataType::uint8)
     {
-      auto& maskStoreRef = maskArray->getIDataStoreRefAs<AbstractDataStore<uint8>>();
+      auto& maskStoreRef = maskArrayPtr->getIDataStoreRefAs<AbstractDataStore<uint8>>();
       if(Result<> maskReadResult = maskStoreRef.copyIntoBuffer(offset, nonstd::span<uint8>(maskBuffer.data(), batchSize)); maskReadResult.invalid())
       {
         return maskReadResult;
       }
     }
-    else if(maskArray != nullptr && maskArray->getDataType() == DataType::boolean)
+    else if(maskArrayPtr != nullptr && maskArrayPtr->getDataType() == DataType::boolean)
     {
-      auto& maskStoreRef = maskArray->getIDataStoreRefAs<AbstractDataStore<bool>>();
+      auto& maskStoreRef = maskArrayPtr->getIDataStoreRefAs<AbstractDataStore<bool>>();
       auto boolMaskBuffer = std::make_unique<bool[]>(batchSize);
       if(Result<> maskReadResult = maskStoreRef.copyIntoBuffer(offset, nonstd::span<bool>(boolMaskBuffer.get(), batchSize)); maskReadResult.invalid())
       {
@@ -81,7 +81,7 @@ Result<> EBSDSegmentFeatures::operator()()
     for(usize batchIdx = 0; batchIdx < batchSize; batchIdx++)
     {
       const int32 currentPhaseIdx = cellPhasesBuffer[batchIdx];
-      if(currentPhaseIdx <= 0 || (maskArray != nullptr && maskBuffer[batchIdx] == 0))
+      if(currentPhaseIdx <= 0 || (maskArrayPtr != nullptr && maskBuffer[batchIdx] == 0))
       {
         continue;
       }
@@ -89,16 +89,16 @@ Result<> EBSDSegmentFeatures::operator()()
       {
         return MakeErrorResult(-485092,
                                fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' contains {} tuples. Valid positive Phase indices are in [1, {}).",
-                                           m_InputValues->CellPhasesArrayPath.toString(), currentPhaseIdx, offset + batchIdx, m_InputValues->CrystalStructuresArrayPath.toString(),
+                                           m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, offset + batchIdx, m_InputValues->crystal_structures_array_path.toString(),
                                            numCrystalStructures, numCrystalStructures));
       }
     }
   }
 
-  m_FeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  m_FeatureIdsArray = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
   m_FeatureIdsArray->fill(0);
 
-  SizeVec3 udims = gridGeom->getDimensions();
+  SizeVec3Type udims = gridGeomPtr->getDimensions();
   auto allocateResult = allocateSliceBuffers(static_cast<int64>(udims[0]), static_cast<int64>(udims[1]));
   if(allocateResult.invalid())
   {
@@ -106,8 +106,8 @@ Result<> EBSDSegmentFeatures::operator()()
   }
 
   auto& featureIdsStore = m_FeatureIdsArray->getDataStoreRef();
-  const bool usesOutOfCoreInput = IsOutOfCore(*m_QuatsArray) || IsOutOfCore(*m_CellPhases) || IsOutOfCore(*m_CrystalStructures) || (maskArray != nullptr && IsOutOfCore(*maskArray));
-  Result<> segmentResult = executeCCL(gridGeom, featureIdsStore, usesOutOfCoreInput);
+  const bool usesOutOfCoreInput = IsOutOfCore(*m_QuatsArray) || IsOutOfCore(*m_CellPhases) || IsOutOfCore(*m_CrystalStructures) || (maskArrayPtr != nullptr && IsOutOfCore(*maskArrayPtr));
+  Result<> segmentResult = executeCCL(gridGeomPtr, featureIdsStore, usesOutOfCoreInput);
 
   deallocateSliceBuffers();
 
@@ -127,18 +127,18 @@ Result<> EBSDSegmentFeatures::operator()()
 
   // Feature tuple zero remains reserved for background cells.
   ShapeType tDims = {static_cast<usize>(m_FoundFeatures + 1)};
-  auto& cellFeaturesAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellFeatureAttributeMatrixPath);
+  auto& cellFeaturesAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->cell_feature_attribute_matrix_path);
   if(Result<> resizeResult = cellFeaturesAM.resizeTuples(tDims); resizeResult.invalid())
   {
     return ConvertResult(std::move(resizeResult));
   }
 
-  auto* activeArray = m_DataStructure.getDataAs<UInt8Array>(m_InputValues->ActiveArrayPath);
-  activeArray->getDataStore()->fill(1);
-  (*activeArray)[0] = 0;
+  auto* activeArrayPtr = m_DataStructure.getDataAs<UInt8ArrayType>(m_InputValues->active_array_path);
+  activeArrayPtr->getDataStore()->fill(1);
+  (*activeArrayPtr)[0] = 0;
 
   // Random IDs improve visual distinction between adjacent features.
-  if(m_InputValues->RandomizeFeatureIds)
+  if(m_InputValues->randomize_feature_ids)
   {
     if(Result<> randomizeResult = randomizeFeatureIds(m_FeatureIdsArray, m_FoundFeatures + 1); randomizeResult.invalid())
     {
@@ -159,7 +159,7 @@ bool EBSDSegmentFeatures::isValidVoxel(int64 point) const
     {
       const usize sliceSize = static_cast<usize>(m_BufSliceSize);
       const usize off = static_cast<usize>(slot) * sliceSize + static_cast<usize>(point - iz * m_BufSliceSize);
-      if(m_InputValues->UseMask && m_MaskBuffer[off] == 0)
+      if(m_InputValues->use_mask && m_MaskBuffer[off] == 0)
       {
         return false;
       }
@@ -172,16 +172,12 @@ bool EBSDSegmentFeatures::isValidVoxel(int64 point) const
     return false;
   }
 
-  if(m_InputValues->UseMask && !m_GoodVoxelsArray->isTrue(point))
+  if(m_InputValues->use_mask && !m_GoodVoxelsArray->isTrue(point))
   {
     return false;
   }
   AbstractDataStore<int32>& cellPhases = m_CellPhases->getDataStoreRef();
-  if(cellPhases[point] <= 0)
-  {
-    return false;
-  }
-  return true;
+  return cellPhases[point] > 0;
 }
 
 bool EBSDSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
@@ -199,7 +195,7 @@ bool EBSDSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
       const usize off1 = static_cast<usize>(slot1) * sliceSize + static_cast<usize>(point1 - iz1 * m_BufSliceSize);
       const usize off2 = static_cast<usize>(slot2) * sliceSize + static_cast<usize>(point2 - iz2 * m_BufSliceSize);
 
-      if(m_InputValues->UseMask && m_MaskBuffer[off2] == 0)
+      if(m_InputValues->use_mask && m_MaskBuffer[off2] == 0)
       {
         return false;
       }
@@ -230,7 +226,7 @@ bool EBSDSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
       if(m_QuatBuffer[q1Base] == m_QuatBuffer[q2Base] && m_QuatBuffer[q1Base + 1] == m_QuatBuffer[q2Base + 1] && m_QuatBuffer[q1Base + 2] == m_QuatBuffer[q2Base + 2] &&
          m_QuatBuffer[q1Base + 3] == m_QuatBuffer[q2Base + 3])
       {
-        return 0.0F < m_InputValues->MisorientationTolerance;
+        return 0.0F < m_InputValues->misorientation_tolerance;
       }
 
       const ebsdlib::QuatD q1(m_QuatBuffer[q1Base], m_QuatBuffer[q1Base + 1], m_QuatBuffer[q1Base + 2], m_QuatBuffer[q1Base + 3]);
@@ -239,7 +235,7 @@ bool EBSDSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
       ebsdlib::AxisAngleDType axisAngle = m_OrientationOps[currentLaueIndex]->calculateMisorientation(q1, q2);
       float32 w = static_cast<float32>(axisAngle[3]);
 
-      return w < m_InputValues->MisorientationTolerance;
+      return w < m_InputValues->misorientation_tolerance;
     }
     return false;
   }
@@ -264,10 +260,10 @@ bool EBSDSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
     return false;
   }
 
-  Float32Array& quats = *m_QuatsArray;
+  Float32ArrayType& quats = *m_QuatsArray;
   if(quats[point1 * 4] == quats[point2 * 4] && quats[point1 * 4 + 1] == quats[point2 * 4 + 1] && quats[point1 * 4 + 2] == quats[point2 * 4 + 2] && quats[point1 * 4 + 3] == quats[point2 * 4 + 3])
   {
-    return 0.0F < m_InputValues->MisorientationTolerance;
+    return 0.0F < m_InputValues->misorientation_tolerance;
   }
 
   const ebsdlib::QuatD q1(quats[point1 * 4], quats[point1 * 4 + 1], quats[point1 * 4 + 2], quats[point1 * 4 + 3]);
@@ -276,7 +272,7 @@ bool EBSDSegmentFeatures::areNeighborsSimilar(int64 point1, int64 point2) const
   ebsdlib::AxisAngleDType axisAngle = m_OrientationOps[currentLaueIndex]->calculateMisorientation(q1, q2);
   float32 w = static_cast<float32>(axisAngle[3]);
 
-  return w < m_InputValues->MisorientationTolerance;
+  return w < m_InputValues->misorientation_tolerance;
 }
 
 Result<> EBSDSegmentFeatures::allocateSliceBuffers(int64 dimX, int64 dimY)
@@ -316,7 +312,7 @@ void EBSDSegmentFeatures::deallocateSliceBuffers()
   m_NextBufferUseSequence = 1;
 }
 
-Result<> EBSDSegmentFeatures::prepareForSlice(int64 iz, int64 dimX, int64 dimY, int64 dimZ)
+Result<> EBSDSegmentFeatures::prepareForSlice(int64 iz, int64 /*dimX*/, int64 /*dimY*/, int64 /*dimZ*/)
 {
   if(iz < 0)
   {
@@ -367,9 +363,9 @@ Result<> EBSDSegmentFeatures::prepareForSlice(int64 iz, int64 dimX, int64 dimY, 
     return phaseReadResult;
   }
 
-  if(m_InputValues->UseMask && m_GoodVoxelsArray != nullptr)
+  if(m_InputValues->use_mask && m_GoodVoxelsArray != nullptr)
   {
-    auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
+    auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->mask_array_path);
     if(maskArray.getDataType() == DataType::uint8)
     {
       auto& typedStore = maskArray.getIDataStoreRefAs<AbstractDataStore<uint8>>();

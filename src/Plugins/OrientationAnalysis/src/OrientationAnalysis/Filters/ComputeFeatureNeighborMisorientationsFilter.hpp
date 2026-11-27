@@ -24,13 +24,13 @@ public:
   ComputeFeatureNeighborMisorientationsFilter& operator=(ComputeFeatureNeighborMisorientationsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_ComputeAvgMisors_Key = "compute_avg_misors";
-  static constexpr StringLiteral k_NeighborListArrayPath_Key = "neighbor_list_array_path";
-  static constexpr StringLiteral k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
-  static constexpr StringLiteral k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
-  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static constexpr StringLiteral k_MisorientationListArrayName_Key = "misorientation_list_array_name";
-  static constexpr StringLiteral k_AvgMisorientationsArrayName_Key = "avg_misorientations_array_name";
+  static constexpr StringLiteralType k_ComputeAvgMisors_Key = "compute_avg_misors";
+  static constexpr StringLiteralType k_NeighborListArrayPath_Key = "neighbor_list_array_path";
+  static constexpr StringLiteralType k_AvgQuatsArrayPath_Key = "avg_quats_array_path";
+  static constexpr StringLiteralType k_FeaturePhasesArrayPath_Key = "feature_phases_array_path";
+  static constexpr StringLiteralType k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteralType k_MisorientationListArrayName_Key = "misorientation_list_array_name";
+  static constexpr StringLiteralType k_AvgMisorientationsArrayName_Key = "avg_misorientations_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -87,7 +87,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

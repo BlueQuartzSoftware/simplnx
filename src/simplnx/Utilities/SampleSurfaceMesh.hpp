@@ -21,9 +21,9 @@ namespace nx::core
  */
 struct SIMPLNX_EXPORT SampleSurfaceMeshInputValues
 {
-  DataPath TriangleGeometryPath;
-  DataPath SurfaceMeshFaceLabelsArrayPath;
-  DataPath FeatureIdsArrayPath;
+  DataPath triangle_geometry_path;
+  DataPath surface_mesh_face_labels_array_path;
+  DataPath feature_ids_array_path;
 };
 
 /**
@@ -81,7 +81,7 @@ public:
    * @return Sampling-grid dimensions.
    * @pre Dimension products fit usize.
    */
-  virtual SizeVec3 getGridDimensions() const = 0;
+  virtual SizeVec3Type getGridDimensions() const = 0;
 
   /**
    * @brief Generates sample points for one Z slice.
@@ -92,7 +92,7 @@ public:
    * Fill by index and do not resize the vector. A stateful random generator must
    * continue its sequence across calls. This preserves the full-volume draw order.
    */
-  virtual void generateSlicePoints(usize zSlice, std::vector<Point3Df>& slicePoints) = 0;
+  virtual void generateSlicePoints(usize zSlice, std::vector<FloatVec3Type>& slicePoints) = 0;
 
   /**
    * @brief Returns the message handler so the type-dispatch functor can send status text.
@@ -117,7 +117,7 @@ private:
   DataStructure& m_DataStructure;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-  mutable std::mutex m_ProgressMessage_Mutex;
+  mutable std::mutex m_ProgressMessageMutex;
   ThrottledMessageHandler m_Throttle;
 };
 } // namespace nx::core

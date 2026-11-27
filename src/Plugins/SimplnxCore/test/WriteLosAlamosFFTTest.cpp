@@ -31,8 +31,8 @@ using namespace nx::core;
 
 namespace
 {
-const fs::path exemplarFilePath = fs::path(fmt::format("{}/LosAlamosFFTExemplar.txt", unit_test::k_TestFilesDir));
-const fs::path writtenFilePath = fs::path(fmt::format("{}/LosAlamosFFT.txt", unit_test::k_BinaryTestOutputDir));
+const fs::path k_ExemplarFilePath = fs::path(fmt::format("{}/LosAlamosFFTExemplar.txt", unit_test::k_TestFilesDir));
+const fs::path k_WrittenFilePath = fs::path(fmt::format("{}/LosAlamosFFT.txt", unit_test::k_BinaryTestOutputDir));
 
 constexpr usize k_BenchmarkDim = 200;
 constexpr usize k_BenchmarkSliceTuples = k_BenchmarkDim * k_BenchmarkDim;
@@ -40,9 +40,9 @@ constexpr usize k_BenchmarkTotalTuples = k_BenchmarkDim * k_BenchmarkDim * k_Ben
 constexpr usize k_BenchmarkEulerComponents = 3;
 constexpr std::array<std::array<float32, k_BenchmarkEulerComponents>, 4> k_BenchmarkEulerAngles = {
     std::array<float32, k_BenchmarkEulerComponents>{0.0F, 0.0F, 0.0F},
-    std::array<float32, k_BenchmarkEulerComponents>{Constants::k_PiOver2F, Constants::k_PiOver4F, Constants::k_PiOver3F},
-    std::array<float32, k_BenchmarkEulerComponents>{Constants::k_PiF, 2.0F * Constants::k_PiOver12F, Constants::k_PiOver12F},
-    std::array<float32, k_BenchmarkEulerComponents>{3.0F * Constants::k_PiOver2F, Constants::k_PiOver2F, Constants::k_PiOver4F},
+    std::array<float32, k_BenchmarkEulerComponents>{constants::k_PiOver2F, constants::k_PiOver4F, constants::k_PiOver3F},
+    std::array<float32, k_BenchmarkEulerComponents>{constants::k_PiF, 2.0F * constants::k_PiOver12F, constants::k_PiOver12F},
+    std::array<float32, k_BenchmarkEulerComponents>{3.0F * constants::k_PiOver2F, constants::k_PiOver2F, constants::k_PiOver4F},
 };
 constexpr std::array<std::array<std::string_view, k_BenchmarkEulerComponents>, 4> k_BenchmarkEulerRecordValues = {
     std::array<std::string_view, k_BenchmarkEulerComponents>{"0.000", "0.000", "0.000"},
@@ -101,7 +101,7 @@ std::string ExpectedRecord(usize tupleIndex)
   return fmt::format("{} {} {} {} {} {} {} {}", eulerValues[0], eulerValues[1], eulerValues[2], x + 1, y + 1, z + 1, ExpectedFeatureId(tupleIndex), ExpectedPhase(tupleIndex));
 }
 
-std::vector<char> readIn(fs::path filePath)
+std::vector<char> ReadIn(const fs::path& filePath)
 {
   std::ifstream file(filePath.string(), std::ios_base::binary);
 
@@ -124,15 +124,15 @@ std::vector<char> readIn(fs::path filePath)
 
 void CompareResults() // compare hash of both file strings
 {
-  REQUIRE(fs::exists(writtenFilePath));
-  REQUIRE(fs::exists(exemplarFilePath));
-  const std::vector<char> exemplar = readIn(exemplarFilePath);
-  const std::vector<char> data = readIn(writtenFilePath);
+  REQUIRE(fs::exists(k_WrittenFilePath));
+  REQUIRE(fs::exists(k_ExemplarFilePath));
+  const std::vector<char> exemplar = ReadIn(k_ExemplarFilePath);
+  const std::vector<char> data = ReadIn(k_WrittenFilePath);
   for(size_t i = 0; i < 1024; i++)
   {
     if(exemplar[i] != data[i])
     {
-      std::cout << "Output difference at byte offset " << i << std::endl;
+      std::cout << "Output difference at byte offset " << i << '\n';
       REQUIRE(exemplar[i] == data[i]);
       break;
     }
@@ -143,32 +143,32 @@ void CompareResults() // compare hash of both file strings
 
 TEST_CASE("SimplnxCore::WriteLosAlamosFFTFilter: Valid Filter Execution", "[SimplnxCore][WriteLosAlamosFFTFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "bin_feature_phases.tar.gz", "bin_feature_phases");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "bin_feature_phases.tar.gz", "bin_feature_phases");
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "LosAlamosFFTExemplar.tar.gz", "LosAlamosFFTExemplar.txt");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "LosAlamosFFTExemplar.tar.gz", "LosAlamosFFTExemplar.txt");
 
   // Reuse the compact binary feature-phases fixture.
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/bin_feature_phases/6_6_find_feature_phases_binary.dream3d", unit_test::k_TestFilesDir)));
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/bin_feature_phases/6_6_find_feature_phases_binary.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Configure the filter arguments.
     WriteLosAlamosFFTFilter filter;
     Arguments args;
 
-    args.insertOrAssign(WriteLosAlamosFFTFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(writtenFilePath));
+    args.insertOrAssign(WriteLosAlamosFFTFilter::k_OutputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(k_WrittenFilePath));
 
-    args.insertOrAssign(WriteLosAlamosFFTFilter::k_ImageGeomPath, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100})));
-    args.insertOrAssign(WriteLosAlamosFFTFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_FeatureIds})));
-    args.insertOrAssign(WriteLosAlamosFFTFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_EulerAngles})));
-    args.insertOrAssign(WriteLosAlamosFFTFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "BinaryPhases"})));
+    args.insertOrAssign(WriteLosAlamosFFTFilter::k_ImageGeomPath, std::make_any<DataPath>(DataPath({constants::k_SmallIN100})));
+    args.insertOrAssign(WriteLosAlamosFFTFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(DataPath({constants::k_SmallIN100, constants::k_EbsdScanData, constants::k_FeatureIds})));
+    args.insertOrAssign(WriteLosAlamosFFTFilter::k_CellEulerAnglesArrayPath_Key, std::make_any<DataPath>(DataPath({constants::k_SmallIN100, constants::k_EbsdScanData, constants::k_EulerAngles})));
+    args.insertOrAssign(WriteLosAlamosFFTFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath({constants::k_SmallIN100, constants::k_EbsdScanData, "BinaryPhases"})));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -176,14 +176,14 @@ TEST_CASE("SimplnxCore::WriteLosAlamosFFTFilter: Valid Filter Execution", "[Simp
 
   ::CompareResults();
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteLosAlamosFFTFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteLosAlamosFFTFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -196,22 +196,22 @@ TEST_CASE("SimplnxCore::WriteLosAlamosFFTFilter: SIMPL Backwards Compatibility",
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<WriteLosAlamosFFTFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<WriteLosAlamosFFTFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<FileSystemPathParameter::ValueType>(WriteLosAlamosFFTFilter::k_OutputFile_Key) == fs::path("/test/path/file.txt"));
       CHECK(args.value<DataPath>(WriteLosAlamosFFTFilter::k_ImageGeomPath) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(WriteLosAlamosFFTFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
@@ -223,7 +223,7 @@ TEST_CASE("SimplnxCore::WriteLosAlamosFFTFilter: SIMPL Backwards Compatibility",
 
 TEST_CASE("SimplnxCore::WriteLosAlamosFFTFilter: Geometry cell tuple count", "[SimplnxCore][WriteLosAlamosFFTFilter][TupleCount]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   using FilterType = WriteLosAlamosFFTFilter;
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image");
@@ -265,13 +265,13 @@ TEST_CASE("SimplnxCore::WriteLosAlamosFFTFilter: Geometry cell tuple count", "[S
   const auto result = filter.preflight(dataStructure, args);
   if(counts[0] == 12 && counts[1] == 12 && counts[2] == 12)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     REQUIRE(errorRef.code == -73461);
     const DataPath expectedPath = counts[0] != 12 ? inputPath : (counts[1] != 12 ? eulerPath : phasePath);
     const usize expectedTuples = counts[0] != 12 ? counts[0] : (counts[1] != 12 ? counts[1] : counts[2]);

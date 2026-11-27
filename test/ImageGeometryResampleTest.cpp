@@ -19,17 +19,17 @@ TEST_CASE("simplnx::PreflightImageGeometryResample: the planned geometry keeps t
   SIMPLNX_RESULT_REQUIRE_VALID(inputGeometryResult);
 
   ResampleImageGeomInputValues inputValues;
-  inputValues.ResamplingMode = 0;
-  inputValues.Spacing = {0.5F, 0.5F, 0.5F};
-  inputValues.SelectedImageGeometryPath = srcGeomPath;
-  inputValues.RemoveOriginalImageGeom = false;
-  inputValues.CreatedImageGeometryPath = DataPath({"Resampled Geometry"});
-  inputValues.RenumberFeatures = false;
+  inputValues.resampling_mode = 0;
+  inputValues.spacing = {0.5F, 0.5F, 0.5F};
+  inputValues.selected_image_geometry_path = srcGeomPath;
+  inputValues.remove_original_image_geom = false;
+  inputValues.created_image_geometry_path = DataPath({"Resampled Geometry"});
+  inputValues.renumber_features = false;
 
   const auto preflightResult = PreflightImageGeometryResample(dataStructure, inputValues);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const CreateImageGeometryAction* plannedGeometryPtr = nullptr;
-  for(const auto& action : preflightResult.outputActions.value().actions)
+  for(const auto& action : preflightResult.output_actions.value().actions)
   {
     if(const auto* candidatePtr = dynamic_cast<const CreateImageGeometryAction*>(action.get()); candidatePtr != nullptr)
     {
@@ -39,5 +39,5 @@ TEST_CASE("simplnx::PreflightImageGeometryResample: the planned geometry keeps t
   }
   REQUIRE(plannedGeometryPtr != nullptr);
   CHECK(plannedGeometryPtr->units() == units);
-  CHECK(plannedGeometryPtr->path() == inputValues.CreatedImageGeometryPath);
+  CHECK(plannedGeometryPtr->path() == inputValues.created_image_geometry_path);
 }

@@ -24,21 +24,21 @@ public:
   RegularGridSampleSurfaceMeshFilter& operator=(RegularGridSampleSurfaceMeshFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
-  static constexpr StringLiteral k_Dimensions_Key = "dimensions";
-  static constexpr StringLiteral k_Spacing_Key = "spacing";
-  static constexpr StringLiteral k_Origin_Key = "origin";
-  static constexpr StringLiteral k_LengthUnit_Key = "length_unit_index";
-  static constexpr StringLiteral k_ImageGeomPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_TriangleGeometryPath_Key = "input_triangle_geometry_path";
-  static constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
-  static constexpr StringLiteral k_CellAMName_Key = "cell_attribute_matrix_name";
-  static constexpr StringLiteral k_UseExistingGeometry_Key = "use_existing_geometry_index";
-  static constexpr StringLiteral k_ExistingImageGeomPath_Key = "existing_image_geometry_path";
+  static constexpr StringLiteralType k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static constexpr StringLiteralType k_Dimensions_Key = "dimensions";
+  static constexpr StringLiteralType k_Spacing_Key = "spacing";
+  static constexpr StringLiteralType k_Origin_Key = "origin";
+  static constexpr StringLiteralType k_LengthUnit_Key = "length_unit_index";
+  static constexpr StringLiteralType k_ImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_TriangleGeometryPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteralType k_FeatureIdsArrayName_Key = "feature_ids_array_name";
+  static constexpr StringLiteralType k_CellAMName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteralType k_UseExistingGeometry_Key = "use_existing_geometry_index";
+  static constexpr StringLiteralType k_ExistingImageGeomPath_Key = "existing_image_geometry_path";
 
   // V4 Keys
-  static constexpr StringLiteral k_UseCustomOutputType_Key = "use_custom_output_type";
-  static constexpr StringLiteral k_OutputType_Key = "output_type_index";
+  static constexpr StringLiteralType k_UseCustomOutputType_Key = "use_custom_output_type";
+  static constexpr StringLiteralType k_OutputType_Key = "output_type_index";
 
   enum GeometryOption : uint64
   {
@@ -101,7 +101,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

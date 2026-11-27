@@ -7,6 +7,7 @@
 #include "simplnx/DataStructure/NeighborList.hpp"
 #include "simplnx/Utilities/NeighborUtilities.hpp"
 
+#include <algorithm>
 #include <nonstd/span.hpp>
 
 using namespace nx::core;
@@ -20,34 +21,32 @@ ComputeFeatureNeighborsScanline::ComputeFeatureNeighborsScanline(DataStructure& 
 {
 }
 
-ComputeFeatureNeighborsScanline::~ComputeFeatureNeighborsScanline() noexcept = default;
-
 Result<> ComputeFeatureNeighborsScanline::operator()()
 {
-  auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
-  auto& numNeighbors = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NumberOfNeighborsPath)->getDataStoreRef();
+  auto& featureIds = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_path)->getDataStoreRef();
+  auto& numNeighbors = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->number_of_neighbors_path)->getDataStoreRef();
 
-  auto& neighborList = m_DataStructure.getDataRefAs<Int32NeighborList>(m_InputValues->NeighborListPath);
-  auto& sharedSurfaceAreaList = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->SharedSurfaceAreaListPath);
+  auto& neighborList = m_DataStructure.getDataRefAs<Int32NeighborListType>(m_InputValues->neighbor_list_path);
+  auto& sharedSurfaceAreaList = m_DataStructure.getDataRefAs<Float32NeighborListType>(m_InputValues->shared_surface_area_list_path);
 
-  auto* boundaryCellsStore = m_InputValues->StoreBoundaryCells ? m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore() : nullptr;
-  auto* surfaceFeatures = m_InputValues->StoreSurfaceFeatures ? m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore() : nullptr;
+  auto* boundaryCellsStorePtr = m_InputValues->store_boundary_cells ? m_DataStructure.getDataAs<Int8ArrayType>(m_InputValues->boundary_cells_path)->getDataStore() : nullptr;
+  auto* surfaceFeaturesPtr = m_InputValues->store_surface_features ? m_DataStructure.getDataAs<BoolArrayType>(m_InputValues->surface_features_path)->getDataStore() : nullptr;
 
   usize totalFeatures = numNeighbors.getNumberOfTuples();
 
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometryPath);
-  SizeVec3 uDims = imageGeom.getDimensions();
+  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->input_image_geometry_path);
+  SizeVec3Type uDims = imageGeom.getDimensions();
 
   const int64 dimX = static_cast<int64>(uDims[0]);
   const int64 dimY = static_cast<int64>(uDims[1]);
   const int64 dimZ = static_cast<int64>(uDims[2]);
   const usize sliceSize = static_cast<usize>(dimX) * static_cast<usize>(dimY);
 
-  FloatVec3 spacing32 = imageGeom.getSpacing();
+  FloatVec3Type spacing32 = imageGeom.getSpacing();
   std::array<float64, 3> spacing64 = {static_cast<float64>(spacing32[0]), static_cast<float64>(spacing32[1]), static_cast<float64>(spacing32[2])};
 
   // Each face orientation uses its physical ImageGeom area.
-  const std::array<float64, VoxelNeighbors<Image3D>::k_FaceNeighborCount> precomputedFaceAreas = computeFaceSurfaceAreas<Image3D>(spacing64);
+  const std::array<float64, VoxelNeighbors<Image3DType>::k_FaceNeighborCount> precomputedFaceAreas = ComputeFaceSurfaceAreas<Image3DType>(spacing64);
 
   // Map keys accumulate every shared face under the neighboring Feature ID.
   std::vector<std::map<usize, float64>> neighborSurfaceAreas(totalFeatures);
@@ -60,7 +59,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
   std::vector<int32> curSlice(sliceSize);
   std::vector<int32> nextSlice(sliceSize);
   std::vector<int8> boundaryCellsSlice;
-  if(boundaryCellsStore != nullptr)
+  if(boundaryCellsStorePtr != nullptr)
   {
     boundaryCellsSlice.resize(sliceSize, 0);
   }
@@ -86,7 +85,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
       return {};
     }
 
-    if(boundaryCellsStore != nullptr)
+    if(boundaryCellsStorePtr != nullptr)
     {
       std::fill(boundaryCellsSlice.begin(), boundaryCellsSlice.end(), static_cast<int8>(0));
     }
@@ -101,15 +100,12 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
         int8 numDiffNeighbors = 0;
         const int32 feature = curSlice[localIndex];
 
-        if(feature > observedMaxFeatureId)
-        {
-          observedMaxFeatureId = feature;
-        }
+        observedMaxFeatureId = std::max(feature, observedMaxFeatureId);
 
         if(feature > 0 && static_cast<usize>(feature) < totalFeatures)
         {
           // A feature is on the surface at a non-degenerate geometry face. A single voxel is surface.
-          if(surfaceFeatures != nullptr)
+          if(surfaceFeaturesPtr != nullptr)
           {
             bool isBoundary = (dimX == 1 && dimY == 1 && dimZ == 1);
             if(dimX > 1 && (x == 0 || x == dimX - 1))
@@ -126,7 +122,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
             }
             if(isBoundary)
             {
-              surfaceFeatures->setValue(feature, true);
+              surfaceFeaturesPtr->setValue(feature, true);
             }
           }
 
@@ -136,7 +132,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
             if(neighborFeature != feature && neighborFeature > 0)
             {
               numDiffNeighbors++;
-              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[VoxelNeighbors<Image3D>::k_NegativeZNeighbor];
+              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[VoxelNeighbors<Image3DType>::k_NegativeZNeighbor];
             }
           }
 
@@ -146,7 +142,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
             if(neighborFeature != feature && neighborFeature > 0)
             {
               numDiffNeighbors++;
-              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[VoxelNeighbors<Image3D>::k_NegativeYNeighbor];
+              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[VoxelNeighbors<Image3DType>::k_NegativeYNeighbor];
             }
           }
 
@@ -156,7 +152,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
             if(neighborFeature != feature && neighborFeature > 0)
             {
               numDiffNeighbors++;
-              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[VoxelNeighbors<Image3D>::k_NegativeXNeighbor];
+              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[VoxelNeighbors<Image3DType>::k_NegativeXNeighbor];
             }
           }
 
@@ -166,7 +162,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
             if(neighborFeature != feature && neighborFeature > 0)
             {
               numDiffNeighbors++;
-              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[VoxelNeighbors<Image3D>::k_PositiveXNeighbor];
+              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[VoxelNeighbors<Image3DType>::k_PositiveXNeighbor];
             }
           }
 
@@ -176,7 +172,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
             if(neighborFeature != feature && neighborFeature > 0)
             {
               numDiffNeighbors++;
-              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[VoxelNeighbors<Image3D>::k_PositiveYNeighbor];
+              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[VoxelNeighbors<Image3DType>::k_PositiveYNeighbor];
             }
           }
 
@@ -186,21 +182,21 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
             if(neighborFeature != feature && neighborFeature > 0)
             {
               numDiffNeighbors++;
-              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[VoxelNeighbors<Image3D>::k_PositiveZNeighbor];
+              neighborSurfaceAreas[feature][neighborFeature] += precomputedFaceAreas[VoxelNeighbors<Image3DType>::k_PositiveZNeighbor];
             }
           }
         }
 
-        if(boundaryCellsStore != nullptr)
+        if(boundaryCellsStorePtr != nullptr)
         {
           boundaryCellsSlice[localIndex] = numDiffNeighbors;
         }
       }
     }
 
-    if(boundaryCellsStore != nullptr)
+    if(boundaryCellsStorePtr != nullptr)
     {
-      ioResult = boundaryCellsStore->copyFromBuffer(static_cast<usize>(z) * sliceSize, nonstd::span<const int8>(boundaryCellsSlice.data(), sliceSize));
+      ioResult = boundaryCellsStorePtr->copyFromBuffer(static_cast<usize>(z) * sliceSize, nonstd::span<const int8>(boundaryCellsSlice.data(), sliceSize));
       if(ioResult.invalid())
       {
         return ioResult;
@@ -224,7 +220,7 @@ Result<> ComputeFeatureNeighborsScanline::operator()()
   {
     return MakeErrorResult(-24500, fmt::format("Data Array {} has a maximum value of {} which is greater than the number of features from array {} which has {}. "
                                                "Did you select the incorrect array for the 'FeatureIds' array?",
-                                               m_InputValues->FeatureIdsPath.getTargetName(), observedMaxFeatureId, m_InputValues->NumberOfNeighborsPath.getTargetName(), totalFeatures));
+                                               m_InputValues->feature_ids_path.getTargetName(), observedMaxFeatureId, m_InputValues->number_of_neighbors_path.getTargetName(), totalFeatures));
   }
 
   // Map order keeps neighbor lists sorted by Feature ID.

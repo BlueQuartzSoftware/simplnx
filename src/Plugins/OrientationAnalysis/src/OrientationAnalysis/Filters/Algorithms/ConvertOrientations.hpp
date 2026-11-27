@@ -35,10 +35,10 @@ constexpr int32 k_MatchingTypesError = -67005;
  */
 struct ORIENTATIONANALYSIS_EXPORT ConvertOrientationsInputValues
 {
-  ArraySelectionParameter::ValueType InputOrientationArrayPath;
-  ebsdlib::orientations::Type InputType;
-  DataObjectNameParameter::ValueType OutputOrientationArrayName;
-  ebsdlib::orientations::Type OutputType;
+  ArraySelectionParameter::ValueType input_orientation_array_path;
+  ebsdlib::orientations::Type input_type;
+  DataObjectNameParameter::ValueType output_orientation_array_name;
+  ebsdlib::orientations::Type output_type;
 };
 
 /**
@@ -123,8 +123,8 @@ private:
   const IFilter::MessageHandler& m_MessageHandler;
 
   ThrottledMessageHandler m_Throttle;
-  mutable std::mutex m_ProgressMessage_Mutex;
-  CopyFromArray::ParallelTaskResult m_ParallelResult;
+  mutable std::mutex m_ProgressMessageMutex;
+  copy_from_array::ParallelTaskResult m_ParallelResult;
 };
 
 } // namespace nx::core

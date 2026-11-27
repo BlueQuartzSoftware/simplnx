@@ -18,7 +18,7 @@ namespace
 {
 Result<DataPath> FindParentGeometry(const DataPath& path, const DataStructure& dataStructure)
 {
-  auto* maybeTriGeomPtr = dataStructure.getDataAs<TriangleGeom>(path);
+  const auto* maybeTriGeomPtr = dataStructure.getDataAs<TriangleGeom>(path);
   if(maybeTriGeomPtr != nullptr)
   {
     return {path};
@@ -27,13 +27,13 @@ Result<DataPath> FindParentGeometry(const DataPath& path, const DataStructure& d
   const DataPath parentPath = path.getParent();
   if(parentPath.empty())
   {
-    return {{nonstd::make_unexpected(ErrorCollection{Error{-25740, "Unable to find a Triangle Geometry on the supplied path"}})}};
+    return {{nonstd::make_unexpected(ErrorCollectionType{Error{.code = -25740, .message = "Unable to find a Triangle Geometry on the supplied path"}})}};
   }
 
   return FindParentGeometry(parentPath, dataStructure);
 }
 
-constexpr StringLiteral k_TempName = "__INTERNAL_!_TEMP_!_PATH__";
+constexpr StringLiteralType k_TempName = "__INTERNAL_!_TEMP_!_PATH__";
 } // namespace
 
 namespace nx::core
@@ -77,13 +77,13 @@ Parameters VerifyTriangleWindingFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_LabelsPath_Key, "Face labels or Region Ids Array",
                                                           "The path to the face labels or region ids array, **MUST** reside in target surface mesh (Triangle Geom)", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}));
 
   params.insertSeparator(Parameters::Separator{"Optional"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_RepairNormals_Key, "Repair Triangle Normals", "If enabled, the triangle normals will be recomputed if the triangle normals exist", true));
   params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleNormalsPath_Key, "Triangle Normals Array", "The path to the triangle normals array", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
 
   params.linkParameters(k_RepairNormals_Key, k_TriangleNormalsPath_Key, true);
 
@@ -97,14 +97,14 @@ IFilter::VersionType VerifyTriangleWindingFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer VerifyTriangleWindingFilter::clone() const
+IFilter::UniquePointerType VerifyTriangleWindingFilter::clone() const
 {
   return std::make_unique<VerifyTriangleWindingFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pLabelsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_LabelsPath_Key);
   Result<DataPath> targetGeomResult = ::FindParentGeometry(pLabelsPath, dataStructure);
@@ -126,30 +126,30 @@ IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataSt
 
     auto pNormalsArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_TriangleNormalsPath_Key);
 
-    const auto* triangleGeom = dataStructure.getDataAs<INodeGeometry2D>(targetGeomResult.value());
+    const auto* triangleGeomPtr = dataStructure.getDataAs<INodeGeometry2D>(targetGeomResult.value());
 
-    const auto* existingNormalsPtr = dataStructure.getDataAs<Float64Array>(pNormalsArrayPath);
+    const auto* existingNormalsPtr = dataStructure.getDataAs<Float64ArrayType>(pNormalsArrayPath);
     if(existingNormalsPtr != nullptr)
     {
-      if(existingNormalsPtr->getNumberOfTuples() != triangleGeom->getNumberOfFaces() || existingNormalsPtr->getNumberOfComponents() != 3)
+      if(existingNormalsPtr->getNumberOfTuples() != triangleGeomPtr->getNumberOfFaces() || existingNormalsPtr->getNumberOfComponents() != 3)
       {
         resultOutputActions.value().appendAction(std::make_unique<RenameDataAction>(pNormalsArrayPath, ::k_TempName));
         resultOutputActions.value().appendAction(
-            std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{3}, pNormalsArrayPath));
+            std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeomPtr->getNumberOfFaces()}, std::vector<usize>{3}, pNormalsArrayPath));
         resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pNormalsArrayPath.getParent().createChildPath(::k_TempName)));
       }
 
       resultOutputActions.value().appendDataObjectModificationNotification(pNormalsArrayPath, DataObjectModification::ModifiedType::Modified);
-      return {std::move(resultOutputActions)};
+      return {.output_actions = std::move(resultOutputActions)};
     }
     const auto* existingObjectPtr = dataStructure.getDataAs<DataObject>(pNormalsArrayPath);
     if(existingObjectPtr != nullptr)
     {
       resultOutputActions.value().appendAction(std::make_unique<RenameDataAction>(pNormalsArrayPath, ::k_TempName));
       resultOutputActions.value().appendAction(
-          std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeom->getNumberOfFaces()}, std::vector<usize>{3}, pNormalsArrayPath));
+          std::make_unique<CreateArrayAction>(nx::core::DataType::float64, std::vector<usize>{triangleGeomPtr->getNumberOfFaces()}, std::vector<usize>{3}, pNormalsArrayPath));
       resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(pNormalsArrayPath.getParent().createChildPath(::k_TempName)));
-      return {std::move(resultOutputActions)};
+      return {.output_actions = std::move(resultOutputActions)};
     }
   }
 
@@ -157,31 +157,31 @@ IFilter::PreflightResult VerifyTriangleWindingFilter::preflightImpl(const DataSt
 }
 
 //------------------------------------------------------------------------------
-Result<> VerifyTriangleWindingFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> VerifyTriangleWindingFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   VerifyTriangleWindingInputValues inputValues;
 
-  inputValues.LabelsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_LabelsPath_Key);
+  inputValues.labels_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_LabelsPath_Key);
 
-  Result<DataPath> targetGeomResult = ::FindParentGeometry(inputValues.LabelsPath, dataStructure);
+  Result<DataPath> targetGeomResult = ::FindParentGeometry(inputValues.labels_path, dataStructure);
   if(targetGeomResult.invalid())
   {
     return ConvertResult(std::move(targetGeomResult));
   }
-  inputValues.TargetGeometryPath = targetGeomResult.value();
-  inputValues.RepairNormals = filterArgs.value<BoolParameter::ValueType>(k_RepairNormals_Key);
-  inputValues.TriangleNormalsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_TriangleNormalsPath_Key);
+  inputValues.target_geometry_path = targetGeomResult.value();
+  inputValues.repair_normals = filterArgs.value<BoolParameter::ValueType>(k_RepairNormals_Key);
+  inputValues.triangle_normals_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_TriangleNormalsPath_Key);
 
   return VerifyTriangleWinding(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_SurfaceMeshFaceLabelsPathKey = "SurfaceMeshFaceLabelsArrayPath";
-} // namespace SIMPL
+constexpr StringLiteralType k_SurfaceMeshFaceLabelsPathKey = "SurfaceMeshFaceLabelsArrayPath";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> VerifyTriangleWindingFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -190,7 +190,7 @@ Result<Arguments> VerifyTriangleWindingFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceLabelsPathKey, k_LabelsPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsPathKey, k_LabelsPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

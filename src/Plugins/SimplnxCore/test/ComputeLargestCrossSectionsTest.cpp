@@ -21,7 +21,7 @@
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 namespace fs = std::filesystem;
 
 namespace
@@ -43,21 +43,21 @@ void CreateBenchmarkDataStructure(DataStructure& dataStructure)
 {
   const ShapeType cellTupleShape = {k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim};
 
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_BenchmarkImageGeometry);
-  imageGeom->setDimensions({k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim});
-  REQUIRE(imageGeom->setOrigin({-10.0f, 5.0f, 20.0f}).valid());
-  REQUIRE(imageGeom->setSpacing({0.5f, 1.25f, 2.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_BenchmarkImageGeometry);
+  imageGeomPtr->setDimensions({k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim});
+  REQUIRE(imageGeomPtr->setOrigin({-10.0f, 5.0f, 20.0f}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({0.5f, 1.25f, 2.0f}).valid());
 
-  auto* cellData = AttributeMatrix::Create(dataStructure, k_BenchmarkCellData, cellTupleShape, imageGeom->getId());
-  imageGeom->setCellData(*cellData);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, k_BenchmarkCellData, cellTupleShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_BenchmarkFeatureIdsPath, cellTupleShape, {1});
-  auto* featureIds = Int32Array::Create(dataStructure, k_BenchmarkFeatureIds, featureIdsStore, cellData->getId());
-  REQUIRE(featureIds != nullptr);
+  auto featureIdsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_BenchmarkFeatureIdsPath, cellTupleShape, {1});
+  auto* featureIdsPtr = Int32ArrayType::Create(dataStructure, k_BenchmarkFeatureIds, featureIdsStore, cellDataPtr->getId());
+  REQUIRE(featureIdsPtr != nullptr);
 
   constexpr usize k_SliceSize = k_BenchmarkDim * k_BenchmarkDim;
   auto sliceBuffer = std::make_unique<int32[]>(k_SliceSize);
-  auto& featureIdsStoreRef = featureIds->getDataStoreRef();
+  auto& featureIdsStoreRef = featureIdsPtr->getDataStoreRef();
   for(usize z = 0; z < k_BenchmarkDim; z++)
   {
     for(usize y = 0; y < k_BenchmarkDim; y++)
@@ -85,24 +85,24 @@ void CreateBenchmarkDataStructure(DataStructure& dataStructure)
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   }
 
-  AttributeMatrix::Create(dataStructure, k_BenchmarkCellFeatureData, {k_BenchmarkFeatureCount + 1}, imageGeom->getId());
+  AttributeMatrix::Create(dataStructure, k_BenchmarkCellFeatureData, {k_BenchmarkFeatureCount + 1}, imageGeomPtr->getId());
 }
 
 DataStructure CreateValidTestDataStructure()
 {
-  DataStructure ds;
-  auto* imageGeom = ImageGeom::Create(ds, k_ImageGeometry);
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({.25, .25, .25}).valid());
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeometry);
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({.25, .25, .25}).valid());
   std::vector<usize> dims = {6, 6, 6};
-  imageGeom->setDimensions(dims);
+  imageGeomPtr->setDimensions(dims);
 
-  auto* cellAM = AttributeMatrix::Create(ds, k_CellData, dims, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
-  auto* cellFeatureAM = AttributeMatrix::Create(ds, k_CellFeatureData, {6}, imageGeom->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellData, dims, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* cellFeatureAmPtr = AttributeMatrix::Create(dataStructure, k_CellFeatureData, {6}, imageGeomPtr->getId());
 
-  auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(ds, k_FeatureIds, dims, {1}, cellAM->getId());
-  auto& featureIdsDataStore = featureIds->getDataStoreRef();
+  auto* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_FeatureIds, dims, {1}, cellAmPtr->getId());
+  auto& featureIdsDataStore = featureIdsPtr->getDataStoreRef();
   featureIdsDataStore[0] = 2;
   featureIdsDataStore[1] = 2;
   featureIdsDataStore[2] = 2;
@@ -320,7 +320,7 @@ DataStructure CreateValidTestDataStructure()
   featureIdsDataStore[214] = 5;
   featureIdsDataStore[215] = 5;
 
-  return ds;
+  return dataStructure;
 }
 
 /**
@@ -330,48 +330,48 @@ DataStructure CreateValidTestDataStructure()
  */
 DataStructure CreateInvalidTestDataStructure(bool geomIs3d)
 {
-  DataStructure ds;
-  auto* imageGeom = ImageGeom::Create(ds, k_ImageGeometry);
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({.25, .25, .25}).valid());
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeometry);
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({.25, .25, .25}).valid());
   std::vector<usize> dims = {6, 6, 1};
   if(geomIs3d)
   {
     dims[2] = 6;
   }
-  imageGeom->setDimensions(dims);
+  imageGeomPtr->setDimensions(dims);
 
-  auto* cellAM = AttributeMatrix::Create(ds, k_CellData, dims, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
-  auto* cellFeatureAM = AttributeMatrix::Create(ds, k_CellFeatureData, {6}, imageGeom->getId());
-  auto* testAM = AttributeMatrix::Create(ds, k_CellEnsembleData, {2}, imageGeom->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellData, dims, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* cellFeatureAmPtr = AttributeMatrix::Create(dataStructure, k_CellFeatureData, {6}, imageGeomPtr->getId());
+  auto* testAmPtr = AttributeMatrix::Create(dataStructure, k_CellEnsembleData, {2}, imageGeomPtr->getId());
 
-  auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(ds, k_FeatureIds, dims, {1}, cellAM->getId());
-  auto& featureIdsDataStore = featureIds->getDataStoreRef();
+  auto* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_FeatureIds, dims, {1}, cellAmPtr->getId());
+  auto& featureIdsDataStore = featureIdsPtr->getDataStoreRef();
   featureIdsDataStore.fill(10);
-  return ds;
+  return dataStructure;
 }
 } // namespace
 
 TEST_CASE("SimplnxCore::ComputeLargestCrossSectionsFilter: Feature Ids tuple count", "[SimplnxCore][ComputeLargestCrossSectionsFilter]")
 {
-  UnitTest::LoadPlugins();
-  DataStructure ds;
+  unit_test::LoadPlugins();
+  DataStructure dataStructure;
   const DataPath imageGeomPath({"Image Geometry"});
   const DataPath cellDataPath = imageGeomPath.createChildPath("Cell Data");
   const DataPath featureDataPath = imageGeomPath.createChildPath("Feature Data");
   const DataPath featureIdsPath = cellDataPath.createChildPath("Feature Ids");
-  auto* imageGeom = ImageGeom::Create(ds, imageGeomPath.getTargetName());
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({3, 4, 5});
-  auto* cellAm = AttributeMatrix::Create(ds, cellDataPath.getTargetName(), {12}, imageGeom->getId());
-  REQUIRE(cellAm != nullptr);
-  imageGeom->setCellData(*cellAm);
-  auto* featureAm = AttributeMatrix::Create(ds, featureDataPath.getTargetName(), {2}, imageGeom->getId());
-  REQUIRE(featureAm != nullptr);
-  auto store = DataStoreUtilities::CreateDataStore<int32>(ds, featureIdsPath, {12}, {1});
-  auto* featureIds = Int32Array::Create(ds, "Feature Ids", store, cellAm->getId());
-  REQUIRE(featureIds != nullptr);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, imageGeomPath.getTargetName());
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({3, 4, 5});
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, cellDataPath.getTargetName(), {12}, imageGeomPtr->getId());
+  REQUIRE(cellAmPtr != nullptr);
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, featureDataPath.getTargetName(), {2}, imageGeomPtr->getId());
+  REQUIRE(featureAmPtr != nullptr);
+  auto store = data_store_utilities::CreateDataStore<int32>(dataStructure, featureIdsPath, {12}, {1});
+  auto* featureIdsPtr = Int32ArrayType::Create(dataStructure, "Feature Ids", store, cellAmPtr->getId());
+  REQUIRE(featureIdsPtr != nullptr);
 
   ComputeLargestCrossSectionsFilter filter;
   Arguments args = filter.getDefaultArguments();
@@ -379,51 +379,51 @@ TEST_CASE("SimplnxCore::ComputeLargestCrossSectionsFilter: Feature Ids tuple cou
   args.insertOrAssign(ComputeLargestCrossSectionsFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
   args.insertOrAssign(ComputeLargestCrossSectionsFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(featureDataPath));
 
-  auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -3711);
-  REQUIRE(preflightResult.outputActions.errors()[0].message.find("12 tuples") != std::string::npos);
-  REQUIRE(preflightResult.outputActions.errors()[0].message.find("60 cells") != std::string::npos);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -3711);
+  REQUIRE(preflightResult.output_actions.errors()[0].message.find("12 tuples") != std::string::npos);
+  REQUIRE(preflightResult.output_actions.errors()[0].message.find("60 cells") != std::string::npos);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeLargestCrossSectionsFilter: Feature Ids in another Attribute Matrix", "[SimplnxCore][ComputeLargestCrossSectionsFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const bool assignCellData = GENERATE(false, true);
   CAPTURE(assignCellData);
 
-  DataStructure ds;
+  DataStructure dataStructure;
   const DataPath imageGeomPath({"Image Geometry"});
   const DataPath otherDataPath({"Other Data"});
   const DataPath featureIdsPath = otherDataPath.createChildPath("Feature Ids");
   const DataPath featureDataPath = imageGeomPath.createChildPath("Feature Data");
-  auto* imageGeom = ImageGeom::Create(ds, imageGeomPath.getTargetName());
-  REQUIRE(imageGeom != nullptr);
-  imageGeom->setDimensions({3, 4, 5});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  auto* cellAm = AttributeMatrix::Create(ds, "Cell Data", {5, 4, 3}, imageGeom->getId());
-  REQUIRE(cellAm != nullptr);
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, imageGeomPath.getTargetName());
+  REQUIRE(imageGeomPtr != nullptr);
+  imageGeomPtr->setDimensions({3, 4, 5});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {5, 4, 3}, imageGeomPtr->getId());
+  REQUIRE(cellAmPtr != nullptr);
   if(assignCellData)
   {
-    imageGeom->setCellData(*cellAm);
+    imageGeomPtr->setCellData(*cellAmPtr);
   }
   else
   {
-    REQUIRE(imageGeom->getCellData() == nullptr);
+    REQUIRE(imageGeomPtr->getCellData() == nullptr);
   }
-  auto* otherAm = AttributeMatrix::Create(ds, otherDataPath.getTargetName(), {5, 4, 3});
-  REQUIRE(otherAm != nullptr);
-  auto* featureAm = AttributeMatrix::Create(ds, featureDataPath.getTargetName(), {2}, imageGeom->getId());
-  REQUIRE(featureAm != nullptr);
-  auto store = DataStoreUtilities::CreateDataStore<int32>(ds, featureIdsPath, {5, 4, 3}, {1});
-  auto* featureIds = Int32Array::Create(ds, "Feature Ids", store, otherAm->getId());
-  REQUIRE(featureIds != nullptr);
-  featureIds->fill(1);
+  auto* otherAmPtr = AttributeMatrix::Create(dataStructure, otherDataPath.getTargetName(), {5, 4, 3});
+  REQUIRE(otherAmPtr != nullptr);
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, featureDataPath.getTargetName(), {2}, imageGeomPtr->getId());
+  REQUIRE(featureAmPtr != nullptr);
+  auto store = data_store_utilities::CreateDataStore<int32>(dataStructure, featureIdsPath, {5, 4, 3}, {1});
+  auto* featureIdsPtr = Int32ArrayType::Create(dataStructure, "Feature Ids", store, otherAmPtr->getId());
+  REQUIRE(featureIdsPtr != nullptr);
+  featureIdsPtr->fill(1);
 
   ComputeLargestCrossSectionsFilter filter;
   Arguments args = filter.getDefaultArguments();
@@ -433,25 +433,25 @@ TEST_CASE("SimplnxCore::ComputeLargestCrossSectionsFilter: Feature Ids in anothe
   args.insertOrAssign(ComputeLargestCrossSectionsFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(featureDataPath));
   args.insertOrAssign(ComputeLargestCrossSectionsFilter::k_LargestCrossSectionsArrayName_Key, std::make_any<std::string>(k_LargestCrossSections));
 
-  auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = scope.executeFilter(filter, ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  const auto* largestCrossSections = ds.getDataAs<Float32Array>(featureDataPath.createChildPath(k_LargestCrossSections));
-  REQUIRE(largestCrossSections != nullptr);
-  REQUIRE(largestCrossSections->getNumberOfTuples() == 2);
-  REQUIRE((*largestCrossSections)[0] == 0.0f);
-  REQUIRE((*largestCrossSections)[1] == 12.0f);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  const auto* largestCrossSectionsPtr = dataStructure.getDataAs<Float32ArrayType>(featureDataPath.createChildPath(k_LargestCrossSections));
+  REQUIRE(largestCrossSectionsPtr != nullptr);
+  REQUIRE(largestCrossSectionsPtr->getNumberOfTuples() == 2);
+  REQUIRE((*largestCrossSectionsPtr)[0] == 0.0f);
+  REQUIRE((*largestCrossSectionsPtr)[1] == 12.0f);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeLargestCrossSectionsFilter: Valid Filter Execution", "[SimplnxCore][ComputeLargestCrossSectionsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   const auto plane = static_cast<ChoicesParameter::ValueType>(GENERATE(0, 1, 2));
   const std::array<std::array<float32, 6>, 3> expectedCrossSections = {
@@ -459,7 +459,7 @@ TEST_CASE("SimplnxCore::ComputeLargestCrossSectionsFilter: Valid Filter Executio
 
   // Configure the filter arguments.
   ComputeLargestCrossSectionsFilter filter;
-  DataStructure ds = CreateValidTestDataStructure();
+  DataStructure dataStructure = CreateValidTestDataStructure();
   Arguments args;
 
   args.insertOrAssign(ComputeLargestCrossSectionsFilter::k_Plane_Key, std::make_any<ChoicesParameter::ValueType>(plane));
@@ -468,25 +468,25 @@ TEST_CASE("SimplnxCore::ComputeLargestCrossSectionsFilter: Valid Filter Executio
   args.insertOrAssign(ComputeLargestCrossSectionsFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry, k_CellFeatureData})));
   args.insertOrAssign(ComputeLargestCrossSectionsFilter::k_LargestCrossSectionsArrayName_Key, std::make_any<std::string>(k_LargestCrossSections));
 
-  auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
-  auto executeResult = scope.executeFilter(filter, ds, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  const auto* largestCrossSection = ds.getDataAs<Float32Array>(DataPath({k_ImageGeometry, k_CellFeatureData, k_LargestCrossSections}));
-  REQUIRE(largestCrossSection != nullptr);
-  for(usize featureId = 0; featureId < largestCrossSection->getNumberOfTuples(); featureId++)
+  const auto* largestCrossSectionPtr = dataStructure.getDataAs<Float32ArrayType>(DataPath({k_ImageGeometry, k_CellFeatureData, k_LargestCrossSections}));
+  REQUIRE(largestCrossSectionPtr != nullptr);
+  for(usize featureId = 0; featureId < largestCrossSectionPtr->getNumberOfTuples(); featureId++)
   {
-    REQUIRE(std::fabs((*largestCrossSection)[featureId] - expectedCrossSections[plane][featureId]) < UnitTest::EPSILON);
+    REQUIRE(std::fabs((*largestCrossSectionPtr)[featureId] - expectedCrossSections[plane][featureId]) < unit_test::k_Epsilon);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeLargestCrossSectionsFilter: InValid Filter Execution")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Configure the filter arguments.
   ComputeLargestCrossSectionsFilter filter;
@@ -498,39 +498,39 @@ TEST_CASE("SimplnxCore::ComputeLargestCrossSectionsFilter: InValid Filter Execut
 
   SECTION("Invalid Image Geometry (should be 3D)")
   {
-    DataStructure ds = CreateInvalidTestDataStructure(false);
+    DataStructure dataStructure = CreateInvalidTestDataStructure(false);
     args.insertOrAssign(ComputeLargestCrossSectionsFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry, k_CellFeatureData})));
 
-    auto preflightResult = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
-    auto executeResult = filter.execute(ds, args);
+    auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
   SECTION("Invalid Cell Feature Attribute Matrix")
   {
-    const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+    const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
     CAPTURE(scenario);
-    UnitTest::AlgorithmTestScope scope(scenario);
+    unit_test::AlgorithmTestScope scope(scenario);
 
-    DataStructure ds = CreateInvalidTestDataStructure(true);
+    DataStructure dataStructure = CreateInvalidTestDataStructure(true);
     args.insertOrAssign(ComputeLargestCrossSectionsFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(DataPath({k_ImageGeometry, k_CellEnsembleData})));
 
-    auto preflightResult = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
-    auto executeResult = scope.executeFilter(filter, ds, args);
+    auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::ComputeLargestCrossSectionsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeLargestCrossSectionsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -543,22 +543,22 @@ TEST_CASE("SimplnxCore::ComputeLargestCrossSectionsFilter: SIMPL Backwards Compa
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeLargestCrossSectionsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeLargestCrossSectionsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<ChoicesParameter::ValueType>(ComputeLargestCrossSectionsFilter::k_Plane_Key) == 0);
       CHECK(args.value<DataPath>(ComputeLargestCrossSectionsFilter::k_ImageGeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(ComputeLargestCrossSectionsFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));

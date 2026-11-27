@@ -27,11 +27,11 @@ public:
   HierarchicalSmoothFilter& operator=(HierarchicalSmoothFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_TriangleGeometryDataPath_Key = "input_triangle_geometry_path";
-  static constexpr StringLiteral k_SurfaceMeshNodeTypeArrayPath_Key = "surface_mesh_node_type_array_path";
-  static constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
-  static constexpr StringLiteral k_MaxIterations_Key = "max_iterations";
-  static constexpr StringLiteral k_ErrorThreshold_Key = "error_threshold";
+  static constexpr StringLiteralType k_TriangleGeometryDataPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteralType k_SurfaceMeshNodeTypeArrayPath_Key = "surface_mesh_node_type_array_path";
+  static constexpr StringLiteralType k_SurfaceMeshFaceLabelsArrayPath_Key = "surface_mesh_face_labels_array_path";
+  static constexpr StringLiteralType k_MaxIterations_Key = "max_iterations";
+  static constexpr StringLiteralType k_ErrorThreshold_Key = "error_threshold";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -88,7 +88,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

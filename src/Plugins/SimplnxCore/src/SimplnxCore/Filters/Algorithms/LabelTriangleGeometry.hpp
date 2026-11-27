@@ -13,10 +13,10 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT LabelTriangleGeometryInputValues
 {
-  DataPath TriangleGeomPath;
-  DataPath RegionIdsPath;
-  DataPath TriangleAMPath;
-  DataPath NumTrianglesPath;
+  DataPath triangle_geom_path;
+  DataPath region_ids_path;
+  DataPath triangle_am_path;
+  DataPath num_triangles_path;
 };
 
 /**
@@ -26,7 +26,7 @@ class SIMPLNXCORE_EXPORT LabelTriangleGeometry
 {
 public:
   LabelTriangleGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, LabelTriangleGeometryInputValues* inputValues);
-  ~LabelTriangleGeometry() noexcept;
+  ~LabelTriangleGeometry() noexcept = default;
 
   LabelTriangleGeometry(const LabelTriangleGeometry&) = delete;
   LabelTriangleGeometry(LabelTriangleGeometry&&) noexcept = delete;

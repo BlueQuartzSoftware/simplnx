@@ -19,10 +19,10 @@ class SIMPLNX_EXPORT GeometrySelectionParameter : public MutableDataParameter
 public:
   using ValueType = DataPath;
   using AllowedType = IGeometry::Type;
-  using AllowedTypes = std::set<AllowedType>;
+  using AllowedTypeSetType = std::set<AllowedType>;
 
   GeometrySelectionParameter() = delete;
-  GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes);
+  GeometrySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypeSetType allowedTypes);
   ~GeometrySelectionParameter() override = default;
 
   GeometrySelectionParameter(const GeometrySelectionParameter&) = delete;
@@ -41,13 +41,13 @@ public:
    * @brief Returns a list of accpeted input types.
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief Creates a copy of the parameter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the user defined default value.
@@ -73,7 +73,7 @@ public:
    * @brief Returns the list of allowed DataObject types.
    * @return
    */
-  const AllowedTypes& allowedTypes() const;
+  const AllowedTypeSetType& allowedTypes() const;
 
   /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
@@ -116,20 +116,20 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
-  AllowedTypes m_AllowedTypes = {};
+  ValueType m_DefaultValue;
+  AllowedTypeSetType m_AllowedTypes;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT DataArraySelectionToGeometrySelectionFilterParameterConverter
 {
   using ParameterType = GeometrySelectionParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::GeometrySelectionParameter, "3804cd7f-4ee4-400f-80ad-c5af17735de2");

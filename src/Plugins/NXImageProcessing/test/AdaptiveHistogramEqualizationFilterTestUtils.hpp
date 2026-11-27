@@ -78,9 +78,9 @@ inline std::vector<T> AdaptiveHistogramEqualizationOracle(const std::vector<T>& 
   // Gate mirrors the engine's LUT gate: integral T AND the integer gray span within the table-size cap. For the
   // integer types exercised here (uint8/int16/int32) iscale equals the exact integer span, so this float64
   // comparison decides the path identically to the engine's integer arithmetic.
-  constexpr usize kMaxAheLutEntries = usize{1} << 22;                             // must match the engine's cap
-  constexpr float64 kMaxSpan = static_cast<float64>((kMaxAheLutEntries - 1) / 2); // 2*span + 1 <= kMaxAheLutEntries
-  const bool useLut = std::is_integral_v<T> && iscale <= kMaxSpan;
+  constexpr usize k_MaxAheLutEntries = usize{1} << 22;                              // must match the engine's cap
+  constexpr float64 k_MaxSpan = static_cast<float64>((k_MaxAheLutEntries - 1) / 2); // 2*span + 1 <= kMaxAheLutEntries
+  const bool useLut = std::is_integral_v<T> && iscale <= k_MaxSpan;
 
   std::vector<T> out(in.size());
   for(int64 zi = 0; zi < dimZi; ++zi)
@@ -241,21 +241,21 @@ inline std::vector<T> MakeAhePattern(usize dimX, usize dimY, usize dimZ)
  *        scalar cell array "Input" of type T, filled with @ref MakeAhePattern. Returns the input path.
  */
 template <class T>
-inline DataPath BuildAheImage(DataStructure& ds, usize dimX, usize dimY, usize dimZ)
+inline DataPath BuildAheImage(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ)
 {
   const ShapeType cellShape = {dimZ, dimY, dimX};
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<T>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
 
   const std::vector<T> pattern = MakeAhePattern<T>(dimX, dimY, dimZ);
   for(usize i = 0; i < pattern.size(); ++i)
@@ -281,7 +281,7 @@ inline std::vector<T> RunApplyAhe(const std::vector<T>& input, usize dimX, usize
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
 
-  const Result<> result = ImageProcessing::ApplyAdaptiveHistogramEqualization<T>(inStore, outStore, SizeVec3{dimX, dimY, dimZ}, radius, alpha, beta, shouldCancel, messageHandler);
+  const Result<> result = ImageProcessing::ApplyAdaptiveHistogramEqualization<T>(inStore, outStore, SizeVec3Type{dimX, dimY, dimZ}, radius, alpha, beta, shouldCancel, messageHandler);
   REQUIRE(result.valid());
 
   std::vector<T> out(input.size());
@@ -297,19 +297,19 @@ inline std::vector<T> RunApplyAhe(const std::vector<T>& input, usize dimX, usize
  *        execute, and requires that both succeed. The function reads the key constants from NewFilterT.
  */
 template <class NewFilterT>
-inline void RunAheFilter(IFilter& filter, DataStructure& ds, const DataPath& inputPath, float32 alpha, float32 beta, const std::vector<uint32>& radius)
+inline void RunAheFilter(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, float32 alpha, float32 beta, const std::vector<uint32>& radius)
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
   args.insertOrAssign(NewFilterT::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
   args.insertOrAssign(NewFilterT::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(NewFilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  args.insertOrAssign(NewFilterT::k_Radius_Key, std::make_any<VectorUInt32Parameter::ValueType>(radius));
+  args.insertOrAssign(NewFilterT::k_Radius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(radius));
   args.insertOrAssign(NewFilterT::k_Alpha_Key, std::make_any<float32>(alpha));
   args.insertOrAssign(NewFilterT::k_Beta_Key, std::make_any<float32>(beta));
-  auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 // Frozen pre-clipping traversals from 3321af983. These preserve operation order for exact regression

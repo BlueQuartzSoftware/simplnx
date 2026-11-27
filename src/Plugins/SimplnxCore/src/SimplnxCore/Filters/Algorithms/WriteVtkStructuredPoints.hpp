@@ -19,10 +19,10 @@ class IDataArray;
  */
 struct SIMPLNXCORE_EXPORT WriteVtkStructuredPointsInputValues
 {
-  FileSystemPathParameter::ValueType OutputFile;
-  bool WriteBinaryFile;
-  DataPath ImageGeometryPath;
-  MultiArraySelectionParameter::ValueType SelectedDataArrayPaths;
+  FileSystemPathParameter::ValueType output_file;
+  bool write_binary_file{};
+  DataPath image_geometry_path;
+  MultiArraySelectionParameter::ValueType selected_data_array_paths;
 };
 
 /**
@@ -48,7 +48,7 @@ public:
   /**
    * @brief Destroys the non-owning writer.
    */
-  ~WriteVtkStructuredPoints() noexcept;
+  ~WriteVtkStructuredPoints() noexcept = default;
 
   WriteVtkStructuredPoints(const WriteVtkStructuredPoints&) = delete;
   WriteVtkStructuredPoints(WriteVtkStructuredPoints&&) noexcept = delete;

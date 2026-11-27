@@ -168,7 +168,7 @@ Result<> ApplyTypedMask(const AbstractDataStore<T>& inputStore, AbstractDataStor
  */
 template <class T>
 Result<> ApplyMask(const AbstractDataStore<T>& inputStore, AbstractDataStore<T>& outputStore, const IDataArray& maskArray, usize numComponents, T outsideValue, const std::atomic_bool& shouldCancel,
-                   const IFilter::MessageHandler& messageHandler)
+                   const IFilter::MessageHandler& /*messageHandler*/)
 {
   switch(maskArray.getDataType())
   {

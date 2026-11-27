@@ -16,21 +16,19 @@ ComputeIPFColors::ComputeIPFColors(DataStructure& dataStructure, const IFilter::
 {
 }
 
-ComputeIPFColors::~ComputeIPFColors() noexcept = default;
-
 Result<> ComputeIPFColors::operator()()
 {
   // Dispatch checks storage residency. The selected executor performs typed access.
-  auto* eulersArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->cellEulerAnglesArrayPath);
-  auto* phasesArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->cellPhasesArrayPath);
-  auto* crystalStructuresArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->crystalStructuresArrayPath);
-  auto* ipfColorsArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->cellIpfColorsArrayPath);
-  IDataArray* maskArray = nullptr;
-  if(m_InputValues->useMask)
+  auto* eulersArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->cell_euler_angles_array_path);
+  auto* phasesArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->cell_phases_array_path);
+  auto* crystalStructuresArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->crystal_structures_array_path);
+  auto* ipfColorsArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->cell_ipf_colors_array_path);
+  IDataArray* maskArrayPtr = nullptr;
+  if(m_InputValues->use_mask)
   {
-    maskArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->maskArrayPath);
+    maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path);
   }
 
-  return DispatchAlgorithm<ComputeIPFColorsDirect, ComputeIPFColorsScanline>({eulersArray, phasesArray, crystalStructuresArray, maskArray, ipfColorsArray}, m_DataStructure, m_MessageHandler,
-                                                                             m_ShouldCancel, m_InputValues);
+  return DispatchAlgorithm<ComputeIPFColorsDirect, ComputeIPFColorsScanline>({eulersArrayPtr, phasesArrayPtr, crystalStructuresArrayPtr, maskArrayPtr, ipfColorsArrayPtr}, m_DataStructure,
+                                                                             m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

@@ -13,51 +13,51 @@
 #include <array>
 
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 namespace fs = std::filesystem;
 
 namespace
 {
-DataPath grainDataPath = DataPath({Constants::k_SmallIN100, Constants::k_Grain_Data});
-DataPath neighborListPath = grainDataPath.createChildPath("NeighborList");
-DataPath avgQuatsPath = DataPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_AvgQuats});
-DataPath featurePhasesPath = DataPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_Phases});
-DataPath crystalStructuresPath = DataPath({Constants::k_SmallIN100, Constants::k_Phase_Data, Constants::k_CrystalStructures});
+DataPath GrainDataPath = DataPath({constants::k_SmallIN100, constants::k_GrainDataWithSpaces});
+DataPath NeighborListPath = GrainDataPath.createChildPath("NeighborList");
+DataPath AvgQuatsPath = DataPath({constants::k_SmallIN100, constants::k_GrainDataWithSpaces, constants::k_AvgQuats});
+DataPath FeaturePhasesPath = DataPath({constants::k_SmallIN100, constants::k_GrainDataWithSpaces, constants::k_Phases});
+DataPath CrystalStructuresPath = DataPath({constants::k_SmallIN100, constants::k_PhaseData, constants::k_CrystalStructures});
 
-const std::string k_f1s = "F1List_COMPUTED";
-const std::string k_f1spts = "F1sptList_COMPUTED";
-const std::string k_f7s = "F7List_COMPUTED";
-const std::string k_mPrimes = "mPrimeList_COMPUTED";
+const std::string k_F1s = "F1List_COMPUTED";
+const std::string k_F1spts = "F1sptList_COMPUTED";
+const std::string k_F7s = "F7List_COMPUTED";
+const std::string k_MPrimes = "mPrimeList_COMPUTED";
 } // namespace
 
 TEST_CASE("OrientationAnalysis::ComputeSlipTransmissionMetricsFilter: Valid Filter Execution", "[OrientationAnalysis][ComputeSlipTransmissionMetricsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "feature_boundary_neighbor_slip_transmission_1.tar.gz",
-                                                              "feature_boundary_neighbor_slip_transmission_1");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "feature_boundary_neighbor_slip_transmission_1.tar.gz",
+                                                               "feature_boundary_neighbor_slip_transmission_1");
 
   DataStructure dataStructure =
-      UnitTest::LoadDataStructure(fs::path(fmt::format("{}/feature_boundary_neighbor_slip_transmission_1/6_6_feature_boundary_neighbor_slip_transmission.dream3d", unit_test::k_TestFilesDir)));
+      unit_test::LoadDataStructure(fs::path(fmt::format("{}/feature_boundary_neighbor_slip_transmission_1/6_6_feature_boundary_neighbor_slip_transmission.dream3d", unit_test::k_TestFilesDir)));
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
     ComputeSlipTransmissionMetricsFilter filter;
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_NeighborListArrayPath_Key, std::make_any<DataPath>(neighborListPath));
-    args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(avgQuatsPath));
-    args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(featurePhasesPath));
-    args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresPath));
+    args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_NeighborListArrayPath_Key, std::make_any<DataPath>(NeighborListPath));
+    args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(AvgQuatsPath));
+    args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(FeaturePhasesPath));
+    args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(CrystalStructuresPath));
 
-    args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_F1ListArrayName_Key, std::make_any<std::string>(k_f1s));
-    args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_F1sptListArrayName_Key, std::make_any<std::string>(k_f1spts));
-    args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_F7ListArrayName_Key, std::make_any<std::string>(k_f7s));
-    args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_mPrimeListArrayName_Key, std::make_any<std::string>(k_mPrimes));
+    args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_F1ListArrayName_Key, std::make_any<std::string>(k_F1s));
+    args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_F1sptListArrayName_Key, std::make_any<std::string>(k_F1spts));
+    args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_F7ListArrayName_Key, std::make_any<std::string>(k_F7s));
+    args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_mPrimeListArrayName_Key, std::make_any<std::string>(k_MPrimes));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -68,29 +68,29 @@ TEST_CASE("OrientationAnalysis::ComputeSlipTransmissionMetricsFilter: Valid Filt
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_ComputeSlipTransmissionMetricsFilter.dream3d", unit_test::k_BinaryTestOutputDir)));
   // #endif
 
-  UnitTest::CompareNeighborLists<float32>(dataStructure, grainDataPath.createChildPath("F1List"), grainDataPath.createChildPath(k_f1s));
-  UnitTest::CompareNeighborLists<float32>(dataStructure, grainDataPath.createChildPath("F1sptList"), grainDataPath.createChildPath(k_f1spts));
-  UnitTest::CompareNeighborLists<float32>(dataStructure, grainDataPath.createChildPath("F7List"), grainDataPath.createChildPath(k_f7s));
-  UnitTest::CompareNeighborLists<float32>(dataStructure, grainDataPath.createChildPath("mPrimeList"), grainDataPath.createChildPath(k_mPrimes));
+  unit_test::CompareNeighborLists<float32>(dataStructure, GrainDataPath.createChildPath("F1List"), GrainDataPath.createChildPath(k_F1s));
+  unit_test::CompareNeighborLists<float32>(dataStructure, GrainDataPath.createChildPath("F1sptList"), GrainDataPath.createChildPath(k_F1spts));
+  unit_test::CompareNeighborLists<float32>(dataStructure, GrainDataPath.createChildPath("F7List"), GrainDataPath.createChildPath(k_F7s));
+  unit_test::CompareNeighborLists<float32>(dataStructure, GrainDataPath.createChildPath("mPrimeList"), GrainDataPath.createChildPath(k_MPrimes));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeSlipTransmissionMetricsFilter: Phase and Laue Index Bounds", "[OrientationAnalysis][ComputeSlipTransmissionMetricsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
-  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "feature_boundary_neighbor_slip_transmission_1.tar.gz", "feature_boundary_neighbor_slip_transmission_1");
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "feature_boundary_neighbor_slip_transmission_1.tar.gz", "feature_boundary_neighbor_slip_transmission_1");
   const fs::path inputFile = fs::path(unit_test::k_TestFilesDir.view()) / "feature_boundary_neighbor_slip_transmission_1" / "6_6_feature_boundary_neighbor_slip_transmission.dream3d";
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFile);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFile);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(featurePhasesPath));
-  auto& featurePhasesArrayRef = dataStructure.getDataRefAs<Int32Array>(featurePhasesPath);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(crystalStructuresPath));
-  auto& crystalStructuresArrayRef = dataStructure.getDataRefAs<UInt32Array>(crystalStructuresPath);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32NeighborList>(neighborListPath));
-  auto& neighborList = dataStructure.getDataRefAs<Int32NeighborList>(neighborListPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(FeaturePhasesPath));
+  auto& featurePhasesArrayRef = dataStructure.getDataRefAs<Int32ArrayType>(FeaturePhasesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(CrystalStructuresPath));
+  auto& crystalStructuresArrayRef = dataStructure.getDataRefAs<UInt32ArrayType>(CrystalStructuresPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32NeighborListType>(NeighborListPath));
+  auto& neighborList = dataStructure.getDataRefAs<Int32NeighborListType>(NeighborListPath);
   if(Application::Instance()->getIOManager("HDF5-OOC") != nullptr)
   {
     REQUIRE(featurePhasesArrayRef.getDataStoreRef().getDataFormat() == "HDF5-OOC");
@@ -108,14 +108,14 @@ TEST_CASE("OrientationAnalysis::ComputeSlipTransmissionMetricsFilter: Phase and 
 
   ComputeSlipTransmissionMetricsFilter filter;
   Arguments args = filter.getDefaultArguments();
-  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_NeighborListArrayPath_Key, std::make_any<DataPath>(neighborListPath));
-  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(avgQuatsPath));
-  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(featurePhasesPath));
-  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresPath));
-  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_F1ListArrayName_Key, std::make_any<std::string>(k_f1s));
-  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_F1sptListArrayName_Key, std::make_any<std::string>(k_f1spts));
-  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_F7ListArrayName_Key, std::make_any<std::string>(k_f7s));
-  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_mPrimeListArrayName_Key, std::make_any<std::string>(k_mPrimes));
+  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_NeighborListArrayPath_Key, std::make_any<DataPath>(NeighborListPath));
+  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_AvgQuatsArrayPath_Key, std::make_any<DataPath>(AvgQuatsPath));
+  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(FeaturePhasesPath));
+  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(CrystalStructuresPath));
+  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_F1ListArrayName_Key, std::make_any<std::string>(k_F1s));
+  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_F1sptListArrayName_Key, std::make_any<std::string>(k_F1spts));
+  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_F7ListArrayName_Key, std::make_any<std::string>(k_F7s));
+  args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_mPrimeListArrayName_Key, std::make_any<std::string>(k_MPrimes));
 
   SECTION("Participating Phase returns an error")
   {
@@ -148,14 +148,14 @@ TEST_CASE("OrientationAnalysis::ComputeSlipTransmissionMetricsFilter: Phase and 
     REQUIRE(executeResult.result.errors()[0].code == -94742);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeSlipTransmissionMetricsFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeSlipTransmissionMetricsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -168,22 +168,22 @@ TEST_CASE("OrientationAnalysis::ComputeSlipTransmissionMetricsFilter: SIMPL Back
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeSlipTransmissionMetricsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeSlipTransmissionMetricsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(ComputeSlipTransmissionMetricsFilter::k_NeighborListArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ComputeSlipTransmissionMetricsFilter::k_AvgQuatsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ComputeSlipTransmissionMetricsFilter::k_FeaturePhasesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
@@ -203,24 +203,24 @@ TEST_CASE("OrientationAnalysis::ComputeSlipTransmissionMetricsFilter: Cubic elig
   DataStructure dataStructure;
   const DataPath featuresPath({"Features"});
   const DataPath ensemblesPath({"Ensembles"});
-  auto* features = AttributeMatrix::Create(dataStructure, "Features", {3});
-  auto* ensembles = AttributeMatrix::Create(dataStructure, "Ensembles", {3});
-  auto* phases = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Phases", {3}, {1}, features->getId());
-  (*phases)[0] = 0;
-  (*phases)[1] = fixture == 0 ? 2 : 1;
-  (*phases)[2] = fixture == 2 ? 1 : 2;
-  auto* structures = UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, "Structures", {3}, {1}, ensembles->getId());
+  auto* featuresPtr = AttributeMatrix::Create(dataStructure, "Features", {3});
+  auto* ensemblesPtr = AttributeMatrix::Create(dataStructure, "Ensembles", {3});
+  auto* phasesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "Phases", {3}, {1}, featuresPtr->getId());
+  (*phasesPtr)[0] = 0;
+  (*phasesPtr)[1] = fixture == 0 ? 2 : 1;
+  (*phasesPtr)[2] = fixture == 2 ? 1 : 2;
+  auto* structuresPtr = UInt32ArrayType::CreateWithStore<DataStore<uint32>>(dataStructure, "Structures", {3}, {1}, ensemblesPtr->getId());
   // Laue indices 0 and 1 denote Hexagonal_High and Cubic_High, respectively.
-  (*structures)[0] = 999;
-  (*structures)[1] = fixture == 1 ? 1 : 0;
-  (*structures)[2] = 1;
-  auto* quats = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Quats", {3}, {4}, features->getId());
-  quats->fill(0);
-  (*quats)[7] = 1;
-  (*quats)[11] = 1;
-  auto* neighbors = Int32NeighborList::Create(dataStructure, "Neighbors", ShapeType{3}, features->getId());
-  neighbors->addEntry(1, 2);
-  neighbors->addEntry(2, 1);
+  (*structuresPtr)[0] = 999;
+  (*structuresPtr)[1] = fixture == 1 ? 1 : 0;
+  (*structuresPtr)[2] = 1;
+  auto* quatsPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "Quats", {3}, {4}, featuresPtr->getId());
+  quatsPtr->fill(0);
+  (*quatsPtr)[7] = 1;
+  (*quatsPtr)[11] = 1;
+  auto* neighborsPtr = Int32NeighborListType::Create(dataStructure, "Neighbors", ShapeType{3}, featuresPtr->getId());
+  neighborsPtr->addEntry(1, 2);
+  neighborsPtr->addEntry(2, 1);
   ComputeSlipTransmissionMetricsFilter filter;
   auto args = filter.getDefaultArguments();
   args.insertOrAssign(ComputeSlipTransmissionMetricsFilter::k_NeighborListArrayPath_Key, std::make_any<DataPath>(featuresPath.createChildPath("Neighbors")));
@@ -248,14 +248,14 @@ TEST_CASE("OrientationAnalysis::ComputeSlipTransmissionMetricsFilter: Cubic elig
   const std::array<float32, 4> expected = {1.0F, 1.7320508075688772F, 10.392304845413264F, 3.0F};
   for(usize metric = 0; metric < names.size(); metric++)
   {
-    const auto* output = dataStructure.getDataAs<Float32NeighborList>(featuresPath.createChildPath(names[metric]));
-    REQUIRE(output != nullptr);
+    const auto* outputPtr = dataStructure.getDataAs<Float32NeighborListType>(featuresPath.createChildPath(names[metric]));
+    REQUIRE(outputPtr != nullptr);
     for(usize feature = 1; feature <= 2; feature++)
     {
       CAPTURE(metric, feature);
-      REQUIRE(output->getList(feature).size() == 1);
-      CHECK(output->getList(feature)[0] == Approx(fixture == 2 ? 0.0F : expected[metric]).margin(1.0e-5F));
+      REQUIRE(outputPtr->getList(feature).size() == 1);
+      CHECK(outputPtr->getList(feature)[0] == Approx(fixture == 2 ? 0.0F : expected[metric]).margin(1.0e-5F));
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

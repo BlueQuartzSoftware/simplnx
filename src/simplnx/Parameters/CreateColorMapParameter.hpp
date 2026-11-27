@@ -18,7 +18,7 @@ public:
   using ValueType = std::string;
 
   CreateColorMapParameter() = delete;
-  CreateColorMapParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  CreateColorMapParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~CreateColorMapParameter() override = default;
 
   CreateColorMapParameter(const CreateColorMapParameter&) = delete;
@@ -37,13 +37,13 @@ public:
    * @brief
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -86,19 +86,19 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
+  ValueType m_DefaultValue;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT CreateColorMapFilterParameterConverter
 {
   using ParameterType = CreateColorMapParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2);
+  static Result<ValueType> Convert(const nlohmann::json& json1, const nlohmann::json& json2);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::CreateColorMapParameter, "7b0e5b25-564e-4797-b154-4324ef276bf0");

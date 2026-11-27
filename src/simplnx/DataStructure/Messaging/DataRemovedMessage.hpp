@@ -19,7 +19,7 @@ namespace nx::core
 class SIMPLNX_EXPORT DataRemovedMessage : public AbstractDataStructureMessage
 {
 public:
-  static const MessageType MsgType = 2;
+  static const MessageType k_MsgType = 2;
 
   /**
    * @brief Constructs a DataRemovedMessage for the target DataStructure marking a
@@ -29,7 +29,7 @@ public:
    * @param identifier
    * @param name
    */
-  DataRemovedMessage(const DataStructure* dataStructure, DataObject::IdType identifier, const std::string& name);
+  DataRemovedMessage(const DataStructure* dataStructure, DataObject::IdType identifier, std::string name);
 
   /**
    * @brief Creates a copy of the target DataRemovedMessage.

@@ -25,11 +25,11 @@ public:
                                                                       "Tetragonal-High 4/mmm", "Trigonal-Low -3", "Trigonal-High -3m"};
   static inline const std::vector<std::string> k_PhaseTypes = {"Primary", "Precipitate", "Transformation", "Matrix", "Boundary"};
 
-  static inline constexpr StringLiteral k_DefaultPhaseName = "_PHASE_NAME_";
+  static constexpr StringLiteralType k_DefaultPhaseName = "_PHASE_NAME_";
 
   EnsembleInfoParameter() = delete;
 
-  EnsembleInfoParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  EnsembleInfoParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
 
   ~EnsembleInfoParameter() override = default;
 
@@ -49,13 +49,13 @@ public:
    * @brief
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -92,19 +92,19 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
+  ValueType m_DefaultValue;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT EnsembleInfoFilterParameterConverter
 {
   using ParameterType = EnsembleInfoParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::EnsembleInfoParameter, "10d3924f-b4c9-4e06-9225-ce11ec8dff89");

@@ -6,12 +6,12 @@
 #include "simplnx/DataStructure/Geometry/INodeGeometry2D.hpp"
 #include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 INodeGeom2dIO::INodeGeom2dIO() = default;
 INodeGeom2dIO::~INodeGeom2dIO() noexcept = default;
 
-Result<> INodeGeom2dIO::ReadNodeGeom2dData(DataStructureReader& dataStructureReader, INodeGeometry2D& geometry, const group_reader_type& parentGroup, const std::string& objectName,
+Result<> INodeGeom2dIO::ReadNodeGeom2dData(DataStructureReader& dataStructureReader, INodeGeometry2D& geometry, const GroupReaderType& parentGroup, const std::string& objectName,
                                            DataObject::IdType importId, const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore)
 {
   Result<> result = INodeGeom1dIO::ReadNodeGeom1dData(dataStructureReader, geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
@@ -22,17 +22,17 @@ Result<> INodeGeom2dIO::ReadNodeGeom2dData(DataStructureReader& dataStructureRea
 
   auto groupReader = parentGroup.openGroup(objectName);
 
-  geometry.setFaceListId(ReadDataId(groupReader, IOConstants::k_FaceListTag));
-  geometry.setFaceDataId(ReadDataId(groupReader, IOConstants::k_FaceDataTag));
-  geometry.setUnsharedEdgesId(ReadDataId(groupReader, IOConstants::k_UnsharedEdgeListTag));
+  geometry.setFaceListId(ReadDataId(groupReader, io_constants::k_FaceListTag));
+  geometry.setFaceDataId(ReadDataId(groupReader, io_constants::k_FaceDataTag));
+  geometry.setUnsharedEdgesId(ReadDataId(groupReader, io_constants::k_UnsharedEdgeListTag));
 
   return {};
 }
 
-Result<> INodeGeom2dIO::FinishImportingNodeGeom2dData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup)
+Result<> INodeGeom2dIO::FinishImportingNodeGeom2dData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& dataStructureGroup)
 {
-  auto* geom = dataStructure.getDataAs<INodeGeometry2D>(dataPath);
-  if(geom == nullptr)
+  auto* geomPtr = dataStructure.getDataAs<INodeGeometry2D>(dataPath);
+  if(geomPtr == nullptr)
   {
     return MakeErrorResult(-50591, fmt::format("Failed to finish importing INodeGeometry2D at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
   }
@@ -40,7 +40,7 @@ Result<> INodeGeom2dIO::FinishImportingNodeGeom2dData(DataStructure& dataStructu
   return INodeGeom1dIO::FinishImportingNodeGeom1dData(dataStructure, dataPath, dataStructureGroup);
 }
 
-Result<> INodeGeom2dIO::WriteNodeGeom2dData(DataStructureWriter& dataStructureWriter, const INodeGeometry2D& geometry, group_writer_type& parentGroupWriter, bool importable)
+Result<> INodeGeom2dIO::WriteNodeGeom2dData(DataStructureWriter& dataStructureWriter, const INodeGeometry2D& geometry, GroupWriterType& parentGroupWriter, bool importable)
 {
   Result<> result = INodeGeom1dIO::WriteNodeGeom1dData(dataStructureWriter, geometry, parentGroupWriter, importable);
   if(result.invalid())
@@ -50,19 +50,19 @@ Result<> INodeGeom2dIO::WriteNodeGeom2dData(DataStructureWriter& dataStructureWr
 
   auto groupWriter = parentGroupWriter.createGroup(geometry.getName());
 
-  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getFaceListId(), IOConstants::k_FaceListTag));
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getFaceListId(), io_constants::k_FaceListTag));
   if(result.invalid())
   {
     return result;
   }
 
-  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getFaceAttributeMatrixId(), IOConstants::k_FaceDataTag));
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getFaceAttributeMatrixId(), io_constants::k_FaceDataTag));
   if(result.invalid())
   {
     return result;
   }
 
-  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getUnsharedEdgesId(), IOConstants::k_UnsharedEdgeListTag));
+  AppendWriteResult(result, WriteDataId(groupWriter, geometry.getUnsharedEdgesId(), io_constants::k_UnsharedEdgeListTag));
   if(result.invalid())
   {
     return result;
@@ -70,4 +70,4 @@ Result<> INodeGeom2dIO::WriteNodeGeom2dData(DataStructureWriter& dataStructureWr
 
   return result;
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

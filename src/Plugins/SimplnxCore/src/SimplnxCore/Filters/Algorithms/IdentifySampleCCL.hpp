@@ -65,7 +65,7 @@ SIMPLNXCORE_EXPORT IdentifySampleSliceObserverForTesting SetIdentifySampleSliceO
 struct SIMPLNXCORE_EXPORT IdentifySampleExtraAllocationControlForTesting
 {
   void* context = nullptr;
-  void (*beforeAllocate)(void*, const IDataArray*, usize extraValues) = nullptr;
+  void (*before_allocate)(void*, const IDataArray*, usize extraValues) = nullptr;
 };
 
 /**
@@ -85,7 +85,7 @@ SIMPLNXCORE_EXPORT IdentifySampleExtraAllocationControlForTesting SetIdentifySam
 struct SIMPLNXCORE_EXPORT IdentifySampleDiagnosticControlForTesting
 {
   void* context = nullptr;
-  void (*beforeAggregate)(void*, const IDataArray*) = nullptr;
+  void (*before_aggregate)(void*, const IDataArray*) = nullptr;
 };
 
 /**
@@ -133,7 +133,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   IdentifySampleCCL(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const IdentifySampleInputValues* inputValues);
-  ~IdentifySampleCCL() noexcept;
+  ~IdentifySampleCCL() noexcept = default;
 
   IdentifySampleCCL(const IdentifySampleCCL&) = delete;
   IdentifySampleCCL(IdentifySampleCCL&&) noexcept = delete;

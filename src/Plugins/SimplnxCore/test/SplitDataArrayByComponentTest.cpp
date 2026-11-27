@@ -24,7 +24,7 @@ namespace fs = std::filesystem;
 namespace
 {
 
-void fillDataArray(BoolArray* inputArray)
+void FillDataArray(BoolArrayType* inputArray)
 {
   usize numComps = inputArray->getNumberOfComponents();
   bool num = false;
@@ -42,7 +42,7 @@ void fillDataArray(BoolArray* inputArray)
 }
 
 template <typename T>
-void fillDataArray(DataArray<T>* inputArray)
+void FillDataArray(DataArray<T>* inputArray)
 {
   usize numComps = inputArray->getNumberOfComponents();
   T num = 0;
@@ -61,43 +61,48 @@ void fillDataArray(DataArray<T>* inputArray)
   }
 }
 
-DataStructure createDataStructure()
+DataStructure CreateDataStructure()
 {
   DataStructure dataStructure;
-  AttributeMatrix* am1 = AttributeMatrix::Create(dataStructure, "AttributeMatrix", {10});
+  AttributeMatrix* am1Ptr = AttributeMatrix::Create(dataStructure, "AttributeMatrix", {10});
 
-  UInt32Array* mcArray1 = UInt32Array::CreateWithStore<DataStore<uint32>>(dataStructure, "MultiComponent Array uint32", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1->getId());
-  fillDataArray<uint32>(mcArray1);
+  UInt32ArrayType* mcArray1Ptr =
+      UInt32ArrayType::CreateWithStore<DataStore<uint32>>(dataStructure, "MultiComponent Array uint32", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  FillDataArray<uint32>(mcArray1Ptr);
 
-  BoolArray* mcArray2 = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "MultiComponent Array bool", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1->getId());
-  fillDataArray(mcArray2);
+  BoolArrayType* mcArray2Ptr = BoolArrayType::CreateWithStore<DataStore<bool>>(dataStructure, "MultiComponent Array bool", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  FillDataArray(mcArray2Ptr);
 
-  Int8Array* mcArray4 = Int8Array::CreateWithStore<DataStore<int8>>(dataStructure, "MultiComponent Array int8", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1->getId());
-  fillDataArray<int8>(mcArray4);
+  Int8ArrayType* mcArray4Ptr = Int8ArrayType::CreateWithStore<DataStore<int8>>(dataStructure, "MultiComponent Array int8", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  FillDataArray<int8>(mcArray4Ptr);
 
-  UInt8Array* mcArray5 = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "MultiComponent Array uint8", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1->getId());
-  fillDataArray<uint8>(mcArray5);
+  UInt8ArrayType* mcArray5Ptr = UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, "MultiComponent Array uint8", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  FillDataArray<uint8>(mcArray5Ptr);
 
-  Int16Array* mcArray6 = Int16Array::CreateWithStore<DataStore<int16>>(dataStructure, "MultiComponent Array int16", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1->getId());
-  fillDataArray<int16>(mcArray6);
+  Int16ArrayType* mcArray6Ptr = Int16ArrayType::CreateWithStore<DataStore<int16>>(dataStructure, "MultiComponent Array int16", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  FillDataArray<int16>(mcArray6Ptr);
 
-  UInt16Array* mcArray7 = UInt16Array::CreateWithStore<DataStore<uint16>>(dataStructure, "MultiComponent Array uint16", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1->getId());
-  fillDataArray<uint16>(mcArray7);
+  UInt16ArrayType* mcArray7Ptr =
+      UInt16ArrayType::CreateWithStore<DataStore<uint16>>(dataStructure, "MultiComponent Array uint16", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  FillDataArray<uint16>(mcArray7Ptr);
 
-  Int32Array* mcArray8 = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "MultiComponent Array int32", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1->getId());
-  fillDataArray<int32>(mcArray8);
+  Int32ArrayType* mcArray8Ptr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "MultiComponent Array int32", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  FillDataArray<int32>(mcArray8Ptr);
 
-  Int64Array* mcArray9 = Int64Array::CreateWithStore<DataStore<int64>>(dataStructure, "MultiComponent Array int64", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1->getId());
-  fillDataArray<int64>(mcArray9);
+  Int64ArrayType* mcArray9Ptr = Int64ArrayType::CreateWithStore<DataStore<int64>>(dataStructure, "MultiComponent Array int64", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  FillDataArray<int64>(mcArray9Ptr);
 
-  UInt64Array* mcArray10 = UInt64Array::CreateWithStore<DataStore<uint64>>(dataStructure, "MultiComponent Array uint64", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1->getId());
-  fillDataArray<uint64>(mcArray10);
+  UInt64ArrayType* mcArray10Ptr =
+      UInt64ArrayType::CreateWithStore<DataStore<uint64>>(dataStructure, "MultiComponent Array uint64", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  FillDataArray<uint64>(mcArray10Ptr);
 
-  Float32Array* mcArray11 = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "MultiComponent Array float", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1->getId());
-  fillDataArray<float32>(mcArray11);
+  Float32ArrayType* mcArray11Ptr =
+      Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "MultiComponent Array float", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  FillDataArray<float32>(mcArray11Ptr);
 
-  Float64Array* mcArray12 = Float64Array::CreateWithStore<DataStore<float64>>(dataStructure, "MultiComponent Array double", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1->getId());
-  fillDataArray<float64>(mcArray12);
+  Float64ArrayType* mcArray12Ptr =
+      Float64ArrayType::CreateWithStore<DataStore<float64>>(dataStructure, "MultiComponent Array double", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  FillDataArray<float64>(mcArray12Ptr);
 
   return dataStructure;
 }
@@ -138,21 +143,21 @@ void TestSplitByType(DataStructure& dataStructure, const std::string& dataType, 
 
   using DataArrayPtrType = DataArray<T>*;
 
-  DataArray<T>& mcArray_original = dataStructure.getDataRefAs<DataArray<T>>(DataPath({"AttributeMatrix", "MultiComponent Array " + dataType}));
+  DataArray<T>& mcArrayOriginal = dataStructure.getDataRefAs<DataArray<T>>(DataPath({"AttributeMatrix", "MultiComponent Array " + dataType}));
   std::map<usize, DataArrayPtrType> mcArraysAfterSplit;
   for(const auto& comp : compsToCheck)
   {
-    DataArrayPtrType mcArray = dataStructure.getDataAs<DataArray<T>>(DataPath({"AttributeMatrix", "MultiComponent Array " + dataType + "Component" + StringUtilities::number(comp)}));
-    mcArraysAfterSplit[comp] = mcArray;
+    DataArrayPtrType mcArrayPtr = dataStructure.getDataAs<DataArray<T>>(DataPath({"AttributeMatrix", "MultiComponent Array " + dataType + "Component" + string_utilities::Number(comp)}));
+    mcArraysAfterSplit[comp] = mcArrayPtr;
   }
 
-  usize numTuples = mcArray_original.getNumberOfTuples();
-  usize numComps = mcArray_original.getNumberOfComponents();
+  usize numTuples = mcArrayOriginal.getNumberOfTuples();
+  usize numComps = mcArrayOriginal.getNumberOfComponents();
   for(int i = 0; i < numTuples; i++)
   {
     for(const auto& j : compsToCheck)
     {
-      T originalValue = mcArray_original[i * numComps + j];
+      T originalValue = mcArrayOriginal[i * numComps + j];
       T afterSplitValue = (*mcArraysAfterSplit[j])[i];
       REQUIRE(originalValue == afterSplitValue);
     }
@@ -162,12 +167,12 @@ void TestSplitByType(DataStructure& dataStructure, const std::string& dataType, 
 
 TEST_CASE("SimplnxCore::SplitDataArrayByComponent", "[SimplnxCore][SplitDataArrayByComponentFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
 
-  DataStructure dataStructure = createDataStructure();
+  DataStructure dataStructure = CreateDataStructure();
 
   scope.execute([&] { TestSplitByType<uint32>(dataStructure, "uint32"); });
   scope.execute([&] { TestSplitByType<bool>(dataStructure, "bool"); });
@@ -181,14 +186,14 @@ TEST_CASE("SimplnxCore::SplitDataArrayByComponent", "[SimplnxCore][SplitDataArra
   scope.execute([&] { TestSplitByType<float>(dataStructure, "float"); });
   scope.execute([&] { TestSplitByType<double>(dataStructure, "double"); });
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::SplitDataArrayByComponentFilter: SIMPL Backwards Compatibility", "[SimplnxCore][SplitDataArrayByComponentFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -201,22 +206,22 @@ TEST_CASE("SimplnxCore::SplitDataArrayByComponentFilter: SIMPL Backwards Compati
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<SplitDataArrayByComponentFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<SplitDataArrayByComponentFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(SplitDataArrayByComponentFilter::k_MultiCompArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<std::string>(SplitDataArrayByComponentFilter::k_Postfix_Key) == "TestName");
     }

@@ -20,16 +20,16 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeTwinBoundariesInputValues
 {
-  bool FindCoherence;
-  float32 AngleTolerance;
-  float32 AxisTolerance;
-  DataPath FaceLabelsArrayPath;
-  DataPath FaceNormalsArrayPath;
-  DataPath AvgQuatsArrayPath;
-  DataPath FeaturePhasesArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath TwinBoundariesArrayPath;
-  DataPath TwinBoundaryIncoherenceArrayPath;
+  bool find_coherence{};
+  float32 angle_tolerance{};
+  float32 axis_tolerance{};
+  DataPath face_labels_array_path;
+  DataPath face_normals_array_path;
+  DataPath avg_quats_array_path;
+  DataPath feature_phases_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath twin_boundaries_array_path;
+  DataPath twin_boundary_incoherence_array_path;
 };
 
 /**
@@ -88,7 +88,7 @@ private:
   const ComputeTwinBoundariesInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-  mutable std::mutex m_ProgressMessage_Mutex;
+  mutable std::mutex m_ProgressMessageMutex;
   ThrottledMessageHandler m_Throttle;
 };
 } // namespace nx::core

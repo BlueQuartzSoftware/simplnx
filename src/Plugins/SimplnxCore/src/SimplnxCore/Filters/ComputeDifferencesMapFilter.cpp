@@ -20,56 +20,56 @@ namespace
 constexpr int32 k_ComponentCountMismatchError = -90003;
 constexpr int32 k_InvalidNumTuples = -90004;
 
-IFilter::PreflightResult validateArrayTypes(const DataStructure& dataStructure, const std::vector<DataPath>& dataPaths)
+IFilter::PreflightResult ValidateArrayTypes(const DataStructure& dataStructure, const std::vector<DataPath>& dataPaths)
 {
   std::optional<DataType> dataType = {};
   for(const auto& dataPath : dataPaths)
   {
-    if(auto dataArray = dataStructure.getDataAs<IDataArray>(dataPath))
+    if(const auto* dataArrayPtr = dataStructure.getDataAs<IDataArray>(dataPath))
     {
       if(!dataType.has_value())
       {
-        dataType = dataArray->getDataType();
+        dataType = dataArrayPtr->getDataType();
       }
-      else if(dataType != dataArray->getDataType())
+      else if(dataType != dataArrayPtr->getDataType())
       {
         std::string ss = fmt::format("Selected Attribute Arrays must all be of the same type");
-        return {MakeErrorResult<OutputActions>(-90001, ss)};
+        return {.output_actions = MakeErrorResult<OutputActions>(-90001, ss)};
       }
     }
     else
     {
       std::string ss = fmt::format("Selected DataPath must point to a DataArray");
-      return {MakeErrorResult<OutputActions>(-90002, ss)};
+      return {.output_actions = MakeErrorResult<OutputActions>(-90002, ss)};
     }
   }
   return {};
 }
 
-WarningCollection warnOnUnsignedTypes(const DataStructure& dataStructure, const std::vector<DataPath>& paths)
+WarningCollectionType WarnOnUnsignedTypes(const DataStructure& dataStructure, const std::vector<DataPath>& paths)
 {
-  WarningCollection results;
+  WarningCollectionType results;
   for(const auto& dataPath : paths)
   {
-    if(dataStructure.getDataAs<UInt8Array>(dataPath))
+    if(dataStructure.getDataAs<UInt8ArrayType>(dataPath) != nullptr)
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint8_t. Using unsigned integer types may result in underflow leading to extremely large values!");
-      results.push_back(Warning{-90004, ss});
+      results.push_back(Warning{.code = -90004, .message = ss});
     }
-    if(dataStructure.getDataAs<UInt16Array>(dataPath))
+    if(dataStructure.getDataAs<UInt16ArrayType>(dataPath) != nullptr)
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint16_t. Using unsigned integer types may result in underflow leading to extremely large values!");
-      results.push_back(Warning{-90005, ss});
+      results.push_back(Warning{.code = -90005, .message = ss});
     }
-    if(dataStructure.getDataAs<UInt32Array>(dataPath))
+    if(dataStructure.getDataAs<UInt32ArrayType>(dataPath) != nullptr)
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint32_t. Using unsigned integer types may result in underflow leading to extremely large values!");
-      results.push_back(Warning{-90006, ss});
+      results.push_back(Warning{.code = -90006, .message = ss});
     }
-    if(dataStructure.getDataAs<UInt64Array>(dataPath))
+    if(dataStructure.getDataAs<UInt64ArrayType>(dataPath) != nullptr)
     {
       std::string ss = fmt::format("Selected Attribute Arrays are of type uint64_t. Using unsigned integer types may result in underflow leading to extremely large values!");
-      results.push_back(Warning{-90007, ss});
+      results.push_back(Warning{.code = -90007, .message = ss});
     }
   }
   return results;
@@ -126,14 +126,14 @@ IFilter::VersionType ComputeDifferencesMapFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeDifferencesMapFilter::clone() const
+IFilter::UniquePointerType ComputeDifferencesMapFilter::clone() const
 {
   return std::make_unique<ComputeDifferencesMapFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto firstInputArrayPath = filterArgs.value<DataPath>(k_FirstInputArrayPath_Key);
   auto secondInputArrayPath = filterArgs.value<DataPath>(k_SecondInputArrayPath_Key);
@@ -149,31 +149,31 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
 
   if(!dataArrayPaths.empty())
   {
-    auto result = validateArrayTypes(dataStructure, dataArrayPaths);
-    if(result.outputActions.invalid())
+    auto result = ValidateArrayTypes(dataStructure, dataArrayPaths);
+    if(result.output_actions.invalid())
     {
       return result;
     }
   }
 
-  WarningCollection warnings;
+  WarningCollectionType warnings;
   if(!dataArrayPaths.empty())
   {
-    warnings = warnOnUnsignedTypes(dataStructure, dataArrayPaths);
+    warnings = WarnOnUnsignedTypes(dataStructure, dataArrayPaths);
   }
 
   if(firstInputArray.getNumberOfComponents() != secondInputArray.getNumberOfComponents())
   {
     std::string ss = fmt::format("Selected Attribute Arrays must have the same component dimensions");
-    return {MakeErrorResult<OutputActions>(nx::core::k_ComponentCountMismatchError, ss)};
+    return {.output_actions = MakeErrorResult<OutputActions>(nx::core::k_ComponentCountMismatchError, ss)};
   }
 
   // validate the number of tuples
   auto tupleValidityCheck = dataStructure.validateNumberOfTuples(dataArrayPaths);
   if(!tupleValidityCheck)
   {
-    return {
-        MakeErrorResult<OutputActions>(k_InvalidNumTuples, fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(k_InvalidNumTuples,
+                                                             fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   // At this point we have two valid arrays of the same type and component dimensions, so we
@@ -184,20 +184,20 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
   //
   nx::core::Result<OutputActions> actions;
   actions.value().appendAction(std::move(action));
-  actions.m_Warnings = warnings;
+  actions.m_warnings = warnings;
 
-  return {std::move(actions)};
+  return {.output_actions = std::move(actions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeDifferencesMapFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeDifferencesMapFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeDifferencesMapInputValues inputValues;
 
-  inputValues.DifferenceMapArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_DifferenceMapArrayPath_Key);
-  inputValues.FirstInputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FirstInputArrayPath_Key);
-  inputValues.SecondInputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_SecondInputArrayPath_Key);
+  inputValues.difference_map_array_path = filterArgs.value<ArrayCreationParameter::ValueType>(k_DifferenceMapArrayPath_Key);
+  inputValues.first_input_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_FirstInputArrayPath_Key);
+  inputValues.second_input_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_SecondInputArrayPath_Key);
   return ComputeDifferencesMap(dataStructure, messageHandler, shouldCancel, &inputValues)();
 
   return {};
@@ -205,12 +205,12 @@ Result<> ComputeDifferencesMapFilter::executeImpl(DataStructure& dataStructure, 
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_FirstInputArrayPathKey = "FirstInputArrayPath";
-constexpr StringLiteral k_SecondInputArrayPathKey = "SecondInputArrayPath";
-constexpr StringLiteral k_DifferenceMapArrayPathKey = "DifferenceMapArrayPath";
-} // namespace SIMPL
+constexpr StringLiteralType k_FirstInputArrayPathKey = "FirstInputArrayPath";
+constexpr StringLiteralType k_SecondInputArrayPathKey = "SecondInputArrayPath";
+constexpr StringLiteralType k_DifferenceMapArrayPathKey = "DifferenceMapArrayPath";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeDifferencesMapFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -219,9 +219,9 @@ Result<Arguments> ComputeDifferencesMapFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FirstInputArrayPathKey, k_FirstInputArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SecondInputArrayPathKey, k_SecondInputArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_DifferenceMapArrayPathKey, k_DifferenceMapArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FirstInputArrayPathKey, k_FirstInputArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SecondInputArrayPathKey, k_SecondInputArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_DifferenceMapArrayPathKey, k_DifferenceMapArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

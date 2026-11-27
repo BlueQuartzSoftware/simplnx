@@ -38,8 +38,8 @@
 #include <vector>
 
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -62,7 +62,7 @@ const DataPath k_OutNodeTypesPath = k_TripleLineGeomPath.createChildPath(INodeGe
  * @param dimensions Image dimensions in voxels, ordered x, y, z.
  * @param labels Cell labels in x-fastest order.
  */
-void BuildGrainBlock(DataStructure& dataStructure, const SizeVec3& dimensions, const std::vector<int32>& labels)
+void BuildGrainBlock(DataStructure& dataStructure, const SizeVec3Type& dimensions, const std::vector<int32>& labels)
 {
   const std::string imageGeomName = "ImageGeom";
   const std::string cellDataName = "Cell Data";
@@ -78,8 +78,8 @@ void BuildGrainBlock(DataStructure& dataStructure, const SizeVec3& dimensions, c
   imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath featureIdsPath({imageGeomName, cellDataName, featureIdsName});
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, featureIdsPath, {dimensions[2], dimensions[1], dimensions[0]}, {1});
-  auto* featureIdsPtr = Int32Array::Create(dataStructure, featureIdsName, featureIdsStore, cellAmPtr->getId());
+  auto featureIdsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, featureIdsPath, {dimensions[2], dimensions[1], dimensions[0]}, {1});
+  auto* featureIdsPtr = Int32ArrayType::Create(dataStructure, featureIdsName, featureIdsStore, cellAmPtr->getId());
   REQUIRE(featureIdsPtr != nullptr);
   auto& featureIdsRef = featureIdsPtr->getDataStoreRef();
   REQUIRE(labels.size() == featureIdsRef.getNumberOfTuples());
@@ -113,7 +113,7 @@ void RunQuickSurfaceMesh(DataStructure& dataStructure)
   args.insertOrAssign(QuickSurfaceMeshFilter::k_RepairTriangleWinding_Key, std::make_any<bool>(false));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -145,7 +145,7 @@ IFilter::ExecuteResult RunExtractTripleLines(DataStructure& dataStructure, bool 
   args.insertOrAssign(ExtractTripleLinesFilter::k_IncludeExteriorTripleLines_Key, std::make_any<bool>(includeExterior));
   args.insertOrAssign(ExtractTripleLinesFilter::k_CreatedTripleLineGeometryPath_Key, std::make_any<DataPath>(k_TripleLineGeomPath));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   return filter.execute(dataStructure, args);
 }
 /**
@@ -173,7 +173,7 @@ void RunSurfaceNets(DataStructure& dataStructure)
   args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -196,7 +196,7 @@ void RunM3CSurfaceMeshing(DataStructure& dataStructure)
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
@@ -204,7 +204,7 @@ void RunM3CSurfaceMeshing(DataStructure& dataStructure)
 
 TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Quadruple point line from a four-grain block", "[SimplnxCore][ExtractTripleLinesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   BuildFourGrainBlock(dataStructure);
@@ -221,17 +221,17 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Quadruple point line from a fo
   REQUIRE(tripleLineGeom.getNumberOfEdges() == 1);
   REQUIRE(tripleLineGeom.getNumberOfVertices() == 2);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(k_OutNumFeaturesPath));
-  const auto& numFeatures = dataStructure.getDataRefAs<Int8Array>(k_OutNumFeaturesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8ArrayType>(k_OutNumFeaturesPath));
+  const auto& numFeatures = dataStructure.getDataRefAs<Int8ArrayType>(k_OutNumFeaturesPath);
   REQUIRE(numFeatures.getNumberOfTuples() == 1);
   REQUIRE(numFeatures[0] == 4);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Include Exterior Triple Lines", "[SimplnxCore][ExtractTripleLinesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   usize interiorOnlyEdges = 0;
   {
@@ -258,8 +258,8 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Include Exterior Triple Lines"
   // boundaries meet the four side faces. The interior quadruple line adds one: 13 edges.
   REQUIRE(interiorOnlyEdges == 1);
   REQUIRE(tripleLineGeom.getNumberOfEdges() == 13);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(k_OutNumFeaturesPath));
-  const auto& numFeatures = dataStructure.getDataRefAs<Int8Array>(k_OutNumFeaturesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8ArrayType>(k_OutNumFeaturesPath));
+  const auto& numFeatures = dataStructure.getDataRefAs<Int8ArrayType>(k_OutNumFeaturesPath);
   usize tripleCount = 0;
   usize quadrupleCount = 0;
   for(usize edgeIdx = 0; edgeIdx < numFeatures.getNumberOfTuples(); edgeIdx++)
@@ -270,12 +270,12 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Include Exterior Triple Lines"
   REQUIRE(tripleCount == 12);
   REQUIRE(quadrupleCount == 1);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: NodeTypes are carried onto the created vertices", "[SimplnxCore][ExtractTripleLinesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   BuildFourGrainBlock(dataStructure);
@@ -285,16 +285,16 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: NodeTypes are carried onto the
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<EdgeGeom>(k_TripleLineGeomPath));
   const auto& tripleLineGeom = dataStructure.getDataRefAs<EdgeGeom>(k_TripleLineGeomPath);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(k_OutNodeTypesPath));
-  const auto& outNodeTypes = dataStructure.getDataRefAs<Int8Array>(k_OutNodeTypesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8ArrayType>(k_OutNodeTypesPath));
+  const auto& outNodeTypes = dataStructure.getDataRefAs<Int8ArrayType>(k_OutNodeTypesPath);
 
   // Downstream filters require one NodeTypes tuple per output vertex.
   REQUIRE(outNodeTypes.getNumberOfTuples() == tripleLineGeom.getNumberOfVertices());
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(k_NodeTypesPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8ArrayType>(k_NodeTypesPath));
   const auto& sourceGeom = dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
-  const auto& sourceNodeTypes = dataStructure.getDataRefAs<Int8Array>(k_NodeTypesPath);
+  const auto& sourceNodeTypes = dataStructure.getDataRefAs<Int8ArrayType>(k_NodeTypesPath);
   const auto& sourceVertices = sourceGeom.getVertices()->getDataStoreRef();
   const auto& outputVertices = tripleLineGeom.getVertices()->getDataStoreRef();
   for(usize vertexIdx = 0; vertexIdx < outNodeTypes.getNumberOfTuples(); vertexIdx++)
@@ -313,12 +313,12 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: NodeTypes are carried onto the
     REQUIRE(foundMatch);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Preflight rejects mismatched input arrays", "[SimplnxCore][ExtractTripleLinesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   BuildFourGrainBlock(dataStructure);
@@ -338,49 +338,49 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Preflight rejects mismatched i
 
   SECTION("Face Labels tuple count mismatch")
   {
-    auto* wrongLabelsPtr = Int32Array::Create(dataStructure, "WrongLabels", std::make_unique<DataStore<int32>>(std::vector<usize>{triangleGeom.getNumberOfFaces() + 1}, std::vector<usize>{2}, 0));
+    auto* wrongLabelsPtr = Int32ArrayType::Create(dataStructure, "WrongLabels", std::make_unique<DataStore<int32>>(std::vector<usize>{triangleGeom.getNumberOfFaces() + 1}, std::vector<usize>{2}, 0));
     REQUIRE(wrongLabelsPtr != nullptr);
     args.insertOrAssign(ExtractTripleLinesFilter::k_FaceLabelsArrayPath_Key, std::make_any<DataPath>(DataPath({"WrongLabels"})));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().size() == 1);
-    REQUIRE(preflightResult.outputActions.errors()[0].code == -57402);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().size() == 1);
+    REQUIRE(preflightResult.output_actions.errors()[0].code == -57402);
   }
   SECTION("Node Types tuple count mismatch")
   {
     auto* wrongNodeTypesPtr =
-        Int8Array::Create(dataStructure, "WrongNodeTypes", std::make_unique<DataStore<int8>>(std::vector<usize>{triangleGeom.getNumberOfVertices() + 1}, std::vector<usize>{1}, 0));
+        Int8ArrayType::Create(dataStructure, "WrongNodeTypes", std::make_unique<DataStore<int8>>(std::vector<usize>{triangleGeom.getNumberOfVertices() + 1}, std::vector<usize>{1}, 0));
     REQUIRE(wrongNodeTypesPtr != nullptr);
     args.insertOrAssign(ExtractTripleLinesFilter::k_NodeTypesArrayPath_Key, std::make_any<DataPath>(DataPath({"WrongNodeTypes"})));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().size() == 1);
-    REQUIRE(preflightResult.outputActions.errors()[0].code == -57403);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().size() == 1);
+    REQUIRE(preflightResult.output_actions.errors()[0].code == -57403);
 
     args.insertOrAssign(ExtractTripleLinesFilter::k_CopyNodeTypes_Key, std::make_any<bool>(false));
     auto disabledPreflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(disabledPreflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(disabledPreflightResult.output_actions);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Copy Node Types off creates only NumFeatures", "[SimplnxCore][ExtractTripleLinesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   BuildFourGrainBlock(dataStructure);
   RunQuickSurfaceMesh(dataStructure);
   auto executeResult = RunExtractTripleLines(dataStructure, false, NodeTypeCopy::Disabled);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(k_OutNumFeaturesPath));
-  REQUIRE(dataStructure.getDataRefAs<Int8Array>(k_OutNumFeaturesPath).getNumberOfTuples() == 1);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8ArrayType>(k_OutNumFeaturesPath));
+  REQUIRE(dataStructure.getDataRefAs<Int8ArrayType>(k_OutNumFeaturesPath).getNumberOfTuples() == 1);
   REQUIRE(dataStructure.getData(k_OutNodeTypesPath) == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Consistent across surface meshers", "[SimplnxCore][ExtractTripleLinesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // QuickSurfaceMesh and SurfaceNets have the same topology. Smoothing changes only coordinates.
   // M3C adds edge, face and body centers, so its segment counts can differ.
@@ -388,36 +388,36 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Consistent across surface mesh
   usize quickEdgeCount = 0;
   struct MesherCase
   {
-    const char* Name;
-    void (*Run)(DataStructure&);
+    const char* name;
+    void (*run)(DataStructure&);
   };
-  const std::array<MesherCase, 3> mesherCases = {MesherCase{"QuickSurfaceMesh", &RunQuickSurfaceMesh}, MesherCase{"SurfaceNets", &RunSurfaceNets},
-                                                 MesherCase{"M3CSurfaceMeshing", &RunM3CSurfaceMeshing}};
+  const std::array<MesherCase, 3> mesherCases = {MesherCase{.name = "QuickSurfaceMesh", .run = &RunQuickSurfaceMesh}, MesherCase{.name = "SurfaceNets", .run = &RunSurfaceNets},
+                                                 MesherCase{.name = "M3CSurfaceMeshing", .run = &RunM3CSurfaceMeshing}};
 
   for(const auto& mesherCase : mesherCases)
   {
-    INFO(mesherCase.Name);
+    INFO(mesherCase.name);
     DataStructure dataStructure;
     BuildFourGrainBlock(dataStructure);
-    mesherCase.Run(dataStructure);
+    mesherCase.run(dataStructure);
 
     auto executeResult = RunExtractTripleLines(dataStructure);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<EdgeGeom>(k_TripleLineGeomPath));
     const auto& tripleLineGeom = dataStructure.getDataRefAs<EdgeGeom>(k_TripleLineGeomPath);
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(k_OutNumFeaturesPath));
-    const auto& numFeatures = dataStructure.getDataRefAs<Int8Array>(k_OutNumFeaturesPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8ArrayType>(k_OutNumFeaturesPath));
+    const auto& numFeatures = dataStructure.getDataRefAs<Int8ArrayType>(k_OutNumFeaturesPath);
 
     // 1. A junction exists in this input, so every mesher must find at least one segment.
-    INFO(mesherCase.Name << " produced " << tripleLineGeom.getNumberOfEdges() << " triple line segments");
+    INFO(mesherCase.name << " produced " << tripleLineGeom.getNumberOfEdges() << " triple line segments");
     REQUIRE(tripleLineGeom.getNumberOfEdges() > 0);
 
     // Counts saturate at 4, which means four or more Features.
     bool sawQuadruplePoint = false;
     for(usize i = 0; i < numFeatures.getNumberOfTuples(); i++)
     {
-      INFO(mesherCase.Name << " segment " << i << " reported NumFeatures " << static_cast<int32>(numFeatures[i]));
+      INFO(mesherCase.name << " segment " << i << " reported NumFeatures " << static_cast<int32>(numFeatures[i]));
       REQUIRE((numFeatures[i] == 3 || numFeatures[i] == 4));
       if(numFeatures[i] == 4)
       {
@@ -430,12 +430,12 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Consistent across surface mesh
     {
       histogram[numFeatures[index] - 3]++;
     }
-    if(std::string(mesherCase.Name) == "QuickSurfaceMesh")
+    if(std::string(mesherCase.name) == "QuickSurfaceMesh")
     {
       quickHistogram = histogram;
       quickEdgeCount = tripleLineGeom.getNumberOfEdges();
     }
-    else if(std::string(mesherCase.Name) == "SurfaceNets")
+    else if(std::string(mesherCase.name) == "SurfaceNets")
     {
       REQUIRE(tripleLineGeom.getNumberOfEdges() == quickEdgeCount);
       REQUIRE(histogram == quickHistogram);
@@ -444,7 +444,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Consistent across surface mesh
     // 3. Four grains meet in this input, so each mesher must find the quadruple point line.
     REQUIRE(sawQuadruplePoint);
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -452,7 +452,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Consistent across surface mesh
 // That defect placed a vertex at z=-0.5 below the input domain [0,1].
 TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: M3C triple line vertices stay within the domain bounds", "[SimplnxCore][ExtractTripleLinesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   BuildFourGrainBlock(dataStructure);
   RunM3CSurfaceMeshing(dataStructure);
@@ -460,23 +460,23 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: M3C triple line vertices stay 
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<EdgeGeom>(k_TripleLineGeomPath));
   const auto& tripleLineGeom = dataStructure.getDataRefAs<EdgeGeom>(k_TripleLineGeomPath);
-  constexpr float32 k_Epsilon = 0.0001f;
+  constexpr float32 k_VertexEpsilon = 0.0001f;
   const auto& vertices = tripleLineGeom.getVertices()->getDataStoreRef();
   for(usize vertexIdx = 0; vertexIdx < tripleLineGeom.getNumberOfVertices(); vertexIdx++)
   {
     const float32 zCoord = vertices[(vertexIdx * 3) + 2];
     CAPTURE(vertexIdx, zCoord);
-    REQUIRE(zCoord >= -k_Epsilon);
-    REQUIRE(zCoord <= 1.0f + k_Epsilon);
+    REQUIRE(zCoord >= -k_VertexEpsilon);
+    REQUIRE(zCoord <= 1.0f + k_VertexEpsilon);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: M3C splits the quadruple line at the mid-plane", "[SimplnxCore][ExtractTripleLinesFilter]")
 {
   // M3C places nodes at cell edge, face and body centers. The vertical quadruple line through
   // the shared corner therefore has two collinear segments, with a split at z=0.5.
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   BuildFourGrainBlock(dataStructure);
   RunM3CSurfaceMeshing(dataStructure);
@@ -484,12 +484,12 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: M3C splits the quadruple line 
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<EdgeGeom>(k_TripleLineGeomPath));
   REQUIRE(dataStructure.getDataRefAs<EdgeGeom>(k_TripleLineGeomPath).getNumberOfEdges() == 2);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(k_OutNumFeaturesPath));
-  const auto& numFeatures = dataStructure.getDataRefAs<Int8Array>(k_OutNumFeaturesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8ArrayType>(k_OutNumFeaturesPath));
+  const auto& numFeatures = dataStructure.getDataRefAs<Int8ArrayType>(k_OutNumFeaturesPath);
   REQUIRE(numFeatures.getNumberOfTuples() == 2);
   REQUIRE(numFeatures[0] == 4);
   REQUIRE(numFeatures[1] == 4);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 namespace
@@ -518,7 +518,7 @@ TriangleGeom* CreateTriangleMesh(DataStructure& dataStructure, const std::vector
   REQUIRE(triangleGeomPtr != nullptr);
 
   auto vertexStore = std::make_unique<DataStore<float32>>(std::vector<usize>{vertices.size()}, std::vector<usize>{3}, 0.0f);
-  auto* vertexArrayPtr = IGeometry::SharedVertexList::Create(dataStructure, "SharedVertexList", std::move(vertexStore), triangleGeomPtr->getId());
+  auto* vertexArrayPtr = IGeometry::SharedVertexListType::Create(dataStructure, "SharedVertexList", std::move(vertexStore), triangleGeomPtr->getId());
   REQUIRE(vertexArrayPtr != nullptr);
   auto& verticesRef = vertexArrayPtr->getDataStoreRef();
   for(usize i = 0; i < vertices.size(); i++)
@@ -530,7 +530,7 @@ TriangleGeom* CreateTriangleMesh(DataStructure& dataStructure, const std::vector
   triangleGeomPtr->setVertices(*vertexArrayPtr);
 
   auto faceStore = std::make_unique<DataStore<IGeometry::MeshIndexType>>(std::vector<usize>{triangles.size()}, std::vector<usize>{3}, 0);
-  auto* faceArrayPtr = IGeometry::SharedFaceList::Create(dataStructure, "SharedTriList", std::move(faceStore), triangleGeomPtr->getId());
+  auto* faceArrayPtr = IGeometry::SharedFaceListType::Create(dataStructure, "SharedTriList", std::move(faceStore), triangleGeomPtr->getId());
   REQUIRE(faceArrayPtr != nullptr);
   auto& facesRef = faceArrayPtr->getDataStoreRef();
   for(usize i = 0; i < triangles.size(); i++)
@@ -544,7 +544,7 @@ TriangleGeom* CreateTriangleMesh(DataStructure& dataStructure, const std::vector
   // Every source vertex gets a NodeTypes value. ExtractTripleLines copies these through to the
   // output vertices; it never reads them to decide which edges are triple lines.
   auto nodeTypeStore = std::make_unique<DataStore<int8>>(std::vector<usize>{vertices.size()}, std::vector<usize>{1}, 0);
-  auto* nodeTypeArrayPtr = Int8Array::Create(dataStructure, k_AlgorithmNodeTypesName, std::move(nodeTypeStore), triangleGeomPtr->getId());
+  auto* nodeTypeArrayPtr = Int8ArrayType::Create(dataStructure, k_AlgorithmNodeTypesName, std::move(nodeTypeStore), triangleGeomPtr->getId());
   REQUIRE(nodeTypeArrayPtr != nullptr);
   auto& nodeTypesRef = nodeTypeArrayPtr->getDataStoreRef();
   for(usize i = 0; i < vertices.size(); i++)
@@ -554,7 +554,7 @@ TriangleGeom* CreateTriangleMesh(DataStructure& dataStructure, const std::vector
   }
 
   auto labelStore = std::make_unique<DataStore<int32>>(std::vector<usize>{faceLabels.size()}, std::vector<usize>{2}, 0);
-  auto* labelArrayPtr = Int32Array::Create(dataStructure, k_AlgorithmFaceLabelsName, std::move(labelStore), triangleGeomPtr->getId());
+  auto* labelArrayPtr = Int32ArrayType::Create(dataStructure, k_AlgorithmFaceLabelsName, std::move(labelStore), triangleGeomPtr->getId());
   REQUIRE(labelArrayPtr != nullptr);
   auto& labelsRef = labelArrayPtr->getDataStoreRef();
   for(usize i = 0; i < faceLabels.size(); i++)
@@ -572,18 +572,18 @@ TriangleGeom* CreateTriangleMesh(DataStructure& dataStructure, const std::vector
  * @param dataStructure Receives the geometry and output arrays.
  * @return Geometry, NumFeatures array, and NodeTypes array.
  */
-std::tuple<EdgeGeom*, Int8Array*, Int8Array*> CreateEmptyTripleLineGeom(DataStructure& dataStructure)
+std::tuple<EdgeGeom*, Int8ArrayType*, Int8ArrayType*> CreateEmptyTripleLineGeom(DataStructure& dataStructure)
 {
   auto* edgeGeomPtr = EdgeGeom::Create(dataStructure, k_AlgorithmTripleLineGeomName);
   REQUIRE(edgeGeomPtr != nullptr);
 
   auto vertexStore = std::make_unique<DataStore<float32>>(std::vector<usize>{0}, std::vector<usize>{3}, 0.0f);
-  auto* vertexArrayPtr = IGeometry::SharedVertexList::Create(dataStructure, "SharedVertexList", std::move(vertexStore), edgeGeomPtr->getId());
+  auto* vertexArrayPtr = IGeometry::SharedVertexListType::Create(dataStructure, "SharedVertexList", std::move(vertexStore), edgeGeomPtr->getId());
   REQUIRE(vertexArrayPtr != nullptr);
   edgeGeomPtr->setVertices(*vertexArrayPtr);
 
   auto edgeStore = std::make_unique<DataStore<IGeometry::MeshIndexType>>(std::vector<usize>{0}, std::vector<usize>{2}, 0);
-  auto* edgeArrayPtr = IGeometry::SharedEdgeList::Create(dataStructure, "SharedEdgeList", std::move(edgeStore), edgeGeomPtr->getId());
+  auto* edgeArrayPtr = IGeometry::SharedEdgeListType::Create(dataStructure, "SharedEdgeList", std::move(edgeStore), edgeGeomPtr->getId());
   REQUIRE(edgeArrayPtr != nullptr);
   edgeGeomPtr->setEdgeList(*edgeArrayPtr);
 
@@ -596,24 +596,24 @@ std::tuple<EdgeGeom*, Int8Array*, Int8Array*> CreateEmptyTripleLineGeom(DataStru
   edgeGeomPtr->setEdgeAttributeMatrix(*edgeAmPtr);
 
   auto numFeaturesStore = std::make_unique<DataStore<int8>>(std::vector<usize>{0}, std::vector<usize>{1}, 0);
-  auto* numFeaturesArrayPtr = Int8Array::Create(dataStructure, k_AlgorithmNumFeaturesName, std::move(numFeaturesStore), edgeAmPtr->getId());
+  auto* numFeaturesArrayPtr = Int8ArrayType::Create(dataStructure, k_AlgorithmNumFeaturesName, std::move(numFeaturesStore), edgeAmPtr->getId());
   REQUIRE(numFeaturesArrayPtr != nullptr);
 
   auto outNodeTypeStore = std::make_unique<DataStore<int8>>(std::vector<usize>{0}, std::vector<usize>{1}, 0);
-  auto* outNodeTypeArrayPtr = Int8Array::Create(dataStructure, k_AlgorithmNodeTypesName, std::move(outNodeTypeStore), vertexAmPtr->getId());
+  auto* outNodeTypeArrayPtr = Int8ArrayType::Create(dataStructure, k_AlgorithmNodeTypesName, std::move(outNodeTypeStore), vertexAmPtr->getId());
   REQUIRE(outNodeTypeArrayPtr != nullptr);
 
   return {edgeGeomPtr, numFeaturesArrayPtr, outNodeTypeArrayPtr};
 }
 
-std::tuple<EdgeGeom*, Int8Array*, Int8Array*> GetOutputs(DataStructure& dataStructure)
+std::tuple<EdgeGeom*, Int8ArrayType*, Int8ArrayType*> GetOutputs(DataStructure& dataStructure)
 {
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<EdgeGeom>(DataPath({k_AlgorithmTripleLineGeomName})));
   auto* edgeGeomPtr = &dataStructure.getDataRefAs<EdgeGeom>(DataPath({k_AlgorithmTripleLineGeomName}));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(DataPath({k_AlgorithmTripleLineGeomName, "Edge Data", k_AlgorithmNumFeaturesName})));
-  auto* numFeaturesPtr = &dataStructure.getDataRefAs<Int8Array>(DataPath({k_AlgorithmTripleLineGeomName, "Edge Data", k_AlgorithmNumFeaturesName}));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(DataPath({k_AlgorithmTripleLineGeomName, "Vertex Data", k_AlgorithmNodeTypesName})));
-  auto* nodeTypesPtr = &dataStructure.getDataRefAs<Int8Array>(DataPath({k_AlgorithmTripleLineGeomName, "Vertex Data", k_AlgorithmNodeTypesName}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8ArrayType>(DataPath({k_AlgorithmTripleLineGeomName, "Edge Data", k_AlgorithmNumFeaturesName})));
+  auto* numFeaturesPtr = &dataStructure.getDataRefAs<Int8ArrayType>(DataPath({k_AlgorithmTripleLineGeomName, "Edge Data", k_AlgorithmNumFeaturesName}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8ArrayType>(DataPath({k_AlgorithmTripleLineGeomName, "Vertex Data", k_AlgorithmNodeTypesName})));
+  auto* nodeTypesPtr = &dataStructure.getDataRefAs<Int8ArrayType>(DataPath({k_AlgorithmTripleLineGeomName, "Vertex Data", k_AlgorithmNodeTypesName}));
   REQUIRE(edgeGeomPtr != nullptr);
   REQUIRE(numFeaturesPtr != nullptr);
   REQUIRE(nodeTypesPtr != nullptr);
@@ -633,20 +633,20 @@ Result<> RunExtractTripleLinesAlgorithm(DataStructure& dataStructure, bool inclu
                                         const IFilter::MessageHandler& messageHandler = {})
 {
   auto [edgeGeomPtr, numFeaturesPtr, nodeTypesPtr] = CreateEmptyTripleLineGeom(dataStructure);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({k_AlgorithmTriangleGeomName, k_AlgorithmFaceLabelsName})));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(DataPath({k_AlgorithmTriangleGeomName, k_AlgorithmNodeTypesName})));
-  const auto& sourceNodeTypes = dataStructure.getDataRefAs<Int8Array>(DataPath({k_AlgorithmTriangleGeomName, k_AlgorithmNodeTypesName})).getDataStoreRef();
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({k_AlgorithmTriangleGeomName, k_AlgorithmFaceLabelsName})));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8ArrayType>(DataPath({k_AlgorithmTriangleGeomName, k_AlgorithmNodeTypesName})));
+  const auto& sourceNodeTypes = dataStructure.getDataRefAs<Int8ArrayType>(DataPath({k_AlgorithmTriangleGeomName, k_AlgorithmNodeTypesName})).getDataStoreRef();
   const auto* inputNodeTypesPtr = nodeTypePointers == NodeTypePointers::Both || nodeTypePointers == NodeTypePointers::InputOnly ? &sourceNodeTypes : nullptr;
   auto* outputNodeTypesPtr = nodeTypePointers == NodeTypePointers::Both || nodeTypePointers == NodeTypePointers::OutputOnly ? &nodeTypesPtr->getDataStoreRef() : nullptr;
   ExtractTripleLinesInputValues inputValues;
-  inputValues.TriangleGeometryPath = DataPath({k_AlgorithmTriangleGeomName});
-  inputValues.FaceLabelsPath = DataPath({k_AlgorithmTriangleGeomName, k_AlgorithmFaceLabelsName});
-  inputValues.TripleLineGeometryPath = DataPath({k_AlgorithmTripleLineGeomName});
-  inputValues.NumFeaturesPath = DataPath({k_AlgorithmTripleLineGeomName, "Edge Data", k_AlgorithmNumFeaturesName});
-  inputValues.SourceNodeTypes = inputNodeTypesPtr;
-  inputValues.DestinationNodeTypes = outputNodeTypesPtr;
-  inputValues.IncludeExteriorLines = includeExterior;
-  inputValues.VertexBatchSize = vertexBatchSize;
+  inputValues.triangle_geometry_path = DataPath({k_AlgorithmTriangleGeomName});
+  inputValues.face_labels_path = DataPath({k_AlgorithmTriangleGeomName, k_AlgorithmFaceLabelsName});
+  inputValues.triple_line_geometry_path = DataPath({k_AlgorithmTripleLineGeomName});
+  inputValues.num_features_path = DataPath({k_AlgorithmTripleLineGeomName, "Edge Data", k_AlgorithmNumFeaturesName});
+  inputValues.source_node_types = inputNodeTypesPtr;
+  inputValues.destination_node_types = outputNodeTypesPtr;
+  inputValues.include_exterior_lines = includeExterior;
+  inputValues.vertex_batch_size = vertexBatchSize;
   return ExtractTripleLines(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
@@ -682,7 +682,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Flat boundary produces n
   REQUIRE(edgeGeomPtr->getNumberOfEdges() == 0);
   REQUIRE(edgeGeomPtr->getNumberOfVertices() == 0);
   REQUIRE(numFeaturesArrayPtr->getNumberOfTuples() == 0);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Interior triple junction", "[SimplnxCore][ExtractTripleLinesFilter]")
@@ -720,7 +720,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Interior triple junction
     zCoords.insert(vertsRef[(vertIndex * 3) + 2]);
   }
   REQUIRE(zCoords == std::set<float32>{0.0f, 1.0f});
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Quadruple point line", "[SimplnxCore][ExtractTripleLinesFilter]")
@@ -751,7 +751,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Quadruple point line", "
   REQUIRE(edgeGeomPtr->getNumberOfEdges() == 1);
   REQUIRE(numFeaturesArrayPtr->getNumberOfTuples() == 1);
   REQUIRE((*numFeaturesArrayPtr)[0] == 4);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Vertex list is compacted", "[SimplnxCore][ExtractTripleLinesFilter]")
@@ -779,7 +779,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Vertex list is compacted
   {
     REQUIRE(edgesRef[i] < edgeGeomPtr->getNumberOfVertices());
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): IncludeExteriorLines toggles surface lines", "[SimplnxCore][ExtractTripleLinesFilter]")
@@ -802,7 +802,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): IncludeExteriorLines tog
     REQUIRE(result.valid());
     const auto [edgeGeomPtr, numFeaturesArrayPtr, tripleLineNodeTypesPtr] = GetOutputs(dataStructure);
     REQUIRE(edgeGeomPtr->getNumberOfEdges() == 0);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("IncludeExteriorLines accepts it")
@@ -817,7 +817,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): IncludeExteriorLines tog
     const auto [edgeGeomPtr, numFeaturesArrayPtr, tripleLineNodeTypesPtr] = GetOutputs(dataStructure);
     REQUIRE(edgeGeomPtr->getNumberOfEdges() == 1);
     REQUIRE((*numFeaturesArrayPtr)[0] == 3);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -842,7 +842,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): NodeTypes are copied thr
   // The Interior triple junction fixture retains source indices 0 and 1, in that order.
   REQUIRE((*tripleLineNodeTypesPtr)[0] == 2);
   REQUIRE((*tripleLineNodeTypesPtr)[1] == 3);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Five sheets saturate at four Features", "[SimplnxCore][ExtractTripleLinesFilter]")
@@ -857,7 +857,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Five sheets saturate at 
   const auto [edgeGeomPtr, numFeaturesPtr, nodeTypesPtr] = GetOutputs(dataStructure);
   REQUIRE(edgeGeomPtr->getNumberOfEdges() == 1);
   REQUIRE((*numFeaturesPtr)[0] == 4); // A value of 4 means four or more unique Feature Ids.
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Feature zero is an ordinary Feature", "[SimplnxCore][ExtractTripleLinesFilter]")
@@ -870,7 +870,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Feature zero is an ordin
   const auto [edgeGeomPtr, numFeaturesPtr, nodeTypesPtr] = GetOutputs(dataStructure);
   REQUIRE(edgeGeomPtr->getNumberOfEdges() == 1);
   REQUIRE((*numFeaturesPtr)[0] == 3);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Checkerboard counts Features instead of triangles", "[SimplnxCore][ExtractTripleLinesFilter]")
@@ -887,7 +887,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Checkerboard counts Feat
   const auto [edgeGeomPtr, numFeaturesPtr, nodeTypesPtr] = GetOutputs(dataStructure);
   REQUIRE(edgeGeomPtr->getNumberOfEdges() == 0);
   REQUIRE(edgeGeomPtr->getNumberOfVertices() == 0);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Cancellation leaves empty output", "[SimplnxCore][ExtractTripleLinesFilter]")
@@ -900,7 +900,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Cancellation leaves empt
   const auto [edgeGeomPtr, numFeaturesPtr, nodeTypesPtr] = GetOutputs(dataStructure);
   REQUIRE(edgeGeomPtr->getNumberOfEdges() == 0);
   REQUIRE(edgeGeomPtr->getNumberOfVertices() == 0);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Output follows sorted source indices", "[SimplnxCore][ExtractTripleLinesFilter]")
@@ -941,7 +941,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Output follows sorted so
     REQUIRE(edges[1] == 2);
     REQUIRE(edges[2] == 1);
     REQUIRE(edges[3] == 3);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -968,7 +968,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): NodeTypes pointers must 
     REQUIRE(edgeGeomPtr->getNumberOfEdges() == 0);
     REQUIRE(edgeGeomPtr->getNumberOfVertices() == 0);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 namespace
@@ -978,7 +978,7 @@ using CoordinateEdgeType = std::pair<PointType, PointType>;
 // A multiset also preserves distinct mesh edges whose endpoint coordinates coincide.
 using CoordinateEdgesType = std::map<CoordinateEdgeType, std::multiset<int8>>;
 
-CoordinateEdgeType CoordinateKey(const IGeometry::SharedVertexList& vertices, uint64 vertex0, uint64 vertex1)
+CoordinateEdgeType CoordinateKey(const IGeometry::SharedVertexListType& vertices, uint64 vertex0, uint64 vertex1)
 {
   PointType point0 = {vertices[3 * vertex0], vertices[3 * vertex0 + 1], vertices[3 * vertex0 + 2]};
   PointType point1 = {vertices[3 * vertex1], vertices[3 * vertex1 + 1], vertices[3 * vertex1 + 2]};
@@ -988,9 +988,9 @@ CoordinateEdgeType CoordinateKey(const IGeometry::SharedVertexList& vertices, ui
 CoordinateEdgesType BruteForceTripleLines(DataStructure& dataStructure, bool includeExterior)
 {
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FaceLabelsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FaceLabelsPath));
   const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
-  const auto& labels = dataStructure.getDataRefAs<Int32Array>(k_FaceLabelsPath);
+  const auto& labels = dataStructure.getDataRefAs<Int32ArrayType>(k_FaceLabelsPath);
   const auto& triangles = *triangleGeom.getFaces();
   std::map<std::pair<uint64, uint64>, std::set<int32>> edgeLabels;
   // Deliberately visit ALL edges. No candidate prefilter, packed key or saturating set.
@@ -1032,9 +1032,9 @@ CoordinateEdgesType BruteForceTripleLines(DataStructure& dataStructure, bool inc
 CoordinateEdgesType ReadTripleLines(DataStructure& dataStructure, const DataPath& geometryPath, const DataPath& countsPath)
 {
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<EdgeGeom>(geometryPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(countsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8ArrayType>(countsPath));
   const auto& edgeGeom = dataStructure.getDataRefAs<EdgeGeom>(geometryPath);
-  const auto& counts = dataStructure.getDataRefAs<Int8Array>(countsPath);
+  const auto& counts = dataStructure.getDataRefAs<Int8ArrayType>(countsPath);
   REQUIRE(counts.getNumberOfTuples() == edgeGeom.getNumberOfEdges());
   CoordinateEdgesType actual;
   std::set<uint64> referencedVertices;
@@ -1078,7 +1078,7 @@ void BuildRandomGrainBlock(DataStructure& dataStructure, uint32 seed)
 
 TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Matches brute-force oracle", "[SimplnxCore][ExtractTripleLinesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const uint32 seed = GENERATE(104729U, 271828U, 314159U);
   const usize mesher = GENERATE(usize{0}, usize{1}, usize{2});
   const bool includeExterior = GENERATE(false, true);
@@ -1096,30 +1096,30 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Matches brute-force oracle", "
   if(seed == 104729U && mesher == 0)
   {
     ExtractTripleLinesInputValues inputValues;
-    inputValues.TriangleGeometryPath = k_TriangleGeomPath;
-    inputValues.FaceLabelsPath = k_FaceLabelsPath;
-    inputValues.TripleLineGeometryPath = k_TripleLineGeomPath;
-    inputValues.NumFeaturesPath = k_OutNumFeaturesPath;
-    inputValues.IncludeExteriorLines = includeExterior;
-    inputValues.VertexBatchSize = 37;
+    inputValues.triangle_geometry_path = k_TriangleGeomPath;
+    inputValues.face_labels_path = k_FaceLabelsPath;
+    inputValues.triple_line_geometry_path = k_TripleLineGeomPath;
+    inputValues.num_features_path = k_OutNumFeaturesPath;
+    inputValues.include_exterior_lines = includeExterior;
+    inputValues.vertex_batch_size = 37;
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
-    REQUIRE(dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath).getNumberOfVertices() > inputValues.VertexBatchSize);
+    REQUIRE(dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath).getNumberOfVertices() > inputValues.vertex_batch_size);
     const std::atomic_bool shouldCancel = false;
     auto algorithmResult = ExtractTripleLines(dataStructure, {}, shouldCancel, &inputValues)();
     SIMPLNX_RESULT_REQUIRE_VALID(algorithmResult);
     REQUIRE(ReadTripleLines(dataStructure, k_TripleLineGeomPath, k_OutNumFeaturesPath) == expected);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Matches brute-force oracle with out-of-core storage", "[SimplnxCore][ExtractTripleLinesFilter]")
 {
-  UnitTest::LoadPlugins();
-  if(!DataStoreUtilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"))
+  unit_test::LoadPlugins();
+  if(!data_store_utilities::GetIOCollection().hasDataStoreCreationFunction("HDF5-OOC"))
   {
     return;
   }
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
   const usize mesher = GENERATE(usize{0}, usize{1}, usize{2});
   const bool includeExterior = GENERATE(false, true);
   CAPTURE(mesher, includeExterior);
@@ -1131,18 +1131,18 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Matches brute-force oracle wit
   auto result = RunExtractTripleLines(dataStructure, includeExterior);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   REQUIRE(ReadTripleLines(dataStructure, k_TripleLineGeomPath, k_OutNumFeaturesPath) == expected);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8Array>(k_OutNumFeaturesPath));
-  REQUIRE(dataStructure.getDataRefAs<Int8Array>(k_OutNumFeaturesPath).getDataStoreRef().getDataFormat() == "HDF5-OOC");
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int8ArrayType>(k_OutNumFeaturesPath));
+  REQUIRE(dataStructure.getDataRefAs<Int8ArrayType>(k_OutNumFeaturesPath).getDataStoreRef().getDataFormat() == "HDF5-OOC");
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<EdgeGeom>(k_TripleLineGeomPath));
   const auto& edgeGeom = dataStructure.getDataRefAs<EdgeGeom>(k_TripleLineGeomPath);
   REQUIRE(edgeGeom.getEdges() != nullptr);
   REQUIRE(edgeGeom.getEdges()->getDataStoreRef().getDataFormat() == "HDF5-OOC");
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Warns when no triple lines exist", "[SimplnxCore][ExtractTripleLinesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   BuildGrainBlock(dataStructure, {2, 2, 1}, {1, 2, 1, 2});
   RunQuickSurfaceMesh(dataStructure);
@@ -1153,7 +1153,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLinesFilter: Warns when no triple lines exi
   REQUIRE(result.result.warnings()[0].message.find("share vertices") != std::string::npos);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<EdgeGeom>(k_TripleLineGeomPath));
   REQUIRE(dataStructure.getDataRefAs<EdgeGeom>(k_TripleLineGeomPath).getNumberOfEdges() == 0);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Batch sizes preserve hand-built fixtures", "[SimplnxCore][ExtractTripleLinesFilter]")
@@ -1179,15 +1179,18 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Batch sizes preserve han
       const auto [edgeGeomPtr, countsPtr, nodesPtr] = GetOutputs(dataStructure);
       std::vector<float32> vertices;
       std::vector<uint64> edges;
+      vertices.reserve(edgeGeomPtr->getNumberOfVertices() * 3);
       for(usize index = 0; index < edgeGeomPtr->getNumberOfVertices() * 3; index++)
       {
         vertices.push_back((*edgeGeomPtr->getVertices())[index]);
       }
+      edges.reserve(edgeGeomPtr->getNumberOfEdges() * 2);
       for(usize index = 0; index < edgeGeomPtr->getNumberOfEdges() * 2; index++)
       {
         edges.push_back((*edgeGeomPtr->getEdges())[index]);
       }
       std::vector<int8> nodeTypes;
+      nodeTypes.reserve(nodesPtr->getNumberOfTuples());
       for(usize index = 0; index < nodesPtr->getNumberOfTuples(); index++)
       {
         nodeTypes.push_back((*nodesPtr)[index]);
@@ -1206,7 +1209,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Batch sizes preserve han
         REQUIRE(vertices == baselineVertices);
         REQUIRE(edges == baselineEdges);
       }
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
@@ -1242,7 +1245,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Negative labels identify
     {
       REQUIRE(actual == baseline);
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -1262,7 +1265,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Rejects face indices out
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().size() == 1);
   REQUIRE(result.errors()[0].code == -57406);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Rejects zero batch size", "[SimplnxCore][ExtractTripleLinesFilter]")
@@ -1274,7 +1277,7 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Rejects zero batch size"
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().size() == 1);
   REQUIRE(result.errors()[0].code == -57404);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Cancellation after output resize", "[SimplnxCore][ExtractTripleLinesFilter]")
@@ -1304,5 +1307,5 @@ TEST_CASE("SimplnxCore::ExtractTripleLines (Algorithm): Cancellation after outpu
   REQUIRE((*nodesPtr)[0] == 2); // First vertex was copied before cancellation.
   REQUIRE((*nodesPtr)[1] == 0); // Second vertex and edge attributes remain unwritten.
   REQUIRE((*countsPtr)[0] == 0);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

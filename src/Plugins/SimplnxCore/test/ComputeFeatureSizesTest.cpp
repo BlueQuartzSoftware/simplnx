@@ -34,17 +34,17 @@ namespace fs = std::filesystem;
  * @namespace LegacyTest
  * @brief Provides array names from the Small IN100 exemplar.
  */
-namespace LegacyTest
+namespace legacy_test
 {
 const std::string k_Volumes("Volumes");
 const std::string k_EquivalentDiameters("EquivalentDiameters");
-} // namespace LegacyTest
+} // namespace legacy_test
 
 /**
  * @namespace Test
  * @brief Provides generated feature-size fixtures and analytical validators.
  */
-namespace Test
+namespace test
 {
 constexpr usize k_OutputBlockTuples = 262144;
 constexpr usize k_MultiBlockFeatureCount = k_OutputBlockTuples + 3;
@@ -89,7 +89,7 @@ constexpr float64 k_RelativeTolerance = 1.0e-6;
  * @return Reference to the required object.
  */
 template <typename T>
-T& GetRequiredDataRef(DataStructure& dataStructure, const DataPath& path)
+static T& GetRequiredDataRef(DataStructure& dataStructure, const DataPath& path)
 {
   T* dataPtr = nullptr;
   REQUIRE_NOTHROW(dataPtr = &dataStructure.getDataRefAs<T>(path));
@@ -106,7 +106,7 @@ T& GetRequiredDataRef(DataStructure& dataStructure, const DataPath& path)
  * @return Const reference to the required object.
  */
 template <typename T>
-const T& GetRequiredDataRef(const DataStructure& dataStructure, const DataPath& path)
+const static T& GetRequiredDataRef(const DataStructure& dataStructure, const DataPath& path)
 {
   const T* dataPtr = nullptr;
   REQUIRE_NOTHROW(dataPtr = &dataStructure.getDataRefAs<T>(path));
@@ -131,8 +131,8 @@ enum class FeatureOutputGeometry : uint8
  */
 struct BulkWriteRecord
 {
-  usize Start = 0;
-  usize Count = 0;
+  usize start = 0;
+  usize count = 0;
 
   bool operator==(const BulkWriteRecord&) const = default;
 };
@@ -240,9 +240,9 @@ private:
  */
 struct ObservedFeatureOutputs
 {
-  std::shared_ptr<ObservedDataStore<int32>> NumElements;
-  std::shared_ptr<ObservedDataStore<float32>> Volumes;
-  std::shared_ptr<ObservedDataStore<float32>> EquivalentDiameters;
+  std::shared_ptr<ObservedDataStore<int32>> num_elements;
+  std::shared_ptr<ObservedDataStore<float32>> volumes;
+  std::shared_ptr<ObservedDataStore<float32>> equivalent_diameters;
 };
 
 /**
@@ -284,17 +284,18 @@ public:
     return std::invoke(std::forward<CallableT>(callable));
   }
 
-  void requireOocStoreExecution() const
+  static void RequireOocStoreExecution()
   {
     const AlgorithmPathExecutionCounts counts = GetAlgorithmPathExecutionCounts();
-    INFO("Dispatch counts: in-core=" << counts.InCore << ", OOC=" << counts.OutOfCore << ", OOC/resident=" << counts.OutOfCoreOnInMemoryStore << ", OOC/OOC=" << counts.OutOfCoreOnOutOfCoreStore
-                                     << ", in-core/resident=" << counts.InCoreOnInMemoryStore << ", in-core/OOC=" << counts.InCoreOnOutOfCoreStore);
-    REQUIRE(counts.OutOfCore > 0);
-    REQUIRE(counts.InCore == 0);
-    REQUIRE(counts.OutOfCoreOnOutOfCoreStore > 0);
-    REQUIRE(counts.OutOfCoreOnInMemoryStore == 0);
-    REQUIRE(counts.InCoreOnInMemoryStore == 0);
-    REQUIRE(counts.InCoreOnOutOfCoreStore == 0);
+    INFO("Dispatch counts: in-core=" << counts.in_core << ", OOC=" << counts.out_of_core << ", OOC/resident=" << counts.out_of_core_on_in_memory_store
+                                     << ", OOC/OOC=" << counts.out_of_core_on_out_of_core_store << ", in-core/resident=" << counts.in_core_on_in_memory_store
+                                     << ", in-core/OOC=" << counts.in_core_on_out_of_core_store);
+    REQUIRE(counts.out_of_core > 0);
+    REQUIRE(counts.in_core == 0);
+    REQUIRE(counts.out_of_core_on_out_of_core_store > 0);
+    REQUIRE(counts.out_of_core_on_in_memory_store == 0);
+    REQUIRE(counts.in_core_on_in_memory_store == 0);
+    REQUIRE(counts.in_core_on_out_of_core_store == 0);
   }
 
 private:
@@ -311,7 +312,7 @@ private:
  * useConfiguredStore Store selection.
  * @return The populated DataStructure.
  */
-DataStructure CreateFeatureOutputDataStructure(FeatureOutputGeometry geometryKind, usize numFeatures, bool useConfiguredStore)
+static DataStructure CreateFeatureOutputDataStructure(FeatureOutputGeometry geometryKind, usize numFeatures, bool useConfiguredStore)
 {
   REQUIRE(numFeatures >= 7);
   DataStructure dataStructure;
@@ -347,9 +348,9 @@ DataStructure CreateFeatureOutputDataStructure(FeatureOutputGeometry geometryKin
     rectGridGeomPtr->setDimensions({3, 2, 2});
     cellShape = {2, 2, 3};
 
-    auto* xBoundsPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "xBounds", {4}, {1}, rectGridGeomPtr->getId());
-    auto* yBoundsPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "yBounds", {3}, {1}, rectGridGeomPtr->getId());
-    auto* zBoundsPtr = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "zBounds", {3}, {1}, rectGridGeomPtr->getId());
+    auto* xBoundsPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "xBounds", {4}, {1}, rectGridGeomPtr->getId());
+    auto* yBoundsPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "yBounds", {3}, {1}, rectGridGeomPtr->getId());
+    auto* zBoundsPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "zBounds", {3}, {1}, rectGridGeomPtr->getId());
     REQUIRE(xBoundsPtr != nullptr);
     REQUIRE(yBoundsPtr != nullptr);
     REQUIRE(zBoundsPtr != nullptr);
@@ -374,17 +375,17 @@ DataStructure CreateFeatureOutputDataStructure(FeatureOutputGeometry geometryKin
   auto* featureDataPtr = AttributeMatrix::Create(dataStructure, k_FeatureAMName, {numFeatures}, gridGeom.getId());
   REQUIRE(featureDataPtr != nullptr);
 
-  std::shared_ptr<Int32AbstractDataStore> featureIdsStore;
+  std::shared_ptr<Int32AbstractDataStoreType> featureIdsStore;
   if(useConfiguredStore)
   {
-    featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, cellShape, {1});
+    featureIdsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_FeatureIdsPath, cellShape, {1});
   }
   else
   {
-    featureIdsStore = std::make_shared<Int32DataStore>(cellShape, ShapeType{1}, std::optional<int32>{0});
+    featureIdsStore = std::make_shared<Int32DataStoreType>(cellShape, ShapeType{1}, std::optional<int32>{0});
   }
   REQUIRE(featureIdsStore != nullptr);
-  auto* featureIdsPtr = Int32Array::Create(dataStructure, k_FeatureIdsName, featureIdsStore, cellDataPtr->getId());
+  auto* featureIdsPtr = Int32ArrayType::Create(dataStructure, k_FeatureIdsName, featureIdsStore, cellDataPtr->getId());
   REQUIRE(featureIdsPtr != nullptr);
   auto featureIdsStoreWriteResult = featureIdsStore->copyFromBuffer(0, featureIdsValues);
   SIMPLNX_RESULT_REQUIRE_VALID(featureIdsStoreWriteResult);
@@ -398,18 +399,18 @@ DataStructure CreateFeatureOutputDataStructure(FeatureOutputGeometry geometryKin
  * @return
  * Shared output stores for behavior checks.
  */
-ObservedFeatureOutputs AddObservedFeatureOutputs(DataStructure& dataStructure, bool rejectScalarWrites)
+static ObservedFeatureOutputs AddObservedFeatureOutputs(DataStructure& dataStructure, bool rejectScalarWrites)
 {
   auto& featureData = GetRequiredDataRef<AttributeMatrix>(dataStructure, k_FeatureAMPath);
   const usize numFeatures = featureData.getNumberOfTuples();
   ObservedFeatureOutputs outputs{
-      std::make_shared<ObservedDataStore<int32>>(numFeatures, rejectScalarWrites),
-      std::make_shared<ObservedDataStore<float32>>(numFeatures, rejectScalarWrites),
-      std::make_shared<ObservedDataStore<float32>>(numFeatures, rejectScalarWrites),
+      .num_elements = std::make_shared<ObservedDataStore<int32>>(numFeatures, rejectScalarWrites),
+      .volumes = std::make_shared<ObservedDataStore<float32>>(numFeatures, rejectScalarWrites),
+      .equivalent_diameters = std::make_shared<ObservedDataStore<float32>>(numFeatures, rejectScalarWrites),
   };
-  REQUIRE(Int32Array::Create(dataStructure, k_NumElementsName, outputs.NumElements, featureData.getId()) != nullptr);
-  REQUIRE(Float32Array::Create(dataStructure, k_VolumesName, outputs.Volumes, featureData.getId()) != nullptr);
-  REQUIRE(Float32Array::Create(dataStructure, k_EquivalentDiametersName, outputs.EquivalentDiameters, featureData.getId()) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, k_NumElementsName, outputs.num_elements, featureData.getId()) != nullptr);
+  REQUIRE(Float32ArrayType::Create(dataStructure, k_VolumesName, outputs.volumes, featureData.getId()) != nullptr);
+  REQUIRE(Float32ArrayType::Create(dataStructure, k_EquivalentDiametersName, outputs.equivalent_diameters, featureData.getId()) != nullptr);
   return outputs;
 }
 
@@ -420,16 +421,16 @@ ObservedFeatureOutputs AddObservedFeatureOutputs(DataStructure& dataStructure, b
  * @return The scanline
  * execution result.
  */
-Result<> RunFeatureOutputScanline(DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
+static Result<> RunFeatureOutputScanline(DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
 {
   ComputeFeatureSizesInputValues inputValues;
-  inputValues.EquivalentDiametersName = k_EquivalentDiametersName;
-  inputValues.FeatureAttributeMatrixPath = k_FeatureAMPath;
-  inputValues.FeatureIdsPath = k_FeatureIdsPath;
-  inputValues.InputImageGeometryPath = k_ImageGeomPath;
-  inputValues.NumElementsName = k_NumElementsName;
-  inputValues.SaveElementSizes = false;
-  inputValues.VolumesName = k_VolumesName;
+  inputValues.equivalent_diameters_name = k_EquivalentDiametersName;
+  inputValues.feature_attribute_matrix_path = k_FeatureAMPath;
+  inputValues.feature_ids_path = k_FeatureIdsPath;
+  inputValues.input_image_geometry_path = k_ImageGeomPath;
+  inputValues.num_elements_name = k_NumElementsName;
+  inputValues.save_element_sizes = false;
+  inputValues.volumes_name = k_VolumesName;
   return ComputeFeatureSizesScanline(dataStructure, IFilter::MessageHandler{}, shouldCancel, &inputValues)();
 }
 
@@ -440,11 +441,11 @@ Result<> RunFeatureOutputScanline(DataStructure& dataStructure, const std::atomi
  *
  * @param[in] numFeatures Feature count.
  */
-void ValidateFeatureOutputFixture(const DataStructure& dataStructure, FeatureOutputGeometry geometryKind, usize numFeatures)
+static void ValidateFeatureOutputFixture(const DataStructure& dataStructure, FeatureOutputGeometry geometryKind, usize numFeatures)
 {
-  const auto& numElements = GetRequiredDataRef<Int32Array>(dataStructure, k_NumElementsPath);
-  const auto& volumes = GetRequiredDataRef<Float32Array>(dataStructure, k_VolumesPath);
-  const auto& equivalentDiameters = GetRequiredDataRef<Float32Array>(dataStructure, k_EquivalentDiametersPath);
+  const auto& numElements = GetRequiredDataRef<Int32ArrayType>(dataStructure, k_NumElementsPath);
+  const auto& volumes = GetRequiredDataRef<Float32ArrayType>(dataStructure, k_VolumesPath);
+  const auto& equivalentDiameters = GetRequiredDataRef<Float32ArrayType>(dataStructure, k_EquivalentDiametersPath);
   const usize blockFeatureId = numFeatures > k_OutputBlockTuples ? k_OutputBlockTuples : numFeatures - 2;
   const usize finalFeatureId = numFeatures - 1;
 
@@ -500,20 +501,20 @@ void ValidateFeatureOutputFixture(const DataStructure& dataStructure, FeatureOut
  * @brief Creates a two-dimensional ImageGeom feature fixture.
  * @return The populated DataStructure.
  */
-DataStructure Create2DImageDataStructure()
+static DataStructure Create2DImageDataStructure()
 {
   DataStructure dataStructure = {};
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{20.2f, 0.1f, 1.0f}}).valid());
-  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
-  imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{5, 5, 1}});
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3Type{std::array<float32, 3>{20.2f, 0.1f, 1.0f}}).valid());
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3Type{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
+  imageGeomPtr->setDimensions(SizeVec3Type{std::array<usize, 3>{5, 5, 1}});
 
-  AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{5, 5, 1}, imageGeom->getId());
-  imageGeom->setCellData(*cellData);
+  AttributeMatrix* cellDataPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{5, 5, 1}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
 
-  Int32Array* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsName, cellData->getShape(), ShapeType{1}, cellData->getId());
+  Int32ArrayType* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_FeatureIdsName, cellDataPtr->getShape(), ShapeType{1}, cellDataPtr->getId());
 
-  AttributeMatrix* featureData = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{4}, imageGeom->getId());
+  AttributeMatrix* featureDataPtr = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{4}, imageGeomPtr->getId());
 
   // clang-format off
   // The following values are the analytical outputs.
@@ -530,9 +531,9 @@ DataStructure Create2DImageDataStructure()
   };
   // clang-format on
 
-  for(usize i = 0; i < featureIds->getNumberOfTuples(); i++)
+  for(usize i = 0; i < featureIdsPtr->getNumberOfTuples(); i++)
   {
-    featureIds->setValue(i, featureIdsArray[i]);
+    featureIdsPtr->setValue(i, featureIdsArray[i]);
   }
 
   return dataStructure;
@@ -542,22 +543,22 @@ DataStructure Create2DImageDataStructure()
  * @brief Compares two-dimensional feature sizes with analytical values.
  * @param dataStructure Contains the generated size arrays.
  */
-void Validate2DImageDataStructure(const DataStructure& dataStructure)
+static void Validate2DImageDataStructure(const DataStructure& dataStructure)
 {
   // The following values are the analytical outputs.
   // One cell has area 2.02.
   // Feature element counts are 0 11 1 13.
-  const auto& numElements = dataStructure.getDataRefAs<Int32Array>(k_NumElementsPath);
+  const auto& numElements = dataStructure.getDataRefAs<Int32ArrayType>(k_NumElementsPath);
   REQUIRE(numElements.getValue(1) == 11);
   REQUIRE(numElements.getValue(2) == 1);
   REQUIRE(numElements.getValue(3) == 13);
   // Feature areas are 0.0 22.22 2.02 26.26.
-  const auto& areas = dataStructure.getDataRefAs<Float32Array>(k_VolumesPath);
+  const auto& areas = dataStructure.getDataRefAs<Float32ArrayType>(k_VolumesPath);
   REQUIRE(areas.getValue(1) == Approx(22.220001f).epsilon(k_RelativeTolerance));
   REQUIRE(areas.getValue(2) == Approx(2.0200002f).epsilon(k_RelativeTolerance));
   REQUIRE(areas.getValue(3) == Approx(26.260002f).epsilon(k_RelativeTolerance));
   // Equivalent diameters are 0.0 5.318964 1.603728 5.78232.
-  const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(k_EquivalentDiametersPath);
+  const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32ArrayType>(k_EquivalentDiametersPath);
   REQUIRE(equivalentDiameters.getValue(1) == Approx(5.3189644f).epsilon(k_RelativeTolerance));
   REQUIRE(equivalentDiameters.getValue(2) == Approx(1.60372818f).epsilon(k_RelativeTolerance));
   REQUIRE(equivalentDiameters.getValue(3) == Approx(5.7823243f).epsilon(k_RelativeTolerance));
@@ -567,20 +568,20 @@ void Validate2DImageDataStructure(const DataStructure& dataStructure)
  * @brief Creates a three-dimensional ImageGeom feature fixture.
  * @return The populated DataStructure.
  */
-DataStructure Create3DImageDataStructure()
+static DataStructure Create3DImageDataStructure()
 {
   DataStructure dataStructure = {};
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeomName);
-  REQUIRE(imageGeom->setSpacing(FloatVec3{std::array<float32, 3>{1.2f, 0.9f, 2.1f}}).valid());
-  REQUIRE(imageGeom->setOrigin(FloatVec3{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
-  imageGeom->setDimensions(SizeVec3{std::array<usize, 3>{5, 5, 5}});
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeomName);
+  REQUIRE(imageGeomPtr->setSpacing(FloatVec3Type{std::array<float32, 3>{1.2f, 0.9f, 2.1f}}).valid());
+  REQUIRE(imageGeomPtr->setOrigin(FloatVec3Type{std::array<float32, 3>{0.0f, 0.0f, 0.0f}}).valid());
+  imageGeomPtr->setDimensions(SizeVec3Type{std::array<usize, 3>{5, 5, 5}});
 
-  AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{5, 5, 5}, imageGeom->getId());
-  imageGeom->setCellData(*cellData);
+  AttributeMatrix* cellDataPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{5, 5, 5}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
 
-  Int32Array* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsName, cellData->getShape(), ShapeType{1}, cellData->getId());
+  Int32ArrayType* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_FeatureIdsName, cellDataPtr->getShape(), ShapeType{1}, cellDataPtr->getId());
 
-  AttributeMatrix* featureData = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{4}, imageGeom->getId());
+  AttributeMatrix* featureDataPtr = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{4}, imageGeomPtr->getId());
 
   // clang-format off
   // The following values are the analytical outputs.
@@ -621,9 +622,9 @@ DataStructure Create3DImageDataStructure()
   };
   // clang-format on
 
-  for(usize i = 0; i < featureIds->getNumberOfTuples(); i++)
+  for(usize i = 0; i < featureIdsPtr->getNumberOfTuples(); i++)
   {
-    featureIds->setValue(i, featureIdsArray[i]);
+    featureIdsPtr->setValue(i, featureIdsArray[i]);
   }
 
   return dataStructure;
@@ -633,22 +634,22 @@ DataStructure Create3DImageDataStructure()
  * @brief Compares three-dimensional ImageGeom feature sizes with analytical values.
  * @param dataStructure Contains the generated size arrays.
  */
-void Validate3DImageDataStructure(const DataStructure& dataStructure)
+static void Validate3DImageDataStructure(const DataStructure& dataStructure)
 {
   // The following values are the analytical outputs.
   // One cell has volume 2.268.
   // Feature element counts are 0 73 29 23.
-  const auto& numElements = dataStructure.getDataRefAs<Int32Array>(k_NumElementsPath);
+  const auto& numElements = dataStructure.getDataRefAs<Int32ArrayType>(k_NumElementsPath);
   REQUIRE(numElements.getValue(1) == 73);
   REQUIRE(numElements.getValue(2) == 29);
   REQUIRE(numElements.getValue(3) == 23);
   // Feature volumes are 0.0 165.564 65.772 52.164.
-  const auto& volumes = dataStructure.getDataRefAs<Float32Array>(k_VolumesPath);
+  const auto& volumes = dataStructure.getDataRefAs<Float32ArrayType>(k_VolumesPath);
   REQUIRE(volumes.getValue(1) == Approx(165.564f).epsilon(k_RelativeTolerance));
   REQUIRE(volumes.getValue(2) == Approx(65.771995f).epsilon(k_RelativeTolerance));
   REQUIRE(volumes.getValue(3) == Approx(52.163997f).epsilon(k_RelativeTolerance));
   // Equivalent diameters are 0.0 6.81275 5.00819 4.63579.
-  const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(k_EquivalentDiametersPath);
+  const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32ArrayType>(k_EquivalentDiametersPath);
   REQUIRE(equivalentDiameters.getValue(1) == Approx(6.8127493f).epsilon(k_RelativeTolerance));
   REQUIRE(equivalentDiameters.getValue(2) == Approx(5.0081901f).epsilon(k_RelativeTolerance));
   REQUIRE(equivalentDiameters.getValue(3) == Approx(4.6357936f).epsilon(k_RelativeTolerance));
@@ -658,44 +659,44 @@ void Validate3DImageDataStructure(const DataStructure& dataStructure)
  * @brief Creates a nonuniform RectGridGeom feature fixture.
  * @return The populated DataStructure.
  */
-DataStructure CreateRectGridDataStructure()
+static DataStructure CreateRectGridDataStructure()
 {
   DataStructure dataStructure = {};
-  RectGridGeom* rectGridGeom = RectGridGeom::Create(dataStructure, k_ImageGeomName);
-  rectGridGeom->setDimensions(SizeVec3{std::array<usize, 3>{4, 4, 4}});
+  RectGridGeom* rectGridGeomPtr = RectGridGeom::Create(dataStructure, k_ImageGeomName);
+  rectGridGeomPtr->setDimensions(SizeVec3Type{std::array<usize, 3>{4, 4, 4}});
 
   // X bounds are 0.0f, 0.6f, 0.9f, 2.1f, 13.0f.
-  Float32Array* xBoundsArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "xBounds", ShapeType{5}, ShapeType{1}, rectGridGeom->getId());
-  xBoundsArray->setValue(0, 0.0f);
-  xBoundsArray->setValue(1, 0.6f);
-  xBoundsArray->setValue(2, 0.9f);
-  xBoundsArray->setValue(3, 2.1f);
-  xBoundsArray->setValue(4, 13.0f);
+  Float32ArrayType* xBoundsArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "xBounds", ShapeType{5}, ShapeType{1}, rectGridGeomPtr->getId());
+  xBoundsArrayPtr->setValue(0, 0.0f);
+  xBoundsArrayPtr->setValue(1, 0.6f);
+  xBoundsArrayPtr->setValue(2, 0.9f);
+  xBoundsArrayPtr->setValue(3, 2.1f);
+  xBoundsArrayPtr->setValue(4, 13.0f);
 
   // Y bounds are 0.0f, 0.1f, 1.0f, 10.0f, 100.0f.
-  Float32Array* yBoundsArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "yBounds", ShapeType{5}, ShapeType{1}, rectGridGeom->getId());
-  yBoundsArray->setValue(0, 0.0f);
-  yBoundsArray->setValue(1, 0.1f);
-  yBoundsArray->setValue(2, 1.0f);
-  yBoundsArray->setValue(3, 10.0f);
-  yBoundsArray->setValue(4, 100.0f);
+  Float32ArrayType* yBoundsArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "yBounds", ShapeType{5}, ShapeType{1}, rectGridGeomPtr->getId());
+  yBoundsArrayPtr->setValue(0, 0.0f);
+  yBoundsArrayPtr->setValue(1, 0.1f);
+  yBoundsArrayPtr->setValue(2, 1.0f);
+  yBoundsArrayPtr->setValue(3, 10.0f);
+  yBoundsArrayPtr->setValue(4, 100.0f);
 
   // Z bounds are 0.0f, 1.0f, 1.2f, 2.0f, 2.1f.
-  Float32Array* zBoundsArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "zBounds", ShapeType{5}, ShapeType{1}, rectGridGeom->getId());
-  zBoundsArray->setValue(0, 0.0f);
-  zBoundsArray->setValue(1, 1.0f);
-  zBoundsArray->setValue(2, 1.2f);
-  zBoundsArray->setValue(3, 2.0f);
-  zBoundsArray->setValue(4, 2.1f);
-  const auto boundsResult = rectGridGeom->setBounds(xBoundsArray, yBoundsArray, zBoundsArray);
+  Float32ArrayType* zBoundsArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "zBounds", ShapeType{5}, ShapeType{1}, rectGridGeomPtr->getId());
+  zBoundsArrayPtr->setValue(0, 0.0f);
+  zBoundsArrayPtr->setValue(1, 1.0f);
+  zBoundsArrayPtr->setValue(2, 1.2f);
+  zBoundsArrayPtr->setValue(3, 2.0f);
+  zBoundsArrayPtr->setValue(4, 2.1f);
+  const auto boundsResult = rectGridGeomPtr->setBounds(xBoundsArrayPtr, yBoundsArrayPtr, zBoundsArrayPtr);
   SIMPLNX_RESULT_REQUIRE_VALID(boundsResult);
 
-  AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{4, 4, 4}, rectGridGeom->getId());
-  rectGridGeom->setCellData(*cellData);
+  AttributeMatrix* cellDataPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{4, 4, 4}, rectGridGeomPtr->getId());
+  rectGridGeomPtr->setCellData(*cellDataPtr);
 
-  Int32Array* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, k_FeatureIdsName, cellData->getShape(), ShapeType{1}, cellData->getId());
+  Int32ArrayType* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_FeatureIdsName, cellDataPtr->getShape(), ShapeType{1}, cellDataPtr->getId());
 
-  AttributeMatrix* featureData = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{4}, rectGridGeom->getId());
+  AttributeMatrix* featureDataPtr = AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{4}, rectGridGeomPtr->getId());
 
   // clang-format off
   // The following values are the analytical outputs.
@@ -725,9 +726,9 @@ DataStructure CreateRectGridDataStructure()
   };
   // clang-format on
 
-  for(usize i = 0; i < featureIds->getNumberOfTuples(); i++)
+  for(usize i = 0; i < featureIdsPtr->getNumberOfTuples(); i++)
   {
-    featureIds->setValue(i, featureIdsArray[i]);
+    featureIdsPtr->setValue(i, featureIdsArray[i]);
   }
 
   return dataStructure;
@@ -737,51 +738,51 @@ DataStructure CreateRectGridDataStructure()
  * @brief Compares RectGridGeom feature sizes with analytical values.
  * @param dataStructure Contains the generated size arrays.
  */
-void ValidateRectGridDataStructure(const DataStructure& dataStructure)
+static void ValidateRectGridDataStructure(const DataStructure& dataStructure)
 {
   // The following values are the analytical outputs.
   // Feature element counts are 0 39 15 10.
-  const auto& numElements = dataStructure.getDataRefAs<Int32Array>(k_NumElementsPath);
+  const auto& numElements = dataStructure.getDataRefAs<Int32ArrayType>(k_NumElementsPath);
   REQUIRE(numElements.getValue(1) == 39);
   REQUIRE(numElements.getValue(2) == 15);
   REQUIRE(numElements.getValue(3) == 10);
   // Feature volumes are 0.0 2362.434 352.462 15.104.
-  const auto& volumes = dataStructure.getDataRefAs<Float32Array>(k_VolumesPath);
+  const auto& volumes = dataStructure.getDataRefAs<Float32ArrayType>(k_VolumesPath);
   REQUIRE(volumes.getValue(1) == Approx(2362.43384f).epsilon(k_RelativeTolerance));
   REQUIRE(volumes.getValue(2) == Approx(352.461884f).epsilon(k_RelativeTolerance));
   REQUIRE(volumes.getValue(3) == Approx(15.1039925f).epsilon(k_RelativeTolerance));
   // Equivalent diameters are 0.0 16.5242 8.76404 3.06689.
-  const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32Array>(k_EquivalentDiametersPath);
+  const auto& equivalentDiameters = dataStructure.getDataRefAs<Float32ArrayType>(k_EquivalentDiametersPath);
   REQUIRE(equivalentDiameters.getValue(1) == Approx(16.5241966f).epsilon(k_RelativeTolerance));
   REQUIRE(equivalentDiameters.getValue(2) == Approx(8.7640428f).epsilon(k_RelativeTolerance));
   REQUIRE(equivalentDiameters.getValue(3) == Approx(3.0668866f).epsilon(k_RelativeTolerance));
 }
-} // namespace Test
+} // namespace test
 
 TEST_CASE("SimplnxCore::ComputeFeatureSizesScanline: bounded output writes", "[SimplnxCore][ComputeFeatureSizes][ScanlineOutput]")
 {
-  const auto [geometryKind, geometryName] = GENERATE(std::make_tuple(Test::FeatureOutputGeometry::Image2D, "Image 2D"), std::make_tuple(Test::FeatureOutputGeometry::Image3D, "Image 3D"),
-                                                     std::make_tuple(Test::FeatureOutputGeometry::RectGrid, "RectGrid"));
+  const auto [geometryKind, geometryName] = GENERATE(std::make_tuple(test::FeatureOutputGeometry::Image2D, "Image 2D"), std::make_tuple(test::FeatureOutputGeometry::Image3D, "Image 3D"),
+                                                     std::make_tuple(test::FeatureOutputGeometry::RectGrid, "RectGrid"));
 
   DYNAMIC_SECTION(geometryName)
   {
-    DataStructure dataStructure = Test::CreateFeatureOutputDataStructure(geometryKind, Test::k_MultiBlockFeatureCount, false);
-    const Test::ObservedFeatureOutputs outputs = Test::AddObservedFeatureOutputs(dataStructure, true);
+    DataStructure dataStructure = test::CreateFeatureOutputDataStructure(geometryKind, test::k_MultiBlockFeatureCount, false);
+    const test::ObservedFeatureOutputs outputs = test::AddObservedFeatureOutputs(dataStructure, true);
     const std::atomic_bool shouldCancel = false;
 
     Result<> result;
-    REQUIRE_NOTHROW(result = Test::RunFeatureOutputScanline(dataStructure, shouldCancel));
+    REQUIRE_NOTHROW(result = test::RunFeatureOutputScanline(dataStructure, shouldCancel));
     SIMPLNX_RESULT_REQUIRE_VALID(result);
-    Test::ValidateFeatureOutputFixture(dataStructure, geometryKind, Test::k_MultiBlockFeatureCount);
+    test::ValidateFeatureOutputFixture(dataStructure, geometryKind, test::k_MultiBlockFeatureCount);
 
-    constexpr std::array<Test::BulkWriteRecord, 2> k_ExpectedWrites = {{{1, Test::k_OutputBlockTuples}, {Test::k_OutputBlockTuples + 1, 2}}};
-    CHECK(outputs.NumElements->getBulkWrites() == std::vector<Test::BulkWriteRecord>(k_ExpectedWrites.begin(), k_ExpectedWrites.end()));
-    CHECK(outputs.Volumes->getBulkWrites() == std::vector<Test::BulkWriteRecord>(k_ExpectedWrites.begin(), k_ExpectedWrites.end()));
-    CHECK(outputs.EquivalentDiameters->getBulkWrites() == std::vector<Test::BulkWriteRecord>(k_ExpectedWrites.begin(), k_ExpectedWrites.end()));
-    CHECK(outputs.NumElements->getScalarWriteCount() == 0);
-    CHECK(outputs.Volumes->getScalarWriteCount() == 0);
-    CHECK(outputs.EquivalentDiameters->getScalarWriteCount() == 0);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    constexpr std::array<test::BulkWriteRecord, 2> k_ExpectedWrites = {{{.start = 1, .count = test::k_OutputBlockTuples}, {.start = test::k_OutputBlockTuples + 1, .count = 2}}};
+    CHECK(outputs.num_elements->getBulkWrites() == std::vector<test::BulkWriteRecord>(k_ExpectedWrites.begin(), k_ExpectedWrites.end()));
+    CHECK(outputs.volumes->getBulkWrites() == std::vector<test::BulkWriteRecord>(k_ExpectedWrites.begin(), k_ExpectedWrites.end()));
+    CHECK(outputs.equivalent_diameters->getBulkWrites() == std::vector<test::BulkWriteRecord>(k_ExpectedWrites.begin(), k_ExpectedWrites.end()));
+    CHECK(outputs.num_elements->getScalarWriteCount() == 0);
+    CHECK(outputs.volumes->getScalarWriteCount() == 0);
+    CHECK(outputs.equivalent_diameters->getScalarWriteCount() == 0);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
@@ -799,72 +800,72 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizesScanline: output write failures stop 
 
   DYNAMIC_SECTION(outputName)
   {
-    DataStructure dataStructure = Test::CreateFeatureOutputDataStructure(Test::FeatureOutputGeometry::Image3D, Test::k_MultiBlockFeatureCount, false);
-    const Test::ObservedFeatureOutputs outputs = Test::AddObservedFeatureOutputs(dataStructure, false);
+    DataStructure dataStructure = test::CreateFeatureOutputDataStructure(test::FeatureOutputGeometry::Image3D, test::k_MultiBlockFeatureCount, false);
+    const test::ObservedFeatureOutputs outputs = test::AddObservedFeatureOutputs(dataStructure, false);
     switch(failingOutput)
     {
     case FailingOutput::NumElements:
-      outputs.NumElements->failBulkWrite(1, Test::k_BulkWriteError);
+      outputs.num_elements->failBulkWrite(1, test::k_BulkWriteError);
       break;
     case FailingOutput::Volumes:
-      outputs.Volumes->failBulkWrite(1, Test::k_BulkWriteError);
+      outputs.volumes->failBulkWrite(1, test::k_BulkWriteError);
       break;
     case FailingOutput::EquivalentDiameters:
-      outputs.EquivalentDiameters->failBulkWrite(1, Test::k_BulkWriteError);
+      outputs.equivalent_diameters->failBulkWrite(1, test::k_BulkWriteError);
       break;
     }
 
     const std::atomic_bool shouldCancel = false;
-    const Result<> result = Test::RunFeatureOutputScanline(dataStructure, shouldCancel);
+    const Result<> result = test::RunFeatureOutputScanline(dataStructure, shouldCancel);
     REQUIRE(result.invalid());
     REQUIRE_FALSE(result.errors().empty());
-    CHECK(result.errors().front().code == Test::k_BulkWriteError);
+    CHECK(result.errors().front().code == test::k_BulkWriteError);
 
     const usize expectedNumElementsWrites = 1;
     const usize expectedVolumeWrites = failingOutput == FailingOutput::NumElements ? 0 : 1;
     const usize expectedDiameterWrites = failingOutput == FailingOutput::EquivalentDiameters ? 1 : 0;
-    CHECK(outputs.NumElements->getBulkWrites().size() == expectedNumElementsWrites);
-    CHECK(outputs.Volumes->getBulkWrites().size() == expectedVolumeWrites);
-    CHECK(outputs.EquivalentDiameters->getBulkWrites().size() == expectedDiameterWrites);
+    CHECK(outputs.num_elements->getBulkWrites().size() == expectedNumElementsWrites);
+    CHECK(outputs.volumes->getBulkWrites().size() == expectedVolumeWrites);
+    CHECK(outputs.equivalent_diameters->getBulkWrites().size() == expectedDiameterWrites);
   }
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureSizesScanline: cancellation preserves completed output blocks", "[SimplnxCore][ComputeFeatureSizes][ScanlineOutput]")
 {
-  DataStructure dataStructure = Test::CreateFeatureOutputDataStructure(Test::FeatureOutputGeometry::Image3D, Test::k_MultiBlockFeatureCount, false);
-  const Test::ObservedFeatureOutputs outputs = Test::AddObservedFeatureOutputs(dataStructure, false);
+  DataStructure dataStructure = test::CreateFeatureOutputDataStructure(test::FeatureOutputGeometry::Image3D, test::k_MultiBlockFeatureCount, false);
+  const test::ObservedFeatureOutputs outputs = test::AddObservedFeatureOutputs(dataStructure, false);
   std::atomic_bool shouldCancel = false;
-  outputs.EquivalentDiameters->setWriteObserver([&shouldCancel](usize callIndex) {
+  outputs.equivalent_diameters->setWriteObserver([&shouldCancel](usize callIndex) {
     if(callIndex == 1)
     {
       shouldCancel.store(true);
     }
   });
 
-  const Result<> result = Test::RunFeatureOutputScanline(dataStructure, shouldCancel);
+  const Result<> result = test::RunFeatureOutputScanline(dataStructure, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   CHECK(shouldCancel.load());
 
-  const auto& numElements = Test::GetRequiredDataRef<Int32Array>(dataStructure, Test::k_NumElementsPath);
-  const auto& volumes = Test::GetRequiredDataRef<Float32Array>(dataStructure, Test::k_VolumesPath);
-  const auto& equivalentDiameters = Test::GetRequiredDataRef<Float32Array>(dataStructure, Test::k_EquivalentDiametersPath);
-  CHECK(numElements[Test::k_OutputBlockTuples] == 2);
-  CHECK(volumes[Test::k_OutputBlockTuples] == Approx(48.0f));
-  CHECK(equivalentDiameters[Test::k_OutputBlockTuples] == Approx(4.5090065f).epsilon(Test::k_RelativeTolerance));
-  CHECK(numElements[Test::k_MultiBlockFeatureCount - 1] == 0);
-  CHECK(volumes[Test::k_MultiBlockFeatureCount - 1] == 0.0f);
-  CHECK(equivalentDiameters[Test::k_MultiBlockFeatureCount - 1] == 0.0f);
+  const auto& numElements = test::GetRequiredDataRef<Int32ArrayType>(dataStructure, test::k_NumElementsPath);
+  const auto& volumes = test::GetRequiredDataRef<Float32ArrayType>(dataStructure, test::k_VolumesPath);
+  const auto& equivalentDiameters = test::GetRequiredDataRef<Float32ArrayType>(dataStructure, test::k_EquivalentDiametersPath);
+  CHECK(numElements[test::k_OutputBlockTuples] == 2);
+  CHECK(volumes[test::k_OutputBlockTuples] == Approx(48.0f));
+  CHECK(equivalentDiameters[test::k_OutputBlockTuples] == Approx(4.5090065f).epsilon(test::k_RelativeTolerance));
+  CHECK(numElements[test::k_MultiBlockFeatureCount - 1] == 0);
+  CHECK(volumes[test::k_MultiBlockFeatureCount - 1] == 0.0f);
+  CHECK(equivalentDiameters[test::k_MultiBlockFeatureCount - 1] == 0.0f);
 
-  const std::vector<Test::BulkWriteRecord> expectedWrites = {{1, Test::k_OutputBlockTuples}};
-  CHECK(outputs.NumElements->getBulkWrites() == expectedWrites);
-  CHECK(outputs.Volumes->getBulkWrites() == expectedWrites);
-  CHECK(outputs.EquivalentDiameters->getBulkWrites() == expectedWrites);
+  const std::vector<test::BulkWriteRecord> expectedWrites = {{.start = 1, .count = test::k_OutputBlockTuples}};
+  CHECK(outputs.num_elements->getBulkWrites() == expectedWrites);
+  CHECK(outputs.volumes->getBulkWrites() == expectedWrites);
+  CHECK(outputs.equivalent_diameters->getBulkWrites() == expectedWrites);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureSizes: real OOC output writes preserve analytical values", "[SimplnxCore][ComputeFeatureSizes][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
-  auto& ioCollection = DataStoreUtilities::GetIOCollection();
+  unit_test::LoadPlugins();
+  auto& ioCollection = data_store_utilities::GetIOCollection();
   if(!ioCollection.hasDataStoreCreationFunction("HDF5-OOC"))
   {
 #if SIMPLNX_TEST_ALGORITHM_PATH == 1
@@ -874,121 +875,121 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: real OOC output writes preserve ana
     return;
   }
 
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
   constexpr usize k_FeatureCount = 7;
-  DataStructure dataStructure = Test::CreateFeatureOutputDataStructure(Test::FeatureOutputGeometry::Image3D, k_FeatureCount, true);
-  const auto& featureIds = Test::GetRequiredDataRef<Int32Array>(dataStructure, Test::k_FeatureIdsPath);
+  DataStructure dataStructure = test::CreateFeatureOutputDataStructure(test::FeatureOutputGeometry::Image3D, k_FeatureCount, true);
+  const auto& featureIds = test::GetRequiredDataRef<Int32ArrayType>(dataStructure, test::k_FeatureIdsPath);
   REQUIRE(featureIds.getIDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
   REQUIRE(featureIds.getDataFormat() == "HDF5-OOC");
 
   ComputeFeatureSizesFilter filter;
   Arguments args = filter.getDefaultArguments();
-  args.insertOrAssign(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(Test::k_ImageGeomPath));
+  args.insertOrAssign(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(test::k_ImageGeomPath));
   args.insertOrAssign(ComputeFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Test::k_FeatureIdsPath));
-  args.insertOrAssign(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Test::k_FeatureAMPath));
-  args.insertOrAssign(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(Test::k_VolumesName));
-  args.insertOrAssign(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(Test::k_EquivalentDiametersName));
-  args.insertOrAssign(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
-  Test::ActualOocExecutionScope executionScope;
+  args.insertOrAssign(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(test::k_FeatureIdsPath));
+  args.insertOrAssign(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(test::k_FeatureAMPath));
+  args.insertOrAssign(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(test::k_VolumesName));
+  args.insertOrAssign(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(test::k_EquivalentDiametersName));
+  args.insertOrAssign(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(test::k_NumElementsName));
+  test::ActualOocExecutionScope executionScope;
   const auto executeResult = executionScope.execute([&] { return filter.execute(dataStructure, args); });
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  executionScope.requireOocStoreExecution();
+  executionScope.RequireOocStoreExecution();
 
-  const auto& numElements = Test::GetRequiredDataRef<Int32Array>(dataStructure, Test::k_NumElementsPath);
-  const auto& volumes = Test::GetRequiredDataRef<Float32Array>(dataStructure, Test::k_VolumesPath);
-  const auto& equivalentDiameters = Test::GetRequiredDataRef<Float32Array>(dataStructure, Test::k_EquivalentDiametersPath);
+  const auto& numElements = test::GetRequiredDataRef<Int32ArrayType>(dataStructure, test::k_NumElementsPath);
+  const auto& volumes = test::GetRequiredDataRef<Float32ArrayType>(dataStructure, test::k_VolumesPath);
+  const auto& equivalentDiameters = test::GetRequiredDataRef<Float32ArrayType>(dataStructure, test::k_EquivalentDiametersPath);
   REQUIRE(numElements.getIDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
   REQUIRE(volumes.getIDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
   REQUIRE(equivalentDiameters.getIDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
   REQUIRE(numElements.getDataFormat() == "HDF5-OOC");
   REQUIRE(volumes.getDataFormat() == "HDF5-OOC");
   REQUIRE(equivalentDiameters.getDataFormat() == "HDF5-OOC");
-  Test::ValidateFeatureOutputFixture(dataStructure, Test::FeatureOutputGeometry::Image3D, k_FeatureCount);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  test::ValidateFeatureOutputFixture(dataStructure, test::FeatureOutputGeometry::Image3D, k_FeatureCount);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureSizes: real OOC multi-block output writes", "[SimplnxCore][ComputeFeatureSizes][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
-  auto& ioCollection = DataStoreUtilities::GetIOCollection();
+  unit_test::LoadPlugins();
+  auto& ioCollection = data_store_utilities::GetIOCollection();
   REQUIRE(ioCollection.hasDataStoreCreationFunction("HDF5-OOC"));
 
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
-  DataStructure dataStructure = Test::CreateFeatureOutputDataStructure(Test::FeatureOutputGeometry::Image3D, Test::k_MultiBlockFeatureCount, true);
-  const auto& featureIds = Test::GetRequiredDataRef<Int32Array>(dataStructure, Test::k_FeatureIdsPath);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  DataStructure dataStructure = test::CreateFeatureOutputDataStructure(test::FeatureOutputGeometry::Image3D, test::k_MultiBlockFeatureCount, true);
+  const auto& featureIds = test::GetRequiredDataRef<Int32ArrayType>(dataStructure, test::k_FeatureIdsPath);
   REQUIRE(featureIds.getIDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
   REQUIRE(featureIds.getDataFormat() == "HDF5-OOC");
 
   ComputeFeatureSizesFilter filter;
   Arguments args = filter.getDefaultArguments();
-  args.insertOrAssign(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(Test::k_ImageGeomPath));
+  args.insertOrAssign(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(test::k_ImageGeomPath));
   args.insertOrAssign(ComputeFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(false));
-  args.insertOrAssign(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Test::k_FeatureIdsPath));
-  args.insertOrAssign(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Test::k_FeatureAMPath));
-  args.insertOrAssign(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(Test::k_VolumesName));
-  args.insertOrAssign(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(Test::k_EquivalentDiametersName));
-  args.insertOrAssign(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
-  Test::ActualOocExecutionScope executionScope;
+  args.insertOrAssign(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(test::k_FeatureIdsPath));
+  args.insertOrAssign(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(test::k_FeatureAMPath));
+  args.insertOrAssign(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(test::k_VolumesName));
+  args.insertOrAssign(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(test::k_EquivalentDiametersName));
+  args.insertOrAssign(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(test::k_NumElementsName));
+  test::ActualOocExecutionScope executionScope;
   const auto executeResult = executionScope.execute([&] { return filter.execute(dataStructure, args); });
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  executionScope.requireOocStoreExecution();
+  executionScope.RequireOocStoreExecution();
 
-  const auto& numElements = Test::GetRequiredDataRef<Int32Array>(dataStructure, Test::k_NumElementsPath);
-  const auto& volumes = Test::GetRequiredDataRef<Float32Array>(dataStructure, Test::k_VolumesPath);
-  const auto& equivalentDiameters = Test::GetRequiredDataRef<Float32Array>(dataStructure, Test::k_EquivalentDiametersPath);
+  const auto& numElements = test::GetRequiredDataRef<Int32ArrayType>(dataStructure, test::k_NumElementsPath);
+  const auto& volumes = test::GetRequiredDataRef<Float32ArrayType>(dataStructure, test::k_VolumesPath);
+  const auto& equivalentDiameters = test::GetRequiredDataRef<Float32ArrayType>(dataStructure, test::k_EquivalentDiametersPath);
   REQUIRE(numElements.getIDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
   REQUIRE(volumes.getIDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
   REQUIRE(equivalentDiameters.getIDataStoreRef().getStoreType() == IDataStore::StoreType::OutOfCore);
   REQUIRE(numElements.getDataFormat() == "HDF5-OOC");
   REQUIRE(volumes.getDataFormat() == "HDF5-OOC");
   REQUIRE(equivalentDiameters.getDataFormat() == "HDF5-OOC");
-  Test::ValidateFeatureOutputFixture(dataStructure, Test::FeatureOutputGeometry::Image3D, Test::k_MultiBlockFeatureCount);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  test::ValidateFeatureOutputFixture(dataStructure, test::FeatureOutputGeometry::Image3D, test::k_MultiBlockFeatureCount);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image 2D", "[SimplnxCore][ComputeFeatureSizes]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  DataStructure dataStructure = Test::Create2DImageDataStructure();
+  DataStructure dataStructure = test::Create2DImageDataStructure();
 
   {
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
-    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(Test::k_ImageGeomPath));
+    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(test::k_ImageGeomPath));
     args.insert(ComputeFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(false));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Test::k_FeatureIdsPath));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Test::k_FeatureAMPath));
-    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(Test::k_VolumesName));
-    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(Test::k_EquivalentDiametersName));
-    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(test::k_FeatureIdsPath));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(test::k_FeatureAMPath));
+    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(test::k_VolumesName));
+    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(test::k_EquivalentDiametersName));
+    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(test::k_NumElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    UnitTest::RequireAutomaticCreateArrayActions(preflightResult.outputActions, 3);
-    UnitTest::RequireAutomaticCreateArrayActions(preflightResult.outputActions, std::vector<DataPath>{Test::k_FeatureAMPath.createChildPath(Test::k_VolumesName),
-                                                                                                      Test::k_FeatureAMPath.createChildPath(Test::k_EquivalentDiametersName),
-                                                                                                      Test::k_FeatureAMPath.createChildPath(Test::k_NumElementsName)});
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    unit_test::RequireAutomaticCreateArrayActions(preflightResult.output_actions, 3);
+    unit_test::RequireAutomaticCreateArrayActions(preflightResult.output_actions, std::vector<DataPath>{test::k_FeatureAMPath.createChildPath(test::k_VolumesName),
+                                                                                                        test::k_FeatureAMPath.createChildPath(test::k_EquivalentDiametersName),
+                                                                                                        test::k_FeatureAMPath.createChildPath(test::k_NumElementsName)});
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  Test::Validate2DImageDataStructure(dataStructure);
+  test::Validate2DImageDataStructure(dataStructure);
 
   // The geometry must not retain per-cell element sizes when storage is disabled.
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(Test::k_ImageGeomPath);
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(test::k_ImageGeomPath);
   REQUIRE_FALSE(imageGeom.getElementSizesId().has_value());
   REQUIRE(imageGeom.getElementSizes() == nullptr);
 
   // The optional output supports manual inspection of the feature-size arrays.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // DREAM3D 6.5.171 calculates two-dimensional area from only the two nonflat spacings.
@@ -1000,11 +1001,12 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image 2D", "[SimplnxCore][Co
 // An unexpected pass fails the test and requires review of the selected area contract.
 TEST_CASE("SimplnxCore::ComputeFeatureSizes: 2D area excludes the flat-dimension spacing", "[SimplnxCore][ComputeFeatureSizes][2DFlatSpacing][!shouldfail]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  auto [label, dims, spacing] = GENERATE(std::make_tuple("flat Z", SizeVec3{2, 2, 1}, FloatVec3{2.0f, 3.0f, 5.0f}), std::make_tuple("flat X", SizeVec3{1, 2, 2}, FloatVec3{5.0f, 2.0f, 3.0f}),
-                                         std::make_tuple("flat Y", SizeVec3{2, 1, 2}, FloatVec3{2.0f, 5.0f, 3.0f}));
+  unit_test::AlgorithmTestScope scope(scenario);
+  auto [label, dims, spacing] =
+      GENERATE(std::make_tuple("flat Z", SizeVec3Type{2, 2, 1}, FloatVec3Type{2.0f, 3.0f, 5.0f}), std::make_tuple("flat X", SizeVec3Type{1, 2, 2}, FloatVec3Type{5.0f, 2.0f, 3.0f}),
+               std::make_tuple("flat Y", SizeVec3Type{2, 1, 2}, FloatVec3Type{2.0f, 5.0f, 3.0f}));
 
   DYNAMIC_SECTION(label)
   {
@@ -1012,250 +1014,250 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: 2D area excludes the flat-dimension
     // Each cell therefore has area 6, and the feature has area 24.
     // The flat-axis spacing is 5 and does not belong in the legacy area product.
     DataStructure dataStructure;
-    auto* imageGeom = ImageGeom::Create(dataStructure, Test::k_ImageGeomName);
-    REQUIRE(imageGeom->setSpacing(spacing).valid());
-    REQUIRE(imageGeom->setOrigin(FloatVec3{0.0f, 0.0f, 0.0f}).valid());
-    imageGeom->setDimensions(dims);
+    auto* imageGeomPtr = ImageGeom::Create(dataStructure, test::k_ImageGeomName);
+    REQUIRE(imageGeomPtr->setSpacing(spacing).valid());
+    REQUIRE(imageGeomPtr->setOrigin(FloatVec3Type{0.0f, 0.0f, 0.0f}).valid());
+    imageGeomPtr->setDimensions(dims);
 
     const ShapeType tupleShape{dims[2], dims[1], dims[0]};
-    auto* cellData = AttributeMatrix::Create(dataStructure, Test::k_CellAMName, tupleShape, imageGeom->getId());
-    imageGeom->setCellData(*cellData);
-    auto* featureIds = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, Test::k_FeatureIdsName, cellData->getShape(), ShapeType{1}, cellData->getId());
-    featureIds->fill(1);
-    AttributeMatrix::Create(dataStructure, Test::k_FeatureAMName, ShapeType{2}, imageGeom->getId());
+    auto* cellDataPtr = AttributeMatrix::Create(dataStructure, test::k_CellAMName, tupleShape, imageGeomPtr->getId());
+    imageGeomPtr->setCellData(*cellDataPtr);
+    auto* featureIdsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, test::k_FeatureIdsName, cellDataPtr->getShape(), ShapeType{1}, cellDataPtr->getId());
+    featureIdsPtr->fill(1);
+    AttributeMatrix::Create(dataStructure, test::k_FeatureAMName, ShapeType{2}, imageGeomPtr->getId());
 
     ComputeFeatureSizesFilter filter;
     Arguments args;
-    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(Test::k_ImageGeomPath));
+    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(test::k_ImageGeomPath));
     args.insert(ComputeFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(false));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Test::k_FeatureIdsPath));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Test::k_FeatureAMPath));
-    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(Test::k_VolumesName));
-    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(Test::k_EquivalentDiametersName));
-    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(test::k_FeatureIdsPath));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(test::k_FeatureAMPath));
+    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(test::k_VolumesName));
+    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(test::k_EquivalentDiametersName));
+    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(test::k_NumElementsName));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-    const auto& areas = dataStructure.getDataRefAs<Float32Array>(Test::k_VolumesPath);
+    const auto& areas = dataStructure.getDataRefAs<Float32ArrayType>(test::k_VolumesPath);
     // The legacy oracle expects 24. The current slab calculation produces 120.
     REQUIRE(areas.getValue(1) == Approx(24.0f));
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image 2D with Element Sizes", "[SimplnxCore][ComputeFeatureSizes]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  DataStructure dataStructure = Test::Create2DImageDataStructure();
+  DataStructure dataStructure = test::Create2DImageDataStructure();
 
   {
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
-    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(Test::k_ImageGeomPath));
+    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(test::k_ImageGeomPath));
     args.insert(ComputeFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(true));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Test::k_FeatureIdsPath));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Test::k_FeatureAMPath));
-    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(Test::k_VolumesName));
-    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(Test::k_EquivalentDiametersName));
-    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(test::k_FeatureIdsPath));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(test::k_FeatureAMPath));
+    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(test::k_VolumesName));
+    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(test::k_EquivalentDiametersName));
+    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(test::k_NumElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  Test::Validate2DImageDataStructure(dataStructure);
+  test::Validate2DImageDataStructure(dataStructure);
 
   // The geometry must retain per-cell element sizes when storage is enabled.
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(Test::k_ImageGeomPath);
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(test::k_ImageGeomPath);
   REQUIRE(imageGeom.getElementSizesId().has_value());
   REQUIRE(imageGeom.getElementSizes() != nullptr);
 
   // The optional output supports manual inspection of the feature-size arrays.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image Stack 3D", "[SimplnxCore][ComputeFeatureSizes]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  DataStructure dataStructure = Test::Create3DImageDataStructure();
+  DataStructure dataStructure = test::Create3DImageDataStructure();
 
   {
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
-    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(Test::k_ImageGeomPath));
+    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(test::k_ImageGeomPath));
     args.insert(ComputeFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(false));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Test::k_FeatureIdsPath));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Test::k_FeatureAMPath));
-    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(Test::k_VolumesName));
-    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(Test::k_EquivalentDiametersName));
-    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(test::k_FeatureIdsPath));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(test::k_FeatureAMPath));
+    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(test::k_VolumesName));
+    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(test::k_EquivalentDiametersName));
+    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(test::k_NumElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  Test::Validate3DImageDataStructure(dataStructure);
+  test::Validate3DImageDataStructure(dataStructure);
 
   // The geometry must not retain per-cell element sizes when storage is disabled.
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(Test::k_ImageGeomPath);
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(test::k_ImageGeomPath);
   REQUIRE_FALSE(imageGeom.getElementSizesId().has_value());
   REQUIRE(imageGeom.getElementSizes() == nullptr);
 
   // The optional output supports manual inspection of the feature-size arrays.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image_stack.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image_stack.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image Stack 3D with Element Size", "[SimplnxCore][ComputeFeatureSizes]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  DataStructure dataStructure = Test::Create3DImageDataStructure();
+  DataStructure dataStructure = test::Create3DImageDataStructure();
 
   {
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
-    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(Test::k_ImageGeomPath));
+    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(test::k_ImageGeomPath));
     args.insert(ComputeFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(true));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Test::k_FeatureIdsPath));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Test::k_FeatureAMPath));
-    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(Test::k_VolumesName));
-    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(Test::k_EquivalentDiametersName));
-    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(test::k_FeatureIdsPath));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(test::k_FeatureAMPath));
+    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(test::k_VolumesName));
+    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(test::k_EquivalentDiametersName));
+    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(test::k_NumElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  Test::Validate3DImageDataStructure(dataStructure);
+  test::Validate3DImageDataStructure(dataStructure);
 
   // The geometry must retain per-cell element sizes when storage is enabled.
-  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(Test::k_ImageGeomPath);
+  const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(test::k_ImageGeomPath);
   REQUIRE(imageGeom.getElementSizesId().has_value());
   REQUIRE(imageGeom.getElementSizes() != nullptr);
 
   // The optional output supports manual inspection of the feature-size arrays.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image_stack_w_element_sizes.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_image_stack_w_element_sizes.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Rectilinear Grid", "[SimplnxCore][ComputeFeatureSizes]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  DataStructure dataStructure = Test::CreateRectGridDataStructure();
+  DataStructure dataStructure = test::CreateRectGridDataStructure();
 
   {
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
-    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(Test::k_ImageGeomPath));
+    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(test::k_ImageGeomPath));
     args.insert(ComputeFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(false));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Test::k_FeatureIdsPath));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Test::k_FeatureAMPath));
-    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(Test::k_VolumesName));
-    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(Test::k_EquivalentDiametersName));
-    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(test::k_FeatureIdsPath));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(test::k_FeatureAMPath));
+    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(test::k_VolumesName));
+    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(test::k_EquivalentDiametersName));
+    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(test::k_NumElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  Test::ValidateRectGridDataStructure(dataStructure);
+  test::ValidateRectGridDataStructure(dataStructure);
 
   // The geometry must not retain per-cell element sizes when storage is disabled.
-  const auto& rectGridGeom = dataStructure.getDataRefAs<RectGridGeom>(Test::k_ImageGeomPath);
+  const auto& rectGridGeom = dataStructure.getDataRefAs<RectGridGeom>(test::k_ImageGeomPath);
   REQUIRE_FALSE(rectGridGeom.getElementSizesId().has_value());
   REQUIRE(rectGridGeom.getElementSizes() == nullptr);
 
   // The optional output supports manual inspection of the feature-size arrays.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_rect_grid.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_rect_grid.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Rectilinear Grid with Element Size", "[SimplnxCore][ComputeFeatureSizes]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  DataStructure dataStructure = Test::CreateRectGridDataStructure();
+  DataStructure dataStructure = test::CreateRectGridDataStructure();
 
   {
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
-    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(Test::k_ImageGeomPath));
+    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(test::k_ImageGeomPath));
     args.insert(ComputeFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(true));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Test::k_FeatureIdsPath));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Test::k_FeatureAMPath));
-    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(Test::k_VolumesName));
-    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(Test::k_EquivalentDiametersName));
-    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(test::k_FeatureIdsPath));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(test::k_FeatureAMPath));
+    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(test::k_VolumesName));
+    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(test::k_EquivalentDiametersName));
+    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(test::k_NumElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  Test::ValidateRectGridDataStructure(dataStructure);
+  test::ValidateRectGridDataStructure(dataStructure);
 
   // The geometry must retain per-cell element sizes when storage is enabled.
-  const auto& rectGridGeom = dataStructure.getDataRefAs<RectGridGeom>(Test::k_ImageGeomPath);
+  const auto& rectGridGeom = dataStructure.getDataRefAs<RectGridGeom>(test::k_ImageGeomPath);
   REQUIRE(rectGridGeom.getElementSizesId().has_value());
   REQUIRE(rectGridGeom.getElementSizes() != nullptr);
 
   // The optional output supports manual inspection of the feature-size arrays.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_rect_grid_w_element_sizes.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/valid_rect_grid_w_element_sizes.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureSizes: Invalid: Execution Failure", "[SimplnxCore][ComputeFeatureSizes]")
 {
   // Both the in-core (Direct) and out-of-core (Scanline) paths must surface the same execution error.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  DataStructure dataStructure = Test::Create3DImageDataStructure();
-  auto& featureIds = dataStructure.getDataRefAs<Int32Array>(Test::k_FeatureIdsPath);
+  DataStructure dataStructure = test::Create3DImageDataStructure();
+  auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(test::k_FeatureIdsPath);
 
   featureIds.setValue(61, 10);
 
@@ -1263,150 +1265,150 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Invalid: Execution Failure", "[Simp
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
-    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(Test::k_ImageGeomPath));
+    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(test::k_ImageGeomPath));
     args.insert(ComputeFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(false));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Test::k_FeatureIdsPath));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Test::k_FeatureAMPath));
-    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(Test::k_VolumesName));
-    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(Test::k_EquivalentDiametersName));
-    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(test::k_FeatureIdsPath));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(test::k_FeatureAMPath));
+    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(test::k_VolumesName));
+    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(test::k_EquivalentDiametersName));
+    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(test::k_NumElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   }
 
   // The optional output supports manual inspection of the feature-size arrays.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/invalid_execution.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/invalid_execution.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureSizes: Invalid: Preflight Failure", "[SimplnxCore][ComputeFeatureSizes]")
 {
-  DataStructure dataStructure = Test::Create3DImageDataStructure();
-  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(Test::k_ImageGeomPath);
+  DataStructure dataStructure = test::Create3DImageDataStructure();
+  auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(test::k_ImageGeomPath);
 
   // A one-dimensional X extent is invalid for this filter.
-  imageGeom.setDimensions(SizeVec3{std::array<usize, 3>{5, 1, 1}});
+  imageGeom.setDimensions(SizeVec3Type{std::array<usize, 3>{5, 1, 1}});
   {
-    auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(Test::k_CellAMPath).resizeTuples({1, 1, 5});
+    auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(test::k_CellAMPath).resizeTuples({1, 1, 5});
     SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
-    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(Test::k_ImageGeomPath));
+    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(test::k_ImageGeomPath));
     args.insert(ComputeFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(false));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Test::k_FeatureIdsPath));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Test::k_FeatureAMPath));
-    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(Test::k_VolumesName));
-    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(Test::k_EquivalentDiametersName));
-    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(test::k_FeatureIdsPath));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(test::k_FeatureAMPath));
+    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(test::k_VolumesName));
+    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(test::k_EquivalentDiametersName));
+    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(test::k_NumElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().size() == 1);
-    CHECK(preflightResult.outputActions.errors()[0].code == -74770);
-    CHECK(preflightResult.outputActions.errors()[0].message.find("requires at least 2 valid dimensions") != std::string::npos);
-    CHECK(preflightResult.outputActions.errors()[0].message.find("Two or more 1's") != std::string::npos);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().size() == 1);
+    CHECK(preflightResult.output_actions.errors()[0].code == -74770);
+    CHECK(preflightResult.output_actions.errors()[0].message.find("requires at least 2 valid dimensions") != std::string::npos);
+    CHECK(preflightResult.output_actions.errors()[0].message.find("Two or more 1's") != std::string::npos);
   }
 
   // A one-dimensional Y extent is invalid for this filter.
-  imageGeom.setDimensions(SizeVec3{std::array<usize, 3>{1, 5, 1}});
+  imageGeom.setDimensions(SizeVec3Type{std::array<usize, 3>{1, 5, 1}});
   {
-    auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(Test::k_CellAMPath).resizeTuples({1, 5, 1});
+    auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(test::k_CellAMPath).resizeTuples({1, 5, 1});
     SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
-    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(Test::k_ImageGeomPath));
+    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(test::k_ImageGeomPath));
     args.insert(ComputeFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(false));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Test::k_FeatureIdsPath));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Test::k_FeatureAMPath));
-    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(Test::k_VolumesName));
-    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(Test::k_EquivalentDiametersName));
-    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(test::k_FeatureIdsPath));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(test::k_FeatureAMPath));
+    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(test::k_VolumesName));
+    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(test::k_EquivalentDiametersName));
+    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(test::k_NumElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().size() == 1);
-    CHECK(preflightResult.outputActions.errors()[0].code == -74770);
-    CHECK(preflightResult.outputActions.errors()[0].message.find("requires at least 2 valid dimensions") != std::string::npos);
-    CHECK(preflightResult.outputActions.errors()[0].message.find("Two or more 1's") != std::string::npos);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().size() == 1);
+    CHECK(preflightResult.output_actions.errors()[0].code == -74770);
+    CHECK(preflightResult.output_actions.errors()[0].message.find("requires at least 2 valid dimensions") != std::string::npos);
+    CHECK(preflightResult.output_actions.errors()[0].message.find("Two or more 1's") != std::string::npos);
   }
 
   // A one-dimensional Z extent is invalid for this filter.
-  imageGeom.setDimensions(SizeVec3{std::array<usize, 3>{1, 1, 5}});
+  imageGeom.setDimensions(SizeVec3Type{std::array<usize, 3>{1, 1, 5}});
   {
-    auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(Test::k_CellAMPath).resizeTuples({5, 1, 1});
+    auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(test::k_CellAMPath).resizeTuples({5, 1, 1});
     SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
-    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(Test::k_ImageGeomPath));
+    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(test::k_ImageGeomPath));
     args.insert(ComputeFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(false));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Test::k_FeatureIdsPath));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Test::k_FeatureAMPath));
-    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(Test::k_VolumesName));
-    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(Test::k_EquivalentDiametersName));
-    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(test::k_FeatureIdsPath));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(test::k_FeatureAMPath));
+    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(test::k_VolumesName));
+    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(test::k_EquivalentDiametersName));
+    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(test::k_NumElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().size() == 1);
-    CHECK(preflightResult.outputActions.errors()[0].code == -74770);
-    CHECK(preflightResult.outputActions.errors()[0].message.find("requires at least 2 valid dimensions") != std::string::npos);
-    CHECK(preflightResult.outputActions.errors()[0].message.find("Two or more 1's") != std::string::npos);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().size() == 1);
+    CHECK(preflightResult.output_actions.errors()[0].code == -74770);
+    CHECK(preflightResult.output_actions.errors()[0].message.find("requires at least 2 valid dimensions") != std::string::npos);
+    CHECK(preflightResult.output_actions.errors()[0].message.find("Two or more 1's") != std::string::npos);
   }
 
   // A single-cell geometry is also invalid for this filter.
-  imageGeom.setDimensions(SizeVec3{std::array<usize, 3>{1, 1, 1}});
+  imageGeom.setDimensions(SizeVec3Type{std::array<usize, 3>{1, 1, 1}});
   {
-    auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(Test::k_CellAMPath).resizeTuples({1, 1, 1});
+    auto resizeResult = dataStructure.getDataRefAs<AttributeMatrix>(test::k_CellAMPath).resizeTuples({1, 1, 1});
     SIMPLNX_RESULT_REQUIRE_VALID(resizeResult);
     ComputeFeatureSizesFilter filter;
     Arguments args;
 
-    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(Test::k_ImageGeomPath));
+    args.insert(ComputeFeatureSizesFilter::k_GeometryPath_Key, std::make_any<DataPath>(test::k_ImageGeomPath));
     args.insert(ComputeFeatureSizesFilter::k_SaveElementSizes_Key, std::make_any<bool>(false));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Test::k_FeatureIdsPath));
-    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(Test::k_FeatureAMPath));
-    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(Test::k_VolumesName));
-    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(Test::k_EquivalentDiametersName));
-    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(Test::k_NumElementsName));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(test::k_FeatureIdsPath));
+    args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(test::k_FeatureAMPath));
+    args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(test::k_VolumesName));
+    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(test::k_EquivalentDiametersName));
+    args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(test::k_NumElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().size() == 1);
-    CHECK(preflightResult.outputActions.errors()[0].code == -74770);
-    CHECK(preflightResult.outputActions.errors()[0].message.find("requires at least 2 valid dimensions") != std::string::npos);
-    CHECK(preflightResult.outputActions.errors()[0].message.find("Two or more 1's") != std::string::npos);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().size() == 1);
+    CHECK(preflightResult.output_actions.errors()[0].code == -74770);
+    CHECK(preflightResult.output_actions.errors()[0].message.find("requires at least 2 valid dimensions") != std::string::npos);
+    CHECK(preflightResult.output_actions.errors()[0].message.find("Two or more 1's") != std::string::npos);
   }
 
   // The optional output supports manual inspection of the feature-size arrays.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/invalid_preflight.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/invalid_preflight.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureSizes: Legacy: Small IN100 Test", "[SimplnxCore][ComputeFeatureSizes]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_stats_test_v2.tar.gz", "6_6_stats_test_v2.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_stats_test_v2.tar.gz", "6_6_stats_test_v2.dream3d");
 
   // Load the Small IN100 input before feature-size calculation.
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_stats_test_v2.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  DataPath smallIn100Group({Constants::k_DataContainer});
-  DataPath cellDataPath = smallIn100Group.createChildPath(Constants::k_CellData);
-  DataPath cellPhasesPath = cellDataPath.createChildPath(Constants::k_Phases);
-  DataPath featureIdsPath = cellDataPath.createChildPath(Constants::k_FeatureIds);
-  DataPath featureGroup = smallIn100Group.createChildPath(Constants::k_CellFeatureData);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
+  DataPath smallIn100Group({constants::k_DataContainer});
+  DataPath cellDataPath = smallIn100Group.createChildPath(constants::k_CellData);
+  DataPath cellPhasesPath = cellDataPath.createChildPath(constants::k_Phases);
+  DataPath featureIdsPath = cellDataPath.createChildPath(constants::k_FeatureIds);
+  DataPath featureGroup = smallIn100Group.createChildPath(constants::k_CellFeatureData);
   std::string volumesName = "computed_volumes";
   std::string numElementsName = "computed_NumElements";
-  std::string EquivalentDiametersName = "computed_EquivalentDiameters";
+  std::string equivalentDiametersName = "computed_EquivalentDiameters";
 
-  std::vector<std::string> featureNames = {LegacyTest::k_Volumes, LegacyTest::k_EquivalentDiameters, Constants::k_NumElements};
+  std::vector<std::string> featureNames = {legacy_test::k_Volumes, legacy_test::k_EquivalentDiameters, constants::k_NumElements};
 
   {
     ComputeFeatureSizesFilter filter;
@@ -1417,43 +1419,43 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Legacy: Small IN100 Test", "[Simpln
     args.insert(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(featureIdsPath));
     args.insert(ComputeFeatureSizesFilter::k_CellFeatureAttributeMatrixPath_Key, std::make_any<DataPath>(featureGroup));
     args.insert(ComputeFeatureSizesFilter::k_VolumesName_Key, std::make_any<std::string>(volumesName));
-    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(EquivalentDiametersName));
+    args.insert(ComputeFeatureSizesFilter::k_EquivalentDiametersName_Key, std::make_any<std::string>(equivalentDiametersName));
     args.insert(ComputeFeatureSizesFilter::k_NumElementsName_Key, std::make_any<std::string>(numElementsName));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // Compare each generated feature array with its exemplar array.
   {
-    DataPath exemplaryDataPath = featureGroup.createChildPath(LegacyTest::k_Volumes);
-    UnitTest::CompareArrays<float32>(dataStructure, exemplaryDataPath, featureGroup.createChildPath(volumesName));
+    DataPath exemplaryDataPath = featureGroup.createChildPath(legacy_test::k_Volumes);
+    unit_test::CompareArrays<float32>(dataStructure, exemplaryDataPath, featureGroup.createChildPath(volumesName));
   }
 
   {
-    DataPath exemplaryDataPath = featureGroup.createChildPath(LegacyTest::k_EquivalentDiameters);
-    UnitTest::CompareArrays<float32>(dataStructure, exemplaryDataPath, featureGroup.createChildPath(EquivalentDiametersName));
+    DataPath exemplaryDataPath = featureGroup.createChildPath(legacy_test::k_EquivalentDiameters);
+    unit_test::CompareArrays<float32>(dataStructure, exemplaryDataPath, featureGroup.createChildPath(equivalentDiametersName));
   }
 
   {
-    DataPath exemplaryDataPath = featureGroup.createChildPath(Constants::k_NumElements);
-    UnitTest::CompareArrays<int32>(dataStructure, exemplaryDataPath, featureGroup.createChildPath(numElementsName));
+    DataPath exemplaryDataPath = featureGroup.createChildPath(constants::k_NumElements);
+    unit_test::CompareArrays<int32>(dataStructure, exemplaryDataPath, featureGroup.createChildPath(numElementsName));
   }
 
 // The optional output supports manual inspection of the feature-size arrays.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/legacy_test.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/calculate_feature_sizes/legacy_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeatureSizesFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeFeatureSizesFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -1466,22 +1468,22 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizesFilter: SIMPL Backwards Compatibility
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeFeatureSizesFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeFeatureSizesFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<bool>(ComputeFeatureSizesFilter::k_SaveElementSizes_Key) == true);
       CHECK(args.value<DataPath>(ComputeFeatureSizesFilter::k_GeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(ComputeFeatureSizesFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
@@ -1533,13 +1535,13 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Geometry cell tuple count", "[Simpl
   const auto result = filter.preflight(dataStructure, args);
   if(tuples == 12)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    const auto& errorRef = result.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    const auto& errorRef = result.output_actions.errors()[0];
     REQUIRE(errorRef.code == -74771);
     REQUIRE(errorRef.message.find(inputPath.toString()) != std::string::npos);
     REQUIRE(errorRef.message.find(fmt::format("has {} tuples", tuples)) != std::string::npos);

@@ -33,8 +33,8 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -171,7 +171,7 @@ void CompareArrayValues(const DataStructure& dataStructure, const DataPath& arra
 // The analytical and invariant oracle uses values derived from the fixture text.
 TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Class 1 Analytical Oracle", "[OrientationAnalysis][ReadAngDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputAngFile = WriteAngFile("read_ang_vv_oracle.ang", k_HeaderPrefix + k_PhaseBlock + SqrGridBlock() + k_DataBlock);
 
@@ -180,7 +180,7 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Class 1 Analytical Oracle", "
   Arguments args = MakeDefaultArgs(inputAngFile);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -193,12 +193,12 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Class 1 Analytical Oracle", "
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_DataContainerPath));
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(k_DataContainerPath);
   {
-    const SizeVec3 dims = imageGeom.getDimensions(); // NCOLS_EVEN=3, NROWS=2, one slice
-    REQUIRE(dims == SizeVec3(3, 2, 1));
-    const FloatVec3 spacing = imageGeom.getSpacing(); // XSTEP=0.25, YSTEP=0.5, z hard-coded 1.0
-    REQUIRE(spacing == FloatVec3(0.25F, 0.5F, 1.0F));
-    const FloatVec3 origin = imageGeom.getOrigin(); // hard-coded (0,0,0)
-    REQUIRE(origin == FloatVec3(0.0F, 0.0F, 0.0F));
+    const SizeVec3Type dims = imageGeom.getDimensions(); // NCOLS_EVEN=3, NROWS=2, one slice
+    REQUIRE(dims == SizeVec3Type(3, 2, 1));
+    const FloatVec3Type spacing = imageGeom.getSpacing(); // XSTEP=0.25, YSTEP=0.5, z hard-coded 1.0
+    REQUIRE(spacing == FloatVec3Type(0.25F, 0.5F, 1.0F));
+    const FloatVec3Type origin = imageGeom.getOrigin(); // hard-coded (0,0,0)
+    REQUIRE(origin == FloatVec3Type(0.0F, 0.0F, 0.0F));
     REQUIRE(imageGeom.getUnits() == IGeometry::LengthUnit::Micrometer);
   }
 
@@ -245,14 +245,14 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Class 1 Analytical Oracle", "
     REQUIRE(materialNamesRef[2] == "Titanium (Alpha)");
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // A file with only phase 2 must size ensemble arrays to maxPhaseIndex + 1.
 // Unused slots must retain invalid-phase defaults.
 TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Non-Contiguous Phase Index", "[OrientationAnalysis][ReadAngDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputAngFile = WriteAngFile("read_ang_vv_sparse_phase.ang", k_HeaderPrefix + k_SparsePhaseBlock + SqrGridBlock() + k_DataBlock);
 
@@ -261,7 +261,7 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Non-Contiguous Phase Index", 
   Arguments args = MakeDefaultArgs(inputAngFile);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -286,7 +286,7 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Non-Contiguous Phase Index", 
     REQUIRE(materialNamesRef[2] == "Titanium (Alpha)");
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -294,7 +294,7 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Non-Contiguous Phase Index", 
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadAngDataFilter: HexGrid Preflight Error (-19500)", "[OrientationAnalysis][ReadAngDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::string hexGridBlock = fmt::format(fmt::runtime(k_GridBlockFmt), "# GRID: HexGrid\n");
   const fs::path inputAngFile = WriteAngFile("read_ang_vv_hexgrid.ang", k_HeaderPrefix + k_PhaseBlock + hexGridBlock + k_DataBlock);
@@ -304,8 +304,8 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: HexGrid Preflight Error (-195
   Arguments args = MakeDefaultArgs(inputAngFile);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -19500);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -19500);
 }
 
 //------------------------------------------------------------------------------
@@ -313,7 +313,7 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: HexGrid Preflight Error (-195
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Missing GRID Preflight Error (-19501)", "[OrientationAnalysis][ReadAngDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::string noGridBlock = fmt::format(fmt::runtime(k_GridBlockFmt), "");
   const fs::path inputAngFile = WriteAngFile("read_ang_vv_missing_grid.ang", k_HeaderPrefix + k_PhaseBlock + noGridBlock + k_DataBlock);
@@ -323,8 +323,8 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Missing GRID Preflight Error 
   Arguments args = MakeDefaultArgs(inputAngFile);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -19501);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -19501);
 }
 
 //------------------------------------------------------------------------------
@@ -333,7 +333,7 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Missing GRID Preflight Error 
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadAngDataFilter: EbsdLib Error Passthrough - No Phase (-150)", "[OrientationAnalysis][ReadAngDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputAngFile = WriteAngFile("read_ang_vv_no_phase.ang", k_HeaderPrefix + SqrGridBlock() + k_DataBlock);
 
@@ -342,7 +342,7 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: EbsdLib Error Passthrough - N
   Arguments args = MakeDefaultArgs(inputAngFile);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -357,7 +357,7 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: EbsdLib Error Passthrough - N
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Phase 0 rejected (-19502)", "[OrientationAnalysis][ReadAngDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path inputAngFile = WriteAngFile("read_ang_vv_phase0.ang", k_HeaderPrefix + k_Phase0Block + SqrGridBlock() + k_DataBlock);
 
@@ -366,7 +366,7 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Phase 0 rejected (-19502)", "
   Arguments args = MakeDefaultArgs(inputAngFile);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -379,7 +379,7 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: Phase 0 rejected (-19502)", "
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadAngDataFilter: EbsdLib Error Passthrough - Truncated Data (-600)", "[OrientationAnalysis][ReadAngDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Keep only the first 4 of 6 data lines.
   std::string truncatedData = k_DataBlock;
@@ -394,7 +394,7 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: EbsdLib Error Passthrough - T
   Arguments args = MakeDefaultArgs(inputAngFile);
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
@@ -407,7 +407,7 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: EbsdLib Error Passthrough - T
 //------------------------------------------------------------------------------
 TEST_CASE("OrientationAnalysis::ReadAngDataFilter: real HDF5 65536-block import oracle", "[OrientationAnalysis][ReadAngDataFilter][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   const PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
   constexpr usize k_BlockTuples = 65536;
@@ -438,12 +438,12 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: real HDF5 65536-block import 
   const auto eulersPath = cellsPath.createChildPath("EulerAngles");
   const auto phasesPath = cellsPath.createChildPath("Phases");
   const auto qualityPath = cellsPath.createChildPath("Image Quality");
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(eulersPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(phasesPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(qualityPath));
-  const auto& eulers = dataStructure.getDataRefAs<Float32Array>(eulersPath);
-  const auto& phases = dataStructure.getDataRefAs<Int32Array>(phasesPath);
-  const auto& quality = dataStructure.getDataRefAs<Float32Array>(qualityPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(eulersPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(phasesPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(qualityPath));
+  const auto& eulers = dataStructure.getDataRefAs<Float32ArrayType>(eulersPath);
+  const auto& phases = dataStructure.getDataRefAs<Int32ArrayType>(phasesPath);
+  const auto& quality = dataStructure.getDataRefAs<Float32ArrayType>(qualityPath);
   REQUIRE(eulers.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   REQUIRE(phases.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   REQUIRE(quality.getDataStoreRef().getDataFormat() == "HDF5-OOC");
@@ -457,15 +457,15 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: real HDF5 65536-block import 
   REQUIRE(quality[k_BlockTuples - 1] == 20.25F);
   REQUIRE(quality[k_BlockTuples] == 30.75F);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(k_DataContainerPath));
-  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(k_DataContainerPath).getDimensions() == SizeVec3(k_BlockTuples + 1, 1, 1));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  REQUIRE(dataStructure.getDataRefAs<ImageGeom>(k_DataContainerPath).getDimensions() == SizeVec3Type(k_BlockTuples + 1, 1, 1));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ReadAngDataFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ReadAngDataFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -478,22 +478,22 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: SIMPL Backwards Compatibility
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ReadAngDataFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ReadAngDataFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<FileSystemPathParameter::ValueType>(ReadAngDataFilter::k_InputFile_Key) == fs::path("/some/test/path/data.ang"));
       CHECK(args.value<DataPath>(ReadAngDataFilter::k_CreatedImageGeometryPath_Key) == DataPath({"ImageDataContainer"}));
       CHECK(args.value<std::string>(ReadAngDataFilter::k_CellAttributeMatrixName_Key) == "CellData");
@@ -510,7 +510,7 @@ TEST_CASE("OrientationAnalysis::ReadAngDataFilter: override invalid X step", "[O
   const auto path = WriteAngFile("read_ang_metadata_override.ang", contents);
   const ReadAngDataFilter filter;
   auto args = MakeDefaultArgs(path);
-  UnitTest::RequireBadReaderMetadata(filter, args, path, true);
-  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {0.25F, 0.5F, 4});
-  UnitTest::RequireReaderGeometryExecution(filter, args, k_DataContainerPath, {4, -3, 8}, {0.25F, 0.5F, 4});
+  unit_test::RequireBadReaderMetadata(filter, args, path, true);
+  unit_test::SetReaderGeometryOverrides(args, {4, -3, 8}, {0.25F, 0.5F, 4});
+  unit_test::RequireReaderGeometryExecution(filter, args, k_DataContainerPath, {4, -3, 8}, {0.25F, 0.5F, 4});
 }

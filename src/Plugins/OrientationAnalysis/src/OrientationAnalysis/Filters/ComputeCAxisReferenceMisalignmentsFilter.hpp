@@ -30,13 +30,13 @@ public:
   ComputeCAxisReferenceMisalignmentsFilter& operator=(ComputeCAxisReferenceMisalignmentsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_ReferenceDir_Key = "reference_dir";
-  static constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
-  static constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
-  static constexpr StringLiteral k_PhasesArrayPath_Key = "phases_array_path";
-  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static constexpr StringLiteral k_CAxisReferenceMisalignmentsArrayName_Key = "c_axis_reference_misalignments_array_name";
+  static constexpr StringLiteralType k_ReferenceDir_Key = "reference_dir";
+  static constexpr StringLiteralType k_UseMask_Key = "use_mask";
+  static constexpr StringLiteralType k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteralType k_QuatsArrayPath_Key = "quats_array_path";
+  static constexpr StringLiteralType k_PhasesArrayPath_Key = "phases_array_path";
+  static constexpr StringLiteralType k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteralType k_CAxisReferenceMisalignmentsArrayName_Key = "c_axis_reference_misalignments_array_name";
 
   /**
    * @brief Returns the name of the filter.
@@ -84,7 +84,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return A new filter instance.
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

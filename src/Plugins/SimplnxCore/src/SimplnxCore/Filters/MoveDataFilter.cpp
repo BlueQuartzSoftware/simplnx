@@ -59,14 +59,14 @@ IFilter::VersionType MoveDataFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer MoveDataFilter::clone() const
+IFilter::UniquePointerType MoveDataFilter::clone() const
 {
   return std::make_unique<MoveDataFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult MoveDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                       const ExecutionContext& executionContext) const
+IFilter::PreflightResult MoveDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto dataPaths = filterArgs.value<MultiPathSelectionParameter::ValueType>(k_SourceDataPaths_Key);
   auto newParentPath = filterArgs.value<DataPath>(k_DestinationParentPath_Key);
@@ -76,20 +76,21 @@ IFilter::PreflightResult MoveDataFilter::preflightImpl(const DataStructure& data
 
   // Scope AM check since we fully expect it to be a nullptr
   {
-    const auto* possibleAM = dataStructure.getDataAs<AttributeMatrix>(newParentPath);
-    if(possibleAM != nullptr)
+    const auto* possibleAmPtr = dataStructure.getDataAs<AttributeMatrix>(newParentPath);
+    if(possibleAmPtr != nullptr)
     {
       for(const auto& path : dataPaths)
       {
-        const auto* possibleIArray = dataStructure.getDataAs<IArray>(path);
-        if(possibleIArray != nullptr)
+        const auto* possibleIArrayPtr = dataStructure.getDataAs<IArray>(path);
+        if(possibleIArrayPtr != nullptr)
         {
-          if(possibleAM->getShape() != possibleIArray->getTupleShape())
+          if(possibleAmPtr->getShape() != possibleIArrayPtr->getTupleShape())
           {
             resultOutputActions.warnings().push_back(
-                Warning{-69250, fmt::format("The tuple dimensions of {} [{}] do not match the AttributeMatrix {} tuple dimensions [{}]. This could result in a "
-                                            "runtime error if the sizing remains the same at time of this filters execution. Proceed with caution.",
-                                            possibleIArray->getName(), possibleIArray->getNumberOfTuples(), possibleAM->getName(), possibleAM->getNumberOfTuples())});
+                Warning{.code = -69250,
+                        .message = fmt::format("The tuple dimensions of {} [{}] do not match the AttributeMatrix {} tuple dimensions [{}]. This could result in a "
+                                               "runtime error if the sizing remains the same at time of this filters execution. Proceed with caution.",
+                                               possibleIArrayPtr->getName(), possibleIArrayPtr->getNumberOfTuples(), possibleAmPtr->getName(), possibleAmPtr->getNumberOfTuples())});
           }
         }
       }
@@ -102,26 +103,26 @@ IFilter::PreflightResult MoveDataFilter::preflightImpl(const DataStructure& data
     resultOutputActions.value().appendAction(std::move(moveDataAction));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> MoveDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> MoveDataFilter::executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                                     const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   return {};
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_WhatToMoveKey = "WhatToMove";
-constexpr StringLiteral k_AttributeMatrixSourceKey = "AttributeMatrixSource";
-constexpr StringLiteral k_DataContainerDestinationKey = "DataContainerDestination";
-constexpr StringLiteral k_DataArraySourceKey = "DataArraySource";
-constexpr StringLiteral k_AttributeMatrixDestinationKey = "AttributeMatrixDestination";
-} // namespace SIMPL
+constexpr StringLiteralType k_WhatToMoveKey = "WhatToMove";
+constexpr StringLiteralType k_AttributeMatrixSourceKey = "AttributeMatrixSource";
+constexpr StringLiteralType k_DataContainerDestinationKey = "DataContainerDestination";
+constexpr StringLiteralType k_DataArraySourceKey = "DataArraySource";
+constexpr StringLiteralType k_AttributeMatrixDestinationKey = "AttributeMatrixDestination";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> MoveDataFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -130,17 +131,18 @@ Result<Arguments> MoveDataFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  if(json[SIMPL::k_WhatToMoveKey].get<int32>() == 0)
+  if(json[simpl::k_WhatToMoveKey].get<int32>() == 0)
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeMatrixSourceKey, k_SourceDataPaths_Key));
     results.push_back(
-        SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DataContainerDestinationKey, k_DestinationParentPath_Key));
+        simpl_conversion::ConvertParameter<simpl_conversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_AttributeMatrixSourceKey, k_SourceDataPaths_Key));
+    results.push_back(
+        simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerDestinationKey, k_DestinationParentPath_Key));
   }
   else
   {
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_DataArraySourceKey, k_SourceDataPaths_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_DataArraySourceKey, k_SourceDataPaths_Key));
     results.push_back(
-        SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_AttributeMatrixDestinationKey, k_DestinationParentPath_Key));
+        simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_AttributeMatrixDestinationKey, k_DestinationParentPath_Key));
   }
 
   Result<> conversionResult = MergeResults(std::move(results));

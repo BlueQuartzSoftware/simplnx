@@ -52,7 +52,7 @@ public:
   /**
    * @brief Defines an opaque registration identifier.
    */
-  using AllocationHandle = uint64;
+  using AllocationHandleType = uint64;
 
   /**
    * @struct AllocationOptions
@@ -60,7 +60,7 @@ public:
    */
   struct AllocationOptions
   {
-    bool initiallyPinned = false; ///< Excludes the entry from eviction until a matching unpin() call.
+    bool initially_pinned = false; ///< Excludes the entry from eviction until a matching unpin() call.
   };
 
   /**
@@ -85,7 +85,7 @@ public:
   {
   public:
     WorkingMemoryReservation() = default;
-    WorkingMemoryReservation(WorkingMemoryReservationKey, CacheMemoryBudgetManager* manager, uint64 sizeBytes) noexcept;
+    WorkingMemoryReservation(WorkingMemoryReservationKey /*unused*/, CacheMemoryBudgetManager* manager, uint64 sizeBytes) noexcept;
     ~WorkingMemoryReservation() noexcept;
 
     WorkingMemoryReservation(const WorkingMemoryReservation&) = delete;
@@ -113,7 +113,7 @@ public:
    * later removal. Manager calls, structural cache locks, and I/O can deadlock or block allocation.
    * Captured objects must remain valid until the registration is released or cleared.
    */
-  using EvictionCallback = std::function<void()>;
+  using EvictionCallbackType = std::function<void()>;
 
   /**
    * @brief Names a non-blocking request to free retained cache bytes.
@@ -123,7 +123,7 @@ public:
    * this manager. The subsystem later calls release() to reconcile accounting.
    * The argument requests the minimum number of retained bytes to release.
    */
-  using SubsystemEvictionHandler = std::function<void(uint64 bytesToFree)>;
+  using SubsystemEvictionHandlerType = std::function<void(uint64 bytesToFree)>;
 
   /**
    * @brief Registers or replaces a delegated eviction handler for a cache subsystem.
@@ -134,19 +134,19 @@ public:
    * A subsystem without a handler uses per-entry eviction callbacks.
    * Captured objects must remain valid until replacement or the end of cache activity.
    */
-  void registerSubsystem(const std::string& subsystem, SubsystemEvictionHandler handler);
+  void registerSubsystem(const std::string& subsystem, SubsystemEvictionHandlerType handler);
 
   /**
    * @brief Returns the singleton instance.
    * @return Process-wide cache budget manager.
    */
-  static CacheMemoryBudgetManager& instance();
+  static CacheMemoryBudgetManager& Instance();
 
   /**
    * @brief Calculates the default cache budget.
    * @return Half of system RAM, with a 1-GiB floor and maxBudgetBytes() ceiling.
    */
-  static uint64 defaultBudgetBytes();
+  static uint64 DefaultBudgetBytes();
 
   /**
    * @brief Calculates the maximum permitted cache budget.
@@ -157,7 +157,7 @@ public:
    * The 6-GiB reserve applies below approximately 120 GiB. The 95-percent limit
    * applies above that value. Unknown or very small memory uses the 1-GiB floor.
    */
-  static uint64 maxBudgetBytes();
+  static uint64 MaxBudgetBytes();
 
   /**
    * @brief Registers an allocation and makes room under the shared budget.
@@ -171,7 +171,7 @@ public:
    * the new entry before the subsystem later calls release().
    * If no entry can be evicted, an allocation can temporarily exceed the budget.
    */
-  std::pair<AllocationHandle, std::vector<AllocationHandle>> allocate(const std::string& subsystem, const std::string& key, uint64 sizeBytes, EvictionCallback onEvict);
+  std::pair<AllocationHandleType, std::vector<AllocationHandleType>> allocate(const std::string& subsystem, const std::string& key, uint64 sizeBytes, EvictionCallbackType onEvict);
 
   /**
    * @brief Registers an allocation with optional initial pin state.
@@ -186,8 +186,8 @@ public:
    * @note A pinned registration remains in usedBytes() but is not an eviction candidate.
    * @note An all-pinned cache can exceed the budget after this registration.
    */
-  std::pair<AllocationHandle, std::vector<AllocationHandle>> allocate(const std::string& subsystem, const std::string& key, uint64 sizeBytes, EvictionCallback onEvict,
-                                                                      const AllocationOptions& options);
+  std::pair<AllocationHandleType, std::vector<AllocationHandleType>> allocate(const std::string& subsystem, const std::string& key, uint64 sizeBytes, EvictionCallbackType onEvict,
+                                                                              const AllocationOptions& options);
 
   /**
    * @brief Registers a temporary pinned allocation if unique pinned bytes remain within the budget.
@@ -200,13 +200,13 @@ public:
    * A delegated subsystem can reconcile its accounting later.
    * The caller must call release() after the temporary allocation becomes inactive.
    */
-  std::optional<AllocationHandle> reservePinned(const std::string& subsystem, const std::string& key, uint64 sizeBytes);
+  std::optional<AllocationHandleType> reservePinned(const std::string& subsystem, const std::string& key, uint64 sizeBytes);
 
   /**
    * @brief Marks a registered allocation as most recently used.
    * @param handle Identifies the allocation. An unknown handle has no effect.
    */
-  void touch(AllocationHandle handle);
+  void touch(AllocationHandleType handle);
 
   /**
    * @brief Increments the pin count for a registered allocation.
@@ -215,7 +215,7 @@ public:
    * @note The call updates recency.
    * Pinned entries remain registered but are not eviction candidates.
    */
-  bool pin(AllocationHandle handle);
+  bool pin(AllocationHandleType handle);
 
   /**
    * @brief Pins an allocation if total unique pinned bytes remain within the budget.
@@ -225,7 +225,7 @@ public:
    * A nested pin does not add unique pinned bytes and succeeds for a valid handle.
    * The check and first pin use one manager lock to prevent concurrent over-admission.
    */
-  PinResult pinWithinBudget(AllocationHandle handle);
+  PinResult pinWithinBudget(AllocationHandleType handle);
 
   /**
    * @brief Decrements the pin count for a registered allocation.
@@ -234,13 +234,13 @@ public:
    *
    * @note The final matching call updates recency before the entry becomes an eviction candidate.
    */
-  bool unpin(AllocationHandle handle);
+  bool unpin(AllocationHandleType handle);
 
   /**
    * @brief Releases a registered allocation.
    * @param handle Identifies the allocation. An unknown handle has no effect.
    */
-  void release(AllocationHandle handle);
+  void release(AllocationHandleType handle);
 
   /**
    * @brief Reserves temporary algorithm working memory against cache headroom.
@@ -328,10 +328,10 @@ private:
   {
     std::string subsystem;
     std::string key;
-    uint64 sizeBytes = 0;
-    uint64 pinCount = 0;
-    std::chrono::steady_clock::time_point lastAccessed;
-    EvictionCallback onEvict;
+    uint64 size_bytes = 0;
+    uint64 pin_count = 0;
+    std::chrono::steady_clock::time_point last_accessed;
+    EvictionCallbackType on_evict;
   };
 
   /**
@@ -345,7 +345,7 @@ private:
    * An all-pinned cache can exceed the
    * budget after the new registration.
    */
-  std::vector<AllocationHandle> makeRoom(uint64 needed);
+  std::vector<AllocationHandleType> makeRoom(uint64 needed);
 
   /** @brief Releases bytes held by a WorkingMemoryReservation. */
   void releaseWorkingMemory(uint64 sizeBytes) noexcept;
@@ -357,16 +357,16 @@ private:
    * Delegates directly to the OS via Memory::GetTotalMemory(); it is not cached,
    * so do not call it on hot paths.
    */
-  static uint64 totalSystemRamBytes();
+  static uint64 TotalSystemRamBytes();
 
   mutable std::mutex m_Mutex;
-  std::unordered_map<AllocationHandle, Entry> m_Entries;
-  std::unordered_map<std::string, SubsystemEvictionHandler> m_SubsystemHandlers;
+  std::unordered_map<AllocationHandleType, Entry> m_Entries;
+  std::unordered_map<std::string, SubsystemEvictionHandlerType> m_SubsystemHandlers;
   uint64 m_BudgetBytes = 0;
   uint64 m_UsedBytes = 0;
   uint64 m_PinnedBytes = 0;
   uint64 m_ReservedWorkingMemoryBytes = 0;
-  AllocationHandle m_NextHandle = 1;
+  AllocationHandleType m_NextHandle = 1;
 };
 
 } // namespace nx::core

@@ -19,7 +19,7 @@ public:
    * @param newPath The path where the copied BaseGroup will be created
    * @param allCreatedPaths All DataPaths that will be created by this action
    */
-  CopyDataObjectAction(const DataPath& path, const DataPath& newPath, const std::vector<DataPath> allCreatedPaths);
+  CopyDataObjectAction(DataPath path, const DataPath& newPath, const std::vector<DataPath>& allCreatedPaths);
 
   ~CopyDataObjectAction() noexcept override;
 
@@ -41,7 +41,7 @@ public:
    * @brief Returns a copy of the action.
    * @return UniquePointer A unique pointer to the cloned action
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the path of the BaseGroup to be copied.
@@ -69,7 +69,7 @@ private:
    * @param copyPath
    * @return std::shared_ptr<DataObject>
    */
-  static std::shared_ptr<DataObject> copyData(DataStructure& dataStructure, const DataPath& sourcePath, const DataPath& destPath);
+  static std::shared_ptr<DataObject> CopyData(DataStructure& dataStructure, const DataPath& sourcePath, const DataPath& destPath);
 
   ////////////
   // Variables

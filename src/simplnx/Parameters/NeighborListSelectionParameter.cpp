@@ -8,18 +8,19 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 using namespace nx::core;
 
 template <>
 struct fmt::formatter<nx::core::DataType>
 {
-  constexpr format_parse_context::iterator parse(format_parse_context& ctx)
+  static constexpr format_parse_context::iterator parse(format_parse_context& ctx)
   {
     return ctx.begin();
   }
 
-  format_context::iterator format(const nx::core::DataType& value, format_context& ctx) const
+  static format_context::iterator format(const nx::core::DataType& value, format_context& ctx)
   {
     return fmt::format_to(ctx.out(), "{}", nx::core::DataTypeToString(value));
   }
@@ -27,15 +28,15 @@ struct fmt::formatter<nx::core::DataType>
 
 namespace
 {
-constexpr int32 k_Validate_AllowedType_Error = -206;
+constexpr int32 k_ValidateAllowedTypeError = -206;
 } // namespace
 
 namespace nx::core
 {
-NeighborListSelectionParameter::NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                               const AllowedTypes& allowedTypes)
+NeighborListSelectionParameter::NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue,
+                                                               const AllowedTypeSetType& allowedTypes)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 , m_AllowedTypes(allowedTypes)
 {
   if(allowedTypes.empty())
@@ -49,7 +50,7 @@ Uuid NeighborListSelectionParameter::uuid() const
   return ParameterTraits<NeighborListSelectionParameter>::uuid;
 }
 
-IParameter::AcceptedTypes NeighborListSelectionParameter::acceptedTypes() const
+IParameter::AcceptedTypesType NeighborListSelectionParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -67,12 +68,12 @@ nlohmann::json NeighborListSelectionParameter::toJsonImpl(const std::any& value)
   return json;
 }
 
-Result<std::any> NeighborListSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> NeighborListSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'NeighborListSelectionParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'NeighborListSelectionParameter' JSON Error: ";
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), name()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix.view(), name()));
   }
   auto jsonStrValue = json.get<std::string>();
   if(jsonStrValue.empty())
@@ -82,12 +83,12 @@ Result<std::any> NeighborListSelectionParameter::fromJsonImpl(const nlohmann::js
   std::optional<DataPath> path = DataPath::FromString(jsonStrValue);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), jsonStrValue));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotValueType, fmt::format("{}Failed to parse '{}' as DataPath", k_Prefix.view(), jsonStrValue));
   }
   return {{std::move(*path)}};
 }
 
-IParameter::UniquePointer NeighborListSelectionParameter::clone() const
+IParameter::UniquePointerType NeighborListSelectionParameter::clone() const
 {
   return std::make_unique<NeighborListSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes);
 }
@@ -102,7 +103,7 @@ typename NeighborListSelectionParameter::ValueType NeighborListSelectionParamete
   return m_DefaultValue;
 }
 
-NeighborListSelectionParameter::AllowedTypes NeighborListSelectionParameter::allowedTypes() const
+NeighborListSelectionParameter::AllowedTypeSetType NeighborListSelectionParameter::allowedTypes() const
 {
   return m_AllowedTypes;
 }
@@ -120,26 +121,26 @@ Result<> NeighborListSelectionParameter::validatePath(const DataStructure& dataS
 
   if(value.empty())
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateEmptyValue, fmt::format("{}DataPath cannot be empty", prefix));
   }
-  const DataObject* object = dataStructure.getData(value);
-  if(object == nullptr)
+  const DataObject* objectPtr = dataStructure.getData(value);
+  if(objectPtr == nullptr)
   {
-    return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
+    return nx::core::MakeErrorResult<>(nx::core::filter_parameter::constants::k_ValidateDoesNotExist, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
-  const auto* neighborList = dynamic_cast<const INeighborList*>(object);
-  if(neighborList == nullptr)
+  const auto* neighborListPtr = dynamic_cast<const INeighborList*>(objectPtr);
+  if(neighborListPtr == nullptr)
   {
-    return nx::core::MakeErrorResult<>(nx::core::FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' is not a neighbor list.", prefix, value.toString()));
+    return nx::core::MakeErrorResult<>(nx::core::filter_parameter::constants::k_ValidateTypeError, fmt::format("{}Object at path '{}' is not a neighbor list.", prefix, value.toString()));
   }
 
   if(!m_AllowedTypes.empty())
   {
-    DataType dataType = neighborList->getDataType();
-    if(m_AllowedTypes.count(dataType) == 0)
+    DataType dataType = neighborListPtr->getDataType();
+    if(!m_AllowedTypes.contains(dataType))
     {
-      return nx::core::MakeErrorResult(k_Validate_AllowedType_Error,
+      return nx::core::MakeErrorResult(k_ValidateAllowedTypeError,
                                        fmt::format("{}DataNeighborList at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(), dataType, m_AllowedTypes));
     }
   }
@@ -150,7 +151,7 @@ Result<> NeighborListSelectionParameter::validatePath(const DataStructure& dataS
 Result<std::any> NeighborListSelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
-  DataObject* object = dataStructure.getData(path);
-  return {{object}};
+  DataObject* objectPtr = dataStructure.getData(path);
+  return {{objectPtr}};
 }
 } // namespace nx::core

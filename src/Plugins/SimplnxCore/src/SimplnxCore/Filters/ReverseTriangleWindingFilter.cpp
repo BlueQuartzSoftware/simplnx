@@ -48,7 +48,7 @@ Parameters ReverseTriangleWindingFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Triangle Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeomPath_Key, "Triangle Geometry", "The DataPath to then input Triangle Geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
 
   return params;
 }
@@ -60,14 +60,14 @@ IFilter::VersionType ReverseTriangleWindingFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReverseTriangleWindingFilter::clone() const
+IFilter::UniquePointerType ReverseTriangleWindingFilter::clone() const
 {
   return std::make_unique<ReverseTriangleWindingFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReverseTriangleWindingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ReverseTriangleWindingFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                     const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pTriGeomPathValue = filterArgs.value<DataPath>(k_TriGeomPath_Key);
 
@@ -75,27 +75,27 @@ IFilter::PreflightResult ReverseTriangleWindingFilter::preflightImpl(const DataS
 
   // Inform users that the following arrays are going to be modified in place
   // Triangle geometry face list is going to be modified
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pTriGeomPathValue, {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, pTriGeomPathValue, {});
 
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReverseTriangleWindingFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ReverseTriangleWindingFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReverseTriangleWindingInputValues inputValues;
-  inputValues.InputTriangleGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_TriGeomPath_Key);
+  inputValues.input_triangle_geometry_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_TriGeomPath_Key);
 
   return ReverseTriangleWinding(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_SurfaceDataContainerNameKey = "SurfaceDataContainerName";
-} // namespace SIMPL
+constexpr StringLiteralType k_SurfaceDataContainerNameKey = "SurfaceDataContainerName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReverseTriangleWindingFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -104,7 +104,7 @@ Result<Arguments> ReverseTriangleWindingFilter::FromSIMPLJson(const nlohmann::js
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceDataContainerNameKey, k_TriGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SurfaceDataContainerNameKey, k_TriGeomPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

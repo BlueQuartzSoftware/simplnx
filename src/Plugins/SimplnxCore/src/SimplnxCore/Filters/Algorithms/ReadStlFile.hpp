@@ -16,12 +16,12 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ReadStlFileInputValues
 {
-  fs::path stlFilePath;
-  DataPath geometryPath;
-  DataPath faceGroupPath;
-  DataPath faceNormalsDataPath;
-  bool scaleOutput = false;
-  float32 scaleFactor = 1.0F;
+  fs::path stl_file_path;
+  DataPath geometry_path;
+  DataPath face_group_path;
+  DataPath face_normals_data_path;
+  bool scale_output = false;
+  float32 scale_factor = 1.0F;
 };
 
 /**
@@ -34,7 +34,7 @@ class SIMPLNXCORE_EXPORT ReadStlFile
 {
 public:
   ReadStlFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadStlFileInputValues* inputValues);
-  ~ReadStlFile() noexcept;
+  ~ReadStlFile() noexcept = default;
 
   ReadStlFile(const ReadStlFile&) = delete;
   ReadStlFile(ReadStlFile&&) noexcept = delete;

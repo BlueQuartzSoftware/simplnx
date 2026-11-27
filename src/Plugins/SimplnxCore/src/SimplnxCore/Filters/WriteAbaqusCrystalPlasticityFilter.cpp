@@ -63,11 +63,11 @@ Parameters WriteAbaqusCrystalPlasticityFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseReducedIntegration_Key, "Use Reduced Integration Elements",
                                                                  "When true, writes C3D8R elements and includes an hourglass stiffness value for each grain section.", false));
   params.insert(
-      std::make_unique<Int32Parameter>(k_HourglassStiffness_Key, "Hourglass Stiffness Value", "The hourglass stiffness for C3D8R elements, in the model's stress units such as Pa or MPa.", 250));
+      std::make_unique<Int32ParameterType>(k_HourglassStiffness_Key, "Hourglass Stiffness Value", "The hourglass stiffness for C3D8R elements, in the model's stress units such as Pa or MPa.", 250));
   params.insert(std::make_unique<BoolParameter>(k_WriteEulerAnglesInDegrees_Key, "Write Euler Angles in Degrees",
                                                 "When true, converts the Euler angles from radians to degrees before writing them. When false, writes them in radians.", false));
-  params.insert(std::make_unique<Int32Parameter>(k_NumDepvar_Key, "Number of Solution Dependent State Variables", "The number of solution-dependent state variables.", 1));
-  params.insert(std::make_unique<Int32Parameter>(k_NumUserOutVar_Key, "Number of User Output Variables", "The number of user output variables.", 1));
+  params.insert(std::make_unique<Int32ParameterType>(k_NumDepvar_Key, "Number of Solution Dependent State Variables", "The number of solution-dependent state variables.", 1));
+  params.insert(std::make_unique<Int32ParameterType>(k_NumUserOutVar_Key, "Number of User Output Variables", "The number of user output variables.", 1));
 
   params.insertSeparator(Parameters::Separator{"Material Constant Layout"});
   params.insert(std::make_unique<BoolParameter>(k_UseUnsymmetricSolver_Key, "Use Unsymmetric Solver",
@@ -75,8 +75,8 @@ Parameters WriteAbaqusCrystalPlasticityFilter::parameters() const
                                                 true));
   params.insert(
       std::make_unique<BoolParameter>(k_IncludeGrainAndPhaseIds_Key, "Include Grain and Phase IDs as Constants", "When true, the grain ID and phase ID are written as constants 1 and 2.", true));
-  params.insert(std::make_unique<Int32Parameter>(k_EulerAnglesStartIndex_Key, "Euler Angles Start Index",
-                                                 "The 1-based position of the first Euler angle in the *User Material constant list. The three angles occupy this position and the next two.", 3));
+  params.insert(std::make_unique<Int32ParameterType>(k_EulerAnglesStartIndex_Key, "Euler Angles Start Index",
+                                                     "The 1-based position of the first Euler angle in the *User Material constant list. The three angles occupy this position and the next two.", 3));
 
   DynamicTableInfo tableInfo;
   tableInfo.setRowsInfo(DynamicTableInfo::DynamicVectorInfo(1, 6, "User Constant {}"));
@@ -91,15 +91,15 @@ Parameters WriteAbaqusCrystalPlasticityFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Selected Image Geometry", "The Image Geometry that defines the voxel mesh.", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "The feature ID for each cell.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Cell Euler Angles", "The Euler angles in radians for each cell.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "The phase ID for each cell.", DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "The phase ID for each cell.", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.linkParameters(k_UseReducedIntegration_Key, k_HourglassStiffness_Key, true);
 
@@ -115,18 +115,18 @@ IFilter::VersionType WriteAbaqusCrystalPlasticityFilter::parametersVersion() con
   return 1;
 }
 
-IFilter::UniquePointer WriteAbaqusCrystalPlasticityFilter::clone() const
+IFilter::UniquePointerType WriteAbaqusCrystalPlasticityFilter::clone() const
 {
   return std::make_unique<WriteAbaqusCrystalPlasticityFilter>();
 }
 
-IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                           const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   const auto prefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
-  if(auto prefixResult = AbaqusElementSets::validateFilePrefix(prefix, -12018); prefixResult.invalid())
+  if(auto prefixResult = abaqus_element_sets::ValidateFilePrefix(prefix, -12018); prefixResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(prefixResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(prefixResult), {})};
   }
 
   const auto outputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
@@ -135,9 +135,9 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
     return MakePreflightErrorResult(-12001, fmt::format("The output path '{}' is not a directory.", outputPath.string()));
   }
 
-  if(auto targetsResult = AbaqusElementSets::validateOutputTargets(outputPath, prefix, -12019); targetsResult.invalid())
+  if(auto targetsResult = abaqus_element_sets::ValidateOutputTargets(outputPath, prefix, -12019); targetsResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(targetsResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(targetsResult), {})};
   }
 
   const int32 numDepvar = filterArgs.value<int32>(k_NumDepvar_Key);
@@ -168,14 +168,14 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
 
   const auto imageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeometryPath);
-  if(auto sizeResult = AbaqusElementSets::validateMeshSize(imageGeom.getDimensions()); sizeResult.invalid())
+  if(auto sizeResult = abaqus_element_sets::ValidateMeshSize(imageGeom.getDimensions()); sizeResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(sizeResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(sizeResult), {})};
   }
   const usize cellCount = imageGeom.getNumberOfCells();
 
-  constexpr std::array<std::pair<StringLiteral, int32>, 3> arrayKeys = {{{k_FeatureIdsArrayPath_Key, -12002}, {k_CellEulerAnglesArrayPath_Key, -12003}, {k_CellPhasesArrayPath_Key, -12004}}};
-  for(const auto& [arrayKey, errorCode] : arrayKeys)
+  constexpr std::array<std::pair<StringLiteralType, int32>, 3> k_ArrayKeys = {{{k_FeatureIdsArrayPath_Key, -12002}, {k_CellEulerAnglesArrayPath_Key, -12003}, {k_CellPhasesArrayPath_Key, -12004}}};
+  for(const auto& [arrayKey, errorCode] : k_ArrayKeys)
   {
     const auto arrayPath = filterArgs.value<DataPath>(arrayKey);
     const auto& array = dataStructure.getDataRefAs<IDataArray>(arrayPath);
@@ -189,44 +189,44 @@ IFilter::PreflightResult WriteAbaqusCrystalPlasticityFilter::preflightImpl(const
   return {};
 }
 
-Result<> WriteAbaqusCrystalPlasticityFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> WriteAbaqusCrystalPlasticityFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   WriteAbaqusCrystalPlasticityInputValues inputValues;
-  inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
-  inputValues.FilePrefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
-  inputValues.JobName = filterArgs.value<StringParameter::ValueType>(k_JobName_Key);
-  inputValues.UseReducedIntegration = filterArgs.value<bool>(k_UseReducedIntegration_Key);
-  inputValues.HourglassStiffness = filterArgs.value<int32>(k_HourglassStiffness_Key);
-  inputValues.WriteEulerAnglesInDegrees = filterArgs.value<bool>(k_WriteEulerAnglesInDegrees_Key);
-  inputValues.NumDepvar = filterArgs.value<int32>(k_NumDepvar_Key);
-  inputValues.NumUserOutVar = filterArgs.value<int32>(k_NumUserOutVar_Key);
-  inputValues.UseUnsymmetricSolver = filterArgs.value<bool>(k_UseUnsymmetricSolver_Key);
-  inputValues.IncludeGrainAndPhaseIds = filterArgs.value<bool>(k_IncludeGrainAndPhaseIds_Key);
-  inputValues.EulerAnglesStartIndex = filterArgs.value<int32>(k_EulerAnglesStartIndex_Key);
-  inputValues.MaterialConstants = filterArgs.value<DynamicTableParameter::ValueType>(k_MaterialConstants_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.CellEulerAnglesArrayPath = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
-  inputValues.CellPhasesArrayPath = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
+  inputValues.output_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
+  inputValues.file_prefix = filterArgs.value<StringParameter::ValueType>(k_FilePrefix_Key);
+  inputValues.job_name = filterArgs.value<StringParameter::ValueType>(k_JobName_Key);
+  inputValues.use_reduced_integration = filterArgs.value<bool>(k_UseReducedIntegration_Key);
+  inputValues.hourglass_stiffness = filterArgs.value<int32>(k_HourglassStiffness_Key);
+  inputValues.write_euler_angles_in_degrees = filterArgs.value<bool>(k_WriteEulerAnglesInDegrees_Key);
+  inputValues.num_depvar = filterArgs.value<int32>(k_NumDepvar_Key);
+  inputValues.num_user_out_var = filterArgs.value<int32>(k_NumUserOutVar_Key);
+  inputValues.use_unsymmetric_solver = filterArgs.value<bool>(k_UseUnsymmetricSolver_Key);
+  inputValues.include_grain_and_phase_ids = filterArgs.value<bool>(k_IncludeGrainAndPhaseIds_Key);
+  inputValues.euler_angles_start_index = filterArgs.value<int32>(k_EulerAnglesStartIndex_Key);
+  inputValues.material_constants = filterArgs.value<DynamicTableParameter::ValueType>(k_MaterialConstants_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.cell_euler_angles_array_path = filterArgs.value<DataPath>(k_CellEulerAnglesArrayPath_Key);
+  inputValues.cell_phases_array_path = filterArgs.value<DataPath>(k_CellPhasesArrayPath_Key);
 
   return WriteAbaqusCrystalPlasticity(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_OutputPathKey = "OutputPath";
-constexpr StringLiteral k_OutputFilePrefixKey = "OutputFilePrefix";
-constexpr StringLiteral k_JobNameKey = "JobName";
-constexpr StringLiteral k_NumDepvarKey = "NumDepvar";
-constexpr StringLiteral k_NumUserOutVarKey = "NumUserOutVar";
-constexpr StringLiteral k_MatConstKey = "MatConst";
-constexpr StringLiteral k_AbqFeatureIdsArrayPathKey = "AbqFeatureIdsArrayPath";
-constexpr StringLiteral k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPath";
-constexpr StringLiteral k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
-} // namespace SIMPL
+constexpr StringLiteralType k_OutputPathKey = "OutputPath";
+constexpr StringLiteralType k_OutputFilePrefixKey = "OutputFilePrefix";
+constexpr StringLiteralType k_JobNameKey = "JobName";
+constexpr StringLiteralType k_NumDepvarKey = "NumDepvar";
+constexpr StringLiteralType k_NumUserOutVarKey = "NumUserOutVar";
+constexpr StringLiteralType k_MatConstKey = "MatConst";
+constexpr StringLiteralType k_AbqFeatureIdsArrayPathKey = "AbqFeatureIdsArrayPath";
+constexpr StringLiteralType k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPath";
+constexpr StringLiteralType k_CellPhasesArrayPathKey = "CellPhasesArrayPath";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteAbaqusCrystalPlasticityFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -240,16 +240,16 @@ Result<Arguments> WriteAbaqusCrystalPlasticityFilter::FromSIMPLJson(const nlohma
   args.insertOrAssign(k_UseUnsymmetricSolver_Key, std::make_any<bool>(false));
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_OutputPathKey, k_OutputPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_OutputFilePrefixKey, k_FilePrefix_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_JobNameKey, k_JobName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_NumDepvarKey, k_NumDepvar_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_NumUserOutVarKey, k_NumUserOutVar_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DynamicTableFilterParameterConverter>(args, json, SIMPL::k_MatConstKey, k_MaterialConstants_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_AbqFeatureIdsArrayPathKey, k_ImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_AbqFeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellEulerAnglesArrayPathKey, k_CellEulerAnglesArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputPathKey, k_OutputPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_OutputFilePrefixKey, k_FilePrefix_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_JobNameKey, k_JobName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_NumDepvarKey, k_NumDepvar_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_NumUserOutVarKey, k_NumUserOutVar_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DynamicTableFilterParameterConverter>(args, json, simpl::k_MatConstKey, k_MaterialConstants_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_AbqFeatureIdsArrayPathKey, k_ImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_AbqFeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellEulerAnglesArrayPathKey, k_CellEulerAnglesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
   return ConvertResultTo<Arguments>(std::move(conversionResult), std::move(args));

@@ -48,12 +48,12 @@ public:
   /**
    * @brief Names the scalar store for mesh vertex coordinates.
    */
-  using VertexStore = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+  using VertexStoreType = AbstractDataStore<IGeometry::SharedVertexListType::value_type>;
 
   /**
    * @brief Names the scalar store for mesh triangle connectivity.
    */
-  using TriStore = AbstractDataStore<IGeometry::SharedTriList::value_type>;
+  using TriStoreType = AbstractDataStore<IGeometry::SharedTriListType::value_type>;
 
   /**
    * @brief Names the integer type used for mesh indices.
@@ -75,7 +75,7 @@ public:
   /**
    * @brief Destroys the scanline meshing algorithm.
    */
-  ~QuickSurfaceMeshScanline() noexcept;
+  ~QuickSurfaceMeshScanline() noexcept = default;
 
   QuickSurfaceMeshScanline(const QuickSurfaceMeshScanline&) = delete;
   QuickSurfaceMeshScanline(QuickSurfaceMeshScanline&&) noexcept = delete;

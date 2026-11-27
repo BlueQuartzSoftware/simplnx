@@ -60,7 +60,7 @@ enum class CSVType : uint8
   string
 };
 
-inline constexpr StringLiteral CSVTypeToHumanString(CSVType csvType)
+constexpr StringLiteralType CSVTypeToHumanString(CSVType csvType)
 {
   switch(csvType)
   {
@@ -152,7 +152,7 @@ inline std::optional<CSVType> IndexToCSVType(usize index)
  * @param numericType
  * @return
  */
-inline constexpr DataType ConvertCSVTypeToDataType(CSVType csvType)
+constexpr DataType ConvertCSVTypeToDataType(CSVType csvType)
 {
   switch(csvType)
   {
@@ -262,7 +262,7 @@ constexpr CSVType GetCSVType() noexcept
  * @param dataType
  * @return
  */
-inline constexpr StringLiteral CSVTypeToString(CSVType dataType)
+constexpr StringLiteralType CSVTypeToString(CSVType dataType)
 {
   switch(dataType)
   {
@@ -312,13 +312,13 @@ inline constexpr StringLiteral CSVTypeToString(CSVType dataType)
  * @param csvTypeString
  * @return
  */
-inline constexpr CSVType StringToCSVType(std::string_view csvTypeString)
+constexpr CSVType StringToCSVType(std::string_view csvTypeString)
 {
   if(csvTypeString == CSVTypeToString(CSVType::int8).view())
   {
     return CSVType::int8;
   }
-  else if(csvTypeString == CSVTypeToString(CSVType::uint8).view())
+  if(csvTypeString == CSVTypeToString(CSVType::uint8).view())
   {
     return CSVType::uint8;
   }
@@ -381,15 +381,15 @@ public:
   nlohmann::json writeJson() const;
   static Result<ReadCSVData> ReadJson(const nlohmann::json& json);
 
-  std::string inputFilePath;
-  std::vector<std::string> customHeaders;
-  usize startImportRow = 1;
-  std::vector<CSVType> dataTypes;
-  std::vector<bool> skippedArrayMask;
-  usize headersLine = 1;
-  HeaderMode headerMode = HeaderMode::CUSTOM;
-  ShapeType tupleDims = {1};
-  std::vector<char> delimiters = {};
-  bool consecutiveDelimiters = false;
+  std::string input_file_path;
+  std::vector<std::string> custom_headers;
+  usize start_import_row = 1;
+  std::vector<CSVType> data_types;
+  std::vector<bool> skipped_array_mask;
+  usize headers_line = 1;
+  HeaderMode header_mode = HeaderMode::CUSTOM;
+  ShapeType tuple_dims = {1};
+  std::vector<char> delimiters;
+  bool consecutive_delimiters = false;
 };
 } // namespace nx::core

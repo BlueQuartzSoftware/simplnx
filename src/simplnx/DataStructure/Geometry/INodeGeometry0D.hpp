@@ -14,13 +14,13 @@ namespace nx::core
 class SIMPLNX_EXPORT INodeGeometry0D : public IGeometry
 {
 public:
-  static constexpr StringLiteral k_TypeName = "INodeGeometry0D";
-  static constexpr StringLiteral k_SharedVertexListName = "Shared Vertex List";
-  static constexpr StringLiteral k_VertexAttributeMatrixName = "Vertex Data";
+  static constexpr StringLiteralType k_TypeName = "INodeGeometry0D";
+  static constexpr StringLiteralType k_SharedVertexListName = "Shared Vertex List";
+  static constexpr StringLiteralType k_VertexAttributeMatrixName = "Vertex Data";
 
   INodeGeometry0D() = delete;
   INodeGeometry0D(const INodeGeometry0D&) = default;
-  INodeGeometry0D(INodeGeometry0D&&) = default;
+  INodeGeometry0D(INodeGeometry0D&&) noexcept = default;
 
   INodeGeometry0D& operator=(const INodeGeometry0D&) = delete;
   INodeGeometry0D& operator=(INodeGeometry0D&&) noexcept = delete;
@@ -31,31 +31,31 @@ public:
    * @brief Returns a shared pointer to the vertex coordinates array
    * @return
    */
-  SharedVertexList* getVertices();
+  SharedVertexListType* getVertices();
 
   /**
    * @brief Returns a shared pointer to the vertex coordinates array
    * @return
    */
-  const SharedVertexList* getVertices() const;
+  const SharedVertexListType* getVertices() const;
 
   /**
    * @brief Returns a reference to the vertex coordinates array
    * @return
    */
-  SharedVertexList& getVerticesRef();
+  SharedVertexListType& getVerticesRef();
 
   /**
    * @brief Returns a reference to the vertex coordinates array
    * @return
    */
-  const SharedVertexList& getVerticesRef() const;
+  const SharedVertexListType& getVerticesRef() const;
 
   /**
    * @brief Sets the internal reference to vertex coordinates to vertices
    * @param vertices Coordinate array to use for vertex coordinates.
    */
-  void setVertices(const SharedVertexList& vertices);
+  void setVertices(const SharedVertexListType& vertices);
 
   /**
    * @brief Returns the optional ID of the vertex list array.
@@ -92,7 +92,7 @@ public:
    * @brief Calculates and returns the bounding box for this geometry
    * @return
    */
-  BoundingBox3Df getBoundingBox() const;
+  BoundingBox3DfType getBoundingBox() const;
 
   /**
    * @brief Returns whether this geometry is in a YZ plane.
@@ -120,14 +120,14 @@ public:
    * @param vertId
    * @return
    */
-  Point3D<float32> getVertexCoordinate(usize vertId) const;
+  Vec3<float32> getVertexCoordinate(usize vertId) const;
 
   /**
    * @brief Sets the coordinates for the specified vertex ID.
    * @param vertId
    * @param coords
    */
-  void setVertexCoordinate(usize vertId, const Point3D<float32>& coords);
+  void setVertexCoordinate(usize vertId, const Vec3<float32>& coords);
 
   /**
    * @brief Returns the DataStructure unique ID of the vertex coordinate array
@@ -145,7 +145,7 @@ public:
    * @brief Sets the ID of the vertex data array.
    * @param vertexDataId The optional ID of the vertex data array
    */
-  void setVertexDataId(const OptionalId& vertexDataId);
+  void setVertexDataId(const OptionalIdType& vertexDataId);
 
   /**
    * @brief Returns pointer to the Attribute Matrix that holds data assigned to each vertex coordinate

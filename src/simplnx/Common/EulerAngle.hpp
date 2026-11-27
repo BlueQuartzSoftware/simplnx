@@ -10,5 +10,5 @@ namespace nx::core
  * angles in alternative formats, but by describing the specific format, it
  * becomes harder to accidentally use the wrong Euler angle format in code.
  */
-using ZXZEuler = Eigen::Vector3f;
+using ZxzEulerType = Eigen::Vector3f;
 } // namespace nx::core

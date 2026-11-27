@@ -12,7 +12,7 @@
 
 #include <fmt/format.h>
 
-namespace nx::core::BoundedRead
+namespace nx::core::bounded_read
 {
 /** @brief Limits each active decoder to 128 KiB of workspace payload. */
 inline constexpr uint64 k_DefaultDecoderWorkspaceBytes = uint64{128} * 1024;
@@ -58,7 +58,7 @@ enum Code : int32
  * @return An empty warnings collection, constructed directly in the result member.
  * @throws std::bad_alloc When the existing bounded fault observer requests a construction failure.
  */
-SIMPLNX_EXPORT WarningCollection MakeSuccessWarningsForTesting(const std::filesystem::path* file = nullptr, std::string_view dataset = {});
+SIMPLNX_EXPORT WarningCollectionType MakeSuccessWarningsForTesting(const std::filesystem::path* file = nullptr, std::string_view dataset = {});
 #endif
 
 /**
@@ -103,7 +103,7 @@ inline bool Add(uint64 first, uint64 second, uint64& result) noexcept
 inline std::string EscapeDiagnosticText(std::string_view value)
 {
   std::string text;
-  constexpr auto hex = std::to_array("0123456789ABCDEF");
+  constexpr auto k_Hex = std::to_array("0123456789ABCDEF");
   usize index = 0;
   while(index < value.size())
   {
@@ -134,14 +134,14 @@ inline std::string EscapeDiagnosticText(std::string_view value)
     if(valid && count > 1)
     {
       const auto second = static_cast<unsigned char>(value[index + 1]);
-      valid = !((first == 0xE0 && second < 0xA0) || (first == 0xED && second >= 0xA0) || (first == 0xF0 && second < 0x90) || (first == 0xF4 && second >= 0x90));
+      valid = (first != 0xE0 || second >= 0xA0) && (first != 0xED || second < 0xA0) && (first != 0xF0 || second >= 0x90) && (first != 0xF4 || second < 0x90);
     }
     std::array<char, 4> escaped{};
     const char* bytesPtr = value.data() + index;
     usize consumed = count;
     if(!valid || first < 0x20 || first == 0x7F)
     {
-      escaped = {'\\', 'x', hex[first >> 4], hex[first & 0x0F]};
+      escaped = {'\\', 'x', k_Hex[first >> 4], k_Hex[first & 0x0F]};
       bytesPtr = escaped.data();
       count = escaped.size();
       consumed = 1;
@@ -276,4 +276,4 @@ Status ValidateExtent(const Extent& extent, const Shape& shape, uint64 component
   }
   return Status::Complete;
 }
-} // namespace nx::core::BoundedRead
+} // namespace nx::core::bounded_read

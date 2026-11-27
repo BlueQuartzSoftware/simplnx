@@ -28,7 +28,7 @@ namespace
  * @param orientationOps Supplies crystal-structure symmetry operators.
  * @return True if phase and strict misorientation tests pass.
  */
-inline bool isMisorientationMatch(int64 neighborSliceIdx, const std::vector<float32>& neighborQuats, const std::vector<int32>& neighborPhases, int32 currentPhaseIdx, uint32 currentLaueIndex,
+inline bool IsMisorientationMatch(int64 neighborSliceIdx, const std::vector<float32>& neighborQuats, const std::vector<int32>& neighborPhases, int32 currentPhaseIdx, uint32 currentLaueIndex,
                                   const ebsdlib::QuatD& quat1, float64 misorientationTolerance, const std::vector<ebsdlib::LaueOps::Pointer>& orientationOps)
 {
   const int32 neighborCellPhaseIdx = neighborPhases[neighborSliceIdx];
@@ -68,34 +68,36 @@ inline bool isMisorientationMatch(int64 neighborSliceIdx, const std::vector<floa
  * @param orientationOps Supplies crystal-structure symmetry operators.
  * @return Matching good face-neighbor count.
  */
-inline int32 countMatchingNeighbors(int64 xIdx, int64 yIdx, int64 zIdx, int64 dimX, int64 dimY, int64 dimZ, int64 sliceIndex, const std::vector<float32>& prevQuats,
+inline int32 CountMatchingNeighbors(int64 xIdx, int64 yIdx, int64 zIdx, int64 dimX, int64 dimY, int64 dimZ, int64 sliceIndex, const std::vector<float32>& prevQuats,
                                     const std::vector<float32>& curQuats, const std::vector<float32>& nextQuats, const std::vector<int32>& prevPhases, const std::vector<int32>& curPhases,
                                     const std::vector<int32>& nextPhases, const std::vector<uint8>& prevMask, const std::vector<uint8>& curMask, const std::vector<uint8>& nextMask,
                                     int32 currentPhaseIdx, uint32 currentLaueIndex, const ebsdlib::QuatD& quat1, float64 misorientationTolerance,
                                     const std::vector<ebsdlib::LaueOps::Pointer>& orientationOps)
 {
   int32 count = 0;
-  if(xIdx > 0 && curMask[sliceIndex - 1] && isMisorientationMatch(sliceIndex - 1, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+  if(xIdx > 0 && (curMask[sliceIndex - 1] != 0u) && IsMisorientationMatch(sliceIndex - 1, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }
-  if(xIdx < dimX - 1 && curMask[sliceIndex + 1] && isMisorientationMatch(sliceIndex + 1, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+  if(xIdx < dimX - 1 && (curMask[sliceIndex + 1] != 0u) &&
+     IsMisorientationMatch(sliceIndex + 1, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }
-  if(yIdx > 0 && curMask[sliceIndex - dimX] && isMisorientationMatch(sliceIndex - dimX, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+  if(yIdx > 0 && (curMask[sliceIndex - dimX] != 0u) && IsMisorientationMatch(sliceIndex - dimX, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }
-  if(yIdx < dimY - 1 && curMask[sliceIndex + dimX] && isMisorientationMatch(sliceIndex + dimX, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+  if(yIdx < dimY - 1 && (curMask[sliceIndex + dimX] != 0u) &&
+     IsMisorientationMatch(sliceIndex + dimX, curQuats, curPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }
-  if(zIdx > 0 && prevMask[sliceIndex] && isMisorientationMatch(sliceIndex, prevQuats, prevPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+  if(zIdx > 0 && (prevMask[sliceIndex] != 0u) && IsMisorientationMatch(sliceIndex, prevQuats, prevPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }
-  if(zIdx < dimZ - 1 && nextMask[sliceIndex] && isMisorientationMatch(sliceIndex, nextQuats, nextPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
+  if(zIdx < dimZ - 1 && (nextMask[sliceIndex] != 0u) && IsMisorientationMatch(sliceIndex, nextQuats, nextPhases, currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps))
   {
     count++;
   }
@@ -114,29 +116,28 @@ BadDataNeighborOrientationCheckScanline::BadDataNeighborOrientationCheckScanline
 }
 
 // -----------------------------------------------------------------------------
-BadDataNeighborOrientationCheckScanline::~BadDataNeighborOrientationCheckScanline() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> BadDataNeighborOrientationCheckScanline::operator()()
 {
   // Double-precision pi keeps the strict comparison aligned with boundary-exact analytical fixtures.
-  const float64 misorientationTolerance = static_cast<float64>(m_InputValues->MisorientationTolerance) * numbers::pi_v<float64> / 180.0;
+  const float64 misorientationTolerance = static_cast<float64>(m_InputValues->misorientation_tolerance) * numbers::k_PiV<float64> / 180.0;
 
-  const auto* imageGeomPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->ImageGeomPath);
-  SizeVec3 udims = imageGeomPtr->getDimensions();
-  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
-  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  const auto* imageGeomPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->image_geom_path);
+  SizeVec3Type udims = imageGeomPtr->getDimensions();
+  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+  auto& quats = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->quats_array_path);
+  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
+  std::unique_ptr<mask_compare_utilities::MaskCompare> maskCompare;
   try
   {
-    maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+    maskCompare = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->mask_array_path);
   } catch(const std::out_of_range& exception)
   {
     // Direct callers can bypass preflight, so mask type errors return a Result.
     return MakeErrorResult(-54900,
-                           fmt::format("Mask Array at '{}' could not be loaded; expected Bool or UInt8 backing. Underlying error: {}", m_InputValues->MaskArrayPath.toString(), exception.what()));
+                           fmt::format("Mask Array at '{}' could not be loaded; expected Bool or UInt8 backing. Underlying error: {}", m_InputValues->mask_array_path.toString(), exception.what()));
   }
 
   const int64 dimX = static_cast<int64>(udims[0]);
@@ -175,17 +176,17 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
   const auto& phasesStore = cellPhases.getDataStoreRef();
 
   // The bool path converts one bulk-read scratch slice to uint8 values. This avoids per-element OOC access.
-  auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
+  auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->mask_array_path);
   const DataType maskDataType = maskArray.getDataType();
   AbstractDataStore<uint8>* maskStorePtr = nullptr;
   AbstractDataStore<bool>* maskStoreBoolPtr = nullptr;
   if(maskDataType == DataType::uint8)
   {
-    maskStorePtr = &dynamic_cast<UInt8Array&>(maskArray).getDataStoreRef();
+    maskStorePtr = &dynamic_cast<UInt8ArrayType&>(maskArray).getDataStoreRef();
   }
   else if(maskDataType == DataType::boolean)
   {
-    maskStoreBoolPtr = &dynamic_cast<BoolArray&>(maskArray).getDataStoreRef();
+    maskStoreBoolPtr = &dynamic_cast<BoolArrayType&>(maskArray).getDataStoreRef();
   }
   // A raw bool buffer supplies a span<bool>; std::vector<bool> cannot supply bool storage.
   std::unique_ptr<bool[]> boolSliceScratch;
@@ -246,11 +247,11 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
   };
 
   // Recompute counts per pass to avoid a global random-write neighbor-count array.
-  constexpr int32 startLevel = 6;
-  const int32 totalLevels = startLevel - m_InputValues->NumberOfNeighbors + 1;
+  constexpr int32 k_StartLevel = 6;
+  const int32 totalLevels = k_StartLevel - m_InputValues->number_of_neighbors + 1;
 
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
-  for(int32 currentLevel = startLevel; currentLevel >= m_InputValues->NumberOfNeighbors; currentLevel--)
+  for(int32 currentLevel = k_StartLevel; currentLevel >= m_InputValues->number_of_neighbors; currentLevel--)
   {
     bool changed = true;
     int32 passCount = 0;
@@ -259,7 +260,7 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
     {
       changed = false;
       passCount++;
-      const std::string progressLabel = fmt::format("Processing Level {}/{} Pass {}", startLevel - currentLevel + 1, totalLevels, passCount);
+      const std::string progressLabel = fmt::format("Processing Level {}/{} Pass {}", k_StartLevel - currentLevel + 1, totalLevels, passCount);
       progressThrottle.reset(static_cast<usize>(dimZ), progressLabel);
 
       if(Result<> ioResult = loadSlice(0, curQuats, curPhases, curMask); ioResult.invalid())
@@ -289,7 +290,7 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
           {
             const int64 sliceIndex = jStride + xIdx;
 
-            if(curMask[sliceIndex])
+            if(curMask[sliceIndex] != 0u)
             {
               continue; // already good
             }
@@ -306,7 +307,7 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
             {
               const int64 voxelIdx = zIdx * xyStride + sliceIndex;
               return MakeErrorResult(-54902, fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in [0, {}).",
-                                                         m_InputValues->CellPhasesArrayPath.toString(), currentPhaseIdx, voxelIdx, m_InputValues->CrystalStructuresArrayPath.toString(),
+                                                         m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, voxelIdx, m_InputValues->crystal_structures_array_path.toString(),
                                                          numCrystalStructures, numCrystalStructures));
             }
             const uint32 currentLaueIndex = localCrystalStructures[currentPhaseIdx];
@@ -316,7 +317,7 @@ Result<> BadDataNeighborOrientationCheckScanline::operator()()
               continue;
             }
 
-            int32 count = countMatchingNeighbors(xIdx, yIdx, zIdx, dimX, dimY, dimZ, sliceIndex, prevQuats, curQuats, nextQuats, prevPhases, curPhases, nextPhases, prevMask, curMask, nextMask,
+            int32 count = CountMatchingNeighbors(xIdx, yIdx, zIdx, dimX, dimY, dimZ, sliceIndex, prevQuats, curQuats, nextQuats, prevPhases, curPhases, nextPhases, prevMask, curMask, nextMask,
                                                  currentPhaseIdx, currentLaueIndex, quat1, misorientationTolerance, orientationOps);
 
             if(count >= currentLevel)

@@ -13,8 +13,8 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT TriangleDihedralAngleInputValues
 {
-  GeometrySelectionParameter::ValueType InputTriangleGeometryPath;
-  DataObjectNameParameter::ValueType SurfaceMeshTriangleDihedralAnglesArrayName;
+  GeometrySelectionParameter::ValueType input_triangle_geometry_path;
+  DataObjectNameParameter::ValueType surface_mesh_triangle_dihedral_angles_array_name;
 };
 
 /**
@@ -26,7 +26,7 @@ class SIMPLNXCORE_EXPORT TriangleDihedralAngle
 {
 public:
   TriangleDihedralAngle(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, TriangleDihedralAngleInputValues* inputValues);
-  ~TriangleDihedralAngle() noexcept;
+  ~TriangleDihedralAngle() noexcept = default;
 
   TriangleDihedralAngle(const TriangleDihedralAngle&) = delete;
   TriangleDihedralAngle(TriangleDihedralAngle&&) noexcept = delete;

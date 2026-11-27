@@ -27,20 +27,20 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ReadChannel5DataInputValues
 {
-  FileSystemPathParameter::ValueType InputFile;
-  std::optional<FloatVec3> SpacingOverride;
-  DataPath DataContainerName;
-  std::string CellAttributeMatrixName;
-  std::string CellEnsembleAttributeMatrixName;
-  bool EdaxHexagonalAlignment;
-  bool CreateCompatibleArrays;
+  FileSystemPathParameter::ValueType input_file;
+  std::optional<FloatVec3Type> spacing_override;
+  DataPath data_container_name;
+  std::string cell_attribute_matrix_name;
+  std::string cell_ensemble_attribute_matrix_name;
+  bool edax_hexagonal_alignment{};
+  bool create_compatible_arrays{};
 };
 
 /**
  * @struct Ang_Private_Data
  * @brief Stores parsed Channel 5 metadata.
  */
-struct ORIENTATIONANALYSIS_EXPORT Ang_Private_Data
+struct ORIENTATIONANALYSIS_EXPORT AngPrivateData
 {
   std::array<size_t, 3> dims = {0, 0, 0};
   std::array<float, 3> resolution = {0.0F, 0.0F, 0.0F};
@@ -64,10 +64,10 @@ public:
   ReadChannel5DataPrivate& operator=(const ReadChannel5DataPrivate&) = delete;
   ReadChannel5DataPrivate& operator=(ReadChannel5DataPrivate&&) = delete;
 
-  Ang_Private_Data m_Data;
+  AngPrivateData m_data;
 
-  std::string m_InputFile_Cache;
-  fs::file_time_type m_TimeStamp_Cache;
+  std::string m_input_file_cache;
+  fs::file_time_type m_time_stamp_cache;
 };
 
 /**
@@ -93,7 +93,7 @@ public:
   /**
    * @brief Destroys the Channel 5 reader.
    */
-  ~ReadChannel5Data() noexcept;
+  ~ReadChannel5Data() noexcept = default;
 
   ReadChannel5Data(const ReadChannel5Data&) = delete;
   ReadChannel5Data(ReadChannel5Data&&) = delete;

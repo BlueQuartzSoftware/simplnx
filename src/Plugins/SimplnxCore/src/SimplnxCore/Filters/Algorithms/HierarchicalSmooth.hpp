@@ -11,11 +11,11 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT HierarchicalSmoothInputValues
 {
-  DataPath triangleGeometryDataPath;
-  DataPath nodeTypeArrayPath;
-  DataPath faceLabelsArrayPath;
-  int32 maxIterations;
-  float64 errorThreshold;
+  DataPath triangle_geometry_data_path;
+  DataPath node_type_array_path;
+  DataPath face_labels_array_path;
+  int32 max_iterations{};
+  float64 error_threshold{};
 };
 
 /**
@@ -30,7 +30,7 @@ class SIMPLNXCORE_EXPORT HierarchicalSmooth
 {
 public:
   HierarchicalSmooth(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, HierarchicalSmoothInputValues* inputValues);
-  ~HierarchicalSmooth() noexcept;
+  ~HierarchicalSmooth() noexcept = default;
 
   HierarchicalSmooth(const HierarchicalSmooth&) = delete;
   HierarchicalSmooth(HierarchicalSmooth&&) noexcept = delete;

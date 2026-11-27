@@ -24,14 +24,14 @@ public:
   ReadOnScaleTableFileFilter& operator=(ReadOnScaleTableFileFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_InputFile_Key = "input_file";
-  static constexpr StringLiteral k_Origin_Key = "fallback_origin";
-  static constexpr StringLiteral k_Spacing_Key = "fallback_spacing";
-  static constexpr StringLiteral k_CreatedRectGridGeometryPath_Key = "output_rect_grid_geometry_path";
-  static constexpr StringLiteral k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
-  static constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
-  static constexpr StringLiteral k_PhaseAttributeMatrixName_Key = "phase_attribute_matrix_name";
-  static constexpr StringLiteral k_MaterialNamesArrayName_Key = "material_names_array_name";
+  static constexpr StringLiteralType k_InputFile_Key = "input_file";
+  static constexpr StringLiteralType k_Origin_Key = "fallback_origin";
+  static constexpr StringLiteralType k_Spacing_Key = "fallback_spacing";
+  static constexpr StringLiteralType k_CreatedRectGridGeometryPath_Key = "output_rect_grid_geometry_path";
+  static constexpr StringLiteralType k_CellAttributeMatrixName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteralType k_FeatureIdsArrayName_Key = "feature_ids_array_name";
+  static constexpr StringLiteralType k_PhaseAttributeMatrixName_Key = "phase_attribute_matrix_name";
+  static constexpr StringLiteralType k_MaterialNamesArrayName_Key = "material_names_array_name";
 
   /**
    * @brief Converts a legacy ImportOnScaleTableFile JSON object to filter arguments.
@@ -55,7 +55,7 @@ public:
   /** @brief Returns the parameter schema version. @return Parameter schema version. */
   VersionType parametersVersion() const override;
   /** @brief Creates a new filter instance. @return New filter instance. */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

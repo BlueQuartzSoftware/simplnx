@@ -19,8 +19,8 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -36,9 +36,9 @@ const DataPath k_FaceAreasPath = k_FaceDataPath.createChildPath(k_FaceAreas);
 
 const DataPath k_FeatureFaceLabelsPath = k_TriangleDataContainerPath.createChildPath(k_FaceFeatureData).createChildPath(k_FaceLabels);
 
-const DataPath k_AvgEulerAnglesPath = k_SmallIN100Path.createChildPath(k_Grain_Data).createChildPath(k_AvgEulerAngles);
-const DataPath k_PhasesPath = k_SmallIN100Path.createChildPath(k_Grain_Data).createChildPath(k_Phases);
-const DataPath k_CrystalStructuresPath = k_SmallIN100Path.createChildPath(k_Phase_Data).createChildPath(k_CrystalStructures);
+const DataPath k_AvgEulerAnglesPath = k_SmallIN100Path.createChildPath(k_GrainDataWithSpaces).createChildPath(k_AvgEulerAngles);
+const DataPath k_PhasesPath = k_SmallIN100Path.createChildPath(k_GrainDataWithSpaces).createChildPath(k_Phases);
+const DataPath k_CrystalStructuresPath = k_SmallIN100Path.createChildPath(k_PhaseData).createChildPath(k_CrystalStructures);
 
 /**
  * @brief Compares two float32 DataArrays after sorting their tuples, so that row ordering does not affect the comparison.
@@ -78,7 +78,7 @@ void CompareSortedArrays(const DataStructure& dataStructure, const DataPath& exe
     {
       float32 diff = std::fabs(exemplarRows[i][c] - computedRows[i][c]);
       INFO(fmt::format("Sorted row {}, comp {}: exemplar={}, computed={}", i, c, exemplarRows[i][c], computedRows[i][c]));
-      REQUIRE(diff < UnitTest::EPSILON);
+      REQUIRE(diff < unit_test::k_Epsilon);
     }
   }
 }
@@ -91,15 +91,15 @@ const DataPath k_ComputedErrorPath({"NX_errors"});
 
 TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: Valid Filter Execution", "[OrientationAnalysis][ComputeGBPDMetricBasedFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_gbpd_metric_based.tar.gz", "6_6_find_gbpd_metric_based");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_gbpd_metric_based.tar.gz", "6_6_find_gbpd_metric_based");
 
-  auto* filterList = Application::Instance()->getFilterList();
+  auto* filterListPtr = Application::Instance()->getFilterList();
 
   // Read Exemplar DREAM3D File Input
   auto exemplarInputFilePath = fs::path(fmt::format("{}/6_6_find_gbpd_metric_based/6_6_find_gbpd_metric_based.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarInputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarInputFilePath);
 
   fs::path exemplarDistOutput(fmt::format("{}/6_6_find_gbpd_metric_based/6_6_gbpd_distribution_1.dat", unit_test::k_TestFilesDir));
   fs::path exemplarErrorsOutput(fmt::format("{}/6_6_find_gbpd_metric_based/6_6_gbpd_distribution_errors_1.dat", unit_test::k_TestFilesDir));
@@ -132,7 +132,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: Valid Filter Execu
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -141,18 +141,18 @@ TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: Valid Filter Execu
 
   // read in exemplar and computed data files for comparison
   {
-    auto filter = filterList->createFilter(k_ReadTextDataArrayFilterHandle);
+    auto filter = filterListPtr->createFilter(k_ReadTextDataArrayFilterHandle);
     REQUIRE(nullptr != filter);
     // exemplar distribution
     {
       Arguments args;
-      args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(exemplarDistOutput));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3624)}}));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(3));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(1));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ExemplarDistributionPath));
+      args.insertOrAssign(read_text_data_array_filter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(exemplarDistOutput));
+      args.insertOrAssign(read_text_data_array_filter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
+      args.insertOrAssign(read_text_data_array_filter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3624)}}));
+      args.insertOrAssign(read_text_data_array_filter::k_NComp_Key, std::make_any<uint64>(3));
+      args.insertOrAssign(read_text_data_array_filter::k_NSkipLines_Key, std::make_any<uint64>(1));
+      args.insertOrAssign(read_text_data_array_filter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
+      args.insertOrAssign(read_text_data_array_filter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ExemplarDistributionPath));
 
       auto executeResult = filter->execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -160,13 +160,13 @@ TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: Valid Filter Execu
     // exemplar errors
     {
       Arguments args;
-      args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(exemplarErrorsOutput));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3624)}}));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(3));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(1));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ExemplarErrorPath));
+      args.insertOrAssign(read_text_data_array_filter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(exemplarErrorsOutput));
+      args.insertOrAssign(read_text_data_array_filter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
+      args.insertOrAssign(read_text_data_array_filter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3624)}}));
+      args.insertOrAssign(read_text_data_array_filter::k_NComp_Key, std::make_any<uint64>(3));
+      args.insertOrAssign(read_text_data_array_filter::k_NSkipLines_Key, std::make_any<uint64>(1));
+      args.insertOrAssign(read_text_data_array_filter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
+      args.insertOrAssign(read_text_data_array_filter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ExemplarErrorPath));
 
       auto executeResult = filter->execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -174,13 +174,13 @@ TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: Valid Filter Execu
     // computed distribution
     {
       Arguments args;
-      args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedDistOutput));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3624)}}));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(3));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(1));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ComputedDistributionPath));
+      args.insertOrAssign(read_text_data_array_filter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedDistOutput));
+      args.insertOrAssign(read_text_data_array_filter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
+      args.insertOrAssign(read_text_data_array_filter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3624)}}));
+      args.insertOrAssign(read_text_data_array_filter::k_NComp_Key, std::make_any<uint64>(3));
+      args.insertOrAssign(read_text_data_array_filter::k_NSkipLines_Key, std::make_any<uint64>(1));
+      args.insertOrAssign(read_text_data_array_filter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
+      args.insertOrAssign(read_text_data_array_filter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ComputedDistributionPath));
 
       auto executeResult = filter->execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -188,13 +188,13 @@ TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: Valid Filter Execu
     // computed errors
     {
       Arguments args;
-      args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedErrorsOutput));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3624)}}));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(3));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(1));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
-      args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ComputedErrorPath));
+      args.insertOrAssign(read_text_data_array_filter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(computedErrorsOutput));
+      args.insertOrAssign(read_text_data_array_filter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(nx::core::NumericType::float32));
+      args.insertOrAssign(read_text_data_array_filter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(3624)}}));
+      args.insertOrAssign(read_text_data_array_filter::k_NComp_Key, std::make_any<uint64>(3));
+      args.insertOrAssign(read_text_data_array_filter::k_NSkipLines_Key, std::make_any<uint64>(1));
+      args.insertOrAssign(read_text_data_array_filter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(2));
+      args.insertOrAssign(read_text_data_array_filter::k_DataArrayPath_Key, std::make_any<DataPath>(k_ComputedErrorPath));
 
       auto executeResult = filter->execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -210,18 +210,18 @@ TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: Valid Filter Execu
   CompareSortedArrays(dataStructure, k_ExemplarDistributionPath, k_ComputedDistributionPath);
   CompareSortedArrays(dataStructure, k_ExemplarErrorPath, k_ComputedErrorPath);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: InValid Filter Execution")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_gbcd_metric_based.tar.gz", "compute_gbcd_metric_based");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "compute_gbcd_metric_based.tar.gz", "compute_gbcd_metric_based");
 
   // Read Exemplar DREAM3D File Input
   auto exemplarInputFilePath = fs::path(fmt::format("{}/compute_gbcd_metric_based/compute_gbcd_metric_based.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarInputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarInputFilePath);
 
   fs::path computedDistOutput(fmt::format("{}/computed_gbcd_distribution_1.dat", unit_test::k_BinaryTestOutputDir));
   fs::path computedErrorsOutput(fmt::format("{}/computed_gbcd_distribution_errors_1.dat", unit_test::k_BinaryTestOutputDir));
@@ -272,20 +272,20 @@ TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: InValid Filter Exe
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeGBPDMetricBasedFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -298,22 +298,22 @@ TEST_CASE("OrientationAnalysis::ComputeGBPDMetricBasedFilter: SIMPL Backwards Co
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeGBPDMetricBasedFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeGBPDMetricBasedFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<int32>(ComputeGBPDMetricBasedFilter::k_PhaseOfInterest_Key) == 5);
       CHECK(args.value<float32>(ComputeGBPDMetricBasedFilter::k_LimitDist_Key) == 2.5f);
       CHECK(args.value<int32>(ComputeGBPDMetricBasedFilter::k_NumSamplPts_Key) == 5);

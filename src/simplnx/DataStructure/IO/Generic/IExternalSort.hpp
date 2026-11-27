@@ -23,14 +23,14 @@ namespace nx::core
  * A negative value orders left first. Zero preserves append order. A positive
  * value orders right first.
  */
-using ExternalSortCompare = std::function<int32(nonstd::span<const std::byte> left, nonstd::span<const std::byte> right)>;
+using ExternalSortCompareType = std::function<int32(nonstd::span<const std::byte> left, nonstd::span<const std::byte> right)>;
 
 /**
  * @brief Reports operation-local completed and total record counts.
  *
  * Implementations do not report a completed count greater than the total.
  */
-using ExternalSortProgressCallback = std::function<void(uint64 completedRecords, uint64 totalRecords)>;
+using ExternalSortProgressCallbackType = std::function<void(uint64 completedRecords, uint64 totalRecords)>;
 
 /**
  * @struct ExternalSortConfig
@@ -41,15 +41,15 @@ struct SIMPLNX_EXPORT ExternalSortConfig
   /**
    * @brief Specifies the exact byte width of each record.
    */
-  uint64 recordSize = 0;
+  uint64 record_size = 0;
   /**
    * @brief Limits the record count in one append or read request.
    */
-  uint64 maxRecordsPerBatch = 0;
+  uint64 max_records_per_batch = 0;
   /**
    * @brief Defines deterministic ordering. Equal records retain append order.
    */
-  ExternalSortCompare compare;
+  ExternalSortCompareType compare;
 };
 
 /**
@@ -78,14 +78,14 @@ public:
    * @param progressCallback Optional operation-local progress callback.
    * @return A valid result or a configuration, size, storage, lifecycle, or cancellation error.
    */
-  virtual Result<> append(uint64 recordCount, nonstd::span<const std::byte> records, const std::atomic_bool& shouldCancel, const ExternalSortProgressCallback& progressCallback) = 0;
+  virtual Result<> append(uint64 recordCount, nonstd::span<const std::byte> records, const std::atomic_bool& shouldCancel, const ExternalSortProgressCallbackType& progressCallback) = 0;
   /**
    * @brief Completes stable sorting and transitions the instance to repeatable read mode.
    * @param shouldCancel Cancellation flag. A cancelled finish invalidates the instance.
    * @param progressCallback Optional operation-local progress callback.
    * @return A valid result or the sort, provider, or cancellation error.
    */
-  virtual Result<> finish(const std::atomic_bool& shouldCancel, const ExternalSortProgressCallback& progressCallback) = 0;
+  virtual Result<> finish(const std::atomic_bool& shouldCancel, const ExternalSortProgressCallbackType& progressCallback) = 0;
   /**
    * @brief Reads a bounded range from the completed sorted stream.
    * @param recordOffset Zero-based sorted record offset.

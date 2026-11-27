@@ -38,22 +38,24 @@ namespace
 ImageGeometryCropOptions CreateCropOptions(const DataPath& inputGeometryPath, const DataPath& outputGeometryPath, const CropGeometryParameter::ValueType& croppingOptions)
 {
   ImageGeometryCropOptions options;
-  options.inputImageGeometryPath = inputGeometryPath;
-  options.outputImageGeometryPath = outputGeometryPath;
-  options.usePhysicalBounds = croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
-  options.cropX = croppingOptions.cropX;
-  options.cropY = croppingOptions.cropY;
-  options.cropZ = croppingOptions.cropZ;
-  options.minVoxel = {static_cast<uint64>(croppingOptions.xBoundVoxels[0]), static_cast<uint64>(croppingOptions.yBoundVoxels[0]), static_cast<uint64>(croppingOptions.zBoundVoxels[0])};
-  options.maxVoxel = {static_cast<uint64>(croppingOptions.xBoundVoxels[1]), static_cast<uint64>(croppingOptions.yBoundVoxels[1]), static_cast<uint64>(croppingOptions.zBoundVoxels[1])};
-  options.minCoordinate = {static_cast<float64>(croppingOptions.xBoundPhysical[0]), static_cast<float64>(croppingOptions.yBoundPhysical[0]), static_cast<float64>(croppingOptions.zBoundPhysical[0])};
-  options.maxCoordinate = {static_cast<float64>(croppingOptions.xBoundPhysical[1]), static_cast<float64>(croppingOptions.yBoundPhysical[1]), static_cast<float64>(croppingOptions.zBoundPhysical[1])};
+  options.input_image_geometry_path = inputGeometryPath;
+  options.output_image_geometry_path = outputGeometryPath;
+  options.use_physical_bounds = croppingOptions.type == CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
+  options.crop_x = croppingOptions.crop_x;
+  options.crop_y = croppingOptions.crop_y;
+  options.crop_z = croppingOptions.crop_z;
+  options.min_voxel = {static_cast<uint64>(croppingOptions.x_bound_voxels[0]), static_cast<uint64>(croppingOptions.y_bound_voxels[0]), static_cast<uint64>(croppingOptions.z_bound_voxels[0])};
+  options.max_voxel = {static_cast<uint64>(croppingOptions.x_bound_voxels[1]), static_cast<uint64>(croppingOptions.y_bound_voxels[1]), static_cast<uint64>(croppingOptions.z_bound_voxels[1])};
+  options.min_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[0]), static_cast<float64>(croppingOptions.y_bound_physical[0]),
+                            static_cast<float64>(croppingOptions.z_bound_physical[0])};
+  options.max_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[1]), static_cast<float64>(croppingOptions.y_bound_physical[1]),
+                            static_cast<float64>(croppingOptions.z_bound_physical[1])};
   return options;
 }
 
 // Interpolation choices (match ITKMhaFileReaderFilter): 0=NearestNeighbor, 1=Linear.
 const ChoicesParameter::ValueType k_NearestNeighborInterpolationIdx = 0ULL;
-const ChoicesParameter::Choices k_InterpolationChoices = {"Nearest Neighbor", "Linear Interpolation"};
+const ChoicesParameter::ChoicesType k_InterpolationChoices = {"Nearest Neighbor", "Linear Interpolation"};
 // ApplyTransformationToGeometry "Manual matrix" transformation-type index.
 const ChoicesParameter::ValueType k_ManualTransformationMatrixIdx = 2ULL;
 
@@ -64,14 +66,14 @@ const ChoicesParameter::ValueType k_ManualTransformationMatrixIdx = 2ULL;
  *        When @p transpose is requested, the matrix must be a pure rotation
  *        (|1 - det| <= 1e-4) or -35852 is returned (mirrors ITK -5002).
  */
-Result<ImageRotationUtilities::Matrix4fR> BuildTransformMatrix(const mhd::MetaImageMetadata& md, bool transpose)
+Result<image_rotation_utilities::Matrix4fRType> BuildTransformMatrix(const mhd::MetaImageMetadata& md, bool transpose)
 {
-  ImageRotationUtilities::Matrix4fR mat;
+  image_rotation_utilities::Matrix4fRType mat;
   mat.fill(0.0f);
   mat(3, 3) = 1.0f;
 
-  const std::vector<float64>& tm = md.transformMatrix;
-  if(md.nDims == 2)
+  const std::vector<float64>& tm = md.transform_matrix;
+  if(md.n_dims == 2)
   {
     if(tm.size() >= 4)
     {
@@ -112,7 +114,7 @@ Result<ImageRotationUtilities::Matrix4fR> BuildTransformMatrix(const mhd::MetaIm
   {
     if(std::abs(1.0f - det) > 0.0001f)
     {
-      return MakeErrorResult<ImageRotationUtilities::Matrix4fR>(
+      return MakeErrorResult<image_rotation_utilities::Matrix4fRType>(
           -35852, fmt::format("Transformation Matrix is NOT a pure rotation transform (determinant = {}). A pure transpose will not work; de-select 'Transpose Stored Transformation Matrix'.", det));
     }
     mat.transposeInPlace();
@@ -121,26 +123,26 @@ Result<ImageRotationUtilities::Matrix4fR> BuildTransformMatrix(const mhd::MetaIm
 }
 
 // Convert a 4x4 Matrix4fR to the DynamicTable value ApplyTransformationToGeometry expects.
-DynamicTableParameter::ValueType MatrixToTable(const ImageRotationUtilities::Matrix4fR& m)
+DynamicTableParameter::ValueType MatrixToTable(const image_rotation_utilities::Matrix4fRType& m)
 {
   return DynamicTableInfo::TableDataType{{m(0, 0), m(0, 1), m(0, 2), m(0, 3)}, {m(1, 0), m(1, 1), m(1, 2), m(1, 3)}, {m(2, 0), m(2, 1), m(2, 2), m(2, 3)}, {m(3, 0), m(3, 1), m(3, 2), m(3, 3)}};
 }
 
 // Create transformation input values for the manual-matrix path.
-ApplyTransformationToGeometryInputValues MakeTransformationInputValues(const DataPath& imageGeomPath, const std::string& cellDataName, const ImageRotationUtilities::Matrix4fR& mat,
+ApplyTransformationToGeometryInputValues MakeTransformationInputValues(const DataPath& imageGeomPath, const std::string& cellDataName, const image_rotation_utilities::Matrix4fRType& mat,
                                                                        const std::array<float32, 3>& centerOfRotation, ChoicesParameter::ValueType interpolationType)
 {
   ApplyTransformationToGeometryInputValues inputValues;
-  inputValues.SelectedGeometryPath = imageGeomPath;
-  inputValues.CellAttributeMatrixPath = imageGeomPath.createChildPath(cellDataName);
-  inputValues.TransformationSelection = k_ManualTransformationMatrixIdx;
-  inputValues.ManualMatrixTableData = MatrixToTable(mat);
-  inputValues.InterpolationSelection = interpolationType;
-  inputValues.TranslateGeometryToGlobalOrigin = centerOfRotation == std::array<float32, 3>{0.0f, 0.0f, 0.0f};
-  inputValues.RemoveOriginalGeometry = true;
+  inputValues.selected_geometry_path = imageGeomPath;
+  inputValues.cell_attribute_matrix_path = imageGeomPath.createChildPath(cellDataName);
+  inputValues.transformation_selection = k_ManualTransformationMatrixIdx;
+  inputValues.manual_matrix_table_data = MatrixToTable(mat);
+  inputValues.interpolation_selection = interpolationType;
+  inputValues.translate_geometry_to_global_origin = centerOfRotation == std::array<float32, 3>{0.0f, 0.0f, 0.0f};
+  inputValues.remove_original_geometry = true;
   // MHA input has no Feature Attribute Matrix.
-  inputValues.ClearFeatureAttributeMatrix = false;
-  inputValues.RenumberFeatures = false;
+  inputValues.clear_feature_attribute_matrix = false;
+  inputValues.renumber_features = false;
   return inputValues;
 }
 
@@ -148,12 +150,12 @@ Result<> ExecuteTransformation(DataStructure& dataStructure, const ApplyTransfor
                                const std::atomic_bool& shouldCancel)
 {
   IFilter::PreflightResult preflightResult = PreflightGeometryTransformation(dataStructure, inputValues);
-  if(preflightResult.outputActions.invalid())
+  if(preflightResult.output_actions.invalid())
   {
-    return ConvertResult(std::move(preflightResult.outputActions));
+    return ConvertResult(std::move(preflightResult.output_actions));
   }
 
-  OutputActions outputActions = std::move(preflightResult.outputActions.value());
+  OutputActions outputActions = std::move(preflightResult.output_actions.value());
   Result<> regularResult = outputActions.applyRegular(dataStructure, IDataAction::Mode::Execute);
   if(regularResult.invalid())
   {
@@ -232,7 +234,7 @@ Parameters ReadMhaFileFilter::parameters() const
                                                          DataPath({"MHA Image", "TransformationMatrix"})));
 
   params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
-  ImageIO::InsertGeometryOverrideParameters(params);
+  image_io::InsertGeometryOverrideParameters(params);
 
   params.insertSeparator(Parameters::Separator{"Output Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "Path to the created Image Geometry", DataPath({"MHA Image"})));
@@ -255,14 +257,14 @@ IFilter::VersionType ReadMhaFileFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadMhaFileFilter::clone() const
+IFilter::UniquePointerType ReadMhaFileFilter::clone() const
 {
   return std::make_unique<ReadMhaFileFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                          const ExecutionContext& executionContext) const
+IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                          const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pInputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFilePath_Key);
   auto pCroppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
@@ -280,25 +282,25 @@ IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& d
 
   if(!fs::exists(pInputFilePath))
   {
-    return {MakeErrorResult<OutputActions>(-35820, fmt::format("Input MHA/MetaImage file does not exist: '{}'", pInputFilePath.string()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-35820, fmt::format("Input MHA/MetaImage file does not exist: '{}'", pInputFilePath.string()))};
   }
 
   auto metadataResult = mhd::ReadMetaImageHeader(pInputFilePath);
   if(metadataResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(ConvertResult(std::move(metadataResult)), {})};
   }
   const mhd::MetaImageMetadata md = std::move(metadataResult).value();
 
   std::vector<usize> dims = {md.dimensions[0], md.dimensions[1], md.dimensions[2]};
   std::vector<float32> origin = {md.origin[0], md.origin[1], md.origin[2]};
   std::vector<float32> spacing = {md.spacing[0], md.spacing[1], md.spacing[2]};
-  if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pInputFilePath, origin, spacing); geometryResult.invalid())
+  if(auto geometryResult = image_io::GeometryOverrides::FromArguments(filterArgs).apply(pInputFilePath, origin, spacing); geometryResult.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
 
-  preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
+  preflightUpdatedValues.push_back({"Full Input Geometry", nx::core::geometry_helpers::description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
 
   // ---- optional crop delegation (verbatim from the NRRD reader's preflight) ----
   if(pCroppingOptions.type != CropGeometryParameter::CropValues::TypeEnum::NoCropping)
@@ -312,21 +314,21 @@ IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& d
     Result<> tmpActionsResult = tmpActions.applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(tmpActionsResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(tmpActionsResult), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(tmpActionsResult), {})};
     }
 
     const DataPath croppedGeomPath({pImageGeomPath.getTargetName() + "_cropped"});
     const ImageGeometryCropOptions cropOptions = CreateCropOptions(pImageGeomPath, croppedGeomPath, pCroppingOptions);
     ImageGeometryCropBounds cropBounds;
     PreflightResult cropImageResult = PreflightImageGeometryCrop(tmpDs, cropOptions, cropBounds);
-    if(cropImageResult.outputActions.invalid())
+    if(cropImageResult.output_actions.invalid())
     {
       return cropImageResult;
     }
-    Result<> actionsResult = cropImageResult.outputActions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
+    Result<> actionsResult = cropImageResult.output_actions.value().applyAll(tmpDs, IDataAction::Mode::Preflight);
     if(actionsResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(actionsResult), {})};
     }
     const auto& croppedGeom = tmpDs.getDataRefAs<ImageGeom>(croppedGeomPath);
     dims = croppedGeom.getDimensions().toContainer<std::vector<usize>>();
@@ -340,16 +342,16 @@ IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& d
   }
 
   const std::vector<usize> tupleDims = {dims[2], dims[1], dims[0]};
-  const std::vector<usize> componentDims = {md.componentCount};
+  const std::vector<usize> componentDims = {md.component_count};
   const DataPath dataArrayPath = pImageGeomPath.createChildPath(pCellAttrMatName).createChildPath(pImageDataArrayName);
   {
-    auto createArrayAction = std::make_unique<CreateArrayAction>(md.dataType, tupleDims, componentDims, dataArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(md.data_type, tupleDims, componentDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  preflightUpdatedValues.push_back({"Imported Geometry Info", nx::core::GeometryHelpers::Description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
-  preflightUpdatedValues.push_back({"MetaImage Header", fmt::format("type: {}  |  components: {}  |  compressed: {}  |  byte-swap: {}", md.typeString, md.componentCount,
-                                                                    (md.encoding == mhd::Encoding::Compressed ? "yes" : "no"), md.byteSwapRequired ? "yes" : "no")});
+  preflightUpdatedValues.push_back({"Imported Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
+  preflightUpdatedValues.push_back({"MetaImage Header", fmt::format("type: {}  |  components: {}  |  compressed: {}  |  byte-swap: {}", md.type_string, md.component_count,
+                                                                    (md.encoding == mhd::Encoding::Compressed ? "yes" : "no"), md.byte_swap_required ? "yes" : "no")});
 
   // ---- transform matrix (assemble + optional transpose check) ----
   if(pSaveTransformation || pApplyTransformation || pTranspose)
@@ -357,10 +359,10 @@ IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& d
     auto matrixResult = BuildTransformMatrix(md, pTranspose);
     if(matrixResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(ConvertResult(std::move(matrixResult)), {}), std::move(preflightUpdatedValues)};
+      return {.output_actions = ConvertResultTo<OutputActions>(ConvertResult(std::move(matrixResult)), {}), .output_values = std::move(preflightUpdatedValues)};
     }
-    const ImageRotationUtilities::Matrix4fR mat = matrixResult.value();
-    preflightUpdatedValues.push_back({"Transformation Matrix", ImageRotationUtilities::GenerateTransformationMatrixDescription(mat)});
+    const image_rotation_utilities::Matrix4fRType mat = matrixResult.value();
+    preflightUpdatedValues.push_back({"Transformation Matrix", image_rotation_utilities::GenerateTransformationMatrixDescription(mat)});
 
     if(pSaveTransformation)
     {
@@ -380,12 +382,12 @@ IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& d
       Result<> stageResult = resultOutputActions.value().applyAll(stagedDataStructure, IDataAction::Mode::Preflight);
       if(stageResult.invalid())
       {
-        return {ConvertResultTo<OutputActions>(std::move(stageResult), {}), std::move(preflightUpdatedValues)};
+        return {.output_actions = ConvertResultTo<OutputActions>(std::move(stageResult), {}), .output_values = std::move(preflightUpdatedValues)};
       }
 
-      const ApplyTransformationToGeometryInputValues transformationInputValues = MakeTransformationInputValues(pImageGeomPath, pCellAttrMatName, mat, md.centerOfRotation, pInterpolationType);
+      const ApplyTransformationToGeometryInputValues transformationInputValues = MakeTransformationInputValues(pImageGeomPath, pCellAttrMatName, mat, md.center_of_rotation, pInterpolationType);
       PreflightResult applyResult = PreflightGeometryTransformation(stagedDataStructure, transformationInputValues);
-      for(const auto& v : applyResult.outputValues)
+      for(const auto& v : applyResult.output_values)
       {
         preflightUpdatedValues.push_back(v);
       }
@@ -398,27 +400,27 @@ IFilter::PreflightResult ReadMhaFileFilter::preflightImpl(const DataStructure& d
       // not rely on the transformed geometry's dimensions being known at preflight when Apply
       // Transformation is enabled.
       // Surface any transform-preflight errors/warnings to the caller.
-      for(const auto& w : applyResult.outputActions.warnings())
+      for(const auto& w : applyResult.output_actions.warnings())
       {
         resultOutputActions.warnings().push_back(w);
       }
-      if(applyResult.outputActions.invalid())
+      if(applyResult.output_actions.invalid())
       {
-        for(const auto& e : applyResult.outputActions.errors())
+        for(const auto& e : applyResult.output_actions.errors())
         {
           resultOutputActions.errors().push_back(e);
         }
-        return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+        return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
       }
     }
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadMhaFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ReadMhaFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                        const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto pInputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputFilePath_Key);
   auto pImageGeomPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
@@ -433,12 +435,12 @@ Result<> ReadMhaFileFilter::executeImpl(DataStructure& dataStructure, const Argu
   // 1) Stream the voxel data (pixels only) via the ReadMhaFile algorithm.
   {
     ReadMhaFileInputValues inputValues;
-    inputValues.GeometryOverrides = ImageIO::GeometryOverrides::FromArguments(filterArgs);
-    inputValues.InputFilePath = pInputFilePath;
-    inputValues.CroppingOptions = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
-    inputValues.ImageGeometryPath = pImageGeomPath;
-    inputValues.CellAttributeMatrixName = pCellAttrMatName;
-    inputValues.ImageDataArrayName = pImageDataArrayName;
+    inputValues.geometry_overrides = image_io::GeometryOverrides::FromArguments(filterArgs);
+    inputValues.input_file_path = pInputFilePath;
+    inputValues.cropping_options = filterArgs.value<CropGeometryParameter::ValueType>(k_CroppingOptions_Key);
+    inputValues.image_geometry_path = pImageGeomPath;
+    inputValues.cell_attribute_matrix_name = pCellAttrMatName;
+    inputValues.image_data_array_name = pImageDataArrayName;
     Result<> readResult = ReadMhaFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
     if(readResult.invalid())
     {
@@ -464,7 +466,7 @@ Result<> ReadMhaFileFilter::executeImpl(DataStructure& dataStructure, const Argu
   {
     return ConvertResult(std::move(matrixResult));
   }
-  const ImageRotationUtilities::Matrix4fR mat = matrixResult.value();
+  const image_rotation_utilities::Matrix4fRType mat = matrixResult.value();
 
   if(pSaveTransformation)
   {
@@ -476,7 +478,7 @@ Result<> ReadMhaFileFilter::executeImpl(DataStructure& dataStructure, const Argu
   if(pApplyTransformation)
   {
     messageHandler.sendInfoMessage(fmt::format("Applying transformation matrix to image geometry '{}'...", pImageGeomPath.getTargetName()));
-    const ApplyTransformationToGeometryInputValues transformationInputValues = MakeTransformationInputValues(pImageGeomPath, pCellAttrMatName, mat, md.centerOfRotation, pInterpolationType);
+    const ApplyTransformationToGeometryInputValues transformationInputValues = MakeTransformationInputValues(pImageGeomPath, pCellAttrMatName, mat, md.center_of_rotation, pInterpolationType);
     Result<> applyResult = ExecuteTransformation(dataStructure, transformationInputValues, messageHandler, shouldCancel);
     if(applyResult.invalid())
     {
@@ -488,7 +490,7 @@ Result<> ReadMhaFileFilter::executeImpl(DataStructure& dataStructure, const Argu
 }
 
 //------------------------------------------------------------------------------
-Result<Arguments> ReadMhaFileFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ReadMhaFileFilter::FromSIMPLJson(const nlohmann::json& /*json*/)
 {
   Arguments args = ReadMhaFileFilter().getDefaultArguments();
   // New filter in simplnx; no SIMPL v6 equivalent.

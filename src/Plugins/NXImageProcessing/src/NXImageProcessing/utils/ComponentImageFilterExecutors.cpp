@@ -43,21 +43,21 @@ namespace
  */
 struct ConnectedComponentExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  SizeVec3 dims;
-  bool fullyConnected;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
+  SizeVec3Type dims;
+  bool fully_connected;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-    auto& outArray = dataStructure.getDataRefAs<DataArray<uint32>>(outputArrayPath);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
+    auto& outArray = data_structure.getDataRefAs<DataArray<uint32>>(output_array_path);
     const auto pred = [](T v) { return v != T{}; }; // compile-time predicate (Pred deduced by LabelConnectedComponents)
-    return LabelConnectedComponents<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, pred, fullyConnected, shouldCancel, messageHandler);
+    return LabelConnectedComponents<T>(inArray.getDataStoreRef(), outArray.getDataStoreRef(), dims, pred, fully_connected, should_cancel, message_handler);
   }
 };
 
@@ -70,21 +70,21 @@ struct ConnectedComponentExecuteFn
  */
 struct ZeroCrossingExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  SizeVec3 dims;
-  uint8 foregroundValue;
-  uint8 backgroundValue;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
+  SizeVec3Type dims;
+  uint8 foreground_value;
+  uint8 background_value;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inStore = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath).getDataStoreRef();
-    auto& outStore = dataStructure.getDataRefAs<DataArray<uint8>>(outputArrayPath).getDataStoreRef();
-    return ApplyZeroCrossing<T>(inStore, outStore, dims, foregroundValue, backgroundValue, shouldCancel, messageHandler);
+    const auto& inStore = data_structure.getDataRefAs<DataArray<T>>(input_array_path).getDataStoreRef();
+    auto& outStore = data_structure.getDataRefAs<DataArray<uint8>>(output_array_path).getDataStoreRef();
+    return ApplyZeroCrossing<T>(inStore, outStore, dims, foreground_value, background_value, should_cancel, message_handler);
   }
 };
 
@@ -97,19 +97,19 @@ struct ZeroCrossingExecuteFn
  */
 struct BinaryThinningExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  SizeVec3 dims;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
+  SizeVec3Type dims;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inStore = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath).getDataStoreRef();
-    auto& outStore = dataStructure.getDataRefAs<DataArray<T>>(outputArrayPath).getDataStoreRef();
-    return ApplyBinaryThinning<T>(inStore, outStore, dims, shouldCancel, messageHandler);
+    const auto& inStore = data_structure.getDataRefAs<DataArray<T>>(input_array_path).getDataStoreRef();
+    auto& outStore = data_structure.getDataRefAs<DataArray<T>>(output_array_path).getDataStoreRef();
+    return ApplyBinaryThinning<T>(inStore, outStore, dims, should_cancel, message_handler);
   }
 };
 
@@ -164,26 +164,26 @@ Result<> StreamDoubleThresholdMarkers(const AbstractDataStore<T>& inStore, Abstr
  */
 struct DoubleThresholdExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  SizeVec3 dims;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
+  SizeVec3Type dims;
   float64 threshold1;
   float64 threshold2;
   float64 threshold3;
   float64 threshold4;
-  uint8 insideValue;
-  uint8 outsideValue;
-  bool fullyConnected;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  uint8 inside_value;
+  uint8 outside_value;
+  bool fully_connected;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
     const AbstractDataStore<T>& inStore = inArray.getDataStoreRef();
-    auto& outArray = dataStructure.getDataRefAs<DataArray<uint8>>(outputArrayPath);
+    auto& outArray = data_structure.getDataRefAs<DataArray<uint8>>(output_array_path);
     AbstractDataStore<uint8>& outStore = outArray.getDataStoreRef();
 
     // ITK stores m_Threshold1..4 as the INPUT pixel type T -> cast double->T, then compare in T (Parity model).
@@ -198,19 +198,19 @@ struct DoubleThresholdExecuteFn
     const T t4 = static_cast<T>(threshold4);
 
     // marker (in [t2,t3]) + mask (in [t1,t4]) uint8 scratch stores, inheriting the input's storage format (OOC-inheriting).
-    auto markerStorePtr = DataStoreUtilities::CreateDataStoreWithFormat<uint8>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
-    auto maskStorePtr = DataStoreUtilities::CreateDataStoreWithFormat<uint8>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
+    auto markerStorePtr = data_store_utilities::CreateDataStoreWithFormat<uint8>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
+    auto maskStorePtr = data_store_utilities::CreateDataStoreWithFormat<uint8>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
     AbstractDataStore<uint8>& markerStore = *markerStorePtr;
     AbstractDataStore<uint8>& maskStore = *maskStorePtr;
 
-    if(Result<> r = StreamDoubleThresholdMarkers<T>(inStore, markerStore, maskStore, t2, t3, t1, t4, insideValue, outsideValue, shouldCancel); r.invalid())
+    if(Result<> r = StreamDoubleThresholdMarkers<T>(inStore, markerStore, maskStore, t2, t3, t1, t4, inside_value, outside_value, should_cancel); r.invalid())
     {
       return r;
     }
 
     // reconstruction-by-dilation: marker under mask -> out. inArray + outArray supply the OOC storage-path detection
     // (the marker/mask are scratch, not IDataArrays); the data is read from markerStore/maskStore.
-    return ApplyMorphologicalReconstruction<uint8>(markerStore, maskStore, outStore, dims, ReconstructOp::Dilation, fullyConnected, inArray, outArray, shouldCancel, messageHandler);
+    return ApplyMorphologicalReconstruction<uint8>(markerStore, maskStore, outStore, dims, ReconstructOp::Dilation, fully_connected, inArray, outArray, should_cancel, message_handler);
   }
 };
 
@@ -227,16 +227,16 @@ struct DoubleThresholdExecuteFn
  */
 #ifdef SIMPLNX_ENABLE_MULTICORE
 template <class ValueT>
-using RelabelThreadLocal = tbb::combinable<ValueT>;
+using RelabelThreadLocalType = tbb::combinable<ValueT>;
 #else
 template <class ValueT>
-class RelabelThreadLocal
+class RelabelThreadLocalType
 {
 public:
-  RelabelThreadLocal() = default;
+  RelabelThreadLocalType() = default;
 
   template <class FactoryT>
-  explicit RelabelThreadLocal(FactoryT&& factory)
+  explicit RelabelThreadLocalType(FactoryT&& factory)
   : m_Value(std::forward<FactoryT>(factory)())
   {
   }
@@ -261,43 +261,43 @@ constexpr int32 k_RelabelComponentResidentStoreMismatch = -8592;
 
 struct RelabelComponentExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  usize numTuples;
-  uint64 minimumObjectSize;
-  bool sortByObjectSize;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
+  usize num_tuples;
+  uint64 minimum_object_size;
+  bool sort_by_object_size;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inStore = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath).getDataStoreRef();
-    auto& outArray = dataStructure.getDataRefAs<DataArray<T>>(outputArrayPath);
+    const auto& inStore = data_structure.getDataRefAs<DataArray<T>>(input_array_path).getDataStoreRef();
+    auto& outArray = data_structure.getDataRefAs<DataArray<T>>(output_array_path);
     auto& outStore = outArray.getDataStoreRef();
     constexpr usize k_TargetChunkBytes = 32 * 1024 * 1024;
     constexpr bool k_UseDenseLabels = sizeof(T) <= sizeof(uint16);
     const auto denseIndex = [](T value) -> usize { return static_cast<usize>(static_cast<int64>(value) - static_cast<int64>(std::numeric_limits<T>::lowest())); };
     const bool bothStoresInMemory = inStore.getStoreType() == IDataStore::StoreType::InMemory && outStore.getStoreType() == IDataStore::StoreType::InMemory;
     const bool usesOutOfCoreStore = inStore.getStoreType() == IDataStore::StoreType::OutOfCore || outStore.getStoreType() == IDataStore::StoreType::OutOfCore;
-    const auto* residentInputStore = bothStoresInMemory ? dynamic_cast<const DataStore<T>*>(&inStore) : nullptr;
-    auto* residentOutputStore = bothStoresInMemory ? dynamic_cast<DataStore<T>*>(&outStore) : nullptr;
-    const bool useResidentSpans = residentInputStore != nullptr && residentOutputStore != nullptr;
-    const bool inputByteCountFits = numTuples <= std::numeric_limits<usize>::max() / sizeof(T);
-    const usize inputBytes = inputByteCountFits ? numTuples * sizeof(T) : 0;
+    const auto* residentInputStorePtr = bothStoresInMemory ? dynamic_cast<const DataStore<T>*>(&inStore) : nullptr;
+    auto* residentOutputStorePtr = bothStoresInMemory ? dynamic_cast<DataStore<T>*>(&outStore) : nullptr;
+    const bool useResidentSpans = residentInputStorePtr != nullptr && residentOutputStorePtr != nullptr;
+    const bool inputByteCountFits = num_tuples <= std::numeric_limits<usize>::max() / sizeof(T);
+    const usize inputBytes = inputByteCountFits ? num_tuples * sizeof(T) : 0;
     const uint64 usefulStagingBytes = inputByteCountFits ? static_cast<uint64>(inputBytes) : std::numeric_limits<uint64>::max();
     auto workingMemoryReservation = usesOutOfCoreStore ? ReserveWorkingMemory(k_TargetChunkBytes, usefulStagingBytes) : CacheMemoryBudgetManager::WorkingMemoryReservation{};
     const uint64 grantedBytes = usesOutOfCoreStore ? workingMemoryReservation.sizeBytes() : k_TargetChunkBytes;
-    if(numTuples > 0 && grantedBytes < sizeof(T))
+    if(num_tuples > 0 && grantedBytes < sizeof(T))
     {
       return MakeErrorResult(k_RelabelComponentInsufficientWorkingMemory, fmt::format("Relabel Component cannot reserve one {}-byte staging value for input array '{}'. Input values: {}; cache "
                                                                                       "budget: {}; maximum working memory: {}; granted bytes: {}. Increase the cache-memory budget.",
-                                                                                      sizeof(T), inputArrayPath.toString(), numTuples, CacheMemoryBudgetManager::instance().budgetBytes(),
-                                                                                      CacheMemoryBudgetManager::instance().maximumWorkingMemoryBytes(), grantedBytes));
+                                                                                      sizeof(T), input_array_path.toString(), num_tuples, CacheMemoryBudgetManager::Instance().budgetBytes(),
+                                                                                      CacheMemoryBudgetManager::Instance().maximumWorkingMemoryBytes(), grantedBytes));
     }
-    const auto slabPlan = usesOutOfCoreStore ? CreateRelabelChunkSlabPlan(outArray.getTupleShape(), outStore.getChunkShape(), numTuples, sizeof(T)) : std::nullopt;
-    const usize stagingValues = useResidentSpans ? 0 : SelectRelabelStagingValues(numTuples, grantedBytes, sizeof(T), slabPlan);
+    const auto slabPlan = usesOutOfCoreStore ? CreateRelabelChunkSlabPlan(outArray.getTupleShape(), outStore.getChunkShape(), num_tuples, sizeof(T)) : std::nullopt;
+    const usize stagingValues = useResidentSpans ? 0 : SelectRelabelStagingValues(num_tuples, grantedBytes, sizeof(T), slabPlan);
     if(usesOutOfCoreStore)
     {
       workingMemoryReservation.shrinkTo(static_cast<uint64>(stagingValues) * sizeof(T));
@@ -305,18 +305,18 @@ struct RelabelComponentExecuteFn
     auto buffer = stagingValues == 0 ? std::unique_ptr<T[]>{} : std::make_unique_for_overwrite<T[]>(stagingValues);
     // Pass 1 counts each non-background label.
     // Narrow labels use a dense table. Wider labels use a sparse table that scales with the number of labels.
-    using LabelSizePair = std::pair<T, uint64>;
-    std::vector<LabelSizePair> sizeVector;
+    using LabelSizePairType = std::pair<T, uint64>;
+    std::vector<LabelSizePairType> sizeVector;
     {
       if constexpr(k_UseDenseLabels)
       {
         constexpr usize k_DomainSize = usize{1} << (sizeof(T) * 8);
         constexpr usize k_CountLanes = sizeof(T) == 1 ? 8 : 1;
-        using DenseCounts = std::array<uint64, k_DomainSize * k_CountLanes>;
-        RelabelThreadLocal<DenseCounts> threadCounts([] { return DenseCounts{}; });
+        using DenseCountsType = std::array<uint64, k_DomainSize * k_CountLanes>;
+        RelabelThreadLocalType<DenseCountsType> threadCounts([] { return DenseCountsType{}; });
         const auto countBuffer = [&](const T* input, usize count) {
           auto countRange = [&](const Range& range) {
-            if(shouldCancel)
+            if(should_cancel)
             {
               return;
             }
@@ -333,7 +333,7 @@ struct RelabelComponentExecuteFn
               for(; i + 8 <= range.max(); i += 8)
               {
 #ifndef SIMPLNX_ENABLE_MULTICORE
-                if((i % 65536) == 0 && shouldCancel)
+                if((i % 65536) == 0 && should_cancel)
                 {
                   return;
                 }
@@ -357,7 +357,7 @@ struct RelabelComponentExecuteFn
             for(; i < range.max(); ++i)
             {
 #ifndef SIMPLNX_ENABLE_MULTICORE
-              if((i % 65536) == 0 && shouldCancel)
+              if((i % 65536) == 0 && should_cancel)
               {
                 return;
               }
@@ -371,30 +371,30 @@ struct RelabelComponentExecuteFn
         };
         if(useResidentSpans)
         {
-          const auto inputSpan = residentInputStore->createSpan();
-          if(inputSpan.size() != numTuples)
+          const auto inputSpan = residentInputStorePtr->createSpan();
+          if(inputSpan.size() != num_tuples)
           {
             return MakeErrorResult(k_RelabelComponentResidentStoreMismatch, fmt::format("Relabel Component resident input array '{}' has {} values, but the filter expected {} values.",
-                                                                                        inputArrayPath.toString(), inputSpan.size(), numTuples));
+                                                                                        input_array_path.toString(), inputSpan.size(), num_tuples));
           }
           countBuffer(inputSpan.data(), inputSpan.size());
         }
         else
         {
           usize start = 0;
-          while(start < numTuples)
+          while(start < num_tuples)
           {
-            if(shouldCancel)
+            if(should_cancel)
             {
               return {};
             }
-            const usize count = std::min(stagingValues, numTuples - start);
+            const usize count = std::min(stagingValues, num_tuples - start);
             if(Result<> r = inStore.copyIntoBuffer(start, nonstd::span<T>(buffer.get(), count)); r.invalid())
             {
               return r;
             }
             countBuffer(buffer.get(), count);
-            if(shouldCancel)
+            if(should_cancel)
             {
               return {};
             }
@@ -402,7 +402,7 @@ struct RelabelComponentExecuteFn
           }
         }
         std::vector<uint64> counts(k_DomainSize, 0);
-        threadCounts.combine_each([&](const DenseCounts& localCounts) {
+        threadCounts.combine_each([&](const DenseCountsType& localCounts) {
           for(usize index = 0; index < k_DomainSize; ++index)
           {
             for(usize lane = 0; lane < k_CountLanes; ++lane)
@@ -411,7 +411,7 @@ struct RelabelComponentExecuteFn
             }
           }
         });
-        if(shouldCancel)
+        if(should_cancel)
         {
           return {};
         }
@@ -433,7 +433,7 @@ struct RelabelComponentExecuteFn
         const auto countBuffer = [&](const T* input, usize count) {
           for(usize i = 0; i < count; ++i)
           {
-            if((i % 65536) == 0 && shouldCancel)
+            if((i % 65536) == 0 && should_cancel)
             {
               return;
             }
@@ -446,30 +446,30 @@ struct RelabelComponentExecuteFn
         };
         if(useResidentSpans)
         {
-          const auto inputSpan = residentInputStore->createSpan();
-          if(inputSpan.size() != numTuples)
+          const auto inputSpan = residentInputStorePtr->createSpan();
+          if(inputSpan.size() != num_tuples)
           {
             return MakeErrorResult(k_RelabelComponentResidentStoreMismatch, fmt::format("Relabel Component resident input array '{}' has {} values, but the filter expected {} values.",
-                                                                                        inputArrayPath.toString(), inputSpan.size(), numTuples));
+                                                                                        input_array_path.toString(), inputSpan.size(), num_tuples));
           }
           countBuffer(inputSpan.data(), inputSpan.size());
         }
         else
         {
           usize start = 0;
-          while(start < numTuples)
+          while(start < num_tuples)
           {
-            if(shouldCancel)
+            if(should_cancel)
             {
               return {};
             }
-            const usize count = std::min(stagingValues, numTuples - start);
+            const usize count = std::min(stagingValues, num_tuples - start);
             if(Result<> r = inStore.copyIntoBuffer(start, nonstd::span<T>(buffer.get(), count)); r.invalid())
             {
               return r;
             }
             countBuffer(buffer.get(), count);
-            if(shouldCancel)
+            if(should_cancel)
             {
               return {};
             }
@@ -480,26 +480,27 @@ struct RelabelComponentExecuteFn
       }
     }
 
-    if(shouldCancel)
+    if(should_cancel)
     {
       return {};
     }
-    if(sortByObjectSize)
+    if(sort_by_object_size)
     {
       // Transcribed VERBATIM from itk::RelabelComponentImageFilter::GenerateData's std::sort comparator
       // (itkRelabelComponentImageFilter.hxx): size DESCENDING; ties (equal size) broken by ASCENDING original
       // label. std::sort is NOT stable, so this tie-break -- not "keep relative order" -- is what makes the
       // sorted order (and therefore the output label values) deterministic.
-      std::sort(sizeVector.begin(), sizeVector.end(), [](const LabelSizePair& a, const LabelSizePair& b) -> bool { return a.second > b.second || (!(a.second < b.second) && a.first < b.first); });
+      std::sort(sizeVector.begin(), sizeVector.end(),
+                [](const LabelSizePairType& a, const LabelSizePairType& b) -> bool { return a.second > b.second || (!(a.second < b.second) && a.first < b.first); });
     }
     else if constexpr(!k_UseDenseLabels)
     {
       // Dense labels were emitted in ascending numeric order. Restore that same ITK m_SizeMap order after the
       // unordered wide-label count path.
-      std::sort(sizeVector.begin(), sizeVector.end(), [](const LabelSizePair& a, const LabelSizePair& b) -> bool { return a.first < b.first; });
+      std::sort(sizeVector.begin(), sizeVector.end(), [](const LabelSizePairType& a, const LabelSizePairType& b) -> bool { return a.first < b.first; });
     }
 
-    if(shouldCancel)
+    if(should_cancel)
     {
       return {};
     }
@@ -521,18 +522,18 @@ struct RelabelComponentExecuteFn
     for(const auto& [label, size] : sizeVector)
     {
       static_cast<void>(label);
-      if(minimumObjectSize == 0 || size >= minimumObjectSize)
+      if(minimum_object_size == 0 || size >= minimum_object_size)
       {
         ++survivingObjectCount;
       }
     }
     for(const auto& [label, size] : sizeVector)
     {
-      if(shouldCancel)
+      if(should_cancel)
       {
         return {};
       }
-      if(minimumObjectSize > 0 && size < minimumObjectSize)
+      if(minimum_object_size > 0 && size < minimum_object_size)
       {
         if constexpr(!k_UseDenseLabels)
         {
@@ -569,7 +570,7 @@ struct RelabelComponentExecuteFn
       const auto& sparseRemapLookup = sparseRemap;
       const auto remapBuffer = [&](const T* input, T* output, usize count) {
         auto remapRange = [&](const Range& range) {
-          if(shouldCancel)
+          if(should_cancel)
           {
             return;
           }
@@ -579,7 +580,7 @@ struct RelabelComponentExecuteFn
             for(; i + 8 <= range.max(); i += 8)
             {
 #ifndef SIMPLNX_ENABLE_MULTICORE
-              if((i % 65536) == 0 && shouldCancel)
+              if((i % 65536) == 0 && should_cancel)
               {
                 return;
               }
@@ -607,7 +608,7 @@ struct RelabelComponentExecuteFn
           for(; i < range.max(); ++i)
           {
 #ifndef SIMPLNX_ENABLE_MULTICORE
-            if((i % 65536) == 0 && shouldCancel)
+            if((i % 65536) == 0 && should_cancel)
             {
               return;
             }
@@ -629,15 +630,15 @@ struct RelabelComponentExecuteFn
       };
       if(useResidentSpans)
       {
-        const auto inputSpan = residentInputStore->createSpan();
-        auto outputSpan = residentOutputStore->createSpan();
-        if(inputSpan.size() != numTuples || outputSpan.size() != numTuples)
+        const auto inputSpan = residentInputStorePtr->createSpan();
+        auto outputSpan = residentOutputStorePtr->createSpan();
+        if(inputSpan.size() != num_tuples || outputSpan.size() != num_tuples)
         {
           return MakeErrorResult(k_RelabelComponentResidentStoreMismatch,
                                  fmt::format("Relabel Component resident stores do not match the expected value count. Input array '{}': {}; output array '{}': {}; expected: {}.",
-                                             inputArrayPath.toString(), inputSpan.size(), outputArrayPath.toString(), outputSpan.size(), numTuples));
+                                             input_array_path.toString(), inputSpan.size(), output_array_path.toString(), outputSpan.size(), num_tuples));
         }
-        if(shouldCancel)
+        if(should_cancel)
         {
           return {};
         }
@@ -645,19 +646,19 @@ struct RelabelComponentExecuteFn
       }
       else
       {
-        for(usize start = 0; start < numTuples;)
+        for(usize start = 0; start < num_tuples;)
         {
-          if(shouldCancel)
+          if(should_cancel)
           {
             return {};
           }
-          const usize count = std::min(stagingValues, numTuples - start);
+          const usize count = std::min(stagingValues, num_tuples - start);
           if(Result<> r = inStore.copyIntoBuffer(start, nonstd::span<T>(buffer.get(), count)); r.invalid())
           {
             return r;
           }
           remapBuffer(buffer.get(), buffer.get(), count);
-          if(shouldCancel)
+          if(should_cancel)
           {
             return {};
           }
@@ -723,31 +724,31 @@ T ClampThresholdMaxCCUpperBoundary(float64 upperBoundary)
  */
 struct ThresholdMaxCCExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  SizeVec3 dims;
-  uint32 minimumObjectSizeInPixels;
-  float64 upperBoundary;
-  uint8 insideValue;
-  uint8 outsideValue;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
+  SizeVec3Type dims;
+  uint32 minimum_object_size_in_pixels;
+  float64 upper_boundary;
+  uint8 inside_value;
+  uint8 outside_value;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inStore = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath).getDataStoreRef();
-    auto& outStore = dataStructure.getDataRefAs<DataArray<uint8>>(outputArrayPath).getDataStoreRef();
+    const auto& inStore = data_structure.getDataRefAs<DataArray<T>>(input_array_path).getDataStoreRef();
+    auto& outStore = data_structure.getDataRefAs<DataArray<uint8>>(output_array_path).getDataStoreRef();
 
     // Input min/max (itk::MinimumMaximumImageCalculator equivalent): one streaming bulk-I/O pass. Only min/max
     // are consumed, so the parallel min/max reduction replaces the full statistics pass.
-    Result<ArrayMinMax<T>> statsResult = ComputeArrayMinMax<T>(inStore, shouldCancel);
+    Result<ArrayMinMax<T>> statsResult = ComputeArrayMinMax<T>(inStore, should_cancel);
     if(statsResult.invalid())
     {
       return ConvertResult(std::move(statsResult));
     }
-    if(shouldCancel)
+    if(should_cancel)
     {
       return {};
     }
@@ -755,7 +756,7 @@ struct ThresholdMaxCCExecuteFn
 
     // m_UpperBoundary (ITK): the Upper Boundary parameter clamped to T's representable range -- FIXED for the
     // whole run (unlike the local bisection `upperBound` below, which the loop mutates).
-    const T upperBoundaryFixed = ClampThresholdMaxCCUpperBoundary<T>(upperBoundary);
+    const T upperBoundaryFixed = ClampThresholdMaxCCUpperBoundary<T>(upper_boundary);
 
     T lowerBound = stats.min;
     T upperBound = std::min(stats.max, upperBoundaryFixed);
@@ -764,7 +765,7 @@ struct ThresholdMaxCCExecuteFn
     T midpointL = lowerBound + (midpoint - lowerBound) / 2;
     T midpointR = upperBound - (upperBound - midpoint) / 2;
 
-    const uint64 minSize = static_cast<uint64>(minimumObjectSizeInPixels);
+    const uint64 minSize = static_cast<uint64>(minimum_object_size_in_pixels);
     // ITK's ComputeConnectedComponents (itkThresholdMaximumConnectedComponentsImageFilter.hxx:76-81,108-110) counts
     // components on the BINARY-THRESHOLD OUTPUT, whose foreground is `value != 0`: the internal BinaryThresholdImageFilter
     // writes m_InsideValue to in-band pixels [thr, m_UpperBoundary] and m_OutsideValue elsewhere, then the
@@ -773,16 +774,16 @@ struct ThresholdMaxCCExecuteFn
     // DEFAULT (InsideValue=1, OutsideValue=0) this reduces to exactly (in-band ? true : false) = in-band, unchanged; for
     // non-default Inside/Outside (e.g. Inside=0/Outside=1) ITK instead maximizes components in the OUT-of-band region.
     // The internal ConnectedComponentImageFilter connectivity is ITK's default (FullyConnected=false).
-    const bool insideNonZero = (insideValue != 0);
-    const bool outsideNonZero = (outsideValue != 0);
+    const bool insideNonZero = (inside_value != 0);
+    const bool outsideNonZero = (outside_value != 0);
     auto countAt = [&](T thr) -> Result<uint32> {
       const auto pred = [thr, upperBoundaryFixed, insideNonZero, outsideNonZero](T v) { return (v >= thr && v <= upperBoundaryFixed) ? insideNonZero : outsideNonZero; };
-      return CountConnectedComponents<T>(inStore, dims, pred, /*fullyConnected=*/false, minSize, shouldCancel);
+      return CountConnectedComponents<T>(inStore, dims, pred, /*fullyConnected=*/false, minSize, should_cancel);
     };
 
     while((upperBound - lowerBound) > T{2})
     {
-      if(shouldCancel)
+      if(should_cancel)
       {
         return {};
       }
@@ -839,7 +840,7 @@ struct ThresholdMaxCCExecuteFn
     auto outBuffer = std::make_unique<uint8[]>(std::min(chunkValues, total));
     for(usize start = 0; start < total; start += chunkValues)
     {
-      if(shouldCancel)
+      if(should_cancel)
       {
         return {};
       }
@@ -851,7 +852,7 @@ struct ThresholdMaxCCExecuteFn
       for(usize i = 0; i < count; ++i)
       {
         const T v = inBuffer[i];
-        outBuffer[i] = (v >= thresholdValue && v <= upperBoundaryFixed) ? insideValue : outsideValue;
+        outBuffer[i] = (v >= thresholdValue && v <= upperBoundaryFixed) ? inside_value : outside_value;
       }
       if(Result<> r = outStore.copyFromBuffer(start, nonstd::span<const uint8>(outBuffer.get(), count)); r.invalid())
       {
@@ -869,24 +870,37 @@ struct ThresholdMaxCCExecuteFn
 Result<> ExecuteConnectedComponentImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, bool fullyConnected,
                                               const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = IntegerOnly;
+  using TypeSetPolicyType = IntegerOnly;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::ConnectedComponentExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, imageGeom.getDimensions(), fullyConnected, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  detail::ConnectedComponentExecuteFn executeFn{.data_structure = dataStructure,
+                                                .input_array_path = inputArrayPath,
+                                                .output_array_path = outputArrayPath,
+                                                .dims = imageGeom.getDimensions(),
+                                                .fully_connected = fullyConnected,
+                                                .should_cancel = shouldCancel,
+                                                .message_handler = messageHandler};
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
 Result<> ExecuteZeroCrossingImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath, uint8 foregroundValue,
                                         uint8 backgroundValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = SignedScalar;
+  using TypeSetPolicyType = SignedScalar;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::ZeroCrossingExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, imageGeom.getDimensions(), foregroundValue, backgroundValue, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  detail::ZeroCrossingExecuteFn executeFn{.data_structure = dataStructure,
+                                          .input_array_path = inputArrayPath,
+                                          .output_array_path = outputArrayPath,
+                                          .dims = imageGeom.getDimensions(),
+                                          .foreground_value = foregroundValue,
+                                          .background_value = backgroundValue,
+                                          .should_cancel = shouldCancel,
+                                          .message_handler = messageHandler};
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -894,36 +908,59 @@ Result<> ExecuteDoubleThresholdImageFilter(DataStructure& dataStructure, const D
                                            float64 threshold2, float64 threshold3, float64 threshold4, uint8 insideValue, uint8 outsideValue, bool fullyConnected, const std::atomic_bool& shouldCancel,
                                            const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = AllNumeric;
+  using TypeSetPolicyType = AllNumeric;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::DoubleThresholdExecuteFn executeFn{dataStructure,  inputArrayPath, outputArrayPath, imageGeom.getDimensions(), threshold1, threshold2, threshold3, threshold4, insideValue, outsideValue,
-                                             fullyConnected, shouldCancel,   messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  detail::DoubleThresholdExecuteFn executeFn{.data_structure = dataStructure,
+                                             .input_array_path = inputArrayPath,
+                                             .output_array_path = outputArrayPath,
+                                             .dims = imageGeom.getDimensions(),
+                                             .threshold1 = threshold1,
+                                             .threshold2 = threshold2,
+                                             .threshold3 = threshold3,
+                                             .threshold4 = threshold4,
+                                             .inside_value = insideValue,
+                                             .outside_value = outsideValue,
+                                             .fully_connected = fullyConnected,
+                                             .should_cancel = shouldCancel,
+                                             .message_handler = messageHandler};
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
 Result<> ExecuteRelabelComponentImageFilter(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& outputArrayPath, uint64 minimumObjectSize, bool sortByObjectSize,
                                             const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = IntegerOnly;
+  using TypeSetPolicyType = IntegerOnly;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
-  detail::RelabelComponentExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, inputArray.getNumberOfTuples(), minimumObjectSize, sortByObjectSize, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  detail::RelabelComponentExecuteFn executeFn{.data_structure = dataStructure,
+                                              .input_array_path = inputArrayPath,
+                                              .output_array_path = outputArrayPath,
+                                              .num_tuples = inputArray.getNumberOfTuples(),
+                                              .minimum_object_size = minimumObjectSize,
+                                              .sort_by_object_size = sortByObjectSize,
+                                              .should_cancel = shouldCancel,
+                                              .message_handler = messageHandler};
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
 Result<> ExecuteBinaryThinningImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath,
                                           const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = IntegerOnly;
+  using TypeSetPolicyType = IntegerOnly;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::BinaryThinningExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, imageGeom.getDimensions(), shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  detail::BinaryThinningExecuteFn executeFn{.data_structure = dataStructure,
+                                            .input_array_path = inputArrayPath,
+                                            .output_array_path = outputArrayPath,
+                                            .dims = imageGeom.getDimensions(),
+                                            .should_cancel = shouldCancel,
+                                            .message_handler = messageHandler};
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -931,13 +968,21 @@ Result<> ExecuteThresholdMaximumConnectedComponentsImageFilter(DataStructure& da
                                                                uint32 minimumObjectSizeInPixels, float64 upperBoundary, uint8 insideValue, uint8 outsideValue, const std::atomic_bool& shouldCancel,
                                                                const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = AllNumeric;
+  using TypeSetPolicyType = AllNumeric;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  detail::ThresholdMaxCCExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, imageGeom.getDimensions(), minimumObjectSizeInPixels, upperBoundary, insideValue,
-                                            outsideValue,  shouldCancel,   messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  detail::ThresholdMaxCCExecuteFn executeFn{.data_structure = dataStructure,
+                                            .input_array_path = inputArrayPath,
+                                            .output_array_path = outputArrayPath,
+                                            .dims = imageGeom.getDimensions(),
+                                            .minimum_object_size_in_pixels = minimumObjectSizeInPixels,
+                                            .upper_boundary = upperBoundary,
+                                            .inside_value = insideValue,
+                                            .outside_value = outsideValue,
+                                            .should_cancel = shouldCancel,
+                                            .message_handler = messageHandler};
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 } // namespace nx::core::ImageProcessing

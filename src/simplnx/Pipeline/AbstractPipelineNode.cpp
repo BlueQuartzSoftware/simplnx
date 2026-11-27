@@ -57,7 +57,7 @@ void AbstractPipelineNode::setDisabled(bool disabled)
 
 void AbstractPipelineNode::setEnabled(bool enabled)
 {
-  return setDisabled(!enabled);
+  setDisabled(!enabled);
 }
 
 const DataStructure& AbstractPipelineNode::getDataStructure() const
@@ -71,18 +71,18 @@ void AbstractPipelineNode::setDataStructure(const DataStructure& dataStructure)
   m_DataStructure = std::move(candidate);
 }
 
-void AbstractPipelineNode::checkDataStructureSize(DataStructure& dataStructure)
+void AbstractPipelineNode::CheckDataStructureSize(DataStructure& dataStructure)
 {
   const uint64 largeDataStructureSize = Application::Instance()->getPreferences()->largeDataStructureSize();
   if(dataStructure.memoryUsage() > largeDataStructureSize)
   {
     auto result = dataStructure.transferDataArraysOoc();
-    if(result.warnings().size() > 0)
+    if(!result.warnings().empty())
     {
-      std::cout << "Some DataArrays not converted to out-of-core:" << std::endl;
+      std::cout << "Some DataArrays not converted to out-of-core:" << '\n';
       for(const auto& warning : result.warnings())
       {
-        std::cout << "\tWarning: " << warning.message << std::endl;
+        std::cout << "\tWarning: " << warning.message << '\n';
       }
     }
   }
@@ -139,7 +139,7 @@ Result<> AbstractPipelineNode::endExecutionChecked(DataStructure& dataStructure)
   {
     result.errors().push_back({.code = -6071, .message = fmt::format("Node '{}' checked flush failed without an error diagnostic.", getName())});
   }
-  ErrorCollection snapshotErrors;
+  ErrorCollectionType snapshotErrors;
   try
   {
     setDataStructure(dataStructure);
@@ -157,7 +157,7 @@ Result<> AbstractPipelineNode::endExecutionChecked(DataStructure& dataStructure)
   {
     if(result.valid())
     {
-      result.m_Expected = nonstd::make_unexpected(std::move(snapshotErrors));
+      result.expected = nonstd::make_unexpected(std::move(snapshotErrors));
     }
     else
     {
@@ -262,23 +262,23 @@ AbstractPipelineNode::FilterFaultDetailSignalType& AbstractPipelineNode::getFilt
 {
   return m_FilterFaultDetailSignal;
 }
-void AbstractPipelineNode::sendFilterFaultDetailMessage(int32_t filterIndex, const WarningCollection& warnings, const ErrorCollection& errors)
+void AbstractPipelineNode::sendFilterFaultDetailMessage(int32_t filterIndex, const WarningCollectionType& warnings, const ErrorCollectionType& errors)
 {
   m_FilterFaultDetailSignal(this, filterIndex, warnings, errors);
 }
 
 std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipeline() const
 {
-  const auto* currentPipeline = this;
+  const auto* currentPipelinePtr = this;
   auto pipeline = getPrecedingPipelineSegment();
   if(pipeline == nullptr)
   {
     return nullptr;
   }
 
-  while((currentPipeline = currentPipeline->getParentPipeline()) != nullptr)
+  while((currentPipelinePtr = currentPipelinePtr->getParentPipeline()) != nullptr)
   {
-    auto segment = currentPipeline->getPrecedingPipelineSegment();
+    auto segment = currentPipelinePtr->getPrecedingPipelineSegment();
     if(segment == nullptr)
     {
       break;
@@ -290,20 +290,20 @@ std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipeline() const
 
 std::unique_ptr<Pipeline> AbstractPipelineNode::getPrecedingPipelineSegment() const
 {
-  Pipeline* parentPipeline = getParentPipeline();
-  if(parentPipeline == nullptr)
+  Pipeline* parentPipelinePtr = getParentPipeline();
+  if(parentPipelinePtr == nullptr)
   {
     return nullptr;
   }
-  if(parentPipeline->isEmpty())
+  if(parentPipelinePtr->isEmpty())
   {
-    auto name = parentPipeline->getName();
-    auto filterList = parentPipeline->getFilterList();
-    return std::make_unique<Pipeline>(name, filterList);
+    auto name = parentPipelinePtr->getName();
+    auto* filterListPtr = parentPipelinePtr->getFilterList();
+    return std::make_unique<Pipeline>(name, filterListPtr);
   }
 
-  auto iter = parentPipeline->find(this);
-  return parentPipeline->copySegment(parentPipeline->begin(), iter);
+  auto iter = parentPipelinePtr->find(this);
+  return parentPipelinePtr->copySegment(parentPipelinePtr->begin(), iter);
 }
 
 nx::core::FaultState AbstractPipelineNode::getFaultState() const

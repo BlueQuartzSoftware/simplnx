@@ -65,7 +65,7 @@ struct SizeGBFiles
   SizeGBFiles& operator=(SizeGBFiles&&) = delete;
 };
 
-void writeText(const fs::path& path, const std::string& text)
+void WriteText(const fs::path& path, const std::string& text)
 {
   std::ofstream stream(path, std::ios::binary);
   REQUIRE(stream.is_open());
@@ -74,7 +74,7 @@ void writeText(const fs::path& path, const std::string& text)
   REQUIRE_FALSE(stream.fail());
 }
 
-std::string readText(const fs::path& path)
+std::string ReadText(const fs::path& path)
 {
   std::ifstream stream(path, std::ios::binary);
   REQUIRE(stream.is_open());
@@ -90,9 +90,9 @@ std::string readText(const fs::path& path)
  * @param preferences Receives the loaded values.
  * @return Load result.
  */
-Result<> loadDocument(const SizeGBFiles& files, const nlohmann::json& document, Preferences& preferences)
+Result<> LoadDocument(const SizeGBFiles& files, const nlohmann::json& document, Preferences& preferences)
 {
-  writeText(files.input, document.dump());
+  WriteText(files.input, document.dump());
   return preferences.loadFromFile(files.input);
 }
 
@@ -154,19 +154,19 @@ TEST_CASE("Preferences loads valid GB thresholds on the 0.01-GB grid", "[Core][P
   {
     const char* description;
     nlohmann::json value;
-    uint64 expectedBytes;
+    uint64 expected_bytes;
   };
-  const std::vector<ValidCase> cases = {{"integer 1", nlohmann::json(int64{1}), 1073741824},
-                                        {"unsigned 2", nlohmann::json(uint64{2}), 2147483648},
-                                        {"1.5", nlohmann::json(1.5), k_OneAndAHalfGBBytes},
-                                        {"integer 0", nlohmann::json(int64{0}), 0},
-                                        {"0.0", nlohmann::json(0.0), 0},
-                                        {"-0.0", nlohmann::json(-0.0), 0},
-                                        {"0.01", nlohmann::json(0.01), k_OneHundredthBytes},
-                                        {"0.001", nlohmann::json(0.001), k_OneHundredthBytes},
-                                        {"0.004", nlohmann::json(0.004), k_OneHundredthBytes},
-                                        {"13.85", nlohmann::json(13.85), 14871324262},
-                                        {"maximum", nlohmann::json(17179869183.99), k_MaxGridBytes}};
+  const std::vector<ValidCase> cases = {{.description = "integer 1", .value = nlohmann::json(int64{1}), .expected_bytes = 1073741824},
+                                        {.description = "unsigned 2", .value = nlohmann::json(uint64{2}), .expected_bytes = 2147483648},
+                                        {.description = "1.5", .value = nlohmann::json(1.5), .expected_bytes = k_OneAndAHalfGBBytes},
+                                        {.description = "integer 0", .value = nlohmann::json(int64{0}), .expected_bytes = 0},
+                                        {.description = "0.0", .value = nlohmann::json(0.0), .expected_bytes = 0},
+                                        {.description = "-0.0", .value = nlohmann::json(-0.0), .expected_bytes = 0},
+                                        {.description = "0.01", .value = nlohmann::json(0.01), .expected_bytes = k_OneHundredthBytes},
+                                        {.description = "0.001", .value = nlohmann::json(0.001), .expected_bytes = k_OneHundredthBytes},
+                                        {.description = "0.004", .value = nlohmann::json(0.004), .expected_bytes = k_OneHundredthBytes},
+                                        {.description = "13.85", .value = nlohmann::json(13.85), .expected_bytes = 14871324262},
+                                        {.description = "maximum", .value = nlohmann::json(17179869183.99), .expected_bytes = k_MaxGridBytes}};
   for(usize keyIndex = 0; keyIndex < k_GBKeys.size(); ++keyIndex)
   {
     for(const auto& validCase : cases)
@@ -175,13 +175,13 @@ TEST_CASE("Preferences loads valid GB thresholds on the 0.01-GB grid", "[Core][P
       {
         SizeGBFiles files;
         Preferences preferences;
-        const auto result = loadDocument(files, {{k_GBKeys[keyIndex], validCase.value}, {"unrelated", "preserved"}}, preferences);
+        const auto result = LoadDocument(files, {{k_GBKeys[keyIndex], validCase.value}, {"unrelated", "preserved"}}, preferences);
         REQUIRE(result.valid());
         CHECK(result.warnings().empty());
         REQUIRE(preferences.contains(k_ByteKeys[keyIndex]));
         const auto stored = preferences.value(k_ByteKeys[keyIndex]);
         REQUIRE(stored.is_number_unsigned());
-        CHECK(stored.get<uint64>() == validCase.expectedBytes);
+        CHECK(stored.get<uint64>() == validCase.expected_bytes);
         CHECK_FALSE(preferences.contains(k_GBKeys[keyIndex]));
         CHECK_FALSE(preferences.contains(k_ByteKeys[1 - keyIndex]));
         CHECK(preferences.value("unrelated") == nlohmann::json("preserved"));
@@ -196,18 +196,19 @@ TEST_CASE("Preferences repairs invalid GB thresholds with their own warning", "[
   {
     const char* description;
     nlohmann::json value;
-    std::string shownValue;
-    std::string shownType;
+    std::string shown_value;
+    std::string shown_type;
   };
-  const std::vector<InvalidCase> cases = {{"negative integer", nlohmann::json(int64{-1}), "-1", "number_integer"},
-                                          {"negative float", nlohmann::json(-0.5), "-0.5", "number_float"},
-                                          {"string", nlohmann::json("1.5"), "\"1.5\"", "string"},
-                                          {"boolean", nlohmann::json(true), "true", "boolean"},
-                                          {"null", nlohmann::json(nullptr), "null", "null"},
-                                          {"array", nlohmann::json::array({1}), "[1]", "array"},
-                                          {"1e300", nlohmann::json(1e300), "1e+300", "number_float"},
-                                          {"above maximum", nlohmann::json(17179869184.0), "17179869184.0", "number_float"},
-                                          {"UINT64_MAX", nlohmann::json(std::numeric_limits<uint64>::max()), "18446744073709551615", "number_unsigned"}};
+  const std::vector<InvalidCase> cases = {
+      {.description = "negative integer", .value = nlohmann::json(int64{-1}), .shown_value = "-1", .shown_type = "number_integer"},
+      {.description = "negative float", .value = nlohmann::json(-0.5), .shown_value = "-0.5", .shown_type = "number_float"},
+      {.description = "string", .value = nlohmann::json("1.5"), .shown_value = "\"1.5\"", .shown_type = "string"},
+      {.description = "boolean", .value = nlohmann::json(true), .shown_value = "true", .shown_type = "boolean"},
+      {.description = "null", .value = nlohmann::json(nullptr), .shown_value = "null", .shown_type = "null"},
+      {.description = "array", .value = nlohmann::json::array({1}), .shown_value = "[1]", .shown_type = "array"},
+      {.description = "1e300", .value = nlohmann::json(1e300), .shown_value = "1e+300", .shown_type = "number_float"},
+      {.description = "above maximum", .value = nlohmann::json(17179869184.0), .shown_value = "17179869184.0", .shown_type = "number_float"},
+      {.description = "UINT64_MAX", .value = nlohmann::json(std::numeric_limits<uint64>::max()), .shown_value = "18446744073709551615", .shown_type = "number_unsigned"}};
   for(usize keyIndex = 0; keyIndex < k_GBKeys.size(); ++keyIndex)
   {
     for(const auto& invalidCase : cases)
@@ -220,18 +221,18 @@ TEST_CASE("Preferences repairs invalid GB thresholds with their own warning", "[
         const uint64 defaultHundredths = (defaultBytes / 1073741824) * 100 + ((defaultBytes % 1073741824) * 100 + 536870912) / 1073741824;
         const std::string defaultText = std::to_string(defaultHundredths / 100) + "." + (defaultHundredths % 100 < 10 ? "0" : "") + std::to_string(defaultHundredths % 100);
         const auto document = nlohmann::json::object({{k_GBKeys[keyIndex], invalidCase.value}, {"unrelated", "preserved"}});
-        const auto result = loadDocument(files, document, preferences);
+        const auto result = LoadDocument(files, document, preferences);
         REQUIRE(result.valid());
         REQUIRE(result.warnings().size() == 1);
         CHECK(result.warnings().front().code == k_GBRepairCode);
-        const std::string expected = "Preferences: saved " + k_Labels[keyIndex] + " ('" + k_GBKeys[keyIndex] + "') value " + invalidCase.shownValue + " (JSON type " + invalidCase.shownType +
+        const std::string expected = "Preferences: saved " + k_Labels[keyIndex] + " ('" + k_GBKeys[keyIndex] + "') value " + invalidCase.shown_value + " (JSON type " + invalidCase.shown_type +
                                      ") is invalid. Allowed domain: 0 to 17179869183.99 GB. Using the default: " + defaultText + " GB. Review this value in Preferences > Out of Core.";
         CHECK(result.warnings().front().message == expected);
         CHECK_FALSE(preferences.contains(k_ByteKeys[keyIndex]));
         CHECK_FALSE(preferences.contains(k_GBKeys[keyIndex]));
         CHECK(preferences.valueAs<uint64>(k_ByteKeys[keyIndex]) == defaultBytes);
         CHECK(preferences.value("unrelated") == nlohmann::json("preserved"));
-        CHECK(nlohmann::json::parse(readText(files.input)) == document);
+        CHECK(nlohmann::json::parse(ReadText(files.input)) == document);
       }
     }
   }
@@ -239,7 +240,7 @@ TEST_CASE("Preferences repairs invalid GB thresholds with their own warning", "[
   {
     SizeGBFiles files;
     Preferences preferences;
-    const auto result = loadDocument(files, {{k_GBKeys[0], int64{-1}}}, preferences);
+    const auto result = LoadDocument(files, {{k_GBKeys[0], int64{-1}}}, preferences);
     REQUIRE(result.warnings().size() == 1);
     CHECK(result.warnings().front().message.find("Using the default: 1.00 GB.") != std::string::npos);
   }
@@ -251,13 +252,13 @@ TEST_CASE("Preferences converts legacy byte thresholds to the 0.01-GB grid", "[C
   {
     const char* description;
     nlohmann::json value;
-    uint64 expectedBytes;
+    uint64 expected_bytes;
   };
-  const std::vector<LegacyCase> cases = {{"0", nlohmann::json(uint64{0}), 0},
-                                         {"10000 bytes", nlohmann::json(int64{10000}), k_OneHundredthBytes},
-                                         {"123456789 bytes", nlohmann::json(uint64{123456789}), 118111601},
-                                         {"1 GiB", nlohmann::json(uint64{1073741824}), 1073741824},
-                                         {"UINT64_MAX", nlohmann::json(std::numeric_limits<uint64>::max()), k_MaxGridBytes}};
+  const std::vector<LegacyCase> cases = {{.description = "0", .value = nlohmann::json(uint64{0}), .expected_bytes = 0},
+                                         {.description = "10000 bytes", .value = nlohmann::json(int64{10000}), .expected_bytes = k_OneHundredthBytes},
+                                         {.description = "123456789 bytes", .value = nlohmann::json(uint64{123456789}), .expected_bytes = 118111601},
+                                         {.description = "1 GiB", .value = nlohmann::json(uint64{1073741824}), .expected_bytes = 1073741824},
+                                         {.description = "UINT64_MAX", .value = nlohmann::json(std::numeric_limits<uint64>::max()), .expected_bytes = k_MaxGridBytes}};
   for(usize keyIndex = 0; keyIndex < k_ByteKeys.size(); ++keyIndex)
   {
     for(const auto& legacyCase : cases)
@@ -266,12 +267,12 @@ TEST_CASE("Preferences converts legacy byte thresholds to the 0.01-GB grid", "[C
       {
         SizeGBFiles files;
         Preferences preferences;
-        const auto result = loadDocument(files, {{k_ByteKeys[keyIndex], legacyCase.value}}, preferences);
+        const auto result = LoadDocument(files, {{k_ByteKeys[keyIndex], legacyCase.value}}, preferences);
         REQUIRE(result.valid());
         CHECK(result.warnings().empty());
         const auto stored = preferences.value(k_ByteKeys[keyIndex]);
         REQUIRE(stored.is_number_unsigned());
-        CHECK(stored.get<uint64>() == legacyCase.expectedBytes);
+        CHECK(stored.get<uint64>() == legacyCase.expected_bytes);
         CHECK_FALSE(preferences.contains(k_GBKeys[keyIndex]));
       }
     }
@@ -280,7 +281,7 @@ TEST_CASE("Preferences converts legacy byte thresholds to the 0.01-GB grid", "[C
       SizeGBFiles files;
       Preferences preferences;
       const uint64 defaultBytes = preferences.defaultValueAs<uint64>(k_ByteKeys[keyIndex]);
-      const auto result = loadDocument(files, {{k_ByteKeys[keyIndex], int64{-1}}}, preferences);
+      const auto result = LoadDocument(files, {{k_ByteKeys[keyIndex], int64{-1}}}, preferences);
       REQUIRE(result.valid());
       REQUIRE(result.warnings().size() == 1);
       CHECK(result.warnings().front().code == k_LegacyRepairCode);
@@ -300,7 +301,7 @@ TEST_CASE("Preferences gives a saved GB threshold precedence over a byte thresho
     {
       SizeGBFiles files;
       Preferences preferences;
-      const auto result = loadDocument(files, {{k_GBKeys[keyIndex], 2}, {k_ByteKeys[keyIndex], uint64{1073741824}}}, preferences);
+      const auto result = LoadDocument(files, {{k_GBKeys[keyIndex], 2}, {k_ByteKeys[keyIndex], uint64{1073741824}}}, preferences);
       REQUIRE(result.valid());
       CHECK(result.warnings().empty());
       CHECK(preferences.valueAs<uint64>(k_ByteKeys[keyIndex]) == 2147483648);
@@ -310,7 +311,7 @@ TEST_CASE("Preferences gives a saved GB threshold precedence over a byte thresho
     {
       SizeGBFiles files;
       Preferences preferences;
-      const auto result = loadDocument(files, {{k_GBKeys[keyIndex], 1.5}, {k_ByteKeys[keyIndex], "bad"}}, preferences);
+      const auto result = LoadDocument(files, {{k_GBKeys[keyIndex], 1.5}, {k_ByteKeys[keyIndex], "bad"}}, preferences);
       REQUIRE(result.valid());
       CHECK(result.warnings().empty());
       CHECK(preferences.valueAs<uint64>(k_ByteKeys[keyIndex]) == k_OneAndAHalfGBBytes);
@@ -321,7 +322,7 @@ TEST_CASE("Preferences gives a saved GB threshold precedence over a byte thresho
       SizeGBFiles files;
       Preferences preferences;
       const uint64 defaultBytes = preferences.defaultValueAs<uint64>(k_ByteKeys[keyIndex]);
-      const auto result = loadDocument(files, {{k_GBKeys[keyIndex], "bad"}, {k_ByteKeys[keyIndex], uint64{1073741824 * 3ULL}}}, preferences);
+      const auto result = LoadDocument(files, {{k_GBKeys[keyIndex], "bad"}, {k_ByteKeys[keyIndex], uint64{1073741824 * 3ULL}}}, preferences);
       REQUIRE(result.valid());
       REQUIRE(result.warnings().size() == 1);
       CHECK(result.warnings().front().code == k_GBRepairCode);
@@ -337,7 +338,7 @@ TEST_CASE("Preferences GB conversion keeps the legacy cache budget migration", "
 {
   SizeGBFiles files;
   Preferences preferences;
-  const auto result = loadDocument(files, {{k_ByteKeys[0], uint64{10000}}, {k_GBKeys[1], 2.5}, {"memory_budget_bytes", uint64{123456}}}, preferences);
+  const auto result = LoadDocument(files, {{k_ByteKeys[0], uint64{10000}}, {k_GBKeys[1], 2.5}, {"memory_budget_bytes", uint64{123456}}}, preferences);
   REQUIRE(result.valid());
   CHECK(result.warnings().empty());
   CHECK(preferences.valueAs<uint64>(k_ByteKeys[0]) == k_OneHundredthBytes);
@@ -346,7 +347,7 @@ TEST_CASE("Preferences GB conversion keeps the legacy cache budget migration", "
   CHECK(preferences.contains(Preferences::k_CacheMemoryBudgetBytes_Key));
   CHECK_FALSE(preferences.contains(Preferences::k_LegacyMemoryBudgetBytes_Key));
   REQUIRE(preferences.saveToFile(files.output).valid());
-  const auto saved = nlohmann::json::parse(readText(files.output));
+  const auto saved = nlohmann::json::parse(ReadText(files.output));
   CHECK(saved.at(std::string(Preferences::k_CacheMemoryBudgetBytes_Key)).get<uint64>() == 123456);
   CHECK(saved.at(k_GBKeys[0]).get<double>() == 0.01);
   CHECK(saved.at(k_GBKeys[1]).get<double>() == 2.5);
@@ -358,18 +359,18 @@ TEST_CASE("Preferences repeated GB loads keep no stale threshold state", "[Core]
   Preferences preferences;
   const uint64 defaultBytes = preferences.defaultValueAs<uint64>(k_ByteKeys[0]);
 
-  const auto failed = loadDocument(files, {{k_GBKeys[0], -3}}, preferences);
+  const auto failed = LoadDocument(files, {{k_GBKeys[0], -3}}, preferences);
   REQUIRE(failed.valid());
   REQUIRE(failed.warnings().size() == 1);
   CHECK(failed.warnings().front().code == k_GBRepairCode);
   CHECK(preferences.valueAs<uint64>(k_ByteKeys[0]) == defaultBytes);
 
-  const auto good = loadDocument(files, {{k_GBKeys[0], 1.5}}, preferences);
+  const auto good = LoadDocument(files, {{k_GBKeys[0], 1.5}}, preferences);
   REQUIRE(good.valid());
   CHECK(good.warnings().empty());
   CHECK(preferences.valueAs<uint64>(k_ByteKeys[0]) == k_OneAndAHalfGBBytes);
 
-  const auto absent = loadDocument(files, nlohmann::json::object({{"plugins", nlohmann::json::object()}}), preferences);
+  const auto absent = LoadDocument(files, nlohmann::json::object({{"plugins", nlohmann::json::object()}}), preferences);
   REQUIRE(absent.valid());
   CHECK(absent.warnings().empty());
   CHECK_FALSE(preferences.contains(k_ByteKeys[0]));
@@ -383,7 +384,12 @@ TEST_CASE("Preferences saves OOC thresholds only as GB keys", "[Core][Preference
     uint64 bytes;
     std::string text;
   };
-  const std::vector<SaveCase> cases = {{0, "0.0"}, {10000, "0.01"}, {1073741824, "1.0"}, {k_OneAndAHalfGBBytes, "1.5"}, {14871324262, "13.85"}, {std::numeric_limits<uint64>::max(), "17179869183.99"}};
+  const std::vector<SaveCase> cases = {{.bytes = 0, .text = "0.0"},
+                                       {.bytes = 10000, .text = "0.01"},
+                                       {.bytes = 1073741824, .text = "1.0"},
+                                       {.bytes = k_OneAndAHalfGBBytes, .text = "1.5"},
+                                       {.bytes = 14871324262, .text = "13.85"},
+                                       {.bytes = std::numeric_limits<uint64>::max(), .text = "17179869183.99"}};
   for(usize keyIndex = 0; keyIndex < k_ByteKeys.size(); ++keyIndex)
   {
     for(const auto& saveCase : cases)
@@ -398,7 +404,7 @@ TEST_CASE("Preferences saves OOC thresholds only as GB keys", "[Core][Preference
         // The in-memory value stays exact. Only the file uses the 0.01-GB grid.
         CHECK(preferences.valueAs<uint64>(k_ByteKeys[keyIndex]) == saveCase.bytes);
         REQUIRE(preferences.saveToFile(files.output).valid());
-        const std::string text = readText(files.output);
+        const std::string text = ReadText(files.output);
         CHECK(text.find("\"" + k_GBKeys[keyIndex] + "\":" + saveCase.text) != std::string::npos);
         CHECK(text.find("\"" + k_ByteKeys[0] + "\"") == std::string::npos);
         CHECK(text.find("\"" + k_ByteKeys[1] + "\"") == std::string::npos);
@@ -415,21 +421,21 @@ TEST_CASE("Preferences converts a legacy file only when it saves", "[Core][Prefe
 {
   SizeGBFiles files;
   const std::string legacyText = R"({"large_data_size":10000,"large_datastructure_size":18446744073709551615,"plugins":{},"unrelated":"preserved"})";
-  writeText(files.input, legacyText);
+  WriteText(files.input, legacyText);
   const auto modifiedBefore = fs::last_write_time(files.input);
 
   Preferences preferences;
   const auto result = preferences.loadFromFile(files.input);
   REQUIRE(result.valid());
   CHECK(result.warnings().empty());
-  CHECK(readText(files.input) == legacyText);
+  CHECK(ReadText(files.input) == legacyText);
   // Evaluate to bool before Catch2 tries to stream libc++'s file-clock time point.
   CHECK((fs::last_write_time(files.input) == modifiedBefore));
   CHECK(preferences.valueAs<uint64>(k_ByteKeys[0]) == k_OneHundredthBytes);
   CHECK(preferences.valueAs<uint64>(k_ByteKeys[1]) == k_MaxGridBytes);
 
   REQUIRE(preferences.saveToFile(files.input).valid());
-  const auto converted = nlohmann::json::parse(readText(files.input));
+  const auto converted = nlohmann::json::parse(ReadText(files.input));
   CHECK_FALSE(converted.contains(k_ByteKeys[0]));
   CHECK_FALSE(converted.contains(k_ByteKeys[1]));
   CHECK(converted.at(k_GBKeys[0]).get<double>() == 0.01);
@@ -442,19 +448,19 @@ TEST_CASE("Preferences GB save and load round trip keeps exact grid bytes", "[Co
   const uint64 ramDefault = Preferences().defaultValueAs<uint64>(k_ByteKeys[1]);
   for(const uint64 bytes : {uint64{0}, k_OneHundredthBytes, uint64{1073741824}, ramDefault, k_MaxGridBytes})
   {
-    for(usize keyIndex = 0; keyIndex < k_ByteKeys.size(); ++keyIndex)
+    for(const auto& kByteKey : k_ByteKeys)
     {
-      DYNAMIC_SECTION(k_ByteKeys[keyIndex] << "=" << bytes)
+      DYNAMIC_SECTION(kByteKey << "=" << bytes)
       {
         SizeGBFiles files;
         Preferences preferences;
-        preferences.setValue(k_ByteKeys[keyIndex], bytes);
+        preferences.setValue(kByteKey, bytes);
         REQUIRE(preferences.saveToFile(files.output).valid());
         Preferences loaded;
         const auto result = loaded.loadFromFile(files.output);
         REQUIRE(result.valid());
         CHECK(result.warnings().empty());
-        CHECK(loaded.valueAs<uint64>(k_ByteKeys[keyIndex]) == bytes);
+        CHECK(loaded.valueAs<uint64>(kByteKey) == bytes);
       }
     }
   }

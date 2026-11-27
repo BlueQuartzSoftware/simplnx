@@ -31,41 +31,41 @@ namespace
  */
 struct MorphologicalReconstructionExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  SizeVec3 dims;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
+  SizeVec3Type dims;
   ReconstructOp op;
-  bool fullyConnected;
-  ReconMarker markerKind;
+  bool fully_connected;
+  ReconMarker marker_kind;
   float64 height;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
-  bool differenceFromInput; // HConvex: after reconstruction, output = input - reconstruction (the h-dome)
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
+  bool difference_from_input; // HConvex: after reconstruction, output = input - reconstruction (the h-dome)
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-    auto& outArray = dataStructure.getDataRefAs<DataArray<T>>(outputArrayPath);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
+    auto& outArray = data_structure.getDataRefAs<DataArray<T>>(output_array_path);
     const AbstractDataStore<T>& inStore = inArray.getDataStoreRef();
     AbstractDataStore<T>& outStore = outArray.getDataStoreRef();
 
     std::shared_ptr<AbstractDataStore<T>> markerStore;
-    const AbstractDataStore<T>* marker = &inStore;
+    const AbstractDataStore<T>* markerPtr = &inStore;
     ReconstructionMarkerOptions markerOptions;
-    const bool isHeightMarker = markerKind == ReconMarker::MinusHeight || markerKind == ReconMarker::PlusHeight;
-    const bool isBorderMarker = markerKind == ReconMarker::FillholeMaxBorder || markerKind == ReconMarker::GrindPeakMinBorder;
+    const bool isHeightMarker = marker_kind == ReconMarker::MinusHeight || marker_kind == ReconMarker::PlusHeight;
+    const bool isBorderMarker = marker_kind == ReconMarker::FillholeMaxBorder || marker_kind == ReconMarker::GrindPeakMinBorder;
     const bool useDerivedMarker = isBorderMarker || (inStore.getStoreType() == IDataStore::StoreType::OutOfCore && isHeightMarker);
     if(useDerivedMarker)
     {
-      if(markerKind == ReconMarker::MinusHeight || markerKind == ReconMarker::PlusHeight)
+      if(marker_kind == ReconMarker::MinusHeight || marker_kind == ReconMarker::PlusHeight)
       {
-        markerOptions.source = markerKind == ReconMarker::MinusHeight ? ReconstructionMarkerSource::MaskMinusHeight : ReconstructionMarkerSource::MaskPlusHeight;
+        markerOptions.source = marker_kind == ReconMarker::MinusHeight ? ReconstructionMarkerSource::MaskMinusHeight : ReconstructionMarkerSource::MaskPlusHeight;
       }
       else
       {
-        markerOptions.source = markerKind == ReconMarker::FillholeMaxBorder ? ReconstructionMarkerSource::MaskWithMaximumInterior : ReconstructionMarkerSource::MaskWithMinimumInterior;
+        markerOptions.source = marker_kind == ReconMarker::FillholeMaxBorder ? ReconstructionMarkerSource::MaskWithMaximumInterior : ReconstructionMarkerSource::MaskWithMinimumInterior;
       }
       markerOptions.height = height;
     }
@@ -73,26 +73,26 @@ struct MorphologicalReconstructionExecuteFn
     {
       // Marker scratch inherits the input's storage format (out-of-core input -> out-of-core scratch), keeping the
       // whole filter memory-bounded through the streamed sweep path.
-      markerStore = DataStoreUtilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
-      if(Result<> r = BuildReconstructionMarker<T>(inStore, *markerStore, dims, markerKind, height, shouldCancel); r.invalid())
+      markerStore = data_store_utilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
+      if(Result<> r = BuildReconstructionMarker<T>(inStore, *markerStore, dims, marker_kind, height, should_cancel); r.invalid())
       {
         return r;
       }
-      marker = markerStore.get();
+      markerPtr = markerStore.get();
     }
     // Mask == the ORIGINAL input; the engine reconstructs the marker under it into outStore. OOC detection uses
     // the real input (mask) + output arrays (the scratch marker has no IDataArray).
-    const bool useTemporaryWork = markerKind == ReconMarker::FillholeMaxBorder || markerKind == ReconMarker::GrindPeakMinBorder;
-    if(Result<> r = ApplyMorphologicalReconstruction<T>(*marker, inStore, outStore, dims, op, fullyConnected, inArray, outArray, shouldCancel, messageHandler, useTemporaryWork, markerOptions);
+    const bool useTemporaryWork = marker_kind == ReconMarker::FillholeMaxBorder || marker_kind == ReconMarker::GrindPeakMinBorder;
+    if(Result<> r = ApplyMorphologicalReconstruction<T>(*markerPtr, inStore, outStore, dims, op, fully_connected, inArray, outArray, should_cancel, message_handler, useTemporaryWork, markerOptions);
        r.invalid())
     {
       return r;
     }
-    if(differenceFromInput)
+    if(difference_from_input)
     {
       // HConvex: output = input - reconstruction (the h-maxima result), i.e. the h-dome. SubtractStores is
       // alias-safe (out == b), and hmax <= input everywhere so the difference never underflows.
-      return SubtractStores<T>(inStore, outStore, outStore, shouldCancel);
+      return SubtractStores<T>(inStore, outStore, outStore, should_cancel);
     }
     return {};
   }
@@ -154,44 +154,44 @@ Result<> BuildPreserveIntensitiesMarker(const AbstractDataStore<T>& morph, const
  */
 struct ReconstructionOpenCloseExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  SizeVec3 dims;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
+  SizeVec3Type dims;
   const StructuringElement& se;
-  MorphOp firstOp;
-  bool fullyConnected;
-  bool preserveIntensities;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  MorphOp first_op;
+  bool fully_connected;
+  bool preserve_intensities;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-    auto& outArray = dataStructure.getDataRefAs<DataArray<T>>(outputArrayPath);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
+    auto& outArray = data_structure.getDataRefAs<DataArray<T>>(output_array_path);
     const AbstractDataStore<T>& inStore = inArray.getDataStoreRef();
     AbstractDataStore<T>& outStore = outArray.getDataStoreRef();
 
-    const ReconstructOp reconOp = (firstOp == MorphOp::Erode) ? ReconstructOp::Dilation : ReconstructOp::Erosion;
+    const ReconstructOp reconOp = (first_op == MorphOp::Erode) ? ReconstructOp::Dilation : ReconstructOp::Erosion;
 
     // Step 1: grayscale erode (Opening) / dilate (Closing) into an OOC-inheriting scratch.
-    auto morph = DataStoreUtilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
-    if(Result<> r = ApplyMorphology<T>(inStore, *morph, dims, se, firstOp, inArray, outArray, shouldCancel, messageHandler); r.invalid())
+    auto morph = data_store_utilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
+    if(Result<> r = ApplyMorphology<T>(inStore, *morph, dims, se, first_op, inArray, outArray, should_cancel, message_handler); r.invalid())
     {
       return r;
     }
 
-    if(!preserveIntensities)
+    if(!preserve_intensities)
     {
       // Reconstruct the morphology result under the input directly into the output.
-      return ApplyMorphologicalReconstruction<T>(*morph, inStore, outStore, dims, reconOp, fullyConnected, inArray, outArray, shouldCancel, messageHandler);
+      return ApplyMorphologicalReconstruction<T>(*morph, inStore, outStore, dims, reconOp, fully_connected, inArray, outArray, should_cancel, message_handler);
     }
 
     // PreserveIntensities: reconstruct into a scratch, re-seed the original input where the first reconstruction was
     // a fixpoint of the morphology result, then reconstruct that marker into the output.
-    auto recon = DataStoreUtilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
-    if(Result<> r = ApplyMorphologicalReconstruction<T>(*morph, inStore, *recon, dims, reconOp, fullyConnected, inArray, outArray, shouldCancel, messageHandler); r.invalid())
+    auto recon = data_store_utilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
+    if(Result<> r = ApplyMorphologicalReconstruction<T>(*morph, inStore, *recon, dims, reconOp, fully_connected, inArray, outArray, should_cancel, message_handler); r.invalid())
     {
       return r;
     }
@@ -199,12 +199,12 @@ struct ReconstructionOpenCloseExecuteFn
     // the output. BuildPreserveIntensitiesMarker copies each chunk into local buffers before writing that chunk back,
     // so the aliasing is safe (reads precede the write per chunk) and it avoids a third full-volume scratch. Neither
     // *morph nor the pre-marker contents of *recon are needed after this pass.
-    const T unmarkedFill = (firstOp == MorphOp::Erode) ? std::numeric_limits<T>::lowest() : std::numeric_limits<T>::max();
-    if(Result<> r = BuildPreserveIntensitiesMarker<T>(*morph, *recon, inStore, *recon, unmarkedFill, shouldCancel); r.invalid())
+    const T unmarkedFill = (first_op == MorphOp::Erode) ? std::numeric_limits<T>::lowest() : std::numeric_limits<T>::max();
+    if(Result<> r = BuildPreserveIntensitiesMarker<T>(*morph, *recon, inStore, *recon, unmarkedFill, should_cancel); r.invalid())
     {
       return r;
     }
-    return ApplyMorphologicalReconstruction<T>(*recon, inStore, outStore, dims, reconOp, fullyConnected, inArray, outArray, shouldCancel, messageHandler);
+    return ApplyMorphologicalReconstruction<T>(*recon, inStore, outStore, dims, reconOp, fully_connected, inArray, outArray, should_cancel, message_handler);
   }
 };
 
@@ -217,22 +217,22 @@ struct ReconstructionOpenCloseExecuteFn
  */
 struct BinaryReconstructionOpeningExecuteFn
 {
-  DataStructure& dataStructure;
-  const DataPath& inputArrayPath;
-  const DataPath& outputArrayPath;
-  SizeVec3 dims;
+  DataStructure& data_structure;
+  const DataPath& input_array_path;
+  const DataPath& output_array_path;
+  SizeVec3Type dims;
   const StructuringElement& se;
   float64 foreground;
   float64 background;
-  bool fullyConnected;
-  const std::atomic_bool& shouldCancel;
-  const IFilter::MessageHandler& messageHandler;
+  bool fully_connected;
+  const std::atomic_bool& should_cancel;
+  const IFilter::MessageHandler& message_handler;
 
   template <class T>
   Result<> operator()() const
   {
-    const auto& inArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-    auto& outArray = dataStructure.getDataRefAs<DataArray<T>>(outputArrayPath);
+    const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
+    auto& outArray = data_structure.getDataRefAs<DataArray<T>>(output_array_path);
     const AbstractDataStore<T>& inStore = inArray.getDataStoreRef();
     AbstractDataStore<T>& outStore = outArray.getDataStoreRef();
 
@@ -240,14 +240,14 @@ struct BinaryReconstructionOpeningExecuteFn
     const T backgroundT = static_cast<T>(background);
 
     // Enforce the strictly-{fg, bg} binary-input contract (as the standalone binary morphology filters do).
-    if(Result<> r = ScanBinaryInput<T>(inStore, foregroundT, backgroundT, inputArrayPath, shouldCancel); r.invalid())
+    if(Result<> r = ScanBinaryInput<T>(inStore, foregroundT, backgroundT, input_array_path, should_cancel); r.invalid())
     {
       return r;
     }
 
     // Binary erosion into an OOC-inheriting scratch. boundaryToForeground=true matches ITK's internal BinaryErode.
-    auto erode = DataStoreUtilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
-    if(Result<> r = ApplyBinaryMorphology<T>(inStore, *erode, dims, se, MorphOp::Erode, foregroundT, backgroundT, /*boundaryToForeground=*/true, inArray, outArray, shouldCancel, messageHandler);
+    auto erode = data_store_utilities::CreateDataStoreWithFormat<T>(inArray.getDataFormat(), inArray.getTupleShape(), std::vector<usize>{1}, IDataAction::Mode::Execute);
+    if(Result<> r = ApplyBinaryMorphology<T>(inStore, *erode, dims, se, MorphOp::Erode, foregroundT, backgroundT, /*boundaryToForeground=*/true, inArray, outArray, should_cancel, message_handler);
        r.invalid())
     {
       return r;
@@ -262,7 +262,7 @@ struct BinaryReconstructionOpeningExecuteFn
     // pass -- matching ITK's binary-reconstruction labelizer, which likewise ignores out-of-mask seeds. (See the
     // Annulus note in @ref MakeStructuringElement / the erode path.)
     const ReconstructOp op = (foregroundT > backgroundT) ? ReconstructOp::Dilation : ReconstructOp::Erosion;
-    return ApplyMorphologicalReconstruction<T>(*erode, inStore, outStore, dims, op, fullyConnected, inArray, outArray, shouldCancel, messageHandler);
+    return ApplyMorphologicalReconstruction<T>(*erode, inStore, outStore, dims, op, fully_connected, inArray, outArray, should_cancel, message_handler);
   }
 };
 
@@ -274,14 +274,23 @@ Result<> ExecuteMorphologicalReconstructionImageFilter(DataStructure& dataStruct
                                                        bool fullyConnected, detail::ReconMarker markerKind, float64 height, const std::atomic_bool& shouldCancel,
                                                        const IFilter::MessageHandler& messageHandler, bool differenceFromInput)
 {
-  using TypeSetPolicy = AllNumeric;
+  using TypeSetPolicyType = AllNumeric;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
-  detail::MorphologicalReconstructionExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath,    dims, op, fullyConnected, markerKind, height,
-                                                         shouldCancel,  messageHandler, differenceFromInput};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  const SizeVec3Type dims = imageGeom.getDimensions();
+  detail::MorphologicalReconstructionExecuteFn executeFn{.data_structure = dataStructure,
+                                                         .input_array_path = inputArrayPath,
+                                                         .output_array_path = outputArrayPath,
+                                                         .dims = dims,
+                                                         .op = op,
+                                                         .fully_connected = fullyConnected,
+                                                         .marker_kind = markerKind,
+                                                         .height = height,
+                                                         .should_cancel = shouldCancel,
+                                                         .message_handler = messageHandler,
+                                                         .difference_from_input = differenceFromInput};
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -289,18 +298,27 @@ Result<> ExecuteReconstructionOpenCloseImageFilter(DataStructure& dataStructure,
                                                    const StructuringElement& se, MorphOp firstOp, bool fullyConnected, bool preserveIntensities, const std::atomic_bool& shouldCancel,
                                                    const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = AllNumeric;
+  using TypeSetPolicyType = AllNumeric;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
+  const SizeVec3Type dims = imageGeom.getDimensions();
   if(auto layout = ValidateMorphologyLayout(dims, se, false, GetDataTypeSize(inputType)); layout.invalid())
   {
     return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
   }
 
-  detail::ReconstructionOpenCloseExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, se, firstOp, fullyConnected, preserveIntensities, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  detail::ReconstructionOpenCloseExecuteFn executeFn{.data_structure = dataStructure,
+                                                     .input_array_path = inputArrayPath,
+                                                     .output_array_path = outputArrayPath,
+                                                     .dims = dims,
+                                                     .se = se,
+                                                     .first_op = firstOp,
+                                                     .fully_connected = fullyConnected,
+                                                     .preserve_intensities = preserveIntensities,
+                                                     .should_cancel = shouldCancel,
+                                                     .message_handler = messageHandler};
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 // -----------------------------------------------------------------------------
@@ -308,18 +326,27 @@ Result<> ExecuteBinaryOpeningByReconstructionImageFilter(DataStructure& dataStru
                                                          const StructuringElement& se, float64 foreground, float64 background, bool fullyConnected, const std::atomic_bool& shouldCancel,
                                                          const IFilter::MessageHandler& messageHandler)
 {
-  using TypeSetPolicy = IntegerOnly;
+  using TypeSetPolicyType = IntegerOnly;
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
   const DataType inputType = inputArray.getDataType();
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
+  const SizeVec3Type dims = imageGeom.getDimensions();
   if(auto layout = ValidateMorphologyLayout(dims, se, false, GetDataTypeSize(inputType)); layout.invalid())
   {
     return AddMorphologyLayoutGeometryContext(std::move(layout), imageGeomPath);
   }
 
-  detail::BinaryReconstructionOpeningExecuteFn executeFn{dataStructure, inputArrayPath, outputArrayPath, dims, se, foreground, background, fullyConnected, shouldCancel, messageHandler};
-  return TypeSetPolicy::dispatch(inputType, executeFn);
+  detail::BinaryReconstructionOpeningExecuteFn executeFn{.data_structure = dataStructure,
+                                                         .input_array_path = inputArrayPath,
+                                                         .output_array_path = outputArrayPath,
+                                                         .dims = dims,
+                                                         .se = se,
+                                                         .foreground = foreground,
+                                                         .background = background,
+                                                         .fully_connected = fullyConnected,
+                                                         .should_cancel = shouldCancel,
+                                                         .message_handler = messageHandler};
+  return TypeSetPolicyType::Dispatch(inputType, executeFn);
 }
 
 } // namespace nx::core::ImageProcessing

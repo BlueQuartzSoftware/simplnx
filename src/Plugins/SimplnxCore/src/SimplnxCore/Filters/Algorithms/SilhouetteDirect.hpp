@@ -39,7 +39,7 @@ public:
   /**
    * @brief Destroys the resident silhouette implementation.
    */
-  ~SilhouetteDirect() noexcept;
+  ~SilhouetteDirect() noexcept = default;
 
   SilhouetteDirect(const SilhouetteDirect&) = delete;
   SilhouetteDirect(SilhouetteDirect&&) noexcept = delete;

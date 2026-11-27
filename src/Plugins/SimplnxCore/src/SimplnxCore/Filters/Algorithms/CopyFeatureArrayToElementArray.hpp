@@ -18,9 +18,9 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT CopyFeatureArrayToElementArrayInputValues
 {
-  StringParameter::ValueType CreatedArraySuffix;
-  ArraySelectionParameter::ValueType FeatureIdsPath;
-  MultiArraySelectionParameter::ValueType SelectedFeatureArrayPaths;
+  StringParameter::ValueType created_array_suffix;
+  ArraySelectionParameter::ValueType feature_ids_path;
+  MultiArraySelectionParameter::ValueType selected_feature_array_paths;
 };
 
 /**
@@ -48,7 +48,7 @@ public:
   /**
    * @brief Destroys the non-owning dispatcher.
    */
-  ~CopyFeatureArrayToElementArray() noexcept;
+  ~CopyFeatureArrayToElementArray() noexcept = default;
 
   CopyFeatureArrayToElementArray(const CopyFeatureArrayToElementArray&) = delete;
   CopyFeatureArrayToElementArray(CopyFeatureArrayToElementArray&&) noexcept = delete;

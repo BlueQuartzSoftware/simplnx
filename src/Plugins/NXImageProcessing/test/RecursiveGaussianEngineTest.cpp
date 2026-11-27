@@ -51,41 +51,41 @@ public:
   {
     return false;
   }
-  Result<uint64> read(uint64 recordOffset, uint64 requestedRecordCount, nonstd::span<std::byte> records, const std::atomic_bool&) const override
+  Result<uint64> read(uint64 recordOffset, uint64 requestedRecordCount, nonstd::span<std::byte> records, const std::atomic_bool& /*shouldCancel*/) const override
   {
-    readCalls++;
-    if(failRead)
+    read_calls++;
+    if(fail_read)
     {
       return MakeErrorResult<uint64>(-7650, "Injected Gaussian scratch read failure");
     }
-    const uint64 returnedRecords = shortRead && requestedRecordCount > 0 ? requestedRecordCount - 1 : requestedRecordCount;
+    const uint64 returnedRecords = short_read && requestedRecordCount > 0 ? requestedRecordCount - 1 : requestedRecordCount;
     std::memcpy(records.data(), m_Bytes.data() + static_cast<usize>(recordOffset * m_RecordSize), static_cast<usize>(returnedRecords * m_RecordSize));
     return {returnedRecords};
   }
-  Result<> write(uint64 recordOffset, uint64 recordCount, nonstd::span<const std::byte> records, const std::atomic_bool&) override
+  Result<> write(uint64 recordOffset, uint64 recordCount, nonstd::span<const std::byte> records, const std::atomic_bool& /*shouldCancel*/) override
   {
-    writeCalls++;
-    if(failWrite)
+    write_calls++;
+    if(fail_write)
     {
       return MakeErrorResult(-7651, "Injected Gaussian scratch write failure");
     }
     std::memcpy(m_Bytes.data() + static_cast<usize>(recordOffset * m_RecordSize), records.data(), static_cast<usize>(recordCount * m_RecordSize));
     return {};
   }
-  Result<> fill(uint64, uint64, nonstd::span<const std::byte>, const std::atomic_bool&) override
+  Result<> fill(uint64 /*recordOffset*/, uint64 /*recordCount*/, nonstd::span<const std::byte> /*record*/, const std::atomic_bool& /*shouldCancel*/) override
   {
     return MakeErrorResult(-7652, "Unexpected Gaussian scratch fill");
   }
-  Result<> resize(uint64, const std::atomic_bool&) override
+  Result<> resize(uint64 /*recordCount*/, const std::atomic_bool& /*shouldCancel*/) override
   {
     return MakeErrorResult(-7653, "Unexpected Gaussian scratch resize");
   }
 
-  mutable usize readCalls = 0;
-  usize writeCalls = 0;
-  bool failRead = false;
-  bool failWrite = false;
-  bool shortRead = false;
+  mutable usize read_calls = 0;
+  usize write_calls = 0;
+  bool fail_read = false;
+  bool fail_write = false;
+  bool short_read = false;
 
 private:
   uint64 m_RecordSize = 0;
@@ -111,7 +111,7 @@ std::vector<float32> RunPass(const std::vector<float32>& field, usize dx, usize 
   DataStore<float32> outStore(ShapeType{dz, dy, dx}, ShapeType{1}, 0.0f);
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  const Result<> r = RecursiveGaussianAxisPass<float32>(inStore, outStore, SizeVec3{dx, dy, dz}, axis, sigma, spacing, order, normalize, shouldCancel, messageHandler, options);
+  const Result<> r = RecursiveGaussianAxisPass<float32>(inStore, outStore, SizeVec3Type{dx, dy, dz}, axis, sigma, spacing, order, normalize, shouldCancel, messageHandler, options);
   REQUIRE(r.valid());
   std::vector<float32> out(field.size());
   for(usize i = 0; i < out.size(); ++i)
@@ -122,7 +122,7 @@ std::vector<float32> RunPass(const std::vector<float32>& field, usize dx, usize 
 }
 
 template <class T>
-std::vector<float32> RunPlaneCascade(const std::vector<T>& field, const SizeVec3& dims, const RecursiveGaussianPlaneAxis& first, const RecursiveGaussianPlaneAxis& second)
+std::vector<float32> RunPlaneCascade(const std::vector<T>& field, const SizeVec3Type& dims, const RecursiveGaussianPlaneAxis& first, const RecursiveGaussianPlaneAxis& second)
 {
   DataStore<T> inStore(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, T{});
   for(usize i = 0; i < field.size(); ++i)
@@ -169,9 +169,13 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: order-1 and order-2 of a 
 TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: order-0 impulse response is symmetric and sums to ~1", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
   // A 1D-along-x impulse embedded in a 3D volume (single non-zero voxel at the x-center of one row).
-  const usize dx = 32, dy = 4, dz = 4;
+  const usize dx = 32;
+  const usize dy = 4;
+  const usize dz = 4;
   std::vector<float32> field(dx * dy * dz, 0.0f);
-  const usize cx = dx / 2, cy = dy / 2, cz = dz / 2;
+  const usize cx = dx / 2;
+  const usize cy = dy / 2;
+  const usize cz = dz / 2;
   field[FlatIndex(cx, cy, cz, dx, dy)] = 1.0f;
   const std::vector<float32> out = RunPass(field, dx, dy, dz, /*axis=*/0, /*sigma=*/3.0, /*spacing=*/1.0, /*order=*/0, false);
 
@@ -187,7 +191,9 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: order-0 impulse response 
 
 TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: smoothing along X leaves a pure-Y ramp unchanged", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
-  const usize dx = 12, dy = 12, dz = 4;
+  const usize dx = 12;
+  const usize dy = 12;
+  const usize dz = 4;
   std::vector<float32> field(dx * dy * dz, 0.0f);
   for(usize z = 0; z < dz; ++z)
   {
@@ -208,7 +214,9 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: smoothing along X leaves 
 
 TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: deterministic + tall-Z streaming runs", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
-  const usize dx = 8, dy = 8, dz = 64; // dz large enough to exercise the z-slab path
+  const usize dx = 8;
+  const usize dy = 8;
+  const usize dz = 64; // dz large enough to exercise the z-slab path
   std::vector<float32> field(dx * dy * dz);
   for(usize i = 0; i < field.size(); ++i)
   {
@@ -221,85 +229,85 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: deterministic + tall-Z st
 
 TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: batched Z streaming matches direct memory", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
-  constexpr usize kDimX = 7;
-  constexpr usize kDimY = 11;
-  constexpr usize kDimZ = 13;
-  std::vector<float32> field(kDimX * kDimY * kDimZ);
+  constexpr usize k_DimX = 7;
+  constexpr usize k_DimY = 11;
+  constexpr usize k_DimZ = 13;
+  std::vector<float32> field(k_DimX * k_DimY * k_DimZ);
   for(usize i = 0; i < field.size(); ++i)
   {
     field[i] = static_cast<float32>((i * 37 + i / 5) % 101);
   }
 
-  const std::vector<float32> direct = RunPass(field, kDimX, kDimY, kDimZ, /*axis=*/2, 2.5, 1.0, 0, false);
+  const std::vector<float32> direct = RunPass(field, k_DimX, k_DimY, k_DimZ, /*axis=*/2, 2.5, 1.0, 0, false);
   RecursiveGaussianPassOptions streamingOptions;
-  streamingOptions.stagingByteBudget = 1600; // Two Y rows per batch, leaving a one-row final batch.
-  streamingOptions.useInMemoryFastPath = false;
-  const std::vector<float32> streamed = RunPass(field, kDimX, kDimY, kDimZ, /*axis=*/2, 2.5, 1.0, 0, false, streamingOptions);
+  streamingOptions.staging_byte_budget = 1600; // Two Y rows per batch, leaving a one-row final batch.
+  streamingOptions.use_in_memory_fast_path = false;
+  const std::vector<float32> streamed = RunPass(field, k_DimX, k_DimY, k_DimZ, /*axis=*/2, 2.5, 1.0, 0, false, streamingOptions);
   REQUIRE(streamed == direct);
 }
 
 TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: Z planner scales the supplied budget and keeps a one-row minimum", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
-  const SizeVec3 benchmarkDims{512, 512, 128};
+  const SizeVec3Type benchmarkDims{512, 512, 128};
   REQUIRE(ImageProcessing::detail::ComputeRecursiveGaussianZBatchRowCount<float32>(benchmarkDims, RecursiveGaussianPassOptions::k_FallbackStagingBytes) == 128);
   REQUIRE(ImageProcessing::detail::ComputeRecursiveGaussianZBatchRowCount<float32>(benchmarkDims, RecursiveGaussianPassOptions::k_FallbackStagingBytes * 2) == 256);
   REQUIRE(ImageProcessing::detail::ComputeRecursiveGaussianZBatchRowCount<float32>(benchmarkDims, 0) == 1);
-  REQUIRE(ImageProcessing::detail::ComputeRecursiveGaussianZBatchRowCount<float64>(SizeVec3{7, 11, 13}, 1000) == 1); // One row pair requires 7 * 13 * (8 + 4) = 1092 bytes.
+  REQUIRE(ImageProcessing::detail::ComputeRecursiveGaussianZBatchRowCount<float64>(SizeVec3Type{7, 11, 13}, 1000) == 1); // One row pair requires 7 * 13 * (8 + 4) = 1092 bytes.
 }
 
 TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: true 2D planner bounds row blocks and overwide column tiles", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
-  constexpr usize kResidentLimit = 64ULL * 1024ULL * 1024ULL;
-  const auto benchmarkPlan = ImageProcessing::detail::BuildRecursiveGaussian2DBufferPlan(5824, 5824, kResidentLimit);
+  constexpr usize k_ResidentLimit = 64ULL * 1024ULL * 1024ULL;
+  const auto benchmarkPlan = ImageProcessing::detail::BuildRecursiveGaussian2DBufferPlan(5824, 5824, k_ResidentLimit);
   REQUIRE(benchmarkPlan.valid);
   REQUIRE_FALSE(benchmarkPlan.overflow);
-  REQUIRE(benchmarkPlan.coreCols == 5824);
-  REQUIRE(benchmarkPlan.blockRows >= 8);
-  REQUIRE(benchmarkPlan.blockRows < 5824);
-  REQUIRE(benchmarkPlan.blockCount > 1);
-  REQUIRE(benchmarkPlan.residentBytes <= kResidentLimit);
+  REQUIRE(benchmarkPlan.core_cols == 5824);
+  REQUIRE(benchmarkPlan.block_rows >= 8);
+  REQUIRE(benchmarkPlan.block_rows < 5824);
+  REQUIRE(benchmarkPlan.block_count > 1);
+  REQUIRE(benchmarkPlan.resident_bytes <= k_ResidentLimit);
 
   const auto tiledPlan = ImageProcessing::detail::BuildRecursiveGaussian2DBufferPlan(16385, 17, 65536);
   REQUIRE(tiledPlan.valid);
   REQUIRE_FALSE(tiledPlan.overflow);
-  REQUIRE(tiledPlan.coreCols > 0);
-  REQUIRE(tiledPlan.coreCols < 16385);
-  REQUIRE(tiledPlan.blockRows >= 4);
-  REQUIRE(tiledPlan.residentBytes <= 65536);
+  REQUIRE(tiledPlan.core_cols > 0);
+  REQUIRE(tiledPlan.core_cols < 16385);
+  REQUIRE(tiledPlan.block_rows >= 4);
+  REQUIRE(tiledPlan.resident_bytes <= 65536);
 
   REQUIRE_FALSE(ImageProcessing::detail::BuildRecursiveGaussian2DBufferPlan(16385, 17, 4096).valid);
-  const auto overflowPlan = ImageProcessing::detail::BuildRecursiveGaussian2DBufferPlan(std::numeric_limits<usize>::max(), 17, kResidentLimit);
+  const auto overflowPlan = ImageProcessing::detail::BuildRecursiveGaussian2DBufferPlan(std::numeric_limits<usize>::max(), 17, k_ResidentLimit);
   REQUIRE_FALSE(overflowPlan.valid);
   REQUIRE(overflowPlan.overflow);
 }
 
 TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: checkpointed true 2D Y pass matches the resident recurrence", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
-  constexpr usize kDimX = 7;
-  constexpr usize kDimY = 29;
-  const SizeVec3 dims{kDimX, kDimY, 1};
-  std::vector<float32> field(kDimX * kDimY);
+  constexpr usize k_DimX = 7;
+  constexpr usize k_DimY = 29;
+  const SizeVec3Type dims{k_DimX, k_DimY, 1};
+  std::vector<float32> field(k_DimX * k_DimY);
   for(usize index = 0; index < field.size(); ++index)
   {
     field[index] = static_cast<float32>(std::sin(static_cast<double>(index) * 0.19) * 17.0 + static_cast<double>((index * 13) % 31));
   }
-  const std::vector<float32> expected = RunPass(field, kDimX, kDimY, 1, 1, 2.25, 0.75, 1, true);
+  const std::vector<float32> expected = RunPass(field, k_DimX, k_DimY, 1, 1, 2.25, 0.75, 1, true);
 
-  DataStore<float32> source(ShapeType{1, kDimY, kDimX}, ShapeType{1}, 0.0f);
+  DataStore<float32> source(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
   REQUIRE(source.copyFromBuffer(0, field).valid());
-  const auto plan = ImageProcessing::detail::BuildRecursiveGaussian2DBufferPlan(kDimX, kDimY, 128ULL * 1024ULL, 1024);
+  const auto plan = ImageProcessing::detail::BuildRecursiveGaussian2DBufferPlan(k_DimX, k_DimY, 128ULL * 1024ULL, 1024);
   REQUIRE(plan.valid);
-  REQUIRE(plan.blockCount > 1);
-  using Checkpoint = ImageProcessing::detail::RecursiveGaussian2DCheckpoint;
-  auto checkpointBackend = std::make_unique<TestTemporaryRecordStore>(sizeof(Checkpoint), plan.blockCount * plan.coreCols, plan.coreCols);
+  REQUIRE(plan.block_count > 1);
+  using CheckpointType = ImageProcessing::detail::RecursiveGaussian2DCheckpoint;
+  auto checkpointBackend = std::make_unique<TestTemporaryRecordStore>(sizeof(CheckpointType), plan.block_count * plan.core_cols, plan.core_cols);
   std::atomic_bool shouldCancel{false};
-  ImageProcessing::detail::GaussianTemporaryStore<Checkpoint> checkpoints(std::move(checkpointBackend), shouldCancel);
+  ImageProcessing::detail::GaussianTemporaryStore<CheckpointType> checkpoints(std::move(checkpointBackend), shouldCancel);
   std::vector<float32> actual(field.size(), 0.0f);
-  const RecursiveGaussianPlaneAxis pass{1, 2.25, 0.75, 1, true};
+  const RecursiveGaussianPlaneAxis pass{.axis = 1, .sigma = 2.25, .spacing = 0.75, .order = 1, .normalize_across_scale = true};
   auto sink = [&](usize yBegin, usize xBegin, usize rowCount, usize columnCount, nonstd::span<float32> values) -> Result<> {
     for(usize row = 0; row < rowCount; ++row)
     {
-      std::copy_n(values.data() + row * columnCount, columnCount, actual.data() + (yBegin + row) * kDimX + xBegin);
+      std::copy_n(values.data() + row * columnCount, columnCount, actual.data() + (yBegin + row) * k_DimX + xBegin);
     }
     return {};
   };
@@ -309,35 +317,35 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: checkpointed true 2D Y pa
 
 TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: overwide true 2D XY and YX cascades are byte-exact", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
-  constexpr usize kDimX = 100;
-  constexpr usize kDimY = 8;
-  const SizeVec3 dims{kDimX, kDimY, 1};
-  std::vector<float32> field(kDimX * kDimY);
+  constexpr usize k_DimX = 100;
+  constexpr usize k_DimY = 8;
+  const SizeVec3Type dims{k_DimX, k_DimY, 1};
+  std::vector<float32> field(k_DimX * k_DimY);
   for(usize index = 0; index < field.size(); ++index)
   {
     field[index] = static_cast<float32>(std::sin(static_cast<double>(index) * 0.11) * 23.0 + static_cast<double>((index * 7) % 19));
   }
-  DataStore<float32> source(ShapeType{1, kDimY, kDimX}, ShapeType{1}, 0.0f);
+  DataStore<float32> source(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
   REQUIRE(source.copyFromBuffer(0, field).valid());
-  const auto plan = ImageProcessing::detail::BuildRecursiveGaussian2DBufferPlan(kDimX, kDimY, 5000);
+  const auto plan = ImageProcessing::detail::BuildRecursiveGaussian2DBufferPlan(k_DimX, k_DimY, 5000);
   REQUIRE(plan.valid);
-  REQUIRE(plan.coreCols == 1);
-  const usize checkpointCount = std::max(plan.blockCount * plan.coreCols, ImageProcessing::detail::RecursiveGaussian2DXBlockCount(kDimX, plan.coreCols));
+  REQUIRE(plan.core_cols == 1);
+  const usize checkpointCount = std::max(plan.block_count * plan.core_cols, ImageProcessing::detail::RecursiveGaussian2DXBlockCount(k_DimX, plan.core_cols));
 
   SECTION("X then Y")
   {
-    const RecursiveGaussianPlaneAxis first{0, 1.75, 0.8, 1, true};
-    const RecursiveGaussianPlaneAxis second{1, 2.25, 1.2, 0, false};
+    const RecursiveGaussianPlaneAxis first{.axis = 0, .sigma = 1.75, .spacing = 0.8, .order = 1, .normalize_across_scale = true};
+    const RecursiveGaussianPlaneAxis second{.axis = 1, .sigma = 2.25, .spacing = 1.2, .order = 0, .normalize_across_scale = false};
     const std::vector<float32> expected = RunPlaneCascade(field, dims, first, second);
-    DataStore<float32> work(ShapeType{1, kDimY, kDimX}, ShapeType{1}, 0.0f);
-    auto checkpointBackend = std::make_unique<TestTemporaryRecordStore>(sizeof(ImageProcessing::detail::RecursiveGaussian2DCheckpoint), checkpointCount, plan.coreCols);
+    DataStore<float32> work(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
+    auto checkpointBackend = std::make_unique<TestTemporaryRecordStore>(sizeof(ImageProcessing::detail::RecursiveGaussian2DCheckpoint), checkpointCount, plan.core_cols);
     std::atomic_bool shouldCancel{false};
     ImageProcessing::detail::GaussianTemporaryStore<ImageProcessing::detail::RecursiveGaussian2DCheckpoint> checkpoints(std::move(checkpointBackend), shouldCancel);
     std::vector<float32> actual(field.size(), 0.0f);
     auto sink = [&](usize yBegin, usize xBegin, usize rowCount, usize columnCount, nonstd::span<float32> values) -> Result<> {
       for(usize row = 0; row < rowCount; ++row)
       {
-        std::copy_n(values.data() + row * columnCount, columnCount, actual.data() + (yBegin + row) * kDimX + xBegin);
+        std::copy_n(values.data() + row * columnCount, columnCount, actual.data() + (yBegin + row) * k_DimX + xBegin);
       }
       return {};
     };
@@ -347,18 +355,18 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: overwide true 2D XY and Y
 
   SECTION("Y then X")
   {
-    const RecursiveGaussianPlaneAxis first{1, 1.75, 0.8, 1, true};
-    const RecursiveGaussianPlaneAxis second{0, 2.25, 1.2, 0, false};
+    const RecursiveGaussianPlaneAxis first{.axis = 1, .sigma = 1.75, .spacing = 0.8, .order = 1, .normalize_across_scale = true};
+    const RecursiveGaussianPlaneAxis second{.axis = 0, .sigma = 2.25, .spacing = 1.2, .order = 0, .normalize_across_scale = false};
     const std::vector<float32> expected = RunPlaneCascade(field, dims, first, second);
-    DataStore<float32> work(ShapeType{1, kDimY, kDimX}, ShapeType{1}, 0.0f);
-    auto checkpointBackend = std::make_unique<TestTemporaryRecordStore>(sizeof(ImageProcessing::detail::RecursiveGaussian2DCheckpoint), checkpointCount, plan.coreCols);
+    DataStore<float32> work(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, 0.0f);
+    auto checkpointBackend = std::make_unique<TestTemporaryRecordStore>(sizeof(ImageProcessing::detail::RecursiveGaussian2DCheckpoint), checkpointCount, plan.core_cols);
     std::atomic_bool shouldCancel{false};
     ImageProcessing::detail::GaussianTemporaryStore<ImageProcessing::detail::RecursiveGaussian2DCheckpoint> checkpoints(std::move(checkpointBackend), shouldCancel);
     std::vector<float32> actual(field.size(), 0.0f);
     auto sink = [&](usize yBegin, usize xBegin, usize rowCount, usize columnCount, nonstd::span<float32> values, nonstd::span<float32>) -> Result<> {
       for(usize row = 0; row < rowCount; ++row)
       {
-        std::copy_n(values.data() + row * columnCount, columnCount, actual.data() + (yBegin + row) * kDimX + xBegin);
+        std::copy_n(values.data() + row * columnCount, columnCount, actual.data() + (yBegin + row) * k_DimX + xBegin);
       }
       return {};
     };
@@ -373,22 +381,24 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: working storage selection
   // OOC-input/resident-output filter execution therefore cannot be constructed through their public parameters. Keep
   // all four endpoint combinations covered here because the storage-neutral engine also defends callers that construct
   // stores directly or use adaptive output placement outside those facades.
-  constexpr const char* kInputOocFormat = "Input-OOC";
-  constexpr const char* kOutputOocFormat = "Output-OOC";
+  constexpr const char* k_InputOocFormat = "Input-OOC";
+  constexpr const char* k_OutputOocFormat = "Output-OOC";
   REQUIRE_FALSE(ImageProcessing::detail::SelectRecursiveGaussianStoragePlan(IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore, IDataStore::StoreType::InMemory, "Alternate-DataStore")
-                    .useTemporaryRecordStore);
-  REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianStoragePlan(IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore, IDataStore::StoreType::OutOfCore, kOutputOocFormat)
-              .useTemporaryRecordStore);
-  REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianStoragePlan(IDataStore::StoreType::OutOfCore, kInputOocFormat, IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore)
-              .useTemporaryRecordStore);
-  REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianStoragePlan(IDataStore::StoreType::OutOfCore, kInputOocFormat, IDataStore::StoreType::OutOfCore, kOutputOocFormat).useTemporaryRecordStore);
+                    .use_temporary_record_store);
+  REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianStoragePlan(IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore, IDataStore::StoreType::OutOfCore, k_OutputOocFormat)
+              .use_temporary_record_store);
+  REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianStoragePlan(IDataStore::StoreType::OutOfCore, k_InputOocFormat, IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore)
+              .use_temporary_record_store);
+  REQUIRE(
+      ImageProcessing::detail::SelectRecursiveGaussianStoragePlan(IDataStore::StoreType::OutOfCore, k_InputOocFormat, IDataStore::StoreType::OutOfCore, k_OutputOocFormat).use_temporary_record_store);
   REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianWorkingDataFormat(IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore, IDataStore::StoreType::InMemory, "Alternate-DataStore") ==
           DataStore<float32>::k_DataStore);
-  REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianWorkingDataFormat(IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore, IDataStore::StoreType::OutOfCore, kOutputOocFormat) ==
-          kOutputOocFormat);
-  REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianWorkingDataFormat(IDataStore::StoreType::OutOfCore, kInputOocFormat, IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore) ==
-          kInputOocFormat);
-  REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianWorkingDataFormat(IDataStore::StoreType::OutOfCore, kInputOocFormat, IDataStore::StoreType::OutOfCore, kOutputOocFormat) == kInputOocFormat);
+  REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianWorkingDataFormat(IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore, IDataStore::StoreType::OutOfCore, k_OutputOocFormat) ==
+          k_OutputOocFormat);
+  REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianWorkingDataFormat(IDataStore::StoreType::OutOfCore, k_InputOocFormat, IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore) ==
+          k_InputOocFormat);
+  REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianWorkingDataFormat(IDataStore::StoreType::OutOfCore, k_InputOocFormat, IDataStore::StoreType::OutOfCore, k_OutputOocFormat) ==
+          k_InputOocFormat);
 }
 
 TEST_CASE("NXImageProcessing::GaussianTemporaryStore: performs typed bulk I/O and rejects backend failures", "[NXImageProcessing][RecursiveGaussianEngine]")
@@ -404,19 +414,19 @@ TEST_CASE("NXImageProcessing::GaussianTemporaryStore: performs typed bulk I/O an
   std::array<float32, 6> read{};
   REQUIRE(store.copyIntoBuffer(3, nonstd::span<float32>(read.data(), read.size())).valid());
   REQUIRE(read == written);
-  REQUIRE(backendPtr->writeCalls == 2);
-  REQUIRE(backendPtr->readCalls == 2);
+  REQUIRE(backendPtr->write_calls == 2);
+  REQUIRE(backendPtr->read_calls == 2);
 
   REQUIRE(store.copyIntoBuffer(10, nonstd::span<float32>(read.data(), 3)).invalid());
-  REQUIRE(backendPtr->readCalls == 2);
+  REQUIRE(backendPtr->read_calls == 2);
 
-  backendPtr->failWrite = true;
+  backendPtr->fail_write = true;
   REQUIRE(store.copyFromBuffer(3, nonstd::span<const float32>(written.data(), written.size())).invalid());
-  backendPtr->failWrite = false;
-  backendPtr->failRead = true;
+  backendPtr->fail_write = false;
+  backendPtr->fail_read = true;
   REQUIRE(store.copyIntoBuffer(3, nonstd::span<float32>(read.data(), read.size())).invalid());
-  backendPtr->failRead = false;
-  backendPtr->shortRead = true;
+  backendPtr->fail_read = false;
+  backendPtr->short_read = true;
   REQUIRE(store.copyIntoBuffer(3, nonstd::span<float32>(read.data(), read.size())).invalid());
 }
 
@@ -426,7 +436,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: XY plane cascade
   const uint32 firstAxis = GENERATE(0u, 1u);
   const int firstOrder = GENERATE(0, 1, 2);
   const usize dimZ = GENERATE(1ULL, 3ULL);
-  const SizeVec3 dims{7, 9, dimZ};
+  const SizeVec3Type dims{7, 9, dimZ};
   CAPTURE(firstAxis, firstOrder, dimZ);
 
   std::vector<T> field(dims[0] * dims[1] * dims[2]);
@@ -437,8 +447,8 @@ TEMPLATE_TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: XY plane cascade
   }
 
   const uint32 secondAxis = 1u - firstAxis;
-  const RecursiveGaussianPlaneAxis first{firstAxis, 1.75, firstAxis == 0 ? 0.6 : 1.4, firstOrder, true};
-  const RecursiveGaussianPlaneAxis second{secondAxis, 2.25, secondAxis == 0 ? 0.8 : 1.7, 0, false};
+  const RecursiveGaussianPlaneAxis first{.axis = firstAxis, .sigma = 1.75, .spacing = firstAxis == 0 ? 0.6 : 1.4, .order = firstOrder, .normalize_across_scale = true};
+  const RecursiveGaussianPlaneAxis second{.axis = secondAxis, .sigma = 2.25, .spacing = secondAxis == 0 ? 0.8 : 1.7, .order = 0, .normalize_across_scale = false};
 
   DataStore<T> source(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, T{});
   for(usize i = 0; i < field.size(); ++i)
@@ -450,10 +460,10 @@ TEMPLATE_TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: XY plane cascade
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
   RecursiveGaussianPassOptions streamedOptions;
-  streamedOptions.useInMemoryFastPath = false;
-  REQUIRE(
-      RecursiveGaussianAxisPass<T>(source, intermediate, dims, first.axis, first.sigma, first.spacing, first.order, first.normalizeAcrossScale, shouldCancel, messageHandler, streamedOptions).valid());
-  REQUIRE(RecursiveGaussianAxisPass<float32>(intermediate, expectedStore, dims, second.axis, second.sigma, second.spacing, second.order, second.normalizeAcrossScale, shouldCancel, messageHandler,
+  streamedOptions.use_in_memory_fast_path = false;
+  REQUIRE(RecursiveGaussianAxisPass<T>(source, intermediate, dims, first.axis, first.sigma, first.spacing, first.order, first.normalize_across_scale, shouldCancel, messageHandler, streamedOptions)
+              .valid());
+  REQUIRE(RecursiveGaussianAxisPass<float32>(intermediate, expectedStore, dims, second.axis, second.sigma, second.spacing, second.order, second.normalize_across_scale, shouldCancel, messageHandler,
                                              streamedOptions)
               .valid());
 
@@ -467,10 +477,10 @@ TEMPLATE_TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: XY plane cascade
 
 TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: XY plane cascade honors cancellation and propagates sink errors", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
-  const SizeVec3 dims{7, 9, 3};
+  const SizeVec3Type dims{7, 9, 3};
   DataStore<float32> source(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, 2.0f);
-  const RecursiveGaussianPlaneAxis first{0, 1.5, 0.75, 1, false};
-  const RecursiveGaussianPlaneAxis second{1, 2.0, 1.25, 0, false};
+  const RecursiveGaussianPlaneAxis first{.axis = 0, .sigma = 1.5, .spacing = 0.75, .order = 1, .normalize_across_scale = false};
+  const RecursiveGaussianPlaneAxis second{.axis = 1, .sigma = 2.0, .spacing = 1.25, .order = 0, .normalize_across_scale = false};
   IFilter::MessageHandler messageHandler{};
 
   SECTION("pre-cancelled")
@@ -502,19 +512,19 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: XY plane cascade honors c
 
 TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: XY plane cascade materializes float32 between recurrences", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
-  const SizeVec3 dims{7, 9, 1};
+  const SizeVec3Type dims{7, 9, 1};
   std::vector<float64> field(dims[0] * dims[1]);
   for(usize i = 0; i < field.size(); ++i)
   {
     field[i] = std::sin(static_cast<double>(i) * 0.73) * 1000000.0 + static_cast<double>(i * i) * 0.01;
   }
 
-  const RecursiveGaussianPlaneAxis first{0, 1.37, 0.7, 1, true};
-  const RecursiveGaussianPlaneAxis second{1, 2.11, 1.3, 0, false};
+  const RecursiveGaussianPlaneAxis first{.axis = 0, .sigma = 1.37, .spacing = 0.7, .order = 1, .normalize_across_scale = true};
+  const RecursiveGaussianPlaneAxis second{.axis = 1, .sigma = 2.11, .spacing = 1.3, .order = 0, .normalize_across_scale = false};
   const std::vector<float32> materialized = RunPlaneCascade(field, dims, first, second);
 
-  const auto firstCoefficients = ImageProcessing::detail::ComputeRecursiveGaussianCoefficients(first.sigma, first.spacing, first.order, first.normalizeAcrossScale);
-  const auto secondCoefficients = ImageProcessing::detail::ComputeRecursiveGaussianCoefficients(second.sigma, second.spacing, second.order, second.normalizeAcrossScale);
+  const auto firstCoefficients = ImageProcessing::detail::ComputeRecursiveGaussianCoefficients(first.sigma, first.spacing, first.order, first.normalize_across_scale);
+  const auto secondCoefficients = ImageProcessing::detail::ComputeRecursiveGaussianCoefficients(second.sigma, second.spacing, second.order, second.normalize_across_scale);
   std::vector<double> firstDouble(field.size());
   std::vector<double> secondDouble(field.size());
   std::vector<double> lineData(std::max(dims[0], dims[1]));
@@ -550,10 +560,10 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: XY plane cascade material
 
 TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: XY plane cascade rejects short filtered axes", "[NXImageProcessing][RecursiveGaussianEngine]")
 {
-  const SizeVec3 dims = GENERATE(SizeVec3{3, 9, 1}, SizeVec3{7, 3, 2});
+  const SizeVec3Type dims = GENERATE(SizeVec3Type{3, 9, 1}, SizeVec3Type{7, 3, 2});
   DataStore<float32> source(ShapeType{dims[2], dims[1], dims[0]}, ShapeType{1}, 2.0f);
-  const RecursiveGaussianPlaneAxis first{0, 1.5, 1.0, 0, false};
-  const RecursiveGaussianPlaneAxis second{1, 1.5, 1.0, 0, false};
+  const RecursiveGaussianPlaneAxis first{.axis = 0, .sigma = 1.5, .spacing = 1.0, .order = 0, .normalize_across_scale = false};
+  const RecursiveGaussianPlaneAxis second{.axis = 1, .sigma = 1.5, .spacing = 1.0, .order = 0, .normalize_across_scale = false};
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
   usize sinkCalls = 0;
@@ -576,39 +586,52 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: postprocessing planner al
 
   SECTION("one float32 buffer")
   {
-    const Result<ImageProcessing::detail::PointwiseBatchPlan> result = ImageProcessing::detail::MakeRecursiveGaussianPostprocessingPlan(
-        k_TotalValues, sizeof(float32), ImageProcessing::detail::k_PointwiseTargetScratchBytes,
-        {{IDataStore::StoreType::OutOfCore, tupleShape, 1, "input"}, {IDataStore::StoreType::OutOfCore, tupleShape, 1, "output", ImageProcessing::detail::PointwiseEndpointLayout::Access::Write}});
+    const Result<ImageProcessing::detail::PointwiseBatchPlan> result =
+        ImageProcessing::detail::MakeRecursiveGaussianPostprocessingPlan(k_TotalValues, sizeof(float32), ImageProcessing::detail::k_PointwiseTargetScratchBytes,
+                                                                         {{.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = tupleShape, .num_components = 1, .name = "input"},
+                                                                          {.store_type = IDataStore::StoreType::OutOfCore,
+                                                                           .tuple_shape = tupleShape,
+                                                                           .num_components = 1,
+                                                                           .name = "output",
+                                                                           .access = ImageProcessing::detail::PointwiseEndpointLayout::Access::Write}});
     REQUIRE(result.valid());
-    REQUIRE(result.value().alignmentValues == k_PlaneValues);
-    REQUIRE(result.value().batchValues == 62 * k_PlaneValues);
-    REQUIRE(result.value().totalBatches == 3);
-    REQUIRE((k_TotalValues - 2 * result.value().batchValues) == 4 * k_PlaneValues);
+    REQUIRE(result.value().alignment_values == k_PlaneValues);
+    REQUIRE(result.value().batch_values == 62 * k_PlaneValues);
+    REQUIRE(result.value().total_batches == 3);
+    REQUIRE((k_TotalValues - 2 * result.value().batch_values) == 4 * k_PlaneValues);
   }
 
   SECTION("two float32 buffers")
   {
-    const Result<ImageProcessing::detail::PointwiseBatchPlan> result = ImageProcessing::detail::MakeRecursiveGaussianPostprocessingPlan(
-        k_TotalValues, sizeof(float32) * 2, ImageProcessing::detail::k_PointwiseTargetScratchBytes,
-        {{IDataStore::StoreType::OutOfCore, tupleShape, 1, "accumulator", ImageProcessing::detail::PointwiseEndpointLayout::Access::Write},
-         {IDataStore::StoreType::OutOfCore, tupleShape, 1, "derivative"}});
+    const Result<ImageProcessing::detail::PointwiseBatchPlan> result =
+        ImageProcessing::detail::MakeRecursiveGaussianPostprocessingPlan(k_TotalValues, sizeof(float32) * 2, ImageProcessing::detail::k_PointwiseTargetScratchBytes,
+                                                                         {{.store_type = IDataStore::StoreType::OutOfCore,
+                                                                           .tuple_shape = tupleShape,
+                                                                           .num_components = 1,
+                                                                           .name = "accumulator",
+                                                                           .access = ImageProcessing::detail::PointwiseEndpointLayout::Access::Write},
+                                                                          {.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = tupleShape, .num_components = 1, .name = "derivative"}});
     REQUIRE(result.valid());
-    REQUIRE(result.value().alignmentValues == k_PlaneValues);
-    REQUIRE(result.value().batchValues == 31 * k_PlaneValues);
-    REQUIRE(result.value().totalBatches == 5);
-    REQUIRE((k_TotalValues - 4 * result.value().batchValues) == 4 * k_PlaneValues);
+    REQUIRE(result.value().alignment_values == k_PlaneValues);
+    REQUIRE(result.value().batch_values == 31 * k_PlaneValues);
+    REQUIRE(result.value().total_batches == 5);
+    REQUIRE((k_TotalValues - 4 * result.value().batch_values) == 4 * k_PlaneValues);
   }
 
   SECTION("one complete slab is the minimum")
   {
-    const Result<ImageProcessing::detail::PointwiseBatchPlan> result = ImageProcessing::detail::MakeRecursiveGaussianPostprocessingPlan(
-        k_TotalValues, sizeof(float32) * 2, 0,
-        {{IDataStore::StoreType::OutOfCore, tupleShape, 1, "accumulator", ImageProcessing::detail::PointwiseEndpointLayout::Access::Write},
-         {IDataStore::StoreType::OutOfCore, tupleShape, 1, "derivative"}});
+    const Result<ImageProcessing::detail::PointwiseBatchPlan> result =
+        ImageProcessing::detail::MakeRecursiveGaussianPostprocessingPlan(k_TotalValues, sizeof(float32) * 2, 0,
+                                                                         {{.store_type = IDataStore::StoreType::OutOfCore,
+                                                                           .tuple_shape = tupleShape,
+                                                                           .num_components = 1,
+                                                                           .name = "accumulator",
+                                                                           .access = ImageProcessing::detail::PointwiseEndpointLayout::Access::Write},
+                                                                          {.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = tupleShape, .num_components = 1, .name = "derivative"}});
     REQUIRE(result.valid());
-    REQUIRE(result.value().alignmentValues == k_PlaneValues);
-    REQUIRE(result.value().batchValues == k_PlaneValues);
-    REQUIRE(result.value().totalBatches == 128);
+    REQUIRE(result.value().alignment_values == k_PlaneValues);
+    REQUIRE(result.value().batch_values == k_PlaneValues);
+    REQUIRE(result.value().total_batches == 128);
   }
 }
 
@@ -623,8 +646,8 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: forced buffered postproce
   }
   std::atomic_bool shouldCancel{false};
   ImageProcessing::detail::PointwiseExecutionOptions options;
-  options.forceBuffered = true;
-  options.targetScratchBytes = 53;
+  options.force_buffered = true;
+  options.target_scratch_bytes = 53;
 
   DataStore<float32> squared(tupleShape, ShapeType{1}, -1.0f);
   REQUIRE(SetSquaredOverSpacing(squared, source, 1.25, shouldCancel, options).valid());

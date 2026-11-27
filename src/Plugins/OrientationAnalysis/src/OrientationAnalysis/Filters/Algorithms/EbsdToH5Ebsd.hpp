@@ -13,13 +13,13 @@
 
 namespace nx::core
 {
-namespace EbsdToH5EbsdInputConstants
+namespace ebsd_to_h5_ebsd_input_constants
 {
-const ChoicesParameter::Choices k_StackingChoices = {"Low to High", "High To Low"};
-const ChoicesParameter::ValueType k_LowToHigh = static_cast<ChoicesParameter::ValueType>(nx::core::FilePathGenerator::Ordering::LowToHigh);
-const ChoicesParameter::ValueType k_HighToLow = static_cast<ChoicesParameter::ValueType>(nx::core::FilePathGenerator::Ordering::HighToLow);
+const ChoicesParameter::ChoicesType k_StackingChoices = {"Low to High", "High To Low"};
+const ChoicesParameter::ValueType k_LowToHigh = static_cast<ChoicesParameter::ValueType>(nx::core::file_path_generator::Ordering::LowToHigh);
+const ChoicesParameter::ValueType k_HighToLow = static_cast<ChoicesParameter::ValueType>(nx::core::file_path_generator::Ordering::HighToLow);
 
-const ChoicesParameter::Choices k_TransformChoices = {"Edax - TSL", "Oxford - CTF", "No/Unknown Transformation", "HEDM - IceNine"};
+const ChoicesParameter::ChoicesType k_TransformChoices = {"Edax - TSL", "Oxford - CTF", "No/Unknown Transformation", "HEDM - IceNine"};
 const ChoicesParameter::ValueType k_Edax = 0;
 const ChoicesParameter::ValueType k_Oxford = 1;
 const ChoicesParameter::ValueType k_Unknown = 2;
@@ -39,16 +39,16 @@ const std::vector<float32> k_NoSampleTransform = {0.0F, 0.0F, 1.0F, 0.0F};
 const std::vector<float32> k_HedmEulerTransform = {0.0F, 0.0F, 1.0F, 0.0F};
 const std::vector<float32> k_HedmSampleTransform = {0.0F, 0.0F, 1.0F, 0.0F};
 
-} // namespace EbsdToH5EbsdInputConstants
+} // namespace ebsd_to_h5_ebsd_input_constants
 
 struct ORIENTATIONANALYSIS_EXPORT EbsdToH5EbsdInputValues
 {
 
-  Float32Parameter::ValueType ZSpacing;
-  ChoicesParameter::ValueType StackingOrder;
-  ChoicesParameter::ValueType ReferenceFrame;
-  FileSystemPathParameter::ValueType OutputPath;
-  GeneratedFileListParameter::ValueType InputFileListInfo;
+  Float32ParameterType::ValueType z_spacing{};
+  ChoicesParameter::ValueType stacking_order{};
+  ChoicesParameter::ValueType reference_frame{};
+  FileSystemPathParameter::ValueType output_path;
+  GeneratedFileListParameter::ValueType input_file_list_info;
 };
 
 /**
@@ -58,7 +58,7 @@ class ORIENTATIONANALYSIS_EXPORT EbsdToH5Ebsd
 {
 public:
   EbsdToH5Ebsd(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, EbsdToH5EbsdInputValues* inputValues);
-  ~EbsdToH5Ebsd() noexcept;
+  ~EbsdToH5Ebsd() noexcept = default;
 
   EbsdToH5Ebsd(const EbsdToH5Ebsd&) = delete;
   EbsdToH5Ebsd(EbsdToH5Ebsd&&) noexcept = delete;

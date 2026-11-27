@@ -22,7 +22,7 @@ public:
   CopyDataObjectExcludingAction& operator=(CopyDataObjectExcludingAction&&) noexcept = delete;
 
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 private:
   DataPath m_ExcludedPath;

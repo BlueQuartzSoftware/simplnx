@@ -29,12 +29,10 @@ ComputeQuaternionConjugateScanline::ComputeQuaternionConjugateScanline(DataStruc
 {
 }
 
-ComputeQuaternionConjugateScanline::~ComputeQuaternionConjugateScanline() noexcept = default;
-
 Result<> ComputeQuaternionConjugateScanline::operator()()
 {
-  const auto& input = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuaternionDataArrayPath);
-  auto& output = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->OutputDataArrayPath);
+  const auto& input = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->quaternion_data_array_path);
+  auto& output = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->output_data_array_path);
 
   const usize totalTuples = input.getNumberOfTuples();
   const auto& inputStore = input.getDataStoreRef();

@@ -14,9 +14,9 @@ namespace nx::core
 {
 namespace detail
 {
-static inline constexpr StringLiteral k_DilateString = "Dilate";
-static inline constexpr StringLiteral k_ErodeString = "Erode";
-static inline const ChoicesParameter::Choices k_OperationChoices = {k_DilateString, k_ErodeString};
+static inline constexpr StringLiteralType k_DilateString = "Dilate";
+static inline constexpr StringLiteralType k_ErodeString = "Erode";
+static inline const ChoicesParameter::ChoicesType k_OperationChoices = {k_DilateString, k_ErodeString};
 
 static inline constexpr ChoicesParameter::ValueType k_DilateIndex = 0ULL;
 static inline constexpr ChoicesParameter::ValueType k_ErodeIndex = 1ULL;
@@ -28,13 +28,13 @@ static inline constexpr ChoicesParameter::ValueType k_ErodeIndex = 1ULL;
  */
 struct SIMPLNXCORE_EXPORT ErodeDilateMaskInputValues
 {
-  ChoicesParameter::ValueType Operation;
-  int32 NumIterations;
-  bool XDirOn;
-  bool YDirOn;
-  bool ZDirOn;
-  DataPath MaskArrayPath;
-  DataPath InputImageGeometry;
+  ChoicesParameter::ValueType operation{};
+  int32 num_iterations{};
+  bool x_dir_on{};
+  bool y_dir_on{};
+  bool z_dir_on{};
+  DataPath mask_array_path;
+  DataPath input_image_geometry;
 };
 
 /**
@@ -62,7 +62,7 @@ public:
    */
   ErodeDilateMask(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ErodeDilateMaskInputValues* inputValues);
 
-  ~ErodeDilateMask() noexcept;
+  ~ErodeDilateMask() noexcept = default;
 
   ErodeDilateMask(const ErodeDilateMask&) = delete;
   ErodeDilateMask(ErodeDilateMask&&) noexcept = delete;

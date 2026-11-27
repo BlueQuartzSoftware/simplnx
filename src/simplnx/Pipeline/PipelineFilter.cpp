@@ -18,16 +18,16 @@ using namespace nx::core;
 
 namespace
 {
-constexpr StringLiteral k_ArgsKey = "args";
-constexpr StringLiteral k_FilterKey = "filter";
-constexpr StringLiteral k_FilterNameKey = "name";
-constexpr StringLiteral k_FilterUuidKey = "uuid";
-constexpr StringLiteral k_FilterCommentsKey = "comments";
-constexpr StringLiteral k_UnknownFilterValue = "UnknownFilter";
+constexpr StringLiteralType k_ArgsKey = "args";
+constexpr StringLiteralType k_FilterKey = "filter";
+constexpr StringLiteralType k_FilterNameKey = "name";
+constexpr StringLiteralType k_FilterUuidKey = "uuid";
+constexpr StringLiteralType k_FilterCommentsKey = "comments";
+constexpr StringLiteralType k_UnknownFilterValue = "UnknownFilter";
 
-constexpr StringLiteral k_SIMPLFilterUuidKey = "Filter_Uuid";
-constexpr StringLiteral k_SIMPLFilterHumanNameKey = "Filter_Human_Label";
-constexpr StringLiteral k_SIMPLFilterClassNameKey = "Filter_Name";
+constexpr StringLiteralType k_SIMPLFilterUuidKey = "Filter_Uuid";
+constexpr StringLiteralType k_SIMPLFilterHumanNameKey = "Filter_Human_Label";
+constexpr StringLiteralType k_SIMPLFilterClassNameKey = "Filter_Name";
 
 nlohmann::json CreateFilterJson(std::string_view uuid, std::string_view name, nlohmann::json argsArray, std::string_view comments)
 {
@@ -50,10 +50,10 @@ nlohmann::json CreateFilterJson(std::string_view uuid, std::string_view name, nl
 std::optional<AbstractPlugin::SIMPLData> FindComplexConversionFromSIMPL(const Uuid& uuid, const FilterList& filterList)
 {
   auto plugins = filterList.getLoadedPlugins();
-  for(const auto* plugin : plugins)
+  for(const auto* pluginPtr : plugins)
   {
-    auto filterMap = plugin->getSimplToSimplnxMap();
-    if(filterMap.count(uuid) > 0)
+    auto filterMap = pluginPtr->getSimplToSimplnxMap();
+    if(filterMap.contains(uuid))
     {
       return filterMap.at(uuid);
     }
@@ -65,9 +65,9 @@ std::optional<Uuid> FindFilterReplacement(const Uuid& oldUuid, const FilterList&
 {
   // First match wins; plugin replacement maps are assumed disjoint (no two plugins map the same old
   // filter UUID). getLoadedPlugins() is unordered, so overlapping maps would resolve nondeterministically.
-  for(const auto* plugin : filterList.getLoadedPlugins())
+  for(const auto* pluginPtr : filterList.getLoadedPlugins())
   {
-    const auto replacements = plugin->getFilterReplacementMap();
+    const auto replacements = pluginPtr->getFilterReplacementMap();
     const auto it = replacements.find(oldUuid);
     if(it != replacements.end())
     {
@@ -94,10 +94,9 @@ std::unique_ptr<PipelineFilter> PipelineFilter::Create(const FilterHandle& handl
   return std::make_unique<PipelineFilter>(std::move(filter), args);
 }
 
-PipelineFilter::PipelineFilter(IFilter::UniquePointer&& filter, const Arguments& args)
-: AbstractPipelineFilter()
-, m_Filter(std::move(filter))
-, m_Arguments(args)
+PipelineFilter::PipelineFilter(IFilter::UniquePointerType&& filter, Arguments args)
+: m_Filter(std::move(filter))
+, m_Arguments(std::move(args))
 {
 }
 
@@ -156,11 +155,11 @@ void PipelineFilter::setComments(const std::string& comments)
 // -----------------------------------------------------------------------------
 bool PipelineFilter::preflight(DataStructure& dataStructure, const std::atomic_bool& shouldCancel)
 {
-  RenamedPaths renamedPaths;
+  RenamedPathsType renamedPaths;
   return preflight(dataStructure, renamedPaths, shouldCancel, true);
 }
 
-bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
+bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPathsType& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
 {
   sendFilterRunStateMessage(m_Index, RunState::Preflighting);
 
@@ -171,7 +170,7 @@ bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPaths& renam
   clearFaultState();
   if(m_Filter == nullptr)
   {
-    m_Errors.push_back(Error{-10, "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
+    m_Errors.push_back(Error{.code = -10, .message = "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
     setHasErrors();
     setPreflightStructure(dataStructure, false);
     sendFilterFaultMessage(m_Index, getFaultState());
@@ -180,13 +179,13 @@ bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPaths& renam
   }
 
   IFilter::PreflightResult result = m_Filter->preflight(dataStructure, getArguments(), messageHandler, shouldCancel, getPipelineExecutionContext());
-  m_Warnings = std::move(result.outputActions.warnings());
+  m_Warnings = std::move(result.output_actions.warnings());
   setHasWarnings(!m_Warnings.empty());
-  m_PreflightValues = std::move(result.outputValues);
+  m_PreflightValues = std::move(result.output_values);
 
-  if(result.outputActions.invalid())
+  if(result.output_actions.invalid())
   {
-    m_Errors = std::move(result.outputActions.errors());
+    m_Errors = std::move(result.output_actions.errors());
     setHasErrors();
     setPreflightStructure(dataStructure, false);
     sendFilterFaultMessage(m_Index, getFaultState());
@@ -196,7 +195,7 @@ bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPaths& renam
 
   m_Errors.clear();
 
-  Result<> actionsResult = result.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Preflight);
+  Result<> actionsResult = result.output_actions.value().applyAll(dataStructure, IDataAction::Mode::Preflight);
 
   for(auto&& warning : actionsResult.warnings())
   {
@@ -215,7 +214,7 @@ bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPaths& renam
 
   std::vector<DataPath> newCreatedPaths;
   std::vector<DataPath> newModifiedPaths;
-  for(const auto& action : result.outputActions.value().actions)
+  for(const auto& action : result.output_actions.value().actions)
   {
     if(const auto* creationActionPtr = dynamic_cast<const IDataCreationAction*>(action.get()); creationActionPtr != nullptr)
     {
@@ -224,7 +223,7 @@ bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPaths& renam
     }
   }
 
-  for(const auto& action : result.outputActions.value().deferredActions)
+  for(const auto& action : result.output_actions.value().deferred_actions)
   {
     if(const auto* creationActionPtr = dynamic_cast<const IDataCreationAction*>(action.get()); creationActionPtr != nullptr)
     {
@@ -235,7 +234,7 @@ bool PipelineFilter::preflight(DataStructure& dataStructure, RenamedPaths& renam
 
   // Do not clear the created paths unless the preflight succeeded
   m_CreatedPaths = newCreatedPaths;
-  m_DataModifiedActions = result.outputActions.value().modifiedActions;
+  m_DataModifiedActions = result.output_actions.value().modified_actions;
 
   setPreflightStructure(dataStructure);
   sendFilterFaultMessage(m_Index, getFaultState());
@@ -269,7 +268,7 @@ bool PipelineFilter::execute(DataStructure& dataStructure, const std::atomic_boo
 
   if(m_Filter == nullptr)
   {
-    m_Errors.push_back(Error{-11, "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
+    m_Errors.push_back(Error{.code = -11, .message = "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
   }
 
   IFilter::ExecuteResult result;
@@ -277,7 +276,7 @@ bool PipelineFilter::execute(DataStructure& dataStructure, const std::atomic_boo
   {
     result = m_Filter->execute(dataStructure, getArguments(), this, messageHandler, shouldCancel, getPipelineExecutionContext());
     m_Warnings = result.result.warnings();
-    m_PreflightValues = std::move(result.outputValues);
+    m_PreflightValues = std::move(result.output_values);
     if(result.result.invalid())
     {
       m_Errors = result.result.errors();
@@ -285,7 +284,7 @@ bool PipelineFilter::execute(DataStructure& dataStructure, const std::atomic_boo
   }
   else
   {
-    m_Errors.push_back(Error{-11, "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
+    m_Errors.push_back(Error{.code = -11, .message = "This filter is just a placeholder! The original filter could not be found. See the filter comments for more details."});
   }
 
   auto completionResult = endExecutionChecked(dataStructure);
@@ -339,7 +338,7 @@ namespace
  * @param path2
  * @return bool
  */
-bool checkIfRename(const DataPath& path1, const DataPath& path2)
+bool CheckIfRename(const DataPath& path1, const DataPath& path2)
 {
   if(path1.getLength() != path2.getLength())
   {
@@ -365,7 +364,7 @@ bool checkIfRename(const DataPath& path1, const DataPath& path2)
  * @param group2
  * @return std::vector<DataPath>
  */
-std::vector<DataPath> getOverlap(const std::vector<DataPath>& group1, const std::vector<DataPath>& group2)
+std::vector<DataPath> GetOverlap(const std::vector<DataPath>& group1, const std::vector<DataPath>& group2)
 {
   std::vector<DataPath> overlap;
   std::set_intersection(group1.begin(), group1.end(), group2.begin(), group2.end(), std::inserter(overlap, overlap.begin()));
@@ -377,9 +376,9 @@ std::vector<DataPath> getOverlap(const std::vector<DataPath>& group1, const std:
  * @param group1
  * @param group2
  */
-void removeOverlap(std::vector<DataPath>& group1, std::vector<DataPath>& group2)
+void RemoveOverlap(std::vector<DataPath>& group1, std::vector<DataPath>& group2)
 {
-  auto overlap = getOverlap(group1, group2);
+  auto overlap = GetOverlap(group1, group2);
   for(const auto& value : overlap)
   {
     group1.erase(std::remove(group1.begin(), group1.end(), value), group1.end());
@@ -393,17 +392,17 @@ void removeOverlap(std::vector<DataPath>& group1, std::vector<DataPath>& group2)
  * @param newCreatedPaths
  * @return PipelineFilter::RenamedPaths
  */
-PipelineFilter::RenamedPaths findAllRenamePaths(const std::vector<DataPath>& oldCreatedPaths, const std::vector<DataPath>& newCreatedPaths)
+PipelineFilter::RenamedPathsType FindAllRenamePaths(const std::vector<DataPath>& oldCreatedPaths, const std::vector<DataPath>& newCreatedPaths)
 {
-  PipelineFilter::RenamedPaths renamedPairs;
+  PipelineFilter::RenamedPathsType renamedPairs;
   std::vector<DataPath> remainingPaths = oldCreatedPaths;
   for(const auto& createdPath : newCreatedPaths)
   {
     for(const auto& oldPath : remainingPaths)
     {
-      if(checkIfRename(createdPath, oldPath))
+      if(CheckIfRename(createdPath, oldPath))
       {
-        renamedPairs.push_back({createdPath, oldPath});
+        renamedPairs.emplace_back(createdPath, oldPath);
       }
     }
   }
@@ -418,7 +417,7 @@ PipelineFilter::RenamedPaths findAllRenamePaths(const std::vector<DataPath>& old
  * @param renamedPairs
  * @return PipelineFilter::RenamedPaths
  */
-PipelineFilter::RenamedPaths getConfirmedRenamePaths(const PipelineFilter::RenamedPaths& renamedPairs)
+PipelineFilter::RenamedPathsType GetConfirmedRenamePaths(const PipelineFilter::RenamedPathsType& renamedPairs)
 {
   std::vector<DataPath> rejectedFirstPaths;
   std::vector<DataPath> rejectedSecondPaths;
@@ -445,7 +444,7 @@ PipelineFilter::RenamedPaths getConfirmedRenamePaths(const PipelineFilter::Renam
     }
   }
 
-  PipelineFilter::RenamedPaths confirmed;
+  PipelineFilter::RenamedPathsType confirmed;
   for(const auto& renamedPair : renamedPairs)
   {
     if(std::find(rejectedFirstPaths.begin(), rejectedFirstPaths.end(), renamedPair.first) != rejectedFirstPaths.end())
@@ -463,7 +462,7 @@ PipelineFilter::RenamedPaths getConfirmedRenamePaths(const PipelineFilter::Renam
 }
 } // namespace
 
-PipelineFilter::RenamedPaths PipelineFilter::checkForRenamedPaths(std::vector<DataPath> oldCreatedPaths) const
+PipelineFilter::RenamedPathsType PipelineFilter::checkForRenamedPaths(std::vector<DataPath> oldCreatedPaths) const
 {
   // If created path sizes do not match, the values cannot be compared
   if(oldCreatedPaths.size() != m_CreatedPaths.size())
@@ -474,9 +473,9 @@ PipelineFilter::RenamedPaths PipelineFilter::checkForRenamedPaths(std::vector<Da
   // Create a copy of the created paths to edit in removeOverlap(...)
   std::vector<DataPath> newCreatedPaths = m_CreatedPaths;
 
-  removeOverlap(oldCreatedPaths, newCreatedPaths);
-  auto renamedPairs = findAllRenamePaths(oldCreatedPaths, newCreatedPaths);
-  renamedPairs = getConfirmedRenamePaths(renamedPairs);
+  RemoveOverlap(oldCreatedPaths, newCreatedPaths);
+  auto renamedPairs = FindAllRenamePaths(oldCreatedPaths, newCreatedPaths);
+  renamedPairs = GetConfirmedRenamePaths(renamedPairs);
 
   return renamedPairs;
 }
@@ -528,7 +527,7 @@ void PipelineFilter::notifyFilterMessage(const IFilter::Message& message)
   }
 }
 
-void PipelineFilter::notifyRenamedPaths(const RenamedPaths& renamedPathPairs)
+void PipelineFilter::notifyRenamedPaths(const RenamedPathsType& renamedPathPairs)
 {
   for(const auto& renamedPath : renamedPathPairs)
   {
@@ -599,7 +598,7 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann:
   {
     return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-4, fmt::format("'{}' is not a valid UUID", uuidString));
   }
-  IFilter::UniquePointer filter = filterList.createFilter(*uuid);
+  IFilter::UniquePointerType filter = filterList.createFilter(*uuid);
   if(filter == nullptr)
   {
     if(std::optional<Uuid> replacement = FindFilterReplacement(*uuid, filterList); replacement.has_value())
@@ -635,12 +634,12 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromJson(const nlohmann:
   return result;
 }
 
-bool isDataPath(const std::any& value)
+static bool IsDataPath(const std::any& value)
 {
   return value.type() == typeid(DataPath);
 }
 
-bool attemptRenamePath(DataPath& path, const AbstractPipelineNode::RenamedPaths& renamedPaths)
+static bool AttemptRenamePath(DataPath& path, const AbstractPipelineNode::RenamedPathsType& renamedPaths)
 {
   bool pathChanged = false;
   for(const auto& renamedPath : renamedPaths)
@@ -654,15 +653,15 @@ bool attemptRenamePath(DataPath& path, const AbstractPipelineNode::RenamedPaths&
   return pathChanged;
 }
 
-void PipelineFilter::renamePathArgs(const RenamedPaths& renamedPaths)
+void PipelineFilter::renamePathArgs(const RenamedPathsType& renamedPaths)
 {
   for(const auto& arg : m_Arguments)
   {
     const std::any& argValue = arg.second;
-    if(isDataPath(argValue))
+    if(IsDataPath(argValue))
     {
       auto argPath = std::any_cast<DataPath>(argValue);
-      if(attemptRenamePath(argPath, renamedPaths))
+      if(AttemptRenamePath(argPath, renamedPaths))
       {
         m_Arguments.insertOrAssign(arg.first, std::make_any<DataPath>(argPath));
       }
@@ -670,7 +669,7 @@ void PipelineFilter::renamePathArgs(const RenamedPaths& renamedPaths)
   }
 }
 
-nx::core::WarningCollection convertErrors(const nx::core::ErrorCollection& errors, const std::string& filterName)
+static nx::core::WarningCollectionType ConvertErrors(const nx::core::ErrorCollectionType& errors, const std::string& filterName)
 {
   if(errors.empty())
   {
@@ -678,15 +677,15 @@ nx::core::WarningCollection convertErrors(const nx::core::ErrorCollection& error
   }
 
   std::string prefix = fmt::format("Filter: '{}' ", filterName);
-  WarningCollection warnings;
+  WarningCollectionType warnings;
   for(const auto& error : errors)
   {
-    warnings.emplace_back(Warning{error.code, prefix + error.message});
+    warnings.emplace_back(Warning{.code = error.code, .message = prefix + error.message});
   }
   return warnings;
 }
 
-std::string PipelineFilter::CreateErrorComments(const nx::core::ErrorCollection& errors, const std::string& prefix)
+std::string PipelineFilter::CreateErrorComments(const nx::core::ErrorCollectionType& errors, const std::string& prefix)
 {
   if(errors.empty())
   {
@@ -748,14 +747,14 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nloh
     return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-3, fmt::format("Unable to find conversion data for filter '{}'", filterName));
   }
 
-  IFilter::UniquePointer filter = filterList.createFilter(simplData->simplnxUuid);
+  IFilter::UniquePointerType filter = filterList.createFilter(simplData->simplnx_uuid);
 
-  if(!simplData->convertJson)
+  if(!simplData->convert_json)
   {
     return MakeErrorResult<std::unique_ptr<PipelineFilter>>(-4, fmt::format("Conversion function for filter '{}' is null", uuidString));
   }
 
-  Result<Arguments> argumentsResult = simplData->convertJson(json);
+  Result<Arguments> argumentsResult = simplData->convert_json(json);
 
   const auto filterName = filter->name();
   const auto defaultArguments = filter->getDefaultArguments();
@@ -766,7 +765,7 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nloh
     // This section validates that the mapping from SIMPL Parameter to the SIMPLNX Parameter
     for(const auto& [parameterName, parameter] : pipelineFilter->getFilter()->parameters())
     {
-      IParameter::AcceptedTypes acceptedTypes = parameter->acceptedTypes();
+      IParameter::AcceptedTypesType acceptedTypes = parameter->acceptedTypes();
       auto iter = std::find(acceptedTypes.cbegin(), acceptedTypes.cend(), std::type_index(argumentsResult.value().at(parameterName).type()));
       if(iter == acceptedTypes.cend())
       {
@@ -780,17 +779,17 @@ Result<std::unique_ptr<PipelineFilter>> PipelineFilter::FromSIMPLJson(const nloh
     {
       throw std::runtime_error(exceptionMessage);
     }
-    pipelineFilter->setArguments(std::move(argumentsResult.value()));
+    pipelineFilter->setArguments(argumentsResult.value());
   }
   else
   {
     pipelineFilter->setArguments(defaultArguments);
   }
 
-  WarningCollection warnings;
+  WarningCollectionType warnings;
   if(argumentsResult.invalid())
   {
-    warnings = convertErrors(argumentsResult.errors(), filterName);
+    warnings = ConvertErrors(argumentsResult.errors(), filterName);
     pipelineFilter->setComments(CreateErrorComments(argumentsResult.errors(), "Parameter conversion error: "));
   }
 

@@ -10,7 +10,7 @@
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
-namespace nx::core::UnitTest::Comparison
+namespace nx::core::unit_test::comparison
 {
 inline bool CompareDataObject(const DataObject& exemplarObject, const DataObject& testObject);
 
@@ -28,10 +28,10 @@ inline bool CompareBaseGroup(const BaseGroup& exemplarObject, const BaseGroup& t
     {
       return false;
     }
-    const DataObject* exemplarChild = exemplarObject[childName];
-    const DataObject* testChild = testObject[childName];
+    const DataObject* exemplarChildPtr = exemplarObject[childName];
+    const DataObject* testChildPtr = testObject[childName];
     // Recursive. Could have issues with a deeply nested DataStructure
-    if(!CompareDataObject(*exemplarChild, *testChild))
+    if(!CompareDataObject(*exemplarChildPtr, *testChildPtr))
     {
       return false;
     }
@@ -419,4 +419,4 @@ inline bool CompareDataObject(const DataObject& exemplarObject, const DataObject
   }
   }
 }
-} // namespace nx::core::UnitTest::Comparison
+} // namespace nx::core::unit_test::comparison

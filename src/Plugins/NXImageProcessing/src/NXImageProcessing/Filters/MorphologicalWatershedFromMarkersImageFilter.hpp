@@ -18,12 +18,12 @@ public:
   MorphologicalWatershedFromMarkersImageFilter& operator=(const MorphologicalWatershedFromMarkersImageFilter&) = delete;
   MorphologicalWatershedFromMarkersImageFilter& operator=(MorphologicalWatershedFromMarkersImageFilter&&) noexcept = delete;
 
-  static constexpr StringLiteral k_InputImageGeomPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_InputImageDataPath_Key = "input_image_data_path";
-  static constexpr StringLiteral k_MarkerImageDataPath_Key = "marker_image_data_path";
-  static constexpr StringLiteral k_MarkWatershedLine_Key = "mark_watershed_line";
-  static constexpr StringLiteral k_FullyConnected_Key = "fully_connected";
-  static constexpr StringLiteral k_OutputImageArrayName_Key = "output_array_name";
+  static constexpr StringLiteralType k_InputImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_InputImageDataPath_Key = "input_image_data_path";
+  static constexpr StringLiteralType k_MarkerImageDataPath_Key = "marker_image_data_path";
+  static constexpr StringLiteralType k_MarkWatershedLine_Key = "mark_watershed_line";
+  static constexpr StringLiteralType k_FullyConnected_Key = "fully_connected";
+  static constexpr StringLiteralType k_OutputImageArrayName_Key = "output_array_name";
 
   std::string name() const override;
   std::string className() const override;
@@ -32,7 +32,7 @@ public:
   std::vector<std::string> defaultTags() const override;
   Parameters parameters() const override;
   VersionType parametersVersion() const override;
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,

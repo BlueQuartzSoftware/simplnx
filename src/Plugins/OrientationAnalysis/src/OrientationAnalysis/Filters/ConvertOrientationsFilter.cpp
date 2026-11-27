@@ -62,12 +62,12 @@ Parameters ConvertOrientationsFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ChoicesParameter>(k_InputType_Key, "Input Orientation Type", "Specifies the incoming orientation representation enumeration index", 0,
-                                                   OrientationConverterType::GetOrientationTypeStrings<ChoicesParameter::Choices>()));
+                                                   OrientationConverterType::GetOrientationTypeStrings<ChoicesParameter::ChoicesType>()));
   params.insert(std::make_unique<ChoicesParameter>(k_OutputType_Key, "Output Orientation Type",
                                                    "Specifies to which orientation representation to convert the incoming data. Specified as an enumeration index", 1,
-                                                   OrientationConverterType::GetOrientationTypeStrings<ChoicesParameter::Choices>()));
+                                                   OrientationConverterType::GetOrientationTypeStrings<ChoicesParameter::ChoicesType>()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputOrientationArrayPath_Key, "Input Orientations", "The complete path to the incoming orientation representation data array", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}));
   params.insert(std::make_unique<DataObjectNameParameter>(k_OutputOrientationArrayName_Key, "Output Orientations", "The name of the data array with the converted orientation representation", ""));
 
   return params;
@@ -80,32 +80,32 @@ IFilter::VersionType ConvertOrientationsFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ConvertOrientationsFilter::clone() const
+IFilter::UniquePointerType ConvertOrientationsFilter::clone() const
 {
   return std::make_unique<ConvertOrientationsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                  const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto inputType = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_InputType_Key));
   auto outputType = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key));
 
   if(inputType == outputType)
   {
-    return {MakeErrorResult<OutputActions>(convert_orientations_constants::k_MatchingTypesError,
-                                           fmt::format("The Input Representation Type and the Output Representation Type cannot be the same!", fmt::underlying(outputType)))};
+    return {.output_actions = MakeErrorResult<OutputActions>(convert_orientations_constants::k_MatchingTypesError,
+                                                             fmt::format("The Input Representation Type and the Output Representation Type cannot be the same!", fmt::underlying(outputType)))};
   }
 
   auto pInputArrayPath = filterArgs.value<DataPath>(k_InputOrientationArrayPath_Key);
-  const auto* inputArray = dataStructure.getDataAs<IDataArray>(pInputArrayPath);
-  std::vector<size_t> inputCompShape = inputArray->getIDataStore()->getComponentShape();
+  const auto* inputArrayPtr = dataStructure.getDataAs<IDataArray>(pInputArrayPath);
+  std::vector<size_t> inputCompShape = inputArrayPtr->getIDataStore()->getComponentShape();
 
   if(inputCompShape.size() > 1)
   {
-    return {MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentDimensionError,
-                                           fmt::format("Input Component Shape has multiple dimensions. It can only have 1 dimension. '{}'", inputCompShape.size()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentDimensionError,
+                                                             fmt::format("Input Component Shape has multiple dimensions. It can only have 1 dimension. '{}'", inputCompShape.size()))};
   }
   using OrientationConverterType = ebsdlib::OrientationConverter<EbsdDataArray<float>, float>;
   auto representationNames = OrientationConverterType::GetOrientationTypeStrings<std::vector<std::string>>();
@@ -116,13 +116,13 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
     std::stringstream message;
     message << "Number of components for input array is not correct for input representation type. " << representationNames[static_cast<size_t>(inputType)] << " should have "
             << representationElementCount[static_cast<size_t>(inputType)] << " components but the selected input array has " << inputCompShape[0];
-    return {MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentCountError, message.str())};
+    return {.output_actions = MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentCountError, message.str())};
   }
   auto pOutputArrayPath = pInputArrayPath.replaceName(filterArgs.value<std::string>(k_OutputOrientationArrayName_Key));
 
-  auto numericType = static_cast<DataType>(inputArray->getDataType());
+  auto numericType = inputArrayPtr->getDataType();
   std::vector<size_t> componentDims = {representationElementCount[static_cast<size_t>(outputType)]};
-  auto action = std::make_unique<CreateArrayAction>(numericType, inputArray->getIDataStore()->getTupleShape(), componentDims, pOutputArrayPath);
+  auto action = std::make_unique<CreateArrayAction>(numericType, inputArrayPtr->getIDataStore()->getTupleShape(), componentDims, pOutputArrayPath);
 
   // Create the Output actions
   OutputActions actions;
@@ -132,15 +132,15 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
 }
 
 //------------------------------------------------------------------------------
-Result<> ConvertOrientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ConvertOrientationsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ConvertOrientationsInputValues inputValues;
   // Replace the keys below with the variables from the header.
-  inputValues.InputOrientationArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputOrientationArrayPath_Key);
-  inputValues.InputType = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_InputType_Key));
-  inputValues.OutputOrientationArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputOrientationArrayName_Key);
-  inputValues.OutputType = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key));
+  inputValues.input_orientation_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_InputOrientationArrayPath_Key);
+  inputValues.input_type = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_InputType_Key));
+  inputValues.output_orientation_array_name = filterArgs.value<DataObjectNameParameter::ValueType>(k_OutputOrientationArrayName_Key);
+  inputValues.output_type = static_cast<ebsdlib::orientations::Type>(filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key));
   return ConvertOrientations(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 } // namespace nx::core
@@ -151,13 +151,13 @@ Result<> ConvertOrientationsFilter::executeImpl(DataStructure& dataStructure, co
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_InputTypeKey = "InputType";
-constexpr StringLiteral k_OutputTypeKey = "OutputType";
-constexpr StringLiteral k_InputOrientationArrayPathKey = "InputOrientationArrayPath";
-constexpr StringLiteral k_OutputOrientationArrayNameKey = "OutputOrientationArrayName";
-} // namespace SIMPL
+constexpr StringLiteralType k_InputTypeKey = "InputType";
+constexpr StringLiteralType k_OutputTypeKey = "OutputType";
+constexpr StringLiteralType k_InputOrientationArrayPathKey = "InputOrientationArrayPath";
+constexpr StringLiteralType k_OutputOrientationArrayNameKey = "OutputOrientationArrayName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ConvertOrientationsFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -166,11 +166,12 @@ Result<Arguments> ConvertOrientationsFilter::FromSIMPLJson(const nlohmann::json&
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_InputTypeKey, k_InputType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_OutputTypeKey, k_OutputType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_InputOrientationArrayPathKey, k_InputOrientationArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_InputTypeKey, k_InputType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_OutputTypeKey, k_OutputType_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_OutputOrientationArrayNameKey, k_OutputOrientationArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_InputOrientationArrayPathKey, k_InputOrientationArrayPath_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_OutputOrientationArrayNameKey, k_OutputOrientationArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

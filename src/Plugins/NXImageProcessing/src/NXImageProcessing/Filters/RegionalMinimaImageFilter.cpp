@@ -53,14 +53,14 @@ Parameters RegionalMinimaImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Float64Parameter>(k_ForegroundValue_Key, "Foreground Value",
-                                                   "The value written to pixels that are part of a regional minimum. For an integer input image the value "
-                                                   "must be finite and within the type's range.",
-                                                   1.0));
-  params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "Background Value",
-                                                   "The value written to pixels that are not part of a regional minimum. For an integer input image the "
-                                                   "value must be finite and within the type's range.",
-                                                   0.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_ForegroundValue_Key, "Foreground Value",
+                                                       "The value written to pixels that are part of a regional minimum. For an integer input image the value "
+                                                       "must be finite and within the type's range.",
+                                                       1.0));
+  params.insert(std::make_unique<Float64ParameterType>(k_BackgroundValue_Key, "Background Value",
+                                                       "The value written to pixels that are not part of a regional minimum. For an integer input image the "
+                                                       "value must be finite and within the type's range.",
+                                                       0.0));
   params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "Fully Connected",
                                                 "Whether the flat zones are connected strictly by face connectivity (Off) or by face+edge+vertex connectivity (On). Default is Off.", false));
   params.insert(
@@ -68,7 +68,7 @@ Parameters RegionalMinimaImageFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
 
@@ -81,12 +81,12 @@ IFilter::VersionType RegionalMinimaImageFilter::parametersVersion() const
 {
   return 1;
 }
-IFilter::UniquePointer RegionalMinimaImageFilter::clone() const
+IFilter::UniquePointerType RegionalMinimaImageFilter::clone() const
 {
   return std::make_unique<RegionalMinimaImageFilter>();
 }
-IFilter::PreflightResult RegionalMinimaImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult RegionalMinimaImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                  const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -96,13 +96,13 @@ IFilter::PreflightResult RegionalMinimaImageFilter::preflightImpl(const DataStru
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   // requireScalar=true: the regional-extrema engine is defined on scalar images. The binary label output is a
-  // FIXED uint32 (matching the legacy ITK RegionalMinima FilterOutputType), so AlwaysUInt32 maps every input type
+  // FIXED uint32 (matching the legacy ITK RegionalMinima FilterOutputType), so AlwaysUInt32Type maps every input type
   // to a uint32 output array.
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt32>(
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt32Type>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   if(resultOutputActions.invalid())
   {
-    return {std::move(resultOutputActions)};
+    return {.output_actions = std::move(resultOutputActions)};
   }
 
   // The Float64 foreground/background are written into the uint32 output; that narrowing is UNDEFINED for a
@@ -110,12 +110,12 @@ IFilter::PreflightResult RegionalMinimaImageFilter::preflightImpl(const DataStru
   Result<> fgGuard = ImageProcessing::ValidateScalarValueForType(DataType::uint32, foregroundValue, "Foreground Value", k_NonFiniteValue, k_ValueOutOfRange, k_ValueTruncated);
   if(fgGuard.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(fgGuard), OutputActions{})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(fgGuard), OutputActions{})};
   }
   Result<> bgGuard = ImageProcessing::ValidateScalarValueForType(DataType::uint32, backgroundValue, "Background Value", k_NonFiniteValue, k_ValueOutOfRange, k_ValueTruncated);
   if(bgGuard.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(bgGuard), OutputActions{})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(bgGuard), OutputActions{})};
   }
   for(Warning& warning : fgGuard.warnings())
   {
@@ -125,10 +125,10 @@ IFilter::PreflightResult RegionalMinimaImageFilter::preflightImpl(const DataStru
   {
     resultOutputActions.warnings().push_back(std::move(warning));
   }
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
-Result<> RegionalMinimaImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> RegionalMinimaImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -146,15 +146,15 @@ Result<> RegionalMinimaImageFilter::executeImpl(DataStructure& dataStructure, co
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_ForegroundValueKey = "ForegroundValue";
-constexpr StringLiteral k_BackgroundValueKey = "BackgroundValue";
-constexpr StringLiteral k_FullyConnectedKey = "FullyConnected";
-constexpr StringLiteral k_FlatIsMinimaKey = "FlatIsMinima";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+constexpr StringLiteralType k_ForegroundValueKey = "ForegroundValue";
+constexpr StringLiteralType k_BackgroundValueKey = "BackgroundValue";
+constexpr StringLiteralType k_FullyConnectedKey = "FullyConnected";
+constexpr StringLiteralType k_FlatIsMinimaKey = "FlatIsMinima";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_NewCellArrayNameKey = "NewCellArrayName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> RegionalMinimaImageFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -163,13 +163,13 @@ Result<Arguments> RegionalMinimaImageFilter::FromSIMPLJson(const nlohmann::json&
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_ForegroundValueKey, k_ForegroundValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_BackgroundValueKey, k_BackgroundValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_FullyConnectedKey, k_FullyConnected_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_FlatIsMinimaKey, k_FlatIsMinima_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_ForegroundValueKey, k_ForegroundValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_BackgroundValueKey, k_BackgroundValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_FullyConnectedKey, k_FullyConnected_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_FlatIsMinimaKey, k_FlatIsMinima_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

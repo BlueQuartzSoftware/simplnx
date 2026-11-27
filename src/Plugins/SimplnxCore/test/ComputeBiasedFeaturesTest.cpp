@@ -19,30 +19,30 @@ namespace
 {
 const std::string k_ComputedBiasedFeaturesName = "ComputedBiasedFeatures";
 const std::string k_ExemplarBiasedFeaturesName = "BiasedFeatures";
-const DataPath k_GeometryPath({Constants::k_SmallIN100});
-const DataPath k_Geometry2DPath({Constants::k_SmallIN1002});
-const DataPath k_CentroidsPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_Centroids});
-const DataPath k_SurfaceFeaturesPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_SurfaceFeatures});
-const DataPath k_PhasesPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_Phases});
-const DataPath k_Centroids2DPath({Constants::k_SmallIN1002, Constants::k_Grain_Data, Constants::k_Centroids});
-const DataPath k_SurfaceFeatures2DPath({Constants::k_SmallIN1002, Constants::k_Grain_Data, Constants::k_SurfaceFeatures});
-const DataPath k_Phases2DPath({Constants::k_SmallIN1002, Constants::k_Grain_Data, Constants::k_Phases});
-const DataPath k_ExemplarBiasedFeaturesPath({Constants::k_SmallIN100, Constants::k_Grain_Data, k_ExemplarBiasedFeaturesName});
-const DataPath k_ComputedBiasedFeaturesPath({Constants::k_SmallIN100, Constants::k_Grain_Data, k_ComputedBiasedFeaturesName});
-const DataPath k_ExemplarBiasedFeatures2DPath({Constants::k_SmallIN1002, Constants::k_Grain_Data, k_ExemplarBiasedFeaturesName});
-const DataPath k_ComputedBiasedFeatures2DPath({Constants::k_SmallIN1002, Constants::k_Grain_Data, k_ComputedBiasedFeaturesName});
-const DataPath k_WrongSurfaceFeaturePath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_FeatureIds});
+const DataPath k_GeometryPath({constants::k_SmallIN100});
+const DataPath k_Geometry2DPath({constants::k_SmallIN1002});
+const DataPath k_CentroidsPath({constants::k_SmallIN100, constants::k_GrainDataWithSpaces, constants::k_Centroids});
+const DataPath k_SurfaceFeaturesPath({constants::k_SmallIN100, constants::k_GrainDataWithSpaces, constants::k_SurfaceFeatures});
+const DataPath k_PhasesPath({constants::k_SmallIN100, constants::k_GrainDataWithSpaces, constants::k_Phases});
+const DataPath k_Centroids2DPath({constants::k_SmallIN1002, constants::k_GrainDataWithSpaces, constants::k_Centroids});
+const DataPath k_SurfaceFeatures2DPath({constants::k_SmallIN1002, constants::k_GrainDataWithSpaces, constants::k_SurfaceFeatures});
+const DataPath k_Phases2DPath({constants::k_SmallIN1002, constants::k_GrainDataWithSpaces, constants::k_Phases});
+const DataPath k_ExemplarBiasedFeaturesPath({constants::k_SmallIN100, constants::k_GrainDataWithSpaces, k_ExemplarBiasedFeaturesName});
+const DataPath k_ComputedBiasedFeaturesPath({constants::k_SmallIN100, constants::k_GrainDataWithSpaces, k_ComputedBiasedFeaturesName});
+const DataPath k_ExemplarBiasedFeatures2DPath({constants::k_SmallIN1002, constants::k_GrainDataWithSpaces, k_ExemplarBiasedFeaturesName});
+const DataPath k_ComputedBiasedFeatures2DPath({constants::k_SmallIN1002, constants::k_GrainDataWithSpaces, k_ComputedBiasedFeaturesName});
+const DataPath k_WrongSurfaceFeaturePath({constants::k_SmallIN100, constants::k_EbsdScanData, constants::k_FeatureIds});
 } // namespace
 
 TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: Valid filter execution", "[ComputeBiasedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_biased_features.tar.gz", "6_6_find_biased_features.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_biased_features.tar.gz", "6_6_find_biased_features.dream3d");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_find_biased_features.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeBiasedFeaturesFilter filter;
@@ -60,13 +60,13 @@ TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: Valid filter execution", "[
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    UnitTest::CompareArrays<bool>(dataStructure, k_ExemplarBiasedFeaturesPath, k_ComputedBiasedFeaturesPath);
+    unit_test::CompareArrays<bool>(dataStructure, k_ExemplarBiasedFeaturesPath, k_ComputedBiasedFeaturesPath);
   }
   SECTION("2D")
   {
@@ -77,27 +77,27 @@ TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: Valid filter execution", "[
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    UnitTest::CompareArrays<bool>(dataStructure, k_ExemplarBiasedFeatures2DPath, k_ComputedBiasedFeatures2DPath);
+    unit_test::CompareArrays<bool>(dataStructure, k_ExemplarBiasedFeatures2DPath, k_ComputedBiasedFeatures2DPath);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: Invalid filter execution", "[ComputeBiasedFeaturesFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_biased_features.tar.gz", "6_6_find_biased_features.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_biased_features.tar.gz", "6_6_find_biased_features.dream3d");
 
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_find_biased_features.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ComputeBiasedFeaturesFilter filter;
@@ -113,20 +113,20 @@ TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: Invalid filter execution", 
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeBiasedFeaturesFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -139,22 +139,22 @@ TEST_CASE("SimplnxCore::ComputeBiasedFeaturesFilter: SIMPL Backwards Compatibili
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeBiasedFeaturesFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeBiasedFeaturesFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<bool>(ComputeBiasedFeaturesFilter::k_CalcByPhase_Key) == true);
       CHECK(args.value<DataPath>(ComputeBiasedFeaturesFilter::k_GeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(ComputeBiasedFeaturesFilter::k_CentroidsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
@@ -171,16 +171,16 @@ void CheckPlanarBias(usize plane, bool spacingFixture)
 {
   const std::array<std::array<usize, 2>, 3> activeAxes = {{{0, 1}, {1, 2}, {0, 2}}};
   const auto axes = activeAxes[plane];
-  SizeVec3 dims = {1, 1, 1};
+  SizeVec3Type dims = {1, 1, 1};
   dims[axes[0]] = 2;
   dims[axes[1]] = 3;
-  FloatVec3 spacing = {8, 8, 8};
-  FloatVec3 origin = {0, 0, 0};
+  FloatVec3Type spacing = {8, 8, 8};
+  FloatVec3Type origin = {0, 0, 0};
   std::array<float32, 3> centroid = {4, 4, 4};
   if(spacingFixture)
   {
     spacing = {2, 4, 8};
-    const std::array<FloatVec3, 3> origins = {FloatVec3{18, 10, 16}, FloatVec3{19, 14, 0}, FloatVec3{18, 18, 0}};
+    const std::array<FloatVec3Type, 3> origins = {FloatVec3Type{18, 10, 16}, FloatVec3Type{19, 14, 0}, FloatVec3Type{18, 18, 0}};
     origin = origins[plane];
     centroid = {20, 20, 20};
   }
@@ -196,20 +196,20 @@ void CheckPlanarBias(usize plane, bool spacingFixture)
   DataStructure dataStructure;
   const DataPath geomPath({"Planar"});
   const DataPath featurePath = geomPath.createChildPath("Features");
-  auto* geom = ImageGeom::Create(dataStructure, "Planar");
-  geom->setDimensions(dims);
-  REQUIRE(geom->setSpacing(spacing).valid());
-  REQUIRE(geom->setOrigin(origin).valid());
-  auto* features = AttributeMatrix::Create(dataStructure, "Features", {2}, geom->getId());
-  auto* centroids = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Centroids", {2}, {3}, features->getId());
-  auto* surface = BoolArray::CreateWithStore<DataStore<bool>>(dataStructure, "Surface", {2}, {1}, features->getId());
-  auto* phases = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, "Phases", {2}, {1}, features->getId());
-  surface->fill(false);
-  phases->fill(1);
-  centroids->fill(0);
+  auto* geomPtr = ImageGeom::Create(dataStructure, "Planar");
+  geomPtr->setDimensions(dims);
+  REQUIRE(geomPtr->setSpacing(spacing).valid());
+  REQUIRE(geomPtr->setOrigin(origin).valid());
+  auto* featuresPtr = AttributeMatrix::Create(dataStructure, "Features", {2}, geomPtr->getId());
+  auto* centroidsPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "Centroids", {2}, {3}, featuresPtr->getId());
+  auto* surfacePtr = BoolArrayType::CreateWithStore<DataStore<bool>>(dataStructure, "Surface", {2}, {1}, featuresPtr->getId());
+  auto* phasesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "Phases", {2}, {1}, featuresPtr->getId());
+  surfacePtr->fill(false);
+  phasesPtr->fill(1);
+  centroidsPtr->fill(0);
   for(usize axis = 0; axis < 3; axis++)
   {
-    (*centroids)[3 + axis] = centroid[axis];
+    (*centroidsPtr)[3 + axis] = centroid[axis];
   }
   ComputeBiasedFeaturesFilter filter;
   auto args = filter.getDefaultArguments();
@@ -221,13 +221,13 @@ void CheckPlanarBias(usize plane, bool spacingFixture)
   args.insertOrAssign(ComputeBiasedFeaturesFilter::k_BiasedFeaturesArrayName_Key, std::make_any<std::string>("Biased"));
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  const auto* biased = dataStructure.getDataAs<BoolArray>(featurePath.createChildPath("Biased"));
-  REQUIRE(biased != nullptr);
+  const auto* biasedPtr = dataStructure.getDataAs<BoolArrayType>(featurePath.createChildPath("Biased"));
+  REQUIRE(biasedPtr != nullptr);
   // Active-axis bounds are [10,14] x [20,32]; (12,22) is strictly inside.
   // Spacing fixtures: XY [18,22] x [10,22], YZ [14,22] x [0,24], XZ [18,22] x [0,24].
   // The centroid (20,20) is strictly inside each spacing fixture. No surface feature shrinks the bounds.
-  CHECK_FALSE((*biased)[1]);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  CHECK_FALSE((*biasedPtr)[1]);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 

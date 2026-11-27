@@ -41,8 +41,8 @@ constexpr int32 k_BinaryValueTruncated = -8352;
  */
 struct BinaryIntegerParamGuard
 {
-  nx::core::float64 foregroundValue;
-  nx::core::float64 backgroundValue;
+  nx::core::float64 foreground_value;
+  nx::core::float64 background_value;
 
   template <class T>
   nx::core::Result<> operator()() const
@@ -50,7 +50,7 @@ struct BinaryIntegerParamGuard
     using nx::core::MakeErrorResult;
     using nx::core::Warning;
     nx::core::Result<> result;
-    const std::array<std::pair<const char*, nx::core::float64>, 2> params{{{"Foreground Value", foregroundValue}, {"Background Value", backgroundValue}}};
+    const std::array<std::pair<const char*, nx::core::float64>, 2> params{{{"Foreground Value", foreground_value}, {"Background Value", background_value}}};
     const std::string typeName = nx::core::DataTypeToString(nx::core::GetDataType<T>());
     const auto lowest = static_cast<nx::core::float64>(std::numeric_limits<T>::lowest());
     const auto highest = static_cast<nx::core::float64>(std::numeric_limits<T>::max());
@@ -68,7 +68,8 @@ struct BinaryIntegerParamGuard
       }
       if(truncated != value)
       {
-        result.warnings().push_back(Warning{k_BinaryValueTruncated, fmt::format("{} ({}) will be truncated to {} to match the integer input image type '{}'.", label, value, truncated, typeName)});
+        result.warnings().push_back(
+            Warning{.code = k_BinaryValueTruncated, .message = fmt::format("{} ({}) will be truncated to {} to match the integer input image type '{}'.", label, value, truncated, typeName)});
       }
     }
     return result;
@@ -113,20 +114,21 @@ Parameters BinaryProjectionImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<UInt32Parameter>(k_ProjectionDimension_Key, "Projection Dimension", "The axis to project along: 0=X, 1=Y, 2=Z.", 0u));
+  params.insert(std::make_unique<UInt32ParameterType>(k_ProjectionDimension_Key, "Projection Dimension", "The axis to project along: 0=X, 1=Y, 2=Z.", 0u));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In-Place", "Performs the projection in-place for the given Image Geometry", true));
-  params.insert(std::make_unique<Float64Parameter>(
+  params.insert(std::make_unique<Float64ParameterType>(
       k_ForegroundValue_Key, "Foreground Value",
       "The value a projected column is set to when ANY voxel along the projection axis equals this value. For an integer input image the value must be finite and within the image type's range.",
       1.0));
-  params.insert(std::make_unique<Float64Parameter>(k_BackgroundValue_Key, "Background Value",
-                                                   "The value a projected column is set to when NO voxel along the projection axis equals the Foreground Value. For an integer input image the value "
-                                                   "must be finite and within the image type's range.",
-                                                   0.0));
+  params.insert(
+      std::make_unique<Float64ParameterType>(k_BackgroundValue_Key, "Background Value",
+                                             "The value a projected column is set to when NO voxel along the projection axis equals the Foreground Value. For an integer input image the value "
+                                             "must be finite and within the image type's range.",
+                                             0.0));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
 
@@ -147,14 +149,14 @@ IFilter::VersionType BinaryProjectionImageFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer BinaryProjectionImageFilter::clone() const
+IFilter::UniquePointerType BinaryProjectionImageFilter::clone() const
 {
   return std::make_unique<BinaryProjectionImageFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult BinaryProjectionImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult BinaryProjectionImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -173,7 +175,7 @@ IFilter::PreflightResult BinaryProjectionImageFilter::preflightImpl(const DataSt
       dataStructure, imageGeomPath, selectedInputArray, static_cast<usize>(projectionDimension), performInPlace, outputGeomName, outputArrayName);
   if(resultOutputActions.invalid())
   {
-    return {std::move(resultOutputActions)};
+    return {.output_actions = std::move(resultOutputActions)};
   }
 
   // BinaryReduce casts the Float64 foreground/background parameters to the input element type. For an
@@ -181,24 +183,24 @@ IFilter::PreflightResult BinaryProjectionImageFilter::preflightImpl(const DataSt
   // parameters here (the array is guaranteed present/scalar by the successful PreflightAxisProjection above).
   // Float input types can represent any Float64 value, so they are skipped.
   const DataType inputType = dataStructure.getDataRefAs<IDataArray>(selectedInputArray).getDataType();
-  if(ImageProcessing::GetIntegerScalarTypes().count(inputType) != 0)
+  if(ImageProcessing::GetIntegerScalarTypes().contains(inputType))
   {
-    Result<> paramGuard = ImageProcessing::IntegerOnly::dispatch(inputType, BinaryIntegerParamGuard{foregroundValue, backgroundValue});
+    Result<> paramGuard = ImageProcessing::IntegerOnly::Dispatch(inputType, BinaryIntegerParamGuard{.foreground_value = foregroundValue, .background_value = backgroundValue});
     if(paramGuard.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(paramGuard), OutputActions{})};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(paramGuard), OutputActions{})};
     }
     for(Warning& warning : paramGuard.warnings())
     {
       resultOutputActions.warnings().push_back(std::move(warning));
     }
   }
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> BinaryProjectionImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> BinaryProjectionImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -214,21 +216,21 @@ Result<> BinaryProjectionImageFilter::executeImpl(DataStructure& dataStructure, 
   // deferred swap renames afterward; the original geometry is still intact here.
   const DataPath outputArrayPath = ImageProcessing::ProjectionOutputArrayPath(dataStructure, imageGeomPath, performInPlace, outputGeomName, outputArrayName);
 
-  const ImageProcessing::BinaryReduce reduce{.foregroundValue = foregroundValue, .backgroundValue = backgroundValue};
+  const ImageProcessing::BinaryReduce reduce{.foreground_value = foregroundValue, .background_value = backgroundValue};
   return ImageProcessing::ExecuteAxisProjectionImageFilter<ImageProcessing::AllNumeric>(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, static_cast<usize>(projectionDimension),
                                                                                         reduce, shouldCancel, messageHandler);
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_ProjectionDimensionKey = "ProjectionDimension";
-constexpr StringLiteral k_ForegroundValueKey = "ForegroundValue";
-constexpr StringLiteral k_BackgroundValueKey = "BackgroundValue";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_NewCellArrayNameKey = "NewCellArrayName";
-} // namespace SIMPL
+constexpr StringLiteralType k_ProjectionDimensionKey = "ProjectionDimension";
+constexpr StringLiteralType k_ForegroundValueKey = "ForegroundValue";
+constexpr StringLiteralType k_BackgroundValueKey = "BackgroundValue";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_NewCellArrayNameKey = "NewCellArrayName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> BinaryProjectionImageFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -237,12 +239,12 @@ Result<Arguments> BinaryProjectionImageFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint32>>(args, json, SIMPL::k_ProjectionDimensionKey, k_ProjectionDimension_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_ForegroundValueKey, k_ForegroundValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DoubleFilterParameterConverter>(args, json, SIMPL::k_BackgroundValueKey, k_BackgroundValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint32>>(args, json, simpl::k_ProjectionDimensionKey, k_ProjectionDimension_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_ForegroundValueKey, k_ForegroundValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DoubleFilterParameterConverterType>(args, json, simpl::k_BackgroundValueKey, k_BackgroundValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_InputImageDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_NewCellArrayNameKey, k_OutputImageArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

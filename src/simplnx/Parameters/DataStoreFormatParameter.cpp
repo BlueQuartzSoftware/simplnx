@@ -5,6 +5,7 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace
 {
@@ -13,9 +14,9 @@ constexpr nx::core::int64 k_BadFormatCode = -780;
 
 namespace nx::core
 {
-DataStoreFormatParameter::DataStoreFormatParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+DataStoreFormatParameter::DataStoreFormatParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -24,7 +25,7 @@ Uuid DataStoreFormatParameter::uuid() const
   return ParameterTraits<DataStoreFormatParameter>::uuid;
 }
 
-IParameter::AcceptedTypes DataStoreFormatParameter::acceptedTypes() const
+IParameter::AcceptedTypesType DataStoreFormatParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -39,7 +40,7 @@ nlohmann::json DataStoreFormatParameter::toJsonImpl(const std::any& value) const
   return GetAnyRef<ValueType>(value);
 }
 
-Result<std::any> DataStoreFormatParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> DataStoreFormatParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   if(!json.is_string())
   {
@@ -48,7 +49,7 @@ Result<std::any> DataStoreFormatParameter::fromJsonImpl(const nlohmann::json& js
   return {{json.get<ValueType>()}};
 }
 
-IParameter::UniquePointer DataStoreFormatParameter::clone() const
+IParameter::UniquePointerType DataStoreFormatParameter::clone() const
 {
   return std::make_unique<DataStoreFormatParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -63,7 +64,7 @@ typename DataStoreFormatParameter::ValueType DataStoreFormatParameter::defaultSt
   return m_DefaultValue;
 }
 
-typename DataStoreFormatParameter::AvailableValuesType DataStoreFormatParameter::availableValues() const
+typename DataStoreFormatParameter::AvailableValuesType DataStoreFormatParameter::AvailableValues()
 {
   const auto displayNames = Application::GetOrCreateInstance()->getDataStoreFormatDisplayNames();
   AvailableValuesType result;
@@ -75,7 +76,7 @@ typename DataStoreFormatParameter::AvailableValuesType DataStoreFormatParameter:
   return result;
 }
 
-std::vector<std::pair<std::string, std::string>> DataStoreFormatParameter::availableFormatsWithDisplayNames() const
+std::vector<std::pair<std::string, std::string>> DataStoreFormatParameter::AvailableFormatsWithDisplayNames()
 {
   return Application::GetOrCreateInstance()->getDataStoreFormatDisplayNames();
 }
@@ -88,7 +89,7 @@ Result<> DataStoreFormatParameter::validate(const std::any& value) const
   {
     return {};
   }
-  const auto formats = availableValues();
+  const auto formats = AvailableValues();
   if(std::find(formats.begin(), formats.end(), stringValue) == formats.end())
   {
     std::string ss = fmt::format("DataStore format not known: '{}'", stringValue);

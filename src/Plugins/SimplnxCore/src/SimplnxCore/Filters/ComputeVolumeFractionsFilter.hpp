@@ -24,9 +24,9 @@ public:
   ComputeVolumeFractionsFilter& operator=(ComputeVolumeFractionsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static constexpr StringLiteral k_CellEnsembleAttributeMatrixPath_Key = "cell_ensemble_attribute_matrix_path";
-  static constexpr StringLiteral k_VolFractionsArrayName_Key = "vol_fractions_array_name";
+  static constexpr StringLiteralType k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static constexpr StringLiteralType k_CellEnsembleAttributeMatrixPath_Key = "cell_ensemble_attribute_matrix_path";
+  static constexpr StringLiteralType k_VolFractionsArrayName_Key = "vol_fractions_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -83,7 +83,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

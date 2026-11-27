@@ -54,7 +54,7 @@ Parameters ReshapeDataArrayFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_Input_Array_Key, "Input Array", "The input array that will be reshaped.", DataPath({"Data"}), GetAllDataTypes()));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayKey, "Input Array", "The input array that will be reshaped.", DataPath({"Data"}), GetAllDataTypes()));
 
   {
     DynamicTableInfo tableInfo;
@@ -75,16 +75,16 @@ IFilter::VersionType ReshapeDataArrayFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReshapeDataArrayFilter::clone() const
+IFilter::UniquePointerType ReshapeDataArrayFilter::clone() const
 {
   return std::make_unique<ReshapeDataArrayFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                               const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
-  auto inputArrayPath = filterArgs.value<DataPath>(k_Input_Array_Key);
+  auto inputArrayPath = filterArgs.value<DataPath>(k_InputArrayKey);
   auto tupleDimsData = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
 
   nx::core::Result<OutputActions> resultOutputActions;
@@ -93,11 +93,11 @@ IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructu
   auto dimensions = ConvertDimensions(tupleDimsData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, to_underlying(ReshapeDataArray::ErrorCodes::NonPositiveTupleDimValue));
   if(dimensions.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(dimensions))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
   }
   tDims = std::move(dimensions.value());
 
-  auto& inputArray = dataStructure.getDataRefAs<IArray>(inputArrayPath);
+  const auto& inputArray = dataStructure.getDataRefAs<IArray>(inputArrayPath);
   auto inputArrayTupleShape = inputArray.getTupleShape();
   if(inputArrayTupleShape == tDims)
   {
@@ -112,12 +112,12 @@ IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructu
   switch(inputArrayType)
   {
   case IArray::ArrayType::DataArray: {
-    auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
+    const auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
     resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(inputDataArray.getDataType(), tDims, inputDataArray.getComponentShape(), outputArrayPath));
     break;
   }
   case IArray::ArrayType::NeighborListArray: {
-    auto& inputNeighborList = dataStructure.getDataRefAs<INeighborList>(inputArrayPath);
+    const auto& inputNeighborList = dataStructure.getDataRefAs<INeighborList>(inputArrayPath);
     resultOutputActions.value().appendAction(std::make_unique<CreateNeighborListAction>(inputNeighborList.getDataType(), tDims, outputArrayPath));
     break;
   }
@@ -139,16 +139,16 @@ IFilter::PreflightResult ReshapeDataArrayFilter::preflightImpl(const DataStructu
   resultOutputActions.value().appendDeferredAction(std::make_unique<DeleteDataAction>(inputArrayPath));
   resultOutputActions.value().appendDeferredAction(std::make_unique<RenameDataAction>(outputArrayPath, inputArrayPath.getTargetName()));
 
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReshapeDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ReshapeDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                             const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReshapeDataArrayInputValues inputValues;
-  inputValues.InputArrayPath = filterArgs.value<DataPath>(k_Input_Array_Key);
-  inputValues.TupleDims = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
+  inputValues.input_array_path = filterArgs.value<DataPath>(k_InputArrayKey);
+  inputValues.tuple_dims = filterArgs.value<DynamicTableParameter::ValueType>(k_TupleDims_Key);
 
   return ReshapeDataArray(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

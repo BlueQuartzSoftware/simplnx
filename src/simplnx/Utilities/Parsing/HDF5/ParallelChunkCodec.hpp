@@ -19,7 +19,7 @@
 #include <string_view>
 #include <vector>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 #if SIMPLNX_BUILD_TESTS
 /**
@@ -105,7 +105,7 @@ struct SIMPLNX_EXPORT CodecIoObserverForTesting
 {
   void* context = nullptr;
   void (*callback)(void*, const std::filesystem::path&, std::string_view, CodecIoEventForTesting, uint64 inputBytes, uint64 outputBytes) noexcept = nullptr;
-  bool (*boundedFault)(void*, const std::filesystem::path&, std::string_view, BoundedFaultPointForTesting) noexcept = nullptr;
+  bool (*bounded_fault)(void*, const std::filesystem::path&, std::string_view, BoundedFaultPointForTesting) noexcept = nullptr;
 };
 
 /** @brief Registers synchronous bounded work with the existing observer quiescence counter. */
@@ -191,11 +191,11 @@ struct LegacyPayloadRecordForTesting
  */
 struct CodecOwnershipStateForTesting
 {
-  uint64 outstandingBuffers = 0;
-  uint64 activeTasks = 0;
-  uint64 integrityFailures = 0;
-  uint64 unobservedReturns = 0;
-  uint64 errorAggregations = 0;
+  uint64 outstanding_buffers = 0;
+  uint64 active_tasks = 0;
+  uint64 integrity_failures = 0;
+  uint64 unobserved_returns = 0;
+  uint64 error_aggregations = 0;
 };
 
 /**
@@ -299,7 +299,7 @@ public:
    * @brief Checks released inner payload state while the worker's error mutex is held.
    * @pre Local result and ticket scopes have already unwound.
    */
-  void observeExceptionAggregation() noexcept;
+  void observeExceptionAggregation() const noexcept;
   LegacyPayloadTaskScopeForTesting(const LegacyPayloadTaskScopeForTesting&) = delete;
   LegacyPayloadTaskScopeForTesting(LegacyPayloadTaskScopeForTesting&&) = delete;
   LegacyPayloadTaskScopeForTesting& operator=(const LegacyPayloadTaskScopeForTesting&) = delete;
@@ -530,10 +530,10 @@ public:
    */
   struct ChunkInfo
   {
-    bool allocated = false;   // A false value can represent sparse storage or a failed HDF5 metadata query.
-    uint32 filterMask = 0;    // HDF5 mask for filters skipped on this chunk.
-    uint64 storedAddress = 0; // Raw chunk file offset.
-    uint64 storedSize = 0;    // Raw chunk byte count.
+    bool allocated = false;    // A false value can represent sparse storage or a failed HDF5 metadata query.
+    uint32 filter_mask = 0;    // HDF5 mask for filters skipped on this chunk.
+    uint64 stored_address = 0; // Raw chunk file offset.
+    uint64 stored_size = 0;    // Raw chunk byte count.
   };
 
   /**
@@ -603,7 +603,7 @@ public:
    * @return Completion, refusal, or failure after backend scratch cleanup.
    * @warning This internal entry does not protect caller-visible output. The publication layer must stage and publish once.
    */
-  BoundedRead::Status readExtentIntoBufferBoundedState(const Extent& fullValueExtent, nonstd::span<std::byte> destination, uint64 payloadBudgetBytes, Result<>& diagnostic) const;
+  bounded_read::Status readExtentIntoBufferBoundedState(const Extent& fullValueExtent, nonstd::span<std::byte> destination, uint64 payloadBudgetBytes, Result<>& diagnostic) const;
 
   /**
    * @brief Inflates one chunk into an edge-clamped byte buffer.
@@ -758,8 +758,8 @@ private:
    * @param selectedOutput Receives the admitted output stage on success; null lets the caller own private destination scratch.
    * @return Completion, refusal, or failure after backend cleanup.
    */
-  BoundedRead::Status readExtentIntoBufferBoundedImpl(const Extent& fullValueExtent, nonstd::span<std::byte> destination, uint64 payloadBudgetBytes, Result<>& diagnostic,
-                                                      std::unique_ptr<std::byte[]>* selectedOutput) const;
+  bounded_read::Status readExtentIntoBufferBoundedImpl(const Extent& fullValueExtent, nonstd::span<std::byte> destination, uint64 payloadBudgetBytes, Result<>& diagnostic,
+                                                       std::unique_ptr<std::byte[]>* selectedOutput) const;
 
   /**
    * @struct PreparedChunkBytes
@@ -767,8 +767,8 @@ private:
    */
   struct PreparedChunkBytes
   {
-    std::vector<std::byte> filteredBytes; // Deflate bytes when filterMask is zero.
-    uint32 filterMask = 0;                // Bit zero indicates raw bytes bypass deflate.
+    std::vector<std::byte> filtered_bytes; // Deflate bytes when filterMask is zero.
+    uint32 filter_mask = 0;                // Bit zero indicates raw bytes bypass deflate.
   };
 
   /**
@@ -853,7 +853,7 @@ private:
    *
    * pread does not change a shared file position, so workers reuse one descriptor.
    */
-  detail::FileHandle getPositionalReadHandle() const;
+  detail::FileHandleType getPositionalReadHandle() const;
 #endif
 
   std::filesystem::path m_FilePath;
@@ -877,11 +877,11 @@ private:
   // Serializes short-read recovery only. Successful positional reads remain lock free.
   mutable std::mutex m_PositionalReadRecoveryMutex;
   mutable std::once_flag m_ReadHandleOpenOnce;
-  mutable detail::FileHandle m_ReadFileHandle = detail::invalidFileHandle();
+  mutable detail::FileHandleType m_ReadFileHandle = detail::InvalidFileHandle();
 #endif
 };
 
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5
 
 /**
  * @def SIMPLNX_OBSERVE_METADATA_CALL
@@ -890,7 +890,7 @@ private:
  * @param expression Supplies the native expression, evaluated exactly once.
  */
 #if SIMPLNX_BUILD_TESTS
-#define SIMPLNX_OBSERVE_METADATA_CALL(event, expression) nx::core::HDF5::InvokeMetadataForTesting(nx::core::HDF5::CodecIoEventForTesting::event, [&]() { return (expression); })
+#define SIMPLNX_OBSERVE_METADATA_CALL(event, expression) nx::core::hdf5::InvokeMetadataForTesting(nx::core::hdf5::CodecIoEventForTesting::event, [&]() { return (expression); })
 #else
 #define SIMPLNX_OBSERVE_METADATA_CALL(event, expression) (expression)
 #endif
@@ -904,7 +904,7 @@ private:
  * @param expression Supplies H5Dread, evaluated exactly once.
  */
 #if SIMPLNX_BUILD_TESTS
-#define SIMPLNX_OBSERVE_TYPED_READ(file, dataset, bytes, expression) nx::core::HDF5::InvokeTypedReadForTesting(file, dataset, bytes, [&]() { return (expression); })
+#define SIMPLNX_OBSERVE_TYPED_READ(file, dataset, bytes, expression) nx::core::hdf5::InvokeTypedReadForTesting(file, dataset, bytes, [&]() { return (expression); })
 #else
 #define SIMPLNX_OBSERVE_TYPED_READ(file, dataset, bytes, expression) (expression)
 #endif
@@ -918,7 +918,7 @@ private:
  * @param expression Supplies H5Dwrite, evaluated exactly once.
  */
 #if SIMPLNX_BUILD_TESTS
-#define SIMPLNX_OBSERVE_TYPED_WRITE(file, dataset, bytes, expression) nx::core::HDF5::InvokeTypedWriteForTesting(file, dataset, bytes, [&]() { return (expression); })
+#define SIMPLNX_OBSERVE_TYPED_WRITE(file, dataset, bytes, expression) nx::core::hdf5::InvokeTypedWriteForTesting(file, dataset, bytes, [&]() { return (expression); })
 #else
 #define SIMPLNX_OBSERVE_TYPED_WRITE(file, dataset, bytes, expression) (expression)
 #endif

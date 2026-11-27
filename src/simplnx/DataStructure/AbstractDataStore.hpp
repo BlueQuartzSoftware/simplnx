@@ -27,7 +27,7 @@ namespace nx::core
  * @brief Contains simplnx core types and functions.
  */
 
-namespace HDF5
+namespace hdf5
 {
 class DatasetIO;
 }
@@ -282,7 +282,7 @@ public:
    * @class Iterator
    * @brief Iterates over mutable values through ValueProxy.
    */
-  class Iterator
+  class iterator
   {
   public:
     /**
@@ -313,14 +313,14 @@ public:
     /**
      * @brief Creates an unbound iterator.
      */
-    Iterator() = default;
+    iterator() = default;
 
     /**
      * @brief Creates an iterator at a flat value index.
      * @param dataStore Data store that must outlive the iterator.
      * @param index Flat value index.
      */
-    Iterator(AbstractDataStore& dataStore, usize index)
+    iterator(AbstractDataStore& dataStore, usize index)
     : m_DataStore(&dataStore)
     , m_Index(index)
     {
@@ -331,9 +331,9 @@ public:
      * @param offset Number of values to advance.
      * @return Advanced iterator.
      */
-    Iterator operator+(usize offset) const
+    iterator operator+(usize offset) const
     {
-      return Iterator(*m_DataStore, m_Index + offset);
+      return iterator(*m_DataStore, m_Index + offset);
     }
 
     /**
@@ -342,7 +342,7 @@ public:
      * @param iter Iterator to advance.
      * @return Advanced iterator.
      */
-    friend Iterator operator+(usize offset, const Iterator& iter)
+    friend iterator operator+(usize offset, const iterator& iter)
     {
       return iter + offset;
     }
@@ -352,9 +352,9 @@ public:
      * @param offset Number of values to move back.
      * @return Moved iterator.
      */
-    Iterator operator-(usize offset) const
+    iterator operator-(usize offset) const
     {
-      return Iterator(*m_DataStore, m_Index - offset);
+      return iterator(*m_DataStore, m_Index - offset);
     }
 
     /**
@@ -362,7 +362,7 @@ public:
      * @param offset Number of values to advance.
      * @return This iterator.
      */
-    Iterator& operator+=(usize offset)
+    iterator& operator+=(usize offset)
     {
       m_Index += offset;
       return *this;
@@ -373,7 +373,7 @@ public:
      * @param offset Number of values to move back.
      * @return This iterator.
      */
-    Iterator& operator-=(usize offset)
+    iterator& operator-=(usize offset)
     {
       m_Index -= offset;
       return *this;
@@ -383,7 +383,7 @@ public:
      * @brief Advances this iterator by one value.
      * @return This iterator after the increment.
      */
-    Iterator& operator++()
+    iterator& operator++()
     {
       m_Index++;
       return *this;
@@ -394,9 +394,9 @@ public:
      * @param unused Distinguishes the postfix operator.
      * @return Iterator before the increment.
      */
-    Iterator operator++([[maybe_unused]] int unused)
+    iterator operator++([[maybe_unused]] int unused)
     {
-      Iterator iter = *this;
+      iterator iter = *this;
       m_Index++;
       return iter;
     }
@@ -405,7 +405,7 @@ public:
      * @brief Moves this iterator back by one value.
      * @return This iterator after the decrement.
      */
-    Iterator& operator--()
+    iterator& operator--()
     {
       m_Index--;
       return *this;
@@ -416,9 +416,9 @@ public:
      * @param unused Distinguishes the postfix operator.
      * @return Iterator before the decrement.
      */
-    Iterator operator--([[maybe_unused]] int unused)
+    iterator operator--([[maybe_unused]] int unused)
     {
-      Iterator iter = *this;
+      iterator iter = *this;
       m_Index--;
       return iter;
     }
@@ -428,7 +428,7 @@ public:
      * @param rhs Iterator that defines the endpoint.
      * @return Difference between the flat indexes.
      */
-    difference_type operator-(const Iterator& rhs) const
+    difference_type operator-(const iterator& rhs) const
     {
       return m_Index - rhs.m_Index;
     }
@@ -458,7 +458,7 @@ public:
      * @param rhs Second iterator.
      * @return True when both flat indexes are equal.
      */
-    friend bool operator==(const Iterator& lhs, const Iterator& rhs)
+    friend bool operator==(const iterator& lhs, const iterator& rhs)
     {
       return lhs.m_Index == rhs.m_Index;
     }
@@ -469,7 +469,7 @@ public:
      * @param rhs Second iterator.
      * @return Relative ordering of the flat indexes.
      */
-    friend std::strong_ordering operator<=>(const Iterator& lhs, const Iterator& rhs)
+    friend std::strong_ordering operator<=>(const iterator& lhs, const iterator& rhs)
     {
       return lhs.m_Index <=> rhs.m_Index;
     }
@@ -483,7 +483,7 @@ public:
    * @class ConstIterator
    * @brief Iterates over values without modifying the data store.
    */
-  class ConstIterator
+  class const_iterator
   {
   public:
     /**
@@ -514,14 +514,14 @@ public:
     /**
      * @brief Creates an unbound iterator.
      */
-    ConstIterator() = default;
+    const_iterator() = default;
 
     /**
      * @brief Creates an iterator at a flat value index.
      * @param dataStore Data store that must outlive the iterator.
      * @param index Flat value index.
      */
-    ConstIterator(const AbstractDataStore& dataStore, usize index)
+    const_iterator(const AbstractDataStore& dataStore, usize index)
     : m_DataStore(&dataStore)
     , m_Index(index)
     {
@@ -532,9 +532,9 @@ public:
      * @param offset Number of values to advance.
      * @return Advanced iterator.
      */
-    ConstIterator operator+(usize offset) const
+    const_iterator operator+(usize offset) const
     {
-      return ConstIterator(*m_DataStore, m_Index + offset);
+      return const_iterator(*m_DataStore, m_Index + offset);
     }
 
     /**
@@ -543,7 +543,7 @@ public:
      * @param iter Iterator to advance.
      * @return Advanced iterator.
      */
-    friend ConstIterator operator+(usize offset, const ConstIterator& iter)
+    friend const_iterator operator+(usize offset, const const_iterator& iter)
     {
       return iter + offset;
     }
@@ -553,9 +553,9 @@ public:
      * @param offset Number of values to move back.
      * @return Moved iterator.
      */
-    ConstIterator operator-(usize offset) const
+    const_iterator operator-(usize offset) const
     {
-      return ConstIterator(*m_DataStore, m_Index - offset);
+      return const_iterator(*m_DataStore, m_Index - offset);
     }
 
     /**
@@ -563,7 +563,7 @@ public:
      * @param offset Number of values to advance.
      * @return This iterator.
      */
-    ConstIterator& operator+=(usize offset)
+    const_iterator& operator+=(usize offset)
     {
       m_Index += offset;
       return *this;
@@ -574,7 +574,7 @@ public:
      * @param offset Number of values to move back.
      * @return This iterator.
      */
-    ConstIterator& operator-=(usize offset)
+    const_iterator& operator-=(usize offset)
     {
       m_Index -= offset;
       return *this;
@@ -584,7 +584,7 @@ public:
      * @brief Advances this iterator by one value.
      * @return This iterator after the increment.
      */
-    ConstIterator& operator++()
+    const_iterator& operator++()
     {
       m_Index++;
       return *this;
@@ -595,9 +595,9 @@ public:
      * @param unused Distinguishes the postfix operator.
      * @return Iterator before the increment.
      */
-    ConstIterator operator++([[maybe_unused]] int unused)
+    const_iterator operator++([[maybe_unused]] int unused)
     {
-      ConstIterator iter = *this;
+      const_iterator iter = *this;
       m_Index++;
       return iter;
     }
@@ -606,7 +606,7 @@ public:
      * @brief Moves this iterator back by one value.
      * @return This iterator after the decrement.
      */
-    ConstIterator& operator--()
+    const_iterator& operator--()
     {
       m_Index--;
       return *this;
@@ -617,9 +617,9 @@ public:
      * @param unused Distinguishes the postfix operator.
      * @return Iterator before the decrement.
      */
-    ConstIterator operator--([[maybe_unused]] int unused)
+    const_iterator operator--([[maybe_unused]] int unused)
     {
-      ConstIterator iter = *this;
+      const_iterator iter = *this;
       m_Index--;
       return iter;
     }
@@ -629,7 +629,7 @@ public:
      * @param rhs Iterator that defines the endpoint.
      * @return Difference between the flat indexes.
      */
-    difference_type operator-(const ConstIterator& rhs) const
+    difference_type operator-(const const_iterator& rhs) const
     {
       return m_Index - rhs.m_Index;
     }
@@ -659,7 +659,7 @@ public:
      * @param rhs Second iterator.
      * @return True when both flat indexes are equal.
      */
-    friend bool operator==(const ConstIterator& lhs, const ConstIterator& rhs)
+    friend bool operator==(const const_iterator& lhs, const const_iterator& rhs)
     {
       return lhs.m_Index == rhs.m_Index;
     }
@@ -670,7 +670,7 @@ public:
      * @param rhs Second iterator.
      * @return Relative ordering of the flat indexes.
      */
-    friend std::strong_ordering operator<=>(const ConstIterator& lhs, const ConstIterator& rhs)
+    friend std::strong_ordering operator<=>(const const_iterator& lhs, const const_iterator& rhs)
     {
       return lhs.m_Index <=> rhs.m_Index;
     }
@@ -821,7 +821,7 @@ public:
       }
     }
 
-    WarningCollection warnings;
+    WarningCollectionType warnings;
     for(usize extentIndex = 0; extentIndex < extents.size(); ++extentIndex)
     {
       Result<> readResult = readExtentIntoBuffer(extents[extentIndex], destinations[extentIndex]);
@@ -850,7 +850,7 @@ public:
   {
     std::vector<std::vector<T>> results;
     results.reserve(extents.size());
-    WarningCollection warnings;
+    WarningCollectionType warnings;
     for(const Extent& extent : extents)
     {
       Result<std::vector<T>> readResult = readExtent(extent);
@@ -979,31 +979,31 @@ public:
    */
   virtual void swap(usize index1, usize index2) = 0;
 
-  Iterator begin()
+  iterator begin()
   {
-    return Iterator(*this, 0);
+    return iterator(*this, 0);
   }
 
-  Iterator end()
+  iterator end()
   {
-    return Iterator(*this, getSize());
+    return iterator(*this, getSize());
   }
 
-  ConstIterator begin() const
+  const_iterator begin() const
   {
-    return ConstIterator(*this, 0);
+    return const_iterator(*this, 0);
   }
 
-  ConstIterator end() const
+  const_iterator end() const
   {
-    return ConstIterator(*this, getSize());
+    return const_iterator(*this, getSize());
   }
 
-  ConstIterator cbegin() const
+  const_iterator cbegin() const
   {
     return begin();
   }
-  ConstIterator cend() const
+  const_iterator cend() const
   {
     return end();
   }
@@ -1275,14 +1275,14 @@ public:
    * @param dataset HDF5 dataset to read.
    * @return Error from the HDF5 read.
    */
-  virtual Result<> readHdf5(const HDF5::DatasetIO& dataset) = 0;
+  virtual Result<> readHdf5(const hdf5::DatasetIO& dataset) = 0;
 
   /**
    * @brief Writes values to an HDF5 dataset.
    * @param dataset HDF5 dataset to write.
    * @return Error from the HDF5 write.
    */
-  virtual Result<> writeHdf5(HDF5::DatasetIO& dataset) const = 0;
+  virtual Result<> writeHdf5(hdf5::DatasetIO& dataset) const = 0;
 
   /**
    * @brief Returns the value that initializes elements when the store grows.
@@ -1350,7 +1350,7 @@ protected:
    * @brief Moves base data-store state.
    * @param other Data store to move.
    */
-  AbstractDataStore(AbstractDataStore&& other)
+  AbstractDataStore(AbstractDataStore&& other) noexcept
   : IDataStore(std::move(other))
   , m_InitValue(std::move(other.m_InitValue))
   {
@@ -1360,18 +1360,18 @@ private:
   std::optional<T> m_InitValue;
 };
 
-using UInt8AbstractDataStore = AbstractDataStore<uint8>;
-using UInt16AbstractDataStore = AbstractDataStore<uint16>;
-using UInt32AbstractDataStore = AbstractDataStore<uint32>;
-using UInt64AbstractDataStore = AbstractDataStore<uint64>;
+using UInt8AbstractDataStoreType = AbstractDataStore<uint8>;
+using UInt16AbstractDataStoreType = AbstractDataStore<uint16>;
+using UInt32AbstractDataStoreType = AbstractDataStore<uint32>;
+using UInt64AbstractDataStoreType = AbstractDataStore<uint64>;
 
-using Int8AbstractDataStore = AbstractDataStore<int8>;
-using Int16AbstractDataStore = AbstractDataStore<int16>;
-using Int32AbstractDataStore = AbstractDataStore<int32>;
-using Int64AbstractDataStore = AbstractDataStore<int64>;
+using Int8AbstractDataStoreType = AbstractDataStore<int8>;
+using Int16AbstractDataStoreType = AbstractDataStore<int16>;
+using Int32AbstractDataStoreType = AbstractDataStore<int32>;
+using Int64AbstractDataStoreType = AbstractDataStore<int64>;
 
-using BoolAbstractDataStore = AbstractDataStore<bool>;
+using BoolAbstractDataStoreType = AbstractDataStore<bool>;
 
-using Float32AbstractDataStore = AbstractDataStore<float32>;
-using Float64AbstractDataStore = AbstractDataStore<float64>;
+using Float32AbstractDataStoreType = AbstractDataStore<float32>;
+using Float64AbstractDataStoreType = AbstractDataStore<float64>;
 } // namespace nx::core

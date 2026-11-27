@@ -7,13 +7,13 @@ namespace nx::core
 class SIMPLNX_EXPORT INodeGeometry3D : public INodeGeometry2D
 {
 public:
-  static inline constexpr StringLiteral k_PolyhedronDataName = "Polyhedron Data";
-  static inline constexpr StringLiteral k_SharedPolyhedronListName = "Shared Polyhedron List";
-  static inline constexpr StringLiteral k_TypeName = "INodeGeometry3D";
+  static constexpr StringLiteralType k_PolyhedronDataName = "Polyhedron Data";
+  static constexpr StringLiteralType k_SharedPolyhedronListName = "Shared Polyhedron List";
+  static constexpr StringLiteralType k_TypeName = "INodeGeometry3D";
 
   INodeGeometry3D() = delete;
   INodeGeometry3D(const INodeGeometry3D&) = default;
-  INodeGeometry3D(INodeGeometry3D&&) = default;
+  INodeGeometry3D(INodeGeometry3D&&) noexcept = default;
 
   INodeGeometry3D& operator=(const INodeGeometry3D&) = delete;
   INodeGeometry3D& operator=(INodeGeometry3D&&) noexcept = delete;
@@ -24,37 +24,37 @@ public:
    * @brief Sets the ID of the polyhedron list array.
    * @param polyListId The optional ID of the polyhedron list array
    */
-  void setPolyhedronListId(const OptionalId& polyListId);
+  void setPolyhedronListId(const OptionalIdType& polyListId);
 
   /**
    * @brief Returns a pointer to the polyhedron list array.
    * @return SharedFaceList* Pointer to the polyhedron list, or nullptr if not available
    */
-  SharedFaceList* getPolyhedra();
+  SharedFaceListType* getPolyhedra();
 
   /**
    * @brief Returns a const pointer to the polyhedron list array.
    * @return const SharedFaceList* Const pointer to the polyhedron list, or nullptr if not available
    */
-  const SharedFaceList* getPolyhedra() const;
+  const SharedFaceListType* getPolyhedra() const;
 
   /**
    * @brief Returns a reference to the polyhedron list array.
    * @return SharedFaceList& Reference to the polyhedron list
    */
-  SharedFaceList& getPolyhedraRef();
+  SharedFaceListType& getPolyhedraRef();
 
   /**
    * @brief Returns a const reference to the polyhedron list array.
    * @return const SharedFaceList& Const reference to the polyhedron list
    */
-  const SharedFaceList& getPolyhedraRef() const;
+  const SharedFaceListType& getPolyhedraRef() const;
 
   /**
    * @brief Sets the internal reference to the polyhedron list.
    * @param polyhedra The polyhedron list array to use
    */
-  void setPolyhedraList(const SharedFaceList& polyhedra);
+  void setPolyhedraList(const SharedFaceListType& polyhedra);
 
   /**
    * @brief Resizes the polyhedra list to the target size.
@@ -67,7 +67,7 @@ public:
    * @brief Returns the optional ID of the polyhedra data AttributeMatrix.
    * @return OptionalId The polyhedra data ID if it exists
    */
-  OptionalId getPolyhedraDataId() const;
+  OptionalIdType getPolyhedraDataId() const;
 
   /**
    * @brief Returns the number of polyhedra in the geometry.
@@ -99,7 +99,7 @@ public:
    * @brief Sets the ID of the unshared faces array.
    * @param id The optional ID of the unshared faces array
    */
-  void setUnsharedFacedId(const OptionalId& id);
+  void setUnsharedFacedId(const OptionalIdType& id);
 
   /**
    * @brief Pure-Virtual intended to find the unshared faces of each element
@@ -114,7 +114,7 @@ public:
    * @brief Returns a pointer to the unshared face list array.
    * @return
    */
-  const SharedFaceList* getUnsharedFaces() const;
+  const SharedFaceListType* getUnsharedFaces() const;
 
   /**
    * @brief Deletes the current unshared face list array.
@@ -146,7 +146,7 @@ public:
    * @param tetId The index of the cell to query
    * @param coords The coordinates of each vertex
    */
-  void getCellCoordinates(usize tetId, nonstd::span<Point3Df> coords) const;
+  void getCellCoordinates(usize tetId, nonstd::span<FloatVec3Type> coords) const;
 
   /**
    * @brief Returns the DataStructure unique ID of the polyhedron list array.
@@ -158,7 +158,7 @@ public:
    * @brief Sets the ID of the polyhedra data AttributeMatrix.
    * @param polyDataId The optional ID of the polyhedra data AttributeMatrix
    */
-  void setPolyhedraDataId(const OptionalId& polyDataId);
+  void setPolyhedraDataId(const OptionalIdType& polyDataId);
 
   /**
    * @brief Returns the DataStructure unique ID of the polyhedra AttributeMatrix.
@@ -229,14 +229,14 @@ protected:
    * @param numQuads The number of quads to allocate space for
    * @return SharedQuadList* Pointer to the created shared quad list
    */
-  SharedQuadList* createSharedQuadList(usize numQuads);
+  SharedQuadListType* createSharedQuadList(usize numQuads);
 
   /**
    * @brief Creates a new shared triangle list with the specified number of triangles.
    * @param numTris The number of triangles to allocate space for
    * @return SharedTriList* Pointer to the created shared triangle list
    */
-  SharedTriList* createSharedTriList(usize numTris);
+  SharedTriListType* createSharedTriList(usize numTris);
 
   /**
    * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.

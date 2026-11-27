@@ -77,7 +77,7 @@ public:
   {
   }
 
-  Result<> copyIntoBuffer(usize, nonstd::span<T>) const override
+  Result<> copyIntoBuffer(usize /*unused*/, nonstd::span<T> /*unused*/) const override
   {
     return MakeErrorResult(m_ErrorCode, "Injected histogram read failure");
   }
@@ -130,7 +130,7 @@ void RequireIntegralHistogramParity(const std::vector<T>& values, usize numBins,
 
   REQUIRE(fused.value().min == reference.value().min);
   REQUIRE(fused.value().max == reference.value().max);
-  REQUIRE(fused.value().binWidth == reference.value().binWidth);
+  REQUIRE(fused.value().bin_width == reference.value().bin_width);
   REQUIRE(fused.value().counts == reference.value().counts);
 }
 
@@ -172,7 +172,7 @@ void RequireCompactCountingParity(const std::vector<T>& values, usize numBins, s
   REQUIRE(fused.value().min != fused.value().max);
   REQUIRE(fused.value().min == reference.value().min);
   REQUIRE(fused.value().max == reference.value().max);
-  REQUIRE(fused.value().binWidth == reference.value().binWidth);
+  REQUIRE(fused.value().bin_width == reference.value().bin_width);
   REQUIRE(fused.value().counts == reference.value().counts);
 }
 } // namespace
@@ -194,13 +194,13 @@ TEST_CASE("NXImageProcessing::HistogramEngine: counts + Otsu bimodal", "[NXImage
   }
   // Bin width reproduces ITK's marginal-scale widening: upper = max + (max-min)/(numBins*100), so binWidth =
   // (upper - min)/numBins = (9 + 9/1000)/10 = 0.9009 (NOT the naive (9-0)/10 = 0.9).
-  REQUIRE(h.value().binWidth == Approx((9.0 + 9.0 / (10.0 * 100.0)) / 10.0));
+  REQUIRE(h.value().bin_width == Approx((9.0 + 9.0 / (10.0 * 100.0)) / 10.0));
 
   // (b) OtsuMultipleThresholds: clean bimodal histogram, single threshold in the valley.
   Histogram bim;
   bim.min = 0.0;
   bim.max = 9.0;
-  bim.binWidth = 1.0;
+  bim.bin_width = 1.0;
   bim.counts = {50, 50, 0, 0, 0, 0, 0, 0, 50, 50};
   auto th = OtsuMultipleThresholds(bim, 1, /*valley*/ false, /*binMidpoint*/ false);
   REQUIRE(th.size() == 1);
@@ -215,7 +215,7 @@ TEST_CASE("NXImageProcessing::HistogramEngine: Otsu trimodal, two thresholds", "
   Histogram tri;
   tri.min = 0.0;
   tri.max = 20.0;
-  tri.binWidth = 1.0;
+  tri.bin_width = 1.0;
   tri.counts = {0, 50, 50, 0, 0, 0, 0, 0, 0, 50, 50, 0, 0, 0, 0, 0, 0, 50, 50, 0};
 
   auto th = OtsuMultipleThresholds(tri, 2, /*valley*/ false, /*binMidpoint*/ false);
@@ -234,7 +234,7 @@ TEST_CASE("NXImageProcessing::HistogramEngine: Otsu guards + options", "[NXImage
   Histogram bim;
   bim.min = 0.0;
   bim.max = 9.0;
-  bim.binWidth = 1.0;
+  bim.bin_width = 1.0;
   bim.counts = {50, 50, 0, 0, 0, 0, 0, 0, 50, 50};
 
   SECTION("numThresholds >= numBins returns an empty vector (no OOB)")
@@ -242,7 +242,7 @@ TEST_CASE("NXImageProcessing::HistogramEngine: Otsu guards + options", "[NXImage
     Histogram tiny;
     tiny.min = 0.0;
     tiny.max = 3.0;
-    tiny.binWidth = 1.0;
+    tiny.bin_width = 1.0;
     tiny.counts = {10, 0, 20}; // 3 bins
     REQUIRE(OtsuMultipleThresholds(tiny, 3, false, false).empty());
     REQUIRE(OtsuMultipleThresholds(tiny, 5, false, false).empty());
@@ -255,7 +255,7 @@ TEST_CASE("NXImageProcessing::HistogramEngine: Otsu guards + options", "[NXImage
     REQUIRE(thMax.size() == 1);
     REQUIRE(thMid.size() == 1);
     // Same selected bin, different in-bin offset: bin-max is exactly half a bin above the midpoint.
-    REQUIRE(thMax[0] == Approx(thMid[0] + 0.5 * bim.binWidth));
+    REQUIRE(thMax[0] == Approx(thMid[0] + 0.5 * bim.bin_width));
   }
 
   SECTION("valleyEmphasis=true runs and returns the requested threshold count")
@@ -270,7 +270,7 @@ TEST_CASE("NXImageProcessing::HistogramEngine: Otsu guards + options", "[NXImage
 TEST_CASE("NXImageProcessing::HistogramEngine: reservation-owned scan policy honors default and explicit capacities", "[NXImageProcessing][HistogramEngine]")
 {
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
   manager.setBudgetBytes(384ULL * k_MiB);

@@ -10,10 +10,10 @@
 
 namespace
 {
-constexpr nx::core::StringLiteral k_TupleDimsAttrName = "TupleDimensions";
+constexpr nx::core::StringLiteralType k_TupleDimsAttrName = "TupleDimensions";
 }
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 StringArrayIO::StringArrayIO() = default;
 StringArrayIO::~StringArrayIO() noexcept = default;
@@ -28,14 +28,14 @@ std::string StringArrayIO::getTypeName() const
   return data_type::k_TypeName;
 }
 
-Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
+Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const GroupReaderType& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                  const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
   auto datasetReader = parentGroup.openDataset(objectName);
   std::string dataArrayName = datasetReader.getName();
 
   // The importable attribute excludes values unavailable in this file.
-  auto importableResult = datasetReader.readScalarAttribute<int32>(Constants::k_ImportableTag);
+  auto importableResult = datasetReader.readScalarAttribute<int32>(constants::k_ImportableTag);
   if(importableResult.invalid())
   {
     return ConvertResult(std::move(importableResult));
@@ -53,25 +53,25 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
     tupleShape = std::move(tupleShapeResult.value());
   }
 
-  StringArray* data = nullptr;
+  StringArray* dataPtr = nullptr;
   if(useEmptyDataStore)
   {
     // Metadata-only import replaces its temporary empty store before access.
     // This avoids allocating strings that finalization loads later.
-    data = StringArray::Import(dataStructureReader.getDataStructure(), dataArrayName, tupleShape, importId, std::vector<std::string>{}, parentId);
-    if(data != nullptr)
+    dataPtr = StringArray::Import(dataStructureReader.getDataStructure(), dataArrayName, tupleShape, importId, std::vector<std::string>{}, parentId);
+    if(dataPtr != nullptr)
     {
       auto emptyStore = std::make_shared<EmptyStringStore>(tupleShape);
-      data->setStore(emptyStore);
+      dataPtr->setStore(emptyStore);
     }
   }
   else
   {
     std::vector<std::string> strings = datasetReader.readAsVectorOfStrings();
-    data = StringArray::Import(dataStructureReader.getDataStructure(), dataArrayName, tupleShape, importId, std::move(strings), parentId);
+    dataPtr = StringArray::Import(dataStructureReader.getDataStructure(), dataArrayName, tupleShape, importId, std::move(strings), parentId);
   }
 
-  if(data == nullptr)
+  if(dataPtr == nullptr)
   {
     return MakeErrorResult(-404, fmt::format("Error importing DataArray with name '{}' that is a child of group '{}'", dataArrayName, parentGroup.getName()));
   }
@@ -79,12 +79,12 @@ Result<> StringArrayIO::readData(DataStructureReader& dataStructureReader, const
   return {};
 }
 
-Result<> StringArrayIO::writeData(DataStructureWriter& dataStructureWriter, const data_type& stringArray, group_writer_type& parentGroup, bool importable) const
+Result<> StringArrayIO::writeData(DataStructureWriter& dataStructureWriter, const data_type& stringArray, GroupWriterType& parentGroup, bool importable)
 {
   auto datasetWriter = parentGroup.createDataset(stringArray.getName());
 
   // writeVectorOfStrings can modify its argument, so write a copy of the values.
-  data_type::collection_type strings = stringArray.values();
+  data_type::CollectionType strings = stringArray.values();
   auto result = datasetWriter.writeVectorOfStrings(strings);
   if(result.invalid())
   {
@@ -103,28 +103,28 @@ Result<> StringArrayIO::writeData(DataStructureWriter& dataStructureWriter, cons
   return WriteObjectAttributes(dataStructureWriter, stringArray, datasetWriter, importable);
 }
 
-Result<> StringArrayIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& parentGroupReader) const
+Result<> StringArrayIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& parentGroupReader) const
 {
   if(!dataStructure.containsData(dataPath))
   {
     return MakeErrorResult(-151200, fmt::format("Imported DataStructure Object at path '{}' does not exist.", dataPath.toString()));
   }
 
-  auto* stringArray = dataStructure.getDataAs<data_type>(dataPath);
-  if(stringArray == nullptr)
+  auto* stringArrayPtr = dataStructure.getDataAs<data_type>(dataPath);
+  if(stringArrayPtr == nullptr)
   {
     return MakeErrorResult(-151201, fmt::format("Imported DataStructure Object at path '{}' is not of the expected type.", dataPath.toString()));
   }
 
   auto datasetReader = parentGroupReader.openDataset(dataPath.getTargetName());
   std::vector<std::string> strings = datasetReader.readAsVectorOfStrings();
-  auto stringStore = std::make_shared<StringStore>(std::move(strings), stringArray->getTupleShape());
-  stringArray->setStore(stringStore);
+  auto stringStore = std::make_shared<StringStore>(std::move(strings), stringArrayPtr->getTupleShape());
+  stringArrayPtr->setStore(stringStore);
   return {};
 }
 
-Result<> StringArrayIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
+Result<> StringArrayIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, GroupWriterType& parentWriter) const
 {
   return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

@@ -22,7 +22,7 @@ namespace
  * A row includes the full extent of each dimension from firstRowDim onward.
  * The function does not split a row across chunks.
  */
-nx::core::usize computeRowsForByteTarget(nonstd::span<const nx::core::usize> dims, nx::core::usize firstRowDim, nx::core::usize unitBytes, nx::core::usize targetBytes, nx::core::usize maxRows)
+nx::core::usize ComputeRowsForByteTarget(nonstd::span<const nx::core::usize> dims, nx::core::usize firstRowDim, nx::core::usize unitBytes, nx::core::usize targetBytes, nx::core::usize maxRows)
 {
   nx::core::usize rowBytes = unitBytes;
   for(nx::core::usize i = firstRowDim; i < dims.size(); ++i)
@@ -35,7 +35,7 @@ nx::core::usize computeRowsForByteTarget(nonstd::span<const nx::core::usize> dim
 }
 } // namespace
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 
 bool ComputeChunkShapeInto(nonstd::span<const usize> dims, usize numComponents, usize elementByteSize, const ChunkShapeOptions& opts, nonstd::span<usize> chunk,
@@ -62,11 +62,11 @@ bool ComputeChunkShapeInto(nonstd::span<const usize> dims, usize numComponents, 
     if(dims.size() >= 3)
     {
       chunk[0] = 1;
-      chunk[1] = computeRowsForByteTarget(dims, /*firstRowDim=*/2, unitBytes, opts.targetBytes, dims[1]);
+      chunk[1] = ComputeRowsForByteTarget(dims, /*firstRowDim=*/2, unitBytes, opts.target_bytes, dims[1]);
     }
     else
     {
-      chunk[0] = computeRowsForByteTarget(dims, /*firstRowDim=*/1, unitBytes, opts.targetBytes, dims[0]);
+      chunk[0] = ComputeRowsForByteTarget(dims, /*firstRowDim=*/1, unitBytes, opts.target_bytes, dims[0]);
     }
     return true;
   }
@@ -83,12 +83,12 @@ bool ComputeChunkShapeInto(nonstd::span<const usize> dims, usize numComponents, 
   // bundles as many complete rows as possible. All inner dimensions stay full.
   for(usize i = 0; i < dims.size(); ++i)
   {
-    if(suffixBytes[i] >= opts.targetBytes)
+    if(suffixBytes[i] >= opts.target_bytes)
     {
       chunk[i] = 1;
       continue;
     }
-    usize rows = (suffixBytes[i] == 0) ? 1 : opts.targetBytes / suffixBytes[i];
+    usize rows = (suffixBytes[i] == 0) ? 1 : opts.target_bytes / suffixBytes[i];
     rows = std::min<usize>(std::max<usize>(rows, 1), dims[i]);
     chunk[i] = rows;
     break;
@@ -96,7 +96,7 @@ bool ComputeChunkShapeInto(nonstd::span<const usize> dims, usize numComponents, 
   return true;
 }
 
-ShapeType computeChunkShape(const ShapeType& dims, usize numComponents, usize elementByteSize, const ChunkShapeOptions& opts)
+ShapeType ComputeChunkShape(const ShapeType& dims, usize numComponents, usize elementByteSize, const ChunkShapeOptions& opts)
 {
   ShapeType chunk(dims.size());
   ShapeType scratch(opts.regime != ChunkShapeRegime::PinSlowestDim ? dims.size() : 0);
@@ -106,4 +106,4 @@ ShapeType computeChunkShape(const ShapeType& dims, usize numComponents, usize el
   return chunk;
 }
 
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

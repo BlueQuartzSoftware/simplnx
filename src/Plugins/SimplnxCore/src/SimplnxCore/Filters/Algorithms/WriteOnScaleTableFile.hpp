@@ -18,17 +18,17 @@ namespace nx::core
 struct SIMPLNXCORE_EXPORT WriteOnScaleTableFileInputValues
 {
   /** @brief Directory that receives the table file. */
-  FileSystemPathParameter::ValueType OutputPath;
+  FileSystemPathParameter::ValueType output_path;
   /** @brief Prefix for the table file name. */
-  StringParameter::ValueType FilePrefix;
+  StringParameter::ValueType file_prefix;
   /** @brief Number of keypoints along the X, Y, and Z axes. */
-  VectorInt32Parameter::ValueType NumKeypoints;
+  VectorInt32ParameterType::ValueType num_keypoints;
   /** @brief Path to the Image or Rectilinear Grid Geometry. */
-  DataPath InputGeometryPath;
+  DataPath input_geometry_path;
   /** @brief Path to the scalar cell feature IDs. */
-  DataPath FeatureIdsArrayPath;
+  DataPath feature_ids_array_path;
   /** @brief Path to the phase names. */
-  DataPath PhaseNamesArrayPath;
+  DataPath phase_names_array_path;
 };
 
 /**
@@ -47,7 +47,7 @@ public:
    */
   WriteOnScaleTableFile(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, WriteOnScaleTableFileInputValues* inputValues);
 
-  ~WriteOnScaleTableFile() noexcept;
+  ~WriteOnScaleTableFile() noexcept = default;
 
   WriteOnScaleTableFile(const WriteOnScaleTableFile&) = delete;
   WriteOnScaleTableFile(WriteOnScaleTableFile&&) noexcept = delete;

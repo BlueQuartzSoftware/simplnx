@@ -9,7 +9,7 @@
 #include <fstream>
 #include <limits>
 
-namespace nx::core::EbsdPatternFileUtilities
+namespace nx::core::ebsd_pattern_file_utilities
 {
 std::string NormalizeExtension(const std::filesystem::path& filePath)
 {
@@ -75,16 +75,16 @@ Result<std::vector<uint8>> ReadExactBytes(const std::filesystem::path& filePath,
 
 uint32 DecodeUInt32LittleEndian(const uint8* bytes)
 {
-  return bit_cast_int<uint32, endian::little>(reinterpret_cast<const std::byte*>(bytes));
+  return BitCastInt<uint32, endian::little>(reinterpret_cast<const std::byte*>(bytes));
 }
 
 uint64 DecodeUInt64LittleEndian(const uint8* bytes)
 {
-  return bit_cast_int<uint64, endian::little>(reinterpret_cast<const std::byte*>(bytes));
+  return BitCastInt<uint64, endian::little>(reinterpret_cast<const std::byte*>(bytes));
 }
 
 float64 DecodeFloat64LittleEndian(const uint8* bytes)
 {
-  return bit_cast<float64>(DecodeUInt64LittleEndian(bytes));
+  return BitCast<float64>(DecodeUInt64LittleEndian(bytes));
 }
-} // namespace nx::core::EbsdPatternFileUtilities
+} // namespace nx::core::ebsd_pattern_file_utilities

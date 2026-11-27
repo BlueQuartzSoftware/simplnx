@@ -60,14 +60,14 @@ Parameters PointSampleEdgeGeometryFilter::parameters() const
   params.insert(
       std::make_unique<NumberParameter<float32>>(k_ScanVectorSamplingRes_Key, "Sampling Spacing (mm)", "Distance (in millimeters) between successive sample points along each scan vector.", 0.1f));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ScanVectorGeometryPath_Key, "Input Edge Geometry", "Path to the Edge geometry along which sampling will occur.", DataPath(),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Edge}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Edge}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(
       k_CalculateCumulativeSampleDistance_Key, "Calculate Cumulative Sample Distance",
       "Determines whether or not to calculate the cumulative distance (the distance from the starting endpoint to the sample vertex's location) for each sample vertex on each edge.", true));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Edge Attribute Arrays to Transfer",
                                                                "The paths to the Edge Attribute Arrays to transfer to the created Vertex Geometry", MultiArraySelectionParameter::ValueType{},
-                                                               MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
+                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray}, nx::core::GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Parameter(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_SampledVertexGeometryPath_Key, "Output Vertex Geometry",
@@ -94,14 +94,14 @@ IFilter::VersionType PointSampleEdgeGeometryFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer PointSampleEdgeGeometryFilter::clone() const
+IFilter::UniquePointerType PointSampleEdgeGeometryFilter::clone() const
 {
   return std::make_unique<PointSampleEdgeGeometryFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult PointSampleEdgeGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult PointSampleEdgeGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                      const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pVertexGeometryDataPath = filterArgs.value<DataPath>(k_SampledVertexGeometryPath_Key);
   auto pVertexGroupDataName = filterArgs.value<std::string>(k_VertexDataGroupName_Key);
@@ -143,30 +143,30 @@ IFilter::PreflightResult PointSampleEdgeGeometryFilter::preflightImpl(const Data
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues  LinkGeometryDataFilter via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> PointSampleEdgeGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> PointSampleEdgeGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   PointSampleEdgeGeometryInputValues inputs;
-  inputs.ScanVectorSamplingRes = filterArgs.value<float32>(k_ScanVectorSamplingRes_Key);
-  inputs.ScanVectorGeometryPath = filterArgs.value<DataPath>(k_ScanVectorGeometryPath_Key);
-  inputs.SampledVertexGeometryPath = filterArgs.value<DataPath>(k_SampledVertexGeometryPath_Key);
-  inputs.CumulativeSampleDistanceArrayName = filterArgs.value<std::string>(k_CumulativeSampleDistanceArrayName_Key);
-  inputs.EdgeIdsArrayName = filterArgs.value<std::string>(k_EdgeIdsArrayName_Key);
-  inputs.CalculateCumulativeSampleDistance = filterArgs.value<bool>(k_CalculateCumulativeSampleDistance_Key);
-  inputs.pSelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+  inputs.scan_vector_sampling_res = filterArgs.value<float32>(k_ScanVectorSamplingRes_Key);
+  inputs.scan_vector_geometry_path = filterArgs.value<DataPath>(k_ScanVectorGeometryPath_Key);
+  inputs.sampled_vertex_geometry_path = filterArgs.value<DataPath>(k_SampledVertexGeometryPath_Key);
+  inputs.cumulative_sample_distance_array_name = filterArgs.value<std::string>(k_CumulativeSampleDistanceArrayName_Key);
+  inputs.edge_ids_array_name = filterArgs.value<std::string>(k_EdgeIdsArrayName_Key);
+  inputs.calculate_cumulative_sample_distance = filterArgs.value<bool>(k_CalculateCumulativeSampleDistance_Key);
+  inputs.p_selected_data_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
   auto pVertexGroupDataName = filterArgs.value<std::string>(k_VertexDataGroupName_Key);
-  inputs.pVertexGroupDataPath = inputs.ScanVectorGeometryPath.createChildPath(pVertexGroupDataName);
+  inputs.p_vertex_group_data_path = inputs.scan_vector_geometry_path.createChildPath(pVertexGroupDataName);
 
   MultiArraySelectionParameter::ValueType createdDataPaths;
-  for(const auto& selectedDataPath : inputs.pSelectedDataArrayPaths)
+  for(const auto& selectedDataPath : inputs.p_selected_data_array_paths)
   {
-    createdDataPaths.push_back(inputs.pVertexGroupDataPath.createChildPath(selectedDataPath.getTargetName()));
+    createdDataPaths.push_back(inputs.p_vertex_group_data_path.createChildPath(selectedDataPath.getTargetName()));
   }
-  inputs.pCreatedDataArrayPaths = createdDataPaths;
+  inputs.p_created_data_array_paths = createdDataPaths;
 
   return PointSampleEdgeGeometry(dataStructure, &inputs, messageHandler, shouldCancel)();
 }

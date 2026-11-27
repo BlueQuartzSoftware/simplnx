@@ -51,10 +51,10 @@ Parameters ComputeTriangleGeomVolumesFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriGeometryDataPath_Key, "Triangle Geometry", "The complete path to the Geometry for which to calculate the normals", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The DataPath to the FaceLabels values.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
   params.insertSeparator(Parameters::Separator{"Input Face Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Face Feature Attribute Matrix",
                                                                     "The DataPath to the AttributeMatrix that holds feature data for the faces",
@@ -72,14 +72,14 @@ IFilter::VersionType ComputeTriangleGeomVolumesFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeTriangleGeomVolumesFilter::clone() const
+IFilter::UniquePointerType ComputeTriangleGeomVolumesFilter::clone() const
 {
   return std::make_unique<ComputeTriangleGeomVolumesFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeTriangleGeomVolumesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeTriangleGeomVolumesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pFaceLabelsArrayPath = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
   auto pFeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
@@ -89,8 +89,8 @@ IFilter::PreflightResult ComputeTriangleGeomVolumesFilter::preflightImpl(const D
   nx::core::Result<OutputActions> resultOutputActions;
 
   // Ensure the Face Feature Attribute Matrix is really an AttributeMatrix
-  const auto* featureAttrMatrix = dataStructure.getDataAs<AttributeMatrix>(pFeatureAttributeMatrixPath);
-  if(featureAttrMatrix == nullptr)
+  const auto* featureAttrMatrixPtr = dataStructure.getDataAs<AttributeMatrix>(pFeatureAttributeMatrixPath);
+  if(featureAttrMatrixPtr == nullptr)
   {
     return IFilter::MakePreflightErrorResult(
         -12801, fmt::format("Feature AttributeMatrix does not exist at path '{}' or the path does not point to an AttributeMatrix.", pFeatureAttributeMatrixPath.toString()));
@@ -100,7 +100,7 @@ IFilter::PreflightResult ComputeTriangleGeomVolumesFilter::preflightImpl(const D
   {
     auto createdArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_VolumesArrayName_Key);
     DataPath createdArrayPath = pFeatureAttributeMatrixPath.createChildPath(createdArrayName);
-    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, featureAttrMatrix->getShape(), std::vector<usize>{1}, createdArrayPath);
+    auto createArrayAction = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, featureAttrMatrixPtr->getShape(), std::vector<usize>{1}, createdArrayPath);
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
@@ -108,20 +108,20 @@ IFilter::PreflightResult ComputeTriangleGeomVolumesFilter::preflightImpl(const D
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeTriangleGeomVolumesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeTriangleGeomVolumesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeTriangleGeomVolumesInputValues inputValues;
-  inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
-  inputValues.FaceLabelsArrayPath = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
-  inputValues.FeatureAttributeMatrixPath = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
+  inputValues.triangle_geometry_path = filterArgs.value<DataPath>(k_TriGeometryDataPath_Key);
+  inputValues.face_labels_array_path = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
+  inputValues.feature_attribute_matrix_path = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
 
   auto volumesArrayNameValue = filterArgs.value<DataObjectNameParameter::ValueType>(k_VolumesArrayName_Key);
-  inputValues.VolumesArrayPath = inputValues.FeatureAttributeMatrixPath.createChildPath(volumesArrayNameValue);
+  inputValues.volumes_array_path = inputValues.feature_attribute_matrix_path.createChildPath(volumesArrayNameValue);
 
   return ComputeTriangleGeomVolumes(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

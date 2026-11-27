@@ -15,11 +15,11 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT WriteFeatureDataCSVInputValues
 {
-  AttributeMatrixSelectionParameter::ValueType CellFeatureAttributeMatrixPath;
-  ChoicesParameter::ValueType DelimiterIndex;
-  FileSystemPathParameter::ValueType FeatureDataFile;
-  BoolParameter::ValueType WriteNeighborlistData;
-  BoolParameter::ValueType WriteNumFeaturesLine;
+  AttributeMatrixSelectionParameter::ValueType cell_feature_attribute_matrix_path;
+  ChoicesParameter::ValueType delimiter_index{};
+  FileSystemPathParameter::ValueType feature_data_file;
+  BoolParameter::ValueType write_neighborlist_data{};
+  BoolParameter::ValueType write_num_features_line{};
 };
 
 /**
@@ -31,7 +31,7 @@ class SIMPLNXCORE_EXPORT WriteFeatureDataCSV
 {
 public:
   WriteFeatureDataCSV(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, WriteFeatureDataCSVInputValues* inputValues);
-  ~WriteFeatureDataCSV() noexcept;
+  ~WriteFeatureDataCSV() noexcept = default;
 
   WriteFeatureDataCSV(const WriteFeatureDataCSV&) = delete;
   WriteFeatureDataCSV(WriteFeatureDataCSV&&) noexcept = delete;

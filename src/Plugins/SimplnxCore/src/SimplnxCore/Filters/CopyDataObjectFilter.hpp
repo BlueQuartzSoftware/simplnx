@@ -21,10 +21,10 @@ public:
   CopyDataObjectFilter& operator=(CopyDataObjectFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_DataPath_Key = "existing_data_path";
-  static constexpr StringLiteral k_UseNewParent_Key = "use_new_parent";
-  static constexpr StringLiteral k_NewPath_Key = "new_data_path";
-  static constexpr StringLiteral k_NewPathSuffix_Key = "new_path_suffix";
+  static constexpr StringLiteralType k_DataPath_Key = "existing_data_path";
+  static constexpr StringLiteralType k_UseNewParent_Key = "use_new_parent";
+  static constexpr StringLiteralType k_NewPath_Key = "new_data_path";
+  static constexpr StringLiteralType k_NewPathSuffix_Key = "new_path_suffix";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -81,7 +81,7 @@ public:
    * @brief
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

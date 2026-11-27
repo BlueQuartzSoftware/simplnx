@@ -26,9 +26,9 @@ const DataPath k_QuickMeshTriangleGeomPath({"QuickMesh"});
 // Runs SurfaceNets on the flush cylinder, using the shared mesher-agnostic RunMesher helper (see
 // SurfaceMeshingTestUtils.hpp) so the argument list is defined in one place instead of duplicated
 // per test file.
-SurfaceMeshingTest::MeshResult RunSurfaceNetsForNodeTypes()
+surface_meshing_test::MeshResult RunSurfaceNetsForNodeTypes()
 {
-  return SurfaceMeshingTest::RunMesher<SurfaceNetsFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_SurfaceNetsTriangleGeomPath, BoundingBoxSkinMode::k_Off, [](Arguments& args) {
+  return surface_meshing_test::RunMesher<SurfaceNetsFilter>(surface_meshing_test::CreateCylinderInBox(true), k_SurfaceNetsTriangleGeomPath, bounding_box_skin_mode::k_Off, [](Arguments& args) {
     args.insertOrAssign(SurfaceNetsFilter::k_ApplySmoothing_Key, std::make_any<bool>(false));
     args.insertOrAssign(SurfaceNetsFilter::k_SmoothingIterations_Key, std::make_any<int32>(20));
     args.insertOrAssign(SurfaceNetsFilter::k_MaxDistanceFromVoxelCenter_Key, std::make_any<float32>(1.0F));
@@ -37,11 +37,11 @@ SurfaceMeshingTest::MeshResult RunSurfaceNetsForNodeTypes()
 }
 
 // Returns the set of distinct Node Type values present in meshResult's Vertex Data/NodeTypes array.
-std::set<int8> CollectNodeTypeValues(const SurfaceMeshingTest::MeshResult& meshResult)
+std::set<int8> CollectNodeTypeValues(const surface_meshing_test::MeshResult& meshResult)
 {
-  const DataPath nodeTypesPath = meshResult.TriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
-  REQUIRE_NOTHROW(meshResult.Structure.getDataRefAs<Int8Array>(nodeTypesPath));
-  const auto& nodeTypesRef = meshResult.Structure.getDataRefAs<Int8Array>(nodeTypesPath).getDataStoreRef();
+  const DataPath nodeTypesPath = meshResult.triangle_geom_path.createChildPath("Vertex Data").createChildPath("NodeTypes");
+  REQUIRE_NOTHROW(meshResult.structure.getDataRefAs<Int8ArrayType>(nodeTypesPath));
+  const auto& nodeTypesRef = meshResult.structure.getDataRefAs<Int8ArrayType>(nodeTypesPath).getDataStoreRef();
 
   std::set<int8> distinctValues;
   for(usize i = 0; i < nodeTypesRef.getNumberOfTuples(); i++)
@@ -54,13 +54,14 @@ std::set<int8> CollectNodeTypeValues(const SurfaceMeshingTest::MeshResult& meshR
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: Node Types follow the NodeType convention", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  SurfaceMeshingTest::MeshResult meshResult = RunSurfaceNetsForNodeTypes();
+  surface_meshing_test::MeshResult meshResult = RunSurfaceNetsForNodeTypes();
   const std::set<int8> distinctValues = CollectNodeTypeValues(meshResult);
 
   // Only the shared convention values may appear: 2/3/4 interior, 12/13/14 on the box wall.
-  const std::set<int8> allowedValues = {NodeType::Default, NodeType::TriplePoint, NodeType::QuadPoint, NodeType::SurfaceDefault, NodeType::SurfaceTriplePoint, NodeType::SurfaceQuadPoint};
+  const std::set<int8> allowedValues = {node_type::k_Default,        node_type::k_TriplePoint,        node_type::k_QuadPoint,
+                                        node_type::k_SurfaceDefault, node_type::k_SurfaceTriplePoint, node_type::k_SurfaceQuadPoint};
   for(const int8 value : distinctValues)
   {
     INFO("Unexpected Node Type value: " << static_cast<int32>(value));
@@ -68,44 +69,44 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Node Types follow the NodeType conven
   }
 
   // The flush cylinder guarantees both an interior node and a box-wall node exist.
-  REQUIRE(distinctValues.count(NodeType::Default) == 1);
-  REQUIRE(distinctValues.count(NodeType::SurfaceDefault) == 1);
+  REQUIRE(distinctValues.count(node_type::k_Default) == 1);
+  REQUIRE(distinctValues.count(node_type::k_SurfaceDefault) == 1);
 
   // 0 must never appear -- it means NodeType::Unused.
   REQUIRE(distinctValues.count(0) == 0);
 
-  UnitTest::CheckArraysInheritTupleDims(meshResult.Structure);
+  unit_test::CheckArraysInheritTupleDims(meshResult.structure);
 }
 
 TEST_CASE("SimplnxCore::SurfaceNetsFilter: Node Types agree with QuickSurfaceMesh", "[SimplnxCore][SurfaceNetsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Both meshers place a node near each grid corner where two or more Features meet, and
   // both derive the node type from the same 8 surrounding voxels. With smoothing disabled
   // the values must agree corner-for-corner. This is the check that proves the equivalence
   // argument in the design spec rather than trusting it.
-  SurfaceMeshingTest::MeshResult surfaceNetsResult = RunSurfaceNetsForNodeTypes();
-  SurfaceMeshingTest::MeshResult quickMeshResult =
-      SurfaceMeshingTest::RunMesher<QuickSurfaceMeshFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_QuickMeshTriangleGeomPath, BoundingBoxSkinMode::k_Off,
-                                                            [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
+  surface_meshing_test::MeshResult surfaceNetsResult = RunSurfaceNetsForNodeTypes();
+  surface_meshing_test::MeshResult quickMeshResult =
+      surface_meshing_test::RunMesher<QuickSurfaceMeshFilter>(surface_meshing_test::CreateCylinderInBox(true), k_QuickMeshTriangleGeomPath, bounding_box_skin_mode::k_Off,
+                                                              [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
 
   // Both meshers should produce the same number of nodes, since both emit one per grid
   // corner where two or more Features meet.
-  REQUIRE_NOTHROW(surfaceNetsResult.Structure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath));
-  REQUIRE_NOTHROW(quickMeshResult.Structure.getDataRefAs<TriangleGeom>(k_QuickMeshTriangleGeomPath));
-  const auto& snGeom = surfaceNetsResult.Structure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath);
-  const auto& qsmGeom = quickMeshResult.Structure.getDataRefAs<TriangleGeom>(k_QuickMeshTriangleGeomPath);
+  REQUIRE_NOTHROW(surfaceNetsResult.structure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath));
+  REQUIRE_NOTHROW(quickMeshResult.structure.getDataRefAs<TriangleGeom>(k_QuickMeshTriangleGeomPath));
+  const auto& snGeom = surfaceNetsResult.structure.getDataRefAs<TriangleGeom>(k_SurfaceNetsTriangleGeomPath);
+  const auto& qsmGeom = quickMeshResult.structure.getDataRefAs<TriangleGeom>(k_QuickMeshTriangleGeomPath);
   REQUIRE(snGeom.getNumberOfVertices() == qsmGeom.getNumberOfVertices());
 
   const auto& snVertsRef = snGeom.getVertices()->getDataStoreRef();
   const auto& qsmVertsRef = qsmGeom.getVertices()->getDataStoreRef();
   const DataPath snNodeTypesPath = k_SurfaceNetsTriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
   const DataPath qsmNodeTypesPath = k_QuickMeshTriangleGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
-  REQUIRE_NOTHROW(surfaceNetsResult.Structure.getDataRefAs<Int8Array>(snNodeTypesPath));
-  REQUIRE_NOTHROW(quickMeshResult.Structure.getDataRefAs<Int8Array>(qsmNodeTypesPath));
-  const auto& snTypesRef = surfaceNetsResult.Structure.getDataRefAs<Int8Array>(snNodeTypesPath).getDataStoreRef();
-  const auto& qsmTypesRef = quickMeshResult.Structure.getDataRefAs<Int8Array>(qsmNodeTypesPath).getDataStoreRef();
+  REQUIRE_NOTHROW(surfaceNetsResult.structure.getDataRefAs<Int8ArrayType>(snNodeTypesPath));
+  REQUIRE_NOTHROW(quickMeshResult.structure.getDataRefAs<Int8ArrayType>(qsmNodeTypesPath));
+  const auto& snTypesRef = surfaceNetsResult.structure.getDataRefAs<Int8ArrayType>(snNodeTypesPath).getDataStoreRef();
+  const auto& qsmTypesRef = quickMeshResult.structure.getDataRefAs<Int8ArrayType>(qsmNodeTypesPath).getDataStoreRef();
 
   // Exact, corner-for-corner comparison: the two meshers number their nodes in different orders
   // (a histogram comparison alone would pass under a permutation of values across corners), so key
@@ -137,6 +138,6 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Node Types agree with QuickSurfaceMes
   INFO("Total mismatching vertices: " << mismatchCount << " / " << snTypesRef.getNumberOfTuples() << (mismatchCount > 0 ? (" -- first mismatch at " + firstMismatch.str()) : std::string{}));
   REQUIRE(mismatchCount == 0);
 
-  UnitTest::CheckArraysInheritTupleDims(surfaceNetsResult.Structure);
-  UnitTest::CheckArraysInheritTupleDims(quickMeshResult.Structure);
+  unit_test::CheckArraysInheritTupleDims(surfaceNetsResult.structure);
+  unit_test::CheckArraysInheritTupleDims(quickMeshResult.structure);
 }

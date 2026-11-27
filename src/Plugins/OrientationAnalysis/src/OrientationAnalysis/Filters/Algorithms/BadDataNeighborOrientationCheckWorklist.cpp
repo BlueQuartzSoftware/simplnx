@@ -26,31 +26,30 @@ BadDataNeighborOrientationCheckWorklist::BadDataNeighborOrientationCheckWorklist
 }
 
 // -----------------------------------------------------------------------------
-BadDataNeighborOrientationCheckWorklist::~BadDataNeighborOrientationCheckWorklist() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> BadDataNeighborOrientationCheckWorklist::operator()()
 {
   // Double-precision pi keeps the strict comparison aligned with boundary-exact analytical fixtures.
-  const double misorientationTolerance = static_cast<double>(m_InputValues->MisorientationTolerance) * numbers::pi_v<double> / 180.0;
+  const double misorientationTolerance = static_cast<double>(m_InputValues->misorientation_tolerance) * numbers::k_PiV<double> / 180.0;
 
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeomPath);
-  SizeVec3 udims = imageGeom.getDimensions();
-  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  const auto& quats = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
-  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geom_path);
+  SizeVec3Type udims = imageGeom.getDimensions();
+  const auto& cellPhases = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+  const auto& quats = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->quats_array_path);
+  const auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
   const usize totalPoints = quats.getNumberOfTuples();
   const usize numCrystalStructures = crystalStructures.getNumberOfTuples();
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
+  std::unique_ptr<mask_compare_utilities::MaskCompare> maskCompare;
   try
   {
-    maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+    maskCompare = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->mask_array_path);
   } catch(const std::out_of_range& exception)
   {
     // Direct callers can bypass preflight, so mask type errors return a Result.
     return MakeErrorResult(-54900,
-                           fmt::format("Mask Array at '{}' could not be loaded; expected Bool or UInt8 backing. Underlying error: {}", m_InputValues->MaskArrayPath.toString(), exception.what()));
+                           fmt::format("Mask Array at '{}' could not be loaded; expected Bool or UInt8 backing. Underlying error: {}", m_InputValues->mask_array_path.toString(), exception.what()));
   }
 
   std::array<int64, 3> dims = {
@@ -62,9 +61,9 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
   const int64 xyStride = dims[0] * dims[1];
 
   // The Image3D offsets retain six positions; runtime bounds checks omit Z neighbors for one-slice geometries.
-  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
-  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3DType>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = InitializeFaceNeighborOffsets(dims);
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> k_FaceNeighborInternalIdx = InitializeFaceNeighborInternalIdx();
 
   const std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
@@ -112,7 +111,7 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
       if(static_cast<usize>(currentPhaseIdx) >= numCrystalStructures)
       {
         return MakeErrorResult(-54902, fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in [0, {}).",
-                                                   m_InputValues->CellPhasesArrayPath.toString(), currentPhaseIdx, voxelIndex, m_InputValues->CrystalStructuresArrayPath.toString(),
+                                                   m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, voxelIndex, m_InputValues->crystal_structures_array_path.toString(),
                                                    numCrystalStructures, numCrystalStructures));
       }
       const uint32 currentLaueIndex = crystalStructures[currentPhaseIdx];
@@ -126,8 +125,8 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
       const int64 yIdx = (static_cast<int64>(voxelIndex) / dims[0]) % dims[1];
       const int64 zIdx = static_cast<int64>(voxelIndex) / xyStride;
 
-      const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
-      for(const auto& faceIndex : faceNeighborInternalIdx)
+      const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = ComputeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+      for(const auto& faceIndex : k_FaceNeighborInternalIdx)
       {
         if(!isValidFaceNeighbor[faceIndex])
         {
@@ -156,12 +155,12 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
   progressThrottle.flush();
 
   // Descend from six face neighbors to the requested count. One-slice geometries cannot meet the top levels.
-  constexpr int32 startLevel = static_cast<int32>(k_NumFaceNeighbors);
-  const int32 totalLevels = startLevel - m_InputValues->NumberOfNeighbors + 1;
+  constexpr int32 k_StartLevel = static_cast<int32>(k_NumFaceNeighbors);
+  const int32 totalLevels = k_StartLevel - m_InputValues->number_of_neighbors + 1;
   const usize levelTotal = totalLevels > 0 ? static_cast<usize>(totalLevels) : 0;
   m_MessageHandler.sendProgressCount("Propagating Levels", 0, levelTotal);
 
-  for(int32 currentLevel = startLevel; currentLevel >= m_InputValues->NumberOfNeighbors; currentLevel--)
+  for(int32 currentLevel = k_StartLevel; currentLevel >= m_InputValues->number_of_neighbors; currentLevel--)
   {
     if(m_ShouldCancel)
     {
@@ -209,7 +208,7 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
       if(static_cast<usize>(currentPhaseIdx) >= numCrystalStructures)
       {
         return MakeErrorResult(-54902, fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in [0, {}).",
-                                                   m_InputValues->CellPhasesArrayPath.toString(), currentPhaseIdx, voxelIndex, m_InputValues->CrystalStructuresArrayPath.toString(),
+                                                   m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, voxelIndex, m_InputValues->crystal_structures_array_path.toString(),
                                                    numCrystalStructures, numCrystalStructures));
       }
       const uint32 currentLaueIndex = crystalStructures[currentPhaseIdx];
@@ -224,8 +223,8 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
       const int64 zIdx = static_cast<int64>(voxelIndex) / xyStride;
 
       // A new good voxel can make an adjacent bad voxel eligible for the current level.
-      const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
-      for(const auto& faceIndex : faceNeighborInternalIdx)
+      const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = ComputeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+      for(const auto& faceIndex : k_FaceNeighborInternalIdx)
       {
         if(!isValidFaceNeighbor[faceIndex])
         {
@@ -254,7 +253,7 @@ Result<> BadDataNeighborOrientationCheckWorklist::operator()()
         }
       }
     }
-    m_MessageHandler.sendProgressCount("Propagating Levels", static_cast<usize>((startLevel - currentLevel) + 1), levelTotal);
+    m_MessageHandler.sendProgressCount("Propagating Levels", static_cast<usize>((k_StartLevel - currentLevel) + 1), levelTotal);
   }
 
   return {};

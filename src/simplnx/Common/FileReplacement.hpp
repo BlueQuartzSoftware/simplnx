@@ -35,15 +35,15 @@ enum class FileReplacementDurability : uint8
 struct FileReplacementOutcome
 {
   /** @brief System error from the final attempt, or an empty code on success. */
-  std::error_code Error;
+  std::error_code error;
   /** @brief Number of loop attempts, at least one. Each tries an unfinished flush, then a rename if the flush succeeded. */
-  usize Attempts = 0;
+  usize attempts = 0;
   /** @brief Sum of the requested waits between attempts. */
-  std::chrono::milliseconds Waited{0};
+  std::chrono::milliseconds waited{0};
   /** @brief True when a transient error persists after the total wait budget. */
-  bool RetriesExhausted = false;
+  bool retries_exhausted = false;
   /** @brief False when no rename ran, for example when the prerequisite flush never succeeded. */
-  bool RenameAttempted = false;
+  bool rename_attempted = false;
 };
 
 /**

@@ -20,21 +20,21 @@ namespace rt = recon_test;
 
 namespace
 {
-using CCFilter = ConnectedComponentImageFilter;
+using CcFilterType = ConnectedComponentImageFilter;
 
 // Sets the geometry, input, and output keys plus the FullyConnected flag on the Arguments. The helper runs
 // preflight and execute, and requires that both steps succeed.
-void RunCC(IFilter& filter, DataStructure& ds, const DataPath& inputPath, bool fullyConnected, const std::string& outputName = "Output")
+void RunCC(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, bool fullyConnected, const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
-  args.insertOrAssign(CCFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(CCFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(CCFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-  args.insertOrAssign(CCFilter::k_FullyConnected_Key, std::make_any<bool>(fullyConnected));
-  auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  args.insertOrAssign(CcFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(CcFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(CcFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  args.insertOrAssign(CcFilterType::k_FullyConnected_Key, std::make_any<bool>(fullyConnected));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
@@ -79,61 +79,61 @@ std::vector<T> MakeBlobField(usize dimX, usize dimY, usize dimZ)
 
 // -----------------------------------------------------------------------------
 // (1) Preflight guards: a multi-component input is rejected (requireScalar); a non-integer (float32) input is
-//     rejected (IntegerOnly); a valid integer scalar input produces a FIXED uint32 output array (AlwaysUInt32).
+//     rejected (IntegerOnly); a valid integer scalar input produces a FIXED uint32 output array (AlwaysUInt32Type).
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: preflight guards", "[NXImageProcessing][ConnectedComponentImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   SECTION("multi-component rejected")
   {
-    DataStructure ds;
-    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, std::vector<int32>(36, 0));
+    DataStructure dataStructure;
+    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(ds, vecPath, {1, 6, 6}, {3});
-    const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
-    DataArray<int32>::Create(ds, "Vec", vecStore, cellAM.getId());
+    auto vecStore = data_store_utilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
+    DataArray<int32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
-    CCFilter filter;
+    CcFilterType filter;
     Arguments args;
-    args.insertOrAssign(CCFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(CCFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
-    args.insertOrAssign(CCFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(CCFilter::k_FullyConnected_Key, std::make_any<bool>(false));
-    const auto result = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    args.insertOrAssign(CcFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(CcFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
+    args.insertOrAssign(CcFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(CcFilterType::k_FullyConnected_Key, std::make_any<bool>(false));
+    const auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("float input rejected")
   {
-    DataStructure ds;
-    const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, 6, 6, 1, std::vector<float32>(36, 1.0f));
+    DataStructure dataStructure;
+    const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 6, 6, 1, std::vector<float32>(36, 1.0f));
     const DataPath geomPath = inputPath.getParent().getParent();
-    CCFilter filter;
+    CcFilterType filter;
     Arguments args;
-    args.insertOrAssign(CCFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(CCFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(CCFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(CCFilter::k_FullyConnected_Key, std::make_any<bool>(false));
-    const auto result = filter.preflight(ds, args);
-    REQUIRE(result.outputActions.invalid()); // float32 is not an IntegerOnly type
+    args.insertOrAssign(CcFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(CcFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(CcFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(CcFilterType::k_FullyConnected_Key, std::make_any<bool>(false));
+    const auto result = filter.preflight(dataStructure, args);
+    REQUIRE(result.output_actions.invalid()); // float32 is not an IntegerOnly type
   }
   SECTION("scalar integer input creates a uint32 output")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<uint8> field = MakeBlobField<uint8>(12, 12, 1);
-    const DataPath inputPath = rt::BuildImageFromPattern<uint8>(ds, 12, 12, 1, field);
-    CCFilter filter;
-    RunCC(filter, ds, inputPath, /*fullyConnected=*/false);
+    const DataPath inputPath = rt::BuildImageFromPattern<uint8>(dataStructure, 12, 12, 1, field);
+    CcFilterType filter;
+    RunCC(filter, dataStructure, inputPath, /*fullyConnected=*/false);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-    REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint32);
+    REQUIRE(dataStructure.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint32);
   }
 }
 
 // -----------------------------------------------------------------------------
 // ITK-sourced real-image golden -- duplicates ITKConnectedComponentImageTest.cpp on our ITK-free filter. The output is
-// a fixed uint32 label image (AlwaysUInt32). The durable golden is an md5 pin. The helper pins ForceInCore.
+// a fixed uint32 label image (AlwaysUInt32Type). The durable golden is an md5 pin. The helper pins ForceInCore.
 //
 // NOTE (recorded): the simplnx ITK test has THREE real-image cases, and NONE uses an actual mask/second-input array --
 // the case named "(mask)" is simply 2th_cthead1.png run with defaults (the mask/second-input variant the plan alluded

@@ -78,7 +78,7 @@ Parameters CreateDataArrayFilter::parameters() const
                                                         "Slowest to Fastest Dimensions. Note this might be opposite displayed by an image geometry.", tableInfo));
 
   params.insertSeparator(Parameters::Separator{"Component Dimensions"});
-  params.insert(std::make_unique<UInt64Parameter>(k_NumComps_Key, "Total Number of Components", "Total number of components. Do not set the component dimensions.", 1));
+  params.insert(std::make_unique<UInt64ParameterType>(k_NumComps_Key, "Total Number of Components", "Total number of components. Do not set the component dimensions.", 1));
 
   params.insertSeparator(Parameters::Separator{"Initialization Options"});
   params.insert(std::make_unique<StringParameter>(k_InitializationValue_Key, "Initialization Value", "This value will be used to fill the new array", "0"));
@@ -95,14 +95,14 @@ IFilter::VersionType CreateDataArrayFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CreateDataArrayFilter::clone() const
+IFilter::UniquePointerType CreateDataArrayFilter::clone() const
 {
   return std::make_unique<CreateDataArrayFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                              const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto useDims = filterArgs.value<bool>(k_AdvancedOptions_Key);
   auto numericType = filterArgs.value<NumericType>(k_NumericType_Key);
@@ -119,14 +119,14 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
 
   if(numComponents == 0)
   {
-    return MakePreflightErrorResult(DimensionConversion::k_ZeroComponents, "Number of Components (0) must be >= 1.");
+    return MakePreflightErrorResult(dimension_conversion::k_ZeroComponents, "Number of Components (0) must be >= 1.");
   }
 
   ShapeType compDims = std::vector<usize>{numComponents};
   ShapeType tupleDims = {};
 
-  auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(dataArrayPath.getParent());
-  if(parentAM == nullptr)
+  const auto* parentAmPtr = dataStructure.getDataAs<AttributeMatrix>(dataArrayPath.getParent());
+  if(parentAmPtr == nullptr)
   {
     if(!useDims)
     {
@@ -134,24 +134,23 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
           -78602, fmt::format("The DataArray to be created '{}'is not within an AttributeMatrix, so the dimensions cannot be determined implicitly. Check Set Tuple Dimensions to set the dimensions",
                               dataArrayPath.toString()));
     }
-    else
+
+    auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, -78603);
+    if(dimensions.invalid())
     {
-      auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::Zero, -78603);
-      if(dimensions.invalid())
-      {
-        return {ConvertInvalidResult<OutputActions>(std::move(dimensions))};
-      }
-      tupleDims = std::move(dimensions.value());
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
     }
+    tupleDims = std::move(dimensions.value());
   }
   else
   {
-    tupleDims = parentAM->getShape();
+    tupleDims = parentAmPtr->getShape();
     if(useDims)
     {
       resultOutputActions.warnings().push_back(
-          Warning{-78604, "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
-                          "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
+          Warning{.code = -78604,
+                  .message = "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
+                             "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
     }
   }
 
@@ -161,25 +160,25 @@ IFilter::PreflightResult CreateDataArrayFilter::preflightImpl(const DataStructur
 
   resultOutputActions.value().appendAction(std::move(action));
 
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateDataArrayFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> CreateDataArrayFilter::executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                                            const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   return {};
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
-constexpr StringLiteral k_NumberOfComponentsKey = "NumberOfComponents";
-constexpr StringLiteral k_InitializationValueKey = "InitializationValue";
-constexpr StringLiteral k_NewArrayKey = "NewArray";
-} // namespace SIMPL
+constexpr StringLiteralType k_ScalarTypeKey = "ScalarType";
+constexpr StringLiteralType k_NumberOfComponentsKey = "NumberOfComponents";
+constexpr StringLiteralType k_InitializationValueKey = "InitializationValue";
+constexpr StringLiteralType k_NewArrayKey = "NewArray";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CreateDataArrayFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -190,12 +189,12 @@ Result<Arguments> CreateDataArrayFilter::FromSIMPLJson(const nlohmann::json& jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ScalarTypeParameterToNumericTypeConverter>(args, json, SIMPL::k_ScalarTypeKey, k_NumericType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<uint64>>(args, json, SIMPL::k_NumberOfComponentsKey, k_NumComps_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ScalarTypeParameterToNumericTypeConverter>(args, json, simpl::k_ScalarTypeKey, k_NumericType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<uint64>>(args, json, simpl::k_NumberOfComponentsKey, k_NumComps_Key));
   // NX has no equivalent for the legacy initialization-type parameter.
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_InitializationValueKey, k_InitializationValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_InitializationValueKey, k_InitializationValue_Key));
   // NX has no equivalent for the legacy initialization-range or starting-index parameters.
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_NewArrayKey, k_DataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_NewArrayKey, k_DataPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

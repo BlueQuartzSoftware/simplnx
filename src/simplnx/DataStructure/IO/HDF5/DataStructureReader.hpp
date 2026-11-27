@@ -8,7 +8,7 @@
 
 #include "simplnx/simplnx_export.hpp"
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 class IDataIO;
 class DataIOManager;
@@ -26,7 +26,7 @@ public:
    * owns this map and keeps it alive for the read. With this map, callers must validate selected rectilinear
    * bounds and install validated image metadata before publishing imported geometries.
    */
-  DataStructureReader(DataIOManager* ioManager = nullptr, DREAM3D::DeferredImageMetadata* deferredImageMetadata = nullptr);
+  DataStructureReader(DataIOManager* ioManager = nullptr, dream3d::DeferredImageMetadataType* deferredImageMetadata = nullptr);
   ~DataStructureReader() noexcept;
 
   /**
@@ -43,7 +43,7 @@ public:
    * @param useEmptyDataStores = false
    * @return Result<DataStructure>
    */
-  static Result<DataStructure> ReadFile(const nx::core::HDF5::FileIO& fileReader, bool useEmptyDataStores = false);
+  static Result<DataStructure> ReadFile(const nx::core::hdf5::FileIO& fileReader, bool useEmptyDataStores = false);
 
   /**
    * @brief Reads a structure with an explicit local storage policy.
@@ -55,14 +55,14 @@ public:
    * validates selected rectilinear bounds and installs validated image metadata before publishing imported geometries.
    * @return Imported structure and read diagnostics.
    */
-  static Result<DataStructure> ReadFile(const nx::core::HDF5::FileIO& fileReader, bool useEmptyDataStores, std::shared_ptr<const IDataStoreFormatResolver> resolver,
-                                        DREAM3D::DeferredImageMetadata* deferredImageMetadata = nullptr);
+  static Result<DataStructure> ReadFile(const nx::core::hdf5::FileIO& fileReader, bool useEmptyDataStores, std::shared_ptr<const IDataStoreFormatResolver> resolver,
+                                        dream3d::DeferredImageMetadataType* deferredImageMetadata = nullptr);
 
   /**
    * @brief Gets the caller-owned map that receives image metadata during selective discovery.
    * @return The map, or nullptr when the reader validates geometry metadata during the read.
    */
-  [[nodiscard]] DREAM3D::DeferredImageMetadata* deferredImageMetadata() const;
+  [[nodiscard]] dream3d::DeferredImageMetadataType* deferredImageMetadata() const;
 
   /**
    * @brief Reads a single DataObject from an HDF5 file at the specified path.
@@ -70,7 +70,7 @@ public:
    * @param dataPath The path to the DataObject to read
    * @return Result<std::shared_ptr<DataObject>> The read DataObject or an error
    */
-  static Result<std::shared_ptr<DataObject>> ReadObject(const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath);
+  static Result<std::shared_ptr<DataObject>> ReadObject(const nx::core::hdf5::FileIO& fileReader, const DataPath& dataPath);
 
   /**
    * @brief Finishes importing a DataObject after it has been read and added to the DataStructure.
@@ -79,7 +79,7 @@ public:
    * @param dataPath The path to the imported DataObject
    * @return Result<> Result with any errors or warnings
    */
-  static Result<> FinishImportingObject(DataStructure& dataStructure, const nx::core::HDF5::FileIO& fileReader, const DataPath& dataPath);
+  static Result<> FinishImportingObject(DataStructure& dataStructure, const nx::core::hdf5::FileIO& fileReader, const DataPath& dataPath);
 
   /**
    * @brief Imports and returns a DataStructure from a target nx::core::HDF5::GroupIO.
@@ -89,7 +89,7 @@ public:
    * @param useEmptyDataStores = false
    * @return Result<DataStructure>
    */
-  Result<DataStructure> readGroup(const nx::core::HDF5::GroupIO& groupReader, bool useEmptyDataStores = false);
+  Result<DataStructure> readGroup(const nx::core::hdf5::GroupIO& groupReader, bool useEmptyDataStores = false);
 
   /**
    * @brief Reads a group with an explicit local storage policy.
@@ -98,7 +98,7 @@ public:
    * @param resolver Supplies policy after reset and before object creation.
    * @return Imported structure and read diagnostics.
    */
-  Result<DataStructure> readGroup(const nx::core::HDF5::GroupIO& groupReader, bool useEmptyDataStores, std::shared_ptr<const IDataStoreFormatResolver> resolver);
+  Result<DataStructure> readGroup(const nx::core::hdf5::GroupIO& groupReader, bool useEmptyDataStores, std::shared_ptr<const IDataStoreFormatResolver> resolver);
 
   /**
    * @brief Imports a DataObject with the specified name from the target
@@ -109,7 +109,7 @@ public:
    * @param useEmptyDataStores = false
    * @return Result<>
    */
-  Result<> readObjectFromGroup(const nx::core::HDF5::GroupIO& parentGroup, const std::string& objectName, const std::optional<DataObject::IdType>& parentId = {}, bool useEmptyDataStores = false);
+  Result<> readObjectFromGroup(const nx::core::hdf5::GroupIO& parentGroup, const std::string& objectName, const std::optional<DataObject::IdType>& parentId = {}, bool useEmptyDataStores = false);
 
   /**
    * @brief Returns a reference to the current DataStructure. Returns an empty
@@ -137,11 +137,11 @@ protected:
    * @param typeName The type name of the data factory to retrieve
    * @return std::shared_ptr<IDataIO> Pointer to the data factory
    */
-  std::shared_ptr<IDataIO> getDataFactory(typename IDataIOManager::factory_id_type typeName) const;
+  std::shared_ptr<IDataIO> getDataFactory(typename IDataIOManager::FactoryIdType typeName) const;
 
 private:
   std::shared_ptr<DataIOManager> m_IOManager = nullptr;
   DataStructure m_CurrentStructure;
-  DREAM3D::DeferredImageMetadata* m_DeferredImageMetadata = nullptr;
+  dream3d::DeferredImageMetadataType* m_DeferredImageMetadata = nullptr;
 };
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

@@ -24,10 +24,10 @@ public:
   ComputeCoordinatesImageGeomFilter& operator=(ComputeCoordinatesImageGeomFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_OutputType_Key = "output_type_index";
-  static constexpr StringLiteral k_SelectedImageGeomPath_Key = "selected_image_geom_path";
-  static constexpr StringLiteral k_CoordsArrayPath_Key = "coords_array_path";
-  static constexpr StringLiteral k_IndicesArrayPath_Key = "indices_array_path";
+  static constexpr StringLiteralType k_OutputType_Key = "output_type_index";
+  static constexpr StringLiteralType k_SelectedImageGeomPath_Key = "selected_image_geom_path";
+  static constexpr StringLiteralType k_CoordsArrayPath_Key = "coords_array_path";
+  static constexpr StringLiteralType k_IndicesArrayPath_Key = "indices_array_path";
 
   /**
    * @brief Returns the name of the filter.
@@ -77,7 +77,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

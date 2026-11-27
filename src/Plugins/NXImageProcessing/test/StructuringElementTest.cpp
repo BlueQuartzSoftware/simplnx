@@ -14,13 +14,13 @@ using namespace nx::core::ImageProcessing;
 
 namespace
 {
-using OffsetKey = std::tuple<int32, int32, int32>;
-using OffsetSet = std::set<OffsetKey>;
+using OffsetKeyType = std::tuple<int32, int32, int32>;
+using OffsetSetType = std::set<OffsetKeyType>;
 
 // Collapse the generator output to an order-independent set, and prove no duplicates were emitted.
-OffsetSet ToSet(const StructuringElement& se)
+OffsetSetType ToSet(const StructuringElement& se)
 {
-  OffsetSet result;
+  OffsetSetType result;
   for(const SEOffset& o : se.offsets)
   {
     const bool inserted = result.emplace(o.dx, o.dy, o.dz).second;
@@ -29,7 +29,7 @@ OffsetSet ToSet(const StructuringElement& se)
   return result;
 }
 
-bool Contains(const OffsetSet& s, int32 dx, int32 dy, int32 dz)
+bool Contains(const OffsetSetType& s, int32 dx, int32 dy, int32 dz)
 {
   return s.find({dx, dy, dz}) != s.end();
 }
@@ -42,9 +42,9 @@ bool Contains(const OffsetSet& s, int32 dx, int32 dy, int32 dz)
 // ---------------------------------------------------------------------------
 
 // Box: the full rectangle.
-OffsetSet RefBox(int32 rx, int32 ry, int32 rz)
+OffsetSetType RefBox(int32 rx, int32 ry, int32 rz)
 {
-  OffsetSet s;
+  OffsetSetType s;
   for(int32 dz = -rz; dz <= rz; ++dz)
     for(int32 dy = -ry; dy <= ry; ++dy)
       for(int32 dx = -rx; dx <= rx; ++dx)
@@ -53,16 +53,18 @@ OffsetSet RefBox(int32 rx, int32 ry, int32 rz)
 }
 
 // Cross: only the axes (at most one nonzero component).
-OffsetSet RefCross(int32 rx, int32 ry, int32 rz)
+OffsetSetType RefCross(int32 rx, int32 ry, int32 rz)
 {
-  OffsetSet s;
+  OffsetSetType s;
   for(int32 dz = -rz; dz <= rz; ++dz)
     for(int32 dy = -ry; dy <= ry; ++dy)
       for(int32 dx = -rx; dx <= rx; ++dx)
       {
         const int32 nonzero = (dx != 0 ? 1 : 0) + (dy != 0 ? 1 : 0) + (dz != 0 ? 1 : 0);
         if(nonzero <= 1)
+        {
           s.emplace(dx, dy, dz);
+        }
       }
   return s;
 }
@@ -78,12 +80,12 @@ double EllipsoidValue(int32 dx, int32 dy, int32 dz, double hx, double hy, double
   return fx * fx + fy * fy + fz * fz;
 }
 
-OffsetSet RefBall(int32 rx, int32 ry, int32 rz)
+OffsetSetType RefBall(int32 rx, int32 ry, int32 rz)
 {
   const double hx = rx + 0.5;
   const double hy = ry + 0.5;
   const double hz = rz + 0.5;
-  OffsetSet s;
+  OffsetSetType s;
   for(int32 dz = -rz; dz <= rz; ++dz)
     for(int32 dy = -ry; dy <= ry; ++dy)
       for(int32 dx = -rx; dx <= rx; ++dx)
@@ -95,16 +97,16 @@ OffsetSet RefBall(int32 rx, int32 ry, int32 rz)
 // Annulus (non-parametric, thickness = 1, includeCenter = false): the outer
 // Ball with the inner Ball removed. ITK's inner ellipsoid half-axis is
 // 0.5 * max(2*r_i + 1 - 2*thickness, 1).
-OffsetSet RefAnnulus(int32 rx, int32 ry, int32 rz)
+OffsetSetType RefAnnulus(int32 rx, int32 ry, int32 rz)
 {
-  constexpr int32 thickness = 1;
+  constexpr int32 k_Thickness = 1;
   const double outerHx = rx + 0.5;
   const double outerHy = ry + 0.5;
   const double outerHz = rz + 0.5;
-  const double innerHx = 0.5 * std::max(2 * rx + 1 - 2 * thickness, 1);
-  const double innerHy = 0.5 * std::max(2 * ry + 1 - 2 * thickness, 1);
-  const double innerHz = 0.5 * std::max(2 * rz + 1 - 2 * thickness, 1);
-  OffsetSet s;
+  const double innerHx = 0.5 * std::max(2 * rx + 1 - 2 * k_Thickness, 1);
+  const double innerHy = 0.5 * std::max(2 * ry + 1 - 2 * k_Thickness, 1);
+  const double innerHz = 0.5 * std::max(2 * rz + 1 - 2 * k_Thickness, 1);
+  OffsetSetType s;
   for(int32 dz = -rz; dz <= rz; ++dz)
     for(int32 dy = -ry; dy <= ry; ++dy)
       for(int32 dx = -rx; dx <= rx; ++dx)
@@ -112,7 +114,9 @@ OffsetSet RefAnnulus(int32 rx, int32 ry, int32 rz)
         const bool outer = EllipsoidValue(dx, dy, dz, outerHx, outerHy, outerHz) <= 1.0;
         const bool inner = EllipsoidValue(dx, dy, dz, innerHx, innerHy, innerHz) <= 1.0;
         if(outer && !inner)
+        {
           s.emplace(dx, dy, dz);
+        }
       }
   return s;
 }

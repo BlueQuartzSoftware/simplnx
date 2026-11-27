@@ -56,24 +56,24 @@ public:
   };
 
   // Parameter Keys
-  static constexpr StringLiteral k_PartitioningMode_Key = "partitioning_mode_index";
-  static constexpr StringLiteral k_StartingFeatureID_Key = "starting_partition_id";
-  static constexpr StringLiteral k_OutOfBoundsFeatureID_Key = "out_of_bounds_value";
-  static constexpr StringLiteral k_NumberOfCellsPerAxis_Key = "number_of_partitions_per_axis";
-  static constexpr StringLiteral k_PartitionGridOrigin_Key = "partitioning_scheme_origin";
-  static constexpr StringLiteral k_CellLength_Key = "length_per_partition";
-  static constexpr StringLiteral k_MinGridCoord_Key = "lower_left_coord";
-  static constexpr StringLiteral k_MaxGridCoord_Key = "upper_right_coord";
-  static constexpr StringLiteral k_InputGeometryCellAttributeMatrixPath_Key = "input_geometry_attribute_matrix_path";
-  static constexpr StringLiteral k_PartitionGridGeometry_Key = "output_image_geometry_path";
-  static constexpr StringLiteral k_PartitionGridCellAMName_Key = "created_attribute_matrix_name";
-  static constexpr StringLiteral k_PartitionGridFeatureIDsName_Key = "created_feature_ids_name";
-  static constexpr StringLiteral k_InputGeometryToPartition_Key = "input_geometry_path";
-  static constexpr StringLiteral k_ExistingPartitionGridPath_Key = "existing_partitioning_scheme_path";
-  static constexpr StringLiteral k_UseVertexMask_Key = "use_vertex_mask";
-  static constexpr StringLiteral k_VertexMaskPath_Key = "vertex_mask_path";
-  static constexpr StringLiteral k_FeatureAttrMatrixName_Key = "feature_attr_matrix_name";
-  static constexpr StringLiteral k_PartitionIdsArrayName_Key = "partition_ids_array_name";
+  static constexpr StringLiteralType k_PartitioningMode_Key = "partitioning_mode_index";
+  static constexpr StringLiteralType k_StartingFeatureID_Key = "starting_partition_id";
+  static constexpr StringLiteralType k_OutOfBoundsFeatureID_Key = "out_of_bounds_value";
+  static constexpr StringLiteralType k_NumberOfCellsPerAxis_Key = "number_of_partitions_per_axis";
+  static constexpr StringLiteralType k_PartitionGridOrigin_Key = "partitioning_scheme_origin";
+  static constexpr StringLiteralType k_CellLength_Key = "length_per_partition";
+  static constexpr StringLiteralType k_MinGridCoord_Key = "lower_left_coord";
+  static constexpr StringLiteralType k_MaxGridCoord_Key = "upper_right_coord";
+  static constexpr StringLiteralType k_InputGeometryCellAttributeMatrixPath_Key = "input_geometry_attribute_matrix_path";
+  static constexpr StringLiteralType k_PartitionGridGeometry_Key = "output_image_geometry_path";
+  static constexpr StringLiteralType k_PartitionGridCellAMName_Key = "created_attribute_matrix_name";
+  static constexpr StringLiteralType k_PartitionGridFeatureIDsName_Key = "created_feature_ids_name";
+  static constexpr StringLiteralType k_InputGeometryToPartition_Key = "input_geometry_path";
+  static constexpr StringLiteralType k_ExistingPartitionGridPath_Key = "existing_partitioning_scheme_path";
+  static constexpr StringLiteralType k_UseVertexMask_Key = "use_vertex_mask";
+  static constexpr StringLiteralType k_VertexMaskPath_Key = "vertex_mask_path";
+  static constexpr StringLiteralType k_FeatureAttrMatrixName_Key = "feature_attr_matrix_name";
+  static constexpr StringLiteralType k_PartitionIdsArrayName_Key = "partition_ids_array_name";
 
   /**
    * @brief Returns the name of the filter.
@@ -123,7 +123,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**
@@ -168,7 +168,7 @@ protected:
    * @return First partition-count or geometry-data error, or a valid empty result.
    */
   template <typename GeomType>
-  Result<> dataCheckBasicMode(const SizeVec3& numOfPartitionsPerAxis, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath,
+  Result<> dataCheckBasicMode(const SizeVec3Type& numOfPartitionsPerAxis, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath,
                               const DataPath& attrMatrixPath) const;
 
   /**
@@ -182,7 +182,7 @@ protected:
    * @return First partition-count or geometry-data error, or a valid empty result.
    */
   template <typename GeomType>
-  Result<> dataCheckAdvancedMode(const SizeVec3& numOfPartitionsPerAxis, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath,
+  Result<> dataCheckAdvancedMode(const SizeVec3Type& numOfPartitionsPerAxis, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath,
                                  const DataPath& attrMatrixPath) const;
 
   /**
@@ -198,8 +198,8 @@ protected:
    * @return First partition-count, bounds, or geometry-data error, or a valid empty result.
    */
   template <typename GeomType>
-  Result<> dataCheckBoundingBoxMode(const SizeVec3& numOfPartitionsPerAxis, const FloatVec3& llCoord, const FloatVec3& urCoord, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix,
-                                    const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const;
+  Result<> dataCheckBoundingBoxMode(const SizeVec3Type& numOfPartitionsPerAxis, const FloatVec3Type& llCoord, const FloatVec3Type& urCoord, const GeomType& geometryToPartition,
+                                    const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const;
 
   static Result<> DataCheckExistingGeometryMode();
 
@@ -220,12 +220,12 @@ protected:
   /**
    * @brief Helper method that data checks the Number Of Partitions Per Axis variable.
    */
-  static Result<> DataCheckNumberOfPartitions(const SizeVec3& numberOfPartitionsPerAxis);
+  static Result<> DataCheckNumberOfPartitions(const SizeVec3Type& numberOfPartitionsPerAxis);
 
   static Result<> DataCheckDimensionality(const INodeGeometry0D& geometry);
 
-  Result<PartitionGeometry::PSGeomInfo> generateNodeBasedPSInfo(const DataStructure& dataStructure, const Arguments& filterArgs, const DataPath& geometryToPartitionPath,
-                                                                const DataPath& attrMatrixPath) const;
+  static Result<PartitionGeometry::PSGeomInfo> GenerateNodeBasedPsInfo(const DataStructure& dataStructure, const Arguments& filterArgs, const DataPath& geometryToPartitionPath,
+                                                                       const DataPath& attrMatrixPath);
 };
 } // namespace nx::core
 

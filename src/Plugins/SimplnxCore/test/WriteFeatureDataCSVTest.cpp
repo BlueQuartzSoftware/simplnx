@@ -19,7 +19,7 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace
 {
@@ -29,7 +29,7 @@ const usize k_NumTuples = 3;
 const std::vector<usize> k_VertexTupleDims = {k_NumTuples};
 const std::vector<usize> k_VertexCompDims = {2};
 
-std::vector<char> readIn(const fs::path& filePath)
+std::vector<char> ReadIn(const fs::path& filePath)
 {
   std::ifstream file(filePath.string(), std::ios_base::binary);
 
@@ -52,27 +52,27 @@ std::vector<char> readIn(const fs::path& filePath)
 
 TEST_CASE("SimplnxCore::WriteFeatureDataCSVFilter: Test Algorithm", "[WriteFeatureDataCSVFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   WriteFeatureDataCSVFilter filter;
   DataStructure dataStructure;
   AttributeMatrix& topLevelGroup = *AttributeMatrix::Create(dataStructure, "TestData", k_VertexTupleDims);
   auto path = dataStructure.getAllDataPaths()[0];
 
-  auto* neighborList = NeighborList<float32>::Create(dataStructure, "Neighbor List", topLevelGroup.getShape(), topLevelGroup.getId());
+  auto* neighborListPtr = NeighborList<float32>::Create(dataStructure, "Neighbor List", topLevelGroup.getShape(), topLevelGroup.getId());
   std::vector<float32> list1 = {117, 875, 1035, 3905, 4214};
   std::vector<float32> list2 = {750, 1905, 1912, 2015, 2586, 3180, 3592, 4041, 4772};
   std::vector<float32> list3 = {309, 775, 2625, 2818, 3061, 3751, 4235, 4817};
-  neighborList->setList(0, std::make_shared<std::vector<float32>>(list1));
-  neighborList->setList(1, std::make_shared<std::vector<float32>>(list2));
-  neighborList->setList(2, std::make_shared<std::vector<float32>>(list3));
+  neighborListPtr->setList(0, std::make_shared<std::vector<float32>>(list1));
+  neighborListPtr->setList(1, std::make_shared<std::vector<float32>>(list2));
+  neighborListPtr->setList(2, std::make_shared<std::vector<float32>>(list3));
 
-  auto dataArray1 = UnitTest::CreateTestDataArray<float32>(dataStructure, "floats", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
-  dataArray1->fill(1.23);
-  auto dataArray2 = UnitTest::CreateTestDataArray<int32>(dataStructure, "negatives", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
-  dataArray2->fill(-678);
-  auto dataArray3 = UnitTest::CreateTestDataArray<uint64>(dataStructure, "basic", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
-  dataArray3->fill(24343);
+  auto* dataArray1Ptr = unit_test::CreateTestDataArray<float32>(dataStructure, "floats", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
+  dataArray1Ptr->fill(1.23);
+  auto* dataArray2Ptr = unit_test::CreateTestDataArray<int32>(dataStructure, "negatives", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
+  dataArray2Ptr->fill(-678);
+  auto* dataArray3Ptr = unit_test::CreateTestDataArray<uint64>(dataStructure, "basic", k_VertexTupleDims, k_VertexCompDims, topLevelGroup.getId());
+  dataArray3Ptr->fill(24343);
 
   auto file = std::filesystem::path(fmt::format("{}/{}.csv", k_TestOutput, "CSV_Test"));
 
@@ -85,27 +85,27 @@ TEST_CASE("SimplnxCore::WriteFeatureDataCSVFilter: Test Algorithm", "[WriteFeatu
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ascii_exemplars.tar.gz", "ascii_exemplars");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ascii_exemplars.tar.gz", "ascii_exemplars");
 
   auto exemplarPath = fs::path(fmt::format("{}/ascii_exemplars/{}", unit_test::k_TestFilesDir, k_CSVExemplarFileName));
   REQUIRE(fs::exists(exemplarPath));
 
-  REQUIRE(readIn(file) == readIn(exemplarPath));
+  REQUIRE(ReadIn(file) == ReadIn(exemplarPath));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::WriteFeatureDataCSVFilter: SIMPL Backwards Compatibility", "[SimplnxCore][WriteFeatureDataCSVFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -118,22 +118,22 @@ TEST_CASE("SimplnxCore::WriteFeatureDataCSVFilter: SIMPL Backwards Compatibility
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<WriteFeatureDataCSVFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<WriteFeatureDataCSVFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<FileSystemPathParameter::ValueType>(WriteFeatureDataCSVFilter::k_FeatureDataFile_Key) == fs::path("/test/path/file.txt"));
       CHECK(args.value<bool>(WriteFeatureDataCSVFilter::k_WriteNeighborListData_Key) == true);
       CHECK(args.value<bool>(WriteFeatureDataCSVFilter::k_WriteNumFeaturesLine_Key) == true);

@@ -16,10 +16,10 @@ class SIMPLNX_EXPORT DataGroupSelectionParameter : public MutableDataParameter
 public:
   using ValueType = DataPath;
 
-  using AllowedTypes = std::set<BaseGroup::GroupType>;
+  using AllowedTypeSetType = std::set<BaseGroup::GroupType>;
 
   DataGroupSelectionParameter() = delete;
-  DataGroupSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes);
+  DataGroupSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypeSetType allowedTypes);
   ~DataGroupSelectionParameter() override = default;
 
   DataGroupSelectionParameter(const DataGroupSelectionParameter&) = delete;
@@ -38,13 +38,13 @@ public:
    * @brief Returns a list of accpeted input types.
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief Creates a copy of the parameter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the user defined default value.
@@ -70,7 +70,7 @@ public:
    * @brief Returns the list of allowed DataObject types.
    * @return
    */
-  const AllowedTypes& allowedTypes() const;
+  const AllowedTypeSetType& allowedTypes() const;
 
   /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
@@ -113,18 +113,18 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
-  AllowedTypes m_AllowedTypes = {};
+  ValueType m_DefaultValue;
+  AllowedTypeSetType m_AllowedTypes;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT DataContainerSelectionFilterParameterConverter
 {
   using ParameterType = DataGroupSelectionParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT DataContainerFromMultiSelectionFilterParameterConverter
@@ -132,8 +132,8 @@ struct SIMPLNX_EXPORT DataContainerFromMultiSelectionFilterParameterConverter
   using ParameterType = DataGroupSelectionParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::DataGroupSelectionParameter, "bff3d4ac-04a6-5251-b178-4f83f7865074");

@@ -17,21 +17,21 @@ namespace
 {
 constexpr usize k_ChunkValues = 65536;
 
-namespace EulerAngleConversionType
+namespace euler_angle_conversion_type
 {
-constexpr uint64 DegreesToRadians = 0;
-constexpr uint64 RadiansToDegrees = 1;
-} // namespace EulerAngleConversionType
+constexpr uint64 k_DegreesToRadians = 0;
+constexpr uint64 k_RadiansToDegrees = 1;
+} // namespace euler_angle_conversion_type
 
 float32 GetConversionFactor(uint64 conversionType)
 {
-  if(conversionType == EulerAngleConversionType::DegreesToRadians)
+  if(conversionType == euler_angle_conversion_type::k_DegreesToRadians)
   {
-    return static_cast<float32>(numbers::pi / 180.0f);
+    return static_cast<float32>(numbers::k_Pi / 180.0f);
   }
-  if(conversionType == EulerAngleConversionType::RadiansToDegrees)
+  if(conversionType == euler_angle_conversion_type::k_RadiansToDegrees)
   {
-    return static_cast<float32>(180.0f / numbers::pi);
+    return static_cast<float32>(180.0f / numbers::k_Pi);
   }
   return 1.0f;
 }
@@ -45,7 +45,7 @@ float32 GetConversionFactor(uint64 conversionType)
  *
  * Cancellation returns success after pages that are already written.
  */
-Result<> ConvertValuesInChunks(Float32AbstractDataStore& angles, float32 conversionFactor, const std::atomic_bool& shouldCancel)
+Result<> ConvertValuesInChunks(Float32AbstractDataStoreType& angles, float32 conversionFactor, const std::atomic_bool& shouldCancel)
 {
   const usize totalValues = angles.getSize();
   if(totalValues == 0 || shouldCancel)
@@ -128,7 +128,7 @@ private:
 class ChangeAngleRepresentationDirect
 {
 public:
-  ChangeAngleRepresentationDirect(Float32Array& angles, float32 conversionFactor, const std::atomic_bool& shouldCancel)
+  ChangeAngleRepresentationDirect(Float32ArrayType& angles, float32 conversionFactor, const std::atomic_bool& shouldCancel)
   : m_Angles(angles)
   , m_ConversionFactor(conversionFactor)
   , m_ShouldCancel(shouldCancel)
@@ -143,21 +143,21 @@ public:
     }
 
     auto& anglesStore = m_Angles.getDataStoreRef();
-    auto* inMemoryStore = dynamic_cast<Float32DataStore*>(&anglesStore);
-    if(inMemoryStore == nullptr)
+    auto* inMemoryStorePtr = dynamic_cast<Float32DataStoreType*>(&anglesStore);
+    if(inMemoryStorePtr == nullptr)
     {
       return ConvertValuesInChunks(anglesStore, m_ConversionFactor, m_ShouldCancel);
     }
 
     // Disjoint worker ranges operate directly on the stable contiguous backing allocation.
     ParallelDataAlgorithm parallelAlgorithm;
-    parallelAlgorithm.setRange(0, inMemoryStore->getSize());
-    parallelAlgorithm.execute(ConvertContiguousValuesImpl(inMemoryStore->data(), m_ConversionFactor, m_ShouldCancel));
+    parallelAlgorithm.setRange(0, inMemoryStorePtr->getSize());
+    parallelAlgorithm.execute(ConvertContiguousValuesImpl(inMemoryStorePtr->data(), m_ConversionFactor, m_ShouldCancel));
     return {};
   }
 
 private:
-  Float32Array& m_Angles;
+  Float32ArrayType& m_Angles;
   float32 m_ConversionFactor = 1.0f;
   const std::atomic_bool& m_ShouldCancel;
 };
@@ -169,7 +169,7 @@ private:
 class ChangeAngleRepresentationScanline
 {
 public:
-  ChangeAngleRepresentationScanline(Float32Array& angles, float32 conversionFactor, const std::atomic_bool& shouldCancel)
+  ChangeAngleRepresentationScanline(Float32ArrayType& angles, float32 conversionFactor, const std::atomic_bool& shouldCancel)
   : m_Angles(angles)
   , m_ConversionFactor(conversionFactor)
   , m_ShouldCancel(shouldCancel)
@@ -182,7 +182,7 @@ public:
   }
 
 private:
-  Float32Array& m_Angles;
+  Float32ArrayType& m_Angles;
   float32 m_ConversionFactor = 1.0f;
   const std::atomic_bool& m_ShouldCancel;
 };
@@ -197,11 +197,9 @@ ChangeAngleRepresentation::ChangeAngleRepresentation(DataStructure& dataStructur
 {
 }
 
-ChangeAngleRepresentation::~ChangeAngleRepresentation() noexcept = default;
-
 Result<> ChangeAngleRepresentation::operator()()
 {
-  auto& angles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AnglesArrayPath);
-  const float32 conversionFactor = GetConversionFactor(m_InputValues->ConversionTypeIndex);
+  auto& angles = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->angles_array_path);
+  const float32 conversionFactor = GetConversionFactor(m_InputValues->conversion_type_index);
   return DispatchAlgorithm<ChangeAngleRepresentationDirect, ChangeAngleRepresentationScanline>({&angles}, angles, conversionFactor, m_ShouldCancel);
 }

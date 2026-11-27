@@ -18,10 +18,10 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeBoundaryElementFractionsInputValues
 {
-  DataObjectNameParameter::ValueType BoundaryCellFractionsArrayName;
-  ArraySelectionParameter::ValueType BoundaryCellsArrayPath;
-  AttributeMatrixSelectionParameter::ValueType FeatureDataAttributeMatrixPath;
-  ArraySelectionParameter::ValueType FeatureIdsArrayPath;
+  DataObjectNameParameter::ValueType boundary_cell_fractions_array_name;
+  ArraySelectionParameter::ValueType boundary_cells_array_path;
+  AttributeMatrixSelectionParameter::ValueType feature_data_attribute_matrix_path;
+  ArraySelectionParameter::ValueType feature_ids_array_path;
 };
 
 /**
@@ -50,7 +50,7 @@ public:
    */
   ComputeBoundaryElementFractions(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                   ComputeBoundaryElementFractionsInputValues* inputValues);
-  ~ComputeBoundaryElementFractions() noexcept;
+  ~ComputeBoundaryElementFractions() noexcept = default;
 
   ComputeBoundaryElementFractions(const ComputeBoundaryElementFractions&) = delete;
   ComputeBoundaryElementFractions(ComputeBoundaryElementFractions&&) noexcept = delete;

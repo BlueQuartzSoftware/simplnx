@@ -72,7 +72,7 @@ Result<> CheckOutputStream(const std::ofstream& outputStream, const fs::path& ou
 template <typename T>
 Result<> WriteArrayPreamble(std::ofstream& outputStream, const DataArray<T>& dataArray, const fs::path& outputPath, const DataPath& arrayPath)
 {
-  const std::string name = StringUtilities::replace(dataArray.getName(), " ", "_");
+  const std::string name = string_utilities::Replace(dataArray.getName(), " ", "_");
   outputStream << "SCALARS " << name << " " << ConvertDataTypeToVtkDataType<T>() << " " << dataArray.getNumberOfComponents() << "\n";
   outputStream << "LOOKUP_TABLE default\n";
   return CheckOutputStream(outputStream, outputPath, arrayPath);
@@ -95,7 +95,7 @@ Result<> WriteBinaryDirect(std::ofstream& outputStream, const DataStore<T>& data
 {
   const usize totalValues = dataStore.getSize();
   const usize chunkCapacity = BinaryChunkValueCapacity<T>();
-  const T* source = dataStore.data();
+  const T* sourcePtr = dataStore.data();
   std::unique_ptr<T[]> chunkBuffer;
   if constexpr(endian::native == endian::little && sizeof(T) > 1)
   {
@@ -110,14 +110,14 @@ Result<> WriteBinaryDirect(std::ofstream& outputStream, const DataStore<T>& data
     }
 
     const usize count = std::min(chunkCapacity, totalValues - offset);
-    const T* writeBuffer = source + offset;
+    const T* writeBufferPtr = sourcePtr + offset;
     if constexpr(endian::native == endian::little && sizeof(T) > 1)
     {
-      std::transform(writeBuffer, writeBuffer + count, chunkBuffer.get(), [](T value) { return nx::core::byteswap(value); });
-      writeBuffer = chunkBuffer.get();
+      std::transform(writeBufferPtr, writeBufferPtr + count, chunkBuffer.get(), [](T value) { return nx::core::Byteswap(value); });
+      writeBufferPtr = chunkBuffer.get();
     }
 
-    outputStream.write(reinterpret_cast<const char*>(writeBuffer), static_cast<std::streamsize>(count * sizeof(T)));
+    outputStream.write(reinterpret_cast<const char*>(writeBufferPtr), static_cast<std::streamsize>(count * sizeof(T)));
     auto writeResult = CheckOutputStream(outputStream, outputPath, arrayPath);
     if(writeResult.invalid())
     {
@@ -185,7 +185,7 @@ Result<> WriteBinaryBulk(std::ofstream& outputStream, const AbstractDataStore<T>
 
     if constexpr(endian::native == endian::little && sizeof(T) > 1)
     {
-      std::transform(chunkBuffer.get(), chunkBuffer.get() + count, chunkBuffer.get(), [](T value) { return nx::core::byteswap(value); });
+      std::transform(chunkBuffer.get(), chunkBuffer.get() + count, chunkBuffer.get(), [](T value) { return nx::core::Byteswap(value); });
     }
 
     outputStream.write(reinterpret_cast<const char*>(chunkBuffer.get()), static_cast<std::streamsize>(count * sizeof(T)));
@@ -255,7 +255,7 @@ Result<> WriteAsciiDirect(std::ofstream& outputStream, const DataStore<T>& dataS
 {
   const usize totalValues = dataStore.getSize();
   constexpr usize k_ChunkCapacity = k_AsciiChunkValues;
-  const T* source = dataStore.data();
+  const T* sourcePtr = dataStore.data();
   usize currentItemCount = 0;
 
   for(usize offset = 0; offset < totalValues; offset += k_ChunkCapacity)
@@ -266,7 +266,7 @@ Result<> WriteAsciiDirect(std::ofstream& outputStream, const DataStore<T>& dataS
     }
 
     const usize count = std::min(k_ChunkCapacity, totalValues - offset);
-    WriteAsciiValues(outputStream, source + offset, count, currentItemCount);
+    WriteAsciiValues(outputStream, sourcePtr + offset, count, currentItemCount);
     auto writeResult = CheckOutputStream(outputStream, outputPath, arrayPath);
     if(writeResult.invalid())
     {
@@ -350,13 +350,13 @@ struct WriteVtkDataDirectFunctor
     }
 
     const auto& dataStore = dataArray.getDataStoreRef();
-    const auto* directStore = dynamic_cast<const DataStore<T>*>(&dataStore);
-    if(directStore == nullptr)
+    const auto* directStorePtr = dynamic_cast<const DataStore<T>*>(&dataStore);
+    if(directStorePtr == nullptr)
     {
       return binary ? WriteBinaryBulk(outputStream, dataStore, outputPath, arrayPath, shouldCancel) : WriteAsciiBulk(outputStream, dataStore, outputPath, arrayPath, shouldCancel);
     }
 
-    return binary ? WriteBinaryDirect(outputStream, *directStore, outputPath, arrayPath, shouldCancel) : WriteAsciiDirect(outputStream, *directStore, outputPath, arrayPath, shouldCancel);
+    return binary ? WriteBinaryDirect(outputStream, *directStorePtr, outputPath, arrayPath, shouldCancel) : WriteAsciiDirect(outputStream, *directStorePtr, outputPath, arrayPath, shouldCancel);
   }
 };
 
@@ -490,8 +490,6 @@ WriteVtkStructuredPoints::WriteVtkStructuredPoints(DataStructure& dataStructure,
 {
 }
 
-WriteVtkStructuredPoints::~WriteVtkStructuredPoints() noexcept = default;
-
 const std::atomic_bool& WriteVtkStructuredPoints::getCancel()
 {
   return m_ShouldCancel;
@@ -499,20 +497,20 @@ const std::atomic_bool& WriteVtkStructuredPoints::getCancel()
 
 Result<> WriteVtkStructuredPoints::operator()()
 {
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  const SizeVec3 dims = imageGeom.getDimensions();
-  const FloatVec3 spacing = imageGeom.getSpacing();
-  const FloatVec3 origin = imageGeom.getOrigin();
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
+  const SizeVec3Type dims = imageGeom.getDimensions();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
+  const FloatVec3Type origin = imageGeom.getOrigin();
 
-  const fs::path vtkOutPath = m_InputValues->OutputFile;
+  const fs::path vtkOutPath = m_InputValues->output_file;
   std::ofstream outStrm(vtkOutPath.string(), std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
   if(!outStrm.is_open())
   {
-    return MakeErrorResult(-66667, fmt::format("Output file could not be opened for writing: '{}'. Check that the parent directory exists and is writable.", m_InputValues->OutputFile.string()));
+    return MakeErrorResult(-66667, fmt::format("Output file could not be opened for writing: '{}'. Check that the parent directory exists and is writable.", m_InputValues->output_file.string()));
   }
   outStrm << "# vtk DataFile Version 3.0\n";
   outStrm << "vtk output\n";
-  outStrm << (m_InputValues->WriteBinaryFile ? "BINARY\n" : "ASCII\n");
+  outStrm << (m_InputValues->write_binary_file ? "BINARY\n" : "ASCII\n");
   outStrm << "DATASET STRUCTURED_POINTS\n";
   outStrm << fmt::format("DIMENSIONS {} {} {}\n", dims[0] + 1, dims[1] + 1, dims[2] + 1);
   outStrm << fmt::format("SPACING {} {} {}\n", spacing[0], spacing[1], spacing[2]);
@@ -523,11 +521,11 @@ Result<> WriteVtkStructuredPoints::operator()()
     return MakeErrorResult(k_WriteError, fmt::format("Failed to write the VTK header to file '{}'. Check that the destination has sufficient free space and is writable.", vtkOutPath.string()));
   }
 
-  for(const auto& arrayPath : m_InputValues->SelectedDataArrayPaths)
+  for(const auto& arrayPath : m_InputValues->selected_data_array_paths)
   {
-    m_MessageHandler.sendMessage({IFilter::Message::Type::Info, fmt::format("Writing {}", arrayPath.toString())});
+    m_MessageHandler.sendMessage({.type = IFilter::Message::Type::Info, .message = fmt::format("Writing {}", arrayPath.toString())});
     auto& dataArray = m_DataStructure.getDataRefAs<IDataArray>(arrayPath);
-    auto writeResult = DispatchAlgorithm<WriteVtkDataDirect, WriteVtkDataScanline>({&dataArray}, outStrm, dataArray, m_InputValues->WriteBinaryFile, vtkOutPath, arrayPath, m_ShouldCancel);
+    auto writeResult = DispatchAlgorithm<WriteVtkDataDirect, WriteVtkDataScanline>({&dataArray}, outStrm, dataArray, m_InputValues->write_binary_file, vtkOutPath, arrayPath, m_ShouldCancel);
     if(writeResult.invalid())
     {
       return writeResult;

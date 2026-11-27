@@ -4,7 +4,7 @@
 
 #include "NXImageProcessing/Filters/ReadNIfTIFileFilter.hpp"
 #include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
-#include "NXImageProcessing/utils/nifti1.h"
+#include "nifti/nifti1.h"
 
 #include "simplnx/Common/Bit.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
@@ -26,7 +26,7 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -35,16 +35,16 @@ struct SyntheticNiftiParams
   std::array<int16_t, 3> dims{1, 1, 1};
   std::array<float, 3> spacing{1.0f, 1.0f, 1.0f};
   std::array<float, 3> origin{0.0f, 0.0f, 0.0f};
-  int16_t niftiDatatype{NIFTI_TYPE_UINT8};
+  int16_t nifti_datatype{NIFTI_TYPE_UINT8};
   int16_t bitpix{8};
-  float sclSlope{0.0f};
-  float sclInter{0.0f};
-  int16_t rank{3};      // dim[0]; override to 1/2/4 for rejection tests
-  int16_t qformCode{1}; // set to 0 to disable qform
-  float quaternB{0.0f};
-  float quaternC{0.0f};
-  float quaternD{0.0f};
-  int16_t sformCode{0};                        // >0 enables srow_* population
+  float scl_slope{0.0f};
+  float scl_inter{0.0f};
+  int16_t rank{3};       // dim[0]; override to 1/2/4 for rejection tests
+  int16_t qform_code{1}; // set to 0 to disable qform
+  float quatern_b{0.0f};
+  float quatern_c{0.0f};
+  float quatern_d{0.0f};
+  int16_t sform_code{0};                       // >0 enables srow_* population
   std::array<std::array<float, 4>, 3> sform{}; // 3x4 affine when sformCode > 0
 };
 
@@ -67,22 +67,22 @@ nifti_1_header MakeHeader(const SyntheticNiftiParams& p)
   hdr.pixdim[3] = p.spacing[2];
   hdr.pixdim[4] = 0.0f;
 
-  hdr.datatype = p.niftiDatatype;
+  hdr.datatype = p.nifti_datatype;
   hdr.bitpix = p.bitpix;
   hdr.vox_offset = 352.0f;
-  hdr.scl_slope = p.sclSlope;
-  hdr.scl_inter = p.sclInter;
+  hdr.scl_slope = p.scl_slope;
+  hdr.scl_inter = p.scl_inter;
 
-  hdr.qform_code = p.qformCode;
+  hdr.qform_code = p.qform_code;
   hdr.qoffset_x = p.origin[0];
   hdr.qoffset_y = p.origin[1];
   hdr.qoffset_z = p.origin[2];
-  hdr.quatern_b = p.quaternB;
-  hdr.quatern_c = p.quaternC;
-  hdr.quatern_d = p.quaternD;
+  hdr.quatern_b = p.quatern_b;
+  hdr.quatern_c = p.quatern_c;
+  hdr.quatern_d = p.quatern_d;
 
-  hdr.sform_code = p.sformCode;
-  if(p.sformCode > 0)
+  hdr.sform_code = p.sform_code;
+  if(p.sform_code > 0)
   {
     for(int i = 0; i < 4; i++)
     {
@@ -99,7 +99,7 @@ nifti_1_header MakeHeader(const SyntheticNiftiParams& p)
 template <typename T>
 void ByteSwap(T& v)
 {
-  v = nx::core::byteswap(v);
+  v = nx::core::Byteswap(v);
 }
 
 // Mirrors the private ByteSwapHeader in NiftiUtilities.cpp so the test can
@@ -169,26 +169,26 @@ std::vector<uint8_t> ToBytesByteSwapped(std::vector<T> values)
 
 void WriteNiftiFile(const fs::path& path, const nifti_1_header& hdr, const std::vector<uint8_t>& voxelBytes, bool gzipped)
 {
-  static constexpr std::array<uint8_t, 4> zeroExtension{0, 0, 0, 0};
+  static constexpr std::array<uint8_t, 4> k_ZeroExtension{0, 0, 0, 0};
 
   if(gzipped)
   {
-    gzFile gz = gzopen(path.string().c_str(), "wb");
-    REQUIRE(gz != nullptr);
-    REQUIRE(gzwrite(gz, &hdr, static_cast<unsigned int>(sizeof(hdr))) == static_cast<int>(sizeof(hdr)));
-    REQUIRE(gzwrite(gz, zeroExtension.data(), 4) == 4);
+    gzFile gzPtr = gzopen(path.string().c_str(), "wb");
+    REQUIRE(gzPtr != nullptr);
+    REQUIRE(gzwrite(gzPtr, &hdr, static_cast<unsigned int>(sizeof(hdr))) == static_cast<int>(sizeof(hdr)));
+    REQUIRE(gzwrite(gzPtr, k_ZeroExtension.data(), 4) == 4);
     if(!voxelBytes.empty())
     {
-      REQUIRE(gzwrite(gz, voxelBytes.data(), static_cast<unsigned int>(voxelBytes.size())) == static_cast<int>(voxelBytes.size()));
+      REQUIRE(gzwrite(gzPtr, voxelBytes.data(), static_cast<unsigned int>(voxelBytes.size())) == static_cast<int>(voxelBytes.size()));
     }
-    gzclose(gz);
+    gzclose(gzPtr);
   }
   else
   {
     std::ofstream ofs(path, std::ios::binary);
     REQUIRE(ofs.is_open());
     ofs.write(reinterpret_cast<const char*>(&hdr), sizeof(hdr));
-    ofs.write(reinterpret_cast<const char*>(zeroExtension.data()), 4);
+    ofs.write(reinterpret_cast<const char*>(k_ZeroExtension.data()), 4);
     if(!voxelBytes.empty())
     {
       ofs.write(reinterpret_cast<const char*>(voxelBytes.data()), static_cast<std::streamsize>(voxelBytes.size()));
@@ -227,10 +227,10 @@ fs::path OutputDir()
 }
 
 template <typename T>
-void RequireArrayEquals(const DataStructure& ds, const DataPath& dataArrayPath, const std::vector<T>& expected)
+void RequireArrayEquals(const DataStructure& dataStructure, const DataPath& dataArrayPath, const std::vector<T>& expected)
 {
-  REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<T>>(dataArrayPath));
-  const auto& arr = ds.getDataRefAs<DataArray<T>>(dataArrayPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath));
+  const auto& arr = dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath);
   const auto& store = arr.getDataStoreRef();
   REQUIRE(store.getSize() == expected.size());
   for(usize i = 0; i < expected.size(); i++)
@@ -244,10 +244,10 @@ void RequireArrayEquals(const DataStructure& ds, const DataPath& dataArrayPath, 
   }
 }
 
-void RequireFloatArrayApproxEquals(const DataStructure& ds, const DataPath& dataArrayPath, const std::vector<float>& expected, float tolerance = 1e-5f)
+void RequireFloatArrayApproxEquals(const DataStructure& dataStructure, const DataPath& dataArrayPath, const std::vector<float>& expected, float tolerance = 1e-5f)
 {
-  REQUIRE_NOTHROW(ds.getDataRefAs<DataArray<float32>>(dataArrayPath));
-  const auto& arr = ds.getDataRefAs<DataArray<float32>>(dataArrayPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<float32>>(dataArrayPath));
+  const auto& arr = dataStructure.getDataRefAs<DataArray<float32>>(dataArrayPath);
   const auto& store = arr.getDataStoreRef();
   REQUIRE(store.getSize() == expected.size());
   for(usize i = 0; i < expected.size(); i++)
@@ -264,7 +264,7 @@ void RequireFloatArrayApproxEquals(const DataStructure& ds, const DataPath& data
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: uint8 round trip (.nii and .nii.gz)", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::array<int16_t, 3> dims = {4, 3, 2};
   const std::array<float, 3> spacing = {0.5f, 0.75f, 1.25f};
@@ -278,7 +278,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: uint8 round trip (.nii and .n
   params.dims = dims;
   params.spacing = spacing;
   params.origin = origin;
-  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.nifti_datatype = NIFTI_TYPE_UINT8;
   params.bitpix = 8;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -300,7 +300,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: uint8 round trip (.nii and .n
       const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, /*applyScaling=*/true, /*useAffine=*/true);
 
       const auto preflight = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
 
       const auto execute = filter.execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
@@ -310,27 +310,27 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: uint8 round trip (.nii and .n
       const auto actualDims = geom.getDimensions();
       const auto actualSpacing = geom.getSpacing();
       const auto actualOrigin = geom.getOrigin();
-      constexpr float tol = 1e-5f;
+      constexpr float k_Tol = 1e-5f;
       REQUIRE(actualDims[0] == static_cast<usize>(dims[0]));
       REQUIRE(actualDims[1] == static_cast<usize>(dims[1]));
       REQUIRE(actualDims[2] == static_cast<usize>(dims[2]));
-      REQUIRE(std::fabs(actualSpacing[0] - spacing[0]) < tol);
-      REQUIRE(std::fabs(actualSpacing[1] - spacing[1]) < tol);
-      REQUIRE(std::fabs(actualSpacing[2] - spacing[2]) < tol);
-      REQUIRE(std::fabs(actualOrigin[0] - origin[0]) < tol);
-      REQUIRE(std::fabs(actualOrigin[1] - origin[1]) < tol);
-      REQUIRE(std::fabs(actualOrigin[2] - origin[2]) < tol);
+      REQUIRE(std::fabs(actualSpacing[0] - spacing[0]) < k_Tol);
+      REQUIRE(std::fabs(actualSpacing[1] - spacing[1]) < k_Tol);
+      REQUIRE(std::fabs(actualSpacing[2] - spacing[2]) < k_Tol);
+      REQUIRE(std::fabs(actualOrigin[0] - origin[0]) < k_Tol);
+      REQUIRE(std::fabs(actualOrigin[1] - origin[1]) < k_Tol);
+      REQUIRE(std::fabs(actualOrigin[2] - origin[2]) < k_Tol);
 
       RequireArrayEquals<uint8>(dataStructure, arrPath, voxels);
 
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: int16 with scaling transform", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::array<int16_t, 3> dims = {3, 3, 2};
   const usize numVoxels = static_cast<usize>(dims[0]) * dims[1] * dims[2];
@@ -342,10 +342,10 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: int16 with scaling transform"
 
   SyntheticNiftiParams params;
   params.dims = dims;
-  params.niftiDatatype = NIFTI_TYPE_INT16;
+  params.nifti_datatype = NIFTI_TYPE_INT16;
   params.bitpix = 16;
-  params.sclSlope = 0.25f;
-  params.sclInter = 10.0f;
+  params.scl_slope = 0.25f;
+  params.scl_inter = 10.0f;
   nifti_1_header hdr = MakeHeader(params);
 
   const fs::path outDir = OutputDir();
@@ -364,14 +364,14 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: int16 with scaling transform"
     const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, /*applyScaling=*/true, /*useAffine=*/true);
 
     const auto preflight = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
     const auto execute = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
     std::vector<float> expected(numVoxels);
     for(usize i = 0; i < numVoxels; i++)
     {
-      expected[i] = static_cast<float>(voxels[i]) * params.sclSlope + params.sclInter;
+      expected[i] = static_cast<float>(voxels[i]) * params.scl_slope + params.scl_inter;
     }
     RequireFloatArrayApproxEquals(dataStructure, arrPath, expected);
   }
@@ -383,7 +383,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: int16 with scaling transform"
     const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, /*applyScaling=*/false, /*useAffine=*/true);
 
     const auto preflight = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
     const auto execute = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
@@ -393,7 +393,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: int16 with scaling transform"
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: float32 round trip", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::array<int16_t, 3> dims = {2, 2, 2};
   const usize numVoxels = static_cast<usize>(dims[0]) * dims[1] * dims[2];
@@ -405,7 +405,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: float32 round trip", "[NXImag
 
   SyntheticNiftiParams params;
   params.dims = dims;
-  params.niftiDatatype = NIFTI_TYPE_FLOAT32;
+  params.nifti_datatype = NIFTI_TYPE_FLOAT32;
   params.bitpix = 32;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -423,17 +423,17 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: float32 round trip", "[NXImag
   const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, /*applyScaling=*/true, /*useAffine=*/true);
 
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
   RequireFloatArrayApproxEquals(dataStructure, arrPath, voxels);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: RGB24 (3-component uint8)", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::array<int16_t, 3> dims = {3, 2, 2};
   const usize numVoxels = static_cast<usize>(dims[0]) * dims[1] * dims[2];
@@ -447,7 +447,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: RGB24 (3-component uint8)", "
 
   SyntheticNiftiParams params;
   params.dims = dims;
-  params.niftiDatatype = NIFTI_TYPE_RGB24;
+  params.nifti_datatype = NIFTI_TYPE_RGB24;
   params.bitpix = 24;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -465,7 +465,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: RGB24 (3-component uint8)", "
   const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, /*applyScaling=*/true, /*useAffine=*/true);
 
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
@@ -475,12 +475,12 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: RGB24 (3-component uint8)", "
   REQUIRE(arr.getDataStoreRef().getSize() == voxels.size());
   RequireArrayEquals<uint8>(dataStructure, arrPath, voxels);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: RGBA32 (4-component uint8)", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::array<int16_t, 3> dims = {2, 2, 2};
   const usize numVoxels = static_cast<usize>(dims[0]) * dims[1] * dims[2];
@@ -492,7 +492,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: RGBA32 (4-component uint8)", 
 
   SyntheticNiftiParams params;
   params.dims = dims;
-  params.niftiDatatype = NIFTI_TYPE_RGBA32;
+  params.nifti_datatype = NIFTI_TYPE_RGBA32;
   params.bitpix = 32;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -510,7 +510,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: RGBA32 (4-component uint8)", 
   const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, /*applyScaling=*/true, /*useAffine=*/true);
 
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
@@ -519,12 +519,12 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: RGBA32 (4-component uint8)", 
   REQUIRE(arr.getNumberOfComponents() == 4);
   RequireArrayEquals<uint8>(dataStructure, arrPath, voxels);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop streams only the selected region", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::array<int16_t, 3> dims = {6, 5, 4};
   const std::array<float, 3> spacing = {1.0f, 1.0f, 1.0f};
@@ -545,7 +545,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop streams o
   params.dims = dims;
   params.spacing = spacing;
   params.origin = origin;
-  params.niftiDatatype = NIFTI_TYPE_UINT16;
+  params.nifti_datatype = NIFTI_TYPE_UINT16;
   params.bitpix = 16;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -555,12 +555,12 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop streams o
 
   CropGeometryParameter::ValueType crop;
   crop.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
-  crop.cropX = true;
-  crop.cropY = true;
-  crop.cropZ = true;
-  crop.xBoundVoxels = {1, 3};
-  crop.yBoundVoxels = {1, 3};
-  crop.zBoundVoxels = {1, 2};
+  crop.crop_x = true;
+  crop.crop_y = true;
+  crop.crop_z = true;
+  crop.x_bound_voxels = {1, 3};
+  crop.y_bound_voxels = {1, 3};
+  crop.z_bound_voxels = {1, 2};
 
   const DataPath geomPath({"NIfTI Cropped"});
   const std::string amName = "Cell Data";
@@ -572,7 +572,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop streams o
   const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, /*applyScaling=*/true, /*useAffine=*/true, crop);
 
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
@@ -585,13 +585,13 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop streams o
   REQUIRE(outDims[1] == 3);
   REQUIRE(outDims[2] == 2);
   // Origin shifts by start * spacing
-  constexpr float tol = 1e-5f;
-  REQUIRE(std::fabs(outOrigin[0] - 1.0f) < tol);
-  REQUIRE(std::fabs(outOrigin[1] - 1.0f) < tol);
-  REQUIRE(std::fabs(outOrigin[2] - 1.0f) < tol);
-  REQUIRE(std::fabs(outSpacing[0] - 1.0f) < tol);
-  REQUIRE(std::fabs(outSpacing[1] - 1.0f) < tol);
-  REQUIRE(std::fabs(outSpacing[2] - 1.0f) < tol);
+  constexpr float k_Tol = 1e-5f;
+  REQUIRE(std::fabs(outOrigin[0] - 1.0f) < k_Tol);
+  REQUIRE(std::fabs(outOrigin[1] - 1.0f) < k_Tol);
+  REQUIRE(std::fabs(outOrigin[2] - 1.0f) < k_Tol);
+  REQUIRE(std::fabs(outSpacing[0] - 1.0f) < k_Tol);
+  REQUIRE(std::fabs(outSpacing[1] - 1.0f) < k_Tol);
+  REQUIRE(std::fabs(outSpacing[2] - 1.0f) < k_Tol);
 
   std::vector<uint16_t> expected;
   expected.reserve(3 * 3 * 2);
@@ -611,12 +611,12 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop streams o
   }
   RequireArrayEquals<uint16>(dataStructure, arrPath, expected);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: PhysicalSubvolume crop maps physical bounds to voxels", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::array<int16_t, 3> dims = {6, 5, 4};
   const std::array<float, 3> spacing = {0.5f, 1.0f, 2.0f};
@@ -637,7 +637,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: PhysicalSubvolume crop maps p
   params.dims = dims;
   params.spacing = spacing;
   params.origin = origin;
-  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.nifti_datatype = NIFTI_TYPE_UINT8;
   params.bitpix = 8;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -649,12 +649,12 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: PhysicalSubvolume crop maps p
   // (xi*0.5+0.25, yi*1.0+0.5, zi*2.0+1.0). Target voxels x=[1..4] y=[1..3] z=[0..2]:
   CropGeometryParameter::ValueType crop;
   crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
-  crop.cropX = true;
-  crop.cropY = true;
-  crop.cropZ = true;
-  crop.xBoundPhysical = {0.6f, 2.4f};
-  crop.yBoundPhysical = {1.2f, 3.7f};
-  crop.zBoundPhysical = {0.5f, 5.5f};
+  crop.crop_x = true;
+  crop.crop_y = true;
+  crop.crop_z = true;
+  crop.x_bound_physical = {0.6f, 2.4f};
+  crop.y_bound_physical = {1.2f, 3.7f};
+  crop.z_bound_physical = {0.5f, 5.5f};
 
   const DataPath geomPath({"NIfTI Cropped Physical"});
   const std::string amName = "Cell Data";
@@ -666,7 +666,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: PhysicalSubvolume crop maps p
   const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, /*applyScaling=*/true, /*useAffine=*/true, crop);
 
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
@@ -703,12 +703,12 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: PhysicalSubvolume crop maps p
   }
   RequireArrayEquals<uint8>(dataStructure, arrPath, expected);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop preserves RGB24 components", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::array<int16_t, 3> dims = {4, 3, 3};
   const usize nx = static_cast<usize>(dims[0]);
@@ -726,7 +726,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop preserves
 
   SyntheticNiftiParams params;
   params.dims = dims;
-  params.niftiDatatype = NIFTI_TYPE_RGB24;
+  params.nifti_datatype = NIFTI_TYPE_RGB24;
   params.bitpix = 24;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -736,12 +736,12 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop preserves
 
   CropGeometryParameter::ValueType crop;
   crop.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
-  crop.cropX = true;
-  crop.cropY = true;
-  crop.cropZ = true;
-  crop.xBoundVoxels = {1, 2};
-  crop.yBoundVoxels = {0, 1};
-  crop.zBoundVoxels = {1, 2};
+  crop.crop_x = true;
+  crop.crop_y = true;
+  crop.crop_z = true;
+  crop.x_bound_voxels = {1, 2};
+  crop.y_bound_voxels = {0, 1};
+  crop.z_bound_voxels = {1, 2};
 
   const DataPath geomPath({"NIfTI RGB Cropped"});
   const std::string amName = "Cell Data";
@@ -753,7 +753,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop preserves
   const Arguments args = MakeFilterArgs(filePath, geomPath, amName, arrName, /*applyScaling=*/true, /*useAffine=*/true, crop);
 
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
@@ -784,12 +784,12 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: VoxelSubvolume crop preserves
   }
   RequireArrayEquals<uint8>(dataStructure, arrPath, expected);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: rejects 4D volumes and .hdr/.img pair", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path outDir = OutputDir();
   const DataPath geomPath({"NIfTI Bad"});
@@ -812,7 +812,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: rejects 4D volumes and .hdr/.
     ReadNIfTIFileFilter filter;
     const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", /*applyScaling=*/true, /*useAffine=*/true);
     const auto preflight = filter.preflight(dataStructure, args);
-    REQUIRE(preflight.outputActions.invalid());
+    REQUIRE(preflight.output_actions.invalid());
   }
 
   SECTION("ni1 (hdr/img pair magic) is rejected")
@@ -832,13 +832,13 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: rejects 4D volumes and .hdr/.
     ReadNIfTIFileFilter filter;
     const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", /*applyScaling=*/true, /*useAffine=*/true);
     const auto preflight = filter.preflight(dataStructure, args);
-    REQUIRE(preflight.outputActions.invalid());
+    REQUIRE(preflight.output_actions.invalid());
   }
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: rejects missing input file, 1D/2D volumes, and unsupported datatypes", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const fs::path outDir = OutputDir();
   const DataPath geomPath({"NIfTI Bad"});
@@ -853,7 +853,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: rejects missing input file, 1
     ReadNIfTIFileFilter filter;
     const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", /*applyScaling=*/true, /*useAffine=*/true);
     const auto preflight = filter.preflight(dataStructure, args);
-    REQUIRE(preflight.outputActions.invalid());
+    REQUIRE(preflight.output_actions.invalid());
   }
 
   for(int16_t rank : {int16_t{1}, int16_t{2}})
@@ -862,7 +862,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: rejects missing input file, 1
     {
       SyntheticNiftiParams params;
       params.dims = {2, 2, 2};
-      params.niftiDatatype = NIFTI_TYPE_UINT8;
+      params.nifti_datatype = NIFTI_TYPE_UINT8;
       params.bitpix = 8;
       params.rank = rank;
       nifti_1_header hdr = MakeHeader(params);
@@ -875,7 +875,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: rejects missing input file, 1
       ReadNIfTIFileFilter filter;
       const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", /*applyScaling=*/true, /*useAffine=*/true);
       const auto preflight = filter.preflight(dataStructure, args);
-      REQUIRE(preflight.outputActions.invalid());
+      REQUIRE(preflight.output_actions.invalid());
     }
   }
 
@@ -883,7 +883,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: rejects missing input file, 1
   {
     SyntheticNiftiParams params;
     params.dims = {2, 2, 2};
-    params.niftiDatatype = NIFTI_TYPE_COMPLEX64;
+    params.nifti_datatype = NIFTI_TYPE_COMPLEX64;
     params.bitpix = 64;
     nifti_1_header hdr = MakeHeader(params);
 
@@ -895,14 +895,14 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: rejects missing input file, 1
     ReadNIfTIFileFilter filter;
     const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", /*applyScaling=*/true, /*useAffine=*/true);
     const auto preflight = filter.preflight(dataStructure, args);
-    REQUIRE(preflight.outputActions.invalid());
+    REQUIRE(preflight.output_actions.invalid());
   }
 
   SECTION("truncated voxel body fails at execute")
   {
     SyntheticNiftiParams params;
     params.dims = {4, 4, 4};
-    params.niftiDatatype = NIFTI_TYPE_UINT8;
+    params.nifti_datatype = NIFTI_TYPE_UINT8;
     params.bitpix = 8;
     nifti_1_header hdr = MakeHeader(params);
 
@@ -916,7 +916,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: rejects missing input file, 1
     const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", /*applyScaling=*/true, /*useAffine=*/true);
 
     const auto preflight = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
     const auto execute = filter.execute(dataStructure, args);
     REQUIRE(execute.result.invalid());
   }
@@ -924,7 +924,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: rejects missing input file, 1
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: sform-based origin and spacing extraction", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::array<int16_t, 3> dims = {3, 3, 3};
   const float sx = 2.0f;
@@ -936,10 +936,10 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: sform-based origin and spacin
   params.dims = dims;
   params.spacing = {1.0f, 1.0f, 1.0f}; // pixdim deliberately different from sform
   params.origin = {0.0f, 0.0f, 0.0f};  // qoffset deliberately different
-  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.nifti_datatype = NIFTI_TYPE_UINT8;
   params.bitpix = 8;
-  params.qformCode = 0; // force sform path
-  params.sformCode = 1; // NIFTI_XFORM_SCANNER_ANAT
+  params.qform_code = 0; // force sform path
+  params.sform_code = 1; // NIFTI_XFORM_SCANNER_ANAT
   params.sform = {{{sx, 0.0f, 0.0f, tOrigin[0]}, {0.0f, sy, 0.0f, tOrigin[1]}, {0.0f, 0.0f, sz, tOrigin[2]}}};
 
   nifti_1_header hdr = MakeHeader(params);
@@ -953,27 +953,27 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: sform-based origin and spacin
   const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", /*applyScaling=*/true, /*useAffine=*/true);
 
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
-  REQUIRE(preflight.outputActions.warnings().empty());
+  REQUIRE(preflight.output_actions.warnings().empty());
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geomPath));
   const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
   const auto outOrigin = geom.getOrigin();
   const auto outSpacing = geom.getSpacing();
-  constexpr float tol = 1e-5f;
-  REQUIRE(std::fabs(outOrigin[0] - tOrigin[0]) < tol);
-  REQUIRE(std::fabs(outOrigin[1] - tOrigin[1]) < tol);
-  REQUIRE(std::fabs(outOrigin[2] - tOrigin[2]) < tol);
-  REQUIRE(std::fabs(outSpacing[0] - sx) < tol);
-  REQUIRE(std::fabs(outSpacing[1] - sy) < tol);
-  REQUIRE(std::fabs(outSpacing[2] - sz) < tol);
+  constexpr float k_Tol = 1e-5f;
+  REQUIRE(std::fabs(outOrigin[0] - tOrigin[0]) < k_Tol);
+  REQUIRE(std::fabs(outOrigin[1] - tOrigin[1]) < k_Tol);
+  REQUIRE(std::fabs(outOrigin[2] - tOrigin[2]) < k_Tol);
+  REQUIRE(std::fabs(outSpacing[0] - sx) < k_Tol);
+  REQUIRE(std::fabs(outSpacing[1] - sy) < k_Tol);
+  REQUIRE(std::fabs(outSpacing[2] - sz) < k_Tol);
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: sform rotation emits a warning", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // 45deg rotation about z, unit spacing, zero translation — off-diagonal
   // srow entries should trip the affineHasRotation detector.
@@ -982,10 +982,10 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: sform rotation emits a warnin
 
   SyntheticNiftiParams params;
   params.dims = {2, 2, 2};
-  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.nifti_datatype = NIFTI_TYPE_UINT8;
   params.bitpix = 8;
-  params.qformCode = 0;
-  params.sformCode = 1;
+  params.qform_code = 0;
+  params.sform_code = 1;
   params.sform = {{{c, -s, 0.0f, 0.0f}, {s, c, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f, 0.0f}}};
 
   nifti_1_header hdr = MakeHeader(params);
@@ -999,9 +999,9 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: sform rotation emits a warnin
   const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", /*applyScaling=*/true, /*useAffine=*/true);
 
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
 
-  const auto& warnings = preflight.outputActions.warnings();
+  const auto& warnings = preflight.output_actions.warnings();
   REQUIRE_FALSE(warnings.empty());
   bool foundRotationWarning = false;
   for(const auto& w : warnings)
@@ -1017,7 +1017,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: sform rotation emits a warnin
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: UseAffineIfPresent=false falls back to pixdim + zero origin", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // File advertises origin (100, 200, 300) via sform and spacing (5, 5, 5)
   // via sform column magnitudes. pixdim stays at (1, 1, 1). When the user
@@ -1025,10 +1025,10 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: UseAffineIfPresent=false fall
   SyntheticNiftiParams params;
   params.dims = {2, 2, 2};
   params.spacing = {1.0f, 1.0f, 1.0f};
-  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.nifti_datatype = NIFTI_TYPE_UINT8;
   params.bitpix = 8;
-  params.qformCode = 0;
-  params.sformCode = 1;
+  params.qform_code = 0;
+  params.sform_code = 1;
   params.sform = {{{5.0f, 0.0f, 0.0f, 100.0f}, {0.0f, 5.0f, 0.0f, 200.0f}, {0.0f, 0.0f, 5.0f, 300.0f}}};
 
   nifti_1_header hdr = MakeHeader(params);
@@ -1042,25 +1042,25 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: UseAffineIfPresent=false fall
   const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", /*applyScaling=*/true, /*useAffine=*/false);
 
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
   const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
   const auto outOrigin = geom.getOrigin();
   const auto outSpacing = geom.getSpacing();
-  constexpr float tol = 1e-5f;
-  REQUIRE(std::fabs(outOrigin[0]) < tol);
-  REQUIRE(std::fabs(outOrigin[1]) < tol);
-  REQUIRE(std::fabs(outOrigin[2]) < tol);
-  REQUIRE(std::fabs(outSpacing[0] - 1.0f) < tol);
-  REQUIRE(std::fabs(outSpacing[1] - 1.0f) < tol);
-  REQUIRE(std::fabs(outSpacing[2] - 1.0f) < tol);
+  constexpr float k_Tol = 1e-5f;
+  REQUIRE(std::fabs(outOrigin[0]) < k_Tol);
+  REQUIRE(std::fabs(outOrigin[1]) < k_Tol);
+  REQUIRE(std::fabs(outOrigin[2]) < k_Tol);
+  REQUIRE(std::fabs(outSpacing[0] - 1.0f) < k_Tol);
+  REQUIRE(std::fabs(outSpacing[1] - 1.0f) < k_Tol);
+  REQUIRE(std::fabs(outSpacing[2] - 1.0f) < k_Tol);
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: big-endian uint16 round trip", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::array<int16_t, 3> dims = {3, 3, 2};
   const usize numVoxels = static_cast<usize>(dims[0]) * dims[1] * dims[2];
@@ -1073,7 +1073,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: big-endian uint16 round trip"
 
   SyntheticNiftiParams params;
   params.dims = dims;
-  params.niftiDatatype = NIFTI_TYPE_UINT16;
+  params.nifti_datatype = NIFTI_TYPE_UINT16;
   params.bitpix = 16;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -1092,19 +1092,19 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: big-endian uint16 round trip"
   const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, /*applyScaling=*/true, /*useAffine=*/true);
 
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
   const DataPath arrPath = geomPath.createChildPath("Cell Data").createChildPath(arrName);
   RequireArrayEquals<uint16>(dataStructure, arrPath, voxels);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: round-trips remaining native datatypes", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::array<int16_t, 3> dims = {3, 2, 2};
   const usize numVoxels = static_cast<usize>(dims[0]) * dims[1] * dims[2];
@@ -1122,7 +1122,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: round-trips remaining native 
 
       SyntheticNiftiParams params;
       params.dims = dims;
-      params.niftiDatatype = niftiDatatype;
+      params.nifti_datatype = niftiDatatype;
       params.bitpix = bitpix;
       nifti_1_header hdr = MakeHeader(params);
 
@@ -1136,7 +1136,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: round-trips remaining native 
       const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, /*applyScaling=*/true, /*useAffine=*/true);
 
       const auto preflight = filter.preflight(dataStructure, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
       const auto execute = filter.execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
@@ -1161,7 +1161,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: round-trips remaining native 
 
     SyntheticNiftiParams params;
     params.dims = dims;
-    params.niftiDatatype = NIFTI_TYPE_FLOAT64;
+    params.nifti_datatype = NIFTI_TYPE_FLOAT64;
     params.bitpix = 64;
     nifti_1_header hdr = MakeHeader(params);
 
@@ -1175,7 +1175,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: round-trips remaining native 
     const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, /*applyScaling=*/true, /*useAffine=*/true);
 
     const auto preflight = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
     const auto execute = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
@@ -1193,7 +1193,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: round-trips remaining native 
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: crop edge cases", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::array<int16_t, 3> dims = {4, 4, 4};
   const usize nx = static_cast<usize>(dims[0]);
@@ -1209,7 +1209,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: crop edge cases", "[NXImagePr
 
   SyntheticNiftiParams params;
   params.dims = dims;
-  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.nifti_datatype = NIFTI_TYPE_UINT8;
   params.bitpix = 8;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -1225,19 +1225,19 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: crop edge cases", "[NXImagePr
 
     CropGeometryParameter::ValueType crop;
     crop.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
-    crop.cropX = true;
-    crop.cropY = false;
-    crop.cropZ = true;
-    crop.xBoundVoxels = {1, 2};
-    crop.yBoundVoxels = {99, 99}; // deliberately nonsense; should be ignored
-    crop.zBoundVoxels = {0, 2};
+    crop.crop_x = true;
+    crop.crop_y = false;
+    crop.crop_z = true;
+    crop.x_bound_voxels = {1, 2};
+    crop.y_bound_voxels = {99, 99}; // deliberately nonsense; should be ignored
+    crop.z_bound_voxels = {0, 2};
 
     DataStructure dataStructure;
     ReadNIfTIFileFilter filter;
     const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, /*applyScaling=*/true, /*useAffine=*/true, crop);
 
     const auto preflight = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
     const auto execute = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
@@ -1270,19 +1270,19 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: crop edge cases", "[NXImagePr
 
     CropGeometryParameter::ValueType crop;
     crop.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
-    crop.cropX = true;
-    crop.cropY = true;
-    crop.cropZ = true;
-    crop.xBoundVoxels = {1, 3};
-    crop.yBoundVoxels = {1, 2};
-    crop.zBoundVoxels = {0, 1};
+    crop.crop_x = true;
+    crop.crop_y = true;
+    crop.crop_z = true;
+    crop.x_bound_voxels = {1, 3};
+    crop.y_bound_voxels = {1, 2};
+    crop.z_bound_voxels = {0, 1};
 
     DataStructure dataStructure;
     ReadNIfTIFileFilter filter;
     const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, /*applyScaling=*/true, /*useAffine=*/true, crop);
 
     const auto preflight = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
     const auto execute = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
@@ -1309,19 +1309,19 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: crop edge cases", "[NXImagePr
 
     CropGeometryParameter::ValueType crop;
     crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
-    crop.cropX = true;
-    crop.cropY = true;
-    crop.cropZ = true;
-    crop.xBoundPhysical = {100.0f, 200.0f};
-    crop.yBoundPhysical = {100.0f, 200.0f};
-    crop.zBoundPhysical = {100.0f, 200.0f};
+    crop.crop_x = true;
+    crop.crop_y = true;
+    crop.crop_z = true;
+    crop.x_bound_physical = {100.0f, 200.0f};
+    crop.y_bound_physical = {100.0f, 200.0f};
+    crop.z_bound_physical = {100.0f, 200.0f};
 
     DataStructure dataStructure;
     ReadNIfTIFileFilter filter;
     const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, /*applyScaling=*/true, /*useAffine=*/true, crop);
 
     const auto preflight = filter.preflight(dataStructure, args);
-    REQUIRE(preflight.outputActions.invalid());
+    REQUIRE(preflight.output_actions.invalid());
   }
 
   SECTION("reversed voxel bounds are rejected")
@@ -1331,25 +1331,25 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: crop edge cases", "[NXImagePr
 
     CropGeometryParameter::ValueType crop;
     crop.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
-    crop.cropX = true;
-    crop.cropY = true;
-    crop.cropZ = true;
-    crop.xBoundVoxels = {3, 1};
-    crop.yBoundVoxels = {0, 2};
-    crop.zBoundVoxels = {0, 2};
+    crop.crop_x = true;
+    crop.crop_y = true;
+    crop.crop_z = true;
+    crop.x_bound_voxels = {3, 1};
+    crop.y_bound_voxels = {0, 2};
+    crop.z_bound_voxels = {0, 2};
 
     DataStructure dataStructure;
     ReadNIfTIFileFilter filter;
     const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, /*applyScaling=*/true, /*useAffine=*/true, crop);
 
     const auto preflight = filter.preflight(dataStructure, args);
-    REQUIRE(preflight.outputActions.invalid());
+    REQUIRE(preflight.output_actions.invalid());
   }
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: identity scaling transform is not applied and does not promote", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::array<int16_t, 3> dims = {2, 2, 2};
   const usize numVoxels = static_cast<usize>(dims[0]) * dims[1] * dims[2];
@@ -1361,10 +1361,10 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: identity scaling transform is
 
   SyntheticNiftiParams params;
   params.dims = dims;
-  params.niftiDatatype = NIFTI_TYPE_INT16;
+  params.nifti_datatype = NIFTI_TYPE_INT16;
   params.bitpix = 16;
-  params.sclSlope = 1.0f; // identity
-  params.sclInter = 0.0f;
+  params.scl_slope = 1.0f; // identity
+  params.scl_inter = 0.0f;
   nifti_1_header hdr = MakeHeader(params);
 
   const fs::path filePath = OutputDir() / "identity_scale.nii";
@@ -1377,7 +1377,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: identity scaling transform is
   const Arguments args = MakeFilterArgs(filePath, geomPath, "Cell Data", arrName, /*applyScaling=*/true, /*useAffine=*/true);
 
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
 
@@ -1389,7 +1389,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: identity scaling transform is
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: header cache is reused across preflight calls", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const std::array<int16_t, 3> dims = {2, 2, 2};
   const usize numVoxels = static_cast<usize>(dims[0]) * dims[1] * dims[2];
@@ -1401,7 +1401,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: header cache is reused across
 
   SyntheticNiftiParams params;
   params.dims = dims;
-  params.niftiDatatype = NIFTI_TYPE_UINT8;
+  params.nifti_datatype = NIFTI_TYPE_UINT8;
   params.bitpix = 8;
   nifti_1_header hdr = MakeHeader(params);
 
@@ -1415,7 +1415,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: header cache is reused across
 
   // First preflight populates the cache.
   const auto firstPreflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(firstPreflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(firstPreflight.output_actions);
 
   // Record the mtime, then overwrite the first 4 bytes of the file with
   // garbage and restore the mtime. A cache miss would read the corrupted
@@ -1435,19 +1435,19 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: header cache is reused across
   // succeed despite the corrupted header bytes.
   DataStructure dataStructure2;
   const auto secondPreflight = filter.preflight(dataStructure2, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(secondPreflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(secondPreflight.output_actions);
 
   // Sanity check: a fresh filter instance (new m_InstanceId → cold cache)
   // should see the corruption and fail.
   DataStructure dataStructure3;
   ReadNIfTIFileFilter freshFilter;
   const auto freshPreflight = freshFilter.preflight(dataStructure3, args);
-  REQUIRE(freshPreflight.outputActions.invalid());
+  REQUIRE(freshPreflight.output_actions.invalid());
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: PhysicalCrop_MaxAtBound", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const DataPath geomPath({"Physical Crop"});
   // Recreate the existing physical-crop fixture so this test runs independently.
   SyntheticNiftiParams params;
@@ -1462,8 +1462,8 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: PhysicalCrop_MaxAtBound", "[N
   ReadNIfTIFileFilter filter;
   DataStructure fullDataStructure;
   auto fullPreflight = filter.preflight(fullDataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(fullPreflight.outputActions);
-  auto fullActions = fullPreflight.outputActions.value().applyAll(fullDataStructure, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(fullPreflight.output_actions);
+  auto fullActions = fullPreflight.output_actions.value().applyAll(fullDataStructure, IDataAction::Mode::Preflight);
   SIMPLNX_RESULT_REQUIRE_VALID(fullActions);
   REQUIRE_NOTHROW(fullDataStructure.getDataRefAs<ImageGeom>(geomPath));
   const auto& fullGeom = fullDataStructure.getDataRefAs<ImageGeom>(geomPath);
@@ -1473,22 +1473,22 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: PhysicalCrop_MaxAtBound", "[N
 
   CropGeometryParameter::ValueType crop;
   crop.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
-  crop.cropX = true;
-  crop.cropY = false;
-  crop.cropZ = false;
-  crop.xBoundPhysical = {origin[0], origin[0] + static_cast<float32>(dims[0]) * spacing[0]};
-  CAPTURE(origin[0], spacing[0], dims[0], crop.xBoundPhysical[1]);
+  crop.crop_x = true;
+  crop.crop_y = false;
+  crop.crop_z = false;
+  crop.x_bound_physical = {origin[0], origin[0] + static_cast<float32>(dims[0]) * spacing[0]};
+  CAPTURE(origin[0], spacing[0], dims[0], crop.x_bound_physical[1]);
   args.insertOrAssign(ReadNIfTIFileFilter::k_CroppingOptions_Key, crop);
   DataStructure croppedDataStructure;
   auto croppedPreflight = filter.preflight(croppedDataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(croppedPreflight.outputActions);
-  auto croppedActions = croppedPreflight.outputActions.value().applyAll(croppedDataStructure, IDataAction::Mode::Preflight);
+  SIMPLNX_RESULT_REQUIRE_VALID(croppedPreflight.output_actions);
+  auto croppedActions = croppedPreflight.output_actions.value().applyAll(croppedDataStructure, IDataAction::Mode::Preflight);
   SIMPLNX_RESULT_REQUIRE_VALID(croppedActions);
   REQUIRE_NOTHROW(croppedDataStructure.getDataRefAs<ImageGeom>(geomPath));
   const auto& croppedGeom = croppedDataStructure.getDataRefAs<ImageGeom>(geomPath);
   REQUIRE(croppedGeom.getDimensions() == dims);
   REQUIRE(croppedGeom.getOrigin() == origin);
-  UnitTest::CheckArraysInheritTupleDims(croppedDataStructure);
+  unit_test::CheckArraysInheritTupleDims(croppedDataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: ignored axis flips warn", "[NXImageProcessing][ReadNIfTIFileFilter]")
@@ -1568,13 +1568,13 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: ignored axis flips warn", "[N
   WriteNiftiFile(filePath, hdr, voxels, false);
   const DataPath geomPath({"NIfTI Flip"});
   auto args = MakeFilterArgs(filePath, geomPath, "Cell Data", "ImageData", false, useAffine);
-  DataStructure ds;
+  DataStructure dataStructure;
   ReadNIfTIFileFilter filter;
-  const auto preflight = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   bool warned = false;
   bool rotationWarned = false;
-  for(const auto& warning : preflight.outputActions.warnings())
+  for(const auto& warning : preflight.output_actions.warnings())
   {
     if(warning.code == -34753)
     {
@@ -1587,22 +1587,22 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: ignored axis flips warn", "[N
     }
   }
   CHECK(rotationWarned == (useAffine && kind == OrientationCase::RotatedFlippedSform));
-  CHECK(preflight.outputActions.warnings().size() == static_cast<usize>(warned) + static_cast<usize>(rotationWarned));
+  CHECK(preflight.output_actions.warnings().size() == static_cast<usize>(warned) + static_cast<usize>(rotationWarned));
   CHECK(warned == (useAffine && kind != OrientationCase::PositiveQform && kind != OrientationCase::PositiveSform));
-  const auto execute = filter.execute(ds, args);
+  const auto execute = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
-  REQUIRE_NOTHROW(ds.getDataRefAs<ImageGeom>(geomPath));
-  const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
-  REQUIRE(geom.getDimensions() == SizeVec3(2, 2, 2));
-  REQUIRE(geom.getSpacing() == FloatVec3(2.0f, 3.0f, 4.0f));
-  REQUIRE(geom.getOrigin() == (useAffine && kind != OrientationCase::NegativeFallbackPixdimX ? FloatVec3(10.0f, 20.0f, 30.0f) : FloatVec3(0.0f, 0.0f, 0.0f)));
-  RequireArrayEquals<uint8>(ds, geomPath.createChildPath("Cell Data").createChildPath("ImageData"), voxels);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(geomPath));
+  const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
+  REQUIRE(geom.getDimensions() == SizeVec3Type(2, 2, 2));
+  REQUIRE(geom.getSpacing() == FloatVec3Type(2.0f, 3.0f, 4.0f));
+  REQUIRE(geom.getOrigin() == (useAffine && kind != OrientationCase::NegativeFallbackPixdimX ? FloatVec3Type(10.0f, 20.0f, 30.0f) : FloatVec3Type(0.0f, 0.0f, 0.0f)));
+  RequireArrayEquals<uint8>(dataStructure, geomPath.createChildPath("Cell Data").createChildPath("ImageData"), voxels);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: nonfinite scaling uses finite coefficients", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Cases 0-5 cover NaN and both infinities in each coefficient; case 6 is the zero-slope control.
   // Case 7: zero slope with a NaN intercept is no scaling, so no intercept warning.
@@ -1612,30 +1612,30 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: nonfinite scaling uses finite
   CAPTURE(kind, applyScaling);
   SyntheticNiftiParams params;
   params.dims = {2, 1, 1};
-  params.niftiDatatype = NIFTI_TYPE_INT16;
+  params.nifti_datatype = NIFTI_TYPE_INT16;
   params.bitpix = 16;
-  params.sclSlope = 2.0f;
-  params.sclInter = 10.0f;
+  params.scl_slope = 2.0f;
+  params.scl_inter = 10.0f;
   const std::array<float, 3> invalidValues{std::numeric_limits<float>::quiet_NaN(), std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity()};
   if(kind < 3)
   {
-    params.sclSlope = invalidValues[kind];
+    params.scl_slope = invalidValues[kind];
   }
   else if(kind < 6)
   {
-    params.sclInter = invalidValues[kind - 3];
+    params.scl_inter = invalidValues[kind - 3];
   }
   else if(kind == 8)
   {
-    params.sclSlope = 1.0f;
-    params.sclInter = invalidValues[0];
+    params.scl_slope = 1.0f;
+    params.scl_inter = invalidValues[0];
   }
   else
   {
-    params.sclSlope = 0.0f;
+    params.scl_slope = 0.0f;
     if(kind == 7)
     {
-      params.sclInter = invalidValues[0];
+      params.scl_inter = invalidValues[0];
     }
   }
   const std::vector<int16> voxels{-7, 23};
@@ -1647,21 +1647,21 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: nonfinite scaling uses finite
   ReadNIfTIFileFilter filter;
   DataStructure preflightData;
   auto preflight = filter.preflight(preflightData, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   const bool invalidIntercept = kind >= 3 && kind < 6;
   const bool scaled = applyScaling && invalidIntercept;
   const bool interceptWarning = applyScaling && (invalidIntercept || kind == 8);
-  REQUIRE(preflight.outputActions.warnings().size() == (interceptWarning ? 1 : 0));
+  REQUIRE(preflight.output_actions.warnings().size() == (interceptWarning ? 1 : 0));
   if(interceptWarning)
   {
-    const auto& warning = preflight.outputActions.warnings().front();
+    const auto& warning = preflight.output_actions.warnings().front();
     CHECK(warning.code == -34752);
     CHECK(warning.message.find(filePath.string()) != std::string::npos);
     CHECK(warning.message.find("intercept is not finite") != std::string::npos);
     CHECK(warning.message.find("0 is used") != std::string::npos);
   }
   bool foundHeader = false;
-  for(const auto& value : preflight.outputValues)
+  for(const auto& value : preflight.output_values)
   {
     if(value.name == "NIfTI Header")
     {
@@ -1670,9 +1670,9 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: nonfinite scaling uses finite
     }
   }
   REQUIRE(foundHeader);
-  auto actions = preflight.outputActions.value().applyAll(preflightData, IDataAction::Mode::Preflight);
+  auto actions = preflight.output_actions.value().applyAll(preflightData, IDataAction::Mode::Preflight);
   SIMPLNX_RESULT_REQUIRE_VALID(actions);
-  CHECK((scaled ? preflightData.getDataAs<Float32Array>(arrPath) != nullptr : preflightData.getDataAs<Int16Array>(arrPath) != nullptr));
+  CHECK((scaled ? preflightData.getDataAs<Float32ArrayType>(arrPath) != nullptr : preflightData.getDataAs<Int16ArrayType>(arrPath) != nullptr));
 
   DataStructure executeData;
   const auto execute = filter.execute(executeData, args);
@@ -1686,12 +1686,12 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: nonfinite scaling uses finite
   {
     RequireArrayEquals<int16>(executeData, arrPath, voxels);
   }
-  UnitTest::CheckArraysInheritTupleDims(executeData);
+  unit_test::CheckArraysInheritTupleDims(executeData);
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: nonfinite scaling on RGB24 preserves stored values", "[NXImageProcessing][ReadNIfTIFileFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Non-finite slopes disable scaling; non-finite intercepts use 0. RGB24 is never scaled.
   // Case 4: finite non-trivial scaling, so the RGB24 warning -34751 is expected.
@@ -1699,23 +1699,23 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: nonfinite scaling on RGB24 pr
   CAPTURE(kind);
   SyntheticNiftiParams params;
   params.dims = {2, 1, 1};
-  params.niftiDatatype = NIFTI_TYPE_RGB24;
+  params.nifti_datatype = NIFTI_TYPE_RGB24;
   params.bitpix = 24;
-  params.sclSlope = 2.0f;
-  params.sclInter = 10.0f;
+  params.scl_slope = 2.0f;
+  params.scl_inter = 10.0f;
   switch(kind)
   {
   case 0:
-    params.sclSlope = std::numeric_limits<float>::quiet_NaN();
+    params.scl_slope = std::numeric_limits<float>::quiet_NaN();
     break;
   case 1:
-    params.sclSlope = std::numeric_limits<float>::infinity();
+    params.scl_slope = std::numeric_limits<float>::infinity();
     break;
   case 2:
-    params.sclInter = std::numeric_limits<float>::quiet_NaN();
+    params.scl_inter = std::numeric_limits<float>::quiet_NaN();
     break;
   case 3:
-    params.sclInter = -std::numeric_limits<float>::infinity();
+    params.scl_inter = -std::numeric_limits<float>::infinity();
     break;
   default:
     break;
@@ -1729,10 +1729,10 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: nonfinite scaling on RGB24 pr
   ReadNIfTIFileFilter filter;
   DataStructure dataStructure;
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   bool hasScalingWarning = false;
   bool hasInterceptWarning = false;
-  for(const auto& warning : preflight.outputActions.warnings())
+  for(const auto& warning : preflight.output_actions.warnings())
   {
     hasScalingWarning = hasScalingWarning || warning.code == -34751;
     hasInterceptWarning = hasInterceptWarning || warning.code == -34752;
@@ -1763,9 +1763,9 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: override invalid stored image
   const DataPath geometry({"Override NIfTI"});
   const ReadNIfTIFileFilter filter;
   auto args = MakeFilterArgs(path, geometry, "Cell Data", "Pixels", true, true);
-  UnitTest::RequireBadReaderMetadata(filter, args, path, badSpacing);
-  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
-  UnitTest::RequireReaderGeometryExecution(filter, args, geometry, {4, -3, 8}, {2, 3, 4});
+  unit_test::RequireBadReaderMetadata(filter, args, path, badSpacing);
+  unit_test::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  unit_test::RequireReaderGeometryExecution(filter, args, geometry, {4, -3, 8}, {2, 3, 4});
 }
 
 TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: preserves representable large affine spacing", "[NXImageProcessing][ReadNIfTIFileFilter]")
@@ -1776,7 +1776,7 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: preserves representable large
   SyntheticNiftiParams params;
   if(useSform)
   {
-    params.sformCode = 1;
+    params.sform_code = 1;
     params.sform = {{{spacing, 0, 0, 0}, {0, 3, 0, 0}, {0, 0, 4, 0}}};
   }
   else
@@ -1790,10 +1790,10 @@ TEST_CASE("NXImageProcessing::ReadNIfTIFileFilter: preserves representable large
   const auto args = MakeFilterArgs(file, geometry, "Cell Data", "Pixels", true, true);
   if(spacing == 0.0F || !std::isfinite(spacing))
   {
-    UnitTest::RequireBadReaderMetadata(filter, args, file, true);
+    unit_test::RequireBadReaderMetadata(filter, args, file, true);
   }
   else
   {
-    UnitTest::RequireReaderGeometryExecution(filter, args, geometry, {0, 0, 0}, {spacing, 3, 4});
+    unit_test::RequireReaderGeometryExecution(filter, args, geometry, {0, 0, 0}, {spacing, 3, 4});
   }
 }

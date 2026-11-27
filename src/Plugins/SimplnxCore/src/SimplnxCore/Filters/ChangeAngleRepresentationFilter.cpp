@@ -49,9 +49,9 @@ Parameters ChangeAngleRepresentationFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<ChoicesParameter>(k_ConversionType_Key, "Conversion Type", "Tells the Filter which conversion is being made", 0,
-                                                   ChoicesParameter::Choices{"Degrees to Radians", "Radians to Degrees"}));
+                                                   ChoicesParameter::ChoicesType{"Degrees to Radians", "Radians to Degrees"}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AnglesArrayPath_Key, "Angles", "The DataArray containing the angles to be converted.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::float32}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}));
 
   return params;
 }
@@ -63,14 +63,14 @@ IFilter::VersionType ChangeAngleRepresentationFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ChangeAngleRepresentationFilter::clone() const
+IFilter::UniquePointerType ChangeAngleRepresentationFilter::clone() const
 {
   return std::make_unique<ChangeAngleRepresentationFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ChangeAngleRepresentationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ChangeAngleRepresentationFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                        const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pAnglesDataPathValue = filterArgs.value<DataPath>(k_AnglesArrayPath_Key);
 
@@ -78,16 +78,16 @@ IFilter::PreflightResult ChangeAngleRepresentationFilter::preflightImpl(const Da
 
   nx::core::MarkDataPathModified(dataStructure, resultOutputActions, pAnglesDataPathValue);
 
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ChangeAngleRepresentationFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ChangeAngleRepresentationFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ChangeAngleRepresentationInputValues inputValues;
-  inputValues.ConversionTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(k_ConversionType_Key);
-  inputValues.AnglesArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_AnglesArrayPath_Key);
+  inputValues.conversion_type_index = filterArgs.value<ChoicesParameter::ValueType>(k_ConversionType_Key);
+  inputValues.angles_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_AnglesArrayPath_Key);
 
   return ChangeAngleRepresentation(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -95,11 +95,11 @@ Result<> ChangeAngleRepresentationFilter::executeImpl(DataStructure& dataStructu
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_ConversionTypeKey = "ConversionType";
-constexpr StringLiteral k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPath";
-} // namespace SIMPL
+constexpr StringLiteralType k_ConversionTypeKey = "ConversionType";
+constexpr StringLiteralType k_CellEulerAnglesArrayPathKey = "CellEulerAnglesArrayPath";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ChangeAngleRepresentationFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -108,8 +108,8 @@ Result<Arguments> ChangeAngleRepresentationFilter::FromSIMPLJson(const nlohmann:
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_ConversionTypeKey, k_ConversionType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_CellEulerAnglesArrayPathKey, k_AnglesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_ConversionTypeKey, k_ConversionType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellEulerAnglesArrayPathKey, k_AnglesArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

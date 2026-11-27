@@ -14,7 +14,7 @@ namespace
 {
 constexpr nx::core::usize k_ControlPointCompSize = 4;
 
-nx::core::usize findRightBinIndex(nx::core::float32 nValue, const std::vector<nx::core::float32>& binPoints)
+nx::core::usize FindRightBinIndex(nx::core::float32 nValue, const std::vector<nx::core::float32>& binPoints)
 {
   nx::core::usize min = 0;
   nx::core::usize max = binPoints.size() - 1;
@@ -40,73 +40,73 @@ nx::core::usize findRightBinIndex(nx::core::float32 nValue, const std::vector<nx
  *
  ******************************************************************************/
 
-ColorTableUtilities::ColorPreset::ColorPreset() = default;
+color_table_utilities::ColorPreset::ColorPreset() = default;
 
-ColorTableUtilities::ColorPreset::ColorPreset(const nlohmann::json& a)
+color_table_utilities::ColorPreset::ColorPreset(const nlohmann::json& a)
 {
   if(a.contains("Name") && a["Name"].is_string())
   {
-    this->Name = a["Name"].get<std::string>();
+    this->name = a["Name"].get<std::string>();
   }
   if(a.contains("ColorSpace") && a["ColorSpace"].is_string())
   {
-    this->ColorSpace = a["ColorSpace"].get<std::string>();
+    this->color_space = a["ColorSpace"].get<std::string>();
   }
   if(a.contains("Source") && a["Source"].is_string())
   {
-    this->Source = a["Source"].get<std::string>();
+    this->source = a["Source"].get<std::string>();
   }
   if(a.contains("Licence") && a["Licence"].is_string())
   {
-    this->License = a["Licence"].get<std::string>();
+    this->license = a["Licence"].get<std::string>();
   }
   if(a.contains("Creator") && a["Creator"].is_string())
   {
-    this->Creator = a["Creator"].get<std::string>();
+    this->creator = a["Creator"].get<std::string>();
   }
 
   if(a.contains("NanColor") && a["NanColor"].is_array())
   {
-    this->NanColor = a["NanColor"].get<std::vector<float>>();
+    this->nan_color = a["NanColor"].get<std::vector<float>>();
   }
   if(a.contains("RGBPoints") && a["RGBPoints"].is_array())
   {
-    this->RGBPoints = a["RGBPoints"].get<std::vector<float>>();
+    this->rgb_points = a["RGBPoints"].get<std::vector<float>>();
   }
   if(a.contains("IndexedColors") && a["IndexedColors"].is_array())
   {
-    this->IndexedColors = a["IndexedColors"].get<std::vector<float>>();
+    this->indexed_colors = a["IndexedColors"].get<std::vector<float>>();
   }
 
   if(a.contains("DefaultMap") && a["DefaultMap"].is_boolean())
   {
-    this->DefaultMap = a["DefaultMap"].get<bool>();
+    this->default_map = a["DefaultMap"].get<bool>();
   }
 
   if(a.contains("Annotations"))
   {
-    this->Annotations = a["Annotations"].get<nlohmann::json>();
+    this->annotations = a["Annotations"].get<nlohmann::json>();
   }
-  this->Invalid = false;
+  this->invalid = false;
 }
 
-nlohmann::json ColorTableUtilities::ColorPreset::toJson() const
+nlohmann::json color_table_utilities::ColorPreset::toJson() const
 {
   nlohmann::json json;
-  json["Name"] = Name;
-  json["ColorSpace"] = ColorSpace;
-  json["Source"] = Source;
-  json["License"] = License;
-  json["Creator"] = Creator;
-  json["NanColor"] = NanColor;
-  json["RGBPoints"] = RGBPoints;
-  json["IndexedColors"] = IndexedColors;
-  json["DefaultMap"] = DefaultMap;
-  json["Annotations"] = Annotations;
+  json["Name"] = name;
+  json["ColorSpace"] = color_space;
+  json["Source"] = source;
+  json["License"] = license;
+  json["Creator"] = creator;
+  json["NanColor"] = nan_color;
+  json["RGBPoints"] = rgb_points;
+  json["IndexedColors"] = indexed_colors;
+  json["DefaultMap"] = default_map;
+  json["Annotations"] = annotations;
   return json;
 }
 
-std::string ColorTableUtilities::ColorPreset::toJsonString(int indent) const
+std::string color_table_utilities::ColorPreset::toJsonString(int indent) const
 {
   nlohmann::json json = toJson();
   return json.dump(indent);
@@ -118,42 +118,34 @@ std::string ColorTableUtilities::ColorPreset::toJsonString(int indent) const
  *
  ******************************************************************************/
 
-bool ColorTableUtilities::IsValidPreset(const ColorPreset& preset)
+bool color_table_utilities::IsValidPreset(const ColorPreset& preset)
 {
-  if(!preset.RGBPoints.empty() && ((preset.ColorSpace == "RGB" || preset.ColorSpace == "Diverging" || preset.ColorSpace == "Lab" || preset.ColorSpace == "CIELAB")))
-  {
-    return true;
-  }
-  return false;
+  return !preset.rgb_points.empty() && ((preset.color_space == "RGB" || preset.color_space == "Diverging" || preset.color_space == "Lab" || preset.color_space == "CIELAB"));
 }
 
-bool ColorTableUtilities::IsValidIndexedPreset(const ColorPreset& preset)
+bool color_table_utilities::IsValidIndexedPreset(const ColorPreset& preset)
 {
-  return !preset.IndexedColors.empty();
+  return !preset.indexed_colors.empty();
 }
 
-bool ColorTableUtilities::IsValidPreset(const nlohmann::json& preset)
+bool color_table_utilities::IsValidPreset(const nlohmann::json& preset)
 {
   const bool hasRgbPoints = preset.contains("RGBPoints");
-  const bool rgbPointsIsArray = (hasRgbPoints && preset["RGBPoints"].is_array() ? true : false);
+  const bool rgbPointsIsArray = (hasRgbPoints && preset["RGBPoints"].is_array());
   const bool hasColorSpace = preset.contains("ColorSpace");
   const std::string colorSpaceValue = (hasColorSpace ? preset["ColorSpace"].get<std::string>() : "");
 
-  if(rgbPointsIsArray && (hasColorSpace && (colorSpaceValue == "RGB" || colorSpaceValue == "Diverging" || colorSpaceValue == "Lab" || colorSpaceValue == "CIELAB")))
-  {
-    return true;
-  }
-  return false;
+  return rgbPointsIsArray && (hasColorSpace && (colorSpaceValue == "RGB" || colorSpaceValue == "Diverging" || colorSpaceValue == "Lab" || colorSpaceValue == "CIELAB"));
 }
 
-bool ColorTableUtilities::IsValidIndexedPreset(const nlohmann::json& preset)
+bool color_table_utilities::IsValidIndexedPreset(const nlohmann::json& preset)
 {
   const bool hasIndexedColors = preset.contains("IndexedColors");
   const bool indexedColorsIsArray = hasIndexedColors && preset["IndexedColors"].is_array();
   return indexedColorsIsArray;
 }
 
-Result<nlohmann::json> ColorTableUtilities::LoadAllRGBPresets()
+Result<nlohmann::json> color_table_utilities::LoadAllRGBPresets()
 {
   nlohmann::json rgbPresets;
 
@@ -167,12 +159,12 @@ Result<nlohmann::json> ColorTableUtilities::LoadAllRGBPresets()
 
   // Sort the presets by name
   std::sort(rgbPresets.begin(), rgbPresets.end(),
-            [](const nlohmann::json& a, const nlohmann::json& b) { return StringUtilities::toLower(a["Name"].get<std::string>()) < StringUtilities::toLower(b["Name"].get<std::string>()); });
+            [](const nlohmann::json& a, const nlohmann::json& b) { return string_utilities::ToLower(a["Name"].get<std::string>()) < string_utilities::ToLower(b["Name"].get<std::string>()); });
 
   return {rgbPresets};
 }
 
-Result<nlohmann::json> ColorTableUtilities::LoadAllIndexedPresets()
+Result<nlohmann::json> color_table_utilities::LoadAllIndexedPresets()
 {
   nlohmann::json indexedPresets;
 
@@ -186,12 +178,12 @@ Result<nlohmann::json> ColorTableUtilities::LoadAllIndexedPresets()
 
   // Sort the presets by name
   std::sort(indexedPresets.begin(), indexedPresets.end(),
-            [](const nlohmann::json& a, const nlohmann::json& b) { return StringUtilities::toLower(a["Name"].get<std::string>()) < StringUtilities::toLower(b["Name"].get<std::string>()); });
+            [](const nlohmann::json& a, const nlohmann::json& b) { return string_utilities::ToLower(a["Name"].get<std::string>()) < string_utilities::ToLower(b["Name"].get<std::string>()); });
 
   return {indexedPresets};
 }
 
-Result<ColorTableUtilities::ColorPresetsVectorType> ColorTableUtilities::CacheAllPresets(bool rgbPreset, bool indexedPreset)
+Result<color_table_utilities::ColorPresetsVectorType> color_table_utilities::CacheAllPresets(bool rgbPreset, bool indexedPreset)
 {
   ColorPresetsVectorType presets;
   for(const auto& preset : ColorTable::k_DefaultColorTableJson)
@@ -203,12 +195,12 @@ Result<ColorTableUtilities::ColorPresetsVectorType> ColorTableUtilities::CacheAl
   }
 
   // Sort the presets by name
-  std::sort(presets.begin(), presets.end(), [](const ColorPreset& a, const ColorPreset& b) { return StringUtilities::toLower(a.Name) < StringUtilities::toLower(b.Name); });
+  std::sort(presets.begin(), presets.end(), [](const ColorPreset& a, const ColorPreset& b) { return string_utilities::ToLower(a.name) < string_utilities::ToLower(b.name); });
 
   return {presets};
 }
 
-Result<nlohmann::json> ColorTableUtilities::LoadAllPresets()
+Result<nlohmann::json> color_table_utilities::LoadAllPresets()
 {
   nlohmann::json presets;
 
@@ -222,12 +214,12 @@ Result<nlohmann::json> ColorTableUtilities::LoadAllPresets()
 
   // Sort the presets by name
   std::sort(presets.begin(), presets.end(),
-            [](const nlohmann::json& a, const nlohmann::json& b) { return StringUtilities::toLower(a["Name"].get<std::string>()) < StringUtilities::toLower(b["Name"].get<std::string>()); });
+            [](const nlohmann::json& a, const nlohmann::json& b) { return string_utilities::ToLower(a["Name"].get<std::string>()) < string_utilities::ToLower(b["Name"].get<std::string>()); });
 
   return {presets};
 }
 
-Result<std::vector<float32>> ColorTableUtilities::ExtractControlPoints(const std::string& presetName)
+Result<std::vector<float32>> color_table_utilities::ExtractControlPoints(const std::string& presetName)
 {
   if(presetName.empty())
   {
@@ -257,7 +249,7 @@ Result<std::vector<float32>> ColorTableUtilities::ExtractControlPoints(const std
   return MakeErrorResult<std::vector<float32>>(-36783, fmt::format("ColorTableUtilities::ExtractControlPoints: Unable to find the object for name '{}' in the JSON Table", presetName));
 }
 
-std::string ColorTableUtilities::GetDefaultRGBPresetName()
+std::string color_table_utilities::GetDefaultRGBPresetName()
 {
   for(const auto& preset : ColorTable::k_DefaultColorTableJson)
   {
@@ -270,7 +262,7 @@ std::string ColorTableUtilities::GetDefaultRGBPresetName()
   return {};
 }
 
-std::vector<float32> ColorTableUtilities::NormalizeBinPoints(const std::vector<float32>& controlPoints)
+std::vector<float32> color_table_utilities::NormalizeBinPoints(const std::vector<float32>& controlPoints)
 {
   const usize numControlColors = controlPoints.size() / k_ControlPointCompSize;
   std::vector<float32> binPoints;
@@ -294,9 +286,9 @@ std::vector<float32> ColorTableUtilities::NormalizeBinPoints(const std::vector<f
   return binPoints;
 }
 
-std::array<uint8, 3> ColorTableUtilities::ComputeRgbFromControlPoints(float32 nValue, const std::vector<float32>& binPoints, const std::vector<float32>& controlPoints, usize numControlColors)
+std::array<uint8, 3> color_table_utilities::ComputeRgbFromControlPoints(float32 nValue, const std::vector<float32>& binPoints, const std::vector<float32>& controlPoints, usize numControlColors)
 {
-  int rightBinIndex = static_cast<int>(findRightBinIndex(nValue, binPoints));
+  int rightBinIndex = static_cast<int>(FindRightBinIndex(nValue, binPoints));
   int leftBinIndex = rightBinIndex - 1;
   if(leftBinIndex < 0)
   {
@@ -314,10 +306,7 @@ std::array<uint8, 3> ColorTableUtilities::ComputeRgbFromControlPoints(float32 nV
     currFraction = (nValue - binPoints[leftBinIndex]) / (1 - binPoints[leftBinIndex]);
   }
 
-  if(leftBinIndex > static_cast<int>(numControlColors) - 1)
-  {
-    leftBinIndex = static_cast<int>(numControlColors) - 1;
-  }
+  leftBinIndex = std::min(leftBinIndex, static_cast<int>(numControlColors) - 1);
 
   const uint8 redVal =
       static_cast<uint8>((controlPoints[leftBinIndex * k_ControlPointCompSize + 1] * (1.0 - currFraction) + controlPoints[rightBinIndex * k_ControlPointCompSize + 1] * currFraction) * 255);

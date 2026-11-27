@@ -24,16 +24,16 @@ public:
   SplitDataArrayByTupleFilter& operator=(SplitDataArrayByTupleFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_DataArrayPath_Key = "data_array_path";
-  static constexpr StringLiteral k_DeleteOriginal_Key = "delete_original_array";
-  static constexpr StringLiteral k_SplitDimension_Key = "split_dimension";
-  static constexpr StringLiteral k_SplitDimensionCounts_Key = "split_dimension_counts";
-  static constexpr StringLiteral k_AttrMatrixTupleShape_Key = "attr_matrix_tuple_shape";
-  static constexpr StringLiteral k_OutputContainer = "output_container_index";
-  static constexpr StringLiteral k_NewAttributeMatrixPath = "new_attribute_matrix_path";
-  static constexpr StringLiteral k_ExistingAttributeMatrixPath = "existing_attribute_matrix_path";
-  static constexpr StringLiteral k_NewDataGroupPath = "new_data_group_path";
-  static constexpr StringLiteral k_ExistingDataGroupPath = "existing_data_group_path";
+  static constexpr StringLiteralType k_DataArrayPath_Key = "data_array_path";
+  static constexpr StringLiteralType k_DeleteOriginal_Key = "delete_original_array";
+  static constexpr StringLiteralType k_SplitDimension_Key = "split_dimension";
+  static constexpr StringLiteralType k_SplitDimensionCounts_Key = "split_dimension_counts";
+  static constexpr StringLiteralType k_AttrMatrixTupleShape_Key = "attr_matrix_tuple_shape";
+  static constexpr StringLiteralType k_OutputContainer = "output_container_index";
+  static constexpr StringLiteralType k_NewAttributeMatrixPath = "new_attribute_matrix_path";
+  static constexpr StringLiteralType k_ExistingAttributeMatrixPath = "existing_attribute_matrix_path";
+  static constexpr StringLiteralType k_NewDataGroupPath = "new_data_group_path";
+  static constexpr StringLiteralType k_ExistingDataGroupPath = "existing_data_group_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -90,7 +90,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

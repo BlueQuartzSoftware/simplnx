@@ -57,8 +57,9 @@ Parameters WriteStlFileFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_GroupingType_Key, "File Grouping Type", "How to partition the stl files", to_underlying(GroupingType::Features),
-                                                                    ChoicesParameter::Choices{"Features", "Phases and Features", "Single File", "Part Index"})); // sequence dependent DO NOT REORDER
+  params.insertLinkableParameter(
+      std::make_unique<ChoicesParameter>(k_GroupingType_Key, "File Grouping Type", "How to partition the stl files", to_underlying(GroupingType::Features),
+                                         ChoicesParameter::ChoicesType{"Features", "Phases and Features", "Single File", "Part Index"})); // sequence dependent DO NOT REORDER
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputStlDirectory_Key, "Output STL Directory", "Directory to dump the STL file(s) to", fs::path(),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir, true));
   params.insert(std::make_unique<StringParameter>(k_OutputStlPrefix_Key, "Output STL File Prefix",
@@ -69,15 +70,15 @@ Parameters WriteStlFileFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeomPath_Key, "Selected Triangle Geometry", "The geometry to print", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
 
   params.insertSeparator(Parameters::Separator{"Input Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Face labels", "The triangle feature ids array to order/index files by", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Face Phases", "The face phases array (the phase on each side of each triangle) to further order/index files by",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_PartNumberPath_Key, "Part Numbers", "The Part Numbers to order/index files by", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   // link params -- GroupingType enum is stored in the algorithm header [WriteStlFile.hpp]
   //------------ Group by Features -------------
@@ -109,14 +110,14 @@ IFilter::VersionType WriteStlFileFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer WriteStlFileFilter::clone() const
+IFilter::UniquePointerType WriteStlFileFilter::clone() const
 {
   return std::make_unique<WriteStlFileFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                           const ExecutionContext& executionContext) const
+IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                           const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pGroupingTypeValue = static_cast<GroupingType>(filterArgs.value<ChoicesParameter::ValueType>(k_GroupingType_Key));
   auto pOutputStlDirectoryValue = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputStlDirectory_Key);
@@ -127,98 +128,101 @@ IFilter::PreflightResult WriteStlFileFilter::preflightImpl(const DataStructure& 
 
   nx::core::Result<OutputActions> resultOutputActions;
 
-  auto* triangleGeom = dataStructure.getDataAs<TriangleGeom>(pTriangleGeomPathValue);
-  if(triangleGeom == nullptr)
+  const auto* triangleGeomPtr = dataStructure.getDataAs<TriangleGeom>(pTriangleGeomPathValue);
+  if(triangleGeomPtr == nullptr)
   {
     return MakePreflightErrorResult(-27870, fmt::format("Triangle Geometry doesn't exist at: {}", pTriangleGeomPathValue.toString()));
   }
 
-  if(triangleGeom->getNumberOfFaces() > std::numeric_limits<int32>::max())
+  if(triangleGeomPtr->getNumberOfFaces() > std::numeric_limits<int32>::max())
   {
     if(pGroupingTypeValue == GroupingType::SingleFile)
     {
       std::string ss =
           fmt::format("The number of triangles is {}, but the STL specification only supports triangle counts up to {}. Since single file was selected this means overflow files WILL be generated.",
-                      triangleGeom->getNumberOfFaces(), std::numeric_limits<int32>::max());
-      resultOutputActions.warnings().emplace_back(Warning{-27871, ss});
+                      triangleGeomPtr->getNumberOfFaces(), std::numeric_limits<int32>::max());
+      resultOutputActions.warnings().emplace_back(Warning{.code = -27871, .message = ss});
     }
     else
     {
       std::string ss = fmt::format("The number of triangles is {}, but the STL specification only supports triangle counts up to {}. This MAY cause some groups to generate overflow files.",
-                                   triangleGeom->getNumberOfFaces(), std::numeric_limits<int32>::max());
-      resultOutputActions.warnings().emplace_back(Warning{-27875, ss});
+                                   triangleGeomPtr->getNumberOfFaces(), std::numeric_limits<int32>::max());
+      resultOutputActions.warnings().emplace_back(Warning{.code = -27875, .message = ss});
     }
   }
 
   if(pGroupingTypeValue == GroupingType::Features || pGroupingTypeValue == GroupingType::FeaturesAndPhases)
   {
-    if(auto* featureIds = dataStructure.getDataAs<Int32Array>(pFeatureIdsPathValue); featureIds == nullptr)
+    const auto* featureIdsPtr = dataStructure.getDataAs<Int32ArrayType>(pFeatureIdsPathValue);
+    if(featureIdsPtr == nullptr)
     {
       return MakePreflightErrorResult(-27873, fmt::format("Feature Ids Array doesn't exist at: {}", pFeatureIdsPathValue.toString()));
     }
-    else if(featureIds->getNumberOfTuples() != triangleGeom->getNumberOfFaces())
+    if(featureIdsPtr->getNumberOfTuples() != triangleGeomPtr->getNumberOfFaces())
     {
       return MakePreflightErrorResult(-27888, fmt::format("Array '{}' has {} tuples but Triangle Geometry '{}' has {} faces; it must have one tuple per face.", pFeatureIdsPathValue.toString(),
-                                                          featureIds->getNumberOfTuples(), pTriangleGeomPathValue.toString(), triangleGeom->getNumberOfFaces()));
+                                                          featureIdsPtr->getNumberOfTuples(), pTriangleGeomPathValue.toString(), triangleGeomPtr->getNumberOfFaces()));
     }
   }
 
   if(pGroupingTypeValue == GroupingType::FeaturesAndPhases)
   {
-    if(auto* featurePhases = dataStructure.getDataAs<Int32Array>(pFeaturePhasesPathValue); featurePhases == nullptr)
+    const auto* featurePhasesPtr = dataStructure.getDataAs<Int32ArrayType>(pFeaturePhasesPathValue);
+    if(featurePhasesPtr == nullptr)
     {
       return MakePreflightErrorResult(-27872, fmt::format("Face Phases Array doesn't exist at: {}", pFeaturePhasesPathValue.toString()));
     }
-    else if(featurePhases->getNumberOfTuples() != triangleGeom->getNumberOfFaces())
+    if(featurePhasesPtr->getNumberOfTuples() != triangleGeomPtr->getNumberOfFaces())
     {
       return MakePreflightErrorResult(-27888, fmt::format("Array '{}' has {} tuples but Triangle Geometry '{}' has {} faces; it must have one tuple per face.", pFeaturePhasesPathValue.toString(),
-                                                          featurePhases->getNumberOfTuples(), pTriangleGeomPathValue.toString(), triangleGeom->getNumberOfFaces()));
+                                                          featurePhasesPtr->getNumberOfTuples(), pTriangleGeomPathValue.toString(), triangleGeomPtr->getNumberOfFaces()));
     }
   }
 
   if(pGroupingTypeValue == GroupingType::PartNumber)
   {
-    if(auto* partNumbers = dataStructure.getDataAs<Int32Array>(pPartNumberPathValue); partNumbers == nullptr)
+    const auto* partNumbersPtr = dataStructure.getDataAs<Int32ArrayType>(pPartNumberPathValue);
+    if(partNumbersPtr == nullptr)
     {
       return MakePreflightErrorResult(-27874, fmt::format("Part Number Array doesn't exist at: {}", pPartNumberPathValue.toString()));
     }
-    else if(partNumbers->getNumberOfTuples() != triangleGeom->getNumberOfFaces())
+    if(partNumbersPtr->getNumberOfTuples() != triangleGeomPtr->getNumberOfFaces())
     {
       return MakePreflightErrorResult(-27888, fmt::format("Array '{}' has {} tuples but Triangle Geometry '{}' has {} faces; it must have one tuple per face.", pPartNumberPathValue.toString(),
-                                                          partNumbers->getNumberOfTuples(), pTriangleGeomPathValue.toString(), triangleGeom->getNumberOfFaces()));
+                                                          partNumbersPtr->getNumberOfTuples(), pTriangleGeomPathValue.toString(), triangleGeomPtr->getNumberOfFaces()));
     }
   }
 
   // Return both the resultOutputActions via std::move()
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> WriteStlFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> WriteStlFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                         const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   WriteStlFileInputValues inputValues;
 
-  inputValues.GroupingType = filterArgs.value<ChoicesParameter::ValueType>(k_GroupingType_Key);
-  inputValues.OutputStlFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputStlFile_Key);
-  inputValues.OutputStlDirectory = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputStlDirectory_Key);
-  inputValues.OutputStlPrefix = filterArgs.value<StringParameter::ValueType>(k_OutputStlPrefix_Key);
-  inputValues.FeatureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
-  inputValues.FeaturePhasesPath = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
-  inputValues.TriangleGeomPath = filterArgs.value<DataPath>(k_TriangleGeomPath_Key);
-  inputValues.PartNumberPath = filterArgs.value<DataPath>(k_PartNumberPath_Key);
+  inputValues.grouping_type = filterArgs.value<ChoicesParameter::ValueType>(k_GroupingType_Key);
+  inputValues.output_stl_file = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputStlFile_Key);
+  inputValues.output_stl_directory = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputStlDirectory_Key);
+  inputValues.output_stl_prefix = filterArgs.value<StringParameter::ValueType>(k_OutputStlPrefix_Key);
+  inputValues.feature_ids_path = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
+  inputValues.feature_phases_path = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
+  inputValues.triangle_geom_path = filterArgs.value<DataPath>(k_TriangleGeomPath_Key);
+  inputValues.part_number_path = filterArgs.value<DataPath>(k_PartNumberPath_Key);
 
   return WriteStlFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_OutputStlDirectoryKey = "OutputStlDirectory";
-constexpr StringLiteral k_OutputStlPrefixKey = "OutputStlPrefix";
-constexpr StringLiteral k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
-} // namespace SIMPL
+constexpr StringLiteralType k_OutputStlDirectoryKey = "OutputStlDirectory";
+constexpr StringLiteralType k_OutputStlPrefixKey = "OutputStlPrefix";
+constexpr StringLiteralType k_SurfaceMeshFaceLabelsArrayPathKey = "SurfaceMeshFaceLabelsArrayPath";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> WriteStlFileFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -227,10 +231,11 @@ Result<Arguments> WriteStlFileFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::OutputFileFilterParameterConverter>(args, json, SIMPL::k_OutputStlDirectoryKey, k_OutputStlDirectory_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_OutputStlPrefixKey, k_OutputStlPrefix_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceLabelsArrayPathKey, k_TriangleGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SurfaceMeshFaceLabelsArrayPathKey, k_FeatureIdsPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputStlDirectoryKey, k_OutputStlDirectory_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_OutputStlPrefixKey, k_OutputStlPrefix_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_TriangleGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_FeatureIdsPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

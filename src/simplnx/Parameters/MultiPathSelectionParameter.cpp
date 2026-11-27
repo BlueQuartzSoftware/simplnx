@@ -6,12 +6,13 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
-MultiPathSelectionParameter::MultiPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+MultiPathSelectionParameter::MultiPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -20,7 +21,7 @@ Uuid MultiPathSelectionParameter::uuid() const
   return ParameterTraits<MultiPathSelectionParameter>::uuid;
 }
 
-IParameter::AcceptedTypes MultiPathSelectionParameter::acceptedTypes() const
+IParameter::AcceptedTypesType MultiPathSelectionParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -42,12 +43,12 @@ nlohmann::json MultiPathSelectionParameter::toJsonImpl(const std::any& value) co
   return json;
 }
 
-Result<std::any> MultiPathSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> MultiPathSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'MultiPathSelectionParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'MultiPathSelectionParameter' JSON Error: ";
   if(!json.is_array())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an array", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an array", k_Prefix, name()));
   }
 
   ValueType paths;
@@ -58,13 +59,13 @@ Result<std::any> MultiPathSelectionParameter::fromJsonImpl(const nlohmann::json&
   {
     if(!item.is_string())
     {
-      return MakeErrorResult<std::any>(-3, fmt::format("{}JSON value in array is not a string", prefix));
+      return MakeErrorResult<std::any>(-3, fmt::format("{}JSON value in array is not a string", k_Prefix));
     }
     auto string = item.get<std::string>();
     auto path = DataPath::FromString(string);
     if(!path.has_value())
     {
-      errors.push_back(Error{FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), string)});
+      errors.push_back(Error{.code = filter_parameter::constants::k_JsonValueNotValueType, .message = fmt::format("{}Failed to parse '{}' as DataPath", k_Prefix.view(), string)});
       continue;
     }
     paths.push_back(std::move(*path));
@@ -78,7 +79,7 @@ Result<std::any> MultiPathSelectionParameter::fromJsonImpl(const nlohmann::json&
   return {{std::move(paths)}};
 }
 
-IParameter::UniquePointer MultiPathSelectionParameter::clone() const
+IParameter::UniquePointerType MultiPathSelectionParameter::clone() const
 {
   return std::make_unique<MultiPathSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -111,13 +112,13 @@ Result<> MultiPathSelectionParameter::validatePaths(const DataStructure& dataStr
 
     if(path.empty())
     {
-      errors.push_back(Error{FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty at index {}", prefix, i)});
+      errors.push_back(Error{.code = filter_parameter::constants::k_ValidateEmptyValue, .message = fmt::format("{}DataPath cannot be empty at index {}", prefix, i)});
       continue;
     }
-    const DataObject* object = dataStructure.getData(path);
-    if(object == nullptr)
+    const DataObject* objectPtr = dataStructure.getData(path);
+    if(objectPtr == nullptr)
     {
-      errors.push_back(Error{FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, path.toString())});
+      errors.push_back(Error{.code = filter_parameter::constants::k_ValidateDoesNotExist, .message = fmt::format("{}Object does not exist at path '{}'", prefix, path.toString())});
       continue;
     }
   }
@@ -134,6 +135,7 @@ Result<std::any> MultiPathSelectionParameter::resolve(DataStructure& dataStructu
 {
   const auto& paths = GetAnyRef<ValueType>(value);
   std::vector<DataObject*> objects;
+  objects.reserve(paths.size());
   for(const auto& path : paths)
   {
     objects.push_back(dataStructure.getData(path));
@@ -141,12 +143,12 @@ Result<std::any> MultiPathSelectionParameter::resolve(DataStructure& dataStructu
   return {{objects}};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
-Result<SingleToMultiDataPathSelectionFilterParameterConverter::ValueType> SingleToMultiDataPathSelectionFilterParameterConverter::convert(const nlohmann::json& json)
+Result<SingleToMultiDataPathSelectionFilterParameterConverter::ValueType> SingleToMultiDataPathSelectionFilterParameterConverter::Convert(const nlohmann::json& json)
 {
-  static constexpr StringLiteral k_AttributeMatrixNameKey = "Attribute Matrix Name";
-  static constexpr StringLiteral k_DataArrayNameKey = "Data Array Name";
+  static constexpr StringLiteralType k_AttributeMatrixNameKey = "Attribute Matrix Name";
+  static constexpr StringLiteralType k_DataArrayNameKey = "Data Array Name";
 
   if(!json.is_object())
   {
@@ -171,9 +173,9 @@ Result<SingleToMultiDataPathSelectionFilterParameterConverter::ValueType> Single
       return ConvertInvalidResult<ValueType>(std::move(attributeMatrixNameResult));
     }
 
-    if(attributeMatrixNameResult.value().empty() == false)
+    if(!attributeMatrixNameResult.value().empty())
     {
-      dataPath = dataPath.createChildPath(std::move(attributeMatrixNameResult.value()));
+      dataPath = dataPath.createChildPath(attributeMatrixNameResult.value());
 
       // Data Array Name is optional — an AttributeMatrixSelectionFilterParameter does not include it.
       if(json.contains(k_DataArrayNameKey))
@@ -184,9 +186,9 @@ Result<SingleToMultiDataPathSelectionFilterParameterConverter::ValueType> Single
           return ConvertInvalidResult<ValueType>(std::move(dataArrayNameResult));
         }
 
-        if(dataArrayNameResult.value().empty() == false)
+        if(!dataArrayNameResult.value().empty())
         {
-          dataPath = dataPath.createChildPath(std::move(dataArrayNameResult.value()));
+          dataPath = dataPath.createChildPath(dataArrayNameResult.value());
         }
       }
     }
@@ -198,11 +200,11 @@ Result<SingleToMultiDataPathSelectionFilterParameterConverter::ValueType> Single
 
 namespace
 {
-constexpr StringLiteral k_DataContainersKey = "Data Containers";
-constexpr StringLiteral k_AttributeMatricesKey = "Attribute Matricies";
-constexpr StringLiteral k_DataArraysKey = "Data Arrays";
-constexpr StringLiteral k_NameKey = "Name";
-constexpr StringLiteral k_FlagKey = "Flag";
+constexpr StringLiteralType k_DataContainersKey = "Data Containers";
+constexpr StringLiteralType k_AttributeMatricesKey = "Attribute Matricies";
+constexpr StringLiteralType k_DataArraysKey = "Data Arrays";
+constexpr StringLiteralType k_NameKey = "Name";
+constexpr StringLiteralType k_FlagKey = "Flag";
 
 Result<std::string> FindName(const nlohmann::json& json)
 {
@@ -232,7 +234,7 @@ bool IsFlagged(const nlohmann::json& json)
 }
 } // namespace
 
-Result<DataArraysToRemoveConverter::ValueType> DataArraysToRemoveConverter::convert(const nlohmann::json& json)
+Result<DataArraysToRemoveConverter::ValueType> DataArraysToRemoveConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_object())
   {
@@ -340,5 +342,5 @@ Result<DataArraysToRemoveConverter::ValueType> DataArraysToRemoveConverter::conv
 
   return {std::move(value)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

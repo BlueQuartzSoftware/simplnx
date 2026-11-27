@@ -18,15 +18,15 @@ using namespace nx::core;
 
 namespace
 {
-constexpr StringLiteral k_ThrowMessage = "boom";
+constexpr StringLiteralType k_ThrowMessage = "boom";
 constexpr int32 k_ExecuteErrorCode = -9975;
-constexpr StringLiteral k_ExecuteErrorMessage = "the store rejected the write";
+constexpr StringLiteralType k_ExecuteErrorMessage = "the store rejected the write";
 constexpr int32 k_PreflightErrorCode = -9976;
 constexpr int32 k_PreflightWarningCode = -9977;
 constexpr int32 k_DeferredErrorCode = -9978;
 constexpr int32 k_DeferredWarningCode = -9979;
-constexpr StringLiteral k_PreflightValueName = "Preflight detail";
-constexpr StringLiteral k_PreflightValueText = "preserved";
+constexpr StringLiteralType k_PreflightValueName = "Preflight detail";
+constexpr StringLiteralType k_PreflightValueText = "preserved";
 
 /**
  * @struct NonStandardException
@@ -117,7 +117,7 @@ public:
    * @brief Returns a copy of this filter.
    * @return An owning pointer to the copy.
    */
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     return std::make_unique<DerivedT>();
   }
@@ -127,8 +127,8 @@ protected:
    * @brief Reports a valid preflight so execute() reaches executeImpl.
    * @return An empty preflight result.
    */
-  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                const ExecutionContext& executionContext) const override
+  PreflightResult preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const MessageHandler& /*messageHandler*/, const std::atomic_bool& /*shouldCancel*/,
+                                const ExecutionContext& /*executionContext*/) const override
   {
     return {};
   }
@@ -145,16 +145,16 @@ protected:
 class ThrowingFilter : public BackstopFilterBase<ThrowingFilter>
 {
 public:
-  static inline constexpr StringLiteral k_FilterName = "ThrowingFilter";
-  static inline constexpr StringLiteral k_FilterUuid = "1f0d5f4a-9f7d-4c67-9d1e-2a3b4c5d6e7f";
+  static constexpr StringLiteralType k_FilterName = "ThrowingFilter";
+  static constexpr StringLiteralType k_FilterUuid = "1f0d5f4a-9f7d-4c67-9d1e-2a3b4c5d6e7f";
 
 protected:
   /**
    * @brief Throws so the caller can observe how execute() handles an escaped exception.
    * @throws std::runtime_error Always.
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                       const ExecutionContext& executionContext) const override
+  Result<> executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const override
   {
     throw std::runtime_error(k_ThrowMessage.str());
   }
@@ -170,16 +170,16 @@ protected:
 class NonStandardThrowingFilter : public BackstopFilterBase<NonStandardThrowingFilter>
 {
 public:
-  static inline constexpr StringLiteral k_FilterName = "NonStandardThrowingFilter";
-  static inline constexpr StringLiteral k_FilterUuid = "2c9e7b31-5a44-4f18-8c33-6d1e9b0a7f52";
+  static constexpr StringLiteralType k_FilterName = "NonStandardThrowingFilter";
+  static constexpr StringLiteralType k_FilterUuid = "2c9e7b31-5a44-4f18-8c33-6d1e9b0a7f52";
 
 protected:
   /**
    * @brief Throws a non-std::exception type.
    * @throws NonStandardException Always.
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                       const ExecutionContext& executionContext) const override
+  Result<> executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const override
   {
     throw NonStandardException{};
   }
@@ -196,8 +196,8 @@ protected:
 class CancelAfterErrorFilter : public BackstopFilterBase<CancelAfterErrorFilter>
 {
 public:
-  static inline constexpr StringLiteral k_FilterName = "CancelAfterErrorFilter";
-  static inline constexpr StringLiteral k_FilterUuid = "84b1c0de-3f27-4a6b-9e15-0c7d2f38ab41";
+  static constexpr StringLiteralType k_FilterName = "CancelAfterErrorFilter";
+  static constexpr StringLiteralType k_FilterUuid = "84b1c0de-3f27-4a6b-9e15-0c7d2f38ab41";
 
   /**
    * @brief Selects the flag executeImpl raises.
@@ -214,8 +214,8 @@ protected:
    * @brief Raises the cancellation flag and reports a storage error.
    * @return An error carrying k_ExecuteErrorCode.
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                       const ExecutionContext& executionContext) const override
+  Result<> executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const override
   {
     if(m_CancelFlag != nullptr)
     {
@@ -238,8 +238,8 @@ private:
 class CancellingPreflightFilter : public BackstopFilterBase<CancellingPreflightFilter>
 {
 public:
-  static inline constexpr StringLiteral k_FilterName = "CancellingPreflightFilter";
-  static inline constexpr StringLiteral k_FilterUuid = "9fbd2765-2fab-4b51-b53a-3b940ea49df0";
+  static constexpr StringLiteralType k_FilterName = "CancellingPreflightFilter";
+  static constexpr StringLiteralType k_FilterUuid = "9fbd2765-2fab-4b51-b53a-3b940ea49df0";
 
   /**
    * @brief Selects the cancellation flag and preflight validity for the test.
@@ -264,8 +264,8 @@ protected:
    * @param executionContext Unused.
    * @return Preflight data for cancellation-precedence tests.
    */
-  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                const ExecutionContext& executionContext) const override
+  PreflightResult preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const MessageHandler& /*messageHandler*/, const std::atomic_bool& /*shouldCancel*/,
+                                const ExecutionContext& /*executionContext*/) const override
   {
     m_CancelFlag->store(true);
 
@@ -274,8 +274,8 @@ protected:
     {
       result = MakeErrorResult<OutputActions>(k_PreflightErrorCode, "The controlled preflight operation failed");
     }
-    result.warnings().push_back(Warning{k_PreflightWarningCode, "The controlled preflight warning"});
-    return {std::move(result), {{k_PreflightValueName.str(), k_PreflightValueText.str()}}};
+    result.warnings().push_back(Warning{.code = k_PreflightWarningCode, .message = "The controlled preflight warning"});
+    return {.output_actions = std::move(result), .output_values = {{.name = k_PreflightValueName.str(), .value = k_PreflightValueText.str()}}};
   }
 
   /**
@@ -288,8 +288,8 @@ protected:
    * @param executionContext Unused.
    * @return A valid result.
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                       const ExecutionContext& executionContext) const override
+  Result<> executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const override
   {
     (*m_ExecutionCount)++;
     return {};
@@ -324,11 +324,11 @@ public:
    * @return An error
    * and warning that identify this action.
    */
-  Result<> apply(DataStructure& dataStructure, Mode mode) const override
+  Result<> apply(DataStructure& /*dataStructure*/, Mode /*mode*/) const override
   {
     (*m_InvocationCount)++;
     Result<> result = MakeErrorResult(k_DeferredErrorCode, "The controlled deferred action failed");
-    result.warnings().push_back(Warning{k_DeferredWarningCode, "The controlled deferred warning"});
+    result.warnings().push_back(Warning{.code = k_DeferredWarningCode, .message = "The controlled deferred warning"});
     return result;
   }
 
@@ -336,7 +336,7 @@ public:
    * @brief Copies the action while sharing the invocation counter.
    * @return A new action that reports through the same counter.
    */
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     return std::make_unique<FailingDeferredAction>(m_InvocationCount);
   }
@@ -367,7 +367,7 @@ public:
    * @param mode Supplies the action mode.
    * @return A valid result.
    */
-  Result<> apply(DataStructure& dataStructure, Mode mode) const override
+  Result<> apply(DataStructure& /*dataStructure*/, Mode /*mode*/) const override
   {
     (*m_InvocationCount)++;
     return {};
@@ -377,7 +377,7 @@ public:
    * @brief Copies the action while sharing the invocation counter.
    * @return A new action that reports through the same counter.
    */
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     return std::make_unique<RecordingDeferredAction>(m_InvocationCount);
   }
@@ -393,8 +393,8 @@ private:
 class DeferredFailureFilter : public BackstopFilterBase<DeferredFailureFilter>
 {
 public:
-  static inline constexpr StringLiteral k_FilterName = "DeferredFailureFilter";
-  static inline constexpr StringLiteral k_FilterUuid = "19b58b93-abd0-4f4e-91a4-e5202aac93f8";
+  static constexpr StringLiteralType k_FilterName = "DeferredFailureFilter";
+  static constexpr StringLiteralType k_FilterUuid = "19b58b93-abd0-4f4e-91a4-e5202aac93f8";
 
   /**
    * @brief Constructs the filter with internal invocation counters.
@@ -419,7 +419,7 @@ public:
    * @brief Returns a copy that shares the deferred-action invocation counters.
    * @return An owning pointer to the copy.
    */
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     return std::make_unique<DeferredFailureFilter>(m_FailingInvocationCount, m_FollowingInvocationCount);
   }
@@ -434,15 +434,15 @@ protected:
    * @param executionContext Unused.
    * @return Deferred action, warning, and output value for the execution test.
    */
-  PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                const ExecutionContext& executionContext) const override
+  PreflightResult preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const MessageHandler& /*messageHandler*/, const std::atomic_bool& /*shouldCancel*/,
+                                const ExecutionContext& /*executionContext*/) const override
   {
     OutputActions actions;
     actions.appendDeferredAction(std::make_unique<FailingDeferredAction>(m_FailingInvocationCount));
     actions.appendDeferredAction(std::make_unique<RecordingDeferredAction>(m_FollowingInvocationCount));
     Result<OutputActions> result{std::move(actions)};
-    result.warnings().push_back(Warning{k_PreflightWarningCode, "The controlled preflight warning"});
-    return {std::move(result), {{k_PreflightValueName.str(), k_PreflightValueText.str()}}};
+    result.warnings().push_back(Warning{.code = k_PreflightWarningCode, .message = "The controlled preflight warning"});
+    return {.output_actions = std::move(result), .output_values = {{.name = k_PreflightValueName.str(), .value = k_PreflightValueText.str()}}};
   }
 
   /**
@@ -455,8 +455,8 @@ protected:
    * @param executionContext Unused.
    * @return A valid result.
    */
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                       const ExecutionContext& executionContext) const override
+  Result<> executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                       const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const override
   {
     return {};
   }
@@ -479,8 +479,8 @@ TEST_CASE("IFilter: An exception thrown by executeImpl becomes an invalid result
   REQUIRE(!executeResult.result.errors().empty());
 
   const std::string& message = executeResult.result.errors().front().message;
-  REQUIRE(StringUtilities::contains(message, filter.name()));
-  REQUIRE(StringUtilities::contains(message, k_ThrowMessage.view()));
+  REQUIRE(string_utilities::Contains(message, filter.name()));
+  REQUIRE(string_utilities::Contains(message, k_ThrowMessage.view()));
 }
 
 TEST_CASE("IFilter: A non-standard exception thrown by executeImpl becomes an invalid result", "[simplnx][IFilter]")
@@ -496,7 +496,7 @@ TEST_CASE("IFilter: A non-standard exception thrown by executeImpl becomes an in
 
   const Error& error = executeResult.result.errors().front();
   REQUIRE(error.code == -2);
-  REQUIRE(StringUtilities::contains(error.message, filter.name()));
+  REQUIRE(string_utilities::Contains(error.message, filter.name()));
 }
 
 TEST_CASE("IFilter: A cancellation does not replace an execution error", "[simplnx][IFilter]")
@@ -516,7 +516,7 @@ TEST_CASE("IFilter: A cancellation does not replace an execution error", "[simpl
 
   const Error& error = executeResult.result.errors().front();
   REQUIRE(error.code == k_ExecuteErrorCode);
-  REQUIRE(StringUtilities::contains(error.message, k_ExecuteErrorMessage.view()));
+  REQUIRE(string_utilities::Contains(error.message, k_ExecuteErrorMessage.view()));
 }
 
 TEST_CASE("IFilter: Preflight cancellation preserves diagnostics and output values", "[simplnx][IFilter]")
@@ -541,9 +541,9 @@ TEST_CASE("IFilter: Preflight cancellation preserves diagnostics and output valu
     REQUIRE(executeResult.result.warnings().size() == 2);
     REQUIRE(executeResult.result.warnings().front().code == k_PreflightWarningCode);
     REQUIRE(executeResult.result.warnings()[1].code == -1);
-    REQUIRE(executeResult.outputValues.size() == 1);
-    REQUIRE(executeResult.outputValues.front().name == k_PreflightValueName.view());
-    REQUIRE(executeResult.outputValues.front().value == k_PreflightValueText.view());
+    REQUIRE(executeResult.output_values.size() == 1);
+    REQUIRE(executeResult.output_values.front().name == k_PreflightValueName.view());
+    REQUIRE(executeResult.output_values.front().value == k_PreflightValueText.view());
   }
 
   SECTION("A successful preflight reports cancellation")
@@ -559,21 +559,21 @@ TEST_CASE("IFilter: Preflight cancellation preserves diagnostics and output valu
     REQUIRE(executeResult.result.warnings().size() == 2);
     REQUIRE(executeResult.result.warnings().front().code == k_PreflightWarningCode);
     REQUIRE(executeResult.result.warnings()[1].code == -1);
-    REQUIRE(executeResult.outputValues.size() == 1);
-    REQUIRE(executeResult.outputValues.front().name == k_PreflightValueName.view());
-    REQUIRE(executeResult.outputValues.front().value == k_PreflightValueText.view());
+    REQUIRE(executeResult.output_values.size() == 1);
+    REQUIRE(executeResult.output_values.front().name == k_PreflightValueName.view());
+    REQUIRE(executeResult.output_values.front().value == k_PreflightValueText.view());
   }
 }
 
 TEST_CASE("IFilter: A deferred-action error precedes post-execution validation", "[simplnx][IFilter]")
 {
   DataStructure dataStructure;
-  auto* imageGeometry = ImageGeom::Create(dataStructure, "Invalid Image Geometry");
-  REQUIRE(imageGeometry != nullptr);
-  imageGeometry->setDimensions({2, 2, 2});
-  auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", {1}, imageGeometry->getId());
-  REQUIRE(cellData != nullptr);
-  imageGeometry->setCellData(*cellData);
+  auto* imageGeometryPtr = ImageGeom::Create(dataStructure, "Invalid Image Geometry");
+  REQUIRE(imageGeometryPtr != nullptr);
+  imageGeometryPtr->setDimensions({2, 2, 2});
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {1}, imageGeometryPtr->getId());
+  REQUIRE(cellDataPtr != nullptr);
+  imageGeometryPtr->setCellData(*cellDataPtr);
 
   Result<> geometryValidationResult = dataStructure.validateGeometries();
   REQUIRE(geometryValidationResult.invalid());
@@ -592,7 +592,7 @@ TEST_CASE("IFilter: A deferred-action error precedes post-execution validation",
   REQUIRE(executeResult.result.warnings().size() == 2);
   REQUIRE(executeResult.result.warnings()[0].code == k_PreflightWarningCode);
   REQUIRE(executeResult.result.warnings()[1].code == k_DeferredWarningCode);
-  REQUIRE(executeResult.outputValues.size() == 1);
-  REQUIRE(executeResult.outputValues.front().name == k_PreflightValueName.view());
-  REQUIRE(executeResult.outputValues.front().value == k_PreflightValueText.view());
+  REQUIRE(executeResult.output_values.size() == 1);
+  REQUIRE(executeResult.output_values.front().name == k_PreflightValueName.view());
+  REQUIRE(executeResult.output_values.front().value == k_PreflightValueText.view());
 }

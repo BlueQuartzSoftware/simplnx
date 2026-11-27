@@ -27,7 +27,7 @@ public:
 
   DataStoreFormatParameter() = delete;
 
-  DataStoreFormatParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  DataStoreFormatParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
 
   ~DataStoreFormatParameter() override = default;
 
@@ -39,9 +39,9 @@ public:
 
   Uuid uuid() const override;
 
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   std::any defaultValue() const override;
 
@@ -55,7 +55,7 @@ public:
    *
    * The result queries Application each call so plugin registrations are visible.
    */
-  AvailableValuesType availableValues() const;
+  static AvailableValuesType AvailableValues();
 
   /**
    * @brief Returns registered format identifiers with display names.
@@ -63,7 +63,7 @@ public:
    * Application provides Automatic, In Memory, and registered plugin formats.
    * @return Format identifier and display-name pairs.
    */
-  std::vector<std::pair<std::string, std::string>> availableFormatsWithDisplayNames() const;
+  static std::vector<std::pair<std::string, std::string>> AvailableFormatsWithDisplayNames();
 
   /**
    * @brief Validates a selected data-store format.
@@ -80,7 +80,7 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
+  ValueType m_DefaultValue;
 };
 } // namespace nx::core
 

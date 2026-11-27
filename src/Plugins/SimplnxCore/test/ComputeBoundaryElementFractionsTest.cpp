@@ -25,7 +25,7 @@ namespace
 {
 const std::string k_BCFName = "Boundary Cell Fractions";
 
-const DataPath k_FeatureDataAMPath = DataPath({Constants::k_SmallIN100, Constants::k_Grain_Data});
+const DataPath k_FeatureDataAMPath = DataPath({constants::k_SmallIN100, constants::k_GrainDataWithSpaces});
 
 const DataPath k_ExemplarBCFPath = k_FeatureDataAMPath.createChildPath(" Surface Element Fractions");
 const DataPath k_GeneratedBCFPath = k_FeatureDataAMPath.createChildPath(k_BCFName);
@@ -34,12 +34,12 @@ constexpr usize k_BenchmarkDim = 200;
 constexpr usize k_BenchmarkFeatureCount = 4;
 constexpr usize k_BenchmarkBoundaryPatternPeriod = 5;
 constexpr usize k_BenchmarkSliceTuples = k_BenchmarkDim * k_BenchmarkDim;
-constexpr StringLiteral k_BenchmarkGeomName = "Benchmark ImageGeom";
-constexpr StringLiteral k_BenchmarkCellDataName = "Cell Data";
-constexpr StringLiteral k_BenchmarkFeatureDataName = "Feature Data";
-constexpr StringLiteral k_BenchmarkFeatureIdsName = "FeatureIds";
-constexpr StringLiteral k_BenchmarkBoundaryCellsName = "BoundaryCells";
-constexpr StringLiteral k_BenchmarkFractionsName = "Boundary Cell Fractions";
+constexpr StringLiteralType k_BenchmarkGeomName = "Benchmark ImageGeom";
+constexpr StringLiteralType k_BenchmarkCellDataName = "Cell Data";
+constexpr StringLiteralType k_BenchmarkFeatureDataName = "Feature Data";
+constexpr StringLiteralType k_BenchmarkFeatureIdsName = "FeatureIds";
+constexpr StringLiteralType k_BenchmarkBoundaryCellsName = "BoundaryCells";
+constexpr StringLiteralType k_BenchmarkFractionsName = "Boundary Cell Fractions";
 const DataPath k_BenchmarkGeomPath({k_BenchmarkGeomName});
 const DataPath k_BenchmarkCellDataPath = k_BenchmarkGeomPath.createChildPath(k_BenchmarkCellDataName);
 const DataPath k_BenchmarkFeatureDataPath = k_BenchmarkGeomPath.createChildPath(k_BenchmarkFeatureDataName);
@@ -51,21 +51,21 @@ void BuildBenchmarkInput(DataStructure& dataStructure)
 {
   const ShapeType cellTupleShape = {k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim};
 
-  auto* imageGeom = ImageGeom::Create(dataStructure, k_BenchmarkGeomName);
-  imageGeom->setDimensions({k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim});
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_BenchmarkGeomName);
+  imageGeomPtr->setDimensions({k_BenchmarkDim, k_BenchmarkDim, k_BenchmarkDim});
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
 
-  auto* cellData = AttributeMatrix::Create(dataStructure, k_BenchmarkCellDataName, cellTupleShape, imageGeom->getId());
-  imageGeom->setCellData(*cellData);
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, k_BenchmarkCellDataName, cellTupleShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellDataPtr);
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_BenchmarkFeatureIdsPath, cellTupleShape, {1});
-  auto* featureIds = Int32Array::Create(dataStructure, k_BenchmarkFeatureIdsName, featureIdsStore, cellData->getId());
-  REQUIRE(featureIds != nullptr);
+  auto featureIdsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_BenchmarkFeatureIdsPath, cellTupleShape, {1});
+  auto* featureIdsPtr = Int32ArrayType::Create(dataStructure, k_BenchmarkFeatureIdsName, featureIdsStore, cellDataPtr->getId());
+  REQUIRE(featureIdsPtr != nullptr);
 
-  auto boundaryCellsStore = DataStoreUtilities::CreateDataStore<int8>(dataStructure, k_BenchmarkBoundaryCellsPath, cellTupleShape, {1});
-  auto* boundaryCells = Int8Array::Create(dataStructure, k_BenchmarkBoundaryCellsName, boundaryCellsStore, cellData->getId());
-  REQUIRE(boundaryCells != nullptr);
+  auto boundaryCellsStore = data_store_utilities::CreateDataStore<int8>(dataStructure, k_BenchmarkBoundaryCellsPath, cellTupleShape, {1});
+  auto* boundaryCellsPtr = Int8ArrayType::Create(dataStructure, k_BenchmarkBoundaryCellsName, boundaryCellsStore, cellDataPtr->getId());
+  REQUIRE(boundaryCellsPtr != nullptr);
 
   auto featureIdsBuffer = std::make_unique<int32[]>(k_BenchmarkSliceTuples);
   auto boundaryCellsBuffer = std::make_unique<int8[]>(k_BenchmarkSliceTuples);
@@ -90,19 +90,20 @@ void BuildBenchmarkInput(DataStructure& dataStructure)
     SIMPLNX_RESULT_REQUIRE_VALID(boundaryCellsStoreWriteResult);
   }
 
-  auto* featureData = AttributeMatrix::Create(dataStructure, k_BenchmarkFeatureDataName, {k_BenchmarkFeatureCount + 1}, imageGeom->getId());
-  REQUIRE(featureData != nullptr);
+  auto* featureDataPtr = AttributeMatrix::Create(dataStructure, k_BenchmarkFeatureDataName, {k_BenchmarkFeatureCount + 1}, imageGeomPtr->getId());
+  REQUIRE(featureDataPtr != nullptr);
 }
 } // namespace
 
 TEST_CASE("SimplnxCore::ComputeBoundaryElementFractionsFilter: Valid Filter Execution", "[SimplnxCore][ComputeBoundaryElementFractionsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_boundary_element_fractions.tar.gz", "6_6_find_feature_boundary_element_fractions");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_find_feature_boundary_element_fractions.tar.gz",
+                                                               "6_6_find_feature_boundary_element_fractions");
 
   DataStructure dataStructure =
-      UnitTest::LoadDataStructure(fs::path(fmt::format("{}/6_6_find_feature_boundary_element_fractions/6_6_find_feature_boundary_element_fractions.dream3d", unit_test::k_TestFilesDir)));
+      unit_test::LoadDataStructure(fs::path(fmt::format("{}/6_6_find_feature_boundary_element_fractions/6_6_find_feature_boundary_element_fractions.dream3d", unit_test::k_TestFilesDir)));
 
   {
     // Create the filter arguments for the calculation.
@@ -110,28 +111,28 @@ TEST_CASE("SimplnxCore::ComputeBoundaryElementFractionsFilter: Valid Filter Exec
     Arguments args;
 
     args.insertOrAssign(ComputeBoundaryElementFractionsFilter::k_FeatureIdsArrayPath_Key,
-                        std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_FeatureIds})));
-    args.insertOrAssign(ComputeBoundaryElementFractionsFilter::k_BoundaryCellsArrayPath_Key, std::make_any<DataPath>(DataPath({Constants::k_SmallIN100, Constants::k_EbsdScanData, "BoundaryCells"})));
+                        std::make_any<DataPath>(DataPath({constants::k_SmallIN100, constants::k_EbsdScanData, constants::k_FeatureIds})));
+    args.insertOrAssign(ComputeBoundaryElementFractionsFilter::k_BoundaryCellsArrayPath_Key, std::make_any<DataPath>(DataPath({constants::k_SmallIN100, constants::k_EbsdScanData, "BoundaryCells"})));
     args.insertOrAssign(ComputeBoundaryElementFractionsFilter::k_FeatureDataAMPath_Key, std::make_any<DataPath>(k_FeatureDataAMPath));
     args.insertOrAssign(ComputeBoundaryElementFractionsFilter::k_BoundaryCellFractionsArrayName_Key, std::make_any<std::string>(::k_BCFName));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  UnitTest::CompareArrays<float32>(dataStructure, k_ExemplarBCFPath, k_GeneratedBCFPath);
+  unit_test::CompareArrays<float32>(dataStructure, k_ExemplarBCFPath, k_GeneratedBCFPath);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeBoundaryElementFractionsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeBoundaryElementFractionsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -144,22 +145,22 @@ TEST_CASE("SimplnxCore::ComputeBoundaryElementFractionsFilter: SIMPL Backwards C
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeBoundaryElementFractionsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeBoundaryElementFractionsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(ComputeBoundaryElementFractionsFilter::k_FeatureIdsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<DataPath>(ComputeBoundaryElementFractionsFilter::k_FeatureDataAMPath_Key) == DataPath({"DataContainer", "CellData"}));
       CHECK(args.value<DataPath>(ComputeBoundaryElementFractionsFilter::k_BoundaryCellsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));

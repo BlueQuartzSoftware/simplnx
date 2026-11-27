@@ -48,21 +48,21 @@ inline bool ObjectMorphologyCheckedMultiply(usize left, usize right, usize& prod
 struct ObjectMorphologyResidentMemoryAllocation
 {
   CacheMemoryBudgetManager::WorkingMemoryReservation reservation;
-  usize requiredBytes = 0;
+  usize required_bytes = 0;
 
   [[nodiscard]] bool holdsCompleteState() const noexcept
   {
-    return requiredBytes > 0 && reservation.sizeBytes() == requiredBytes;
+    return required_bytes > 0 && reservation.sizeBytes() == required_bytes;
   }
 };
 
-inline bool ShouldUseObjectMorphologyResidentState(const SizeVec3& dims)
+inline bool ShouldUseObjectMorphologyResidentState(const SizeVec3Type& dims)
 {
   return dims[2] > 1;
 }
 
 template <class T>
-Result<usize> CalculateObjectMorphologyResidentWorkingMemoryBytes(const SizeVec3& dims)
+Result<usize> CalculateObjectMorphologyResidentWorkingMemoryBytes(const SizeVec3Type& dims)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -77,13 +77,13 @@ Result<usize> CalculateObjectMorphologyResidentWorkingMemoryBytes(const SizeVec3
      !ObjectMorphologyCheckedMultiply(volumeValues, usize{2}, residentValues) || !ObjectMorphologyCheckedMultiply(residentValues, sizeof(T), requiredBytes))
   {
     return MakeErrorResult<usize>(-8763, fmt::format("Object morphology dimensions ({}) and element size ({} bytes) overflow while sizing the resident input and output state.",
-                                                     StringUtilities::formatDimensions3D(dims), sizeof(T)));
+                                                     string_utilities::FormatDimensions3D(dims), sizeof(T)));
   }
   return {requiredBytes};
 }
 
 template <class T>
-Result<ObjectMorphologyResidentMemoryAllocation> ReserveObjectMorphologyResidentWorkingMemory(const SizeVec3& dims)
+Result<ObjectMorphologyResidentMemoryAllocation> ReserveObjectMorphologyResidentWorkingMemory(const SizeVec3Type& dims)
 {
   auto requiredResult = CalculateObjectMorphologyResidentWorkingMemoryBytes<T>(dims);
   if(requiredResult.invalid())
@@ -98,20 +98,20 @@ Result<ObjectMorphologyResidentMemoryAllocation> ReserveObjectMorphologyResident
 
 struct ObjectMorphology3DPlan
 {
-  usize outputBatchDepth = 0;
-  usize computeBatchDepth = 0;
-  usize inputSlabDepth = 0;
-  usize outputWindowDepth = 0;
-  usize residentBytes = 0;
+  usize output_batch_depth = 0;
+  usize compute_batch_depth = 0;
+  usize input_slab_depth = 0;
+  usize output_window_depth = 0;
+  usize resident_bytes = 0;
 };
 
 template <class T>
-Result<ObjectMorphology3DPlan> CreateObjectMorphology3DPlan(const SizeVec3& dims, usize radiusZ, usize targetBytes)
+Result<ObjectMorphology3DPlan> CreateObjectMorphology3DPlan(const SizeVec3Type& dims, usize radiusZ, usize targetBytes)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] <= 1)
   {
     return MakeErrorResult<ObjectMorphology3DPlan>(
-        -8764, fmt::format("Object morphology 3D batching requires nonzero X and Y dimensions and Z greater than one. Actual dimensions: {}.", StringUtilities::formatDimensions3D(dims)));
+        -8764, fmt::format("Object morphology 3D batching requires nonzero X and Y dimensions and Z greater than one. Actual dimensions: {}.", string_utilities::FormatDimensions3D(dims)));
   }
   usize sliceValues = 0;
   const usize inputHalo = std::max<usize>(radiusZ, 1);
@@ -126,7 +126,7 @@ Result<ObjectMorphology3DPlan> CreateObjectMorphology3DPlan(const SizeVec3& dims
   if(!ObjectMorphologyCheckedMultiply(dims[0], dims[1], sliceValues))
   {
     return MakeErrorResult<ObjectMorphology3DPlan>(
-        -8764, fmt::format("Object morphology dimensions ({}) and radius Z ({}) overflow while sizing the 3D rolling-scatter buffers.", StringUtilities::formatDimensions3D(dims), radiusZ));
+        -8764, fmt::format("Object morphology dimensions ({}) and radius Z ({}) overflow while sizing the 3D rolling-scatter buffers.", string_utilities::FormatDimensions3D(dims), radiusZ));
   }
   auto bytesForBatch = [&](usize batchDepth, usize& inputDepth, usize& outputDepth, usize& residentBytes) {
     inputDepth = boundedWindowDepth(batchDepth, inputHalo);
@@ -145,12 +145,12 @@ Result<ObjectMorphology3DPlan> CreateObjectMorphology3DPlan(const SizeVec3& dims
   if(!bytesForBatch(1, minimumInputDepth, minimumOutputDepth, minimumBytes))
   {
     return MakeErrorResult<ObjectMorphology3DPlan>(
-        -8764, fmt::format("Object morphology dimensions ({}) and radius Z ({}) overflow while sizing the 3-D minimum batch.", StringUtilities::formatDimensions3D(dims), radiusZ));
+        -8764, fmt::format("Object morphology dimensions ({}) and radius Z ({}) overflow while sizing the 3-D minimum batch.", string_utilities::FormatDimensions3D(dims), radiusZ));
   }
   if(targetBytes < minimumBytes)
   {
     return MakeErrorResult<ObjectMorphology3DPlan>(-8765, fmt::format("Object morphology's {}-byte adaptive grant cannot hold its {}-byte 3-D rolling input and output windows for dimensions {}.",
-                                                                      targetBytes, minimumBytes, StringUtilities::formatDimensions3D(dims)));
+                                                                      targetBytes, minimumBytes, string_utilities::FormatDimensions3D(dims)));
   }
   usize low = 1;
   usize high = dims[2];
@@ -172,13 +172,13 @@ Result<ObjectMorphology3DPlan> CreateObjectMorphology3DPlan(const SizeVec3& dims
   ObjectMorphology3DPlan plan;
   const usize batchCount = 1 + (dims[2] - 1) / low;
   const usize normalizedBatchDepth = 1 + (dims[2] - 1) / batchCount;
-  plan.computeBatchDepth = normalizedBatchDepth;
-  plan.outputBatchDepth = normalizedBatchDepth;
-  if(!bytesForBatch(normalizedBatchDepth, plan.inputSlabDepth, plan.outputWindowDepth, plan.residentBytes))
+  plan.compute_batch_depth = normalizedBatchDepth;
+  plan.output_batch_depth = normalizedBatchDepth;
+  if(!bytesForBatch(normalizedBatchDepth, plan.input_slab_depth, plan.output_window_depth, plan.resident_bytes))
   {
     return MakeErrorResult<ObjectMorphology3DPlan>(
         -8764, fmt::format("Object morphology 3-D rolling-scatter batch sizing overflowed. Normalized batch: {}; dimensions: {}; radius Z: {}; input depth: {}; output depth: {}.",
-                           normalizedBatchDepth, StringUtilities::formatDimensions3D(dims), radiusZ, plan.inputSlabDepth, plan.outputWindowDepth));
+                           normalizedBatchDepth, string_utilities::FormatDimensions3D(dims), radiusZ, plan.input_slab_depth, plan.output_window_depth));
   }
   return {plan};
 }
@@ -267,7 +267,7 @@ inline Result<ObjectMorphologyPlaneWindow> CreateObjectMorphologyPlaneWindow(usi
   }
   const usize origin = batchBegin > halo ? batchBegin - halo : 0;
   const usize end = halo >= dimZ || batchEnd > dimZ - halo ? dimZ : batchEnd + halo;
-  return {ObjectMorphologyPlaneWindow{origin, end}};
+  return {ObjectMorphologyPlaneWindow{.origin = origin, .end = end}};
 }
 
 template <class T>
@@ -416,19 +416,19 @@ Result<> FinalizeObjectMorphologyOutputWindow(AbstractDataStore<T>& outStore, T*
   {
     return ConvertInvalidResult<void>(std::move(retainedResult));
   }
-  current = {finalEnd, oldEnd};
+  current = {.origin = finalEnd, .end = oldEnd};
   return {};
 }
 
 struct ObjectMorphology2DPlan
 {
-  bool fullWidth = true;
-  usize coreRows = 0;
-  usize coreColumns = 0;
-  usize inputCapacityValues = 0;
-  usize maskCapacityValues = 0;
-  usize outputCapacityValues = 0;
-  usize residentBytes = 0;
+  bool full_width = true;
+  usize core_rows = 0;
+  usize core_columns = 0;
+  usize input_capacity_values = 0;
+  usize mask_capacity_values = 0;
+  usize output_capacity_values = 0;
+  usize resident_bytes = 0;
 };
 
 inline Result<ObjectMorphology2DPlan> CreateObjectMorphology2DPlan(usize dimX, usize dimY, usize radiusX, usize radiusY, usize valueBytes, usize targetBytes)
@@ -481,15 +481,15 @@ inline Result<ObjectMorphology2DPlan> CreateObjectMorphology2DPlan(usize dimX, u
   {
     const usize coreRows = std::min(dimY, (targetBytes - fullWidthFixedBytes) / fullWidthCoreBytes);
     ObjectMorphology2DPlan plan;
-    plan.fullWidth = true;
-    plan.coreRows = coreRows;
-    plan.coreColumns = dimX;
+    plan.full_width = true;
+    plan.core_rows = coreRows;
+    plan.core_columns = dimX;
     usize inputRows = 0;
     usize maskRows = 0;
-    if(!checkedAdd(coreRows, inputHaloRows, inputRows) || !checkedAdd(coreRows, maskHaloRows, maskRows) || !checkedMultiply(inputRows, dimX, plan.inputCapacityValues) ||
-       !checkedMultiply(maskRows, dimX, plan.maskCapacityValues) || !checkedMultiply(coreRows, dimX, plan.outputCapacityValues) ||
-       !checkedMultiply(plan.inputCapacityValues, valueBytes, inputHaloBytes) || !checkedMultiply(plan.outputCapacityValues, valueBytes, fullWidthCoreBytes) ||
-       !checkedAdd(inputHaloBytes, plan.maskCapacityValues, plan.residentBytes) || !checkedAdd(plan.residentBytes, fullWidthCoreBytes, plan.residentBytes))
+    if(!checkedAdd(coreRows, inputHaloRows, inputRows) || !checkedAdd(coreRows, maskHaloRows, maskRows) || !checkedMultiply(inputRows, dimX, plan.input_capacity_values) ||
+       !checkedMultiply(maskRows, dimX, plan.mask_capacity_values) || !checkedMultiply(coreRows, dimX, plan.output_capacity_values) ||
+       !checkedMultiply(plan.input_capacity_values, valueBytes, inputHaloBytes) || !checkedMultiply(plan.output_capacity_values, valueBytes, fullWidthCoreBytes) ||
+       !checkedAdd(inputHaloBytes, plan.mask_capacity_values, plan.resident_bytes) || !checkedAdd(plan.resident_bytes, fullWidthCoreBytes, plan.resident_bytes))
     {
       return MakeErrorResult<ObjectMorphology2DPlan>(-8670, "The bounded 2-D object-morphology full-width capacities overflow.");
     }
@@ -516,16 +516,16 @@ inline Result<ObjectMorphology2DPlan> CreateObjectMorphology2DPlan(usize dimX, u
   }
 
   ObjectMorphology2DPlan plan;
-  plan.fullWidth = false;
-  plan.coreRows = 1;
-  plan.coreColumns = std::min(dimX, (targetBytes - tiledFixedBytes) / perCoreColumnBytes);
+  plan.full_width = false;
+  plan.core_rows = 1;
+  plan.core_columns = std::min(dimX, (targetBytes - tiledFixedBytes) / perCoreColumnBytes);
   usize inputColumns = 0;
   usize maskColumns = 0;
-  if(!checkedAdd(plan.coreColumns, inputHaloColumns, inputColumns) || !checkedAdd(plan.coreColumns, maskHaloColumns, maskColumns) ||
-     !checkedMultiply(inputRows, inputColumns, plan.inputCapacityValues) || !checkedMultiply(maskRows, maskColumns, plan.maskCapacityValues) ||
-     !checkedMultiply(plan.coreRows, plan.coreColumns, plan.outputCapacityValues) || !checkedMultiply(plan.inputCapacityValues, valueBytes, inputFixedBytes) ||
-     !checkedMultiply(plan.outputCapacityValues, valueBytes, fullWidthCoreBytes) || !checkedAdd(inputFixedBytes, plan.maskCapacityValues, plan.residentBytes) ||
-     !checkedAdd(plan.residentBytes, fullWidthCoreBytes, plan.residentBytes))
+  if(!checkedAdd(plan.core_columns, inputHaloColumns, inputColumns) || !checkedAdd(plan.core_columns, maskHaloColumns, maskColumns) ||
+     !checkedMultiply(inputRows, inputColumns, plan.input_capacity_values) || !checkedMultiply(maskRows, maskColumns, plan.mask_capacity_values) ||
+     !checkedMultiply(plan.core_rows, plan.core_columns, plan.output_capacity_values) || !checkedMultiply(plan.input_capacity_values, valueBytes, inputFixedBytes) ||
+     !checkedMultiply(plan.output_capacity_values, valueBytes, fullWidthCoreBytes) || !checkedAdd(inputFixedBytes, plan.mask_capacity_values, plan.resident_bytes) ||
+     !checkedAdd(plan.resident_bytes, fullWidthCoreBytes, plan.resident_bytes))
   {
     return MakeErrorResult<ObjectMorphology2DPlan>(-8670, "The bounded 2-D object-morphology tiled capacities overflow.");
   }
@@ -537,35 +537,35 @@ struct ObjectBoundaryMask2DBody
 {
   const T* input;
   uint8* mask;
-  const SEOffset* boxOffsets;
-  usize numBoxOffsets;
-  usize dimX;
-  usize dimY;
-  usize inputXBegin;
-  usize inputYBegin;
-  usize inputWidth;
-  usize maskXBegin;
-  usize maskYBegin;
-  usize maskWidth;
-  T objectValue;
+  const SEOffset* box_offsets;
+  usize num_box_offsets;
+  usize dim_x;
+  usize dim_y;
+  usize input_x_begin;
+  usize input_y_begin;
+  usize input_width;
+  usize mask_x_begin;
+  usize mask_y_begin;
+  usize mask_width;
+  T object_value;
 
   void operator()(const Range& range) const
   {
-    const int64 dimXi = static_cast<int64>(dimX);
-    const int64 dimYi = static_cast<int64>(dimY);
+    const int64 dimXi = static_cast<int64>(dim_x);
+    const int64 dimYi = static_cast<int64>(dim_y);
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
-      const usize localX = tuple % maskWidth;
-      const usize localY = tuple / maskWidth;
-      const usize x = maskXBegin + localX;
-      const usize y = maskYBegin + localY;
-      const usize inputPosition = (y - inputYBegin) * inputWidth + (x - inputXBegin);
+      const usize localX = tuple % mask_width;
+      const usize localY = tuple / mask_width;
+      const usize x = mask_x_begin + localX;
+      const usize y = mask_y_begin + localY;
+      const usize inputPosition = (y - input_y_begin) * input_width + (x - input_x_begin);
       bool boundary = false;
-      if(input[inputPosition] == objectValue)
+      if(input[inputPosition] == object_value)
       {
-        for(usize offsetIndex = 0; offsetIndex < numBoxOffsets; ++offsetIndex)
+        for(usize offsetIndex = 0; offsetIndex < num_box_offsets; ++offsetIndex)
         {
-          const SEOffset& offset = boxOffsets[offsetIndex];
+          const SEOffset& offset = box_offsets[offsetIndex];
           if(offset.dz != 0)
           {
             continue;
@@ -576,8 +576,8 @@ struct ObjectBoundaryMask2DBody
           {
             continue;
           }
-          const usize neighbor = (static_cast<usize>(neighborY) - inputYBegin) * inputWidth + (static_cast<usize>(neighborX) - inputXBegin);
-          if(input[neighbor] != objectValue)
+          const usize neighbor = (static_cast<usize>(neighborY) - input_y_begin) * input_width + (static_cast<usize>(neighborX) - input_x_begin);
+          if(input[neighbor] != object_value)
           {
             boundary = true;
             break;
@@ -596,35 +596,35 @@ struct ObjectMorphGather2DBody
   const uint8* mask;
   T* output;
   const SEOffset* offsets;
-  usize numOffsets;
-  usize dimX;
-  usize dimY;
-  usize inputXBegin;
-  usize inputYBegin;
-  usize inputWidth;
-  usize maskXBegin;
-  usize maskYBegin;
-  usize maskWidth;
-  usize outputXBegin;
-  usize outputYBegin;
-  usize outputWidth;
+  usize num_offsets;
+  usize dim_x;
+  usize dim_y;
+  usize input_x_begin;
+  usize input_y_begin;
+  usize input_width;
+  usize mask_x_begin;
+  usize mask_y_begin;
+  usize mask_width;
+  usize output_x_begin;
+  usize output_y_begin;
+  usize output_width;
   bool dilate;
-  T objectValue;
-  T backgroundValue;
+  T object_value;
+  T background_value;
 
   void operator()(const Range& range) const
   {
-    const int64 dimXi = static_cast<int64>(dimX);
-    const int64 dimYi = static_cast<int64>(dimY);
+    const int64 dimXi = static_cast<int64>(dim_x);
+    const int64 dimYi = static_cast<int64>(dim_y);
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
-      const usize localX = tuple % outputWidth;
-      const usize localY = tuple / outputWidth;
-      const usize x = outputXBegin + localX;
-      const usize y = outputYBegin + localY;
-      const T inputValue = input[(y - inputYBegin) * inputWidth + (x - inputXBegin)];
+      const usize localX = tuple % output_width;
+      const usize localY = tuple / output_width;
+      const usize x = output_x_begin + localX;
+      const usize y = output_y_begin + localY;
+      const T inputValue = input[(y - input_y_begin) * input_width + (x - input_x_begin)];
       bool hit = false;
-      for(usize offsetIndex = 0; offsetIndex < numOffsets && !hit; ++offsetIndex)
+      for(usize offsetIndex = 0; offsetIndex < num_offsets && !hit; ++offsetIndex)
       {
         const SEOffset& offset = offsets[offsetIndex];
         if(offset.dz != 0)
@@ -637,10 +637,10 @@ struct ObjectMorphGather2DBody
         {
           continue;
         }
-        const usize maskPosition = (static_cast<usize>(sourceY) - maskYBegin) * maskWidth + (static_cast<usize>(sourceX) - maskXBegin);
+        const usize maskPosition = (static_cast<usize>(sourceY) - mask_y_begin) * mask_width + (static_cast<usize>(sourceX) - mask_x_begin);
         hit = mask[maskPosition] != 0;
       }
-      output[tuple] = dilate ? ((inputValue == objectValue || hit) ? objectValue : inputValue) : (hit ? backgroundValue : inputValue);
+      output[tuple] = dilate ? ((inputValue == object_value || hit) ? object_value : inputValue) : (hit ? background_value : inputValue);
     }
   }
 };
@@ -685,7 +685,7 @@ inline bool IsBoundaryObjectPixel(const T* in, T objectValue, const SEOffset* bo
 template <class T>
 // inputRange and outputRange describe the complete allocated backing windows; their depths are bounded by the caller's checked plan.
 Result<> ScatterObjectMorphologyInputBatch(const T* input, const ObjectMorphologyPlaneWindow& inputRange, T* output, const ObjectMorphologyPlaneWindow& outputRange, usize outputCapacityPlanes,
-                                           const ObjectMorphologyPlaneWindow& sourceRange, const SizeVec3& dims, const SEOffset* boxOffsets, usize numBoxOffsets, const SEOffset* paintOffsets,
+                                           const ObjectMorphologyPlaneWindow& sourceRange, const SizeVec3Type& dims, const SEOffset* boxOffsets, usize numBoxOffsets, const SEOffset* paintOffsets,
                                            usize numPaintOffsets, T objectValue, T paintValue, const std::atomic_bool& shouldCancel)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0 || inputRange.end < inputRange.origin || outputRange.end < outputRange.origin || inputRange.end > dims[2] || outputRange.end > dims[2] ||
@@ -696,7 +696,7 @@ Result<> ScatterObjectMorphologyInputBatch(const T* input, const ObjectMorpholog
     return MakeErrorResult(-8766, fmt::format("Object morphology batch scatter has invalid dimensions, ranges, pointers, or capacity. Input: [{}, {}); output: [{}, {}); source: [{}, {}); "
                                               "capacity: {}; dimensions: {}; box offsets: {}; paint offsets: {}.",
                                               inputRange.origin, inputRange.end, outputRange.origin, outputRange.end, sourceRange.origin, sourceRange.end, outputCapacityPlanes,
-                                              StringUtilities::formatDimensions3D(dims), numBoxOffsets, numPaintOffsets));
+                                              string_utilities::FormatDimensions3D(dims), numBoxOffsets, numPaintOffsets));
   }
   if(sourceRange.origin == sourceRange.end)
   {
@@ -711,7 +711,7 @@ Result<> ScatterObjectMorphologyInputBatch(const T* input, const ObjectMorpholog
   {
     return MakeErrorResult(-8766,
                            fmt::format("Object morphology batch scatter dimensions or output capacity do not fit signed coordinates or XY/XYZ value counts. Dimensions: {}; capacity planes: {}.",
-                                       StringUtilities::formatDimensions3D(dims), outputCapacityPlanes));
+                                       string_utilities::FormatDimensions3D(dims), outputCapacityPlanes));
   }
   int32 minimumBoxDz = 0;
   int32 maximumBoxDz = 0;
@@ -734,7 +734,7 @@ Result<> ScatterObjectMorphologyInputBatch(const T* input, const ObjectMorpholog
                                    dims[2] > k_Int64Max - static_cast<usize>(maximumPositiveOffset)))
   {
     return MakeErrorResult(-8766, fmt::format("Object morphology batch scatter dimensions plus offsets exceed signed coordinates. Dimensions: {}; maximum positive offset: {}.",
-                                              StringUtilities::formatDimensions3D(dims), maximumPositiveOffset));
+                                              string_utilities::FormatDimensions3D(dims), maximumPositiveOffset));
   }
   const int64 sourceBegin = static_cast<int64>(sourceRange.origin);
   const int64 sourceEnd = static_cast<int64>(sourceRange.end);
@@ -817,11 +817,11 @@ template <class T>
 class ObjectMorphScatter
 {
 public:
-  ObjectMorphScatter(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets, ObjectMorphOp op,
+  ObjectMorphScatter(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3Type dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets, ObjectMorphOp op,
                      T objectValue, T backgroundValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_BoxOffsets(boxOffsets)
   , m_Op(op)
@@ -906,7 +906,7 @@ public:
 private:
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<T>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   const StructuringElement& m_SE;
   const std::vector<SEOffset>& m_BoxOffsets;
   ObjectMorphOp m_Op;
@@ -934,11 +934,11 @@ template <class T>
 class ObjectMorphGather
 {
 public:
-  ObjectMorphGather(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets, ObjectMorphOp op,
+  ObjectMorphGather(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3Type dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets, ObjectMorphOp op,
                     T objectValue, T backgroundValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize targetBufferBytes = 64ULL * 1024ULL * 1024ULL)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_BoxOffsets(boxOffsets)
   , m_Op(op)
@@ -987,7 +987,7 @@ public:
     usize sliceValues = 0;
     if(!detail::ObjectMorphologyCheckedMultiply(dimX, dimY, sliceValues))
     {
-      return MakeErrorResult(-8764, fmt::format("Object morphology dimensions ({}) overflow while sizing the 3-D rolling-scatter plane.", StringUtilities::formatDimensions3D(m_Dims)));
+      return MakeErrorResult(-8764, fmt::format("Object morphology dimensions ({}) overflow while sizing the 3-D rolling-scatter plane.", string_utilities::FormatDimensions3D(m_Dims)));
     }
     auto planResult = detail::CreateObjectMorphology3DPlan<T>(m_Dims, rz, m_TargetBufferBytes);
     if(planResult.invalid())
@@ -1002,21 +1002,21 @@ public:
 private:
   Result<> run3DRollingScatter(usize sliceValues, usize radiusZ, const detail::ObjectMorphology3DPlan& plan, ThrottledMessageHandler& progressThrottle)
   {
-    if(plan.computeBatchDepth == 0 || plan.inputSlabDepth == 0 || plan.outputWindowDepth == 0)
+    if(plan.compute_batch_depth == 0 || plan.input_slab_depth == 0 || plan.output_window_depth == 0)
     {
-      return MakeErrorResult(-8766, fmt::format("Object morphology rolling scatter requires nonzero checked plan depths. Compute: {}; input: {}; output: {}; dimensions: {}.", plan.computeBatchDepth,
-                                                plan.inputSlabDepth, plan.outputWindowDepth, StringUtilities::formatDimensions3D(m_Dims)));
+      return MakeErrorResult(-8766, fmt::format("Object morphology rolling scatter requires nonzero checked plan depths. Compute: {}; input: {}; output: {}; dimensions: {}.", plan.compute_batch_depth,
+                                                plan.input_slab_depth, plan.output_window_depth, string_utilities::FormatDimensions3D(m_Dims)));
     }
     usize inputWindowValues = 0;
     usize outputWindowValues = 0;
-    if(!detail::ObjectMorphologyCheckedMultiply(plan.inputSlabDepth, sliceValues, inputWindowValues) ||
-       !detail::ObjectMorphologyCheckedMultiply(plan.outputWindowDepth, sliceValues, outputWindowValues) || inputWindowValues > std::numeric_limits<usize>::max() / sizeof(T) ||
+    if(!detail::ObjectMorphologyCheckedMultiply(plan.input_slab_depth, sliceValues, inputWindowValues) ||
+       !detail::ObjectMorphologyCheckedMultiply(plan.output_window_depth, sliceValues, outputWindowValues) || inputWindowValues > std::numeric_limits<usize>::max() / sizeof(T) ||
        outputWindowValues > std::numeric_limits<usize>::max() / sizeof(T))
     {
       return MakeErrorResult(-8766,
                              fmt::format("Object morphology rolling scatter window allocation overflow. Input depth: {}; output depth: {}; plane values: {}; input values: {}; output values: {}; "
                                          "dimensions: {}.",
-                                         plan.inputSlabDepth, plan.outputWindowDepth, sliceValues, inputWindowValues, outputWindowValues, StringUtilities::formatDimensions3D(m_Dims)));
+                                         plan.input_slab_depth, plan.output_window_depth, sliceValues, inputWindowValues, outputWindowValues, string_utilities::FormatDimensions3D(m_Dims)));
     }
     auto inputWindow = std::make_unique_for_overwrite<T[]>(inputWindowValues);
     auto outputWindow = std::make_unique_for_overwrite<T[]>(outputWindowValues);
@@ -1032,15 +1032,15 @@ private:
         return {};
       }
       const usize remainingDepth = m_Dims[2] - batchBegin;
-      const usize batchDepth = std::min(plan.computeBatchDepth, remainingDepth);
+      const usize batchDepth = std::min(plan.compute_batch_depth, remainingDepth);
       const usize batchEnd = batchBegin + batchDepth;
-      const detail::ObjectMorphologyPlaneWindow sourceRange{batchBegin, batchEnd};
+      const detail::ObjectMorphologyPlaneWindow sourceRange{.origin = batchBegin, .end = batchEnd};
       auto desiredInputResult = detail::CreateObjectMorphologyPlaneWindow(batchBegin, batchEnd, inputHalo, m_Dims[2]);
       if(desiredInputResult.invalid())
       {
         return ConvertInvalidResult<void>(std::move(desiredInputResult));
       }
-      if(Result<> result = detail::AdvanceObjectMorphologyInputWindow(m_In, inputWindow.get(), plan.inputSlabDepth, sliceValues, inputRange, desiredInputResult.value()); result.invalid())
+      if(Result<> result = detail::AdvanceObjectMorphologyInputWindow(m_In, inputWindow.get(), plan.input_slab_depth, sliceValues, inputRange, desiredInputResult.value()); result.invalid())
       {
         return result;
       }
@@ -1050,12 +1050,12 @@ private:
         return ConvertInvalidResult<void>(std::move(desiredOutputResult));
       }
       if(Result<> result =
-             detail::AdvanceObjectMorphologyOutputWindow(outputWindow.get(), plan.outputWindowDepth, sliceValues, outputRange, desiredOutputResult.value(), inputWindow.get(), inputRange);
+             detail::AdvanceObjectMorphologyOutputWindow(outputWindow.get(), plan.output_window_depth, sliceValues, outputRange, desiredOutputResult.value(), inputWindow.get(), inputRange);
          result.invalid())
       {
         return result;
       }
-      if(Result<> result = detail::ScatterObjectMorphologyInputBatch(inputWindow.get(), inputRange, outputWindow.get(), outputRange, plan.outputWindowDepth, sourceRange, m_Dims, m_BoxOffsets.data(),
+      if(Result<> result = detail::ScatterObjectMorphologyInputBatch(inputWindow.get(), inputRange, outputWindow.get(), outputRange, plan.output_window_depth, sourceRange, m_Dims, m_BoxOffsets.data(),
                                                                      m_BoxOffsets.size(), m_SE.offsets.data(), m_SE.offsets.size(), m_ObjectValue, paintValue, m_ShouldCancel);
          result.invalid())
       {
@@ -1066,7 +1066,7 @@ private:
         return {};
       }
       const usize finalEnd = batchEnd == m_Dims[2] ? m_Dims[2] : std::max(outputRange.origin, batchEnd > radiusZ ? batchEnd - radiusZ : 0);
-      if(Result<> result = detail::FinalizeObjectMorphologyOutputWindow(m_Out, outputWindow.get(), plan.outputWindowDepth, sliceValues, outputRange, finalEnd, m_ShouldCancel); result.invalid())
+      if(Result<> result = detail::FinalizeObjectMorphologyOutputWindow(m_Out, outputWindow.get(), plan.output_window_depth, sliceValues, outputRange, finalEnd, m_ShouldCancel); result.invalid())
       {
         return result;
       }
@@ -1080,7 +1080,7 @@ private:
     if(outputRange.origin != outputRange.end)
     {
       return MakeErrorResult(-8766, fmt::format("Object morphology rolling scatter completed with an unfinalized output range. Output: [{}, {}); input: [{}, {}); dimensions: {}.", outputRange.origin,
-                                                outputRange.end, inputRange.origin, inputRange.end, StringUtilities::formatDimensions3D(m_Dims)));
+                                                outputRange.end, inputRange.origin, inputRange.end, string_utilities::FormatDimensions3D(m_Dims)));
     }
     return {};
   }
@@ -1107,13 +1107,13 @@ private:
       return MakeErrorResult(-8671, "The bounded 2-D object-morphology input/output stores do not match the image dimensions.");
     }
 
-    auto inputBuffer = std::make_unique<T[]>(plan.inputCapacityValues);
-    auto maskBuffer = std::make_unique<uint8[]>(plan.maskCapacityValues);
-    auto outputBuffer = std::make_unique<T[]>(plan.outputCapacityValues);
+    auto inputBuffer = std::make_unique<T[]>(plan.input_capacity_values);
+    auto maskBuffer = std::make_unique<uint8[]>(plan.mask_capacity_values);
+    auto outputBuffer = std::make_unique<T[]>(plan.output_capacity_values);
     const bool dilate = m_Op == ObjectMorphOp::Dilate;
 
-    const usize yStep = plan.fullWidth ? plan.coreRows : 1;
-    const usize xStep = plan.fullWidth ? dimX : plan.coreColumns;
+    const usize yStep = plan.full_width ? plan.core_rows : 1;
+    const usize xStep = plan.full_width ? dimX : plan.core_columns;
     for(usize outputYBegin = 0; outputYBegin < dimY; outputYBegin += yStep)
     {
       const usize outputRows = std::min(yStep, dimY - outputYBegin);
@@ -1150,17 +1150,17 @@ private:
         maskAlgorithm.setRange(0, maskRows * maskWidth);
         maskAlgorithm.execute(detail::ObjectBoundaryMask2DBody<T>{.input = inputBuffer.get(),
                                                                   .mask = maskBuffer.get(),
-                                                                  .boxOffsets = m_BoxOffsets.data(),
-                                                                  .numBoxOffsets = m_BoxOffsets.size(),
-                                                                  .dimX = dimX,
-                                                                  .dimY = dimY,
-                                                                  .inputXBegin = inputXBegin,
-                                                                  .inputYBegin = inputYBegin,
-                                                                  .inputWidth = inputWidth,
-                                                                  .maskXBegin = maskXBegin,
-                                                                  .maskYBegin = maskYBegin,
-                                                                  .maskWidth = maskWidth,
-                                                                  .objectValue = m_ObjectValue});
+                                                                  .box_offsets = m_BoxOffsets.data(),
+                                                                  .num_box_offsets = m_BoxOffsets.size(),
+                                                                  .dim_x = dimX,
+                                                                  .dim_y = dimY,
+                                                                  .input_x_begin = inputXBegin,
+                                                                  .input_y_begin = inputYBegin,
+                                                                  .input_width = inputWidth,
+                                                                  .mask_x_begin = maskXBegin,
+                                                                  .mask_y_begin = maskYBegin,
+                                                                  .mask_width = maskWidth,
+                                                                  .object_value = m_ObjectValue});
 
         ParallelDataAlgorithm gatherAlgorithm;
         gatherAlgorithm.setRange(0, outputRows * outputColumns);
@@ -1168,23 +1168,23 @@ private:
                                                                    .mask = maskBuffer.get(),
                                                                    .output = outputBuffer.get(),
                                                                    .offsets = m_SE.offsets.data(),
-                                                                   .numOffsets = m_SE.offsets.size(),
-                                                                   .dimX = dimX,
-                                                                   .dimY = dimY,
-                                                                   .inputXBegin = inputXBegin,
-                                                                   .inputYBegin = inputYBegin,
-                                                                   .inputWidth = inputWidth,
-                                                                   .maskXBegin = maskXBegin,
-                                                                   .maskYBegin = maskYBegin,
-                                                                   .maskWidth = maskWidth,
-                                                                   .outputXBegin = outputXBegin,
-                                                                   .outputYBegin = outputYBegin,
-                                                                   .outputWidth = outputColumns,
+                                                                   .num_offsets = m_SE.offsets.size(),
+                                                                   .dim_x = dimX,
+                                                                   .dim_y = dimY,
+                                                                   .input_x_begin = inputXBegin,
+                                                                   .input_y_begin = inputYBegin,
+                                                                   .input_width = inputWidth,
+                                                                   .mask_x_begin = maskXBegin,
+                                                                   .mask_y_begin = maskYBegin,
+                                                                   .mask_width = maskWidth,
+                                                                   .output_x_begin = outputXBegin,
+                                                                   .output_y_begin = outputYBegin,
+                                                                   .output_width = outputColumns,
                                                                    .dilate = dilate,
-                                                                   .objectValue = m_ObjectValue,
-                                                                   .backgroundValue = m_BackgroundValue});
+                                                                   .object_value = m_ObjectValue,
+                                                                   .background_value = m_BackgroundValue});
 
-        if(plan.fullWidth)
+        if(plan.full_width)
         {
           if(Result<> result = m_Out.copyFromBuffer(outputYBegin * dimX, nonstd::span<const T>(outputBuffer.get(), outputRows * dimX)); result.invalid())
           {
@@ -1202,7 +1202,7 @@ private:
 
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<T>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   const StructuringElement& m_SE;
   const std::vector<SEOffset>& m_BoxOffsets;
   ObjectMorphOp m_Op;
@@ -1225,8 +1225,8 @@ private:
  * @tparam T scalar voxel type.
  */
 template <class T>
-Result<> ApplyObjectMorphology(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets, ObjectMorphOp op,
-                               T objectValue, T backgroundValue, const IDataArray& inArray, const IDataArray& outArray, const std::atomic_bool& shouldCancel,
+Result<> ApplyObjectMorphology(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3Type& dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets,
+                               ObjectMorphOp op, T objectValue, T backgroundValue, const IDataArray& inArray, const IDataArray& outArray, const std::atomic_bool& shouldCancel,
                                const IFilter::MessageHandler& messageHandler)
 {
   if(auto layout = ValidateMorphologyLayout(dims, se, false, sizeof(T)); layout.invalid())
@@ -1271,7 +1271,7 @@ Result<> ApplyObjectMorphology(const AbstractDataStore<T>& in, AbstractDataStore
       }
       else
       {
-        allocation.reservation.shrinkTo(static_cast<uint64>(planResult.value().residentBytes));
+        allocation.reservation.shrinkTo(static_cast<uint64>(planResult.value().resident_bytes));
         ObjectMorphGather<T> gather{in, out, dims, se, boxOffsets, op, objectValue, backgroundValue, shouldCancel, messageHandler, static_cast<usize>(allocation.reservation.sizeBytes())};
         return gather();
       }

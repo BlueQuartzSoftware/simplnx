@@ -20,7 +20,7 @@ public:
    * @param path The path where the AttributeMatrix will be created
    * @param shape The tuple shape of the AttributeMatrix
    */
-  CreateAttributeMatrixAction(const DataPath& path, const ShapeType& shape);
+  CreateAttributeMatrixAction(const DataPath& path, ShapeType shape);
 
   ~CreateAttributeMatrixAction() noexcept override;
 
@@ -42,7 +42,7 @@ public:
    * @brief Returns a copy of the action.
    * @return UniquePointer A unique pointer to the cloned action
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns all of the DataPaths to be created.

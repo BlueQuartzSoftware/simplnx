@@ -16,14 +16,14 @@ class SIMPLNX_EXPORT TriangleGeom : public INodeGeometry2D
 public:
   friend class DataStructure;
 
-  static inline constexpr usize k_NumEdgeVerts = 2;
-  static inline constexpr usize k_NumFaceVerts = 3;
-  static inline constexpr usize k_NumVerts = 3;
-  static inline constexpr StringLiteral k_VoxelSizes = "Triangle Areas";
-  static inline constexpr StringLiteral k_EltsContainingVert = "Triangles Containing Vert";
-  static inline constexpr StringLiteral k_EltNeighbors = "Triangle Neighbors";
-  static inline constexpr StringLiteral k_EltCentroids = "Triangle Centroids";
-  static inline constexpr StringLiteral k_TypeName = "TriangleGeom";
+  static constexpr usize k_NumEdgeVerts = 2;
+  static constexpr usize k_NumFaceVerts = 3;
+  static constexpr usize k_NumVerts = 3;
+  static constexpr StringLiteralType k_VoxelSizes = "Triangle Areas";
+  static constexpr StringLiteralType k_EltsContainingVert = "Triangles Containing Vert";
+  static constexpr StringLiteralType k_EltNeighbors = "Triangle Neighbors";
+  static constexpr StringLiteralType k_EltCentroids = "Triangle Centroids";
+  static constexpr StringLiteralType k_TypeName = "TriangleGeom";
 
   /**
    * @brief Creates a new TriangleGeom in the specified DataStructure.
@@ -54,7 +54,7 @@ public:
    * @brief Move constructor.
    * @param other The TriangleGeom to move from
    */
-  TriangleGeom(TriangleGeom&& other) = default;
+  TriangleGeom(TriangleGeom&& other) noexcept = default;
 
   ~TriangleGeom() noexcept override = default;
 
@@ -153,16 +153,16 @@ public:
 
   /**
    * @brief Returns the parametric center of a triangular element.
-   * @return Point3D<float64> The parametric center coordinates
+   * @return Vec3<float64> The parametric center coordinates
    */
-  Point3D<float64> getParametricCenter() const override;
+  Vec3<float64> getParametricCenter() const override;
 
   /**
    * @brief Calculates shape functions at the given parametric coordinates.
    * @param pCoords The parametric coordinates
    * @param shape Output array to store the calculated shape function values
    */
-  void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
+  void getShapeFunctions(const Vec3<float64>& pCoords, float64* shape) const override;
 
   /**
    * @brief finds the shared edges (no duplicates) of each triangle in the

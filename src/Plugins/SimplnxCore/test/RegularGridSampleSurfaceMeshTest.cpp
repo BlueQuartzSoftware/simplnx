@@ -28,15 +28,15 @@ namespace
 {
 const std::string k_TriGeomName = "Input Triangle Geometry";
 const DataPath k_TriGeomPath = DataPath({k_TriGeomName});
-const DataPath k_FaceLabelsPath = k_TriGeomPath.createChildPath(Constants::k_FaceData).createChildPath(Constants::k_FaceLabels);
+const DataPath k_FaceLabelsPath = k_TriGeomPath.createChildPath(constants::k_FaceData).createChildPath(constants::k_FaceLabels);
 
 const std::string k_ExemplarImageGeomName = "Exemplar Sample Triangle Geometry on Regular Grid";
 const DataPath k_ExemplarImageGeomPath = DataPath({k_ExemplarImageGeomName});
-const DataPath k_ExemplarFeatureIdsPath = k_ExemplarImageGeomPath.createChildPath(Constants::k_CellData).createChildPath(Constants::k_FeatureIds);
+const DataPath k_ExemplarFeatureIdsPath = k_ExemplarImageGeomPath.createChildPath(constants::k_CellData).createChildPath(constants::k_FeatureIds);
 
-const DataPath k_GeneratedImageGeomPath = DataPath({Constants::k_ImageGeometry});
-const DataPath k_GeneratedCellDataPath = k_GeneratedImageGeomPath.createChildPath(Constants::k_CellData);
-const DataPath k_GeneratedFeatureIdsPath = k_GeneratedCellDataPath.createChildPath(Constants::k_FeatureIds);
+const DataPath k_GeneratedImageGeomPath = DataPath({constants::k_ImageGeometry});
+const DataPath k_GeneratedCellDataPath = k_GeneratedImageGeomPath.createChildPath(constants::k_CellData);
+const DataPath k_GeneratedFeatureIdsPath = k_GeneratedCellDataPath.createChildPath(constants::k_FeatureIds);
 
 const std::vector<uint64> k_Dims{171, 200, 150};
 const std::vector<float32> k_Origin{1.0f, 1.99f, 0.0f};
@@ -56,17 +56,18 @@ void BuildVerticalQuads(DataStructure& dataStructure, const std::vector<float32>
   const usize numQuads = positions.size();
   const auto verticesPath = k_TriGeomPath.createChildPath("Vertices");
   const auto facesPath = k_TriGeomPath.createChildPath("Faces");
-  auto* verticesPtr = Float32Array::Create(dataStructure, "Vertices", DataStoreUtilities::CreateDataStore<float32>(dataStructure, verticesPath, {numQuads * 4}, {3}), triangleGeomPtr->getId());
-  auto* facesPtr = IGeometry::MeshIndexArrayType::Create(dataStructure, "Faces", DataStoreUtilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, facesPath, {numQuads * 2}, {3}),
+  auto* verticesPtr = Float32ArrayType::Create(dataStructure, "Vertices", data_store_utilities::CreateDataStore<float32>(dataStructure, verticesPath, {numQuads * 4}, {3}), triangleGeomPtr->getId());
+  auto* facesPtr = IGeometry::MeshIndexArrayType::Create(dataStructure, "Faces", data_store_utilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, facesPath, {numQuads * 2}, {3}),
                                                          triangleGeomPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   REQUIRE(facesPtr != nullptr);
   triangleGeomPtr->setVertices(*verticesPtr);
   triangleGeomPtr->setFaceList(*facesPtr);
-  auto* faceDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_FaceData, ShapeType{numQuads * 2}, triangleGeomPtr->getId());
+  auto* faceDataPtr = AttributeMatrix::Create(dataStructure, constants::k_FaceData, ShapeType{numQuads * 2}, triangleGeomPtr->getId());
   REQUIRE(faceDataPtr != nullptr);
   triangleGeomPtr->setFaceAttributeMatrix(*faceDataPtr);
-  auto* labelsPtr = Int32Array::Create(dataStructure, Constants::k_FaceLabels, DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FaceLabelsPath, {numQuads * 2}, {2}), faceDataPtr->getId());
+  auto* labelsPtr =
+      Int32ArrayType::Create(dataStructure, constants::k_FaceLabels, data_store_utilities::CreateDataStore<int32>(dataStructure, k_FaceLabelsPath, {numQuads * 2}, {2}), faceDataPtr->getId());
   REQUIRE(labelsPtr != nullptr);
   for(usize quadIdx = 0; quadIdx < numQuads; ++quadIdx)
   {
@@ -91,14 +92,14 @@ void BuildVerticalQuads(DataStructure& dataStructure, const std::vector<float32>
 Arguments MakeSmallGridArguments()
 {
   Arguments args;
-  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{5, 1, 1}));
-  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0, 0, 0}));
-  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1, 1, 1}));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(std::vector<uint64>{5, 1, 1}));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{0, 0, 0}));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{1, 1, 1}));
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key, std::make_any<DataPath>(k_TriGeomPath));
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(k_FaceLabelsPath));
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_GeneratedImageGeomPath));
-  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_CellAMName_Key, std::make_any<std::string>(Constants::k_CellData));
-  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(Constants::k_FeatureIds));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_CellAMName_Key, std::make_any<std::string>(constants::k_CellData));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(constants::k_FeatureIds));
   return args;
 }
 
@@ -116,7 +117,7 @@ void RequireSmallGridFeatureIds(const DataStructure& dataStructure)
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Reject nonpositive or nonfinite spacing when creating geometry", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto axis = GENERATE(usize{0}, usize{1}, usize{2});
   const auto invalidSpacing = GENERATE(0.0F, -1.0F, std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity());
   CAPTURE(axis, invalidSpacing);
@@ -125,55 +126,55 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Reject nonpositive o
   RegularGridSampleSurfaceMeshFilter filter;
   auto args = MakeSmallGridArguments();
   auto validResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(validResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(validResult.output_actions);
 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Existing Image Geometry");
   REQUIRE(imageGeomPtr != nullptr);
   imageGeomPtr->setDimensions({5, 1, 1});
   REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_CellData, ShapeType{1, 1, 5}, imageGeomPtr->getId());
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, constants::k_CellData, ShapeType{1, 1, 5}, imageGeomPtr->getId());
   REQUIRE(cellDataPtr != nullptr);
   imageGeomPtr->setCellData(*cellDataPtr);
 
-  VectorFloat32Parameter::ValueType spacing{1.0F, 1.0F, 1.0F};
+  VectorFloat32ParameterType::ValueType spacing{1.0F, 1.0F, 1.0F};
   spacing[axis] = invalidSpacing;
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, spacing);
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_UseExistingGeometry_Key,
                       std::make_any<ChoicesParameter::ValueType>(to_underlying(RegularGridSampleSurfaceMeshFilter::GeometryOption::UseExisting)));
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_ExistingImageGeomPath_Key, DataPath({"Existing Image Geometry"}));
   auto existingResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(existingResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(existingResult.output_actions);
 
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_UseExistingGeometry_Key,
                       std::make_any<ChoicesParameter::ValueType>(to_underlying(RegularGridSampleSurfaceMeshFilter::GeometryOption::Create)));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -11802);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -11802);
 }
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Reject Face Labels outside Face Attribute Matrix", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   BuildVerticalQuads(dataStructure, {1.2F, 3.7F}, {{0, 2}, {0, 2}});
   auto* otherFaceDataPtr = AttributeMatrix::Create(dataStructure, "Other Face Data", ShapeType{4});
   REQUIRE(otherFaceDataPtr != nullptr);
   const DataPath otherLabelsPath({"Other Face Data", "Face Labels"});
-  auto* otherLabelsPtr = Int32Array::Create(dataStructure, "Face Labels", DataStoreUtilities::CreateDataStore<int32>(dataStructure, otherLabelsPath, {4}, {2}), otherFaceDataPtr->getId());
+  auto* otherLabelsPtr = Int32ArrayType::Create(dataStructure, "Face Labels", data_store_utilities::CreateDataStore<int32>(dataStructure, otherLabelsPath, {4}, {2}), otherFaceDataPtr->getId());
   REQUIRE(otherLabelsPtr != nullptr);
   RegularGridSampleSurfaceMeshFilter filter;
   auto args = MakeSmallGridArguments();
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, otherLabelsPath);
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -11803);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -11803);
 }
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Reject missing Face Attribute Matrix without throwing", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   BuildVerticalQuads(dataStructure, {1.2F, 3.7F}, {{0, 2}, {0, 2}});
   auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, "Without Face Data");
@@ -188,23 +189,23 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Reject missing Face 
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key, DataPath({"Without Face Data"}));
   IFilter::PreflightResult preflightResult;
   REQUIRE_NOTHROW(preflightResult = filter.preflight(dataStructure, args));
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -11803);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -11803);
 }
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:CreateImageGeom", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   //  Read Exemplar DREAM3D File Filter
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "sample_surface_mesh_regular_grid_v1.tar.gz", "sample_surface_mesh_regular_grid_v1");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "sample_surface_mesh_regular_grid_v1.tar.gz", "sample_surface_mesh_regular_grid_v1");
   auto baseDataFilePath = fs::path(fmt::format("{}/sample_surface_mesh_regular_grid_v1/sample_surface_mesh_regular_grid_v1.dream3d", unit_test::k_TestFilesDir));
 
   std::string sectionTitle = "Exemplar Image Geometry Face Labels Create";
   SECTION(sectionTitle)
   {
-    DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+    DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
     // Instantiate the filter, a DataStructure object and an Arguments Object
     RegularGridSampleSurfaceMeshFilter filter;
@@ -213,42 +214,42 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:CreateImageGeom", "[S
     // Create default Parameters for the filter.
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_UseExistingGeometry_Key, std::make_any<uint64>(to_underlying(RegularGridSampleSurfaceMeshFilter::GeometryOption::Create)));
 
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(k_Dims));
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(k_Origin));
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(k_Spacing));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(k_Dims));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>(k_Origin));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>(k_Spacing));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(6ULL));
 
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key, std::make_any<DataPath>(::k_TriGeomPath));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(::k_FaceLabelsPath));
 
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(::k_GeneratedImageGeomPath));
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_CellAMName_Key, std::make_any<std::string>(Constants::k_CellData));
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(Constants::k_FeatureIds));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_CellAMName_Key, std::make_any<std::string>(constants::k_CellData));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(constants::k_FeatureIds));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result)
 
 // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-    UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
+    unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
     DataPath exemplarImageGeomPath({sectionTitle});
-    UnitTest::CompareImageGeometry(dataStructure, exemplarImageGeomPath, ::k_GeneratedImageGeomPath);
-    UnitTest::CompareArrays<int32>(dataStructure, exemplarImageGeomPath.createChildPath(Constants::k_CellData).createChildPath("FeatureIds"), ::k_GeneratedFeatureIdsPath);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CompareImageGeometry(dataStructure, exemplarImageGeomPath, ::k_GeneratedImageGeomPath);
+    unit_test::CompareArrays<int32>(dataStructure, exemplarImageGeomPath.createChildPath(constants::k_CellData).createChildPath("FeatureIds"), ::k_GeneratedFeatureIdsPath);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   sectionTitle = "Exemplar Image Geometry Part Numbers int32 Create";
   SECTION(sectionTitle)
   {
-    DataPath partNumberPath = k_TriGeomPath.createChildPath(Constants::k_FaceData).createChildPath("PartNumber");
+    DataPath partNumberPath = k_TriGeomPath.createChildPath(constants::k_FaceData).createChildPath("PartNumber");
 
-    DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+    DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
     // Instantiate the filter, a DataStructure object and an Arguments Object
     RegularGridSampleSurfaceMeshFilter filter;
@@ -257,42 +258,42 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:CreateImageGeom", "[S
     // Create default Parameters for the filter.
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_UseExistingGeometry_Key, std::make_any<uint64>(to_underlying(RegularGridSampleSurfaceMeshFilter::GeometryOption::Create)));
 
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(k_Dims));
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(k_Origin));
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(k_Spacing));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(k_Dims));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>(k_Origin));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>(k_Spacing));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(6ULL));
 
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key, std::make_any<DataPath>(::k_TriGeomPath));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(partNumberPath));
 
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(::k_GeneratedImageGeomPath));
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_CellAMName_Key, std::make_any<std::string>(Constants::k_CellData));
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(Constants::k_FeatureIds));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_CellAMName_Key, std::make_any<std::string>(constants::k_CellData));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(constants::k_FeatureIds));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result)
 
 // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-    UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
+    unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
     DataPath exemplarImageGeomPath({sectionTitle});
-    UnitTest::CompareImageGeometry(dataStructure, exemplarImageGeomPath, ::k_GeneratedImageGeomPath);
-    UnitTest::CompareArrays<int32>(dataStructure, exemplarImageGeomPath.createChildPath(Constants::k_CellData).createChildPath("FeatureIds"), ::k_GeneratedFeatureIdsPath);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CompareImageGeometry(dataStructure, exemplarImageGeomPath, ::k_GeneratedImageGeomPath);
+    unit_test::CompareArrays<int32>(dataStructure, exemplarImageGeomPath.createChildPath(constants::k_CellData).createChildPath("FeatureIds"), ::k_GeneratedFeatureIdsPath);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   sectionTitle = "Exemplar Image Geometry Part Numbers uint8 Create";
   SECTION(sectionTitle)
   {
-    DataPath partNumberPath = k_TriGeomPath.createChildPath(Constants::k_FaceData).createChildPath("PartNumber (uint8)");
+    DataPath partNumberPath = k_TriGeomPath.createChildPath(constants::k_FaceData).createChildPath("PartNumber (uint8)");
 
-    DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+    DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
     // Instantiate the filter, a DataStructure object and an Arguments Object
     RegularGridSampleSurfaceMeshFilter filter;
@@ -301,42 +302,42 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:CreateImageGeom", "[S
     // Create default Parameters for the filter.
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_UseExistingGeometry_Key, std::make_any<uint64>(to_underlying(RegularGridSampleSurfaceMeshFilter::GeometryOption::Create)));
 
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(k_Dims));
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(k_Origin));
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(k_Spacing));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(k_Dims));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>(k_Origin));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>(k_Spacing));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(6ULL));
 
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key, std::make_any<DataPath>(::k_TriGeomPath));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(partNumberPath));
 
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(::k_GeneratedImageGeomPath));
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_CellAMName_Key, std::make_any<std::string>(Constants::k_CellData));
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(Constants::k_FeatureIds));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_CellAMName_Key, std::make_any<std::string>(constants::k_CellData));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(constants::k_FeatureIds));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result)
 
 // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-    UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
+    unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
     DataPath exemplarImageGeomPath({sectionTitle});
-    UnitTest::CompareImageGeometry(dataStructure, exemplarImageGeomPath, ::k_GeneratedImageGeomPath);
-    UnitTest::CompareArrays<uint8>(dataStructure, exemplarImageGeomPath.createChildPath(Constants::k_CellData).createChildPath("FeatureIds"), ::k_GeneratedFeatureIdsPath);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CompareImageGeometry(dataStructure, exemplarImageGeomPath, ::k_GeneratedImageGeomPath);
+    unit_test::CompareArrays<uint8>(dataStructure, exemplarImageGeomPath.createChildPath(constants::k_CellData).createChildPath("FeatureIds"), ::k_GeneratedFeatureIdsPath);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   sectionTitle = "Exemplar Image Geometry Part Numbers float32 Create";
   SECTION(sectionTitle)
   {
-    DataPath partNumberPath = k_TriGeomPath.createChildPath(Constants::k_FaceData).createChildPath("PartNumber (float32)");
+    DataPath partNumberPath = k_TriGeomPath.createChildPath(constants::k_FaceData).createChildPath("PartNumber (float32)");
 
-    DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+    DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
     // Instantiate the filter, a DataStructure object and an Arguments Object
     RegularGridSampleSurfaceMeshFilter filter;
@@ -345,37 +346,37 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:CreateImageGeom", "[S
     // Create default Parameters for the filter.
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_UseExistingGeometry_Key, std::make_any<uint64>(to_underlying(RegularGridSampleSurfaceMeshFilter::GeometryOption::Create)));
 
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(k_Dims));
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32Parameter::ValueType>(k_Origin));
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32Parameter::ValueType>(k_Spacing));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(k_Dims));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Origin_Key, std::make_any<VectorFloat32ParameterType::ValueType>(k_Origin));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Spacing_Key, std::make_any<VectorFloat32ParameterType::ValueType>(k_Spacing));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_LengthUnit_Key, std::make_any<ChoicesParameter::ValueType>(6ULL));
 
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_TriangleGeometryPath_Key, std::make_any<DataPath>(::k_TriGeomPath));
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(partNumberPath));
 
     args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(::k_GeneratedImageGeomPath));
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_CellAMName_Key, std::make_any<std::string>(Constants::k_CellData));
-    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(Constants::k_FeatureIds));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_CellAMName_Key, std::make_any<std::string>(constants::k_CellData));
+    args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_FeatureIdsArrayName_Key, std::make_any<std::string>(constants::k_FeatureIds));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
   }
 }
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:ExistingImageGeom", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   //  Read Exemplar DREAM3D File Filter
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "sample_surface_mesh_regular_grid_v1.tar.gz", "sample_surface_mesh_regular_grid_v1");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "sample_surface_mesh_regular_grid_v1.tar.gz", "sample_surface_mesh_regular_grid_v1");
   auto baseDataFilePath = fs::path(fmt::format("{}/sample_surface_mesh_regular_grid_v1/sample_surface_mesh_regular_grid_v1.dream3d", unit_test::k_TestFilesDir));
 
   DataPath exemplarImageGeometryPath({"Exemplar Image Geometry Existing"});
   std::string sectionTitle = "FeatureIds (FaceLabels)";
   SECTION(sectionTitle)
   {
-    DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+    DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
     // Instantiate the filter, a DataStructure object and an Arguments Object
     RegularGridSampleSurfaceMeshFilter filter;
@@ -391,26 +392,26 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:ExistingImageGeom", "
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result)
 
 // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-    UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
+    unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
-    DataPath exemplarFeatureIdsPath = exemplarImageGeometryPath.createChildPath(Constants::k_CellData).createChildPath(sectionTitle);
-    DataPath computedFeatureIdsPath = exemplarImageGeometryPath.createChildPath(Constants::k_CellData).createChildPath("FeatureIds");
-    UnitTest::CompareArrays<int32>(dataStructure, exemplarFeatureIdsPath, computedFeatureIdsPath);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    DataPath exemplarFeatureIdsPath = exemplarImageGeometryPath.createChildPath(constants::k_CellData).createChildPath(sectionTitle);
+    DataPath computedFeatureIdsPath = exemplarImageGeometryPath.createChildPath(constants::k_CellData).createChildPath("FeatureIds");
+    unit_test::CompareArrays<int32>(dataStructure, exemplarFeatureIdsPath, computedFeatureIdsPath);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   sectionTitle = "FeatureIds (PartNumber)";
   SECTION(sectionTitle)
   {
-    DataPath partNumberPath = k_TriGeomPath.createChildPath(Constants::k_FaceData).createChildPath("PartNumber");
-    DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+    DataPath partNumberPath = k_TriGeomPath.createChildPath(constants::k_FaceData).createChildPath("PartNumber");
+    DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
     // Instantiate the filter, a DataStructure object and an Arguments Object
     RegularGridSampleSurfaceMeshFilter filter;
@@ -426,26 +427,26 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:ExistingImageGeom", "
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result)
 
 // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-    UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
+    unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
-    DataPath exemplarFeatureIdsPath = exemplarImageGeometryPath.createChildPath(Constants::k_CellData).createChildPath(sectionTitle);
-    DataPath computedFeatureIdsPath = exemplarImageGeometryPath.createChildPath(Constants::k_CellData).createChildPath("FeatureIds");
-    UnitTest::CompareArrays<int32>(dataStructure, exemplarFeatureIdsPath, computedFeatureIdsPath);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    DataPath exemplarFeatureIdsPath = exemplarImageGeometryPath.createChildPath(constants::k_CellData).createChildPath(sectionTitle);
+    DataPath computedFeatureIdsPath = exemplarImageGeometryPath.createChildPath(constants::k_CellData).createChildPath("FeatureIds");
+    unit_test::CompareArrays<int32>(dataStructure, exemplarFeatureIdsPath, computedFeatureIdsPath);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   sectionTitle = "FeatureIds (PartNumber uint8)";
   SECTION(sectionTitle)
   {
-    DataPath partNumberPath = k_TriGeomPath.createChildPath(Constants::k_FaceData).createChildPath("PartNumber (uint8)");
-    DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+    DataPath partNumberPath = k_TriGeomPath.createChildPath(constants::k_FaceData).createChildPath("PartNumber (uint8)");
+    DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
     // Instantiate the filter, a DataStructure object and an Arguments Object
     RegularGridSampleSurfaceMeshFilter filter;
@@ -461,27 +462,27 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:ExistingImageGeom", "
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto result = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(result.result)
 
 // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-    UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
+    unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
-    DataPath exemplarFeatureIdsPath = exemplarImageGeometryPath.createChildPath(Constants::k_CellData).createChildPath(sectionTitle);
-    DataPath computedFeatureIdsPath = exemplarImageGeometryPath.createChildPath(Constants::k_CellData).createChildPath("FeatureIds");
-    UnitTest::CompareArrays<uint8>(dataStructure, exemplarFeatureIdsPath, computedFeatureIdsPath);
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    DataPath exemplarFeatureIdsPath = exemplarImageGeometryPath.createChildPath(constants::k_CellData).createChildPath(sectionTitle);
+    DataPath computedFeatureIdsPath = exemplarImageGeometryPath.createChildPath(constants::k_CellData).createChildPath("FeatureIds");
+    unit_test::CompareArrays<uint8>(dataStructure, exemplarFeatureIdsPath, computedFeatureIdsPath);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: SIMPL Backwards Compatibility", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -494,22 +495,22 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: SIMPL Backwards Comp
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<RegularGridSampleSurfaceMeshFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<RegularGridSampleSurfaceMeshFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       if(label == "SIMPL 6.5 (UUID)")
       {
         CHECK(args.value<ChoicesParameter::ValueType>(RegularGridSampleSurfaceMeshFilter::k_LengthUnit_Key) == 0);
@@ -528,7 +529,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: SIMPL Backwards Comp
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Custom Output Type", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto outputType = GENERATE(DataType::uint8, DataType::int64);
   CAPTURE(outputType);
   DataStructure dataStructure;
@@ -538,7 +539,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Custom Output Type",
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_UseCustomOutputType_Key, true);
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(outputType)));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(k_GeneratedFeatureIdsPath));
@@ -551,12 +552,12 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Custom Output Type",
   {
     RequireSmallGridFeatureIds<int64>(dataStructure);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Output type ignored when Use Custom Output Type is off", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   BuildVerticalQuads(dataStructure, {1.2F, 3.7F}, {{0, 2}, {0, 2}});
   RegularGridSampleSurfaceMeshFilter filter;
@@ -564,19 +565,19 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Output type ignored 
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_UseCustomOutputType_Key, false);
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DataType::uint8)));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(k_FaceLabelsPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(k_GeneratedFeatureIdsPath));
   REQUIRE(dataStructure.getDataRefAs<IDataArray>(k_GeneratedFeatureIdsPath).getDataType() == dataStructure.getDataRefAs<IDataArray>(k_FaceLabelsPath).getDataType());
   RequireSmallGridFeatureIds<int32>(dataStructure);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Custom Output Type value out of range", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   BuildVerticalQuads(dataStructure, {1.2F, 3.7F}, {{0, 300}, {0, 300}});
   RegularGridSampleSurfaceMeshFilter filter;
@@ -584,19 +585,19 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Custom Output Type v
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_UseCustomOutputType_Key, true);
   args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_OutputType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(DataType::uint8)));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors().size() == 1);
   REQUIRE(result.result.errors()[0].code == -11801);
   REQUIRE(result.result.errors()[0].message.find("300") != std::string::npos);
   REQUIRE(result.result.errors()[0].message.find("uint8") != std::string::npos);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Exterior -1 Labels", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   SECTION("A: exterior and Feature 2")
   {
@@ -611,7 +612,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Exterior -1 Labels",
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   RequireSmallGridFeatureIds<int32>(dataStructure);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Use Custom Output Type parameter layout", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter]")
@@ -642,46 +643,47 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Use Custom Output Ty
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Nested single label boxes", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter][L24]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   // Two closed boxes: [1, 6] x [0, 3] x [0, 3] and [2, 4] x [1, 2] x [1, 2].
-  auto* geom = TriangleGeom::Create(dataStructure, k_TriGeomName);
-  REQUIRE(geom != nullptr);
-  auto* vertices = Float32Array::Create(dataStructure, "Vertices", DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_TriGeomPath.createChildPath("Vertices"), {16}, {3}), geom->getId());
-  auto* faces = IGeometry::MeshIndexArrayType::Create(dataStructure, "Faces",
-                                                      DataStoreUtilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, k_TriGeomPath.createChildPath("Faces"), {24}, {3}), geom->getId());
-  REQUIRE(vertices != nullptr);
-  REQUIRE(faces != nullptr);
-  geom->setVertices(*vertices);
-  geom->setFaceList(*faces);
-  auto* faceData = AttributeMatrix::Create(dataStructure, Constants::k_FaceData, ShapeType{24}, geom->getId());
-  REQUIRE(faceData != nullptr);
-  geom->setFaceAttributeMatrix(*faceData);
-  auto* labels = Int32Array::Create(dataStructure, Constants::k_FaceLabels, DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FaceLabelsPath, {24}, {1}), faceData->getId());
-  REQUIRE(labels != nullptr);
+  auto* geomPtr = TriangleGeom::Create(dataStructure, k_TriGeomName);
+  REQUIRE(geomPtr != nullptr);
+  auto* verticesPtr =
+      Float32ArrayType::Create(dataStructure, "Vertices", data_store_utilities::CreateDataStore<float32>(dataStructure, k_TriGeomPath.createChildPath("Vertices"), {16}, {3}), geomPtr->getId());
+  auto* facesPtr = IGeometry::MeshIndexArrayType::Create(
+      dataStructure, "Faces", data_store_utilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, k_TriGeomPath.createChildPath("Faces"), {24}, {3}), geomPtr->getId());
+  REQUIRE(verticesPtr != nullptr);
+  REQUIRE(facesPtr != nullptr);
+  geomPtr->setVertices(*verticesPtr);
+  geomPtr->setFaceList(*facesPtr);
+  auto* faceDataPtr = AttributeMatrix::Create(dataStructure, constants::k_FaceData, ShapeType{24}, geomPtr->getId());
+  REQUIRE(faceDataPtr != nullptr);
+  geomPtr->setFaceAttributeMatrix(*faceDataPtr);
+  auto* labelsPtr = Int32ArrayType::Create(dataStructure, constants::k_FaceLabels, data_store_utilities::CreateDataStore<int32>(dataStructure, k_FaceLabelsPath, {24}, {1}), faceDataPtr->getId());
+  REQUIRE(labelsPtr != nullptr);
   const std::array<float32, 48> coords = {1, 0, 0, 6, 0, 0, 6, 3, 0, 1, 3, 0, 1, 0, 3, 6, 0, 3, 6, 3, 3, 1, 3, 3, 2, 1, 1, 4, 1, 1, 4, 2, 1, 2, 2, 1, 2, 1, 2, 4, 1, 2, 4, 2, 2, 2, 2, 2};
   const std::array<usize, 36> indices = {0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 1, 5, 0, 5, 4, 1, 2, 6, 1, 6, 5, 2, 3, 7, 2, 7, 6, 3, 0, 4, 3, 4, 7};
   for(usize i = 0; i < coords.size(); ++i)
   {
-    (*vertices)[i] = coords[i];
+    (*verticesPtr)[i] = coords[i];
   }
   for(usize box = 0; box < 2; ++box)
   {
     for(usize i = 0; i < indices.size(); ++i)
     {
-      (*faces)[box * 36 + i] = box * 8 + indices[i];
+      (*facesPtr)[box * 36 + i] = box * 8 + indices[i];
     }
     for(usize i = 0; i < 12; ++i)
     {
-      (*labels)[box * 12 + i] = static_cast<int32>(box + 1);
+      (*labelsPtr)[box * 12 + i] = static_cast<int32>(box + 1);
     }
   }
   auto args = MakeSmallGridArguments();
-  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{7, 3, 3}));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(std::vector<uint64>{7, 3, 3}));
   RegularGridSampleSurfaceMeshFilter filter;
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_GeneratedFeatureIdsPath);
+  const auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(k_GeneratedFeatureIdsPath);
   // Cell centers are half-integers. Only the middle Y row of the middle Z slice intersects the inner box.
   const std::vector<int32> expected = {0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 2, 2,
                                        1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0};
@@ -691,19 +693,20 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Nested single label 
 
 TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Touching and overlapping single label boxes", "[SimplnxCore][RegularGridSampleSurfaceMeshFilter][L24]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
-  auto* geom = TriangleGeom::Create(dataStructure, k_TriGeomName);
-  auto* vertices = Float32Array::Create(dataStructure, "Vertices", DataStoreUtilities::CreateDataStore<float32>(dataStructure, k_TriGeomPath.createChildPath("Vertices"), {24}, {3}), geom->getId());
-  auto* faces = IGeometry::MeshIndexArrayType::Create(dataStructure, "Faces",
-                                                      DataStoreUtilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, k_TriGeomPath.createChildPath("Faces"), {36}, {3}), geom->getId());
-  geom->setVertices(*vertices);
-  geom->setFaceList(*faces);
-  auto* faceData = AttributeMatrix::Create(dataStructure, Constants::k_FaceData, ShapeType{36}, geom->getId());
-  geom->setFaceAttributeMatrix(*faceData);
-  auto* labels = Int32Array::Create(dataStructure, Constants::k_FaceLabels, DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_FaceLabelsPath, {36}, {1}), faceData->getId());
+  auto* geomPtr = TriangleGeom::Create(dataStructure, k_TriGeomName);
+  auto* verticesPtr =
+      Float32ArrayType::Create(dataStructure, "Vertices", data_store_utilities::CreateDataStore<float32>(dataStructure, k_TriGeomPath.createChildPath("Vertices"), {24}, {3}), geomPtr->getId());
+  auto* facesPtr = IGeometry::MeshIndexArrayType::Create(
+      dataStructure, "Faces", data_store_utilities::CreateDataStore<IGeometry::MeshIndexType>(dataStructure, k_TriGeomPath.createChildPath("Faces"), {36}, {3}), geomPtr->getId());
+  geomPtr->setVertices(*verticesPtr);
+  geomPtr->setFaceList(*facesPtr);
+  auto* faceDataPtr = AttributeMatrix::Create(dataStructure, constants::k_FaceData, ShapeType{36}, geomPtr->getId());
+  geomPtr->setFaceAttributeMatrix(*faceDataPtr);
+  auto* labelsPtr = Int32ArrayType::Create(dataStructure, constants::k_FaceLabels, data_store_utilities::CreateDataStore<int32>(dataStructure, k_FaceLabelsPath, {36}, {1}), faceDataPtr->getId());
   // All boxes have y in [0,1] and z in [0,3]. Each row samples y = z = 0.5.
-  std::array<std::array<float32, 3>, 3> boxes;
+  std::array<std::array<float32, 3>, 3> boxes{};
   std::vector<int32> expected;
   SECTION("Touching parts with B entry before A exit")
   {
@@ -727,23 +730,23 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter: Touching and overlap
     const std::array<float32, 24> c = {x0, 0, 0, x1, 0, 0, x1, 1, 0, x0, 1, 0, x0, 0, 3, x1, 0, 3, x1, 1, 3, x0, 1, 3};
     for(usize i = 0; i < 24; ++i)
     {
-      (*vertices)[b * 24 + i] = c[i];
+      (*verticesPtr)[b * 24 + i] = c[i];
     }
     for(usize i = 0; i < 36; ++i)
     {
-      (*faces)[b * 36 + i] = b * 8 + indices[i];
+      (*facesPtr)[b * 36 + i] = b * 8 + indices[i];
     }
     for(usize i = 0; i < 12; ++i)
     {
-      (*labels)[b * 12 + i] = static_cast<int32>(boxes[b][2]);
+      (*labelsPtr)[b * 12 + i] = static_cast<int32>(boxes[b][2]);
     }
   }
   auto args = MakeSmallGridArguments();
-  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64Parameter::ValueType>(std::vector<uint64>{static_cast<uint64>(expected.size()), 1, 1}));
+  args.insertOrAssign(RegularGridSampleSurfaceMeshFilter::k_Dimensions_Key, std::make_any<VectorUInt64ParameterType::ValueType>(std::vector<uint64>{static_cast<uint64>(expected.size()), 1, 1}));
   RegularGridSampleSurfaceMeshFilter filter;
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  const auto& featureIds = dataStructure.getDataRefAs<Int32Array>(k_GeneratedFeatureIdsPath);
+  const auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(k_GeneratedFeatureIdsPath);
   const std::vector<int32> actual(featureIds.begin(), featureIds.end());
   REQUIRE(actual == expected);
 }

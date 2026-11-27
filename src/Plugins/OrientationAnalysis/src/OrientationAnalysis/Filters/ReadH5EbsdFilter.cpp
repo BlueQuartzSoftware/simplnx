@@ -69,7 +69,7 @@ Parameters ReadH5EbsdFilter::parameters() const
                                                           ReadH5EbsdFileParameter::ValueType{}));
 
   params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
-  ImageIO::InsertGeometryOverrideParameters(params);
+  image_io::InsertGeometryOverrideParameters(params);
 
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedImageGeometryPath_Key, "Image Geometry", "The path to the created Image Geometry", DataPath({ImageGeom::k_TypeName})));
@@ -91,14 +91,14 @@ IFilter::VersionType ReadH5EbsdFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReadH5EbsdFilter::clone() const
+IFilter::UniquePointerType ReadH5EbsdFilter::clone() const
 {
   return std::make_unique<ReadH5EbsdFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                         const ExecutionContext& executionContext) const
+IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pReadH5EbsdFilterValue = filterArgs.value<ReadH5EbsdFileParameter::ValueType>(k_ReadH5EbsdParameter_Key);
   auto imageGeomPath = filterArgs.value<DataPath>(k_CreatedImageGeometryPath_Key);
@@ -110,99 +110,100 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
   std::vector<PreflightValue> preflightUpdatedValues;
 
   ebsdlib::H5EbsdVolumeReader::Pointer reader = ebsdlib::H5EbsdVolumeReader::New();
-  reader->setFileName(pReadH5EbsdFilterValue.inputFilePath);
+  reader->setFileName(pReadH5EbsdFilterValue.input_file_path);
   int32_t err = reader->readVolumeInfo();
   if(err < 0)
   {
     // This really should have been hit during the parameter validation... but just in case.
-    preflightUpdatedValues.push_back({"ERROR:", fmt::format("Could not read input file {}", pReadH5EbsdFilterValue.inputFilePath)});
-    return {MakeErrorResult<OutputActions>(-67500, fmt::format("Could not read input file '{}'", pReadH5EbsdFilterValue.inputFilePath)), std::move(preflightUpdatedValues)};
+    preflightUpdatedValues.push_back({"ERROR:", fmt::format("Could not read input file {}", pReadH5EbsdFilterValue.input_file_path)});
+    return {.output_actions = MakeErrorResult<OutputActions>(-67500, fmt::format("Could not read input file '{}'", pReadH5EbsdFilterValue.input_file_path)),
+            .output_values = std::move(preflightUpdatedValues)};
   }
 
   std::vector<int64_t> dims = {0, 0, 0};
   reader->getDims(dims.at(0), dims.at(1), dims.at(2));
 
   CreateImageGeometryAction::DimensionType imageGeomDims = {static_cast<size_t>(dims[0]), static_cast<size_t>(dims[1]),
-                                                            static_cast<size_t>(pReadH5EbsdFilterValue.endSlice - pReadH5EbsdFilterValue.startSlice + 1)};
+                                                            static_cast<size_t>(pReadH5EbsdFilterValue.end_slice - pReadH5EbsdFilterValue.start_slice + 1)};
   std::vector<size_t> tupleDims = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
 
   CreateImageGeometryAction::SpacingType spacing = {1.0F, 1.0F, 1.0F};
   reader->getSpacing(spacing.at(0), spacing.at(1), spacing.at(2));
 
   CreateImageGeometryAction::OriginType origin = {0.0F, 0.0F, 0.0F};
-  if(auto geometryResult = ImageIO::GeometryOverrides::FromArguments(filterArgs).apply(pReadH5EbsdFilterValue.inputFilePath, origin, spacing); geometryResult.invalid())
+  if(auto geometryResult = image_io::GeometryOverrides::FromArguments(filterArgs).apply(pReadH5EbsdFilterValue.input_file_path, origin, spacing); geometryResult.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(geometryResult))};
   }
 
   resultOutputActions.value().appendAction(std::make_unique<CreateImageGeometryAction>(imageGeomPath, imageGeomDims, origin, spacing, pCellAttributeMatrixNameValue));
 
-  ebsdlib::OEM m_Manufacturer = {ebsdlib::OEM::Unknown};
+  ebsdlib::OEM mManufacturer = {ebsdlib::OEM::Unknown};
   std::string manufacturer = reader->getManufacturer();
   if(manufacturer == ebsdlib::Ang::Manufacturer)
   {
-    m_Manufacturer = ebsdlib::OEM::EDAX;
+    mManufacturer = ebsdlib::OEM::EDAX;
   }
   else if(manufacturer == ebsdlib::Ctf::Manufacturer)
   {
-    m_Manufacturer = ebsdlib::OEM::Oxford;
+    mManufacturer = ebsdlib::OEM::Oxford;
   }
 
   std::vector<std::string> names;
-  if(m_Manufacturer == ebsdlib::OEM::EDAX)
+  if(mManufacturer == ebsdlib::OEM::EDAX)
   {
     ebsdlib::AngFields angFeatures;
     reader = ebsdlib::H5AngVolumeReader::New();
-    reader->setFileName(pReadH5EbsdFilterValue.inputFilePath);
+    reader->setFileName(pReadH5EbsdFilterValue.input_file_path);
     names = angFeatures.getFilterFeatures<std::vector<std::string>>();
 
-    EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::H5AngVolumeReader>(dynamic_cast<ebsdlib::H5AngVolumeReader&>(*reader.get()), preflightUpdatedValues, FloatVec3(spacing));
-    EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5AngVolumeReader>(dynamic_cast<ebsdlib::H5AngVolumeReader&>(*reader.get()), preflightUpdatedValues);
+    ebsd_reader_utilities::GeneratePreflightScanInformation<ebsdlib::H5AngVolumeReader>(dynamic_cast<ebsdlib::H5AngVolumeReader&>(*reader.get()), preflightUpdatedValues, FloatVec3Type(spacing));
+    ebsd_reader_utilities::GeneratePreflightPhaseInformation<ebsdlib::H5AngVolumeReader>(dynamic_cast<ebsdlib::H5AngVolumeReader&>(*reader.get()), preflightUpdatedValues);
   }
-  else if(m_Manufacturer == ebsdlib::OEM::Oxford)
+  else if(mManufacturer == ebsdlib::OEM::Oxford)
   {
     ebsdlib::CtfFields cfeatures;
     reader = ebsdlib::H5CtfVolumeReader::New();
-    reader->setFileName(pReadH5EbsdFilterValue.inputFilePath);
+    reader->setFileName(pReadH5EbsdFilterValue.input_file_path);
     names = cfeatures.getFilterFeatures<std::vector<std::string>>();
-    EbsdReaderUtilities::GeneratePreflightScanInformation<ebsdlib::H5CtfVolumeReader>(dynamic_cast<ebsdlib::H5CtfVolumeReader&>(*reader.get()), preflightUpdatedValues, FloatVec3(spacing));
-    EbsdReaderUtilities::GeneratePreflightPhaseInformation<ebsdlib::H5CtfVolumeReader>(dynamic_cast<ebsdlib::H5CtfVolumeReader&>(*reader.get()), preflightUpdatedValues);
+    ebsd_reader_utilities::GeneratePreflightScanInformation<ebsdlib::H5CtfVolumeReader>(dynamic_cast<ebsdlib::H5CtfVolumeReader&>(*reader.get()), preflightUpdatedValues, FloatVec3Type(spacing));
+    ebsd_reader_utilities::GeneratePreflightPhaseInformation<ebsdlib::H5CtfVolumeReader>(dynamic_cast<ebsdlib::H5CtfVolumeReader&>(*reader.get()), preflightUpdatedValues);
   }
   else
   {
-    return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+    return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
   }
 
-  std::set<std::string> m_SelectedArrayNames;
-  for(const auto& selectedArrayName : pReadH5EbsdFilterValue.selectedArrayNames)
+  std::set<std::string> mSelectedArrayNames;
+  for(const auto& selectedArrayName : pReadH5EbsdFilterValue.selected_array_names)
   {
-    m_SelectedArrayNames.insert(selectedArrayName);
+    mSelectedArrayNames.insert(selectedArrayName);
   }
 
   std::vector<size_t> cDims = {1ULL};
-  for(int32_t i = 0; i < names.size(); ++i)
+  for(const auto& name : names)
   {
     // First check to see if the name is in our list of names to read.
-    if(m_SelectedArrayNames.find(names[i]) == m_SelectedArrayNames.end())
+    if(mSelectedArrayNames.find(name) == mSelectedArrayNames.end())
     {
       continue;
     }
-    if(reader->getPointerType(names[i]) == ebsdlib::NumericTypes::Type::Int32)
+    if(reader->getPointerType(name) == ebsdlib::NumericTypes::Type::Int32)
     {
-      const DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(names[i]);
+      const DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(name);
       auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::int32, tupleDims, cDims, dataArrayPath);
       resultOutputActions.value().appendAction(std::move(action));
     }
-    else if(reader->getPointerType(names[i]) == ebsdlib::NumericTypes::Type::Float)
+    else if(reader->getPointerType(name) == ebsdlib::NumericTypes::Type::Float)
     {
-      const DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(names[i]);
+      const DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(name);
       auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, tupleDims, cDims, dataArrayPath);
       resultOutputActions.value().appendAction(std::move(action));
     }
   }
 
   // Only read these arrays if the user wants them
-  if(m_SelectedArrayNames.find(ebsdlib::CellData::EulerAngles) != m_SelectedArrayNames.end())
+  if(mSelectedArrayNames.find(ebsdlib::CellData::EulerAngles) != mSelectedArrayNames.end())
   {
     cDims[0] = 3;
     const DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(ebsdlib::CellData::EulerAngles);
@@ -211,7 +212,7 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
   }
 
   // Only read the phases if the user wants it.
-  if(m_SelectedArrayNames.find(ebsdlib::H5Ebsd::Phases) != m_SelectedArrayNames.end())
+  if(mSelectedArrayNames.find(ebsdlib::H5Ebsd::Phases) != mSelectedArrayNames.end())
   {
     cDims[0] = 1;
     const DataPath dataArrayPath = cellAttributeMatrixPath.createChildPath(ebsdlib::H5Ebsd::Phases);
@@ -224,9 +225,9 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
   tupleDims = {static_cast<size_t>(reader->getNumPhases() + 1)};
   if(tupleDims[0] == 0)
   {
-    return {MakeErrorResult<OutputActions>(-67501,
-                                           fmt::format("H5EBSD File: Number of phases is ZERO. This should not have happened. Please check the source data.", pReadH5EbsdFilterValue.inputFilePath)),
-            std::move(preflightUpdatedValues)};
+    return {.output_actions = MakeErrorResult<OutputActions>(
+                -67501, fmt::format("H5EBSD File: Number of phases is ZERO. This should not have happened. Please check the source data.", pReadH5EbsdFilterValue.input_file_path)),
+            .output_values = std::move(preflightUpdatedValues)};
   }
 
   // Create the Ensemble AttributeMatrix
@@ -236,48 +237,48 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& da
   }
 
   {
-    const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(ebsdlib::EnsembleData::CrystalStructures);
+    const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(nx::core::h5_ebsd_ensemble_data::k_CrystalStructures);
     auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::uint32, tupleDims, cDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
 
   {
-    const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(ebsdlib::EnsembleData::MaterialName);
+    const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(nx::core::h5_ebsd_ensemble_data::k_MaterialName);
     auto action = std::make_unique<CreateStringArrayAction>(tupleDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
 
   cDims[0] = 6;
   {
-    const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(ebsdlib::EnsembleData::LatticeConstants);
+    const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(nx::core::h5_ebsd_ensemble_data::k_LatticeConstants);
     auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, tupleDims, cDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
 
-  if(pReadH5EbsdFilterValue.useRecommendedTransform)
+  if(pReadH5EbsdFilterValue.use_recommended_transform)
   {
     auto sampleTransAngle = reader->getSampleTransformationAngle();
     if(sampleTransAngle > 0)
     {
       auto sampleTransAxis = reader->getSampleTransformationAxis();
       const std::vector<float32> rotAxisAngle = {sampleTransAxis[0], sampleTransAxis[1], sampleTransAxis[2], sampleTransAngle};
-      ImageRotationUtilities::Matrix4fR rotationMatrix = ImageRotationUtilities::GenerateRotationTransformationMatrix(rotAxisAngle);
+      image_rotation_utilities::Matrix4fRType rotationMatrix = image_rotation_utilities::GenerateRotationTransformationMatrix(rotAxisAngle);
       std::array<float32, 6> arr{
           origin[0], origin[1], origin[2], origin[0] + (imageGeomDims[0] * spacing[0]), origin[1] + (imageGeomDims[1] * spacing[1]), origin[2] + (imageGeomDims[2] * spacing[2])};
-      BoundingBox3Df boundingBox = BoundingBox3Df(arr);
-      auto minMaxCoords = ImageRotationUtilities::DetermineMinMaxCoords(boundingBox, rotationMatrix);
-      FloatVec3 transformedOrigin = {minMaxCoords[0], minMaxCoords[2], minMaxCoords[4]};
+      BoundingBox3DfType boundingBox = BoundingBox3DfType(arr);
+      auto minMaxCoords = image_rotation_utilities::DetermineMinMaxCoords(boundingBox, rotationMatrix);
+      FloatVec3Type transformedOrigin = {minMaxCoords[0], minMaxCoords[2], minMaxCoords[4]};
       resultOutputActions.value().appendAction(std::make_unique<UpdateImageGeomAction>(transformedOrigin, spacing, imageGeomPath));
     }
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReadH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ReadH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   /****************************************************************************
    * Extract the actual input values from the 'filterArgs' object
@@ -292,15 +293,15 @@ Result<> ReadH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Argum
    ***************************************************************************/
 
   ReadH5EbsdInputValues inputValues;
-  inputValues.inputFilePath = pReadH5EbsdFilterValue.inputFilePath;
-  inputValues.startSlice = pReadH5EbsdFilterValue.startSlice;
-  inputValues.endSlice = pReadH5EbsdFilterValue.endSlice;
-  inputValues.eulerRepresentation = pReadH5EbsdFilterValue.eulerRepresentation;
-  inputValues.hdf5DataPaths = pReadH5EbsdFilterValue.selectedArrayNames;
-  inputValues.useRecommendedTransform = pReadH5EbsdFilterValue.useRecommendedTransform;
-  inputValues.dataContainerPath = pDataContainerNameValue;
-  inputValues.cellAttributeMatrixPath = pDataContainerNameValue.createChildPath(pCellAttributeMatrixNameValue);
-  inputValues.cellEnsembleMatrixPath = pCellEnsembleAttributeMatrixNameValue;
+  inputValues.input_file_path = pReadH5EbsdFilterValue.input_file_path;
+  inputValues.start_slice = pReadH5EbsdFilterValue.start_slice;
+  inputValues.end_slice = pReadH5EbsdFilterValue.end_slice;
+  inputValues.euler_representation = pReadH5EbsdFilterValue.euler_representation;
+  inputValues.hdf5_data_paths = pReadH5EbsdFilterValue.selected_array_names;
+  inputValues.use_recommended_transform = pReadH5EbsdFilterValue.use_recommended_transform;
+  inputValues.data_container_path = pDataContainerNameValue;
+  inputValues.cell_attribute_matrix_path = pDataContainerNameValue.createChildPath(pCellAttributeMatrixNameValue);
+  inputValues.cell_ensemble_matrix_path = pCellEnsembleAttributeMatrixNameValue;
 
   ReadH5Ebsd readH5Ebsd(dataStructure, messageHandler, shouldCancel, &inputValues);
   return readH5Ebsd();
@@ -308,32 +309,32 @@ Result<> ReadH5EbsdFilter::executeImpl(DataStructure& dataStructure, const Argum
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_ReadH5EbsdKey = "ReadH5Ebsd";
-constexpr StringLiteral k_DataContainerNameKey = "DataContainerName";
-constexpr StringLiteral k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
-constexpr StringLiteral k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
-} // namespace SIMPL
+constexpr StringLiteralType k_ReadH5EbsdKey = "ReadH5Ebsd";
+constexpr StringLiteralType k_DataContainerNameKey = "DataContainerName";
+constexpr StringLiteralType k_CellAttributeMatrixNameKey = "CellAttributeMatrixName";
+constexpr StringLiteralType k_CellEnsembleAttributeMatrixNameKey = "CellEnsembleAttributeMatrixName";
+} // namespace simpl
 
-namespace SIMPLConversionCustom
+namespace simpl_conversion_custom
 {
 struct ReadH5EbsdFilterParameterConverter
 {
   using ParameterType = ReadH5EbsdFileParameter;
   using ValueType = ParameterType::ValueType;
 
-  static constexpr StringLiteral k_InputFileKey = "InputFile";
-  static constexpr StringLiteral k_SelectedArrayNamesKey = "SelectedArrayNames";
-  static constexpr StringLiteral k_ZStartIndexKey = "ZStartIndex";
-  static constexpr StringLiteral k_ZEndIndexKey = "ZEndIndex";
-  static constexpr StringLiteral k_RefFrameZDirKey = "RefFrameZDir";
-  static constexpr StringLiteral k_UseTransformationsKey = "UseTransformations";
+  static constexpr StringLiteralType k_InputFileKey = "InputFile";
+  static constexpr StringLiteralType k_SelectedArrayNamesKey = "SelectedArrayNames";
+  static constexpr StringLiteralType k_ZStartIndexKey = "ZStartIndex";
+  static constexpr StringLiteralType k_ZEndIndexKey = "ZEndIndex";
+  static constexpr StringLiteralType k_RefFrameZDirKey = "RefFrameZDir";
+  static constexpr StringLiteralType k_UseTransformationsKey = "UseTransformations";
 
-  static Result<ValueType> convert(const nlohmann::json& json)
+  static Result<ValueType> Convert(const nlohmann::json& json)
   {
-    static constexpr std::array<StringLiteral, 6> requiredKeys = {k_InputFileKey, k_SelectedArrayNamesKey, k_ZStartIndexKey, k_ZEndIndexKey, k_RefFrameZDirKey, k_UseTransformationsKey};
-    for(const auto& key : requiredKeys)
+    static constexpr std::array<StringLiteralType, 6> k_RequiredKeys = {k_InputFileKey, k_SelectedArrayNamesKey, k_ZStartIndexKey, k_ZEndIndexKey, k_RefFrameZDirKey, k_UseTransformationsKey};
+    for(const auto& key : k_RequiredKeys)
     {
       if(!json.contains(key.view()))
       {
@@ -375,17 +376,17 @@ struct ReadH5EbsdFilterParameterConverter
     }
 
     ParameterType::ValueType value;
-    value.inputFilePath = json[k_InputFileKey].get<std::string>();
-    value.startSlice = json[k_ZStartIndexKey].get<int32>();
-    value.endSlice = json[k_ZEndIndexKey].get<int32>();
-    value.eulerRepresentation = json[k_RefFrameZDirKey].get<int32>() - 1;
-    value.useRecommendedTransform = json[k_UseTransformationsKey].is_boolean() ? json[k_UseTransformationsKey].get<bool>() : static_cast<bool>(json[k_UseTransformationsKey].get<int32>());
-    value.selectedArrayNames = json[k_SelectedArrayNamesKey].get<std::vector<std::string>>();
+    value.input_file_path = json[k_InputFileKey].get<std::string>();
+    value.start_slice = json[k_ZStartIndexKey].get<int32>();
+    value.end_slice = json[k_ZEndIndexKey].get<int32>();
+    value.euler_representation = json[k_RefFrameZDirKey].get<int32>() - 1;
+    value.use_recommended_transform = json[k_UseTransformationsKey].is_boolean() ? json[k_UseTransformationsKey].get<bool>() : static_cast<bool>(json[k_UseTransformationsKey].get<int32>());
+    value.selected_array_names = json[k_SelectedArrayNamesKey].get<std::vector<std::string>>();
 
     return {std::move(value)};
   }
 };
-} // namespace SIMPLConversionCustom
+} // namespace simpl_conversion_custom
 } // namespace
 
 Result<Arguments> ReadH5EbsdFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -394,11 +395,11 @@ Result<Arguments> ReadH5EbsdFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversionCustom::ReadH5EbsdFilterParameterConverter>(args, json, SIMPL::k_ReadH5EbsdKey, k_ReadH5EbsdParameter_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DCPathBuilderFilterParameterConverter>(args, json, SIMPL::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion_custom::ReadH5EbsdFilterParameterConverter>(args, json, simpl::k_ReadH5EbsdKey, k_ReadH5EbsdParameter_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, k_CreatedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixNameKey, k_CellAttributeMatrixName_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

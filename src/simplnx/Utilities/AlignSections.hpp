@@ -57,7 +57,7 @@ public:
    * Cancellation returns a valid result. Arrays can contain a partially applied
    * alignment when cancellation occurs during transfer.
    */
-  Result<> execute(const SizeVec3& udims, const DataPath& imageGeometryPath);
+  Result<> execute(const SizeVec3Type& udims, const DataPath& imageGeometryPath);
 
   const std::atomic_bool& getCancel();
 
@@ -94,7 +94,7 @@ private:
   const IFilter::MessageHandler& m_MessageHandler;
   std::mutex m_MessageMutex;
   const IFilter::MessageHandler m_ThreadSafeMessageHandler;
-  mutable std::mutex m_ProgressMessage_Mutex;
+  mutable std::mutex m_ProgressMessageMutex;
   ThrottledMessageHandler m_Throttle;
 };
 

@@ -4,44 +4,44 @@
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 
+#include <cmath>
+
 #include <Eigen/Dense>
 
 #include <array>
 
-namespace nx::core
-{
-namespace IntersectionUtilities
+namespace nx::core::intersection_utilities
 {
 inline constexpr float k_Epsilon = 1e-8;
-inline constexpr uint32_t width = 310;
-inline constexpr uint32_t height = 150;
+inline constexpr uint32_t k_Width = 310;
+inline constexpr uint32_t k_Height = 150;
 
 /**
  *@brief Bilinear Interpolator implements function to execute a 2D interpolation
  */
-using Vec3f = nx::core::Vec3<float>;
+using Vec3fType = nx::core::Vec3<float>;
 
-inline float deg2rad(float deg)
+inline float Deg2rad(float deg)
 {
-  return deg * nx::core::Constants::k_PiOver180<float>;
+  return deg * nx::core::constants::k_PiOver180<float>;
 }
 
-inline float clamp(float lo, float hi, float v)
+inline float Clamp(float lo, float hi, float v)
 {
   return std::max(lo, std::min(hi, v));
 }
 
 inline std::array<float, 6> GetBoundingBoxAtTri(nx::core::TriangleGeom& tri, size_t triId)
 {
-  nx::core::IGeometry::SharedTriList& triList = tri.getFacesRef();
+  nx::core::IGeometry::SharedTriListType& triList = tri.getFacesRef();
   // nx::core::IGeometry::SharedVertexList& vertList = tri.getVerticesRef();
 
   // nx::core::uint64* Tri = &triList[triId];
-  std::array<nx::core::Point3Df, 3> triCoords;
+  std::array<nx::core::FloatVec3Type, 3> triCoords;
   tri.getFaceCoordinates(triId, triCoords);
-  nx::core::Point3Df vert1 = triCoords[0];
-  nx::core::Point3Df vert2 = triCoords[1];
-  nx::core::Point3Df vert3 = triCoords[2];
+  nx::core::FloatVec3Type vert1 = triCoords[0];
+  nx::core::FloatVec3Type vert2 = triCoords[1];
+  nx::core::FloatVec3Type vert3 = triCoords[2];
   // nx::core::float32* vert1 = &vertList[Tri[0] * 3];
   // nx::core::float32* vert2 = &vertList[Tri[1]*3+1];
   // nx::core::float32* vert3 = &vertList[Tri[2]*3+2];
@@ -65,30 +65,30 @@ inline std::array<float, 6> GetBoundingBoxAtTri(nx::core::TriangleGeom& tri, siz
  * @param v v part of Barycentric Coord
  * @return
  */
-inline bool RayTriangleIntersect(const Vec3f& rayOrigin, const Vec3f& rayDirection, const Vec3f& v0, const Vec3f& v1, const Vec3f& v2, Vec3f& barycentricCoord)
+inline bool RayTriangleIntersect(const Vec3fType& rayOrigin, const Vec3fType& rayDirection, const Vec3fType& v0, const Vec3fType& v1, const Vec3fType& v2, Vec3fType& barycentricCoord)
 {
   // compute plane's normal
-  Vec3f v0v1 = v1 - v0;
-  Vec3f v0v2 = v2 - v0;
+  Vec3fType v0v1 = v1 - v0;
+  Vec3fType v0v2 = v2 - v0;
   // no need to normalize
-  Vec3f N = v0v1.cross(v0v2); // N
-  float denom = N.dot(N);
+  Vec3fType n = v0v1.cross(v0v2); // N
+  float denom = n.dot(n);
 
   // Step 1: finding P
 
   // check if ray and plane are parallel ?
-  float NdotRayDirection = N.dot(rayDirection);
+  float ndotRayDirection = n.dot(rayDirection);
 
-  if(fabs(NdotRayDirection) < k_Epsilon) // almost 0
+  if(std::fabs(ndotRayDirection) < k_Epsilon) // almost 0
   {
     return false;
   } // they are parallel so they don't intersect !
 
   // compute d parameter using equation 2
-  float d = -N.dot(v0);
+  float d = -n.dot(v0);
 
   // compute t (equation 3)
-  barycentricCoord[2] = -(N.dot(rayOrigin) + d) / NdotRayDirection;
+  barycentricCoord[2] = -(n.dot(rayOrigin) + d) / ndotRayDirection;
 
   // check if the triangle is in behind the ray
   if(barycentricCoord[2] < 0)
@@ -97,34 +97,34 @@ inline bool RayTriangleIntersect(const Vec3f& rayOrigin, const Vec3f& rayDirecti
   } // the triangle is behind
 
   // compute the intersection point using equation 1
-  Vec3f P = rayOrigin + (rayDirection * barycentricCoord[2]);
+  Vec3fType p = rayOrigin + (rayDirection * barycentricCoord[2]);
 
   // Step 2: inside-outside test
-  Vec3f C; // vector perpendicular to triangle's plane
+  Vec3fType c; // vector perpendicular to triangle's plane
 
   // edge 0
-  Vec3f edge0 = v1 - v0;
-  Vec3f vp0 = P - v0;
-  C = edge0.cross(vp0);
-  if(N.dot(C) < 0)
+  Vec3fType edge0 = v1 - v0;
+  Vec3fType vp0 = p - v0;
+  c = edge0.cross(vp0);
+  if(n.dot(c) < 0)
   {
     return false;
   } // P is on the right side
 
   // edge 1
-  Vec3f edge1 = v2 - v1;
-  Vec3f vp1 = P - v1;
-  C = edge1.cross(vp1);
-  if((barycentricCoord[0] = N.dot(C)) < 0)
+  Vec3fType edge1 = v2 - v1;
+  Vec3fType vp1 = p - v1;
+  c = edge1.cross(vp1);
+  if((barycentricCoord[0] = n.dot(c)) < 0)
   {
     return false;
   } // P is on the right side
 
   // edge 2
-  Vec3f edge2 = v0 - v2;
-  Vec3f vp2 = P - v2;
-  C = edge2.cross(vp2);
-  if((barycentricCoord[1] = N.dot(C)) < 0)
+  Vec3fType edge2 = v0 - v2;
+  Vec3fType vp2 = p - v2;
+  c = edge2.cross(vp2);
+  if((barycentricCoord[1] = n.dot(c)) < 0)
   {
     return false; // P is on the right side;
   }
@@ -150,10 +150,15 @@ inline bool RayTriangleIntersect(const Vec3f& rayOrigin, const Vec3f& rayDirecti
  * @param v part of Barycentric Coord
  * @return If the point is within the triangle
  */
-inline bool RayTriangleIntersect2(const Vec3f& orig, const Vec3f& dir, const Vec3f& vert0, const Vec3f& vert1, const Vec3f& vert2, Vec3f& bcoord)
+inline bool RayTriangleIntersect2(const Vec3fType& orig, const Vec3fType& dir, const Vec3fType& vert0, const Vec3fType& vert1, const Vec3fType& vert2, Vec3fType& bcoord)
 {
-  Vec3f edge1, edge2, tvec, pvec, qvec;
-  double det, inv_det;
+  Vec3fType edge1;
+  Vec3fType edge2;
+  Vec3fType tvec;
+  Vec3fType pvec;
+  Vec3fType qvec;
+  double det = NAN;
+  double invDet = NAN;
 
   /* find vectors for two edges sharing vert0 */
   edge1 = vert1 - vert0;
@@ -168,7 +173,7 @@ inline bool RayTriangleIntersect2(const Vec3f& orig, const Vec3f& dir, const Vec
   /* calculate distance from vert0 to ray origin */
   tvec = orig - vert0;
 
-  inv_det = 1.0 / det;
+  invDet = 1.0 / det;
 
   qvec = tvec.cross(edge1);
 
@@ -210,8 +215,8 @@ inline bool RayTriangleIntersect2(const Vec3f& orig, const Vec3f& dir, const Vec
   } /* ray is parallel to the plane of the triangle */
 
   // float t = edge2.dotProduct(qvec) * inv_det;
-  float u = bcoord[0] * inv_det;
-  float v = bcoord[1] * inv_det;
+  float u = bcoord[0] * invDet;
+  float v = bcoord[1] * invDet;
 
   bcoord[0] = 1 - u - v;
   bcoord[1] = u;
@@ -225,37 +230,37 @@ inline bool RayTriangleIntersect2(const Vec3f& orig, const Vec3f& dir, const Vec
 template <typename T>
 struct MTPointsCache
 {
-  using PointT = Eigen::Vector3<T>;
+  using PointType = Eigen::Vector3<T>;
 
   // Ray origin
-  PointT origin;
+  PointType origin;
 
   // Triangle Vertices
-  PointT pointA;
-  PointT pointB;
-  PointT pointC;
+  PointType point_a;
+  PointType point_b;
+  PointType point_c;
 
   // Specific edges
   // edge1 = pointB - pointA;
-  PointT edge1;
+  PointType edge1;
   // edge2 = pointC - pointA;
-  PointT edge2;
+  PointType edge2;
 
   // Pre-calculations
   // sDist = origin - pointA;
-  PointT sDist;
+  PointType s_dist;
   // sCrossE1 = sDist.cross(edge1);
-  PointT sCrossE1;
+  PointType s_cross_e1;
 };
 
 // Eigen implementation of Moller-Trumbore intersection algorithm adapted to account for distance (Cached)
 template <typename T>
 std::optional<Eigen::Vector3<T>> MTIntersection(const Eigen::Vector3<T>& dirVec, const MTPointsCache<T>& cache)
 {
-  using PointT = Eigen::Vector3<T>;
+  using PointTType = Eigen::Vector3<T>;
   constexpr T epsilon = std::numeric_limits<T>::epsilon();
 
-  PointT crossE2 = dirVec.cross(cache.edge2);
+  PointTType crossE2 = dirVec.cross(cache.edge2);
   T determinant = cache.edge1.dot(crossE2);
 
   if(determinant > -epsilon && determinant < epsilon)
@@ -265,7 +270,7 @@ std::optional<Eigen::Vector3<T>> MTIntersection(const Eigen::Vector3<T>& dirVec,
   }
 
   T invDet = 1.0 / determinant;
-  T uCoff = invDet * cache.sDist.dot(crossE2);
+  T uCoff = invDet * cache.s_dist.dot(crossE2);
 
   // Allow ADL for efficient absolute value function
   using std::abs;
@@ -275,7 +280,7 @@ std::optional<Eigen::Vector3<T>> MTIntersection(const Eigen::Vector3<T>& dirVec,
     return {};
   }
 
-  T vCoff = invDet * dirVec.dot(cache.sCrossE1);
+  T vCoff = invDet * dirVec.dot(cache.s_cross_e1);
 
   if((vCoff < 0 && abs(vCoff) > epsilon) || (uCoff + vCoff > 1 && abs(uCoff + vCoff - 1.0) > epsilon))
   {
@@ -283,7 +288,7 @@ std::optional<Eigen::Vector3<T>> MTIntersection(const Eigen::Vector3<T>& dirVec,
     return {};
   }
 
-  T tCoff = invDet * cache.edge2.dot(cache.sCrossE1);
+  T tCoff = invDet * cache.edge2.dot(cache.s_cross_e1);
 
   if(tCoff > epsilon)
   {
@@ -300,13 +305,13 @@ template <typename T>
 std::optional<Eigen::Vector3<T>> MTIntersection(const Eigen::Vector3<T>& origin, const Eigen::Vector3<T>& dirVec, const Eigen::Vector3<T>& pointA, const Eigen::Vector3<T>& pointB,
                                                 const Eigen::Vector3<T>& pointC)
 {
-  using PointT = Eigen::Vector3<T>;
+  using PointTType = Eigen::Vector3<T>;
   constexpr T epsilon = std::numeric_limits<T>::epsilon();
 
-  PointT edge1 = pointB - pointA;
-  PointT edge2 = pointC - pointA;
+  PointTType edge1 = pointB - pointA;
+  PointTType edge2 = pointC - pointA;
 
-  PointT crossE2 = dirVec.cross(edge2);
+  PointTType crossE2 = dirVec.cross(edge2);
   T determinant = edge1.dot(crossE2);
 
   if(determinant > -epsilon && determinant < epsilon)
@@ -315,7 +320,7 @@ std::optional<Eigen::Vector3<T>> MTIntersection(const Eigen::Vector3<T>& origin,
     return {};
   }
 
-  PointT sDist = origin - pointA;
+  PointTType sDist = origin - pointA;
 
   T invDet = 1.0 / determinant;
   T uCoff = invDet * sDist.dot(crossE2);
@@ -328,7 +333,7 @@ std::optional<Eigen::Vector3<T>> MTIntersection(const Eigen::Vector3<T>& origin,
     return {};
   }
 
-  PointT sCrossE1 = sDist.cross(edge1);
+  PointTType sCrossE1 = sDist.cross(edge1);
 
   T vCoff = invDet * dirVec.dot(sCrossE1);
 
@@ -392,9 +397,9 @@ bool SphereIntersectsRectangularPrism(const std::array<T, 3>& sphereCenter, T ra
 
   if(outMinX || outMinY || outMinZ || outMaxX || outMaxY || outMaxZ)
   {
-    float32 xPoint;
-    float32 yPoint;
-    float32 zPoint;
+    float32 xPoint = NAN;
+    float32 yPoint = NAN;
+    float32 zPoint = NAN;
     if(outMinX && outMinY && outMinZ)
     {
       // Center is in C; Checking if point falls in sphere
@@ -522,6 +527,4 @@ bool SphereIntersectsRectangularPrism(const std::array<T, 3>& sphereCenter, T ra
   return true;
 }
 
-} // namespace IntersectionUtilities
-
-} // namespace nx::core
+} // namespace nx::core::intersection_utilities

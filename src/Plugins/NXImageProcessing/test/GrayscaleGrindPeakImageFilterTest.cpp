@@ -19,39 +19,40 @@ namespace rt = recon_test;
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: hand-computed interior grind vs border region", "[NXImageProcessing][GrayscaleGrindPeakImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize DX = 7;
-  constexpr usize DY = 7;
-  constexpr usize DZ = 1;
-  constexpr int32 field = 50;
-  constexpr int32 peak = 90;
+  constexpr usize k_Dx = 7;
+  constexpr usize k_Dy = 7;
+  constexpr usize k_Dz = 1;
+  constexpr int32 k_Field = 50;
+  constexpr int32 k_Peak = 90;
 
-  std::vector<int32> pattern(DX * DY * DZ, field);
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, k_Field);
   // Isolated interior peak (all four face-neighbors are dark field) -> a regional maximum not connected to the
   // border -> must be GROUND DOWN to the surrounding level (50).
-  pattern[rt::FlatIndex(3, 3, 0, DX, DY)] = peak;
+  pattern[rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)] = k_Peak;
   // A bright 2x2 region anchored at the (0,0) corner. Voxels (0,0),(1,0),(0,1) are on the 2D border; (1,1) is a
   // non-border voxel but is connected to the border through the bright region -> the whole region is NOT ground.
-  pattern[rt::FlatIndex(0, 0, 0, DX, DY)] = peak;
-  pattern[rt::FlatIndex(1, 0, 0, DX, DY)] = peak;
-  pattern[rt::FlatIndex(0, 1, 0, DX, DY)] = peak;
-  pattern[rt::FlatIndex(1, 1, 0, DX, DY)] = peak;
+  pattern[rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)] = k_Peak;
+  pattern[rt::FlatIndex(1, 0, 0, k_Dx, k_Dy)] = k_Peak;
+  pattern[rt::FlatIndex(0, 1, 0, k_Dx, k_Dy)] = k_Peak;
+  pattern[rt::FlatIndex(1, 1, 0, k_Dx, k_Dy)] = k_Peak;
 
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
 
   GrayscaleGrindPeakImageFilter filter;
-  rt::RunReconstructionFilter<GrayscaleGrindPeakImageFilter>(filter, ds, inputPath, rt::FullyConnectedParamSetter<GrayscaleGrindPeakImageFilter>(), /*fullyConnected=*/false, /*height=*/0.0);
+  rt::RunReconstructionFilter<GrayscaleGrindPeakImageFilter>(filter, dataStructure, inputPath, rt::FullyConnectedParamSetter<GrayscaleGrindPeakImageFilter>(), /*fullyConnected=*/false,
+                                                             /*height=*/0.0);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<int32>>(outputPath).getDataStoreRef();
 
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, DX, DY)) == field); // interior peak ground down
-  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, DX, DY)) == peak);  // border voxel of the border region
-  REQUIRE(outStore.getValue(rt::FlatIndex(1, 1, 0, DX, DY)) == peak);  // non-border voxel of the border region, still not ground
-  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, DX, DY)) == field); // untouched field voxel
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Field); // interior peak ground down
+  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)) == k_Peak);  // border voxel of the border region
+  REQUIRE(outStore.getValue(rt::FlatIndex(1, 1, 0, k_Dx, k_Dy)) == k_Peak);  // non-border voxel of the border region, still not ground
+  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, k_Dx, k_Dy)) == k_Field); // untouched field voxel
 }
 
 // -----------------------------------------------------------------------------
@@ -64,26 +65,28 @@ TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: hand-computed inter
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: hand-computed interior grind vs border region (both algorithm paths)", "[NXImageProcessing][GrayscaleGrindPeakImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  constexpr usize DX = 7, DY = 7, DZ = 1;
-  constexpr int32 field = 50;
-  constexpr int32 peak = 90;
-  std::vector<int32> pattern(DX * DY * DZ, field);
-  pattern[rt::FlatIndex(3, 3, 0, DX, DY)] = peak; // isolated interior peak -> ground down
+  constexpr usize k_Dx = 7;
+  constexpr usize k_Dy = 7;
+  constexpr usize k_Dz = 1;
+  constexpr int32 k_Field = 50;
+  constexpr int32 k_Peak = 90;
+  std::vector<int32> pattern(k_Dx * k_Dy * k_Dz, k_Field);
+  pattern[rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)] = k_Peak; // isolated interior peak -> ground down
   // A bright 2x2 region anchored at the (0,0) corner: connected to the border through the bright region -> NOT ground.
-  pattern[rt::FlatIndex(0, 0, 0, DX, DY)] = peak;
-  pattern[rt::FlatIndex(1, 0, 0, DX, DY)] = peak;
-  pattern[rt::FlatIndex(0, 1, 0, DX, DY)] = peak;
-  pattern[rt::FlatIndex(1, 1, 0, DX, DY)] = peak;
+  pattern[rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)] = k_Peak;
+  pattern[rt::FlatIndex(1, 0, 0, k_Dx, k_Dy)] = k_Peak;
+  pattern[rt::FlatIndex(0, 1, 0, k_Dx, k_Dy)] = k_Peak;
+  pattern[rt::FlatIndex(1, 1, 0, k_Dx, k_Dy)] = k_Peak;
 
-  DataStructure ds;
-  const DataPath inputPath = rt::BuildImageFromPattern<int32>(ds, DX, DY, DZ, pattern);
-  scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
+  DataStructure dataStructure;
+  const DataPath inputPath = rt::BuildImageFromPattern<int32>(dataStructure, k_Dx, k_Dy, k_Dz, pattern);
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
 
   GrayscaleGrindPeakImageFilter filter;
   Arguments args;
@@ -92,18 +95,18 @@ TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: hand-computed inter
   args.insertOrAssign(GrayscaleGrindPeakImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   rt::FullyConnectedParamSetter<GrayscaleGrindPeakImageFilter>()(args, /*fullyConnected=*/false, /*height=*/0.0);
 
-  auto executeResult = scope.executeFilter(filter, ds, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  auto& outArray = ds.getDataRefAs<DataArray<int32>>(outputPath);
+  auto& outArray = dataStructure.getDataRefAs<DataArray<int32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
-  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, DX, DY)) == field); // interior peak ground down
-  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, DX, DY)) == peak);  // border voxel of the border region
-  REQUIRE(outStore.getValue(rt::FlatIndex(1, 1, 0, DX, DY)) == peak);  // non-border voxel of the border region, still not ground
-  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, DX, DY)) == field); // untouched field voxel
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  REQUIRE(outStore.getValue(rt::FlatIndex(3, 3, 0, k_Dx, k_Dy)) == k_Field); // interior peak ground down
+  REQUIRE(outStore.getValue(rt::FlatIndex(0, 0, 0, k_Dx, k_Dy)) == k_Peak);  // border voxel of the border region
+  REQUIRE(outStore.getValue(rt::FlatIndex(1, 1, 0, k_Dx, k_Dy)) == k_Peak);  // non-border voxel of the border region, still not ground
+  REQUIRE(outStore.getValue(rt::FlatIndex(5, 5, 0, k_Dx, k_Dy)) == k_Field); // untouched field voxel
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------
@@ -112,8 +115,8 @@ TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: hand-computed inter
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: Preflight scalar guard", "[NXImageProcessing][GrayscaleGrindPeakImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   GrayscaleGrindPeakImageFilter filter;
 
@@ -128,24 +131,24 @@ TEST_CASE("NXImageProcessing::GrayscaleGrindPeakImageFilter: Preflight scalar gu
 
   SECTION("scalar input preflights cleanly")
   {
-    DataStructure ds;
-    const DataPath inputPath = rt::BuildPeakImage<uint8>(ds, 8, 8, 8, uint8{40}, uint8{220});
-    auto result = filter.preflight(ds, makeArgs(inputPath));
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    DataStructure dataStructure;
+    const DataPath inputPath = rt::BuildPeakImage<uint8>(dataStructure, 8, 8, 8, uint8{40}, uint8{220});
+    auto result = filter.preflight(dataStructure, makeArgs(inputPath));
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
 
   SECTION("multi-component input is rejected")
   {
-    DataStructure ds;
-    const DataPath scalarPath = rt::BuildPeakImage<uint8>(ds, 8, 8, 8, uint8{40}, uint8{220}); // creates the geometry + CellData
+    DataStructure dataStructure;
+    const DataPath scalarPath = rt::BuildPeakImage<uint8>(dataStructure, 8, 8, 8, uint8{40}, uint8{220}); // creates the geometry + CellData
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<uint8>(ds, vecPath, {8, 8, 8}, {2});
-    const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
-    DataArray<uint8>::Create(ds, "Vec", vecStore, cellAM.getId());
+    auto vecStore = data_store_utilities::CreateDataStore<uint8>(dataStructure, vecPath, {8, 8, 8}, {2});
+    const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
+    DataArray<uint8>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
 
-    auto result = filter.preflight(ds, makeArgs(vecPath));
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    auto result = filter.preflight(dataStructure, makeArgs(vecPath));
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
 }
 

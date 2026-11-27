@@ -59,12 +59,13 @@ void SubtractMorphologyPlaneRows(const T* originalPlane, T* morphologyPlane, usi
   assert(outputMode != MorphologyCompositeOutputMode::Morphology);
   for(usize y = yBegin; y < yEnd; ++y)
   {
-    const T* originalRow = originalPlane + (cropY + y) * originalStride + cropX;
-    T* morphologyRow = morphologyPlane + y * outputWidth;
+    const T* originalRowPtr = originalPlane + (cropY + y) * originalStride + cropX;
+    T* morphologyRowPtr = morphologyPlane + y * outputWidth;
     for(usize x = 0; x < outputWidth; ++x)
     {
-      const T originalValue = originalRow[x];
-      morphologyRow[x] = outputMode == MorphologyCompositeOutputMode::OriginalMinusMorphology ? static_cast<T>(originalValue - morphologyRow[x]) : static_cast<T>(morphologyRow[x] - originalValue);
+      const T originalValue = originalRowPtr[x];
+      morphologyRowPtr[x] =
+          outputMode == MorphologyCompositeOutputMode::OriginalMinusMorphology ? static_cast<T>(originalValue - morphologyRowPtr[x]) : static_cast<T>(morphologyRowPtr[x] - originalValue);
     }
   }
 }
@@ -89,8 +90,8 @@ constexpr T MorphologyGradientDifference(T maximum, T minimum) noexcept
   }
   else
   {
-    using UnsignedT = std::make_unsigned_t<T>;
-    const UnsignedT difference = static_cast<UnsignedT>(static_cast<UnsignedT>(maximum) - static_cast<UnsignedT>(minimum));
+    using UnsignedTType = std::make_unsigned_t<T>;
+    const UnsignedTType difference = static_cast<UnsignedTType>(static_cast<UnsignedTType>(maximum) - static_cast<UnsignedTType>(minimum));
     if constexpr(std::is_signed_v<T>)
     {
       return std::bit_cast<T>(difference);
@@ -108,15 +109,15 @@ constexpr T MorphologyGradientDifference(T maximum, T minimum) noexcept
  * @param kernel Rasterized offsets.
  * @return True if every computed delta and its sum with a volume-sized base fit int64.
  */
-inline bool MorphologyFlatFoldIsRepresentable(const SizeVec3& dims, const StructuringElement& kernel)
+inline bool MorphologyFlatFoldIsRepresentable(const SizeVec3Type& dims, const StructuringElement& kernel)
 {
-  constexpr uint64 signedMax = static_cast<uint64>(std::numeric_limits<int64>::max());
-  if(dims[0] > signedMax || dims[1] > signedMax || dims[2] > signedMax || (dims[0] != 0 && dims[1] > signedMax / dims[0]))
+  constexpr uint64 k_SignedMax = static_cast<uint64>(std::numeric_limits<int64>::max());
+  if(dims[0] > k_SignedMax || dims[1] > k_SignedMax || dims[2] > k_SignedMax || (dims[0] != 0 && dims[1] > k_SignedMax / dims[0]))
   {
     return false;
   }
   const uint64 slice = static_cast<uint64>(dims[0]) * dims[1];
-  if(slice != 0 && dims[2] > signedMax / slice)
+  if(slice != 0 && dims[2] > k_SignedMax / slice)
   {
     return false;
   }
@@ -130,7 +131,7 @@ inline bool MorphologyFlatFoldIsRepresentable(const SizeVec3& dims, const Struct
     {
       const usize axis = 2 - step;
       const uint64 magnitude = static_cast<uint64>(values.at(axis) < 0 ? -values.at(axis) : values.at(axis));
-      if(magnitude != 0 && strides.at(axis) > signedMax / magnitude)
+      if(magnitude != 0 && strides.at(axis) > k_SignedMax / magnitude)
       {
         return false;
       }
@@ -142,7 +143,7 @@ inline bool MorphologyFlatFoldIsRepresentable(const SizeVec3& dims, const Struct
       delta += product;
     }
     const uint64 magnitude = delta < 0 ? static_cast<uint64>(-(delta + 1)) + 1 : static_cast<uint64>(delta);
-    if(magnitude > signedMax - volume)
+    if(magnitude > k_SignedMax - volume)
     {
       return false;
     }
@@ -150,20 +151,20 @@ inline bool MorphologyFlatFoldIsRepresentable(const SizeVec3& dims, const Struct
   return true;
 }
 
-inline bool ShouldUseMorphologyResidentFlatFold(const SizeVec3& dims, const StructuringElement& se)
+inline bool ShouldUseMorphologyResidentFlatFold(const SizeVec3Type& dims, const StructuringElement& se)
 {
   // Larger kernels use the moving histogram, whose work scales with the entering and leaving boundary.
   return dims[2] > 1 && !se.offsets.empty() && se.offsets.size() <= k_MaxMorphologyResidentFlatFoldOffsets && MorphologyFlatFoldIsRepresentable(dims, se);
 }
 
-inline std::array<usize, 3> MorphologySafeBorderPadRadius(const StructuringElement& se, const SizeVec3& dims)
+inline std::array<usize, 3> MorphologySafeBorderPadRadius(const StructuringElement& se, const SizeVec3Type& dims)
 {
   const std::array<usize, 3> radius = {se.radius[0] > 0 ? static_cast<usize>(se.radius[0]) : usize{0}, se.radius[1] > 0 ? static_cast<usize>(se.radius[1]) : usize{0},
                                        se.radius[2] > 0 ? static_cast<usize>(se.radius[2]) : usize{0}};
   return {radius[0], radius[1], dims[2] == 1 ? usize{0} : radius[2]};
 }
 
-inline usize MorphologyCompositePipelineRadiusZ(const StructuringElement& se, const SizeVec3& dims)
+inline usize MorphologyCompositePipelineRadiusZ(const StructuringElement& se, const SizeVec3Type& dims)
 {
   return dims[2] == 1 ? usize{0} : (se.radius[2] > 0 ? static_cast<usize>(se.radius[2]) : usize{0});
 }
@@ -171,11 +172,11 @@ inline usize MorphologyCompositePipelineRadiusZ(const StructuringElement& se, co
 struct MorphologyResidentMemoryAllocation
 {
   CacheMemoryBudgetManager::WorkingMemoryReservation reservation;
-  usize requiredBytes = 0;
+  usize required_bytes = 0;
 
   [[nodiscard]] bool holdsCompleteState() const noexcept
   {
-    return requiredBytes > 0 && reservation.sizeBytes() == requiredBytes;
+    return required_bytes > 0 && reservation.sizeBytes() == required_bytes;
   }
 };
 
@@ -190,7 +191,7 @@ inline bool TryMultiplyMorphologySize(usize left, usize right, usize& product)
 }
 
 template <class T>
-Result<usize> CalculateMorphologyResidentWorkingMemoryBytes(const SizeVec3& dims)
+Result<usize> CalculateMorphologyResidentWorkingMemoryBytes(const SizeVec3Type& dims)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -204,13 +205,13 @@ Result<usize> CalculateMorphologyResidentWorkingMemoryBytes(const SizeVec3& dims
      !TryMultiplyMorphologySize(volumeBytes, usize{2}, requiredBytes))
   {
     return MakeErrorResult<usize>(-8656, fmt::format("Morphology dimensions ({}) overflow while sizing resident input and output working memory. Input element bytes: {}.",
-                                                     StringUtilities::formatDimensions3D(dims), sizeof(T)));
+                                                     string_utilities::FormatDimensions3D(dims), sizeof(T)));
   }
   return {requiredBytes};
 }
 
 template <class T>
-Result<MorphologyResidentMemoryAllocation> ReserveMorphologyResidentWorkingMemory(const SizeVec3& dims)
+Result<MorphologyResidentMemoryAllocation> ReserveMorphologyResidentWorkingMemory(const SizeVec3Type& dims)
 {
   auto requiredResult = CalculateMorphologyResidentWorkingMemoryBytes<T>(dims);
   if(requiredResult.invalid())
@@ -223,10 +224,10 @@ Result<MorphologyResidentMemoryAllocation> ReserveMorphologyResidentWorkingMemor
 
 struct MorphologySlabPlan
 {
-  usize sliceValues = 0;
-  usize volumeValues = 0;
-  usize outputBatchDepth = 0;
-  usize maxInputDepth = 0;
+  usize slice_values = 0;
+  usize volume_values = 0;
+  usize output_batch_depth = 0;
+  usize max_input_depth = 0;
 };
 
 /**
@@ -239,7 +240,7 @@ struct MorphologySlabPlan
  * full-depth input slab.
  */
 template <class T>
-Result<> MakeMorphologySlabPlan(const AbstractDataStore<T>& in, const AbstractDataStore<T>& out, const SizeVec3& dims, usize radiusZ, usize targetBytes, MorphologySlabPlan& plan)
+Result<> MakeMorphologySlabPlan(const AbstractDataStore<T>& in, const AbstractDataStore<T>& out, const SizeVec3Type& dims, usize radiusZ, usize targetBytes, MorphologySlabPlan& plan)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -260,23 +261,23 @@ Result<> MakeMorphologySlabPlan(const AbstractDataStore<T>& in, const AbstractDa
     product = left * right;
     return true;
   };
-  if(!checkedMultiply(dims[0], dims[1], plan.sliceValues) || !checkedMultiply(plan.sliceValues, dims[2], plan.volumeValues))
+  if(!checkedMultiply(dims[0], dims[1], plan.slice_values) || !checkedMultiply(plan.slice_values, dims[2], plan.volume_values))
   {
     return MakeErrorResult(-8651, fmt::format("Morphology image dimensions overflow the addressable value count. Dimensions: {} x {} x {}.", dims[0], dims[1], dims[2]));
   }
-  if(in.getSize() != plan.volumeValues)
+  if(in.getSize() != plan.volume_values)
   {
     return MakeErrorResult(
-        -8652, fmt::format("Morphology input store size ({}) does not match the expected image volume ({}) for dimensions {} x {} x {}.", in.getSize(), plan.volumeValues, dims[0], dims[1], dims[2]));
+        -8652, fmt::format("Morphology input store size ({}) does not match the expected image volume ({}) for dimensions {} x {} x {}.", in.getSize(), plan.volume_values, dims[0], dims[1], dims[2]));
   }
-  if(out.getSize() != plan.volumeValues)
+  if(out.getSize() != plan.volume_values)
   {
-    return MakeErrorResult(-8653, fmt::format("Morphology output store size ({}) does not match the expected image volume ({}) for dimensions {} x {} x {}.", out.getSize(), plan.volumeValues, dims[0],
-                                              dims[1], dims[2]));
+    return MakeErrorResult(-8653, fmt::format("Morphology output store size ({}) does not match the expected image volume ({}) for dimensions {} x {} x {}.", out.getSize(), plan.volume_values,
+                                              dims[0], dims[1], dims[2]));
   }
 
   usize planeBytes = 0;
-  if(!checkedMultiply(plan.sliceValues, sizeof(T), planeBytes))
+  if(!checkedMultiply(plan.slice_values, sizeof(T), planeBytes))
   {
     return MakeErrorResult(-8654, fmt::format("Morphology image plane size overflows the addressable byte count. Plane dimensions: {} x {}; value size: {} bytes.", dims[0], dims[1], sizeof(T)));
   }
@@ -287,8 +288,8 @@ Result<> MakeMorphologySlabPlan(const AbstractDataStore<T>& in, const AbstractDa
   const bool holdsFullInputAndOutput = planeBudget / dims[2] >= 2;
   const usize maximumOutputBatchDepth = holdsFullInputAndOutput ? dims[2] : std::min(planeBudget > haloPlanes ? std::max<usize>(1, (planeBudget - haloPlanes) / 2) : 1, dims[2]);
   const usize batchCount = 1 + (dims[2] - 1) / maximumOutputBatchDepth;
-  plan.outputBatchDepth = 1 + (dims[2] - 1) / batchCount;
-  plan.maxInputDepth = plan.outputBatchDepth + std::min(haloPlanes, dims[2] - plan.outputBatchDepth);
+  plan.output_batch_depth = 1 + (dims[2] - 1) / batchCount;
+  plan.max_input_depth = plan.output_batch_depth + std::min(haloPlanes, dims[2] - plan.output_batch_depth);
   return {};
 }
 
@@ -310,32 +311,32 @@ template <class T>
 struct BinaryMorphPlaneBody
 {
   const T* slab;           // read-only slab covering Z in [zLo, zHi], laid out [slabZ][y][x]
-  T* outSlab;              // output slab, outputDepth*dimX*dimY
+  T* out_slab;             // output slab, outputDepth*dimX*dimY
   const SEOffset* offsets; // structuring-element offsets (dx,dy,dz)
-  usize numOffsets;
-  usize dimX;
-  usize dimY;
-  usize dimZ;
-  usize zLo;    // slab's first Z index
-  usize zBegin; // first output Z index
+  usize num_offsets;
+  usize dim_x;
+  usize dim_y;
+  usize dim_z;
+  usize z_lo;    // slab's first Z index
+  usize z_begin; // first output Z index
   bool dilate;
   T fg;
   T bg;
-  bool boundaryToForeground;
+  bool boundary_to_foreground;
 
   void operator()(const Range& range) const
   {
-    const usize sliceValues = dimX * dimY;
-    const int64 dimXi = static_cast<int64>(dimX);
-    const int64 dimYi = static_cast<int64>(dimY);
-    const int64 dimZi = static_cast<int64>(dimZ);
+    const usize sliceValues = dim_x * dim_y;
+    const int64 dimXi = static_cast<int64>(dim_x);
+    const int64 dimYi = static_cast<int64>(dim_y);
+    const int64 dimZi = static_cast<int64>(dim_z);
 
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
       const usize planeTuple = tuple % sliceValues;
-      const usize x = planeTuple % dimX;
-      const usize y = planeTuple / dimX;
-      const usize z = zBegin + tuple / sliceValues;
+      const usize x = planeTuple % dim_x;
+      const usize y = planeTuple / dim_x;
+      const usize z = z_begin + tuple / sliceValues;
       const int64 xi = static_cast<int64>(x);
       const int64 yi = static_cast<int64>(y);
       const int64 zi = static_cast<int64>(z);
@@ -344,7 +345,7 @@ struct BinaryMorphPlaneBody
       {
         // any(): stop at the first foreground neighbor.
         bool anyFg = false;
-        for(usize k = 0; k < numOffsets && !anyFg; ++k)
+        for(usize k = 0; k < num_offsets && !anyFg; ++k)
         {
           const SEOffset& off = offsets[k];
           const int64 nx = xi + off.dx;
@@ -352,19 +353,19 @@ struct BinaryMorphPlaneBody
           const int64 nz = zi + off.dz;
           if(nx < 0 || nx >= dimXi || ny < 0 || ny >= dimYi || nz < 0 || nz >= dimZi)
           {
-            anyFg = boundaryToForeground; // out-of-image neighbor is foreground iff boundaryToForeground
+            anyFg = boundary_to_foreground; // out-of-image neighbor is foreground iff boundaryToForeground
             continue;
           }
-          const usize slabZ = static_cast<usize>(nz) - zLo; // nz in [zLo, zHi] once in-bounds, since the slab spans the SE's full z-reach
-          anyFg = (slab[slabZ * sliceValues + static_cast<usize>(ny) * dimX + static_cast<usize>(nx)] == fg);
+          const usize slabZ = static_cast<usize>(nz) - z_lo; // nz in [zLo, zHi] once in-bounds, since the slab spans the SE's full z-reach
+          anyFg = (slab[slabZ * sliceValues + static_cast<usize>(ny) * dim_x + static_cast<usize>(nx)] == fg);
         }
-        outSlab[tuple] = anyFg ? fg : bg;
+        out_slab[tuple] = anyFg ? fg : bg;
       }
       else
       {
         // all(): stop at the first non-foreground neighbor.
         bool allFg = true;
-        for(usize k = 0; k < numOffsets && allFg; ++k)
+        for(usize k = 0; k < num_offsets && allFg; ++k)
         {
           const SEOffset& off = offsets[k];
           const int64 nx = xi + off.dx;
@@ -372,13 +373,13 @@ struct BinaryMorphPlaneBody
           const int64 nz = zi + off.dz;
           if(nx < 0 || nx >= dimXi || ny < 0 || ny >= dimYi || nz < 0 || nz >= dimZi)
           {
-            allFg = boundaryToForeground; // out-of-image neighbor is foreground iff boundaryToForeground
+            allFg = boundary_to_foreground; // out-of-image neighbor is foreground iff boundaryToForeground
             continue;
           }
-          const usize slabZ = static_cast<usize>(nz) - zLo; // nz in [zLo, zHi] once in-bounds, since the slab spans the SE's full z-reach
-          allFg = (slab[slabZ * sliceValues + static_cast<usize>(ny) * dimX + static_cast<usize>(nx)] == fg);
+          const usize slabZ = static_cast<usize>(nz) - z_lo; // nz in [zLo, zHi] once in-bounds, since the slab spans the SE's full z-reach
+          allFg = (slab[slabZ * sliceValues + static_cast<usize>(ny) * dim_x + static_cast<usize>(nx)] == fg);
         }
-        outSlab[tuple] = allFg ? fg : bg;
+        out_slab[tuple] = allFg ? fg : bg;
       }
     }
   }
@@ -390,15 +391,15 @@ struct Morphology2DBlockBody
   const T* input;
   T* output;
   const SEOffset* offsets;
-  usize numOffsets;
-  usize dimX;
-  usize dimY;
-  usize inputXBegin;
-  usize inputYBegin;
-  usize inputWidth;
-  usize outputXBegin;
-  usize outputYBegin;
-  usize outputWidth;
+  usize num_offsets;
+  usize dim_x;
+  usize dim_y;
+  usize input_x_begin;
+  usize input_y_begin;
+  usize input_width;
+  usize output_x_begin;
+  usize output_y_begin;
+  usize output_width;
   bool dilate;
 
   void operator()(const Range& range) const
@@ -406,12 +407,12 @@ struct Morphology2DBlockBody
     const T identity = dilate ? std::numeric_limits<T>::lowest() : std::numeric_limits<T>::max();
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
-      const usize localX = tuple % outputWidth;
-      const usize localY = tuple / outputWidth;
-      const usize x = outputXBegin + localX;
-      const usize y = outputYBegin + localY;
+      const usize localX = tuple % output_width;
+      const usize localY = tuple / output_width;
+      const usize x = output_x_begin + localX;
+      const usize y = output_y_begin + localY;
       T value = identity;
-      for(usize offsetIndex = 0; offsetIndex < numOffsets; ++offsetIndex)
+      for(usize offsetIndex = 0; offsetIndex < num_offsets; ++offsetIndex)
       {
         const SEOffset& offset = offsets[offsetIndex];
         if(offset.dz != 0)
@@ -420,11 +421,11 @@ struct Morphology2DBlockBody
         }
         const int64 neighborX = static_cast<int64>(x) + offset.dx;
         const int64 neighborY = static_cast<int64>(y) + offset.dy;
-        if(neighborX < 0 || neighborX >= static_cast<int64>(dimX) || neighborY < 0 || neighborY >= static_cast<int64>(dimY))
+        if(neighborX < 0 || neighborX >= static_cast<int64>(dim_x) || neighborY < 0 || neighborY >= static_cast<int64>(dim_y))
         {
           continue;
         }
-        const usize inputIndex = (static_cast<usize>(neighborY) - inputYBegin) * inputWidth + (static_cast<usize>(neighborX) - inputXBegin);
+        const usize inputIndex = (static_cast<usize>(neighborY) - input_y_begin) * input_width + (static_cast<usize>(neighborX) - input_x_begin);
         const T neighbor = input[inputIndex];
         value = dilate ? std::max(value, neighbor) : std::min(value, neighbor);
       }
@@ -445,29 +446,29 @@ struct MorphGradient2DBlockBody
   const T* input;
   T* output;
   const SEOffset* offsets;
-  usize numOffsets;
-  usize dimX;
-  usize dimY;
-  usize inputXBegin;
-  usize inputYBegin;
-  usize inputWidth;
-  usize outputXBegin;
-  usize outputYBegin;
-  usize outputWidth;
+  usize num_offsets;
+  usize dim_x;
+  usize dim_y;
+  usize input_x_begin;
+  usize input_y_begin;
+  usize input_width;
+  usize output_x_begin;
+  usize output_y_begin;
+  usize output_width;
 
   void operator()(const Range& range) const
   {
-    const int64 dimXi = static_cast<int64>(dimX);
-    const int64 dimYi = static_cast<int64>(dimY);
+    const int64 dimXi = static_cast<int64>(dim_x);
+    const int64 dimYi = static_cast<int64>(dim_y);
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
-      const usize localX = tuple % outputWidth;
-      const usize localY = tuple / outputWidth;
-      const usize x = outputXBegin + localX;
-      const usize y = outputYBegin + localY;
+      const usize localX = tuple % output_width;
+      const usize localY = tuple / output_width;
+      const usize x = output_x_begin + localX;
+      const usize y = output_y_begin + localY;
       T maxValue = std::numeric_limits<T>::lowest();
       T minValue = std::numeric_limits<T>::max();
-      for(usize offsetIndex = 0; offsetIndex < numOffsets; ++offsetIndex)
+      for(usize offsetIndex = 0; offsetIndex < num_offsets; ++offsetIndex)
       {
         const SEOffset& offset = offsets[offsetIndex];
         if(offset.dz != 0)
@@ -480,7 +481,7 @@ struct MorphGradient2DBlockBody
         {
           continue;
         }
-        const usize inputIndex = (static_cast<usize>(neighborY) - inputYBegin) * inputWidth + (static_cast<usize>(neighborX) - inputXBegin);
+        const usize inputIndex = (static_cast<usize>(neighborY) - input_y_begin) * input_width + (static_cast<usize>(neighborX) - input_x_begin);
         const T neighbor = input[inputIndex];
         if(neighbor > maxValue)
         {
@@ -502,38 +503,38 @@ struct BinaryMorphology2DBlockBody
   const T* input;
   T* output;
   const SEOffset* offsets;
-  usize numOffsets;
-  usize dimX;
-  usize dimY;
-  usize inputXBegin;
-  usize inputYBegin;
-  usize inputWidth;
-  usize outputXBegin;
-  usize outputYBegin;
-  usize outputWidth;
+  usize num_offsets;
+  usize dim_x;
+  usize dim_y;
+  usize input_x_begin;
+  usize input_y_begin;
+  usize input_width;
+  usize output_x_begin;
+  usize output_y_begin;
+  usize output_width;
   bool dilate;
   T foreground;
   T background;
-  bool boundaryToForeground;
+  bool boundary_to_foreground;
 
   void operator()(const Range& range) const
   {
     // A single-slice image has no Z neighbors, including at its boundary.
-    const usize planeOffsets = static_cast<usize>(std::count_if(offsets, offsets + numOffsets, [](const SEOffset& offset) { return offset.dz == 0; }));
+    const usize planeOffsets = static_cast<usize>(std::count_if(offsets, offsets + num_offsets, [](const SEOffset& offset) { return offset.dz == 0; }));
     for(usize tuple = range.min(); tuple < range.max(); ++tuple)
     {
-      const usize localX = tuple % outputWidth;
-      const usize localY = tuple / outputWidth;
-      const usize x = outputXBegin + localX;
-      const usize y = outputYBegin + localY;
+      const usize localX = tuple % output_width;
+      const usize localY = tuple / output_width;
+      const usize x = output_x_begin + localX;
+      const usize y = output_y_begin + localY;
       // Removing Z offsets can leave an empty kernel, which preserves the input.
       if(planeOffsets == 0)
       {
-        output[tuple] = input[(y - inputYBegin) * inputWidth + (x - inputXBegin)];
+        output[tuple] = input[(y - input_y_begin) * input_width + (x - input_x_begin)];
         continue;
       }
       usize foregroundCount = 0;
-      for(usize offsetIndex = 0; offsetIndex < numOffsets; ++offsetIndex)
+      for(usize offsetIndex = 0; offsetIndex < num_offsets; ++offsetIndex)
       {
         const SEOffset& offset = offsets[offsetIndex];
         if(offset.dz != 0)
@@ -542,13 +543,13 @@ struct BinaryMorphology2DBlockBody
         }
         const int64 neighborX = static_cast<int64>(x) + offset.dx;
         const int64 neighborY = static_cast<int64>(y) + offset.dy;
-        const bool inBounds = neighborX >= 0 && neighborX < static_cast<int64>(dimX) && neighborY >= 0 && neighborY < static_cast<int64>(dimY);
+        const bool inBounds = neighborX >= 0 && neighborX < static_cast<int64>(dim_x) && neighborY >= 0 && neighborY < static_cast<int64>(dim_y);
         if(!inBounds)
         {
-          foregroundCount += boundaryToForeground ? 1 : 0;
+          foregroundCount += boundary_to_foreground ? 1 : 0;
           continue;
         }
-        const usize inputIndex = (static_cast<usize>(neighborY) - inputYBegin) * inputWidth + (static_cast<usize>(neighborX) - inputXBegin);
+        const usize inputIndex = (static_cast<usize>(neighborY) - input_y_begin) * input_width + (static_cast<usize>(neighborX) - input_x_begin);
         foregroundCount += input[inputIndex] == foreground ? 1 : 0;
       }
       output[tuple] = dilate ? (foregroundCount > 0 ? foreground : background) : (foregroundCount == planeOffsets ? foreground : background);
@@ -562,8 +563,8 @@ inline bool CanUseFixedMorphologyInput2D(usize dimX, usize totalValues, usize in
 }
 
 template <class T, class BodyFactory>
-Result<> ExecuteBoundedMorphology2D(const AbstractDataStore<T>& inputStore, AbstractDataStore<T>& outputStore, const SizeVec3& dims, const StructuringElement& se, const std::atomic_bool& shouldCancel,
-                                    usize requestedTargetBytes, BodyFactory&& bodyFactory)
+Result<> ExecuteBoundedMorphology2D(const AbstractDataStore<T>& inputStore, AbstractDataStore<T>& outputStore, const SizeVec3Type& dims, const StructuringElement& se,
+                                    const std::atomic_bool& shouldCancel, usize requestedTargetBytes, BodyFactory&& bodyFactory)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
@@ -695,12 +696,12 @@ Result<> ExecuteBoundedMorphology2D(const AbstractDataStore<T>& inputStore, Abst
       const usize inputYBegin = useFixedInput ? 0 : (outputYBegin > radiusY ? outputYBegin - radiusY : 0);
       const usize inputYEnd = useFixedInput ? dimY : outputYEnd + std::min(radiusY, dimY - outputYEnd);
       const usize inputWidth = inputXEnd - inputXBegin;
-      T* input = useFixedInput ? fixedInput.get() : inputBuffer.get();
+      T* inputPtr = useFixedInput ? fixedInput.get() : inputBuffer.get();
       if(!useFixedInput)
       {
         for(usize inputY = inputYBegin; inputY < inputYEnd; ++inputY)
         {
-          if(Result<> result = inputStore.copyIntoBuffer(inputY * dimX + inputXBegin, nonstd::span<T>(input + (inputY - inputYBegin) * inputWidth, inputWidth)); result.invalid())
+          if(Result<> result = inputStore.copyIntoBuffer(inputY * dimX + inputXBegin, nonstd::span<T>(inputPtr + (inputY - inputYBegin) * inputWidth, inputWidth)); result.invalid())
           {
             return result;
           }
@@ -709,7 +710,7 @@ Result<> ExecuteBoundedMorphology2D(const AbstractDataStore<T>& inputStore, Abst
 
       ParallelDataAlgorithm parallelAlgorithm;
       parallelAlgorithm.setRange(0, outputRows * outputColumns);
-      parallelAlgorithm.execute(bodyFactory(input, outputBuffer.get(), inputXBegin, inputYBegin, inputWidth, outputXBegin, outputYBegin, outputColumns));
+      parallelAlgorithm.execute(bodyFactory(inputPtr, outputBuffer.get(), inputXBegin, inputYBegin, inputWidth, outputXBegin, outputYBegin, outputColumns));
 
       const usize outputOffset = outputYBegin * dimX + outputXBegin;
       const usize outputValues = fullWidth ? outputRows * dimX : outputColumns;
@@ -773,7 +774,7 @@ inline constexpr bool k_UseVectorHistogram = std::is_integral_v<T> && (sizeof(T)
 template <class T, bool Dilate>
 class MorphMapHistogram
 {
-  using Compare = std::conditional_t<Dilate, std::greater<T>, std::less<T>>;
+  using CompareType = std::conditional_t<Dilate, std::greater<T>, std::less<T>>;
 
 public:
   void setBoundary(T value)
@@ -829,7 +830,7 @@ public:
   }
 
 private:
-  std::map<T, usize, Compare> m_Map;
+  std::map<T, usize, CompareType> m_Map;
   T m_Boundary{};
 };
 
@@ -870,7 +871,7 @@ public:
   }
   void addPixel(T p)
   {
-    ++m_Vector[index(p)];
+    ++m_Vector[Index(p)];
     if constexpr(Dilate)
     {
       if(p > m_CurrentValue)
@@ -888,12 +889,12 @@ public:
   }
   void removePixel(T p)
   {
-    --m_Vector[index(p)];
+    --m_Vector[Index(p)];
     // Walk the running extremum toward the init value until its bin is non-empty again. The
     // m_CurrentValue != m_InitValue guard both stops the walk at the type extremum and keeps the index in
     // range; the histogram is never empty (it always holds one entry per SE offset), so a non-zero bin
     // always exists at or before m_InitValue.
-    while(m_Vector[index(m_CurrentValue)] == 0 && m_CurrentValue != m_InitValue)
+    while(m_Vector[Index(m_CurrentValue)] == 0 && m_CurrentValue != m_InitValue)
     {
       m_CurrentValue = static_cast<T>(m_CurrentValue + m_Direction);
     }
@@ -912,7 +913,7 @@ public:
   }
 
 private:
-  static usize index(T p)
+  static usize Index(T p)
   {
     return static_cast<usize>(static_cast<int64>(p) - static_cast<int64>(std::numeric_limits<T>::lowest()));
   }
@@ -929,7 +930,7 @@ private:
  *        @ref k_UseVectorHistogram). The non-selected template is only named, never instantiated.
  */
 template <class T, bool Dilate>
-using MorphHistogram = std::conditional_t<k_UseVectorHistogram<T>, MorphVectorHistogram<T, Dilate>, MorphMapHistogram<T, Dilate>>;
+using MorphHistogramType = std::conditional_t<k_UseVectorHistogram<T>, MorphVectorHistogram<T, Dilate>, MorphMapHistogram<T, Dilate>>;
 
 /**
  * @brief Map-based FUSED gradient histogram: the both-extremes analogue of @ref MorphMapHistogram, tracking the
@@ -1039,7 +1040,7 @@ public:
   }
   void addPixel(T p)
   {
-    ++m_Vector[index(p)];
+    ++m_Vector[Index(p)];
     ++m_Count;
     if(p > m_Max)
     {
@@ -1052,7 +1053,7 @@ public:
   }
   void removePixel(T p)
   {
-    --m_Vector[index(p)];
+    --m_Vector[Index(p)];
     --m_Count;
     if(m_Count == 0)
     {
@@ -1065,11 +1066,11 @@ public:
     // Walk each running extremum toward its neighbor bin until non-empty: max DOWN toward lowest(), min UP
     // toward max(). m_Count > 0 guarantees a live bin exists between the two seeds, so neither walk overruns;
     // the != seed guards also keep the index in range (mirrors MorphVectorHistogram's single-extremum walk).
-    while(m_Vector[index(m_Max)] == 0 && m_Max != std::numeric_limits<T>::lowest())
+    while(m_Vector[Index(m_Max)] == 0 && m_Max != std::numeric_limits<T>::lowest())
     {
       m_Max = static_cast<T>(m_Max - 1);
     }
-    while(m_Vector[index(m_Min)] == 0 && m_Min != std::numeric_limits<T>::max())
+    while(m_Vector[Index(m_Min)] == 0 && m_Min != std::numeric_limits<T>::max())
     {
       m_Min = static_cast<T>(m_Min + 1);
     }
@@ -1090,7 +1091,7 @@ public:
   }
 
 private:
-  static usize index(T p)
+  static usize Index(T p)
   {
     return static_cast<usize>(static_cast<int64>(p) - static_cast<int64>(std::numeric_limits<T>::lowest()));
   }
@@ -1106,7 +1107,7 @@ private:
  *        @ref k_UseVectorHistogram). The non-selected template is only named, never instantiated.
  */
 template <class T>
-using MorphGradientHistogram = std::conditional_t<k_UseVectorHistogram<T>, MorphGradientVectorHistogram<T>, MorphGradientMapHistogram<T>>;
+using MorphGradientHistogramType = std::conditional_t<k_UseVectorHistogram<T>, MorphGradientVectorHistogram<T>, MorphGradientMapHistogram<T>>;
 
 /**
  * @brief Binary morphology accumulator: tracks only the count of foreground voxels in the sliding window
@@ -1217,21 +1218,21 @@ inline AxisAddRemoveSets ComputeAxisAddRemoveSets(const StructuringElement& se)
   auto contains = [&onSet](int32 x, int32 y, int32 z) { return onSet.find({x, y, z}) != onSet.end(); };
 
   AxisAddRemoveSets result;
-  constexpr int32 axisStep[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+  constexpr int32 k_AxisStep[3][3] = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
   for(int a = 0; a < 3; ++a)
   {
     for(const SEOffset& o : se.offsets)
     {
-      const int32 qx = o.dx + axisStep[a][0];
-      const int32 qy = o.dy + axisStep[a][1];
-      const int32 qz = o.dz + axisStep[a][2];
+      const int32 qx = o.dx + k_AxisStep[a][0];
+      const int32 qy = o.dy + k_AxisStep[a][1];
+      const int32 qz = o.dz + k_AxisStep[a][2];
       if(!contains(qx, qy, qz))
       {
-        result.added[a].push_back(SEOffset{qx, qy, qz});
+        result.added[a].push_back(SEOffset{.dx = qx, .dy = qy, .dz = qz});
       }
-      const int32 px = o.dx - axisStep[a][0];
-      const int32 py = o.dy - axisStep[a][1];
-      const int32 pz = o.dz - axisStep[a][2];
+      const int32 px = o.dx - k_AxisStep[a][0];
+      const int32 py = o.dy - k_AxisStep[a][1];
+      const int32 pz = o.dz - k_AxisStep[a][2];
       if(!contains(px, py, pz))
       {
         result.removed[a].push_back(o);
@@ -1285,7 +1286,7 @@ struct MorphologyFlatFoldOffset
   int64 dx = 0;
   int64 dy = 0;
   int64 dz = 0;
-  int64 flatDelta = 0;
+  int64 flat_delta = 0;
 };
 
 /**
@@ -1295,7 +1296,7 @@ struct MorphologyFlatFoldOffset
  * @pre MorphologyFlatFoldIsRepresentable(dims, se) is true.
  * @return Offsets with signed flat deltas for these bounds.
  */
-inline std::vector<MorphologyFlatFoldOffset> MakeMorphologyFlatFoldOffsets(const StructuringElement& se, const SizeVec3& dims)
+inline std::vector<MorphologyFlatFoldOffset> MakeMorphologyFlatFoldOffsets(const StructuringElement& se, const SizeVec3Type& dims)
 {
   assert(MorphologyFlatFoldIsRepresentable(dims, se));
   const int64 dimX = static_cast<int64>(dims[0]);
@@ -1352,8 +1353,8 @@ inline std::pair<usize, usize> MorphologyInteriorXRange(usize boundDimX, usize o
  * @tparam Dilate true for max; false for min.
  */
 template <class T, bool Dilate>
-void RunMorphologyFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3& boundDims, usize stagedZLo, const SizeVec3& outputDims, const SizeVec3& outputOrigin, const StructuringElement& se,
-                                const std::vector<MorphologyFlatFoldOffset>& offsets, const std::atomic_bool& shouldCancel)
+void RunMorphologyFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3Type& boundDims, usize stagedZLo, const SizeVec3Type& outputDims, const SizeVec3Type& outputOrigin,
+                                const StructuringElement& se, const std::vector<MorphologyFlatFoldOffset>& offsets, const std::atomic_bool& shouldCancel)
 {
   const usize sliceValues = boundDims[0] * boundDims[1];
   const int64 boundX = static_cast<int64>(boundDims[0]);
@@ -1394,7 +1395,7 @@ void RunMorphologyFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3&
           const int64 neighborZ = z + offset.dz;
           if(neighborX >= 0 && neighborX < boundX && neighborY >= 0 && neighborY < boundY && neighborZ >= 0 && neighborZ < boundZ)
           {
-            const T neighbor = stagedInput[static_cast<usize>(static_cast<int64>(stagedBase) + offset.flatDelta)];
+            const T neighbor = stagedInput[static_cast<usize>(static_cast<int64>(stagedBase) + offset.flat_delta)];
             value = Dilate ? std::max(value, neighbor) : std::min(value, neighbor);
           }
         }
@@ -1427,7 +1428,7 @@ void RunMorphologyFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3&
       std::fill(outputRowPtr + interiorXBegin, outputRowPtr + interiorXEnd, identity);
       for(const MorphologyFlatFoldOffset& offset : offsets)
       {
-        const T* neighborRowPtr = stagedInput + static_cast<usize>(static_cast<int64>(stagedRowBase + interiorXBegin) + offset.flatDelta);
+        const T* neighborRowPtr = stagedInput + static_cast<usize>(static_cast<int64>(stagedRowBase + interiorXBegin) + offset.flat_delta);
         for(usize localX = interiorXBegin; localX < interiorXEnd; ++localX)
         {
           outputRowPtr[localX] = Dilate ? std::max(outputRowPtr[localX], *neighborRowPtr) : std::min(outputRowPtr[localX], *neighborRowPtr);
@@ -1459,8 +1460,8 @@ void RunMorphologyFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3&
  * @tparam Dilate True for max; false for min.
  */
 template <class T, bool Dilate>
-void RunMorphologyFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3& boundDims, usize stagedZLo, const SizeVec3& outputDims, const SizeVec3& outputOrigin, const StructuringElement& se,
-                                const std::atomic_bool& shouldCancel)
+void RunMorphologyFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3Type& boundDims, usize stagedZLo, const SizeVec3Type& outputDims, const SizeVec3Type& outputOrigin,
+                                const StructuringElement& se, const std::atomic_bool& shouldCancel)
 {
   const std::vector<MorphologyFlatFoldOffset> offsets = MakeMorphologyFlatFoldOffsets(se, boundDims);
   RunMorphologyFlatFoldBlock<T, Dilate>(stagedInput, output, boundDims, stagedZLo, outputDims, outputOrigin, se, offsets, shouldCancel);
@@ -1486,7 +1487,7 @@ void RunMorphologyFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3&
  * @tparam T scalar voxel type.
  */
 template <class T>
-void RunMorphologyGradientFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3& boundDims, usize stagedZLo, const SizeVec3& outputDims, const SizeVec3& outputOrigin,
+void RunMorphologyGradientFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3Type& boundDims, usize stagedZLo, const SizeVec3Type& outputDims, const SizeVec3Type& outputOrigin,
                                         const StructuringElement& se, const std::vector<MorphologyFlatFoldOffset>& offsets, const std::atomic_bool& shouldCancel)
 {
   const usize sliceValues = boundDims[0] * boundDims[1];
@@ -1531,7 +1532,7 @@ void RunMorphologyGradientFlatFoldBlock(const T* stagedInput, T* output, const S
           const int64 neighborZ = z + offset.dz;
           if(neighborX >= 0 && neighborX < boundX && neighborY >= 0 && neighborY < boundY && neighborZ >= 0 && neighborZ < boundZ)
           {
-            const T neighbor = stagedInput[static_cast<usize>(static_cast<int64>(stagedBase) + offset.flatDelta)];
+            const T neighbor = stagedInput[static_cast<usize>(static_cast<int64>(stagedBase) + offset.flat_delta)];
             maximum = std::max(maximum, neighbor);
             minimum = std::min(minimum, neighbor);
           }
@@ -1569,23 +1570,23 @@ void RunMorphologyGradientFlatFoldBlock(const T* stagedInput, T* output, const S
       std::fill(minimumInteriorPtr, minimumInteriorPtr + interiorWidth, std::numeric_limits<T>::max());
       for(const MorphologyFlatFoldOffset& offset : offsets)
       {
-        const T* neighborRowPtr = stagedInput + static_cast<usize>(static_cast<int64>(stagedRowBase + interiorXBegin) + offset.flatDelta);
+        const T* neighborRowPtr = stagedInput + static_cast<usize>(static_cast<int64>(stagedRowBase + interiorXBegin) + offset.flat_delta);
         for(usize localX = interiorXBegin; localX < interiorXEnd; ++localX)
         {
           outputRowPtr[localX] = std::max(outputRowPtr[localX], *neighborRowPtr);
           ++neighborRowPtr;
         }
-        neighborRowPtr = stagedInput + static_cast<usize>(static_cast<int64>(stagedRowBase + interiorXBegin) + offset.flatDelta);
+        neighborRowPtr = stagedInput + static_cast<usize>(static_cast<int64>(stagedRowBase + interiorXBegin) + offset.flat_delta);
         T* minimumPtr = minimumInteriorPtr;
-        const T* const minimumEnd = minimumInteriorPtr + interiorWidth;
-        for(; minimumPtr != minimumEnd; ++minimumPtr, ++neighborRowPtr)
+        const T* const minimumEndPtr = minimumInteriorPtr + interiorWidth;
+        for(; minimumPtr != minimumEndPtr; ++minimumPtr, ++neighborRowPtr)
         {
           *minimumPtr = std::min(*minimumPtr, *neighborRowPtr);
         }
       }
       T* minimumPtr = minimumInteriorPtr;
-      T* const outputInteriorEnd = outputInteriorPtr + interiorWidth;
-      for(T* outputPtr = outputInteriorPtr; outputPtr != outputInteriorEnd; ++outputPtr, ++minimumPtr)
+      T* const outputInteriorEndPtr = outputInteriorPtr + interiorWidth;
+      for(T* outputPtr = outputInteriorPtr; outputPtr != outputInteriorEndPtr; ++outputPtr, ++minimumPtr)
       {
         *outputPtr = MorphologyGradientDifference(*outputPtr, *minimumPtr);
       }
@@ -1613,7 +1614,7 @@ void RunMorphologyGradientFlatFoldBlock(const T* stagedInput, T* output, const S
  * @tparam T Scalar voxel type.
  */
 template <class T>
-void RunMorphologyGradientFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3& boundDims, usize stagedZLo, const SizeVec3& outputDims, const SizeVec3& outputOrigin,
+void RunMorphologyGradientFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3Type& boundDims, usize stagedZLo, const SizeVec3Type& outputDims, const SizeVec3Type& outputOrigin,
                                         const StructuringElement& se, const std::atomic_bool& shouldCancel)
 {
   const std::vector<MorphologyFlatFoldOffset> offsets = MakeMorphologyFlatFoldOffsets(se, boundDims);
@@ -1641,7 +1642,7 @@ void RunMorphologyGradientFlatFoldBlock(const T* stagedInput, T* output, const S
  * @tparam Dilate true for any; false for all.
  */
 template <class T, bool Dilate>
-void RunBinaryMorphologyFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3& boundDims, usize stagedZLo, const SizeVec3& outputDims, const SizeVec3& outputOrigin,
+void RunBinaryMorphologyFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3Type& boundDims, usize stagedZLo, const SizeVec3Type& outputDims, const SizeVec3Type& outputOrigin,
                                       const StructuringElement& se, T foreground, T background, bool boundaryToForeground, const std::vector<MorphologyFlatFoldOffset>& offsets,
                                       const std::atomic_bool& shouldCancel)
 {
@@ -1680,7 +1681,7 @@ void RunBinaryMorphologyFlatFoldBlock(const T* stagedInput, T* output, const Siz
         {
           for(const MorphologyFlatFoldOffset& offset : offsets)
           {
-            const bool isForeground = stagedInput[static_cast<usize>(static_cast<int64>(stagedBase) + offset.flatDelta)] == foreground;
+            const bool isForeground = stagedInput[static_cast<usize>(static_cast<int64>(stagedBase) + offset.flat_delta)] == foreground;
             if constexpr(Dilate)
             {
               if(isForeground)
@@ -1704,7 +1705,7 @@ void RunBinaryMorphologyFlatFoldBlock(const T* stagedInput, T* output, const Siz
             const int64 neighborY = y + offset.dy;
             const int64 neighborZ = z + offset.dz;
             const bool inBounds = neighborX >= 0 && neighborX < boundX && neighborY >= 0 && neighborY < boundY && neighborZ >= 0 && neighborZ < boundZ;
-            const bool isForeground = inBounds ? stagedInput[static_cast<usize>(static_cast<int64>(stagedBase) + offset.flatDelta)] == foreground : boundaryToForeground;
+            const bool isForeground = inBounds ? stagedInput[static_cast<usize>(static_cast<int64>(stagedBase) + offset.flat_delta)] == foreground : boundaryToForeground;
             if constexpr(Dilate)
             {
               if(isForeground)
@@ -1746,14 +1747,14 @@ void RunBinaryMorphologyFlatFoldBlock(const T* stagedInput, T* output, const Siz
  * @tparam Dilate True for any; false for all.
  */
 template <class T, bool Dilate>
-void RunBinaryMorphologyFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3& boundDims, usize stagedZLo, const SizeVec3& outputDims, const SizeVec3& outputOrigin,
+void RunBinaryMorphologyFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3Type& boundDims, usize stagedZLo, const SizeVec3Type& outputDims, const SizeVec3Type& outputOrigin,
                                       const StructuringElement& se, T foreground, T background, bool boundaryToForeground, const std::atomic_bool& shouldCancel)
 {
   const std::vector<MorphologyFlatFoldOffset> offsets = MakeMorphologyFlatFoldOffsets(se, boundDims);
   RunBinaryMorphologyFlatFoldBlock<T, Dilate>(stagedInput, output, boundDims, stagedZLo, outputDims, outputOrigin, se, foreground, background, boundaryToForeground, offsets, shouldCancel);
 }
 
-using BinaryMorphWord = uint64;
+using BinaryMorphWordType = uint64;
 
 /**
  * @brief Describes the contiguous 64-bit layout for one packed binary X/Y plane.
@@ -1763,11 +1764,11 @@ using BinaryMorphWord = uint64;
  */
 struct PackedBinaryPlaneLayout
 {
-  usize dimX = 0;
-  usize dimY = 0;
-  usize wordsPerRow = 0;
-  usize planeWords = 0;
-  BinaryMorphWord validLastWordMask = 0;
+  usize dim_x = 0;
+  usize dim_y = 0;
+  usize words_per_row = 0;
+  usize plane_words = 0;
+  BinaryMorphWordType valid_last_word_mask = 0;
 };
 
 /**
@@ -1779,9 +1780,9 @@ struct PackedBinaryPlaneLayout
  */
 struct PackedBinaryPlanesView
 {
-  const BinaryMorphWord* words = nullptr;
+  const BinaryMorphWordType* words = nullptr;
   PackedBinaryPlaneLayout layout;
-  usize zLo = 0;
+  usize z_lo = 0;
   usize depth = 0;
   usize capacity = 0;
   usize head = 0;
@@ -1808,7 +1809,7 @@ public:
   {
     assert(capacity > 0 && "Packed binary ring capacity must be positive");
     usize wordCount = 0;
-    const bool hasValidSize = TryMultiplyMorphologySize(capacity, layout.planeWords, wordCount);
+    const bool hasValidSize = TryMultiplyMorphologySize(capacity, layout.plane_words, wordCount);
     assert(hasValidSize && "Packed binary ring size overflows");
     if(hasValidSize)
     {
@@ -1821,7 +1822,7 @@ public:
    * @param logicalZ Logical Z plane to append.
    * @return Writable storage for one complete packed plane.
    */
-  BinaryMorphWord* appendPlane(usize logicalZ)
+  BinaryMorphWordType* appendPlane(usize logicalZ)
   {
     assert(m_Capacity > 0);
     assert(m_Depth == 0 || logicalZ == m_ZLo + m_Depth);
@@ -1841,7 +1842,7 @@ public:
       slot = (m_Head + m_Depth) % m_Capacity;
       ++m_Depth;
     }
-    return m_Words.data() + slot * m_Layout.planeWords;
+    return m_Words.data() + slot * m_Layout.plane_words;
   }
 
   /**
@@ -1850,12 +1851,12 @@ public:
    */
   PackedBinaryPlanesView view() const
   {
-    return {m_Words.data(), m_Layout, m_ZLo, m_Depth, m_Capacity, m_Head};
+    return {.words = m_Words.data(), .layout = m_Layout, .z_lo = m_ZLo, .depth = m_Depth, .capacity = m_Capacity, .head = m_Head};
   }
 
 private:
   PackedBinaryPlaneLayout m_Layout;
-  std::vector<BinaryMorphWord> m_Words;
+  std::vector<BinaryMorphWordType> m_Words;
   usize m_Capacity = 0;
   usize m_ZLo = 0;
   usize m_Depth = 0;
@@ -1868,20 +1869,20 @@ private:
  * @param boundDims Complete image or padded bounds.
  * @return Layout for one packed X/Y plane.
  */
-inline PackedBinaryPlaneLayout MakePackedBinaryPlaneLayout(const SizeVec3& boundDims)
+inline PackedBinaryPlaneLayout MakePackedBinaryPlaneLayout(const SizeVec3Type& boundDims)
 {
-  constexpr usize k_WordBits = std::numeric_limits<BinaryMorphWord>::digits;
+  constexpr usize k_WordBits = std::numeric_limits<BinaryMorphWordType>::digits;
   PackedBinaryPlaneLayout layout;
-  layout.dimX = boundDims[0];
-  layout.dimY = boundDims[1];
-  layout.wordsPerRow = boundDims[0] / k_WordBits + (boundDims[0] % k_WordBits == 0 ? 0 : 1);
-  if(!TryMultiplyMorphologySize(layout.wordsPerRow, boundDims[1], layout.planeWords))
+  layout.dim_x = boundDims[0];
+  layout.dim_y = boundDims[1];
+  layout.words_per_row = boundDims[0] / k_WordBits + (boundDims[0] % k_WordBits == 0 ? 0 : 1);
+  if(!TryMultiplyMorphologySize(layout.words_per_row, boundDims[1], layout.plane_words))
   {
     assert(false && "Packed binary plane dimensions overflow");
     return layout;
   }
   const usize tailBits = boundDims[0] % k_WordBits;
-  layout.validLastWordMask = tailBits == 0 ? std::numeric_limits<BinaryMorphWord>::max() : (BinaryMorphWord{1} << tailBits) - BinaryMorphWord{1};
+  layout.valid_last_word_mask = tailBits == 0 ? std::numeric_limits<BinaryMorphWordType>::max() : (BinaryMorphWordType{1} << tailBits) - BinaryMorphWordType{1};
   return layout;
 }
 
@@ -1900,12 +1901,13 @@ inline PackedBinaryPlaneLayout MakePackedBinaryPlaneLayout(const SizeVec3& bound
  * @return True when all rows were packed.
  */
 template <class T>
-bool PackBinaryMorphologyStagedPlanes(const T* stagedInput, BinaryMorphWord* packedOutput, const PackedBinaryPlaneLayout& layout, usize stagedDepth, T foreground, const std::atomic_bool& shouldCancel)
+bool PackBinaryMorphologyStagedPlanes(const T* stagedInput, BinaryMorphWordType* packedOutput, const PackedBinaryPlaneLayout& layout, usize stagedDepth, T foreground,
+                                      const std::atomic_bool& shouldCancel)
 {
-  constexpr usize k_WordBits = std::numeric_limits<BinaryMorphWord>::digits;
-  const usize rawPlaneValues = layout.dimX * layout.dimY;
+  constexpr usize k_WordBits = std::numeric_limits<BinaryMorphWordType>::digits;
+  const usize rawPlaneValues = layout.dim_x * layout.dim_y;
   usize packedRows = 0;
-  if(!TryMultiplyMorphologySize(stagedDepth, layout.dimY, packedRows))
+  if(!TryMultiplyMorphologySize(stagedDepth, layout.dim_y, packedRows))
   {
     assert(false && "Packed binary row count overflows");
     return false;
@@ -1919,23 +1921,23 @@ bool PackBinaryMorphologyStagedPlanes(const T* stagedInput, BinaryMorphWord* pac
       {
         return;
       }
-      const usize localZ = packedRowIndex / layout.dimY;
-      const usize y = packedRowIndex % layout.dimY;
-      const T* rawRow = stagedInput + localZ * rawPlaneValues + y * layout.dimX;
-      BinaryMorphWord* packedRow = packedOutput + localZ * layout.planeWords + y * layout.wordsPerRow;
-      for(usize wordIndex = 0; wordIndex < layout.wordsPerRow; ++wordIndex)
+      const usize localZ = packedRowIndex / layout.dim_y;
+      const usize y = packedRowIndex % layout.dim_y;
+      const T* rawRowPtr = stagedInput + localZ * rawPlaneValues + y * layout.dim_x;
+      BinaryMorphWordType* packedRowPtr = packedOutput + localZ * layout.plane_words + y * layout.words_per_row;
+      for(usize wordIndex = 0; wordIndex < layout.words_per_row; ++wordIndex)
       {
         const usize xBegin = wordIndex * k_WordBits;
-        const usize count = std::min(k_WordBits, layout.dimX - xBegin);
-        BinaryMorphWord word = 0;
+        const usize count = std::min(k_WordBits, layout.dim_x - xBegin);
+        BinaryMorphWordType word = 0;
         for(usize bit = 0; bit < count; ++bit)
         {
-          if(rawRow[xBegin + bit] == foreground)
+          if(rawRowPtr[xBegin + bit] == foreground)
           {
-            word |= BinaryMorphWord{1} << bit;
+            word |= BinaryMorphWordType{1} << bit;
           }
         }
-        packedRow[wordIndex] = word & (wordIndex + 1 == layout.wordsPerRow ? layout.validLastWordMask : std::numeric_limits<BinaryMorphWord>::max());
+        packedRowPtr[wordIndex] = word & (wordIndex + 1 == layout.words_per_row ? layout.valid_last_word_mask : std::numeric_limits<BinaryMorphWordType>::max());
       }
     }
   });
@@ -1950,8 +1952,8 @@ bool PackBinaryMorphologyStagedPlanes(const T* stagedInput, BinaryMorphWord* pac
  */
 inline int64 MorphologyPackedWordEnd(int64 xStart, int64 rowEnd)
 {
-  constexpr int64 wordBits = std::numeric_limits<BinaryMorphWord>::digits;
-  return xStart > std::numeric_limits<int64>::max() - wordBits ? rowEnd : std::min(rowEnd, xStart + wordBits);
+  constexpr int64 k_WordBits = std::numeric_limits<BinaryMorphWordType>::digits;
+  return xStart > std::numeric_limits<int64>::max() - k_WordBits ? rowEnd : std::min(rowEnd, xStart + k_WordBits);
 }
 
 /**
@@ -1968,7 +1970,7 @@ inline int64 MorphologyPackedWordEnd(int64 xStart, int64 rowEnd)
  * @param boundaryToForeground Maps out-of-bounds coordinates to set bits.
  * @return Packed membership bits.
  */
-inline BinaryMorphWord ExtractPackedBinaryWord(const PackedBinaryPlanesView& view, const SizeVec3& boundDims, int64 xStart, int64 y, int64 z, bool boundaryToForeground);
+inline BinaryMorphWordType ExtractPackedBinaryWord(const PackedBinaryPlanesView& view, const SizeVec3Type& boundDims, int64 xStart, int64 y, int64 z, bool boundaryToForeground);
 
 /**
  * @brief Extracts a packed word from contiguous staged packed planes.
@@ -1984,10 +1986,10 @@ inline BinaryMorphWord ExtractPackedBinaryWord(const PackedBinaryPlanesView& vie
  * @param boundaryToForeground Maps out-of-bounds coordinates to set bits.
  * @return Packed membership bits.
  */
-inline BinaryMorphWord ExtractPackedBinaryWord(const BinaryMorphWord* packedInput, const PackedBinaryPlaneLayout& layout, const SizeVec3& boundDims, usize stagedZLo, usize stagedDepth, int64 xStart,
-                                               int64 y, int64 z, bool boundaryToForeground)
+inline BinaryMorphWordType ExtractPackedBinaryWord(const BinaryMorphWordType* packedInput, const PackedBinaryPlaneLayout& layout, const SizeVec3Type& boundDims, usize stagedZLo, usize stagedDepth,
+                                                   int64 xStart, int64 y, int64 z, bool boundaryToForeground)
 {
-  return ExtractPackedBinaryWord({packedInput, layout, stagedZLo, stagedDepth, stagedDepth, 0}, boundDims, xStart, y, z, boundaryToForeground);
+  return ExtractPackedBinaryWord({.words = packedInput, .layout = layout, .z_lo = stagedZLo, .depth = stagedDepth, .capacity = stagedDepth, .head = 0}, boundDims, xStart, y, z, boundaryToForeground);
 }
 
 /**
@@ -2001,15 +2003,15 @@ inline BinaryMorphWord ExtractPackedBinaryWord(const BinaryMorphWord* packedInpu
  * @param boundaryToForeground Maps out-of-bounds coordinates to set bits.
  * @return Packed membership bits.
  */
-inline BinaryMorphWord ExtractPackedBinaryWord(const PackedBinaryPlanesView& view, const SizeVec3& boundDims, int64 xStart, int64 y, int64 z, bool boundaryToForeground)
+inline BinaryMorphWordType ExtractPackedBinaryWord(const PackedBinaryPlanesView& view, const SizeVec3Type& boundDims, int64 xStart, int64 y, int64 z, bool boundaryToForeground)
 {
-  constexpr usize k_WordBits = std::numeric_limits<BinaryMorphWord>::digits;
-  const BinaryMorphWord boundaryWord = boundaryToForeground ? std::numeric_limits<BinaryMorphWord>::max() : BinaryMorphWord{0};
+  constexpr usize k_WordBits = std::numeric_limits<BinaryMorphWordType>::digits;
+  const BinaryMorphWordType boundaryWord = boundaryToForeground ? std::numeric_limits<BinaryMorphWordType>::max() : BinaryMorphWordType{0};
   if(y < 0 || y >= static_cast<int64>(boundDims[1]) || z < 0 || z >= static_cast<int64>(boundDims[2]))
   {
     return boundaryWord;
   }
-  if(z < static_cast<int64>(view.zLo) || z >= static_cast<int64>(view.zLo + view.depth))
+  if(z < static_cast<int64>(view.z_lo) || z >= static_cast<int64>(view.z_lo + view.depth))
   {
     assert(false && "Packed binary input does not contain a required in-bounds Z plane");
     return boundaryWord;
@@ -2027,19 +2029,19 @@ inline BinaryMorphWord ExtractPackedBinaryWord(const PackedBinaryPlanesView& vie
   const usize firstX = static_cast<usize>(inBoundsBegin);
   const usize sourceWordIndex = firstX / k_WordBits;
   const usize sourceShift = firstX % k_WordBits;
-  const usize logicalPlane = static_cast<usize>(z) - view.zLo;
+  const usize logicalPlane = static_cast<usize>(z) - view.z_lo;
   const usize slot = (view.head + logicalPlane) % view.capacity;
-  const BinaryMorphWord* packedRow = view.words + slot * layout.planeWords + static_cast<usize>(y) * layout.wordsPerRow;
-  BinaryMorphWord sourceBits = packedRow[sourceWordIndex] >> sourceShift;
-  if(sourceShift != 0 && sourceWordIndex + 1 < layout.wordsPerRow)
+  const BinaryMorphWordType* packedRowPtr = view.words + slot * layout.plane_words + static_cast<usize>(y) * layout.words_per_row;
+  BinaryMorphWordType sourceBits = packedRowPtr[sourceWordIndex] >> sourceShift;
+  if(sourceShift != 0 && sourceWordIndex + 1 < layout.words_per_row)
   {
-    sourceBits |= packedRow[sourceWordIndex + 1] << (k_WordBits - sourceShift);
+    sourceBits |= packedRowPtr[sourceWordIndex + 1] << (k_WordBits - sourceShift);
   }
 
   const usize inBoundsCount = static_cast<usize>(inBoundsEnd - inBoundsBegin);
-  const BinaryMorphWord inBoundsMask = inBoundsCount == k_WordBits ? std::numeric_limits<BinaryMorphWord>::max() : (BinaryMorphWord{1} << inBoundsCount) - BinaryMorphWord{1};
+  const BinaryMorphWordType inBoundsMask = inBoundsCount == k_WordBits ? std::numeric_limits<BinaryMorphWordType>::max() : (BinaryMorphWordType{1} << inBoundsCount) - BinaryMorphWordType{1};
   const usize destinationShift = static_cast<usize>(inBoundsBegin - xStart);
-  const BinaryMorphWord destinationMask = inBoundsMask << destinationShift;
+  const BinaryMorphWordType destinationMask = inBoundsMask << destinationShift;
   return (boundaryWord & ~destinationMask) | ((sourceBits & inBoundsMask) << destinationShift);
 }
 
@@ -2057,16 +2059,16 @@ inline BinaryMorphWord ExtractPackedBinaryWord(const PackedBinaryPlanesView& vie
  * @return Folded packed membership word.
  */
 template <bool Dilate>
-BinaryMorphWord FoldPackedBinaryWord(const PackedBinaryPlanesView& view, const SizeVec3& boundDims, int64 xStart, int64 y, int64 z, const StructuringElement& se, bool boundaryToForeground)
+BinaryMorphWordType FoldPackedBinaryWord(const PackedBinaryPlanesView& view, const SizeVec3Type& boundDims, int64 xStart, int64 y, int64 z, const StructuringElement& se, bool boundaryToForeground)
 {
-  BinaryMorphWord folded = Dilate ? BinaryMorphWord{0} : std::numeric_limits<BinaryMorphWord>::max();
+  BinaryMorphWordType folded = Dilate ? BinaryMorphWordType{0} : std::numeric_limits<BinaryMorphWordType>::max();
   for(const SEOffset& offset : se.offsets)
   {
-    const BinaryMorphWord neighbor = ExtractPackedBinaryWord(view, boundDims, xStart + offset.dx, y + offset.dy, z + offset.dz, boundaryToForeground);
+    const BinaryMorphWordType neighbor = ExtractPackedBinaryWord(view, boundDims, xStart + offset.dx, y + offset.dy, z + offset.dz, boundaryToForeground);
     if constexpr(Dilate)
     {
       folded |= neighbor;
-      if(folded == std::numeric_limits<BinaryMorphWord>::max())
+      if(folded == std::numeric_limits<BinaryMorphWordType>::max())
       {
         break;
       }
@@ -2101,15 +2103,15 @@ BinaryMorphWord FoldPackedBinaryWord(const PackedBinaryPlanesView& view, const S
  * @tparam Dilate True for any; false for all.
  */
 template <class T, bool Dilate>
-bool RunPrepackedBinaryMorphologyBlock(const PackedBinaryPlanesView& view, T* output, const SizeVec3& boundDims, const SizeVec3& outputDims, const SizeVec3& outputOrigin, const StructuringElement& se,
-                                       T foreground, T background, bool boundaryToForeground, const std::atomic_bool& shouldCancel)
+bool RunPrepackedBinaryMorphologyBlock(const PackedBinaryPlanesView& view, T* output, const SizeVec3Type& boundDims, const SizeVec3Type& outputDims, const SizeVec3Type& outputOrigin,
+                                       const StructuringElement& se, T foreground, T background, bool boundaryToForeground, const std::atomic_bool& shouldCancel)
 {
   assert(!se.offsets.empty());
   if(shouldCancel)
   {
     return false;
   }
-  constexpr usize k_WordBits = std::numeric_limits<BinaryMorphWord>::digits;
+  constexpr usize k_WordBits = std::numeric_limits<BinaryMorphWordType>::digits;
   const usize outputWordsPerRow = outputDims[0] / k_WordBits + (outputDims[0] % k_WordBits == 0 ? 0 : 1);
   const usize outputRows = outputDims[1] * outputDims[2];
   ParallelDataAlgorithm parallelAlgorithm;
@@ -2130,13 +2132,13 @@ bool RunPrepackedBinaryMorphologyBlock(const PackedBinaryPlanesView& view, T* ou
       {
         const usize localX = outputWord * k_WordBits;
         const int64 xStart = static_cast<int64>(outputOrigin[0] + localX);
-        BinaryMorphWord folded = FoldPackedBinaryWord<Dilate>(view, boundDims, xStart, y, z, se, boundaryToForeground);
+        BinaryMorphWordType folded = FoldPackedBinaryWord<Dilate>(view, boundDims, xStart, y, z, se, boundaryToForeground);
         const usize validBits = std::min(k_WordBits, outputDims[0] - localX);
-        const BinaryMorphWord validMask = validBits == k_WordBits ? std::numeric_limits<BinaryMorphWord>::max() : (BinaryMorphWord{1} << validBits) - BinaryMorphWord{1};
+        const BinaryMorphWordType validMask = validBits == k_WordBits ? std::numeric_limits<BinaryMorphWordType>::max() : (BinaryMorphWordType{1} << validBits) - BinaryMorphWordType{1};
         folded &= validMask;
         for(usize bit = 0; bit < validBits; ++bit)
         {
-          outputRowPtr[localX + bit] = ((folded >> bit) & BinaryMorphWord{1}) != 0 ? foreground : background;
+          outputRowPtr[localX + bit] = ((folded >> bit) & BinaryMorphWordType{1}) != 0 ? foreground : background;
         }
       }
     }
@@ -2164,8 +2166,8 @@ bool RunPrepackedBinaryMorphologyBlock(const PackedBinaryPlanesView& view, T* ou
  * @tparam Dilate True for any; false for all.
  */
 template <class T, bool Dilate>
-bool RunPrepackedBinaryMorphologyBlock(const BinaryMorphWord* packedInput, T* output, const SizeVec3& boundDims, usize stagedZLo, usize stagedDepth, const SizeVec3& outputDims,
-                                       const SizeVec3& outputOrigin, const StructuringElement& se, T foreground, T background, bool boundaryToForeground, const std::atomic_bool& shouldCancel)
+bool RunPrepackedBinaryMorphologyBlock(const BinaryMorphWordType* packedInput, T* output, const SizeVec3Type& boundDims, usize stagedZLo, usize stagedDepth, const SizeVec3Type& outputDims,
+                                       const SizeVec3Type& outputOrigin, const StructuringElement& se, T foreground, T background, bool boundaryToForeground, const std::atomic_bool& shouldCancel)
 {
   const PackedBinaryPlaneLayout layout = MakePackedBinaryPlaneLayout(boundDims);
   return RunPrepackedBinaryMorphologyBlock<T, Dilate>({packedInput, layout, stagedZLo, stagedDepth, stagedDepth, 0}, output, boundDims, outputDims, outputOrigin, se, foreground, background,
@@ -2186,8 +2188,8 @@ bool RunPrepackedBinaryMorphologyBlock(const BinaryMorphWord* packedInput, T* ou
  * @tparam Dilate True for any; false for all.
  */
 template <bool Dilate>
-bool RunPrepackedBinaryMorphologyPlane(const PackedBinaryPlanesView& inputView, BinaryMorphWord* packedOutput, const SizeVec3& boundDims, const SizeVec3& outputOrigin, const StructuringElement& se,
-                                       bool boundaryToForeground, const std::atomic_bool& shouldCancel)
+bool RunPrepackedBinaryMorphologyPlane(const PackedBinaryPlanesView& inputView, BinaryMorphWordType* packedOutput, const SizeVec3Type& boundDims, const SizeVec3Type& outputOrigin,
+                                       const StructuringElement& se, bool boundaryToForeground, const std::atomic_bool& shouldCancel)
 {
   assert(!se.offsets.empty());
   if(shouldCancel)
@@ -2196,7 +2198,7 @@ bool RunPrepackedBinaryMorphologyPlane(const PackedBinaryPlanesView& inputView, 
   }
   const PackedBinaryPlaneLayout& layout = inputView.layout;
   ParallelDataAlgorithm parallelAlgorithm;
-  parallelAlgorithm.setRange(0, layout.dimY);
+  parallelAlgorithm.setRange(0, layout.dim_y);
   parallelAlgorithm.execute([&](const Range& range) {
     for(usize localY = range.min(); localY < range.max(); ++localY)
     {
@@ -2204,14 +2206,14 @@ bool RunPrepackedBinaryMorphologyPlane(const PackedBinaryPlanesView& inputView, 
       {
         return;
       }
-      BinaryMorphWord* outputRow = packedOutput + localY * layout.wordsPerRow;
+      BinaryMorphWordType* outputRowPtr = packedOutput + localY * layout.words_per_row;
       const int64 y = static_cast<int64>(outputOrigin[1] + localY);
       const int64 z = static_cast<int64>(outputOrigin[2]);
-      for(usize wordIndex = 0; wordIndex < layout.wordsPerRow; ++wordIndex)
+      for(usize wordIndex = 0; wordIndex < layout.words_per_row; ++wordIndex)
       {
-        const int64 xStart = static_cast<int64>(outputOrigin[0] + wordIndex * std::numeric_limits<BinaryMorphWord>::digits);
-        const BinaryMorphWord word = FoldPackedBinaryWord<Dilate>(inputView, boundDims, xStart, y, z, se, boundaryToForeground);
-        outputRow[wordIndex] = word & (wordIndex + 1 == layout.wordsPerRow ? layout.validLastWordMask : std::numeric_limits<BinaryMorphWord>::max());
+        const int64 xStart = static_cast<int64>(outputOrigin[0] + wordIndex * std::numeric_limits<BinaryMorphWordType>::digits);
+        const BinaryMorphWordType word = FoldPackedBinaryWord<Dilate>(inputView, boundDims, xStart, y, z, se, boundaryToForeground);
+        outputRowPtr[wordIndex] = word & (wordIndex + 1 == layout.words_per_row ? layout.valid_last_word_mask : std::numeric_limits<BinaryMorphWordType>::max());
       }
     }
   });
@@ -2232,14 +2234,14 @@ bool RunPrepackedBinaryMorphologyPlane(const PackedBinaryPlanesView& inputView, 
  * @tparam T Scalar voxel type.
  */
 template <class T>
-bool PackBinaryPaddedPlane(const T* sourcePlane, BinaryMorphWord* packedOutput, const PackedBinaryPlaneLayout& layout, const SizeVec3& sourceDims, const std::array<usize, 3>& cropOffset, T foreground,
-                           const std::atomic_bool& shouldCancel)
+bool PackBinaryPaddedPlane(const T* sourcePlane, BinaryMorphWordType* packedOutput, const PackedBinaryPlaneLayout& layout, const SizeVec3Type& sourceDims, const std::array<usize, 3>& cropOffset,
+                           T foreground, const std::atomic_bool& shouldCancel)
 {
   if(shouldCancel)
   {
     return false;
   }
-  std::fill_n(packedOutput, layout.planeWords, BinaryMorphWord{0});
+  std::fill_n(packedOutput, layout.plane_words, BinaryMorphWordType{0});
   if(sourcePlane == nullptr)
   {
     return !shouldCancel;
@@ -2253,17 +2255,17 @@ bool PackBinaryPaddedPlane(const T* sourcePlane, BinaryMorphWord* packedOutput, 
       {
         return;
       }
-      BinaryMorphWord* packedRow = packedOutput + (cropOffset[1] + y) * layout.wordsPerRow;
-      const T* sourceRow = sourcePlane + y * sourceDims[0];
+      BinaryMorphWordType* packedRowPtr = packedOutput + (cropOffset[1] + y) * layout.words_per_row;
+      const T* sourceRowPtr = sourcePlane + y * sourceDims[0];
       for(usize x = 0; x < sourceDims[0]; ++x)
       {
-        if(sourceRow[x] == foreground)
+        if(sourceRowPtr[x] == foreground)
         {
           const usize paddedX = cropOffset[0] + x;
-          packedRow[paddedX / std::numeric_limits<BinaryMorphWord>::digits] |= BinaryMorphWord{1} << (paddedX % std::numeric_limits<BinaryMorphWord>::digits);
+          packedRowPtr[paddedX / std::numeric_limits<BinaryMorphWordType>::digits] |= BinaryMorphWordType{1} << (paddedX % std::numeric_limits<BinaryMorphWordType>::digits);
         }
       }
-      packedRow[layout.wordsPerRow - 1] &= layout.validLastWordMask;
+      packedRowPtr[layout.words_per_row - 1] &= layout.valid_last_word_mask;
     }
   });
   return !shouldCancel;
@@ -2289,17 +2291,17 @@ bool PackBinaryPaddedPlane(const T* sourcePlane, BinaryMorphWord* packedOutput, 
  * @tparam Dilate True for any; false for all.
  */
 template <class T, bool Dilate>
-bool RunPackedBinaryMorphologyBlock(const T* stagedInput, T* output, const SizeVec3& boundDims, usize stagedZLo, usize stagedDepth, const SizeVec3& outputDims, const SizeVec3& outputOrigin,
-                                    const StructuringElement& se, T foreground, T background, bool boundaryToForeground, const std::atomic_bool& shouldCancel)
+bool RunPackedBinaryMorphologyBlock(const T* stagedInput, T* output, const SizeVec3Type& boundDims, usize stagedZLo, usize stagedDepth, const SizeVec3Type& outputDims,
+                                    const SizeVec3Type& outputOrigin, const StructuringElement& se, T foreground, T background, bool boundaryToForeground, const std::atomic_bool& shouldCancel)
 {
   const PackedBinaryPlaneLayout layout = MakePackedBinaryPlaneLayout(boundDims);
   usize packedWordCount = 0;
-  if(!TryMultiplyMorphologySize(layout.planeWords, stagedDepth, packedWordCount))
+  if(!TryMultiplyMorphologySize(layout.plane_words, stagedDepth, packedWordCount))
   {
     assert(false && "Packed binary staged-plane dimensions overflow");
     return false;
   }
-  std::vector<BinaryMorphWord> packedInput(packedWordCount);
+  std::vector<BinaryMorphWordType> packedInput(packedWordCount);
   if(!PackBinaryMorphologyStagedPlanes(stagedInput, packedInput.data(), layout, stagedDepth, foreground, shouldCancel))
   {
     return false;
@@ -2354,11 +2356,11 @@ template <class T, bool Dilate>
 void RunMorphologySlabWindow(const T* slab, T* outSlab, usize dimX, usize dimY, usize dimZ, usize zLo, usize zBegin, usize outputDepth, const StructuringElement& se, const AxisAddRemoveSets& axisSets,
                              const std::atomic_bool& shouldCancel)
 {
-  using Hist = MorphHistogram<T, Dilate>;
+  using HistType = MorphHistogramType<T, Dilate>;
   const usize sliceValues = dimX * dimY;
   const int64 nX = static_cast<int64>(dimX);
-  const int64 nY = static_cast<int64>(dimY);
-  const int64 nZ = static_cast<int64>(dimZ);
+  const int64 ny = static_cast<int64>(dimY);
+  const int64 nz = static_cast<int64>(dimZ);
   const int64 rX = (se.radius[0] > 0) ? se.radius[0] : 0;
   const int64 rY = (se.radius[1] > 0) ? se.radius[1] : 0;
   const int64 rZ = (se.radius[2] > 0) ? se.radius[2] : 0;
@@ -2369,12 +2371,12 @@ void RunMorphologySlabWindow(const T* slab, T* outSlab, usize dimX, usize dimY, 
   // Reads a GLOBAL (x,y,z) out of the slab; valid whenever (x,y,z) is in-bounds, since the slab always
   // spans every global Z the window can reach for this batch (see class docs).
   auto flat = [slab, sliceValues, dimX, zLo](int64 x, int64 y, int64 z) -> T { return slab[(static_cast<usize>(z) - zLo) * sliceValues + static_cast<usize>(y) * dimX + static_cast<usize>(x)]; };
-  auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < nY && z >= 0 && z < nZ; };
+  auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < ny && z >= 0 && z < nz; };
 
   // Slide the histogram from center (cx,cy,cz) by +1 along axis a -- identical to MorphDirect's push,
   // reading through the slab-relative `flat` instead of a whole-volume buffer.
-  auto push = [&](Hist& h, int64 cx, int64 cy, int64 cz, int a) {
-    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < nY) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nZ);
+  auto push = [&](HistType& h, int64 cx, int64 cy, int64 cz, int a) {
+    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < ny) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nz);
     if(fast)
     {
       for(const SEOffset& q : added[a])
@@ -2422,7 +2424,7 @@ void RunMorphologySlabWindow(const T* slab, T* outSlab, usize dimX, usize dimY, 
   // Seed a row-start window at (0, rowY, z) -- a one-time O(|SE|) gather so each (localZ, yBlock) work item
   // below builds its OWN starting histogram independently of every other item, at an arbitrary row start
   // rather than only a plane's first row (mirrors RunMorphologyPlaneWindow's row-start seeding).
-  auto seedRowHist = [&](Hist& h, int64 rowY, int64 z) {
+  auto seedRowHist = [&](HistType& h, int64 rowY, int64 z) {
     h.setBoundary(boundary);
     for(const SEOffset& o : se.offsets)
     {
@@ -2451,8 +2453,8 @@ void RunMorphologySlabWindow(const T* slab, T* outSlab, usize dimX, usize dimY, 
     // seeding (seedRowHist only ADDS the window's entries; the histogram types keep their contents
     // across setBoundary, so seeding a carried-over histogram would fold the previous item's final
     // window into this one). histX is reset by assignment each row.
-    Hist histY;
-    Hist histX;
+    HistType histY;
+    HistType histX;
 
     for(usize item = itemRange.min(); item < itemRange.max(); ++item)
     {
@@ -2466,7 +2468,7 @@ void RunMorphologySlabWindow(const T* slab, T* outSlab, usize dimX, usize dimY, 
       const usize yEnd = std::min(dimY, yBegin + blockRows);
       const int64 z = static_cast<int64>(zBegin + localZ);
 
-      histY = Hist{};
+      histY = HistType{};
       seedRowHist(histY, static_cast<int64>(yBegin), z);
       for(usize y = yBegin; y < yEnd; ++y)
       {
@@ -2525,12 +2527,12 @@ template <class T, bool Dilate>
 void RunBinaryMorphologySlabWindow(const T* slab, T* outSlab, usize dimX, usize dimY, usize dimZ, usize zLo, usize zBegin, usize outputDepth, const StructuringElement& se,
                                    const AxisAddRemoveSets& axisSets, T fg, T bg, bool boundaryToForeground, const std::atomic_bool& shouldCancel)
 {
-  using Acc = FgCountAccumulator<T, Dilate>;
+  using AccType = FgCountAccumulator<T, Dilate>;
   const usize windowSize = se.offsets.size();
   const usize sliceValues = dimX * dimY;
   const int64 nX = static_cast<int64>(dimX);
-  const int64 nY = static_cast<int64>(dimY);
-  const int64 nZ = static_cast<int64>(dimZ);
+  const int64 ny = static_cast<int64>(dimY);
+  const int64 nz = static_cast<int64>(dimZ);
   const int64 rX = (se.radius[0] > 0) ? se.radius[0] : 0;
   const int64 rY = (se.radius[1] > 0) ? se.radius[1] : 0;
   const int64 rZ = (se.radius[2] > 0) ? se.radius[2] : 0;
@@ -2539,13 +2541,13 @@ void RunBinaryMorphologySlabWindow(const T* slab, T* outSlab, usize dimX, usize 
 
   // Reads a GLOBAL (x,y,z) out of the slab; valid whenever (x,y,z) is in-bounds (see RunMorphologySlabWindow).
   auto flat = [slab, sliceValues, dimX, zLo](int64 x, int64 y, int64 z) -> T { return slab[(static_cast<usize>(z) - zLo) * sliceValues + static_cast<usize>(y) * dimX + static_cast<usize>(x)]; };
-  auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < nY && z >= 0 && z < nZ; };
+  auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < ny && z >= 0 && z < nz; };
 
   // Slide the accumulator from center (cx,cy,cz) by +1 along axis a -- identical shape to
   // RunMorphologySlabWindow's push, folding in/out via addPixel/removePixel/addBoundary/removeBoundary instead
   // of a min/max histogram update.
-  auto push = [&](Acc& acc, int64 cx, int64 cy, int64 cz, int a) {
-    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < nY) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nZ);
+  auto push = [&](AccType& acc, int64 cx, int64 cy, int64 cz, int a) {
+    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < ny) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nz);
     if(fast)
     {
       for(const SEOffset& q : added[a])
@@ -2593,7 +2595,7 @@ void RunBinaryMorphologySlabWindow(const T* slab, T* outSlab, usize dimX, usize 
   // Seeds a fresh row-start window at (0, rowY, z) -- a one-time O(|SE|) gather into a NEWLY-CONSTRUCTED
   // accumulator (see class docs for why this constructs rather than resets a shared instance).
   auto seedRowAcc = [&](int64 rowY, int64 z) {
-    Acc acc(fg, bg, boundaryToForeground, windowSize);
+    AccType acc(fg, bg, boundaryToForeground, windowSize);
     for(const SEOffset& o : se.offsets)
     {
       const int64 x = o.dx;
@@ -2630,14 +2632,14 @@ void RunBinaryMorphologySlabWindow(const T* slab, T* outSlab, usize dimX, usize 
       const usize yEnd = std::min(dimY, yBegin + blockRows);
       const int64 z = static_cast<int64>(zBegin + localZ);
 
-      Acc accY = seedRowAcc(static_cast<int64>(yBegin), z);
+      AccType accY = seedRowAcc(static_cast<int64>(yBegin), z);
       for(usize y = yBegin; y < yEnd; ++y)
       {
         if(y > yBegin)
         {
           push(accY, 0, static_cast<int64>(y) - 1, z, 1);
         }
-        Acc accX = accY;
+        AccType accX = accY;
         for(int64 x = 0; x < nX; ++x)
         {
           outSlab[localZ * sliceValues + y * dimX + static_cast<usize>(x)] = accX.getValue();
@@ -2696,11 +2698,11 @@ template <class T, bool Dilate>
 void RunMorphologyPlaneWindow(const T* slab, T* outPlane, usize boundDimX, usize boundDimY, usize boundDimZ, usize slabZLo, usize outputDimX, usize outputDimY,
                               const std::array<usize, 3>& originOffset, usize outputZ, const StructuringElement& se, const AxisAddRemoveSets& axisSets, const std::atomic_bool& shouldCancel)
 {
-  using Hist = MorphHistogram<T, Dilate>;
+  using HistType = MorphHistogramType<T, Dilate>;
   const usize boundSliceValues = boundDimX * boundDimY;
   const int64 nX = static_cast<int64>(boundDimX);
-  const int64 nY = static_cast<int64>(boundDimY);
-  const int64 nZ = static_cast<int64>(boundDimZ);
+  const int64 ny = static_cast<int64>(boundDimY);
+  const int64 nz = static_cast<int64>(boundDimZ);
   const int64 rX = (se.radius[0] > 0) ? se.radius[0] : 0;
   const int64 rY = (se.radius[1] > 0) ? se.radius[1] : 0;
   const int64 rZ = (se.radius[2] > 0) ? se.radius[2] : 0;
@@ -2716,12 +2718,12 @@ void RunMorphologyPlaneWindow(const T* slab, T* outPlane, usize boundDimX, usize
   auto flat = [slab, boundSliceValues, boundDimX, slabZLo](int64 x, int64 y, int64 zc) -> T {
     return slab[(static_cast<usize>(zc) - slabZLo) * boundSliceValues + static_cast<usize>(y) * boundDimX + static_cast<usize>(x)];
   };
-  auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 zc) { return x >= 0 && x < nX && y >= 0 && y < nY && zc >= 0 && zc < nZ; };
+  auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 zc) { return x >= 0 && x < nX && y >= 0 && y < ny && zc >= 0 && zc < nz; };
 
   // Slide the histogram from center (cx,cy,cz) by +1 along axis a -- identical to RunMorphologySlabWindow's
   // push, reading through the ring-relative `flat` instead of a whole-slab buffer.
-  auto push = [&](Hist& h, int64 cx, int64 cy, int64 cz, int a) {
-    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < nY) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nZ);
+  auto push = [&](HistType& h, int64 cx, int64 cy, int64 cz, int a) {
+    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < ny) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nz);
     if(fast)
     {
       for(const SEOffset& q : added[a])
@@ -2769,7 +2771,7 @@ void RunMorphologyPlaneWindow(const T* slab, T* outPlane, usize boundDimX, usize
   // Seeds a row-start window at (originX, rowY, z) -- a one-time O(|SE|) gather so each Y-worker below
   // builds its OWN starting histogram independently of every other worker (mirrors RunMorphologySlabWindow's
   // per-worker seedHist, but at an arbitrary row start instead of a plane start, since Z never changes here).
-  auto seedHist = [&](Hist& h, int64 rowY) {
+  auto seedHist = [&](HistType& h, int64 rowY) {
     h.setBoundary(boundary);
     for(const SEOffset& o : se.offsets)
     {
@@ -2800,9 +2802,9 @@ void RunMorphologyPlaneWindow(const T* slab, T* outPlane, usize boundDimX, usize
     // Per-worker scratch: two histograms seeded at this worker's OWN row start (originX, originY +
     // workerYBegin, z), independent of every other worker. histX is reset by assignment each row, reusing
     // its capacity.
-    Hist histY;
+    HistType histY;
     seedHist(histY, originY + static_cast<int64>(workerYBegin));
-    Hist histX;
+    HistType histX;
 
     for(usize oy = workerYBegin; oy < workerYEnd; ++oy)
     {
@@ -2852,12 +2854,12 @@ void RunBinaryMorphologyPlaneWindow(const T* slab, T* outPlane, usize boundDimX,
                                     const std::array<usize, 3>& originOffset, usize outputZ, const StructuringElement& se, const AxisAddRemoveSets& axisSets, T fg, T bg, bool boundaryToForeground,
                                     const std::atomic_bool& shouldCancel)
 {
-  using Acc = FgCountAccumulator<T, Dilate>;
+  using AccType = FgCountAccumulator<T, Dilate>;
   const usize windowSize = se.offsets.size();
   const usize boundSliceValues = boundDimX * boundDimY;
   const int64 nX = static_cast<int64>(boundDimX);
-  const int64 nY = static_cast<int64>(boundDimY);
-  const int64 nZ = static_cast<int64>(boundDimZ);
+  const int64 ny = static_cast<int64>(boundDimY);
+  const int64 nz = static_cast<int64>(boundDimZ);
   const int64 rX = (se.radius[0] > 0) ? se.radius[0] : 0;
   const int64 rY = (se.radius[1] > 0) ? se.radius[1] : 0;
   const int64 rZ = (se.radius[2] > 0) ? se.radius[2] : 0;
@@ -2871,12 +2873,12 @@ void RunBinaryMorphologyPlaneWindow(const T* slab, T* outPlane, usize boundDimX,
   auto flat = [slab, boundSliceValues, boundDimX, slabZLo](int64 x, int64 y, int64 zc) -> T {
     return slab[(static_cast<usize>(zc) - slabZLo) * boundSliceValues + static_cast<usize>(y) * boundDimX + static_cast<usize>(x)];
   };
-  auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 zc) { return x >= 0 && x < nX && y >= 0 && y < nY && zc >= 0 && zc < nZ; };
+  auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 zc) { return x >= 0 && x < nX && y >= 0 && y < ny && zc >= 0 && zc < nz; };
 
   // Slide the accumulator from center (cx,cy,cz) by +1 along axis a -- identical shape to
   // RunMorphologyPlaneWindow's push, reading through the ring-relative `flat`.
-  auto push = [&](Acc& acc, int64 cx, int64 cy, int64 cz, int a) {
-    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < nY) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nZ);
+  auto push = [&](AccType& acc, int64 cx, int64 cy, int64 cz, int a) {
+    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < ny) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nz);
     if(fast)
     {
       for(const SEOffset& q : added[a])
@@ -2925,7 +2927,7 @@ void RunBinaryMorphologyPlaneWindow(const T* slab, T* outPlane, usize boundDimX,
   // grayscale seedHist, @ref detail::FgCountAccumulator has no default constructor, so the caller constructs
   // a fresh {fg, bg, boundaryToForeground, windowSize} accumulator once per worker and this only performs the
   // O(|SE|) gather into it (mirrors RunMorphologyPlaneWindow's row-start seeding).
-  auto seedAcc = [&](Acc& acc, int64 rowY) {
+  auto seedAcc = [&](AccType& acc, int64 rowY) {
     for(const SEOffset& o : se.offsets)
     {
       const int64 x = originX + o.dx;
@@ -2954,9 +2956,9 @@ void RunBinaryMorphologyPlaneWindow(const T* slab, T* outPlane, usize boundDimX,
 
     // Per-worker scratch: two accumulators seeded at this worker's OWN row start (originX, originY +
     // workerYBegin, z), independent of every other worker. accX is reset by assignment each row.
-    Acc accY(fg, bg, boundaryToForeground, windowSize);
+    AccType accY(fg, bg, boundaryToForeground, windowSize);
     seedAcc(accY, originY + static_cast<int64>(workerYBegin));
-    Acc accX(fg, bg, boundaryToForeground, windowSize);
+    AccType accX(fg, bg, boundaryToForeground, windowSize);
 
     for(usize oy = workerYBegin; oy < workerYEnd; ++oy)
     {
@@ -3001,11 +3003,11 @@ template <class T>
 void RunMorphologyGradientSlabWindow(const T* slab, T* outSlab, usize dimX, usize dimY, usize dimZ, usize zLo, usize zBegin, usize outputDepth, const StructuringElement& se,
                                      const AxisAddRemoveSets& axisSets, const std::atomic_bool& shouldCancel)
 {
-  using Hist = MorphGradientHistogram<T>;
+  using HistType = MorphGradientHistogramType<T>;
   const usize sliceValues = dimX * dimY;
   const int64 nX = static_cast<int64>(dimX);
-  const int64 nY = static_cast<int64>(dimY);
-  const int64 nZ = static_cast<int64>(dimZ);
+  const int64 ny = static_cast<int64>(dimY);
+  const int64 nz = static_cast<int64>(dimZ);
   const int64 rX = (se.radius[0] > 0) ? se.radius[0] : 0;
   const int64 rY = (se.radius[1] > 0) ? se.radius[1] : 0;
   const int64 rZ = (se.radius[2] > 0) ? se.radius[2] : 0;
@@ -3013,10 +3015,10 @@ void RunMorphologyGradientSlabWindow(const T* slab, T* outSlab, usize dimX, usiz
   const std::array<std::vector<SEOffset>, 3>& removed = axisSets.removed;
 
   auto flat = [slab, sliceValues, dimX, zLo](int64 x, int64 y, int64 z) -> T { return slab[(static_cast<usize>(z) - zLo) * sliceValues + static_cast<usize>(y) * dimX + static_cast<usize>(x)]; };
-  auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < nY && z >= 0 && z < nZ; };
+  auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < ny && z >= 0 && z < nz; };
 
-  auto push = [&](Hist& h, int64 cx, int64 cy, int64 cz, int a) {
-    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < nY) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nZ);
+  auto push = [&](HistType& h, int64 cx, int64 cy, int64 cz, int a) {
+    const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < ny) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nz);
     if(fast)
     {
       for(const SEOffset& q : added[a])
@@ -3063,7 +3065,7 @@ void RunMorphologyGradientSlabWindow(const T* slab, T* outSlab, usize dimX, usiz
 
   // Seed a row-start window at (0, rowY, z) (mirrors RunMorphologySlabWindow's seedRowHist; no boundary
   // value to set since addBoundary/removeBoundary are no-ops for the fused gradient).
-  auto seedRowHist = [&](Hist& h, int64 rowY, int64 z) {
+  auto seedRowHist = [&](HistType& h, int64 rowY, int64 z) {
     for(const SEOffset& o : se.offsets)
     {
       const int64 x = o.dx;
@@ -3091,8 +3093,8 @@ void RunMorphologyGradientSlabWindow(const T* slab, T* outSlab, usize dimX, usiz
     // seeding (seedRowHist only ADDS the window's entries; the histogram types keep their contents
     // across setBoundary, so seeding a carried-over histogram would fold the previous item's final
     // window into this one). histX is reset by assignment each row.
-    Hist histY;
-    Hist histX;
+    HistType histY;
+    HistType histX;
 
     for(usize item = itemRange.min(); item < itemRange.max(); ++item)
     {
@@ -3106,7 +3108,7 @@ void RunMorphologyGradientSlabWindow(const T* slab, T* outSlab, usize dimX, usiz
       const usize yEnd = std::min(dimY, yBegin + blockRows);
       const int64 z = static_cast<int64>(zBegin + localZ);
 
-      histY = Hist{};
+      histY = HistType{};
       seedRowHist(histY, static_cast<int64>(yBegin), z);
       for(usize y = yBegin; y < yEnd; ++y)
       {
@@ -3149,11 +3151,11 @@ template <class T>
 class MorphScanline
 {
 public:
-  MorphScanline(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, MorphOp op, const std::atomic_bool& shouldCancel,
+  MorphScanline(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3Type dims, const StructuringElement& se, MorphOp op, const std::atomic_bool& shouldCancel,
                 const IFilter::MessageHandler& messageHandler, usize targetBufferBytes = detail::k_MorphologySlabTargetBytes)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_Op(op)
   , m_ShouldCancel(shouldCancel)
@@ -3188,11 +3190,11 @@ public:
     {
       return validation;
     }
-    if(plan.volumeValues == 0)
+    if(plan.volume_values == 0)
     {
       return {};
     }
-    const usize sliceValues = plan.sliceValues;
+    const usize sliceValues = plan.slice_values;
 
     ThrottledMessageHandler progressThrottle(m_MessageHandler);
     progressThrottle.reset(dimZ, "Applying morphology filter");
@@ -3205,15 +3207,15 @@ public:
                                                   return detail::Morphology2DBlockBody<T>{.input = input,
                                                                                           .output = output,
                                                                                           .offsets = m_SE.offsets.data(),
-                                                                                          .numOffsets = m_SE.offsets.size(),
-                                                                                          .dimX = dimX,
-                                                                                          .dimY = dimY,
-                                                                                          .inputXBegin = inputXBegin,
-                                                                                          .inputYBegin = inputYBegin,
-                                                                                          .inputWidth = inputWidth,
-                                                                                          .outputXBegin = outputXBegin,
-                                                                                          .outputYBegin = outputYBegin,
-                                                                                          .outputWidth = outputWidth,
+                                                                                          .num_offsets = m_SE.offsets.size(),
+                                                                                          .dim_x = dimX,
+                                                                                          .dim_y = dimY,
+                                                                                          .input_x_begin = inputXBegin,
+                                                                                          .input_y_begin = inputYBegin,
+                                                                                          .input_width = inputWidth,
+                                                                                          .output_x_begin = outputXBegin,
+                                                                                          .output_y_begin = outputYBegin,
+                                                                                          .output_width = outputWidth,
                                                                                           .dilate = dilate};
                                                 });
       if(result.valid() && !m_ShouldCancel)
@@ -3223,20 +3225,20 @@ public:
       return result;
     }
 
-    auto outSlab = std::make_unique<T[]>(plan.outputBatchDepth * sliceValues);
+    auto outSlab = std::make_unique<T[]>(plan.output_batch_depth * sliceValues);
 
     // Degenerate structuring element (empty offset list, only reachable for a radius-0 Annulus): there
     // are no neighbors to reduce, so pass the input through unchanged rather than emitting the fold
     // identity (lowest()/max()) into every voxel. Bounded: one output batch, reused across Z.
     if(m_SE.offsets.empty())
     {
-      for(usize zBegin = 0; zBegin < dimZ; zBegin += plan.outputBatchDepth)
+      for(usize zBegin = 0; zBegin < dimZ; zBegin += plan.output_batch_depth)
       {
         if(m_ShouldCancel)
         {
           return {};
         }
-        const usize outputDepth = std::min(plan.outputBatchDepth, dimZ - zBegin);
+        const usize outputDepth = std::min(plan.output_batch_depth, dimZ - zBegin);
         const usize outputValues = outputDepth * sliceValues;
         if(Result<> r = m_In.copyIntoBuffer(zBegin * sliceValues, nonstd::span<T>(outSlab.get(), outputValues)); r.invalid())
         {
@@ -3267,17 +3269,17 @@ public:
     // Allocate one input halo slab at the maximum batch depth and reuse it. The 16 MiB target covers
     // input plus output buffers whenever at least one plane fits; unusually wide images retain the
     // required one-plane O(slice) minimum. The bound never scales with the full volume depth.
-    auto slab = std::make_unique<T[]>(plan.maxInputDepth * sliceValues);
+    auto slab = std::make_unique<T[]>(plan.max_input_depth * sliceValues);
     usize loadedZLo = 0;
     usize loadedDepth = 0;
 
-    for(usize zBegin = 0; zBegin < dimZ; zBegin += plan.outputBatchDepth)
+    for(usize zBegin = 0; zBegin < dimZ; zBegin += plan.output_batch_depth)
     {
       if(m_ShouldCancel)
       {
         return {};
       }
-      const usize outputDepth = std::min(plan.outputBatchDepth, dimZ - zBegin);
+      const usize outputDepth = std::min(plan.output_batch_depth, dimZ - zBegin);
       const usize zEnd = zBegin + outputDepth;
       const usize zLo = (zBegin >= rz) ? (zBegin - rz) : 0;
       const usize zHi = (zEnd - 1) + std::min(rz, dimZ - zEnd);
@@ -3316,11 +3318,11 @@ public:
       {
         if(dilate)
         {
-          detail::RunMorphologyFlatFoldBlock<T, true>(slab.get(), outSlab.get(), m_Dims, zLo, SizeVec3{dimX, dimY, outputDepth}, SizeVec3{0, 0, zBegin}, m_SE, flatOffsets, m_ShouldCancel);
+          detail::RunMorphologyFlatFoldBlock<T, true>(slab.get(), outSlab.get(), m_Dims, zLo, SizeVec3Type{dimX, dimY, outputDepth}, SizeVec3Type{0, 0, zBegin}, m_SE, flatOffsets, m_ShouldCancel);
         }
         else
         {
-          detail::RunMorphologyFlatFoldBlock<T, false>(slab.get(), outSlab.get(), m_Dims, zLo, SizeVec3{dimX, dimY, outputDepth}, SizeVec3{0, 0, zBegin}, m_SE, flatOffsets, m_ShouldCancel);
+          detail::RunMorphologyFlatFoldBlock<T, false>(slab.get(), outSlab.get(), m_Dims, zLo, SizeVec3Type{dimX, dimY, outputDepth}, SizeVec3Type{0, 0, zBegin}, m_SE, flatOffsets, m_ShouldCancel);
         }
       }
       else
@@ -3351,7 +3353,7 @@ public:
 private:
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<T>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   const StructuringElement& m_SE;
   MorphOp m_Op;
   const std::atomic_bool& m_ShouldCancel;
@@ -3395,11 +3397,11 @@ template <class T>
 class MorphDirect
 {
 public:
-  MorphDirect(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, MorphOp op, const std::atomic_bool& shouldCancel,
+  MorphDirect(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3Type dims, const StructuringElement& se, MorphOp op, const std::atomic_bool& shouldCancel,
               const IFilter::MessageHandler& messageHandler)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_Op(op)
   , m_ShouldCancel(shouldCancel)
@@ -3479,14 +3481,14 @@ private:
     {
       return r;
     }
-    const T* in = data.get();
+    const T* inPtr = data.get();
 
     if constexpr(detail::k_UseVectorHistogram<T>)
     {
       if(detail::ShouldUseMorphologyResidentFlatFold(m_Dims, m_SE))
       {
         auto output = std::make_unique<T[]>(vol);
-        detail::RunMorphologyFlatFoldBlock<T, Dilate>(in, output.get(), m_Dims, 0, m_Dims, SizeVec3{0, 0, 0}, m_SE, m_ShouldCancel);
+        detail::RunMorphologyFlatFoldBlock<T, Dilate>(inPtr, output.get(), m_Dims, 0, m_Dims, SizeVec3Type{0, 0, 0}, m_SE, m_ShouldCancel);
         if(m_ShouldCancel)
         {
           return {};
@@ -3505,11 +3507,11 @@ private:
     // Boundary extremum folded in for out-of-image neighbors (see class docs / MorphOp).
     const T boundary = Dilate ? std::numeric_limits<T>::lowest() : std::numeric_limits<T>::max();
 
-    using Hist = detail::MorphHistogram<T, Dilate>;
+    using HistType = detail::MorphHistogramType<T, Dilate>;
 
     const int64 nX = static_cast<int64>(dimX);
-    const int64 nY = static_cast<int64>(dimY);
-    const int64 nZ = static_cast<int64>(dimZ);
+    const int64 ny = static_cast<int64>(dimY);
+    const int64 nz = static_cast<int64>(dimZ);
     // Per-axis radius (clamped >= 0). Any added/removed offset reaches at most r_a + 1 along axis a, so a
     // center whose (r_a + 1)-padded neighborhood is fully in bounds needs no per-voxel checks.
     const int64 rX = (m_SE.radius[0] > 0) ? m_SE.radius[0] : 0;
@@ -3526,23 +3528,23 @@ private:
     }
 #endif
 
-    auto flat = [nX, nY](int64 x, int64 y, int64 z) { return static_cast<usize>((z * nY + y) * nX + x); };
-    auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < nY && z >= 0 && z < nZ; };
+    auto flat = [nX, ny](int64 x, int64 y, int64 z) { return static_cast<usize>((z * ny + y) * nX + x); };
+    auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < ny && z >= 0 && z < nz; };
 
     // Slide the histogram from center (cx,cy,cz) by +1 along axis a: fold in the entering voxels, fold out
     // the leaving ones. The fast path (whole padded neighborhood in bounds) skips per-voxel checks; the slow
     // path substitutes the boundary extremum for OOB neighbors (== Scanline skipping them).
-    auto push = [&](Hist& h, int64 cx, int64 cy, int64 cz, int a) {
-      const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < nY) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nZ);
+    auto push = [&](HistType& h, int64 cx, int64 cy, int64 cz, int a) {
+      const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < ny) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nz);
       if(fast)
       {
         for(const SEOffset& q : added[a])
         {
-          h.addPixel(in[flat(cx + q.dx, cy + q.dy, cz + q.dz)]);
+          h.addPixel(inPtr[flat(cx + q.dx, cy + q.dy, cz + q.dz)]);
         }
         for(const SEOffset& o : removed[a])
         {
-          h.removePixel(in[flat(cx + o.dx, cy + o.dy, cz + o.dz)]);
+          h.removePixel(inPtr[flat(cx + o.dx, cy + o.dy, cz + o.dz)]);
         }
       }
       else
@@ -3554,7 +3556,7 @@ private:
           const int64 z = cz + q.dz;
           if(inBounds(x, y, z))
           {
-            h.addPixel(in[flat(x, y, z)]);
+            h.addPixel(inPtr[flat(x, y, z)]);
           }
           else
           {
@@ -3568,7 +3570,7 @@ private:
           const int64 z = cz + o.dz;
           if(inBounds(x, y, z))
           {
-            h.removePixel(in[flat(x, y, z)]);
+            h.removePixel(inPtr[flat(x, y, z)]);
           }
           else
           {
@@ -3581,7 +3583,7 @@ private:
     // Seed a plane-start window at corner (0,0,zStart) -- a one-time O(|SE|) init identical to the former
     // origin seed but shifted along Z, so each parallel Z-slab worker below can build its OWN starting
     // histogram independently instead of carrying one across slabs.
-    auto seedHist = [&](Hist& h, int64 zStart) {
+    auto seedHist = [&](HistType& h, int64 zStart) {
       h.setBoundary(boundary);
       for(const SEOffset& o : m_SE.offsets)
       {
@@ -3590,7 +3592,7 @@ private:
         const int64 z = zStart + o.dz;
         if(inBounds(x, y, z))
         {
-          h.addPixel(in[flat(x, y, z)]);
+          h.addPixel(inPtr[flat(x, y, z)]);
         }
         else
         {
@@ -3624,10 +3626,10 @@ private:
       // slab. histY (line start) and histX (working window) are declared ONCE per worker and reset by
       // assignment below, reusing their capacity instead of reallocating a histogram every line/plane --
       // byte-identical to copy-constructing them each iteration.
-      Hist histZ;
+      HistType histZ;
       seedHist(histZ, static_cast<int64>(zBegin));
-      Hist histY;
-      Hist histX;
+      HistType histY;
+      HistType histX;
 
       for(usize zc = zBegin; zc < zEnd; ++zc)
       {
@@ -3641,7 +3643,7 @@ private:
           push(histZ, 0, 0, z - 1, 2);
         }
         histY = histZ;
-        for(int64 y = 0; y < nY; ++y)
+        for(int64 y = 0; y < ny; ++y)
         {
           if(y > 0)
           {
@@ -3672,7 +3674,7 @@ private:
     };
 
     ParallelDataAlgorithm parallelAlgorithm;
-    IParallelAlgorithm::AlgorithmStores algStores{&m_In, &m_Out};
+    IParallelAlgorithm::AlgorithmStoresType algStores{&m_In, &m_Out};
     parallelAlgorithm.requireStoresInMemory(algStores);
     parallelAlgorithm.setRange(0, dimZ);
     parallelAlgorithm.execute(processZRange);
@@ -3686,7 +3688,7 @@ private:
 
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<T>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   const StructuringElement& m_SE;
   MorphOp m_Op;
   const std::atomic_bool& m_ShouldCancel;
@@ -3697,11 +3699,11 @@ template <class T>
 class MorphWorkingMemory
 {
 public:
-  MorphWorkingMemory(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, MorphOp op, const std::atomic_bool& shouldCancel,
+  MorphWorkingMemory(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3Type dims, const StructuringElement& se, MorphOp op, const std::atomic_bool& shouldCancel,
                      const IFilter::MessageHandler& messageHandler)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_Op(op)
   , m_ShouldCancel(shouldCancel)
@@ -3745,10 +3747,10 @@ public:
       }
       usize residentValues = 0;
       usize residentBytes = 0;
-      if(plan.volumeValues > 0 && plan.maxInputDepth <= std::numeric_limits<usize>::max() - plan.outputBatchDepth)
+      if(plan.volume_values > 0 && plan.max_input_depth <= std::numeric_limits<usize>::max() - plan.output_batch_depth)
       {
-        const usize residentPlaneCount = plan.maxInputDepth + plan.outputBatchDepth;
-        if(detail::TryMultiplyMorphologySize(residentPlaneCount, plan.sliceValues, residentValues) && detail::TryMultiplyMorphologySize(residentValues, sizeof(T), residentBytes))
+        const usize residentPlaneCount = plan.max_input_depth + plan.output_batch_depth;
+        if(detail::TryMultiplyMorphologySize(residentPlaneCount, plan.slice_values, residentValues) && detail::TryMultiplyMorphologySize(residentValues, sizeof(T), residentBytes))
         {
           allocation.reservation.shrinkTo(static_cast<uint64>(residentBytes));
         }
@@ -3761,7 +3763,7 @@ public:
 private:
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<T>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   const StructuringElement& m_SE;
   MorphOp m_Op;
   const std::atomic_bool& m_ShouldCancel;
@@ -3778,7 +3780,7 @@ private:
  * @tparam T scalar voxel type.
  */
 template <class T>
-Result<> ApplyMorphology(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, MorphOp op, const IDataArray& inArray,
+Result<> ApplyMorphology(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3Type& dims, const StructuringElement& se, MorphOp op, const IDataArray& inArray,
                          const IDataArray& outArray, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   if(auto layout = ValidateMorphologyLayout(dims, se, false, sizeof(T)); layout.invalid())
@@ -3790,18 +3792,18 @@ Result<> ApplyMorphology(const AbstractDataStore<T>& in, AbstractDataStore<T>& o
 }
 
 template <class T>
-Result<usize> CalculateMorphologyCompositePipelineWorkingMemoryBytes(const SizeVec3& dims, const StructuringElement& se, bool safeBorder)
+Result<usize> CalculateMorphologyCompositePipelineWorkingMemoryBytes(const SizeVec3Type& dims, const StructuringElement& se, bool safeBorder)
 {
   const std::array<usize, 3> cropOffset = safeBorder ? detail::MorphologySafeBorderPadRadius(se, dims) : std::array<usize, 3>{0, 0, 0};
-  SizeVec3 paddedDims = dims;
+  SizeVec3Type paddedDims = dims;
   if(safeBorder)
   {
     for(usize axis = 0; axis < 3; ++axis)
     {
       if(cropOffset[axis] > (std::numeric_limits<usize>::max() - dims[axis]) / 2)
       {
-        return MakeErrorResult<usize>(
-            -8479, fmt::format("SafeBorder morphology-composite padded dimensions overflow. Dimensions: {}; axis: {}; radius: {}.", StringUtilities::formatDimensions3D(dims), axis, cropOffset[axis]));
+        return MakeErrorResult<usize>(-8479, fmt::format("SafeBorder morphology-composite padded dimensions overflow. Dimensions: {}; axis: {}; radius: {}.",
+                                                         string_utilities::FormatDimensions3D(dims), axis, cropOffset[axis]));
       }
       paddedDims[axis] = dims[axis] + 2 * cropOffset[axis];
     }
@@ -3810,7 +3812,7 @@ Result<usize> CalculateMorphologyCompositePipelineWorkingMemoryBytes(const SizeV
   if(radiusZ > (std::numeric_limits<usize>::max() - 1) / 2)
   {
     return MakeErrorResult<usize>(
-        -8479, fmt::format("SafeBorder morphology-composite pipeline Z radius {} overflows its rolling-ring depth for dimensions {}.", radiusZ, StringUtilities::formatDimensions3D(dims)));
+        -8479, fmt::format("SafeBorder morphology-composite pipeline Z radius {} overflows its rolling-ring depth for dimensions {}.", radiusZ, string_utilities::FormatDimensions3D(dims)));
   }
   const usize ringDepth = 2 * radiusZ + 1;
   usize paddedSliceValues = 0;
@@ -3825,13 +3827,13 @@ Result<usize> CalculateMorphologyCompositePipelineWorkingMemoryBytes(const SizeV
   {
     return MakeErrorResult<usize>(
         -8479, fmt::format("SafeBorder morphology-composite pipeline working-memory dimensions overflow. Dimensions: {}; padded slice values: {}; output slice values: {}; ring depth: {}.",
-                           StringUtilities::formatDimensions3D(dims), paddedSliceValues, outputSliceValues, ringDepth));
+                           string_utilities::FormatDimensions3D(dims), paddedSliceValues, outputSliceValues, ringDepth));
   }
   return {requiredBytes};
 }
 
 template <class T>
-Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, AbstractDataStore<T>& output, const SizeVec3& dims, const StructuringElement& se, MorphOp firstOp, MorphOp secondOp,
+Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, AbstractDataStore<T>& output, const SizeVec3Type& dims, const StructuringElement& se, MorphOp firstOp, MorphOp secondOp,
                                           bool safeBorder, detail::MorphologyCompositeOutputMode outputMode, const std::atomic_bool& shouldCancel, usize grantedWorkingMemoryBytes)
 {
   if(auto layout = ValidateMorphologyLayout(dims, se, safeBorder, sizeof(T)); layout.invalid())
@@ -3850,7 +3852,7 @@ Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, Abs
   }
   const usize requiredBytes = requiredBytesResult.value();
   const std::array<usize, 3> cropOffset = safeBorder ? detail::MorphologySafeBorderPadRadius(se, dims) : std::array<usize, 3>{0, 0, 0};
-  SizeVec3 paddedDims = dims;
+  SizeVec3Type paddedDims = dims;
   if(safeBorder)
   {
     for(usize axis = 0; axis < 3; ++axis)
@@ -3867,12 +3869,12 @@ Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, Abs
      !detail::TryMultiplyMorphologySize(ringDepth, paddedSliceValues, ringValues))
   {
     return MakeErrorResult(-8479, fmt::format("SafeBorder morphology-composite pipeline slab dimensions overflow. Dimensions: {}; padded dimensions: {}; ring depth: {}.",
-                                              StringUtilities::formatDimensions3D(dims), StringUtilities::formatDimensions3D(paddedDims), ringDepth));
+                                              string_utilities::FormatDimensions3D(dims), string_utilities::FormatDimensions3D(paddedDims), ringDepth));
   }
   if(grantedWorkingMemoryBytes < requiredBytes)
   {
     return MakeErrorResult(-8480, fmt::format("SafeBorder morphology-composite pipeline requires {} bytes but only {} bytes are reserved. Dimensions: {}; padded dimensions: {}; Z radius: {}.",
-                                              requiredBytes, grantedWorkingMemoryBytes, StringUtilities::formatDimensions3D(dims), StringUtilities::formatDimensions3D(paddedDims), radiusZ));
+                                              requiredBytes, grantedWorkingMemoryBytes, string_utilities::FormatDimensions3D(dims), string_utilities::FormatDimensions3D(paddedDims), radiusZ));
   }
 
   auto inputRing = std::make_unique<T[]>(ringValues);
@@ -3915,7 +3917,7 @@ Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, Abs
   if(!detail::TryMultiplyMorphologySize(stagingPlanes, outputSliceValues, stagingBufferElements))
   {
     return MakeErrorResult(-8792, fmt::format("SafeBorder morphology-composite pipeline staging buffer size overflows. Dimensions: {}; staging planes: {}; output slice values: {}.",
-                                              StringUtilities::formatDimensions3D(dims), stagingPlanes, outputSliceValues));
+                                              string_utilities::FormatDimensions3D(dims), stagingPlanes, outputSliceValues));
   }
 
   std::vector<T> inputStagingBuffer(stagingBufferElements);
@@ -3966,8 +3968,8 @@ Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, Abs
       ++inputZLo;
       --inputDepth;
     }
-    T* plane = inputRing.get() + inputDepth * paddedSliceValues;
-    std::fill_n(plane, paddedSliceValues, padValue);
+    T* planePtr = inputRing.get() + inputDepth * paddedSliceValues;
+    std::fill_n(planePtr, paddedSliceValues, padValue);
     if(paddedZ >= cropOffset[2] && paddedZ < cropOffset[2] + dims[2])
     {
       const usize originalZ = paddedZ - cropOffset[2];
@@ -3986,11 +3988,11 @@ Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, Abs
         inputStagingCount = batchPlanes;
         inputStagingConsumed = 0;
       }
-      const T* sourcePlane = inputStagingBuffer.data() + inputStagingConsumed * outputSliceValues;
+      const T* sourcePlanePtr = inputStagingBuffer.data() + inputStagingConsumed * outputSliceValues;
       ++inputStagingConsumed;
       for(usize y = 0; y < dims[1]; ++y)
       {
-        std::copy_n(sourcePlane + y * dims[0], dims[0], plane + (cropOffset[1] + y) * paddedDims[0] + cropOffset[0]);
+        std::copy_n(sourcePlanePtr + y * dims[0], dims[0], planePtr + (cropOffset[1] + y) * paddedDims[0] + cropOffset[0]);
       }
     }
     if(inputDepth == 0)
@@ -4008,10 +4010,10 @@ Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, Abs
       ++firstZLo;
       --firstDepth;
     }
-    T* plane = firstRing.get() + firstDepth * paddedSliceValues;
+    T* planePtr = firstRing.get() + firstDepth * paddedSliceValues;
     if(se.offsets.empty())
     {
-      std::copy_n(inputRing.get() + (paddedZ - inputZLo) * paddedSliceValues, paddedSliceValues, plane);
+      std::copy_n(inputRing.get() + (paddedZ - inputZLo) * paddedSliceValues, paddedSliceValues, planePtr);
     }
     else
     {
@@ -4019,23 +4021,25 @@ Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, Abs
       {
         if(firstDilate)
         {
-          detail::RunMorphologyFlatFoldBlock<T, true>(inputRing.get(), plane, paddedDims, inputZLo, SizeVec3{paddedDims[0], paddedDims[1], 1}, SizeVec3{0, 0, paddedZ}, se, flatOffsets, shouldCancel);
+          detail::RunMorphologyFlatFoldBlock<T, true>(inputRing.get(), planePtr, paddedDims, inputZLo, SizeVec3Type{paddedDims[0], paddedDims[1], 1}, SizeVec3Type{0, 0, paddedZ}, se, flatOffsets,
+                                                      shouldCancel);
         }
         else
         {
-          detail::RunMorphologyFlatFoldBlock<T, false>(inputRing.get(), plane, paddedDims, inputZLo, SizeVec3{paddedDims[0], paddedDims[1], 1}, SizeVec3{0, 0, paddedZ}, se, flatOffsets, shouldCancel);
+          detail::RunMorphologyFlatFoldBlock<T, false>(inputRing.get(), planePtr, paddedDims, inputZLo, SizeVec3Type{paddedDims[0], paddedDims[1], 1}, SizeVec3Type{0, 0, paddedZ}, se, flatOffsets,
+                                                       shouldCancel);
         }
       }
       else
       {
         if(firstDilate)
         {
-          detail::RunMorphologyPlaneWindow<T, true>(inputRing.get(), plane, paddedDims[0], paddedDims[1], paddedDims[2], inputZLo, paddedDims[0], paddedDims[1], identityOrigin, paddedZ, se, *axisSets,
-                                                    shouldCancel);
+          detail::RunMorphologyPlaneWindow<T, true>(inputRing.get(), planePtr, paddedDims[0], paddedDims[1], paddedDims[2], inputZLo, paddedDims[0], paddedDims[1], identityOrigin, paddedZ, se,
+                                                    *axisSets, shouldCancel);
         }
         else
         {
-          detail::RunMorphologyPlaneWindow<T, false>(inputRing.get(), plane, paddedDims[0], paddedDims[1], paddedDims[2], inputZLo, paddedDims[0], paddedDims[1], identityOrigin, paddedZ, se,
+          detail::RunMorphologyPlaneWindow<T, false>(inputRing.get(), planePtr, paddedDims[0], paddedDims[1], paddedDims[2], inputZLo, paddedDims[0], paddedDims[1], identityOrigin, paddedZ, se,
                                                      *axisSets, shouldCancel);
         }
       }
@@ -4063,7 +4067,7 @@ Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, Abs
     {
       return MakeErrorResult(
           -8481, fmt::format("SafeBorder morphology-composite pipeline lost the original crop plane before subtraction. Dimensions: {}; first plane: {}; source center: {}; input range: [{}, {}].",
-                             StringUtilities::formatDimensions3D(dims), paddedFirstZ, sourceCenterZ, inputZLo, inputZLo + inputDepth));
+                             string_utilities::FormatDimensions3D(dims), paddedFirstZ, sourceCenterZ, inputZLo, inputZLo + inputDepth));
     }
     // Completed output planes accumulate here and flush to the store in one bulk copyFromBuffer call every
     // stagingPlanes planes (or whatever remains at the end); see flushOutputStaging above. outputZ is always
@@ -4073,46 +4077,46 @@ Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, Abs
     {
       outputStagingBase = outputZ;
     }
-    T* outputPlane = outputStagingBuffer.data() + outputStagingCount * outputSliceValues;
+    T* outputPlanePtr = outputStagingBuffer.data() + outputStagingCount * outputSliceValues;
     if(se.offsets.empty())
     {
-      const T* sourcePlane = firstRing.get() + (sourceCenterZ - firstZLo) * paddedSliceValues;
+      const T* sourcePlanePtr = firstRing.get() + (sourceCenterZ - firstZLo) * paddedSliceValues;
       for(usize y = 0; y < dims[1]; ++y)
       {
-        std::copy_n(sourcePlane + (cropOffset[1] + y) * paddedDims[0] + cropOffset[0], dims[0], outputPlane + y * dims[0]);
+        std::copy_n(sourcePlanePtr + (cropOffset[1] + y) * paddedDims[0] + cropOffset[0], dims[0], outputPlanePtr + y * dims[0]);
       }
     }
     else
     {
       if(useFlatFold)
       {
-        const SizeVec3 outputOrigin{cropOffset[0], cropOffset[1], cropOffset[2] + outputZ};
+        const SizeVec3Type outputOrigin{cropOffset[0], cropOffset[1], cropOffset[2] + outputZ};
         if(secondDilate)
         {
-          detail::RunMorphologyFlatFoldBlock<T, true>(firstRing.get(), outputPlane, paddedDims, firstZLo, SizeVec3{dims[0], dims[1], 1}, outputOrigin, se, flatOffsets, shouldCancel);
+          detail::RunMorphologyFlatFoldBlock<T, true>(firstRing.get(), outputPlanePtr, paddedDims, firstZLo, SizeVec3Type{dims[0], dims[1], 1}, outputOrigin, se, flatOffsets, shouldCancel);
         }
         else
         {
-          detail::RunMorphologyFlatFoldBlock<T, false>(firstRing.get(), outputPlane, paddedDims, firstZLo, SizeVec3{dims[0], dims[1], 1}, outputOrigin, se, flatOffsets, shouldCancel);
+          detail::RunMorphologyFlatFoldBlock<T, false>(firstRing.get(), outputPlanePtr, paddedDims, firstZLo, SizeVec3Type{dims[0], dims[1], 1}, outputOrigin, se, flatOffsets, shouldCancel);
         }
       }
       else
       {
         if(secondDilate)
         {
-          detail::RunMorphologyPlaneWindow<T, true>(firstRing.get(), outputPlane, paddedDims[0], paddedDims[1], paddedDims[2], firstZLo, dims[0], dims[1], cropOffset, outputZ, se, *axisSets,
+          detail::RunMorphologyPlaneWindow<T, true>(firstRing.get(), outputPlanePtr, paddedDims[0], paddedDims[1], paddedDims[2], firstZLo, dims[0], dims[1], cropOffset, outputZ, se, *axisSets,
                                                     shouldCancel);
         }
         else
         {
-          detail::RunMorphologyPlaneWindow<T, false>(firstRing.get(), outputPlane, paddedDims[0], paddedDims[1], paddedDims[2], firstZLo, dims[0], dims[1], cropOffset, outputZ, se, *axisSets,
+          detail::RunMorphologyPlaneWindow<T, false>(firstRing.get(), outputPlanePtr, paddedDims[0], paddedDims[1], paddedDims[2], firstZLo, dims[0], dims[1], cropOffset, outputZ, se, *axisSets,
                                                      shouldCancel);
         }
       }
     }
     if(outputMode != detail::MorphologyCompositeOutputMode::Morphology)
     {
-      const T* originalPlane = inputRing.get() + (sourceCenterZ - inputZLo) * paddedSliceValues;
+      const T* originalPlanePtr = inputRing.get() + (sourceCenterZ - inputZLo) * paddedSliceValues;
       ParallelDataAlgorithm parallelAlgorithm;
       parallelAlgorithm.setRange(0, dims[1]);
       parallelAlgorithm.execute([&](const Range& yRange) {
@@ -4120,7 +4124,7 @@ Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, Abs
         {
           return;
         }
-        detail::SubtractMorphologyPlaneRows(originalPlane, outputPlane, paddedDims[0], dims[0], cropOffset[0], cropOffset[1], outputMode, yRange.min(), yRange.max());
+        detail::SubtractMorphologyPlaneRows(originalPlanePtr, outputPlanePtr, paddedDims[0], dims[0], cropOffset[0], cropOffset[1], outputMode, yRange.min(), yRange.max());
       });
       if(shouldCancel)
       {
@@ -4202,7 +4206,7 @@ Result<> ApplyMorphologyCompositePipeline(const AbstractDataStore<T>& input, Abs
     if(radiusZ > std::numeric_limits<usize>::max() - paddedZCount)
     {
       return MakeErrorResult(-8481, fmt::format("SafeBorder=false morphology-composite virtual tail index overflows. Padded Z count: {}; Z radius: {}; dimensions: {}.", paddedZCount, radiusZ,
-                                                StringUtilities::formatDimensions3D(dims)));
+                                                string_utilities::FormatDimensions3D(dims)));
     }
     const usize virtualFirstZEnd = paddedZCount + radiusZ;
     for(usize virtualFirstZ = paddedZCount; virtualFirstZ < virtualFirstZEnd; ++virtualFirstZ)
@@ -4246,11 +4250,11 @@ template <class T>
 class MorphGradientScanline
 {
 public:
-  MorphGradientScanline(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, const std::atomic_bool& shouldCancel,
+  MorphGradientScanline(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3Type dims, const StructuringElement& se, const std::atomic_bool& shouldCancel,
                         const IFilter::MessageHandler& messageHandler, usize targetBufferBytes = detail::k_MorphologySlabTargetBytes)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
@@ -4283,11 +4287,11 @@ public:
     {
       return validation;
     }
-    if(plan.volumeValues == 0)
+    if(plan.volume_values == 0)
     {
       return {};
     }
-    const usize sliceValues = plan.sliceValues;
+    const usize sliceValues = plan.slice_values;
 
     ThrottledMessageHandler progressThrottle(m_MessageHandler);
     progressThrottle.reset(dimZ, "Applying morphology filter");
@@ -4303,16 +4307,16 @@ public:
           return MakeErrorResult(-8655, "The bounded 2-D morphology target cannot hold one value.");
         }
 
-        const usize chunkValues = std::min(plan.volumeValues, targetValues);
+        const usize chunkValues = std::min(plan.volume_values, targetValues);
         auto outputBuffer = std::make_unique<T[]>(chunkValues);
         std::fill_n(outputBuffer.get(), chunkValues, static_cast<T>(0));
-        for(usize start = 0; start < plan.volumeValues; start += chunkValues)
+        for(usize start = 0; start < plan.volume_values; start += chunkValues)
         {
           if(m_ShouldCancel)
           {
             return {};
           }
-          const usize count = std::min(chunkValues, plan.volumeValues - start);
+          const usize count = std::min(chunkValues, plan.volume_values - start);
           if(Result<> result = m_Out.copyFromBuffer(start, nonstd::span<const T>(outputBuffer.get(), count)); result.invalid())
           {
             return result;
@@ -4328,15 +4332,15 @@ public:
                                                   return detail::MorphGradient2DBlockBody<T>{.input = input,
                                                                                              .output = output,
                                                                                              .offsets = m_SE.offsets.data(),
-                                                                                             .numOffsets = m_SE.offsets.size(),
-                                                                                             .dimX = dimX,
-                                                                                             .dimY = dimY,
-                                                                                             .inputXBegin = inputXBegin,
-                                                                                             .inputYBegin = inputYBegin,
-                                                                                             .inputWidth = inputWidth,
-                                                                                             .outputXBegin = outputXBegin,
-                                                                                             .outputYBegin = outputYBegin,
-                                                                                             .outputWidth = outputWidth};
+                                                                                             .num_offsets = m_SE.offsets.size(),
+                                                                                             .dim_x = dimX,
+                                                                                             .dim_y = dimY,
+                                                                                             .input_x_begin = inputXBegin,
+                                                                                             .input_y_begin = inputYBegin,
+                                                                                             .input_width = inputWidth,
+                                                                                             .output_x_begin = outputXBegin,
+                                                                                             .output_y_begin = outputYBegin,
+                                                                                             .output_width = outputWidth};
                                                 });
       if(result.valid() && !m_ShouldCancel)
       {
@@ -4345,21 +4349,21 @@ public:
       return result;
     }
 
-    auto outSlab = std::make_unique<T[]>(plan.outputBatchDepth * sliceValues);
+    auto outSlab = std::make_unique<T[]>(plan.output_batch_depth * sliceValues);
 
     // Degenerate structuring element (empty offset list, only reachable for a radius-0 Annulus): the gradient
     // is dilate(passthrough) - erode(passthrough) == in - in == 0 at every voxel, so emit zeros -- byte-for-byte
     // identical to the old dilate/erode passthrough + SubtractStores. Bounded: one output batch, reused across Z.
     if(m_SE.offsets.empty())
     {
-      std::fill(outSlab.get(), outSlab.get() + plan.outputBatchDepth * sliceValues, static_cast<T>(0));
-      for(usize zBegin = 0; zBegin < dimZ; zBegin += plan.outputBatchDepth)
+      std::fill(outSlab.get(), outSlab.get() + plan.output_batch_depth * sliceValues, static_cast<T>(0));
+      for(usize zBegin = 0; zBegin < dimZ; zBegin += plan.output_batch_depth)
       {
         if(m_ShouldCancel)
         {
           return {};
         }
-        const usize outputDepth = std::min(plan.outputBatchDepth, dimZ - zBegin);
+        const usize outputDepth = std::min(plan.output_batch_depth, dimZ - zBegin);
         if(Result<> r = m_Out.copyFromBuffer(zBegin * sliceValues, nonstd::span<const T>(outSlab.get(), outputDepth * sliceValues)); r.invalid())
         {
           return r;
@@ -4379,17 +4383,17 @@ public:
     }
 
     // Reuse one bounded input halo slab across all output batches (see MorphScanline).
-    auto slab = std::make_unique<T[]>(plan.maxInputDepth * sliceValues);
+    auto slab = std::make_unique<T[]>(plan.max_input_depth * sliceValues);
     usize loadedZLo = 0;
     usize loadedDepth = 0;
 
-    for(usize zBegin = 0; zBegin < dimZ; zBegin += plan.outputBatchDepth)
+    for(usize zBegin = 0; zBegin < dimZ; zBegin += plan.output_batch_depth)
     {
       if(m_ShouldCancel)
       {
         return {};
       }
-      const usize outputDepth = std::min(plan.outputBatchDepth, dimZ - zBegin);
+      const usize outputDepth = std::min(plan.output_batch_depth, dimZ - zBegin);
       const usize zEnd = zBegin + outputDepth;
       const usize zLo = (zBegin >= rz) ? (zBegin - rz) : 0;
       const usize zHi = (zEnd - 1) + std::min(rz, dimZ - zEnd);
@@ -4426,7 +4430,7 @@ public:
 
       if(useFlatFold)
       {
-        detail::RunMorphologyGradientFlatFoldBlock<T>(slab.get(), outSlab.get(), m_Dims, zLo, SizeVec3{dimX, dimY, outputDepth}, SizeVec3{0, 0, zBegin}, m_SE, flatOffsets, m_ShouldCancel);
+        detail::RunMorphologyGradientFlatFoldBlock<T>(slab.get(), outSlab.get(), m_Dims, zLo, SizeVec3Type{dimX, dimY, outputDepth}, SizeVec3Type{0, 0, zBegin}, m_SE, flatOffsets, m_ShouldCancel);
       }
       else
       {
@@ -4449,7 +4453,7 @@ public:
 private:
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<T>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   const StructuringElement& m_SE;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
@@ -4485,11 +4489,11 @@ template <class T>
 class MorphGradientDirect
 {
 public:
-  MorphGradientDirect(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, const std::atomic_bool& shouldCancel,
+  MorphGradientDirect(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3Type dims, const StructuringElement& se, const std::atomic_bool& shouldCancel,
                       const IFilter::MessageHandler& messageHandler)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
@@ -4555,14 +4559,14 @@ public:
     {
       return r;
     }
-    const T* in = data.get();
+    const T* inPtr = data.get();
 
     if constexpr(detail::k_UseVectorHistogram<T>)
     {
       if(detail::ShouldUseMorphologyResidentFlatFold(m_Dims, m_SE))
       {
         auto output = std::make_unique<T[]>(vol);
-        detail::RunMorphologyGradientFlatFoldBlock<T>(in, output.get(), m_Dims, 0, m_Dims, SizeVec3{0, 0, 0}, m_SE, m_ShouldCancel);
+        detail::RunMorphologyGradientFlatFoldBlock<T>(inPtr, output.get(), m_Dims, 0, m_Dims, SizeVec3Type{0, 0, 0}, m_SE, m_ShouldCancel);
         if(m_ShouldCancel)
         {
           return {};
@@ -4577,11 +4581,11 @@ public:
     const std::array<std::vector<SEOffset>, 3>& added = axisSets.added;
     const std::array<std::vector<SEOffset>, 3>& removed = axisSets.removed;
 
-    using Hist = detail::MorphGradientHistogram<T>;
+    using HistType = detail::MorphGradientHistogramType<T>;
 
     const int64 nX = static_cast<int64>(dimX);
-    const int64 nY = static_cast<int64>(dimY);
-    const int64 nZ = static_cast<int64>(dimZ);
+    const int64 ny = static_cast<int64>(dimY);
+    const int64 nz = static_cast<int64>(dimZ);
     // Per-axis radius (clamped >= 0). Any added/removed offset reaches at most r_a + 1 along axis a, so a center
     // whose (r_a + 1)-padded neighborhood is fully in bounds needs no per-voxel checks.
     const int64 rX = (m_SE.radius[0] > 0) ? m_SE.radius[0] : 0;
@@ -4597,24 +4601,24 @@ public:
     }
 #endif
 
-    auto flat = [nX, nY](int64 x, int64 y, int64 z) { return static_cast<usize>((z * nY + y) * nX + x); };
-    auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < nY && z >= 0 && z < nZ; };
+    auto flat = [nX, ny](int64 x, int64 y, int64 z) { return static_cast<usize>((z * ny + y) * nX + x); };
+    auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < ny && z >= 0 && z < nz; };
 
     // Slide the fused histogram from center (cx,cy,cz) by +1 along axis a: fold in the entering voxels, fold out
     // the leaving ones. The fast path (whole padded neighborhood in bounds) skips per-voxel checks; the slow
     // path drops OOB neighbors (addBoundary/removeBoundary are no-ops for the gradient, since a boundary neighbor
     // wins neither extreme -- == MorphGradientScanline skipping them).
-    auto push = [&](Hist& h, int64 cx, int64 cy, int64 cz, int a) {
-      const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < nY) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nZ);
+    auto push = [&](HistType& h, int64 cx, int64 cy, int64 cz, int a) {
+      const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < ny) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nz);
       if(fast)
       {
         for(const SEOffset& q : added[a])
         {
-          h.addPixel(in[flat(cx + q.dx, cy + q.dy, cz + q.dz)]);
+          h.addPixel(inPtr[flat(cx + q.dx, cy + q.dy, cz + q.dz)]);
         }
         for(const SEOffset& o : removed[a])
         {
-          h.removePixel(in[flat(cx + o.dx, cy + o.dy, cz + o.dz)]);
+          h.removePixel(inPtr[flat(cx + o.dx, cy + o.dy, cz + o.dz)]);
         }
       }
       else
@@ -4626,7 +4630,7 @@ public:
           const int64 z = cz + q.dz;
           if(inBounds(x, y, z))
           {
-            h.addPixel(in[flat(x, y, z)]);
+            h.addPixel(inPtr[flat(x, y, z)]);
           }
           else
           {
@@ -4640,7 +4644,7 @@ public:
           const int64 z = cz + o.dz;
           if(inBounds(x, y, z))
           {
-            h.removePixel(in[flat(x, y, z)]);
+            h.removePixel(inPtr[flat(x, y, z)]);
           }
           else
           {
@@ -4652,7 +4656,7 @@ public:
 
     // Seed a plane-start window at corner (0,0,zStart) -- a one-time O(|SE|) init, so each parallel Z-slab worker
     // below builds its OWN starting histogram independently instead of carrying one across slabs.
-    auto seedHist = [&](Hist& h, int64 zStart) {
+    auto seedHist = [&](HistType& h, int64 zStart) {
       for(const SEOffset& o : m_SE.offsets)
       {
         const int64 x = o.dx;
@@ -4660,7 +4664,7 @@ public:
         const int64 z = zStart + o.dz;
         if(inBounds(x, y, z))
         {
-          h.addPixel(in[flat(x, y, z)]);
+          h.addPixel(inPtr[flat(x, y, z)]);
         }
         else
         {
@@ -4692,10 +4696,10 @@ public:
       // Seed this slab's plane-start window at its OWN origin corner (0,0,zBegin), independent of every other
       // slab. histY (line start) and histX (working window) are declared ONCE per worker and reset by assignment
       // below, reusing their capacity instead of reallocating a histogram every line/plane.
-      Hist histZ;
+      HistType histZ;
       seedHist(histZ, static_cast<int64>(zBegin));
-      Hist histY;
-      Hist histX;
+      HistType histY;
+      HistType histX;
 
       for(usize zc = zBegin; zc < zEnd; ++zc)
       {
@@ -4709,7 +4713,7 @@ public:
           push(histZ, 0, 0, z - 1, 2);
         }
         histY = histZ;
-        for(int64 y = 0; y < nY; ++y)
+        for(int64 y = 0; y < ny; ++y)
         {
           if(y > 0)
           {
@@ -4740,7 +4744,7 @@ public:
     };
 
     ParallelDataAlgorithm parallelAlgorithm;
-    IParallelAlgorithm::AlgorithmStores algStores{&m_In, &m_Out};
+    IParallelAlgorithm::AlgorithmStoresType algStores{&m_In, &m_Out};
     parallelAlgorithm.requireStoresInMemory(algStores);
     parallelAlgorithm.setRange(0, dimZ);
     parallelAlgorithm.execute(processZRange);
@@ -4755,7 +4759,7 @@ public:
 private:
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<T>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   const StructuringElement& m_SE;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
@@ -4765,11 +4769,11 @@ template <class T>
 class MorphGradientWorkingMemory
 {
 public:
-  MorphGradientWorkingMemory(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, const std::atomic_bool& shouldCancel,
+  MorphGradientWorkingMemory(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3Type dims, const StructuringElement& se, const std::atomic_bool& shouldCancel,
                              const IFilter::MessageHandler& messageHandler)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_ShouldCancel(shouldCancel)
   , m_MessageHandler(messageHandler)
@@ -4812,10 +4816,10 @@ public:
       }
       usize residentValues = 0;
       usize residentBytes = 0;
-      if(plan.volumeValues > 0 && plan.maxInputDepth <= std::numeric_limits<usize>::max() - plan.outputBatchDepth)
+      if(plan.volume_values > 0 && plan.max_input_depth <= std::numeric_limits<usize>::max() - plan.output_batch_depth)
       {
-        const usize residentPlaneCount = plan.maxInputDepth + plan.outputBatchDepth;
-        if(detail::TryMultiplyMorphologySize(residentPlaneCount, plan.sliceValues, residentValues) && detail::TryMultiplyMorphologySize(residentValues, sizeof(T), residentBytes))
+        const usize residentPlaneCount = plan.max_input_depth + plan.output_batch_depth;
+        if(detail::TryMultiplyMorphologySize(residentPlaneCount, plan.slice_values, residentValues) && detail::TryMultiplyMorphologySize(residentValues, sizeof(T), residentBytes))
         {
           allocation.reservation.shrinkTo(static_cast<uint64>(residentBytes));
         }
@@ -4828,7 +4832,7 @@ public:
 private:
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<T>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   const StructuringElement& m_SE;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
@@ -4846,8 +4850,8 @@ private:
  * @tparam T scalar voxel type.
  */
 template <class T>
-Result<> ApplyMorphologyGradient(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, const IDataArray& inArray, const IDataArray& outArray,
-                                 const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+Result<> ApplyMorphologyGradient(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3Type& dims, const StructuringElement& se, const IDataArray& inArray,
+                                 const IDataArray& outArray, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   if(auto layout = ValidateMorphologyLayout(dims, se, false, sizeof(T)); layout.invalid())
   {
@@ -4892,11 +4896,11 @@ template <class T>
 class BinaryMorphScanline
 {
 public:
-  BinaryMorphScanline(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, MorphOp op, T foreground, T background, bool boundaryToForeground,
+  BinaryMorphScanline(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3Type dims, const StructuringElement& se, MorphOp op, T foreground, T background, bool boundaryToForeground,
                       const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize targetBufferBytes = detail::k_MorphologySlabTargetBytes)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_Op(op)
   , m_Fg(foreground)
@@ -4934,11 +4938,11 @@ public:
     {
       return validation;
     }
-    if(plan.volumeValues == 0)
+    if(plan.volume_values == 0)
     {
       return {};
     }
-    const usize sliceValues = plan.sliceValues;
+    const usize sliceValues = plan.slice_values;
 
     ThrottledMessageHandler progressThrottle(m_MessageHandler);
     progressThrottle.reset(dimZ, "Applying morphology filter");
@@ -4951,19 +4955,19 @@ public:
                                                   return detail::BinaryMorphology2DBlockBody<T>{.input = input,
                                                                                                 .output = output,
                                                                                                 .offsets = m_SE.offsets.data(),
-                                                                                                .numOffsets = m_SE.offsets.size(),
-                                                                                                .dimX = dimX,
-                                                                                                .dimY = dimY,
-                                                                                                .inputXBegin = inputXBegin,
-                                                                                                .inputYBegin = inputYBegin,
-                                                                                                .inputWidth = inputWidth,
-                                                                                                .outputXBegin = outputXBegin,
-                                                                                                .outputYBegin = outputYBegin,
-                                                                                                .outputWidth = outputWidth,
+                                                                                                .num_offsets = m_SE.offsets.size(),
+                                                                                                .dim_x = dimX,
+                                                                                                .dim_y = dimY,
+                                                                                                .input_x_begin = inputXBegin,
+                                                                                                .input_y_begin = inputYBegin,
+                                                                                                .input_width = inputWidth,
+                                                                                                .output_x_begin = outputXBegin,
+                                                                                                .output_y_begin = outputYBegin,
+                                                                                                .output_width = outputWidth,
                                                                                                 .dilate = dilate,
                                                                                                 .foreground = m_Fg,
                                                                                                 .background = m_Bg,
-                                                                                                .boundaryToForeground = m_BoundaryToForeground};
+                                                                                                .boundary_to_foreground = m_BoundaryToForeground};
                                                 });
       if(result.valid() && !m_ShouldCancel)
       {
@@ -4972,20 +4976,20 @@ public:
       return result;
     }
 
-    auto outSlab = std::make_unique<T[]>(plan.outputBatchDepth * sliceValues);
+    auto outSlab = std::make_unique<T[]>(plan.output_batch_depth * sliceValues);
 
     // Degenerate structuring element (empty offset list, only reachable for a radius-0 Annulus): there are
     // no neighbors to count, so pass the input through unchanged, mirroring MorphScanline's degenerate-SE
     // handling. Bounded: one output batch, reused across Z.
     if(m_SE.offsets.empty())
     {
-      for(usize zBegin = 0; zBegin < dimZ; zBegin += plan.outputBatchDepth)
+      for(usize zBegin = 0; zBegin < dimZ; zBegin += plan.output_batch_depth)
       {
         if(m_ShouldCancel)
         {
           return {};
         }
-        const usize outputDepth = std::min(plan.outputBatchDepth, dimZ - zBegin);
+        const usize outputDepth = std::min(plan.output_batch_depth, dimZ - zBegin);
         const usize outputValues = outputDepth * sliceValues;
         if(Result<> r = m_In.copyIntoBuffer(zBegin * sliceValues, nonstd::span<T>(outSlab.get(), outputValues)); r.invalid())
         {
@@ -5013,30 +5017,30 @@ public:
     }
 
     // Reuse one bounded input halo slab across all output batches (see MorphScanline).
-    auto slab = std::make_unique<T[]>(plan.maxInputDepth * sliceValues);
+    auto slab = std::make_unique<T[]>(plan.max_input_depth * sliceValues);
     detail::PackedBinaryPlaneLayout packedLayout;
-    std::vector<detail::BinaryMorphWord> packedSlab;
+    std::vector<detail::BinaryMorphWordType> packedSlab;
     if(useFlatFold)
     {
       packedLayout = detail::MakePackedBinaryPlaneLayout(m_Dims);
       usize packedSlabWords = 0;
-      if(!detail::TryMultiplyMorphologySize(packedLayout.planeWords, plan.maxInputDepth, packedSlabWords))
+      if(!detail::TryMultiplyMorphologySize(packedLayout.plane_words, plan.max_input_depth, packedSlabWords))
       {
-        return MakeErrorResult(-8660, fmt::format("Packed binary morphology requires {} staged planes with image dimensions ({}). This overflows the addressable word count.", plan.maxInputDepth,
-                                                  StringUtilities::formatDimensions3D(m_Dims)));
+        return MakeErrorResult(-8660, fmt::format("Packed binary morphology requires {} staged planes with image dimensions ({}). This overflows the addressable word count.", plan.max_input_depth,
+                                                  string_utilities::FormatDimensions3D(m_Dims)));
       }
       packedSlab.resize(packedSlabWords);
     }
     usize loadedZLo = 0;
     usize loadedDepth = 0;
 
-    for(usize zBegin = 0; zBegin < dimZ; zBegin += plan.outputBatchDepth)
+    for(usize zBegin = 0; zBegin < dimZ; zBegin += plan.output_batch_depth)
     {
       if(m_ShouldCancel)
       {
         return {};
       }
-      const usize outputDepth = std::min(plan.outputBatchDepth, dimZ - zBegin);
+      const usize outputDepth = std::min(plan.output_batch_depth, dimZ - zBegin);
       const usize zEnd = zBegin + outputDepth;
       const usize zLo = (zBegin >= rz) ? (zBegin - rz) : 0;
       const usize zHi = (zEnd - 1) + std::min(rz, dimZ - zEnd);
@@ -5079,13 +5083,13 @@ public:
         }
         if(dilate)
         {
-          detail::RunPrepackedBinaryMorphologyBlock<T, true>(packedSlab.data(), outSlab.get(), m_Dims, zLo, slabDepth, SizeVec3{dimX, dimY, outputDepth}, SizeVec3{0, 0, zBegin}, m_SE, m_Fg, m_Bg,
-                                                             m_BoundaryToForeground, m_ShouldCancel);
+          detail::RunPrepackedBinaryMorphologyBlock<T, true>(packedSlab.data(), outSlab.get(), m_Dims, zLo, slabDepth, SizeVec3Type{dimX, dimY, outputDepth}, SizeVec3Type{0, 0, zBegin}, m_SE, m_Fg,
+                                                             m_Bg, m_BoundaryToForeground, m_ShouldCancel);
         }
         else
         {
-          detail::RunPrepackedBinaryMorphologyBlock<T, false>(packedSlab.data(), outSlab.get(), m_Dims, zLo, slabDepth, SizeVec3{dimX, dimY, outputDepth}, SizeVec3{0, 0, zBegin}, m_SE, m_Fg, m_Bg,
-                                                              m_BoundaryToForeground, m_ShouldCancel);
+          detail::RunPrepackedBinaryMorphologyBlock<T, false>(packedSlab.data(), outSlab.get(), m_Dims, zLo, slabDepth, SizeVec3Type{dimX, dimY, outputDepth}, SizeVec3Type{0, 0, zBegin}, m_SE, m_Fg,
+                                                              m_Bg, m_BoundaryToForeground, m_ShouldCancel);
         }
       }
       else
@@ -5101,18 +5105,18 @@ public:
           ParallelDataAlgorithm parallelAlgorithm;
           parallelAlgorithm.setRange(0, outputDepth * sliceValues);
           parallelAlgorithm.execute(detail::BinaryMorphPlaneBody<T>{.slab = slab.get(),
-                                                                    .outSlab = outSlab.get(),
+                                                                    .out_slab = outSlab.get(),
                                                                     .offsets = m_SE.offsets.data(),
-                                                                    .numOffsets = m_SE.offsets.size(),
-                                                                    .dimX = dimX,
-                                                                    .dimY = dimY,
-                                                                    .dimZ = dimZ,
-                                                                    .zLo = zLo,
-                                                                    .zBegin = zBegin,
+                                                                    .num_offsets = m_SE.offsets.size(),
+                                                                    .dim_x = dimX,
+                                                                    .dim_y = dimY,
+                                                                    .dim_z = dimZ,
+                                                                    .z_lo = zLo,
+                                                                    .z_begin = zBegin,
                                                                     .dilate = dilate,
                                                                     .fg = m_Fg,
                                                                     .bg = m_Bg,
-                                                                    .boundaryToForeground = m_BoundaryToForeground});
+                                                                    .boundary_to_foreground = m_BoundaryToForeground});
         }
       }
 
@@ -5132,7 +5136,7 @@ public:
 private:
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<T>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   const StructuringElement& m_SE;
   MorphOp m_Op;
   T m_Fg;
@@ -5175,11 +5179,11 @@ template <class T>
 class BinaryMorphDirect
 {
 public:
-  BinaryMorphDirect(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, MorphOp op, T foreground, T background, bool boundaryToForeground,
+  BinaryMorphDirect(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3Type dims, const StructuringElement& se, MorphOp op, T foreground, T background, bool boundaryToForeground,
                     const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_Op(op)
   , m_Fg(foreground)
@@ -5263,7 +5267,7 @@ private:
     {
       return r;
     }
-    const T* in = data.get();
+    const T* inPtr = data.get();
 
     if constexpr(detail::k_UseVectorHistogram<T>)
     {
@@ -5271,11 +5275,11 @@ private:
       {
         const detail::PackedBinaryPlaneLayout packedLayout = detail::MakePackedBinaryPlaneLayout(m_Dims);
         usize packedWordCount = 0;
-        if(!detail::TryMultiplyMorphologySize(packedLayout.planeWords, dimZ, packedWordCount))
+        if(!detail::TryMultiplyMorphologySize(packedLayout.plane_words, dimZ, packedWordCount))
         {
-          return MakeErrorResult(-8661, fmt::format("Packed binary morphology image dimensions ({}) overflow the addressable word count.", StringUtilities::formatDimensions3D(m_Dims)));
+          return MakeErrorResult(-8661, fmt::format("Packed binary morphology image dimensions ({}) overflow the addressable word count.", string_utilities::FormatDimensions3D(m_Dims)));
         }
-        std::vector<detail::BinaryMorphWord> packedInput(packedWordCount);
+        std::vector<detail::BinaryMorphWordType> packedInput(packedWordCount);
         if(!detail::PackBinaryMorphologyStagedPlanes(data.get(), packedInput.data(), packedLayout, dimZ, m_Fg, m_ShouldCancel))
         {
           return {};
@@ -5284,7 +5288,8 @@ private:
         // so the resident fast path stays below its former two-raw-volume scratch peak.
         data.reset();
         auto output = std::make_unique<T[]>(vol);
-        detail::RunPrepackedBinaryMorphologyBlock<T, Dilate>(packedInput.data(), output.get(), m_Dims, 0, dimZ, m_Dims, SizeVec3{0, 0, 0}, m_SE, m_Fg, m_Bg, m_BoundaryToForeground, m_ShouldCancel);
+        detail::RunPrepackedBinaryMorphologyBlock<T, Dilate>(packedInput.data(), output.get(), m_Dims, 0, dimZ, m_Dims, SizeVec3Type{0, 0, 0}, m_SE, m_Fg, m_Bg, m_BoundaryToForeground,
+                                                             m_ShouldCancel);
         if(m_ShouldCancel)
         {
           return {};
@@ -5300,11 +5305,11 @@ private:
     const std::array<std::vector<SEOffset>, 3>& added = axisSets.added;
     const std::array<std::vector<SEOffset>, 3>& removed = axisSets.removed;
 
-    using Acc = detail::FgCountAccumulator<T, Dilate>;
+    using AccType = detail::FgCountAccumulator<T, Dilate>;
 
     const int64 nX = static_cast<int64>(dimX);
-    const int64 nY = static_cast<int64>(dimY);
-    const int64 nZ = static_cast<int64>(dimZ);
+    const int64 ny = static_cast<int64>(dimY);
+    const int64 nz = static_cast<int64>(dimZ);
     // Per-axis radius (clamped >= 0). Any added/removed offset reaches at most r_a + 1 along axis a, so a
     // center whose (r_a + 1)-padded neighborhood is fully in bounds needs no per-voxel checks.
     const int64 rX = (m_SE.radius[0] > 0) ? m_SE.radius[0] : 0;
@@ -5320,24 +5325,24 @@ private:
     }
 #endif
 
-    auto flat = [nX, nY](int64 x, int64 y, int64 z) { return static_cast<usize>((z * nY + y) * nX + x); };
-    auto inBounds = [nX, nY, nZ](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < nY && z >= 0 && z < nZ; };
+    auto flat = [nX, ny](int64 x, int64 y, int64 z) { return static_cast<usize>((z * ny + y) * nX + x); };
+    auto inBounds = [nX, ny, nz](int64 x, int64 y, int64 z) { return x >= 0 && x < nX && y >= 0 && y < ny && z >= 0 && z < nz; };
 
     // Slide the accumulator from center (cx,cy,cz) by +1 along axis a: fold in the entering voxels, fold out
     // the leaving ones. The fast path (whole padded neighborhood in bounds) skips per-voxel checks; the slow
     // path treats an OOB neighbor as foreground iff boundaryToForeground via addBoundary/removeBoundary
     // (== BinaryMorphScanline's boundary rule).
-    auto push = [&](Acc& h, int64 cx, int64 cy, int64 cz, int a) {
-      const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < nY) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nZ);
+    auto push = [&](AccType& h, int64 cx, int64 cy, int64 cz, int a) {
+      const bool fast = (cx - (rX + 1) >= 0) && (cx + (rX + 1) < nX) && (cy - (rY + 1) >= 0) && (cy + (rY + 1) < ny) && (cz - (rZ + 1) >= 0) && (cz + (rZ + 1) < nz);
       if(fast)
       {
         for(const SEOffset& q : added[a])
         {
-          h.addPixel(in[flat(cx + q.dx, cy + q.dy, cz + q.dz)]);
+          h.addPixel(inPtr[flat(cx + q.dx, cy + q.dy, cz + q.dz)]);
         }
         for(const SEOffset& o : removed[a])
         {
-          h.removePixel(in[flat(cx + o.dx, cy + o.dy, cz + o.dz)]);
+          h.removePixel(inPtr[flat(cx + o.dx, cy + o.dy, cz + o.dz)]);
         }
       }
       else
@@ -5353,7 +5358,7 @@ private:
           const int64 z = cz + q.dz;
           if(inBounds(x, y, z))
           {
-            h.addPixel(in[flat(x, y, z)]);
+            h.addPixel(inPtr[flat(x, y, z)]);
           }
           else
           {
@@ -5371,7 +5376,7 @@ private:
           const int64 z = cz + o.dz;
           if(inBounds(x, y, z))
           {
-            h.removePixel(in[flat(x, y, z)]);
+            h.removePixel(inPtr[flat(x, y, z)]);
           }
           else
           {
@@ -5384,7 +5389,7 @@ private:
     // Seed a plane-start window at corner (0,0,zStart) -- a one-time O(|SE|) init identical to the former
     // origin seed but shifted along Z, so each parallel Z-slab worker below can build its OWN starting
     // accumulator independently instead of carrying one across slabs.
-    auto seedAcc = [&](Acc& h, int64 zStart) {
+    auto seedAcc = [&](AccType& h, int64 zStart) {
       for(const SEOffset& o : m_SE.offsets)
       {
         if(dimZ == 1 && o.dz != 0)
@@ -5396,7 +5401,7 @@ private:
         const int64 z = zStart + o.dz;
         if(inBounds(x, y, z))
         {
-          h.addPixel(in[flat(x, y, z)]);
+          h.addPixel(inPtr[flat(x, y, z)]);
         }
         else
         {
@@ -5430,10 +5435,10 @@ private:
       // slab. accY (line start) and accX (working window) are declared ONCE per worker and reset by
       // assignment below, mirroring MorphDirect's per-worker histogram reuse (the accumulator is a single
       // integer, so this is byte-identical to copy-constructing them each iteration).
-      Acc accZ(m_Fg, m_Bg, m_BoundaryToForeground, windowSize);
+      AccType accZ(m_Fg, m_Bg, m_BoundaryToForeground, windowSize);
       seedAcc(accZ, static_cast<int64>(zBegin));
-      Acc accY(m_Fg, m_Bg, m_BoundaryToForeground, windowSize);
-      Acc accX(m_Fg, m_Bg, m_BoundaryToForeground, windowSize);
+      AccType accY(m_Fg, m_Bg, m_BoundaryToForeground, windowSize);
+      AccType accX(m_Fg, m_Bg, m_BoundaryToForeground, windowSize);
 
       for(usize zc = zBegin; zc < zEnd; ++zc)
       {
@@ -5447,7 +5452,7 @@ private:
           push(accZ, 0, 0, z - 1, 2);
         }
         accY = accZ;
-        for(int64 y = 0; y < nY; ++y)
+        for(int64 y = 0; y < ny; ++y)
         {
           if(y > 0)
           {
@@ -5478,7 +5483,7 @@ private:
     };
 
     ParallelDataAlgorithm parallelAlgorithm;
-    IParallelAlgorithm::AlgorithmStores algStores{&m_In, &m_Out};
+    IParallelAlgorithm::AlgorithmStoresType algStores{&m_In, &m_Out};
     parallelAlgorithm.requireStoresInMemory(algStores);
     parallelAlgorithm.setRange(0, dimZ);
     parallelAlgorithm.execute(processZRange);
@@ -5492,7 +5497,7 @@ private:
 
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<T>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   const StructuringElement& m_SE;
   MorphOp m_Op;
   T m_Fg;
@@ -5506,11 +5511,11 @@ template <class T>
 class BinaryMorphWorkingMemory
 {
 public:
-  BinaryMorphWorkingMemory(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, MorphOp op, T foreground, T background,
+  BinaryMorphWorkingMemory(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3Type dims, const StructuringElement& se, MorphOp op, T foreground, T background,
                            bool boundaryToForeground, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(in)
   , m_Out(out)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_SE(se)
   , m_Op(op)
   , m_Fg(foreground)
@@ -5556,7 +5561,7 @@ public:
 private:
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<T>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   const StructuringElement& m_SE;
   MorphOp m_Op;
   T m_Fg;
@@ -5576,7 +5581,7 @@ private:
  * @tparam T scalar voxel type.
  */
 template <class T>
-Result<> ApplyBinaryMorphology(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3& dims, const StructuringElement& se, MorphOp op, T foreground, T background,
+Result<> ApplyBinaryMorphology(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3Type& dims, const StructuringElement& se, MorphOp op, T foreground, T background,
                                bool boundaryToForeground, const IDataArray& inArray, const IDataArray& outArray, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   if(auto layout = ValidateMorphologyLayout(dims, se, false, sizeof(T)); layout.invalid())
@@ -5600,10 +5605,10 @@ Result<> ApplyBinaryMorphology(const AbstractDataStore<T>& in, AbstractDataStore
  * @return Required conservative working-memory bytes.
  */
 template <class T>
-Result<usize> CalculateBinaryMorphologyCompositePipelineWorkingMemoryBytes(const SizeVec3& dims, const StructuringElement& se, bool safeBorder)
+Result<usize> CalculateBinaryMorphologyCompositePipelineWorkingMemoryBytes(const SizeVec3Type& dims, const StructuringElement& se, bool safeBorder)
 {
   const std::array<usize, 3> cropOffset = safeBorder ? detail::MorphologySafeBorderPadRadius(se, dims) : std::array<usize, 3>{0, 0, 0};
-  SizeVec3 paddedDims = dims;
+  SizeVec3Type paddedDims = dims;
   if(safeBorder)
   {
     for(usize axis = 0; axis < 3; ++axis)
@@ -5611,7 +5616,7 @@ Result<usize> CalculateBinaryMorphologyCompositePipelineWorkingMemoryBytes(const
       if(cropOffset[axis] > (std::numeric_limits<usize>::max() - dims[axis]) / 2)
       {
         return MakeErrorResult<usize>(-8482, fmt::format("SafeBorder binary morphology-composite padded dimensions overflow. Dimensions: {}; axis: {}; radius: {}.",
-                                                         StringUtilities::formatDimensions3D(dims), axis, cropOffset[axis]));
+                                                         string_utilities::FormatDimensions3D(dims), axis, cropOffset[axis]));
       }
       paddedDims[axis] = dims[axis] + 2 * cropOffset[axis];
     }
@@ -5620,7 +5625,7 @@ Result<usize> CalculateBinaryMorphologyCompositePipelineWorkingMemoryBytes(const
   if(radiusZ > (std::numeric_limits<usize>::max() - 1) / 2)
   {
     return MakeErrorResult<usize>(
-        -8482, fmt::format("SafeBorder binary morphology-composite pipeline Z radius {} overflows its rolling-ring depth for dimensions {}.", radiusZ, StringUtilities::formatDimensions3D(dims)));
+        -8482, fmt::format("SafeBorder binary morphology-composite pipeline Z radius {} overflows its rolling-ring depth for dimensions {}.", radiusZ, string_utilities::FormatDimensions3D(dims)));
   }
   const usize ringDepth = 2 * radiusZ + 1;
   usize paddedSliceValues = 0;
@@ -5635,7 +5640,7 @@ Result<usize> CalculateBinaryMorphologyCompositePipelineWorkingMemoryBytes(const
   {
     return MakeErrorResult<usize>(
         -8482, fmt::format("SafeBorder binary morphology-composite pipeline working-memory dimensions overflow. Dimensions: {}; padded slice values: {}; output slice values: {}; ring depth: {}.",
-                           StringUtilities::formatDimensions3D(dims), paddedSliceValues, outputSliceValues, ringDepth));
+                           string_utilities::FormatDimensions3D(dims), paddedSliceValues, outputSliceValues, ringDepth));
   }
   return {requiredBytes};
 }
@@ -5667,8 +5672,8 @@ Result<usize> CalculateBinaryMorphologyCompositePipelineWorkingMemoryBytes(const
  * @return An error result for invalid memory dimensions or store transfers.
  */
 template <class T>
-Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& input, AbstractDataStore<T>& output, const SizeVec3& dims, const StructuringElement& se, MorphOp firstOp, MorphOp secondOp,
-                                                bool safeBorder, T foreground, T background, const std::atomic_bool& shouldCancel, usize grantedWorkingMemoryBytes)
+Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& input, AbstractDataStore<T>& output, const SizeVec3Type& dims, const StructuringElement& se, MorphOp firstOp,
+                                                MorphOp secondOp, bool safeBorder, T foreground, T background, const std::atomic_bool& shouldCancel, usize grantedWorkingMemoryBytes)
 {
   if(auto layout = ValidateMorphologyLayout(dims, se, safeBorder, sizeof(T)); layout.invalid())
   {
@@ -5694,7 +5699,7 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
   }
   const usize requiredBytes = requiredBytesResult.value();
   const std::array<usize, 3> cropOffset = safeBorder ? detail::MorphologySafeBorderPadRadius(se, dims) : std::array<usize, 3>{0, 0, 0};
-  SizeVec3 paddedDims = dims;
+  SizeVec3Type paddedDims = dims;
   if(safeBorder)
   {
     for(usize axis = 0; axis < 3; ++axis)
@@ -5711,12 +5716,12 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
      !detail::TryMultiplyMorphologySize(ringDepth, paddedSliceValues, ringValues))
   {
     return MakeErrorResult(-8482, fmt::format("SafeBorder binary morphology-composite pipeline slab dimensions overflow. Dimensions: {}; padded dimensions: {}; ring depth: {}.",
-                                              StringUtilities::formatDimensions3D(dims), StringUtilities::formatDimensions3D(paddedDims), ringDepth));
+                                              string_utilities::FormatDimensions3D(dims), string_utilities::FormatDimensions3D(paddedDims), ringDepth));
   }
   if(grantedWorkingMemoryBytes < requiredBytes)
   {
     return MakeErrorResult(-8483, fmt::format("SafeBorder binary morphology-composite pipeline requires {} bytes but only {} bytes are reserved. Dimensions: {}; padded dimensions: {}; Z radius: {}.",
-                                              requiredBytes, grantedWorkingMemoryBytes, StringUtilities::formatDimensions3D(dims), StringUtilities::formatDimensions3D(paddedDims), radiusZ));
+                                              requiredBytes, grantedWorkingMemoryBytes, string_utilities::FormatDimensions3D(dims), string_utilities::FormatDimensions3D(paddedDims), radiusZ));
   }
 
   const bool useFlatFold = detail::k_UseVectorHistogram<T> && detail::ShouldUseMorphologyResidentFlatFold(paddedDims, se);
@@ -5766,7 +5771,7 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
   if(!detail::TryMultiplyMorphologySize(stagingPlanes, outputSliceValues, stagingBufferElements))
   {
     return MakeErrorResult(-8484, fmt::format("SafeBorder binary morphology-composite pipeline staging buffer size overflows. Dimensions: {}; staging planes: {}; output slice values: {}.",
-                                              StringUtilities::formatDimensions3D(dims), stagingPlanes, outputSliceValues));
+                                              string_utilities::FormatDimensions3D(dims), stagingPlanes, outputSliceValues));
   }
 
   std::vector<T> inputStagingBuffer(stagingBufferElements);
@@ -5812,7 +5817,7 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
   };
 
   const auto appendInputPlane = [&](usize paddedZ) -> Result<> {
-    T* rawPlane = nullptr;
+    T* rawPlanePtr = nullptr;
     if(!usePackedComposite && inputDepth == ringDepth)
     {
       std::memmove(inputRing.get(), inputRing.get() + paddedSliceValues, (ringDepth - 1) * paddedSliceValues * sizeof(T));
@@ -5821,10 +5826,10 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
     }
     if(!usePackedComposite)
     {
-      rawPlane = inputRing.get() + inputDepth * paddedSliceValues;
-      std::fill_n(rawPlane, paddedSliceValues, background);
+      rawPlanePtr = inputRing.get() + inputDepth * paddedSliceValues;
+      std::fill_n(rawPlanePtr, paddedSliceValues, background);
     }
-    const T* sourcePlane = nullptr;
+    const T* sourcePlanePtr = nullptr;
     if(paddedZ >= cropOffset[2] && paddedZ < cropOffset[2] + dims[2])
     {
       const usize originalZ = paddedZ - cropOffset[2];
@@ -5843,20 +5848,20 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
         inputStagingCount = batchPlanes;
         inputStagingConsumed = 0;
       }
-      sourcePlane = inputStagingBuffer.data() + inputStagingConsumed * outputSliceValues;
+      sourcePlanePtr = inputStagingBuffer.data() + inputStagingConsumed * outputSliceValues;
       ++inputStagingConsumed;
       if(!usePackedComposite)
       {
         for(usize y = 0; y < dims[1]; ++y)
         {
-          std::copy_n(sourcePlane + y * dims[0], dims[0], rawPlane + (cropOffset[1] + y) * paddedDims[0] + cropOffset[0]);
+          std::copy_n(sourcePlanePtr + y * dims[0], dims[0], rawPlanePtr + (cropOffset[1] + y) * paddedDims[0] + cropOffset[0]);
         }
       }
     }
     if(usePackedComposite)
     {
-      detail::BinaryMorphWord* packedPlane = packedInputRing->appendPlane(paddedZ);
-      if(!detail::PackBinaryPaddedPlane(sourcePlane, packedPlane, packedLayout, dims, cropOffset, foreground, shouldCancel))
+      detail::BinaryMorphWordType* packedPlanePtr = packedInputRing->appendPlane(paddedZ);
+      if(!detail::PackBinaryPaddedPlane(sourcePlanePtr, packedPlanePtr, packedLayout, dims, cropOffset, foreground, shouldCancel))
       {
         return {};
       }
@@ -5875,18 +5880,18 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
   const auto appendFirstPlane = [&](usize paddedZ) -> Result<> {
     if(usePackedComposite)
     {
-      detail::BinaryMorphWord* packedPlane = packedFirstRing->appendPlane(paddedZ);
+      detail::BinaryMorphWordType* packedPlanePtr = packedFirstRing->appendPlane(paddedZ);
       const detail::PackedBinaryPlanesView inputView = packedInputRing->view();
       if(firstDilate)
       {
-        if(!detail::RunPrepackedBinaryMorphologyPlane<true>(inputView, packedPlane, paddedDims, SizeVec3{0, 0, paddedZ}, se, firstBoundaryToForeground, shouldCancel))
+        if(!detail::RunPrepackedBinaryMorphologyPlane<true>(inputView, packedPlanePtr, paddedDims, SizeVec3Type{0, 0, paddedZ}, se, firstBoundaryToForeground, shouldCancel))
         {
           return {};
         }
       }
       else
       {
-        if(!detail::RunPrepackedBinaryMorphologyPlane<false>(inputView, packedPlane, paddedDims, SizeVec3{0, 0, paddedZ}, se, firstBoundaryToForeground, shouldCancel))
+        if(!detail::RunPrepackedBinaryMorphologyPlane<false>(inputView, packedPlanePtr, paddedDims, SizeVec3Type{0, 0, paddedZ}, se, firstBoundaryToForeground, shouldCancel))
         {
           return {};
         }
@@ -5899,10 +5904,10 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
       ++firstZLo;
       --firstDepth;
     }
-    T* plane = firstRing.get() + firstDepth * paddedSliceValues;
+    T* planePtr = firstRing.get() + firstDepth * paddedSliceValues;
     if(se.offsets.empty())
     {
-      std::copy_n(inputRing.get() + (paddedZ - inputZLo) * paddedSliceValues, paddedSliceValues, plane);
+      std::copy_n(inputRing.get() + (paddedZ - inputZLo) * paddedSliceValues, paddedSliceValues, planePtr);
     }
     else
     {
@@ -5910,25 +5915,25 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
       {
         if(firstDilate)
         {
-          detail::RunBinaryMorphologyFlatFoldBlock<T, true>(inputRing.get(), plane, paddedDims, inputZLo, SizeVec3{paddedDims[0], paddedDims[1], 1}, SizeVec3{0, 0, paddedZ}, se, foreground,
+          detail::RunBinaryMorphologyFlatFoldBlock<T, true>(inputRing.get(), planePtr, paddedDims, inputZLo, SizeVec3Type{paddedDims[0], paddedDims[1], 1}, SizeVec3Type{0, 0, paddedZ}, se, foreground,
                                                             background, firstBoundaryToForeground, flatOffsets, shouldCancel);
         }
         else
         {
-          detail::RunBinaryMorphologyFlatFoldBlock<T, false>(inputRing.get(), plane, paddedDims, inputZLo, SizeVec3{paddedDims[0], paddedDims[1], 1}, SizeVec3{0, 0, paddedZ}, se, foreground,
-                                                             background, firstBoundaryToForeground, flatOffsets, shouldCancel);
+          detail::RunBinaryMorphologyFlatFoldBlock<T, false>(inputRing.get(), planePtr, paddedDims, inputZLo, SizeVec3Type{paddedDims[0], paddedDims[1], 1}, SizeVec3Type{0, 0, paddedZ}, se,
+                                                             foreground, background, firstBoundaryToForeground, flatOffsets, shouldCancel);
         }
       }
       else
       {
         if(firstDilate)
         {
-          detail::RunBinaryMorphologyPlaneWindow<T, true>(inputRing.get(), plane, paddedDims[0], paddedDims[1], paddedDims[2], inputZLo, paddedDims[0], paddedDims[1], identityOrigin, paddedZ, se,
+          detail::RunBinaryMorphologyPlaneWindow<T, true>(inputRing.get(), planePtr, paddedDims[0], paddedDims[1], paddedDims[2], inputZLo, paddedDims[0], paddedDims[1], identityOrigin, paddedZ, se,
                                                           *axisSets, foreground, background, firstBoundaryToForeground, shouldCancel);
         }
         else
         {
-          detail::RunBinaryMorphologyPlaneWindow<T, false>(inputRing.get(), plane, paddedDims[0], paddedDims[1], paddedDims[2], inputZLo, paddedDims[0], paddedDims[1], identityOrigin, paddedZ, se,
+          detail::RunBinaryMorphologyPlaneWindow<T, false>(inputRing.get(), planePtr, paddedDims[0], paddedDims[1], paddedDims[2], inputZLo, paddedDims[0], paddedDims[1], identityOrigin, paddedZ, se,
                                                            *axisSets, foreground, background, firstBoundaryToForeground, shouldCancel);
         }
       }
@@ -5963,23 +5968,23 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
     {
       outputStagingBase = outputZ;
     }
-    T* outputPlane = outputStagingBuffer.data() + outputStagingCount * outputSliceValues;
+    T* outputPlanePtr = outputStagingBuffer.data() + outputStagingCount * outputSliceValues;
     if(usePackedComposite)
     {
-      const SizeVec3 outputOrigin{cropOffset[0], cropOffset[1], cropOffset[2] + outputZ};
+      const SizeVec3Type outputOrigin{cropOffset[0], cropOffset[1], cropOffset[2] + outputZ};
       const detail::PackedBinaryPlanesView firstView = packedFirstRing->view();
       if(secondDilate)
       {
-        if(!detail::RunPrepackedBinaryMorphologyBlock<T, true>(firstView, outputPlane, paddedDims, SizeVec3{dims[0], dims[1], 1}, outputOrigin, se, foreground, background, secondBoundaryToForeground,
-                                                               shouldCancel))
+        if(!detail::RunPrepackedBinaryMorphologyBlock<T, true>(firstView, outputPlanePtr, paddedDims, SizeVec3Type{dims[0], dims[1], 1}, outputOrigin, se, foreground, background,
+                                                               secondBoundaryToForeground, shouldCancel))
         {
           return {};
         }
       }
       else
       {
-        if(!detail::RunPrepackedBinaryMorphologyBlock<T, false>(firstView, outputPlane, paddedDims, SizeVec3{dims[0], dims[1], 1}, outputOrigin, se, foreground, background, secondBoundaryToForeground,
-                                                                shouldCancel))
+        if(!detail::RunPrepackedBinaryMorphologyBlock<T, false>(firstView, outputPlanePtr, paddedDims, SizeVec3Type{dims[0], dims[1], 1}, outputOrigin, se, foreground, background,
+                                                                secondBoundaryToForeground, shouldCancel))
         {
           return {};
         }
@@ -5988,25 +5993,25 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
     else if(se.offsets.empty())
     {
       const usize sourceCenterZ = paddedFirstZ - radiusZ;
-      const T* sourcePlane = firstRing.get() + (sourceCenterZ - firstZLo) * paddedSliceValues;
+      const T* sourcePlanePtr = firstRing.get() + (sourceCenterZ - firstZLo) * paddedSliceValues;
       for(usize y = 0; y < dims[1]; ++y)
       {
-        std::copy_n(sourcePlane + (cropOffset[1] + y) * paddedDims[0] + cropOffset[0], dims[0], outputPlane + y * dims[0]);
+        std::copy_n(sourcePlanePtr + (cropOffset[1] + y) * paddedDims[0] + cropOffset[0], dims[0], outputPlanePtr + y * dims[0]);
       }
     }
     else
     {
       if(useFlatFold)
       {
-        const SizeVec3 outputOrigin{cropOffset[0], cropOffset[1], cropOffset[2] + outputZ};
+        const SizeVec3Type outputOrigin{cropOffset[0], cropOffset[1], cropOffset[2] + outputZ};
         if(secondDilate)
         {
-          detail::RunBinaryMorphologyFlatFoldBlock<T, true>(firstRing.get(), outputPlane, paddedDims, firstZLo, SizeVec3{dims[0], dims[1], 1}, outputOrigin, se, foreground, background,
+          detail::RunBinaryMorphologyFlatFoldBlock<T, true>(firstRing.get(), outputPlanePtr, paddedDims, firstZLo, SizeVec3Type{dims[0], dims[1], 1}, outputOrigin, se, foreground, background,
                                                             secondBoundaryToForeground, flatOffsets, shouldCancel);
         }
         else
         {
-          detail::RunBinaryMorphologyFlatFoldBlock<T, false>(firstRing.get(), outputPlane, paddedDims, firstZLo, SizeVec3{dims[0], dims[1], 1}, outputOrigin, se, foreground, background,
+          detail::RunBinaryMorphologyFlatFoldBlock<T, false>(firstRing.get(), outputPlanePtr, paddedDims, firstZLo, SizeVec3Type{dims[0], dims[1], 1}, outputOrigin, se, foreground, background,
                                                              secondBoundaryToForeground, flatOffsets, shouldCancel);
         }
       }
@@ -6014,12 +6019,12 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
       {
         if(secondDilate)
         {
-          detail::RunBinaryMorphologyPlaneWindow<T, true>(firstRing.get(), outputPlane, paddedDims[0], paddedDims[1], paddedDims[2], firstZLo, dims[0], dims[1], cropOffset, outputZ, se, *axisSets,
+          detail::RunBinaryMorphologyPlaneWindow<T, true>(firstRing.get(), outputPlanePtr, paddedDims[0], paddedDims[1], paddedDims[2], firstZLo, dims[0], dims[1], cropOffset, outputZ, se, *axisSets,
                                                           foreground, background, secondBoundaryToForeground, shouldCancel);
         }
         else
         {
-          detail::RunBinaryMorphologyPlaneWindow<T, false>(firstRing.get(), outputPlane, paddedDims[0], paddedDims[1], paddedDims[2], firstZLo, dims[0], dims[1], cropOffset, outputZ, se, *axisSets,
+          detail::RunBinaryMorphologyPlaneWindow<T, false>(firstRing.get(), outputPlanePtr, paddedDims[0], paddedDims[1], paddedDims[2], firstZLo, dims[0], dims[1], cropOffset, outputZ, se, *axisSets,
                                                            foreground, background, secondBoundaryToForeground, shouldCancel);
         }
       }
@@ -6083,7 +6088,7 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
     if(radiusZ > std::numeric_limits<usize>::max() - paddedZCount)
     {
       return MakeErrorResult(-8485, fmt::format("SafeBorder=false binary morphology-composite virtual tail index overflows. Padded Z count: {}; Z radius: {}; dimensions: {}.", paddedZCount, radiusZ,
-                                                StringUtilities::formatDimensions3D(dims)));
+                                                string_utilities::FormatDimensions3D(dims)));
     }
     const usize virtualFirstZEnd = paddedZCount + radiusZ;
     for(usize virtualFirstZ = paddedZCount; virtualFirstZ < virtualFirstZEnd; ++virtualFirstZ)

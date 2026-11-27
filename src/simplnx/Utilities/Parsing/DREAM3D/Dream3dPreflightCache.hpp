@@ -13,7 +13,7 @@
 #include <optional>
 #include <string>
 
-namespace nx::core::DREAM3D
+namespace nx::core::dream3d
 {
 /**
  * @struct NeutralMetadataHandout
@@ -21,9 +21,9 @@ namespace nx::core::DREAM3D
  */
 struct SIMPLNX_EXPORT NeutralMetadataHandout
 {
-  DataStructure dataStructure;
-  std::string fileVersion;
-  DeferredImageMetadata deferredImageMetadata; /**< Unvalidated metadata retained until the caller selects image geometries. */
+  DataStructure data_structure;
+  std::string file_version;
+  DeferredImageMetadataType deferred_image_metadata; /**< Unvalidated metadata retained until the caller selects image geometries. */
 
   /**
    * @brief Validates and installs origin and spacing for selected image geometries.
@@ -157,7 +157,7 @@ public:
 
 private:
   Dream3dPreflightCache() = default;
-  using CacheKey = std::pair<std::string, bool>;
+  using CacheKeyType = std::pair<std::string, bool>;
 
   /**
    * @brief Gets one handout through the shared cache mechanics.
@@ -198,7 +198,7 @@ private:
    * The method copies the master under m_Mutex, then isolates stores after it
    * releases the table lock. Both fast and post-read recheck paths use it.
    */
-  Result<std::optional<NeutralMetadataHandout>> tryServeFromCache(const CacheKey& key, uint64 fileSize, const std::filesystem::file_time_type& mtime, const std::filesystem::path& filePath);
+  Result<std::optional<NeutralMetadataHandout>> tryServeFromCache(const CacheKeyType& key, uint64 fileSize, const std::filesystem::file_time_type& mtime, const std::filesystem::path& filePath);
 
   /**
    * @struct Entry
@@ -210,10 +210,10 @@ private:
   struct Entry
   {
     NeutralMetadataHandout master;
-    std::vector<Warning> diskWarnings;
-    uint64 fileSize = 0;
+    std::vector<Warning> disk_warnings;
+    uint64 file_size = 0;
     std::filesystem::file_time_type mtime;
-    uint64 lastUsedTick = 0;
+    uint64 last_used_tick = 0;
   };
 
   /**
@@ -225,9 +225,9 @@ private:
    */
   std::mutex m_ReadMutex;
   mutable std::mutex m_Mutex;
-  std::map<CacheKey, Entry> m_Entries;
+  std::map<CacheKeyType, Entry> m_Entries;
   uint64 m_Tick = 0;
   std::atomic<uint64> m_Hits{0};
   std::atomic<uint64> m_Misses{0};
 };
-} // namespace nx::core::DREAM3D
+} // namespace nx::core::dream3d

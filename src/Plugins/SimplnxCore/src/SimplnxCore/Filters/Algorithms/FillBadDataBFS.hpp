@@ -40,7 +40,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   FillBadDataBFS(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, const FillBadDataInputValues* inputValues);
-  ~FillBadDataBFS() noexcept;
+  ~FillBadDataBFS() noexcept = default;
 
   FillBadDataBFS(const FillBadDataBFS&) = delete;
   FillBadDataBFS(FillBadDataBFS&&) noexcept = delete;

@@ -6,16 +6,17 @@
 #include <fmt/core.h>
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 template <>
 struct fmt::formatter<nx::core::Error>
 {
-  constexpr format_parse_context::iterator parse(format_parse_context& ctx)
+  static constexpr format_parse_context::iterator parse(format_parse_context& ctx)
   {
     return ctx.begin();
   }
 
-  format_context::iterator format(const nx::core::Error& error, format_context& ctx) const
+  static format_context::iterator format(const nx::core::Error& error, format_context& ctx)
   {
     return fmt::format_to(ctx.out(), "Error({}, {})", error.code, error.message);
   }
@@ -23,10 +24,10 @@ struct fmt::formatter<nx::core::Error>
 
 namespace nx::core
 {
-ChoicesParameter::ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const Choices& choices)
+ChoicesParameter::ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, ChoicesType choices)
 : ValueParameter(name, humanName, helpText)
 , m_DefaultValue(defaultValue)
-, m_Choices(choices)
+, m_Choices(std::move(choices))
 {
 }
 
@@ -35,7 +36,7 @@ Uuid ChoicesParameter::uuid() const
   return ParameterTraits<ChoicesParameter>::uuid;
 }
 
-IParameter::AcceptedTypes ChoicesParameter::acceptedTypes() const
+IParameter::AcceptedTypesType ChoicesParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -53,18 +54,18 @@ nlohmann::json ChoicesParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> ChoicesParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> ChoicesParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'ChoicesParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'ChoicesParameter' JSON Error: ";
   if(!json.is_number())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a number", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a number", k_Prefix, name()));
   }
   auto index = json.get<ValueType>();
   return {{index}};
 }
 
-IParameter::UniquePointer ChoicesParameter::clone() const
+IParameter::UniquePointerType ChoicesParameter::clone() const
 {
   return std::make_unique<ChoicesParameter>(name(), humanName(), helpText(), m_DefaultValue, m_Choices);
 }
@@ -91,14 +92,14 @@ Result<> ChoicesParameter::validateIndex(ValueType index) const
 
   if(index >= m_Choices.size())
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_OutOfRange_Error,
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateOutOfRangeError,
                                      fmt::format("{}Value '{}' must be less than {}. Valid choices are: [{}]", prefix, index, m_Choices.size(), fmt::join(m_Choices, ", ")));
   }
 
   return {};
 }
 
-ChoicesParameter::Choices ChoicesParameter::choices() const
+ChoicesParameter::ChoicesType ChoicesParameter::choices() const
 {
   return m_Choices;
 }
@@ -116,16 +117,16 @@ bool ChoicesParameter::checkActive(const std::any& parameterValue, const std::an
   return value == index;
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
-Result<LinkedChoicesFilterParameterConverter::ValueType> LinkedChoicesFilterParameterConverter::convert(const nlohmann::json& json)
+Result<LinkedChoicesFilterParameterConverter::ValueType> LinkedChoicesFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   return ConvertChoicesParameter(json, "LinkedChoicesFilterParameter");
 }
 
-Result<ChoiceFilterParameterConverter::ValueType> ChoiceFilterParameterConverter::convert(const nlohmann::json& json)
+Result<ChoiceFilterParameterConverter::ValueType> ChoiceFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   return ConvertChoicesParameter(json, "ChoiceFilterParameter");
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

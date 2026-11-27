@@ -24,14 +24,14 @@ public:
   WriteAbaqusHexahedronFilter& operator=(WriteAbaqusHexahedronFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_UseReducedIntegration_Key = "use_reduced_integration";
-  static constexpr StringLiteral k_HourglassStiffness_Key = "hourglass_stiffness";
-  static constexpr StringLiteral k_WriteDummyNode_Key = "write_dummy_node";
-  static constexpr StringLiteral k_JobName_Key = "job_name";
-  static constexpr StringLiteral k_OutputPath_Key = "output_path";
-  static constexpr StringLiteral k_FilePrefix_Key = "file_prefix";
-  static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
+  static constexpr StringLiteralType k_ImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_UseReducedIntegration_Key = "use_reduced_integration";
+  static constexpr StringLiteralType k_HourglassStiffness_Key = "hourglass_stiffness";
+  static constexpr StringLiteralType k_WriteDummyNode_Key = "write_dummy_node";
+  static constexpr StringLiteralType k_JobName_Key = "job_name";
+  static constexpr StringLiteralType k_OutputPath_Key = "output_path";
+  static constexpr StringLiteralType k_FilePrefix_Key = "file_prefix";
+  static constexpr StringLiteralType k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -88,7 +88,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

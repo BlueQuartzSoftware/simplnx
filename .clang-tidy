@@ -1,56 +1,213 @@
----
-Checks: "-abseil-*,
-  bugprone-*,
-  -boost-*,
-  -cert-*,
-  clang-diagnostic-*,
-  -clang-diagnostic-documentation,
-  clang-analyzer-*,
-  cppcoreguidelines-*,
-  -cppcoreguidelines-avoid-magic-numbers,
-  -darwin-*,
-  -fuchsia-*,
-  -google-*,
-  -hicpp-*,
-  -linuxkernel-*,
-  -llvm-*,
-  misc-*,
-  modernize-*,
-  -modernize-use-trailing-return-type,
-  -modernize-use-nodiscard,
-  -modernize-use-auto,
-  -mpi-*,
-  -objc-*,
-  -openmp-*,
-  performance-*,
-  -portability-*,
-  readability-*,
-  -readability-function-cognitive-complexity,
-  -readability-function-size,
-  -readability-uppercase-literal-suffix,
-  -readability-magic-numbers"
+# nxcleanup completed P4
+# Shared BlueQuartz clang-tidy configuration (simplnx, SimplnxOoc, SimplnxReview, DREAM3DNX).
+# Only HeaderFilterRegex and the macro allowlist differ between repositories.
+#
+# Keep these macros allowed until replacements are found. A TIDY issue tracks the replacements.
+# NX_IDENTIFY_SAMPLE_SLICE_READ, NX_IDENTIFY_SAMPLE_SLICE_WRITE, H5SUPPORT_MUTEX_LOCK,
+# SIMPLNX_OBSERVE_METADATA_CALL, SIMPLNX_OBSERVE_TYPED_READ, SIMPLNX_OBSERVE_TYPED_WRITE, TEST_LEGACY.
+#
+# Disabled on purpose (do not re-enable without reading the reason):
+#   readability-math-missing-parentheses          : hurts readability of math-heavy code; real precedence bugs
+#                                                   are caught by -Wparentheses and friends.
+#   cppcoreguidelines-pro-bounds-constant-array-index,
+#   cppcoreguidelines-owning-memory                : assume the GSL, which BlueQuartz does not use.
+#   cppcoreguidelines-pro-bounds-pointer-arithmetic: raw buffer walking in stores, I/O and engines is intentional.
+#   cppcoreguidelines-avoid-const-or-ref-data-members: algorithm classes hold references by design (never null);
+#                                                   they are non-copyable, so the assignability cost does not apply.
+#   performance-enum-size                          : FILE COMPATIBILITY. Changing an enum's underlying type can
+#                                                   change what is written to .dream3d/HDF5 files.
+#   misc-no-recursion                              : DataStructure/group traversal is naturally recursive and bounded.
+# nxcleanup P2a check bugprone-argument-comment
+# nxcleanup P4 check bugprone-assignment-in-if-condition
+# nxcleanup P4 check bugprone-branch-clone
+# nxcleanup P4 check bugprone-chained-comparison
+# nxcleanup P2b check bugprone-crtp-constructor-accessibility
+# nxcleanup P4 check bugprone-empty-catch
+# nxcleanup P4 check bugprone-exception-escape
+# nxcleanup P4 check bugprone-forward-declaration-namespace
+# nxcleanup P4 check bugprone-implicit-widening-of-multiplication-result
+# nxcleanup P4 check bugprone-incorrect-roundings
+# nxcleanup P4 check bugprone-integer-division
+# nxcleanup P2c check bugprone-macro-parentheses
+# nxcleanup P4 check bugprone-misplaced-widening-cast
+# nxcleanup P4 check bugprone-multi-level-implicit-pointer-conversion
+# nxcleanup P4 check bugprone-narrowing-conversions
+# nxcleanup P4 check bugprone-optional-value-conversion
+# nxcleanup P4 check bugprone-reserved-identifier
+# nxcleanup P4 check bugprone-return-const-ref-from-parameter
+# nxcleanup P4 check bugprone-signed-char-misuse
+# nxcleanup P4 check bugprone-suspicious-stringview-data-usage
+# nxcleanup P4 check bugprone-switch-missing-default-case
+# nxcleanup P4 check bugprone-too-small-loop-variable
+# nxcleanup P4 check bugprone-unchecked-optional-access
+# nxcleanup P4 check bugprone-unhandled-self-assignment
+# nxcleanup P4 check bugprone-unsafe-functions
+# nxcleanup P4 check bugprone-unused-local-non-trivial-variable
+# nxcleanup P4 check bugprone-use-after-move
+# nxcleanup P4 check clang-analyzer-*
+# nxcleanup P4 check clang-analyzer-core.CallAndMessage
+# nxcleanup P4 check clang-analyzer-core.DivideZero
+# nxcleanup P4 check clang-analyzer-core.NullDereference
+# nxcleanup P4 check clang-analyzer-cplusplus.Move
+# nxcleanup P4 check clang-analyzer-cplusplus.NewDelete
+# nxcleanup P4 check clang-analyzer-cplusplus.NewDeleteLeaks
+# nxcleanup P4 check clang-analyzer-deadcode.DeadStores
+# nxcleanup P4 check clang-analyzer-optin.core.EnumCastOutOfRange
+# nxcleanup P4 check clang-analyzer-optin.cplusplus.VirtualCall
+# nxcleanup P4 check clang-analyzer-security.FloatLoopCounter
+# nxcleanup P4 check clang-analyzer-unix.Errno
+# nxcleanup P4 check clang-analyzer-unix.Stream
+# nxcleanup P4 check clang-diagnostic-tautological-compare
+# nxcleanup P4 check cppcoreguidelines-avoid-c-arrays
+# nxcleanup P4 check cppcoreguidelines-avoid-do-while
+# nxcleanup P4 check cppcoreguidelines-avoid-non-const-global-variables
+# nxcleanup P4 check cppcoreguidelines-c-copy-assignment-signature
+# nxcleanup P2b check cppcoreguidelines-init-variables
+# nxcleanup P4 check cppcoreguidelines-missing-std-forward
+# nxcleanup P4 check cppcoreguidelines-narrowing-conversions
+# nxcleanup P4 check cppcoreguidelines-no-malloc
+# nxcleanup P2b check cppcoreguidelines-noexcept-destructor
+# nxcleanup P2b check cppcoreguidelines-noexcept-move-operations
+# nxcleanup P4 check cppcoreguidelines-non-private-member-variables-in-classes
+# nxcleanup P2b check cppcoreguidelines-prefer-member-initializer
+# nxcleanup P4 check cppcoreguidelines-pro-bounds-array-to-pointer-decay
+# nxcleanup P4 check cppcoreguidelines-pro-type-const-cast
+# nxcleanup P4 check cppcoreguidelines-pro-type-cstyle-cast
+# nxcleanup P2b check cppcoreguidelines-pro-type-member-init
+# nxcleanup P4 check cppcoreguidelines-pro-type-reinterpret-cast
+# nxcleanup P4 check cppcoreguidelines-pro-type-vararg
+# nxcleanup P4 check cppcoreguidelines-rvalue-reference-param-not-moved
+# nxcleanup P4 check cppcoreguidelines-special-member-functions
+# nxcleanup P2b check cppcoreguidelines-use-default-member-init
+# nxcleanup P4 check cppcoreguidelines-virtual-class-destructor
+# nxcleanup P4 check misc-non-private-member-variables-in-classes
+# nxcleanup P4 check misc-redundant-expression
+# nxcleanup P4 check misc-unconventional-assign-operator
+# nxcleanup P2a check misc-unused-parameters
+# nxcleanup P4 check misc-use-anonymous-namespace
+# nxcleanup P4 check modernize-avoid-c-arrays
+# nxcleanup P2c check modernize-loop-convert
+# nxcleanup P2b check modernize-pass-by-value
+# nxcleanup P2b check modernize-return-braced-init-list
+# nxcleanup P2b check modernize-type-traits
+# nxcleanup P2b check modernize-use-constraints
+# nxcleanup P4 check modernize-use-default-member-init
+# nxcleanup P2b check modernize-use-designated-initializers
+# nxcleanup P2b check modernize-use-equals-default
+# nxcleanup P2b check modernize-use-equals-delete
+# nxcleanup P2c check modernize-use-ranges
+# nxcleanup P2c check modernize-use-std-numbers
+# nxcleanup P2c check modernize-use-transparent-functors
+# nxcleanup P2c check performance-inefficient-algorithm
+# nxcleanup P4 check performance-inefficient-string-concatenation
+# nxcleanup P2b check performance-move-const-arg
+# nxcleanup P4 check performance-move-constructor-init
+# nxcleanup P4 check performance-no-automatic-move
+# nxcleanup P4 check performance-noexcept-destructor
+# nxcleanup P4 check performance-noexcept-move-constructor
+# nxcleanup P2b check performance-trivially-destructible
+# nxcleanup P2b check performance-unnecessary-value-param
+# nxcleanup P4 check readability-avoid-nested-conditional-operator
+# nxcleanup P4 check readability-avoid-unconditional-preprocessor-if
+# nxcleanup P2c check readability-braces-around-statements
+# nxcleanup P2c check readability-container-contains
+# nxcleanup P2b check readability-container-data-pointer
+# nxcleanup P2b check readability-convert-member-functions-to-static
+# nxcleanup P2c check readability-duplicate-include
+# nxcleanup P2c check readability-else-after-return
+# nxcleanup P4 check readability-identifier-length
+# nxcleanup P2c check readability-implicit-bool-conversion
+# nxcleanup P4 check readability-inconsistent-declaration-parameter-name
+# nxcleanup P2b check readability-make-member-function-const
+# nxcleanup P2b check readability-non-const-parameter
+# nxcleanup P2c check readability-qualified-auto
+# nxcleanup P4 check readability-redundant-declaration
+# nxcleanup P2c check readability-simplify-boolean-expr
+# nxcleanup P4 check readability-static-accessed-through-instance
+# nxcleanup P4 check readability-suspicious-call-argument
+# nxcleanup P4 check readability-use-anyofallof
+# nxcleanup P4 naming-kind ClassMethod
+# nxcleanup P4 naming-kind ConstexprVariable
+# nxcleanup P4 naming-kind Function
+# nxcleanup P4 naming-kind GlobalConstant
+# nxcleanup P4 naming-kind GlobalFunction
+# nxcleanup P4 naming-kind GlobalVariable
+# nxcleanup P3 naming-kind LocalPointer
+# nxcleanup P4 naming-kind Namespace
+# nxcleanup P4 naming-kind PublicMember
+# nxcleanup P4 naming-kind TypeAlias
+# nxcleanup P3 naming-kind Variable
+# nxcleanup disabled-by-decision misc-const-correctness: Maintainer decision (2026-11-26) to keep this check off until reconsidered. Adding const to returned or moved locals can turn moves into copies.
+# nxcleanup disabled-by-decision misc-include-cleaner: Maintainer decision (2026-11-26) to keep this check off until reconsidered. Include removal can break other platforms or build configurations.
+
+Checks: -abseil-*, bugprone-*, -bugprone-easily-swappable-parameters, -boost-*, -cert-*,
+  clang-diagnostic-*, -clang-diagnostic-documentation, clang-analyzer-*, cppcoreguidelines-*,
+  -cppcoreguidelines-avoid-magic-numbers, -cppcoreguidelines-avoid-const-or-ref-data-members,
+  -cppcoreguidelines-owning-memory, -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic, -darwin-*, -fuchsia-*, -google-*,
+  -hicpp-*, -linuxkernel-*, -llvm-*, misc-*, -misc-no-recursion, modernize-*, -modernize-use-trailing-return-type,
+  -modernize-use-nodiscard, -modernize-use-auto, -mpi-*, -objc-*, -openmp-*, performance-*,
+  -performance-enum-size, -portability-*, readability-*, -readability-function-cognitive-complexity,
+  -readability-function-size, -readability-math-missing-parentheses, -readability-uppercase-literal-suffix,
+  -readability-magic-numbers,-bugprone-argument-comment,-bugprone-assignment-in-if-condition,-bugprone-branch-clone,-bugprone-chained-comparison,-bugprone-crtp-constructor-accessibility,-bugprone-empty-catch,-bugprone-exception-escape,-bugprone-forward-declaration-namespace,-bugprone-implicit-widening-of-multiplication-result,-bugprone-incorrect-roundings,-bugprone-integer-division,-bugprone-macro-parentheses,-bugprone-misplaced-widening-cast,-bugprone-multi-level-implicit-pointer-conversion,-bugprone-narrowing-conversions,-bugprone-optional-value-conversion,-bugprone-reserved-identifier,-bugprone-return-const-ref-from-parameter,-bugprone-signed-char-misuse,-bugprone-suspicious-stringview-data-usage,-bugprone-switch-missing-default-case,-bugprone-too-small-loop-variable,-bugprone-unchecked-optional-access,-bugprone-unhandled-self-assignment,-bugprone-unsafe-functions,-bugprone-unused-local-non-trivial-variable,-bugprone-use-after-move,-clang-analyzer-*,-clang-analyzer-core.CallAndMessage,-clang-analyzer-core.DivideZero,-clang-analyzer-core.NullDereference,-clang-analyzer-cplusplus.Move,-clang-analyzer-cplusplus.NewDelete,-clang-analyzer-cplusplus.NewDeleteLeaks,-clang-analyzer-deadcode.DeadStores,-clang-analyzer-optin.core.EnumCastOutOfRange,-clang-analyzer-optin.cplusplus.VirtualCall,-clang-analyzer-security.FloatLoopCounter,-clang-analyzer-unix.Errno,-clang-analyzer-unix.Stream,-clang-diagnostic-tautological-compare,-cppcoreguidelines-avoid-c-arrays,-cppcoreguidelines-avoid-do-while,-cppcoreguidelines-avoid-non-const-global-variables,-cppcoreguidelines-c-copy-assignment-signature,-cppcoreguidelines-init-variables,-cppcoreguidelines-missing-std-forward,-cppcoreguidelines-narrowing-conversions,-cppcoreguidelines-no-malloc,-cppcoreguidelines-noexcept-destructor,-cppcoreguidelines-noexcept-move-operations,-cppcoreguidelines-non-private-member-variables-in-classes,-cppcoreguidelines-prefer-member-initializer,-cppcoreguidelines-pro-bounds-array-to-pointer-decay,-cppcoreguidelines-pro-type-const-cast,-cppcoreguidelines-pro-type-cstyle-cast,-cppcoreguidelines-pro-type-member-init,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-vararg,-cppcoreguidelines-rvalue-reference-param-not-moved,-cppcoreguidelines-special-member-functions,-cppcoreguidelines-use-default-member-init,-cppcoreguidelines-virtual-class-destructor,-misc-non-private-member-variables-in-classes,-misc-redundant-expression,-misc-unconventional-assign-operator,-misc-unused-parameters,-misc-use-anonymous-namespace,-modernize-avoid-c-arrays,-modernize-loop-convert,-modernize-pass-by-value,-modernize-return-braced-init-list,-modernize-type-traits,-modernize-use-constraints,-modernize-use-default-member-init,-modernize-use-designated-initializers,-modernize-use-equals-default,-modernize-use-equals-delete,-modernize-use-ranges,-modernize-use-std-numbers,-modernize-use-transparent-functors,-performance-inefficient-algorithm,-performance-inefficient-string-concatenation,-performance-move-const-arg,-performance-move-constructor-init,-performance-no-automatic-move,-performance-noexcept-destructor,-performance-noexcept-move-constructor,-performance-trivially-destructible,-performance-unnecessary-value-param,-readability-avoid-nested-conditional-operator,-readability-avoid-unconditional-preprocessor-if,-readability-braces-around-statements,-readability-container-contains,-readability-container-data-pointer,-readability-convert-member-functions-to-static,-readability-duplicate-include,-readability-else-after-return,-readability-identifier-length,-readability-implicit-bool-conversion,-readability-inconsistent-declaration-parameter-name,-readability-make-member-function-const,-readability-non-const-parameter,-readability-qualified-auto,-readability-redundant-declaration,-readability-simplify-boolean-expr,-readability-static-accessed-through-instance,-readability-suspicious-call-argument,-readability-use-anyofallof,-misc-const-correctness,-misc-include-cleaner
 WarningsAsErrors: '*'
-HeaderFilterRegex: 'simplnx/.*\.hpp'
+HeaderFilterRegex: .*/simplnx/([^/]+/)?(src|test|wrapping|utilities/benchmark|cmake)/.*\.(h|hpp)$
+ExcludeHeaderFilterRegex: .*/3rd[Pp]arty/.*
 FormatStyle: file
 CheckOptions:
-  cppcoreguidelines-macro-usage.AllowedRegexp: 'SIMPLNX_EXPORT|SIMPLNX_NO_EXPORT|SIMPLNX_DEPRECATED'
+  cppcoreguidelines-macro-usage.AllowedRegexp: ^((SIMPLNX|SIMPLNXCORE|NXIMAGEPROCESSING|ORIENTATIONANALYSIS|TESTONE|TESTTWO)_(EXPORT(_H)?|NO_EXPORT|NO_DEPRECATED|DEPRECATED(_(NO_)?EXPORT)?)|SIMPLNX_(TEMPLATE|PLUGIN)_EXPORT|MM_(CELL_MAP|GEOMETRY_GL|GEOMETRY_OBJ|SURFACE_NET)_H|ADD_PARAMETER_TRAIT|SIMPLNX_(DEF|NAMESPACE_CONCAT)|SIMPLNX_DEF_(FILTER|PARAMETER)_TRAITS(_NAMED|_NAMEDSPACED)?|SIMPLNX_DEF_PLUGIN(_IMPL)?|SIMPLNX_(CREATE|DESTROY)_PLUGIN_FUNC(_NAME)?|SIMPLNX_(STRINGIFY|TEXT)(_IMPL)?|SIMPLNX_INSTANTIATE_RECONSTRUCT_SWEEP_(RUN_IMPL|SERIAL_MEMBERS)|SIMPLNX_PY_BIND_[A-Z0-9_]+|CATCH_CONFIG_(MAIN|RUNNER)|SIMPLNX_RESULT_(REQUIRE_(VALID|INVALID)|CATCH_PRINT)|SIMPLNX_TEST_(ALGORITHM_PATH|RESTORE_NOMINMAX)|CANVAS_ITY_IMPLEMENTATION|STB_IMAGE(_WRITE)?_IMPLEMENTATION|NOMINMAX|SIMPLNX_(BUILD_TESTS|BYTE_ORDER|EMBED_PYTHON|ENABLE_MULTICORE|PYTHON_MODULE|STORE_COPY_STRICT_FORMAT|WRITE_TEST_OUTPUT)|H5_USE_110_API|H5Support_USE_MUTEX|PYBIND11_DETAILED_ERROR_MESSAGES|_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING|NX_IDENTIFY_SAMPLE_SLICE_(READ|WRITE)|H5SUPPORT_MUTEX_LOCK|SIMPLNX_OBSERVE_(METADATA_CALL|TYPED_(READ|WRITE))|TEST_LEGACY)$
+  cppcoreguidelines-init-variables.MathHeader: <cmath>
+  misc-include-cleaner.IgnoreHeaders: Eigen/.*;fmt/.*;nlohmann/.*;catch2/.*;pybind11/.*;tbb/.*;oneapi/.*;Qt[A-Za-z0-9]*/.*;Qt[A-Za-z0-9]*\.framework/.*
+  misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic: true
+  cppcoreguidelines-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic: true
+  readability-identifier-length.IgnoredVariableNames: ^([xyzijk]|[dn][xyz])$
+  readability-identifier-length.IgnoredParameterNames: ^([xyzijk]|[dn][xyz])$
+  readability-identifier-length.IgnoredLoopCounterNames: ^([xyzijk]|[dn][xyz])$
   readability-identifier-naming.IgnoreMainLikeFunctions: 'false'
-  readability-identifier-naming.PrivateMemberPrefix: 'm_'
   readability-identifier-naming.NamespaceCase: lower_case
   readability-identifier-naming.ClassCase: CamelCase
-  readability-identifier-naming.ClassMethodCase: camelBack
-  readability-identifier-naming.PrivateMember: CamelCase
-  readability-identifier-naming.PublicMemberCase: CamelCase
+  readability-identifier-naming.ClassIgnoredRegexp: ^(const_)?iterator$
   readability-identifier-naming.StructCase: CamelCase
-  readability-identifier-naming.FunctionCase: camelBack
+  readability-identifier-naming.ClassMethodCase: CamelCase
+  # Enable ClassMethod in P4 after its findings are resolved.
+  readability-identifier-naming.ClassMethodIgnoredRegexp: .*
+  readability-identifier-naming.MethodCase: camelBack
+  readability-identifier-naming.MethodIgnoredRegexp: ^(at|back|begin|capacity|cbegin|cend|c_str|c_view|clear|compare|contains|copy|crbegin|crend|data|emplace|emplace_back|emplace_front|empty|end|ends_with|erase|find|find_first_not_of|find_first_of|find_last_not_of|find_last_of|front|get_allocator|insert|insert_or_assign|length|lower_bound|max_size|merge|npos|pop_back|pop_front|push_back|push_front|rbegin|rend|replace|reserve|resize|rfind|shrink_to_fit|size|starts_with|str|substr|swap|try_emplace|upper_bound|view|kdtree_get_point_count|kdtree_get_pt|kdtree_get_bbox|kdtree_distance)$
+  readability-identifier-naming.FunctionCase: CamelCase
+  readability-identifier-naming.GlobalFunctionCase: CamelCase
+  # Enable GlobalFunction in P4 after its findings are resolved.
+  readability-identifier-naming.GlobalFunctionIgnoredRegexp: .*
+  readability-identifier-naming.PrivateMemberPrefix: m_
+  readability-identifier-naming.PrivateMemberCase: CamelCase
+  readability-identifier-naming.ProtectedMemberPrefix: m_
+  readability-identifier-naming.ProtectedMemberCase: CamelCase
+  readability-identifier-naming.PublicMemberCase: lower_case
+  # Enable PublicMember in P4 after its findings are resolved.
+  readability-identifier-naming.PublicMemberIgnoredRegexp: .*
   readability-identifier-naming.VariableCase: camelBack
+  readability-identifier-naming.LocalPointerCase: camelBack
+  readability-identifier-naming.LocalPointerSuffix: Ptr
   readability-identifier-naming.GlobalVariableCase: CamelCase
   readability-identifier-naming.GlobalConstantCase: CamelCase
-  readability-identifier-naming.GlobalConstantPrefix: 'k_'
-  readability-identifier-naming.GlobalFunctionCase: CamelCase
-  readability-identifier-naming.LocalPointerCase: camelBack
-  readability-identifier-naming.LocalPointerSuffix: 'Ptr'
+  readability-identifier-naming.GlobalConstantPrefix: k_
+  # Enable GlobalConstant in P4 after its findings are resolved.
+  readability-identifier-naming.GlobalConstantIgnoredRegexp: .*
+  readability-identifier-naming.ConstexprVariableCase: CamelCase
+  readability-identifier-naming.ConstexprVariablePrefix: k_
+  # Enable ConstexprVariable in P4 after its findings are resolved.
+  readability-identifier-naming.ConstexprVariableIgnoredRegexp: .*
   readability-identifier-naming.TypeAliasCase: CamelCase
-  readability-identifier-naming.TypeAliasSuffix: 'Type'
+  readability-identifier-naming.TypeAliasSuffix: Type
+  # Enable TypeAlias in P4 after its findings are resolved.
+  readability-identifier-naming.TypeAliasIgnoredRegexp: .*
   readability-identifier-naming.MacroDefinitionCase: UPPER_CASE
-...
+  # Enable Function in P4 after its findings are resolved.
+  readability-identifier-naming.FunctionIgnoredRegexp: .*
+  # Enable GlobalVariable in P4 after its findings are resolved.
+  readability-identifier-naming.GlobalVariableIgnoredRegexp: .*
+  # Enable LocalPointer in P3 after its findings are resolved.
+  readability-identifier-naming.LocalPointerIgnoredRegexp: .*
+  # Enable Namespace in P4 after its findings are resolved.
+  readability-identifier-naming.NamespaceIgnoredRegexp: .*
+  # Enable Variable in P3 after its findings are resolved.
+  readability-identifier-naming.VariableIgnoredRegexp: .*

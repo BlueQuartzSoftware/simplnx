@@ -37,7 +37,7 @@ public:
    * same store. A default-constructed Iterator is unbound. Do not call
    * isValid() or an operation that accesses its store until binding.
    */
-  class Iterator
+  class iterator
   {
   public:
     using iterator_category = std::random_access_iterator_tag;
@@ -47,133 +47,133 @@ public:
     using reference = value_type&;
     using const_reference = const value_type&;
 
-    Iterator()
+    iterator()
     : m_DataStore(nullptr)
     , m_Index(0)
     {
     }
 
-    Iterator(AbstractStringStore& dataStore, usize index)
+    iterator(AbstractStringStore& dataStore, usize index)
     : m_DataStore(&dataStore)
     , m_Index(index)
     {
     }
 
-    Iterator(const Iterator& other)
+    iterator(const iterator& other)
     : m_DataStore(other.m_DataStore)
     , m_Index(other.m_Index)
     {
     }
-    Iterator(Iterator&& other) noexcept
+    iterator(iterator&& other) noexcept
     : m_DataStore(other.m_DataStore)
     , m_Index(other.m_Index)
     {
     }
 
-    Iterator& operator=(const Iterator& rhs)
+    iterator& operator=(const iterator& rhs)
     {
       m_DataStore = rhs.m_DataStore;
       m_Index = rhs.m_Index;
       return *this;
     }
-    Iterator& operator=(Iterator&& rhs) noexcept
+    iterator& operator=(iterator&& rhs) noexcept
     {
       m_DataStore = rhs.m_DataStore;
       m_Index = rhs.m_Index;
       return *this;
     }
 
-    ~Iterator() noexcept = default;
+    ~iterator() noexcept = default;
 
-    inline bool isValid() const
+    bool isValid() const
     {
       return m_Index < m_DataStore->size();
     }
 
-    inline Iterator operator+(usize offset) const
+    iterator operator+(usize offset) const
     {
-      return Iterator(*m_DataStore, m_Index + offset);
+      return iterator(*m_DataStore, m_Index + offset);
     }
 
-    inline Iterator operator-(usize offset) const
+    iterator operator-(usize offset) const
     {
-      return Iterator(*m_DataStore, m_Index - offset);
+      return iterator(*m_DataStore, m_Index - offset);
     }
 
-    inline Iterator& operator+=(usize offset)
+    iterator& operator+=(usize offset)
     {
       m_Index += offset;
       return *this;
     }
 
-    Iterator& operator-=(usize offset)
+    iterator& operator-=(usize offset)
     {
       m_Index -= offset;
       return *this;
     }
 
-    inline Iterator& operator++()
+    iterator& operator++()
     {
       m_Index++;
       return *this;
     }
 
-    inline Iterator operator++(int)
+    iterator operator++(int)
     {
-      Iterator iter = *this;
+      iterator iter = *this;
       m_Index++;
       return iter;
     }
 
-    inline Iterator& operator--()
+    iterator& operator--()
     {
       m_Index--;
       return *this;
     }
 
-    inline Iterator operator--(int)
+    iterator operator--(int)
     {
-      Iterator iter = *this;
+      iterator iter = *this;
       m_Index--;
       return iter;
     }
 
-    inline difference_type operator-(const Iterator& rhs) const
+    difference_type operator-(const iterator& rhs) const
     {
       return m_Index - rhs.m_Index;
     }
 
-    inline reference operator*() const
+    reference operator*() const
     {
       return (*m_DataStore)[m_Index];
     }
 
-    inline bool operator==(const Iterator& rhs) const
+    bool operator==(const iterator& rhs) const
     {
       return m_Index == rhs.m_Index;
     }
 
-    inline bool operator!=(const Iterator& rhs) const
+    bool operator!=(const iterator& rhs) const
     {
       return !(*this == rhs);
     }
 
-    inline bool operator<(const Iterator& rhs) const
+    bool operator<(const iterator& rhs) const
     {
       return m_Index < rhs.m_Index;
     }
 
-    inline bool operator>(const Iterator& rhs) const
+    bool operator>(const iterator& rhs) const
     {
       return m_Index > rhs.m_Index;
     }
 
-    inline bool operator<=(const Iterator& rhs) const
+    bool operator<=(const iterator& rhs) const
     {
       return m_Index <= rhs.m_Index;
     }
 
-    inline bool operator>=(const Iterator& rhs) const
+    bool operator>=(const iterator& rhs) const
     {
       return m_Index >= rhs.m_Index;
     }
@@ -191,7 +191,7 @@ public:
    * same store. A default-constructed ConstIterator is unbound. isValid()
    * accepts it and returns false. Other store operations require binding.
    */
-  class ConstIterator
+  class const_iterator
   {
   public:
     using iterator_category = std::random_access_iterator_tag;
@@ -200,99 +200,99 @@ public:
     using pointer = const value_type*;
     using reference = const value_type&;
 
-    ConstIterator()
+    const_iterator()
     : m_DataStore(nullptr)
     , m_Index(0)
     {
     }
 
-    ConstIterator(const AbstractStringStore& dataStore, usize index)
+    const_iterator(const AbstractStringStore& dataStore, usize index)
     : m_DataStore(&dataStore)
     , m_Index(index)
     {
     }
 
-    ConstIterator(const ConstIterator& other)
+    const_iterator(const const_iterator& other)
     : m_DataStore(other.m_DataStore)
     , m_Index(other.m_Index)
     {
     }
 
-    ConstIterator(ConstIterator&& other) noexcept
+    const_iterator(const_iterator&& other) noexcept
     : m_DataStore(other.m_DataStore)
     , m_Index(other.m_Index)
     {
     }
 
-    ConstIterator& operator=(const ConstIterator& rhs)
+    const_iterator& operator=(const const_iterator& rhs)
     {
       m_DataStore = rhs.m_DataStore;
       m_Index = rhs.m_Index;
       return *this;
     }
-    ConstIterator& operator=(ConstIterator&& rhs) noexcept
+    const_iterator& operator=(const_iterator&& rhs) noexcept
     {
       m_DataStore = rhs.m_DataStore;
       m_Index = rhs.m_Index;
       return *this;
     }
 
-    ~ConstIterator() noexcept = default;
+    ~const_iterator() noexcept = default;
 
     bool isValid() const
     {
       return m_DataStore != nullptr && m_Index < m_DataStore->size();
     }
 
-    ConstIterator operator+(usize offset) const
+    const_iterator operator+(usize offset) const
     {
-      return ConstIterator(*m_DataStore, m_Index + offset);
+      return const_iterator(*m_DataStore, m_Index + offset);
     }
 
-    ConstIterator operator-(usize offset) const
+    const_iterator operator-(usize offset) const
     {
-      return ConstIterator(*m_DataStore, m_Index - offset);
+      return const_iterator(*m_DataStore, m_Index - offset);
     }
 
-    ConstIterator& operator+=(usize offset)
+    const_iterator& operator+=(usize offset)
     {
       m_Index += offset;
       return *this;
     }
 
-    ConstIterator& operator-=(usize offset)
+    const_iterator& operator-=(usize offset)
     {
       m_Index -= offset;
       return *this;
     }
 
-    ConstIterator& operator++()
+    const_iterator& operator++()
     {
       m_Index++;
       return *this;
     }
 
-    ConstIterator operator++(int)
+    const_iterator operator++(int)
     {
-      ConstIterator iter = *this;
+      const_iterator iter = *this;
       m_Index++;
       return iter;
     }
 
-    ConstIterator& operator--()
+    const_iterator& operator--()
     {
       m_Index--;
       return *this;
     }
 
-    ConstIterator operator--(int)
+    const_iterator operator--(int)
     {
-      ConstIterator iter = *this;
+      const_iterator iter = *this;
       m_Index--;
       return iter;
     }
 
-    difference_type operator-(const ConstIterator& rhs) const
+    difference_type operator-(const const_iterator& rhs) const
     {
       if(!isValid() && !rhs.isValid())
       {
@@ -301,37 +301,37 @@ public:
       return m_Index - rhs.m_Index;
     }
 
-    inline reference operator*() const
+    reference operator*() const
     {
       return (*m_DataStore)[m_Index];
     }
 
-    bool operator==(const ConstIterator& rhs) const
+    bool operator==(const const_iterator& rhs) const
     {
       return m_Index == rhs.m_Index;
     }
 
-    bool operator!=(const ConstIterator& rhs) const
+    bool operator!=(const const_iterator& rhs) const
     {
       return m_Index != rhs.m_Index;
     }
 
-    bool operator<(const ConstIterator& rhs) const
+    bool operator<(const const_iterator& rhs) const
     {
       return m_Index < rhs.m_Index;
     }
 
-    bool operator>(const ConstIterator& rhs) const
+    bool operator>(const const_iterator& rhs) const
     {
       return m_Index > rhs.m_Index;
     }
 
-    bool operator<=(const ConstIterator& rhs) const
+    bool operator<=(const const_iterator& rhs) const
     {
       return m_Index <= rhs.m_Index;
     }
 
-    bool operator>=(const ConstIterator& rhs) const
+    bool operator>=(const const_iterator& rhs) const
     {
       return m_Index >= rhs.m_Index;
     }
@@ -340,9 +340,6 @@ public:
     const AbstractStringStore* m_DataStore = nullptr;
     usize m_Index = 0;
   };
-
-  using iterator = Iterator;
-  using const_iterator = ConstIterator;
 
   virtual ~AbstractStringStore() = default;
 

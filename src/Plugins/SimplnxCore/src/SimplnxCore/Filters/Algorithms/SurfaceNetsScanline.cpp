@@ -45,7 +45,7 @@ using LabelType = int32;
  * @param paddedXY Product of padded X and Y dimensions.
  * @return Flat padded-cell record index.
  */
-inline uint64 cellRecordIndex(int32 i, int32 j, int32 k, int32 paddedX, int32 paddedXY)
+inline uint64 CellRecordIndex(int32 i, int32 j, int32 k, int32 paddedX, int32 paddedXY)
 {
   return static_cast<uint64>(i) + static_cast<uint64>(j) * static_cast<uint64>(paddedX) + static_cast<uint64>(k) * static_cast<uint64>(paddedXY);
 }
@@ -53,7 +53,7 @@ inline uint64 cellRecordIndex(int32 i, int32 j, int32 k, int32 paddedX, int32 pa
 /** @brief Returns true when the selected mode omits a padding-to-background quad. */
 bool SkipPaddingQuad(ChoicesParameter::ValueType mode, const std::array<LabelType, 2>& quadLabels)
 {
-  if(mode != BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+  if(mode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
   {
     return false;
   }
@@ -66,8 +66,8 @@ bool SkipPaddingQuad(ChoicesParameter::ValueType mode, const std::array<LabelTyp
  */
 struct VertexData
 {
-  usize VertexId = 0;
-  std::array<float32, 3> Position;
+  usize vertex_id = 0;
+  std::array<float32, 3> position;
 };
 
 /**
@@ -76,7 +76,7 @@ struct VertexData
  * @param vert1 Second vector.
  * @param result Local output copy. The caller's array is unchanged.
  */
-void crossProduct(const std::array<float32, 3>& vert0, const std::array<float32, 3> vert1, std::array<float32, 3> result)
+void CrossProduct(const std::array<float32, 3>& vert0, const std::array<float32, 3> vert1, std::array<float32, 3> result)
 {
   result[0] = vert0[1] * vert1[2] - vert0[2] * vert1[1];
   result[1] = vert0[2] * vert1[0] - vert0[0] * vert1[2];
@@ -90,12 +90,12 @@ void crossProduct(const std::array<float32, 3>& vert0, const std::array<float32,
  * @param vert2 Third position.
  * @return Zero because crossProduct() receives its result by value.
  */
-float32 triangleArea(std::array<float32, 3>& vert0, std::array<float32, 3>& vert1, std::array<float32, 3>& vert2)
+float32 TriangleArea(std::array<float32, 3>& vert0, std::array<float32, 3>& vert1, std::array<float32, 3>& vert2)
 {
   const std::array<float32, 3> v01 = {vert1[0] - vert0[0], vert1[1] - vert0[1], vert1[2] - vert0[2]};
   const std::array<float32, 3> v02 = {vert2[0] - vert0[0], vert2[1] - vert0[1], vert2[2] - vert0[2]};
   std::array<float32, 3> cross = {0.0f, 0.0f, 0.0f};
-  crossProduct(v01, v02, cross);
+  CrossProduct(v01, v02, cross);
   float32 const magCP = std::sqrt(cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]);
   return 0.5f * magCP;
 }
@@ -109,7 +109,7 @@ float32 triangleArea(std::array<float32, 3>& vert0, std::array<float32, 3>& vert
  * Both area results are zero because crossProduct() cannot update its caller.
  * Current call sites also supply zero positions. The first diagonal remains.
  */
-void getQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing, std::array<usize, 6>& triangleVtxIDs)
+void GetQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing, std::array<usize, 6>& triangleVtxIDs)
 {
   // Swap side vertices when label order indicates back-facing winding.
   if(!isQuadFrontFacing)
@@ -120,8 +120,8 @@ void getQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing
   }
 
   // Prefer the lower-area diagonal when positions distinguish the alternatives.
-  float32 const thisArea = triangleArea(vData[0].Position, vData[1].Position, vData[2].Position) + triangleArea(vData[0].Position, vData[2].Position, vData[3].Position);
-  float32 const alternateArea = triangleArea(vData[1].Position, vData[2].Position, vData[3].Position) + triangleArea(vData[1].Position, vData[3].Position, vData[0].Position);
+  float32 const thisArea = TriangleArea(vData[0].position, vData[1].position, vData[2].position) + TriangleArea(vData[0].position, vData[2].position, vData[3].position);
+  float32 const alternateArea = TriangleArea(vData[1].position, vData[2].position, vData[3].position) + TriangleArea(vData[1].position, vData[3].position, vData[0].position);
   if(alternateArea < thisArea)
   {
     VertexData const temp = vData[0];
@@ -132,12 +132,12 @@ void getQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing
   }
 
   // Emit two triangles as a fan from vertex zero.
-  triangleVtxIDs[0] = vData[0].VertexId;
-  triangleVtxIDs[1] = vData[1].VertexId;
-  triangleVtxIDs[2] = vData[2].VertexId;
-  triangleVtxIDs[3] = vData[0].VertexId;
-  triangleVtxIDs[4] = vData[2].VertexId;
-  triangleVtxIDs[5] = vData[3].VertexId;
+  triangleVtxIDs[0] = vData[0].vertex_id;
+  triangleVtxIDs[1] = vData[1].vertex_id;
+  triangleVtxIDs[2] = vData[2].vertex_id;
+  triangleVtxIDs[3] = vData[0].vertex_id;
+  triangleVtxIDs[4] = vData[2].vertex_id;
+  triangleVtxIDs[5] = vData[3].vertex_id;
 }
 
 /**
@@ -153,7 +153,7 @@ void getQuadTriangleIDs(std::array<VertexData, 4>& vData, bool isQuadFrontFacing
  * @param dimZ ImageGeom Z dimension.
  * @return Flat ImageGeom index, or usize max outside the image.
  */
-inline usize edgeCellNxIndex(int32 ci, int32 cj, int32 ck, int32 paddedX, int32 paddedY, int32 paddedZ, usize dimX, usize dimY, usize dimZ)
+inline usize EdgeCellNxIndex(int32 ci, int32 cj, int32 ck, int32 paddedX, int32 paddedY, int32 paddedZ, usize dimX, usize dimY, usize dimZ)
 {
   const int32 nxX = ci - 1;
   const int32 nxY = cj - 1;
@@ -185,7 +185,7 @@ inline usize edgeCellNxIndex(int32 ci, int32 cj, int32 ck, int32 paddedX, int32 
  * @param slice1Z ImageGeom Z index in slice1.
  * @return Feature ID, or the padding label at the exterior or on a buffer miss.
  */
-inline int32 cornerLabel(int32 ci, int32 cj, int32 ck, int32 paddedX, int32 paddedY, int32 paddedZ, usize dimX, usize dimY, const std::vector<int32>& slice0, int32 slice0Z,
+inline int32 CornerLabel(int32 ci, int32 cj, int32 ck, int32 paddedX, int32 paddedY, int32 paddedZ, usize dimX, usize dimY, const std::vector<int32>& slice0, int32 slice0Z,
                          const std::vector<int32>& slice1, int32 slice1Z)
 {
   // Exterior padded corners close the mesh at the volume boundary.
@@ -227,8 +227,8 @@ SurfaceNetsScanline::~SurfaceNetsScanline() noexcept = default;
 
 Result<> SurfaceNetsScanline::operator()()
 {
-  const auto& sentinelFeatureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
-  Result<> sentinelCheck = MeshingUtilities::ValidateFeatureIdsAgainstSentinels(sentinelFeatureIdsStore, m_InputValues->FeatureIdsArrayPath, true, m_ShouldCancel, m_MessageHandler);
+  const auto& sentinelFeatureIdsStore = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getDataStoreRef();
+  Result<> sentinelCheck = meshing_utilities::ValidateFeatureIdsAgainstSentinels(sentinelFeatureIdsStore, m_InputValues->feature_ids_array_path, true, m_ShouldCancel, m_MessageHandler);
   if(sentinelCheck.invalid())
   {
     return sentinelCheck;
@@ -240,7 +240,7 @@ Result<> SurfaceNetsScanline::operator()()
   }
 
   // One padding cell on each side closes surfaces at the image exterior.
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GridGeomDataPath);
+  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->grid_geom_data_path);
   auto gridDimensions = imageGeom.getDimensions();
 
   const usize dimX = gridDimensions[0];
@@ -269,50 +269,51 @@ Result<> SurfaceNetsScanline::operator()()
   }
   const int32 paddedXY = paddedX * paddedY;
 
-  auto* featureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  auto& featureIdsStore = featureIdsArray->getDataStoreRef();
+  auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
+  auto& featureIdsStore = featureIdsArrayPtr->getDataStoreRef();
   const auto anyDispatchTargetOutOfCore = [&]() {
     const auto isOoc = [](const IDataArray* array) { return array != nullptr && IsOutOfCore(*array); };
-    if(isOoc(featureIdsArray) || isOoc(m_DataStructure.getDataAs<IDataArray>(m_InputValues->NodeTypesDataPath)) || isOoc(m_DataStructure.getDataAs<IDataArray>(m_InputValues->FaceLabelsDataPath)))
+    if(isOoc(featureIdsArrayPtr) || isOoc(m_DataStructure.getDataAs<IDataArray>(m_InputValues->node_types_data_path)) ||
+       isOoc(m_DataStructure.getDataAs<IDataArray>(m_InputValues->face_labels_data_path)))
     {
       return true;
     }
-    for(const auto& path : m_InputValues->SelectedCellDataArrayPaths)
+    for(const auto& path : m_InputValues->selected_cell_data_array_paths)
     {
       if(isOoc(m_DataStructure.getDataAs<IDataArray>(path)))
       {
         return true;
       }
     }
-    for(const auto& path : m_InputValues->SelectedFeatureDataArrayPaths)
+    for(const auto& path : m_InputValues->selected_feature_data_array_paths)
     {
       if(isOoc(m_DataStructure.getDataAs<IDataArray>(path)))
       {
         return true;
       }
     }
-    for(const auto& path : m_InputValues->CreatedDataArrayPaths)
+    for(const auto& path : m_InputValues->created_data_array_paths)
     {
       if(isOoc(m_DataStructure.getDataAs<IDataArray>(path)))
       {
         return true;
       }
     }
-    if(const auto* triangleGeom = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->TriangleGeometryPath); triangleGeom != nullptr)
+    if(const auto* triangleGeomPtr = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->triangle_geometry_path); triangleGeomPtr != nullptr)
     {
-      return isOoc(triangleGeom->getVertices()) || isOoc(triangleGeom->getFaces());
+      return isOoc(triangleGeomPtr->getVertices()) || isOoc(triangleGeomPtr->getFaces());
     }
     return false;
   };
 
   const uint64 paddedCellCount = static_cast<uint64>(paddedX) * static_cast<uint64>(paddedY) * static_cast<uint64>(paddedZ);
   TemporaryRecordStoreConfig recordConfig;
-  recordConfig.recordSize = sizeof(SurfaceCellRecord);
-  recordConfig.maxRecordsPerBatch = 4096;
-  recordConfig.initialRecordCount = paddedCellCount;
+  recordConfig.record_size = sizeof(SurfaceCellRecord);
+  recordConfig.max_records_per_batch = 4096;
+  recordConfig.initial_record_count = paddedCellCount;
   // Actual OOC targets require external records. Resident forced-path tests may
   // use the explicit O(padded volume) in-memory fallback.
-  auto recordStoreResult = DataStoreUtilities::GetIOCollection().createTemporaryRecordStore(recordConfig);
+  auto recordStoreResult = data_store_utilities::GetIOCollection().createTemporaryRecordStore(recordConfig);
   if(recordStoreResult.valid())
   {
     m_SurfaceCells = std::move(recordStoreResult.value());
@@ -336,15 +337,15 @@ Result<> SurfaceNetsScanline::operator()()
   }
   try
   {
-    m_SurfaceCellCache = std::make_unique<BoundedRecordPageCache<SurfaceCellRecord>>(*m_SurfaceCells, recordConfig.maxRecordsPerBatch, 8);
+    m_SurfaceCellCache = std::make_unique<BoundedRecordPageCache<SurfaceCellRecord>>(*m_SurfaceCells, recordConfig.max_records_per_batch, 8);
   } catch(const std::bad_alloc&)
   {
     return MakeErrorResult(-62051, "SurfaceNets failed to allocate its bounded padded-cell page cache.");
   }
 
   SurfaceCellRecord inactiveRecord;
-  inactiveRecord.Flag.clear();
-  inactiveRecord.Label = MMSurfaceNet::ReservedLabel::Padding;
+  inactiveRecord.flag.clear();
+  inactiveRecord.label = MMSurfaceNet::ReservedLabel::Padding;
   auto initializeResult = m_SurfaceCells->fill(0, paddedCellCount, nonstd::span<const std::byte>(reinterpret_cast<const std::byte*>(&inactiveRecord), sizeof(SurfaceCellRecord)), m_ShouldCancel);
   if(initializeResult.invalid())
   {
@@ -368,8 +369,8 @@ Result<> SurfaceNetsScanline::operator()()
   }
 
   // Ping-pong pointers reuse the prior upper slice as the next lower slice.
-  std::vector<int32>* slice0 = &sliceBufA;
-  std::vector<int32>* slice1 = &sliceBufB;
+  std::vector<int32>* slice0Ptr = &sliceBufA;
+  std::vector<int32>* slice1Ptr = &sliceBufB;
   int32 slice0Z = -1;
   int32 slice1Z = -1;
 
@@ -391,7 +392,7 @@ Result<> SurfaceNetsScanline::operator()()
     {
       if(slice0Z != needZ0 && slice1Z != needZ0)
       {
-        auto copyResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(needZ0) * sliceSize, nonstd::span<int32>(slice0->data(), sliceSize));
+        auto copyResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(needZ0) * sliceSize, nonstd::span<int32>(slice0Ptr->data(), sliceSize));
         if(copyResult.invalid())
         {
           return copyResult;
@@ -403,7 +404,7 @@ Result<> SurfaceNetsScanline::operator()()
     {
       if(slice0Z != needZ1 && slice1Z != needZ1)
       {
-        auto copyResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(needZ1) * sliceSize, nonstd::span<int32>(slice1->data(), sliceSize));
+        auto copyResult = featureIdsStore.copyIntoBuffer(static_cast<usize>(needZ1) * sliceSize, nonstd::span<int32>(slice1Ptr->data(), sliceSize));
         if(copyResult.invalid())
         {
           return copyResult;
@@ -425,34 +426,34 @@ Result<> SurfaceNetsScanline::operator()()
         //   [5] = (i+1, j,   k+1)   right-back-top
         //   [6] = (i+1, j+1, k+1)   right-front-top
         //   [7] = (i,   j+1, k+1)   left-front-top
-        std::array<int32, 8> cellLabels;
+        std::array<int32, 8> cellLabels{};
 
-        cellLabels[0] = cornerLabel(i, j, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);
-        cellLabels[1] = cornerLabel(i + 1, j, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);
-        cellLabels[2] = cornerLabel(i + 1, j + 1, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);
-        cellLabels[3] = cornerLabel(i, j + 1, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);
-        cellLabels[4] = cornerLabel(i, j, k + 1, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);
-        cellLabels[5] = cornerLabel(i + 1, j, k + 1, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);
-        cellLabels[6] = cornerLabel(i + 1, j + 1, k + 1, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);
-        cellLabels[7] = cornerLabel(i, j + 1, k + 1, paddedX, paddedY, paddedZ, dimX, dimY, *slice0, slice0Z, *slice1, slice1Z);
+        cellLabels[0] = CornerLabel(i, j, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0Ptr, slice0Z, *slice1Ptr, slice1Z);
+        cellLabels[1] = CornerLabel(i + 1, j, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0Ptr, slice0Z, *slice1Ptr, slice1Z);
+        cellLabels[2] = CornerLabel(i + 1, j + 1, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0Ptr, slice0Z, *slice1Ptr, slice1Z);
+        cellLabels[3] = CornerLabel(i, j + 1, k, paddedX, paddedY, paddedZ, dimX, dimY, *slice0Ptr, slice0Z, *slice1Ptr, slice1Z);
+        cellLabels[4] = CornerLabel(i, j, k + 1, paddedX, paddedY, paddedZ, dimX, dimY, *slice0Ptr, slice0Z, *slice1Ptr, slice1Z);
+        cellLabels[5] = CornerLabel(i + 1, j, k + 1, paddedX, paddedY, paddedZ, dimX, dimY, *slice0Ptr, slice0Z, *slice1Ptr, slice1Z);
+        cellLabels[6] = CornerLabel(i + 1, j + 1, k + 1, paddedX, paddedY, paddedZ, dimX, dimY, *slice0Ptr, slice0Z, *slice1Ptr, slice1Z);
+        cellLabels[7] = CornerLabel(i, j + 1, k + 1, paddedX, paddedY, paddedZ, dimX, dimY, *slice0Ptr, slice0Z, *slice1Ptr, slice1Z);
 
         MMCellFlag flag;
         flag.clear();
         flag.set(cellLabels.data());
 
         SurfaceCellRecord record;
-        record.Flag = flag;
-        record.Label = cellLabels[0];
+        record.flag = flag;
+        record.label = cellLabels[0];
         if(flag.vertexType() != MMCellFlag::VertexType::NoVertex)
         {
           if(numVertices == std::numeric_limits<usize>::max())
           {
             return MakeErrorResult(-56335, "SurfaceNets vertex count exceeds the supported tuple range.");
           }
-          record.VertexId = static_cast<uint64>(numVertices);
+          record.vertex_id = static_cast<uint64>(numVertices);
           ++numVertices;
         }
-        auto writeResult = m_SurfaceCellCache->write(cellRecordIndex(i, j, k, paddedX, paddedXY), record, m_ShouldCancel);
+        auto writeResult = m_SurfaceCellCache->write(CellRecordIndex(i, j, k, paddedX, paddedXY), record, m_ShouldCancel);
         if(writeResult.invalid())
         {
           return writeResult;
@@ -461,7 +462,7 @@ Result<> SurfaceNetsScanline::operator()()
     }
 
     // Reuse the upper slice and make the other buffer available for k+1.
-    std::swap(slice0, slice1);
+    std::swap(slice0Ptr, slice1Ptr);
     std::swap(slice0Z, slice1Z);
   }
 
@@ -472,9 +473,9 @@ Result<> SurfaceNetsScanline::operator()()
     return cacheFlushResult;
   }
 
-  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
+  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_geometry_path);
   auto& verticesStore = triangleGeom.getVerticesRef().getDataStoreRef();
-  auto& nodeTypes = m_DataStructure.getDataAs<Int8Array>(m_InputValues->NodeTypesDataPath)->getDataStoreRef();
+  auto& nodeTypes = m_DataStructure.getDataAs<Int8ArrayType>(m_InputValues->node_types_data_path)->getDataStoreRef();
   if(numVertices > std::numeric_limits<usize>::max() / 3)
   {
     return MakeErrorResult(-56336, "SurfaceNets vertex value count exceeds the supported tuple range.");
@@ -519,14 +520,14 @@ Result<> SurfaceNetsScanline::operator()()
       {0, 0, +1}  // TopFace
   }};
 
-  if(m_InputValues->ApplySmoothing)
+  if(m_InputValues->apply_smoothing)
   {
-    const float32 alpha = m_InputValues->RelaxationFactor;
-    const float32 maxDist = m_InputValues->MaxDistanceFromVoxel;
+    const float32 alpha = m_InputValues->relaxation_factor;
+    const float32 maxDist = m_InputValues->max_distance_from_voxel;
     const float32 minClamp = 0.5f - maxDist;
     const float32 maxClamp = 0.5f + maxDist;
 
-    for(int32 iter = 0; iter < m_InputValues->SmoothingIterations; iter++)
+    for(int32 iter = 0; iter < m_InputValues->smoothing_iterations; iter++)
     {
       if(m_ShouldCancel)
       {
@@ -538,14 +539,14 @@ Result<> SurfaceNetsScanline::operator()()
         {
           for(int32 cellI = 0; cellI < paddedX - 1; cellI++)
           {
-            const uint64 recordIndex = cellRecordIndex(cellI, cellJ, cellK, paddedX, paddedXY);
+            const uint64 recordIndex = CellRecordIndex(cellI, cellJ, cellK, paddedX, paddedXY);
             auto recordResult = m_SurfaceCellCache->read(recordIndex, m_ShouldCancel);
             if(recordResult.invalid())
             {
               return ConvertResult(std::move(recordResult));
             }
             auto record = recordResult.value();
-            if(record.VertexId == std::numeric_limits<uint64>::max())
+            if(record.vertex_id == std::numeric_limits<uint64>::max())
             {
               continue;
             }
@@ -557,13 +558,13 @@ Result<> SurfaceNetsScanline::operator()()
             {
               // Vertex type selects ordinary or junction-only crossed faces.
               bool participates = false;
-              if(record.Flag.vertexType() == MMCellFlag::VertexType::SurfaceVertex)
+              if(record.flag.vertexType() == MMCellFlag::VertexType::SurfaceVertex)
               {
-                participates = (record.Flag.faceCrossingType(face) != MMCellFlag::FaceCrossingType::NoFaceCrossing);
+                participates = (record.flag.faceCrossingType(face) != MMCellFlag::FaceCrossingType::NoFaceCrossing);
               }
               else
               {
-                participates = (record.Flag.faceCrossingType(face) == MMCellFlag::FaceCrossingType::JunctionFaceCrossing);
+                participates = (record.flag.faceCrossingType(face) == MMCellFlag::FaceCrossingType::JunctionFaceCrossing);
               }
 
               if(!participates)
@@ -581,17 +582,17 @@ Result<> SurfaceNetsScanline::operator()()
               float32 nbrPosZ = 0.5f;
               if(nbrI >= 0 && nbrJ >= 0 && nbrK >= 0 && nbrI < paddedX && nbrJ < paddedY && nbrK < paddedZ)
               {
-                auto neighborResult = m_SurfaceCellCache->read(cellRecordIndex(nbrI, nbrJ, nbrK, paddedX, paddedXY), m_ShouldCancel);
+                auto neighborResult = m_SurfaceCellCache->read(CellRecordIndex(nbrI, nbrJ, nbrK, paddedX, paddedXY), m_ShouldCancel);
                 if(neighborResult.invalid())
                 {
                   return ConvertResult(std::move(neighborResult));
                 }
                 const auto& neighbor = neighborResult.value();
-                if(neighbor.VertexId != std::numeric_limits<uint64>::max())
+                if(neighbor.vertex_id != std::numeric_limits<uint64>::max())
                 {
-                  nbrPosX = neighbor.LocalPosition[0];
-                  nbrPosY = neighbor.LocalPosition[1];
-                  nbrPosZ = neighbor.LocalPosition[2];
+                  nbrPosX = neighbor.local_position[0];
+                  nbrPosY = neighbor.local_position[1];
+                  nbrPosZ = neighbor.local_position[2];
                 }
               }
 
@@ -609,9 +610,9 @@ Result<> SurfaceNetsScanline::operator()()
               avgP[1] /= static_cast<float32>(numNeighbors);
               avgP[2] /= static_cast<float32>(numNeighbors);
 
-              record.LocalPosition[0] = std::clamp((1.0f - alpha) * record.LocalPosition[0] + alpha * avgP[0], minClamp, maxClamp);
-              record.LocalPosition[1] = std::clamp((1.0f - alpha) * record.LocalPosition[1] + alpha * avgP[1], minClamp, maxClamp);
-              record.LocalPosition[2] = std::clamp((1.0f - alpha) * record.LocalPosition[2] + alpha * avgP[2], minClamp, maxClamp);
+              record.local_position[0] = std::clamp((1.0f - alpha) * record.local_position[0] + alpha * avgP[0], minClamp, maxClamp);
+              record.local_position[1] = std::clamp((1.0f - alpha) * record.local_position[1] + alpha * avgP[1], minClamp, maxClamp);
+              record.local_position[2] = std::clamp((1.0f - alpha) * record.local_position[2] + alpha * avgP[2], minClamp, maxClamp);
 
               auto writeResult = m_SurfaceCellCache->write(recordIndex, record, m_ShouldCancel);
               if(writeResult.invalid())
@@ -638,7 +639,7 @@ Result<> SurfaceNetsScanline::operator()()
     {
       return MakeErrorResult<SurfaceCellRecord>(-62055, "SurfaceNets encountered an invalid padded-cell neighbor.");
     }
-    return m_SurfaceCellCache->read(cellRecordIndex(i, j, k, paddedX, paddedXY), m_ShouldCancel);
+    return m_SurfaceCellCache->read(CellRecordIndex(i, j, k, paddedX, paddedXY), m_ShouldCancel);
   };
   const auto labelAt = [&](int32 i, int32 j, int32 k) -> Result<LabelType> {
     if(i <= 0 || j <= 0 || k <= 0 || i >= paddedX - 1 || j >= paddedY - 1 || k >= paddedZ - 1)
@@ -650,7 +651,7 @@ Result<> SurfaceNetsScanline::operator()()
     {
       return ConvertInvalidResult<LabelType>(std::move(recordResult));
     }
-    return {recordResult.value().Label};
+    return {recordResult.value().label};
   };
   const auto nodeTypeAt = [&](int32 i, int32 j, int32 k) -> Result<int8> {
     const std::array<std::array<int32, 3>, 8> corners = {{{i, j, k}, {i + 1, j, k}, {i, j + 1, k}, {i + 1, j + 1, k}, {i, j, k + 1}, {i + 1, j, k + 1}, {i + 1, j + 1, k + 1}, {i, j + 1, k + 1}}};
@@ -692,15 +693,15 @@ Result<> SurfaceNetsScanline::operator()()
           return ConvertResult(std::move(recordResult));
         }
         auto record = recordResult.value();
-        if(record.VertexId != std::numeric_limits<uint64>::max())
+        if(record.vertex_id != std::numeric_limits<uint64>::max())
         {
           auto nodeTypeResult = nodeTypeAt(i, j, k);
           if(nodeTypeResult.invalid())
           {
             return ConvertResult(std::move(nodeTypeResult));
           }
-          record.NodeType = nodeTypeResult.value();
-          auto writeResult = m_SurfaceCellCache->write(cellRecordIndex(i, j, k, paddedX, paddedXY), record, m_ShouldCancel);
+          record.node_type = nodeTypeResult.value();
+          auto writeResult = m_SurfaceCellCache->write(CellRecordIndex(i, j, k, paddedX, paddedXY), record, m_ShouldCancel);
           if(writeResult.invalid())
           {
             return writeResult;
@@ -715,7 +716,7 @@ Result<> SurfaceNetsScanline::operator()()
   usize suppressedFaceCount = 0;
   const auto countEdge = [&](int32 i, int32 j, int32 k, const SurfaceCellRecord& record, MMCellFlag::Edge edge, const std::array<std::array<int32, 3>, 4>& quadCells,
                              const std::array<int32, 3>& otherLabelOffset) -> Result<> {
-    if(!record.Flag.isEdgeCrossing(edge))
+    if(!record.flag.isEdgeCrossing(edge))
     {
       return {};
     }
@@ -726,7 +727,7 @@ Result<> SurfaceNetsScanline::operator()()
       return label0.invalid() ? ConvertResult(std::move(label0)) : ConvertResult(std::move(label1));
     }
     const std::array<LabelType, 2> quadLabels = {label0.value(), label1.value()};
-    if(SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
+    if(SkipPaddingQuad(m_InputValues->bounding_box_skin_mode, quadLabels))
     {
       suppressedFaceCount++;
       return {};
@@ -739,8 +740,8 @@ Result<> SurfaceNetsScanline::operator()()
         return ConvertResult(std::move(quadRecordResult));
       }
       auto quadRecord = quadRecordResult.value();
-      quadRecord.IsReferenced = true;
-      auto writeResult = m_SurfaceCellCache->write(cellRecordIndex(cell[0], cell[1], cell[2], paddedX, paddedXY), quadRecord, m_ShouldCancel);
+      quadRecord.is_referenced = true;
+      auto writeResult = m_SurfaceCellCache->write(CellRecordIndex(cell[0], cell[1], cell[2], paddedX, paddedXY), quadRecord, m_ShouldCancel);
       if(writeResult.invalid())
       {
         return writeResult;
@@ -769,24 +770,30 @@ Result<> SurfaceNetsScanline::operator()()
           return ConvertResult(std::move(recordResult));
         }
         const auto& record = recordResult.value();
-        if(record.VertexId == std::numeric_limits<uint64>::max())
+        if(record.vertex_id == std::numeric_limits<uint64>::max())
         {
           continue;
         }
         auto result = countEdge(i, j, k, record, MMCellFlag::Edge::BackBottomEdge, {{{i, j, k}, {i, j - 1, k}, {i, j - 1, k - 1}, {i, j, k - 1}}}, {{1, 0, 0}});
         if(result.invalid())
+        {
           return result;
+        }
         result = countEdge(i, j, k, record, MMCellFlag::Edge::LeftBottomEdge, {{{i, j, k}, {i, j, k - 1}, {i - 1, j, k - 1}, {i - 1, j, k}}}, {{0, 1, 0}});
         if(result.invalid())
+        {
           return result;
+        }
         result = countEdge(i, j, k, record, MMCellFlag::Edge::LeftBackEdge, {{{i, j, k}, {i - 1, j, k}, {i - 1, j - 1, k}, {i, j - 1, k}}}, {{0, 0, 1}});
         if(result.invalid())
+        {
           return result;
+        }
       }
     }
   }
 
-  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+  if(m_InputValues->bounding_box_skin_mode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
   {
     usize survivingVertexCount = 0;
     for(int32 k = 0; k < paddedZ - 1; k++)
@@ -801,19 +808,19 @@ Result<> SurfaceNetsScanline::operator()()
             return ConvertResult(std::move(recordResult));
           }
           auto record = recordResult.value();
-          if(record.VertexId == std::numeric_limits<uint64>::max())
+          if(record.vertex_id == std::numeric_limits<uint64>::max())
           {
             continue;
           }
-          if(record.IsReferenced)
+          if(record.is_referenced)
           {
-            record.VertexId = survivingVertexCount++;
+            record.vertex_id = survivingVertexCount++;
           }
           else
           {
-            record.VertexId = std::numeric_limits<uint64>::max();
+            record.vertex_id = std::numeric_limits<uint64>::max();
           }
-          auto writeResult = m_SurfaceCellCache->write(cellRecordIndex(i, j, k, paddedX, paddedXY), record, m_ShouldCancel);
+          auto writeResult = m_SurfaceCellCache->write(CellRecordIndex(i, j, k, paddedX, paddedXY), record, m_ShouldCancel);
           if(writeResult.invalid())
           {
             return writeResult;
@@ -841,19 +848,21 @@ Result<> SurfaceNetsScanline::operator()()
 
   auto recordFlushResult = m_SurfaceCellCache->flush(m_ShouldCancel);
   if(recordFlushResult.invalid())
+  {
     return recordFlushResult;
+  }
 
   // Stream vertices and node types in 4,096-vertex batches by vertex ID.
   auto voxelSize = imageGeom.getSpacing();
   auto origin = imageGeom.getOrigin();
-  const Point3Df halfVoxelOffset(0.5f * voxelSize[0], 0.5f * voxelSize[1], 0.5f * voxelSize[2]);
-  constexpr usize kOutputChunkSize = 4096;
+  const FloatVec3Type halfVoxelOffset(0.5f * voxelSize[0], 0.5f * voxelSize[1], 0.5f * voxelSize[2]);
+  constexpr usize k_OutputChunkSize = 4096;
   std::vector<float32> vertexBuffer;
   std::vector<int8> nodeBuffer;
   try
   {
-    vertexBuffer.reserve(kOutputChunkSize * 3);
-    nodeBuffer.reserve(kOutputChunkSize);
+    vertexBuffer.reserve(k_OutputChunkSize * 3);
+    nodeBuffer.reserve(k_OutputChunkSize);
   } catch(const std::bad_alloc&)
   {
     return MakeErrorResult(-62054, "SurfaceNets failed to allocate its bounded vertex output buffers.");
@@ -864,15 +873,23 @@ Result<> SurfaceNetsScanline::operator()()
   usize vertexStart = 0;
   const auto flushVertices = [&]() -> Result<> {
     if(vertexBuffer.empty())
+    {
       return {};
+    }
     if(vertexStart > numVertices || vertexStart > std::numeric_limits<usize>::max() / 3 || vertexBuffer.size() > (numVertices - vertexStart) * 3)
+    {
       return MakeErrorResult(-56336, "SurfaceNets vertex output range exceeds the supported value range.");
+    }
     auto vertexResult = verticesStore.copyFromBuffer(vertexStart * 3, nonstd::span<const float32>(vertexBuffer.data(), vertexBuffer.size()));
     if(vertexResult.invalid())
+    {
       return vertexResult;
+    }
     auto nodeResult = nodeTypes.copyFromBuffer(vertexStart, nonstd::span<const int8>(nodeBuffer.data(), nodeBuffer.size()));
     if(nodeResult.invalid())
+    {
       return nodeResult;
+    }
     vertexStart += nodeBuffer.size();
     vertexBuffer.clear();
     nodeBuffer.clear();
@@ -881,39 +898,53 @@ Result<> SurfaceNetsScanline::operator()()
   for(int32 k = 0; k < paddedZ - 1; k++)
   {
     if(m_ShouldCancel)
+    {
       return {};
+    }
     for(int32 j = 0; j < paddedY - 1; j++)
+    {
       for(int32 i = 0; i < paddedX - 1; i++)
       {
         auto recordResult = recordAt(i, j, k);
         if(recordResult.invalid())
+        {
           return ConvertResult(std::move(recordResult));
+        }
         const auto& record = recordResult.value();
-        if(record.VertexId == std::numeric_limits<uint64>::max())
+        if(record.vertex_id == std::numeric_limits<uint64>::max())
+        {
           continue;
-        vertexBuffer.push_back(voxelSize[0] * (static_cast<float32>(i) + record.LocalPosition[0]) + origin[0] - halfVoxelOffset[0]);
-        vertexBuffer.push_back(voxelSize[1] * (static_cast<float32>(j) + record.LocalPosition[1]) + origin[1] - halfVoxelOffset[1]);
-        vertexBuffer.push_back(voxelSize[2] * (static_cast<float32>(k) + record.LocalPosition[2]) + origin[2] - halfVoxelOffset[2]);
-        nodeBuffer.push_back(record.NodeType);
-        if(nodeBuffer.size() == kOutputChunkSize)
+        }
+        vertexBuffer.push_back(voxelSize[0] * (static_cast<float32>(i) + record.local_position[0]) + origin[0] - halfVoxelOffset[0]);
+        vertexBuffer.push_back(voxelSize[1] * (static_cast<float32>(j) + record.local_position[1]) + origin[1] - halfVoxelOffset[1]);
+        vertexBuffer.push_back(voxelSize[2] * (static_cast<float32>(k) + record.local_position[2]) + origin[2] - halfVoxelOffset[2]);
+        nodeBuffer.push_back(record.node_type);
+        if(nodeBuffer.size() == k_OutputChunkSize)
         {
           auto result = flushVertices();
           if(result.invalid())
+          {
             return result;
+          }
         }
       }
+    }
   }
   auto vertexFlushResult = flushVertices();
   if(vertexFlushResult.invalid())
+  {
     return vertexFlushResult;
+  }
   if(vertexStart != numVertices)
+  {
     return MakeErrorResult(-62057, "SurfaceNets streamed an unexpected number of vertices.");
+  }
 
   if(triangleCount > std::numeric_limits<usize>::max() / 3)
   {
     return MakeErrorResult(-56337, "SurfaceNets face value count exceeds the supported tuple range.");
   }
-  auto& faceLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef();
+  auto& faceLabels = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->face_labels_data_path)->getDataStoreRef();
   try
   {
     Result<> resizeResult = triangleGeom.resizeFaceList(triangleCount);
@@ -943,12 +974,16 @@ Result<> SurfaceNetsScanline::operator()()
   }
 
   std::vector<std::shared_ptr<AbstractTupleTransfer>> tupleTransferFunctions;
-  for(usize i = 0; i < m_InputValues->SelectedCellDataArrayPaths.size(); i++)
-    ::AddTupleTransferInstance(m_DataStructure, m_InputValues->SelectedCellDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i], tupleTransferFunctions);
-  const auto numSelectedCellArrayPaths = m_InputValues->SelectedCellDataArrayPaths.size();
-  for(usize i = 0; i < m_InputValues->SelectedFeatureDataArrayPaths.size(); i++)
-    ::AddFeatureTupleTransferInstance(m_DataStructure, m_InputValues->SelectedFeatureDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i + numSelectedCellArrayPaths],
-                                      m_InputValues->FeatureIdsArrayPath, tupleTransferFunctions);
+  for(usize i = 0; i < m_InputValues->selected_cell_data_array_paths.size(); i++)
+  {
+    ::AddTupleTransferInstance(m_DataStructure, m_InputValues->selected_cell_data_array_paths[i], m_InputValues->created_data_array_paths[i], tupleTransferFunctions);
+  }
+  const auto numSelectedCellArrayPaths = m_InputValues->selected_cell_data_array_paths.size();
+  for(usize i = 0; i < m_InputValues->selected_feature_data_array_paths.size(); i++)
+  {
+    ::AddFeatureTupleTransferInstance(m_DataStructure, m_InputValues->selected_feature_data_array_paths[i], m_InputValues->created_data_array_paths[i + numSelectedCellArrayPaths],
+                                      m_InputValues->feature_ids_array_path, tupleTransferFunctions);
+  }
 
   using MeshIndexType = IGeometry::MeshIndexType;
   auto& facesStore = triangleGeom.getFacesRef().getDataStoreRef();
@@ -957,9 +992,9 @@ Result<> SurfaceNetsScanline::operator()()
   std::vector<SurfaceNetsTransferData> transferBuffer;
   try
   {
-    faceBuffer.reserve(kOutputChunkSize * 3);
-    faceLabelBuffer.reserve(kOutputChunkSize * 2);
-    transferBuffer.reserve(kOutputChunkSize);
+    faceBuffer.reserve(k_OutputChunkSize * 3);
+    faceLabelBuffer.reserve(k_OutputChunkSize * 2);
+    transferBuffer.reserve(k_OutputChunkSize);
   } catch(const std::bad_alloc&)
   {
     return MakeErrorResult(-62054, "SurfaceNets failed to allocate its bounded face output buffers.");
@@ -970,16 +1005,24 @@ Result<> SurfaceNetsScanline::operator()()
   usize faceStart = 0;
   const auto flushFaces = [&]() -> Result<> {
     if(faceBuffer.empty())
+    {
       return {};
+    }
     if(faceStart > triangleCount || faceStart > std::numeric_limits<usize>::max() / 3 || faceBuffer.size() > (triangleCount - faceStart) * 3 ||
        faceLabelBuffer.size() > (triangleCount - faceStart) * 2)
+    {
       return MakeErrorResult(-56337, "SurfaceNets face output range exceeds the supported value range.");
+    }
     auto faceResult = facesStore.copyFromBuffer(faceStart * 3, nonstd::span<const MeshIndexType>(faceBuffer.data(), faceBuffer.size()));
     if(faceResult.invalid())
+    {
       return faceResult;
+    }
     auto labelResult = faceLabels.copyFromBuffer(faceStart * 2, nonstd::span<const int32>(faceLabelBuffer.data(), faceLabelBuffer.size()));
     if(labelResult.invalid())
+    {
       return labelResult;
+    }
     for(const auto& transfer : tupleTransferFunctions)
     {
       auto transferResult = transfer->surfaceNetsTransferBatch(nonstd::span<const SurfaceNetsTransferData>(transferBuffer.data(), transferBuffer.size()));
@@ -996,33 +1039,43 @@ Result<> SurfaceNetsScanline::operator()()
   };
   const auto emitEdge = [&](int32 i, int32 j, int32 k, const SurfaceCellRecord& record, MMCellFlag::Edge edge, const std::array<std::array<int32, 3>, 4>& quadCells,
                             const std::array<int32, 3>& otherLabelOffset) -> Result<> {
-    if(!record.Flag.isEdgeCrossing(edge))
+    if(!record.flag.isEdgeCrossing(edge))
+    {
       return {};
+    }
     auto label0 = labelAt(i, j, k);
     auto label1 = labelAt(i + otherLabelOffset[0], j + otherLabelOffset[1], k + otherLabelOffset[2]);
     if(label0.invalid() || label1.invalid())
+    {
       return label0.invalid() ? ConvertResult(std::move(label0)) : ConvertResult(std::move(label1));
+    }
     const std::array<LabelType, 2> quadLabels = {label0.value(), label1.value()};
-    if(SkipPaddingQuad(m_InputValues->BoundingBoxSkinMode, quadLabels))
+    if(SkipPaddingQuad(m_InputValues->bounding_box_skin_mode, quadLabels))
+    {
       return {};
+    }
     std::array<VertexData, 4> vData{};
     // Both implementations supply zero positions and therefore use the default diagonal.
     for(usize n = 0; n < quadCells.size(); n++)
     {
       auto quadRecord = recordAt(quadCells[n][0], quadCells[n][1], quadCells[n][2]);
       if(quadRecord.invalid())
+      {
         return ConvertResult(std::move(quadRecord));
-      if(quadRecord.value().VertexId == std::numeric_limits<uint64>::max())
+      }
+      if(quadRecord.value().vertex_id == std::numeric_limits<uint64>::max())
+      {
         return MakeErrorResult(-62056, "SurfaceNets edge quad is missing one of its required vertices.");
-      vData[n] = {static_cast<usize>(quadRecord.value().VertexId), {0.0f, 0.0f, 0.0f}};
+      }
+      vData[n] = {.vertex_id = static_cast<usize>(quadRecord.value().vertex_id), .position = {0.0f, 0.0f, 0.0f}};
     }
     const bool frontFacing = label0.value() < label1.value();
     LabelType firstLabel = label0.value() == MMSurfaceNet::Padding ? -1 : label0.value();
     LabelType secondLabel = label1.value() == MMSurfaceNet::Padding ? -1 : label1.value();
     std::array<usize, 6> triangleVertexIds{};
-    getQuadTriangleIDs(vData, frontFacing, triangleVertexIds);
-    const std::array<usize, 2> nxIndices = {edgeCellNxIndex(i, j, k, paddedX, paddedY, paddedZ, dimX, dimY, dimZ),
-                                            edgeCellNxIndex(i + otherLabelOffset[0], j + otherLabelOffset[1], k + otherLabelOffset[2], paddedX, paddedY, paddedZ, dimX, dimY, dimZ)};
+    GetQuadTriangleIDs(vData, frontFacing, triangleVertexIds);
+    const std::array<usize, 2> nxIndices = {EdgeCellNxIndex(i, j, k, paddedX, paddedY, paddedZ, dimX, dimY, dimZ),
+                                            EdgeCellNxIndex(i + otherLabelOffset[0], j + otherLabelOffset[1], k + otherLabelOffset[2], paddedX, paddedY, paddedZ, dimX, dimY, dimZ)};
     const auto appendTriangle = [&](usize offset) {
       faceBuffer.insert(faceBuffer.end(), triangleVertexIds.begin() + offset, triangleVertexIds.begin() + offset + 3);
       faceLabelBuffer.push_back(std::min(firstLabel, secondLabel));
@@ -1031,11 +1084,13 @@ Result<> SurfaceNetsScanline::operator()()
     };
     appendTriangle(0);
     appendTriangle(3);
-    if(transferBuffer.size() >= kOutputChunkSize)
+    if(transferBuffer.size() >= k_OutputChunkSize)
     {
       auto flushResult = flushFaces();
       if(flushResult.invalid())
+      {
         return flushResult;
+      }
     }
     return {};
   };
@@ -1044,38 +1099,54 @@ Result<> SurfaceNetsScanline::operator()()
       for(int32 i = 0; i < paddedX - 1; i++)
       {
         if(m_ShouldCancel)
+        {
           return {};
+        }
         auto recordResult = recordAt(i, j, k);
         if(recordResult.invalid())
+        {
           return ConvertResult(std::move(recordResult));
+        }
         const auto& record = recordResult.value();
-        if(record.VertexId == std::numeric_limits<uint64>::max())
+        if(record.vertex_id == std::numeric_limits<uint64>::max())
+        {
           continue;
+        }
         auto result = emitEdge(i, j, k, record, MMCellFlag::Edge::BackBottomEdge, {{{i, j, k}, {i, j - 1, k}, {i, j - 1, k - 1}, {i, j, k - 1}}}, {{1, 0, 0}});
         if(result.invalid())
+        {
           return result;
+        }
         result = emitEdge(i, j, k, record, MMCellFlag::Edge::LeftBottomEdge, {{{i, j, k}, {i, j, k - 1}, {i - 1, j, k - 1}, {i - 1, j, k}}}, {{0, 1, 0}});
         if(result.invalid())
+        {
           return result;
+        }
         result = emitEdge(i, j, k, record, MMCellFlag::Edge::LeftBackEdge, {{{i, j, k}, {i - 1, j, k}, {i - 1, j - 1, k}, {i, j - 1, k}}}, {{0, 0, 1}});
         if(result.invalid())
+        {
           return result;
+        }
       }
   auto faceFlushResult = flushFaces();
   if(faceFlushResult.invalid())
+  {
     return faceFlushResult;
+  }
   if(faceStart != triangleCount)
+  {
     return MakeErrorResult(-62058, "SurfaceNets streamed an unexpected number of faces.");
+  }
 
   // Prefer bounded external winding repair when the provider supports it.
   Result<> windingResult = {};
-  if(m_InputValues->RepairTriangleWinding)
+  if(m_InputValues->repair_triangle_winding)
   {
-    auto& ioCollection = DataStoreUtilities::GetIOCollection();
+    auto& ioCollection = data_store_utilities::GetIOCollection();
     if(ioCollection.hasExternalSortCapability() && ioCollection.hasTemporaryRecordStoreCapability())
     {
-      windingResult = MeshingUtilities::RepairTriangleWindingExternal(triangleGeom.getFaces()->getDataStoreRef(),
-                                                                      m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
+      windingResult = meshing_utilities::RepairTriangleWindingExternal(
+          triangleGeom.getFaces()->getDataStoreRef(), m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->face_labels_data_path)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
     }
     else
     {
@@ -1092,25 +1163,25 @@ Result<> SurfaceNetsScanline::operator()()
       {
         return MakeErrorResult(-56331, fmt::format("Unable to generate the connectivity list for {} geometry.", triangleGeom.getName()));
       }
-      const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
+      const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicListType>(optionalId.value());
       m_MessageHandler.sendInfoMessage("Repairing Windings...");
-      windingResult = MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
-                                                              m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
+      windingResult = meshing_utilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
+                                                               m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->face_labels_data_path)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
       m_DataStructure.removeData(triangleGeom.getElementContainingVertId().value());
       m_DataStructure.removeData(triangleGeom.getElementNeighborsId().value());
     }
   }
 
-  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && windingResult.valid())
+  if(m_InputValues->bounding_box_skin_mode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly && windingResult.valid())
   {
     if(triangleGeom.getNumberOfFaces() == 0)
     {
-      return MeshingUtilities::MakeEmptyMeshWarning(m_InputValues->TriangleGeometryPath, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getNumberOfTuples(),
-                                                    triangleGeom.getNumberOfVertices());
+      return meshing_utilities::MakeEmptyMeshWarning(m_InputValues->triangle_geometry_path, m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getNumberOfTuples(),
+                                                     triangleGeom.getNumberOfVertices());
     }
     if(suppressedFaceCount == 0)
     {
-      return MeshingUtilities::MakeNoFacesPrunedWarning(m_InputValues->TriangleGeometryPath);
+      return meshing_utilities::MakeNoFacesPrunedWarning(m_InputValues->triangle_geometry_path);
     }
   }
 

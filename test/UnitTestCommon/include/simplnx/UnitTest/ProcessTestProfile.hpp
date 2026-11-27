@@ -21,7 +21,7 @@
 #endif
 #endif
 
-namespace nx::core::UnitTest
+namespace nx::core::unit_test
 {
 /**
  * @brief Isolates one test process without taking ownership of borrowed fixtures.
@@ -64,15 +64,15 @@ public:
         throw std::runtime_error("Test profile installation was already attempted");
       }
       m_Attempted = true;
-      const char* requested = std::getenv("SIMPLNX_TEST_PROFILE_DIR");
-      const char* token = std::getenv("SIMPLNX_TEST_PROFILE_TOKEN");
-      if(requested != nullptr || token != nullptr)
+      const char* requestedPtr = std::getenv("SIMPLNX_TEST_PROFILE_DIR");
+      const char* tokenPtr = std::getenv("SIMPLNX_TEST_PROFILE_TOKEN");
+      if(requestedPtr != nullptr || tokenPtr != nullptr)
       {
-        if(requested == nullptr || token == nullptr || *requested == '\0' || *token == '\0')
+        if(requestedPtr == nullptr || tokenPtr == nullptr || *requestedPtr == '\0' || *tokenPtr == '\0')
         {
           throw std::runtime_error("Test profile directory and nonempty token must be supplied together");
         }
-        std::filesystem::path requestedPath(requested);
+        std::filesystem::path requestedPath(requestedPtr);
         while(requestedPath != requestedPath.root_path() && (requestedPath.filename().empty() || requestedPath.filename() == "."))
         {
           requestedPath = requestedPath.parent_path();
@@ -82,20 +82,20 @@ public:
           throw std::runtime_error("Borrowed test profile must be an absolute non-root directory");
         }
         // Ancestor aliases can name a valid fixture. The requested directory itself must remain a plain entry.
-        requirePlainEntry(requestedPath);
+        RequirePlainEntry(requestedPath);
         m_Root = std::filesystem::canonical(requestedPath);
         if(m_Root == m_Root.root_path())
         {
           throw std::runtime_error("Borrowed test profile resolves to a filesystem root");
         }
-        requirePlainPath(m_Root);
-        m_Token = token;
+        RequirePlainPath(m_Root);
+        m_Token = tokenPtr;
         validateMarker();
       }
       else
       {
         m_Parent = std::filesystem::canonical(std::filesystem::temp_directory_path());
-        requirePlainPath(m_Parent);
+        RequirePlainPath(m_Parent);
         std::random_device random;
         for(int attempt = 0; attempt < 32; ++attempt)
         {
@@ -112,9 +112,9 @@ public:
         {
           throw std::runtime_error("Cannot reserve an exclusive test profile directory");
         }
-        writeFile(m_Root / ".simplnx-test-profile", m_Token);
+        WriteFile(m_Root / ".simplnx-test-profile", m_Token);
         std::filesystem::create_directories(corePreferencesFile().parent_path());
-        writeFile(corePreferencesFile(), "{}");
+        WriteFile(corePreferencesFile(), "{}");
       }
 
       // Core Preferences reads the narrow CRT environment on Windows.
@@ -123,9 +123,9 @@ public:
       {
         throw std::runtime_error("Test profile path cannot round-trip through the core environment");
       }
-      setEnvironment(homeVariable(), rootString.c_str());
-      const char* installed = std::getenv(homeVariable());
-      if(installed == nullptr || std::filesystem::path(installed) != m_Root)
+      SetEnvironment(HomeVariable(), rootString.c_str());
+      const char* installedPtr = std::getenv(HomeVariable());
+      if(installedPtr == nullptr || std::filesystem::path(installedPtr) != m_Root)
       {
         throw std::runtime_error("Core environment did not retain the test profile path");
       }
@@ -142,19 +142,19 @@ public:
         throw std::runtime_error("CRT and inherited Windows profile paths differ");
       }
 #endif
-      setEnvironment("SIMPLNX_TEST_PROFILE_DIR", nullptr);
-      setEnvironment("SIMPLNX_TEST_PROFILE_TOKEN", nullptr);
-      setEnvironment("SIMPLNX_TEST_ACTIVE_PROFILE", rootString.c_str());
-      if(const char* report = std::getenv("SIMPLNX_TEST_PROFILE_REPORT"))
+      SetEnvironment("SIMPLNX_TEST_PROFILE_DIR", nullptr);
+      SetEnvironment("SIMPLNX_TEST_PROFILE_TOKEN", nullptr);
+      SetEnvironment("SIMPLNX_TEST_ACTIVE_PROFILE", rootString.c_str());
+      if(const char* reportPtr = std::getenv("SIMPLNX_TEST_PROFILE_REPORT"))
       {
-        const std::filesystem::path reportPath(report);
-        setEnvironment("SIMPLNX_TEST_PROFILE_REPORT", nullptr);
+        const std::filesystem::path reportPath(reportPtr);
+        SetEnvironment("SIMPLNX_TEST_PROFILE_REPORT", nullptr);
         if(!reportPath.is_absolute())
         {
           throw std::runtime_error("Test profile report must use an absolute external path");
         }
         const auto reportParent = std::filesystem::canonical(reportPath.parent_path());
-        requirePlainPath(reportParent);
+        RequirePlainPath(reportParent);
         const auto resolvedReport = reportParent / reportPath.filename();
         for(auto parent = reportParent; !parent.empty(); parent = parent.parent_path())
         {
@@ -171,7 +171,7 @@ public:
         {
           throw std::runtime_error("Test profile report already exists");
         }
-        writeFile(resolvedReport, rootString);
+        WriteFile(resolvedReport, rootString);
       }
       m_Installed = true;
       error.clear();
@@ -222,7 +222,7 @@ public:
         }
         if(m_OwnsRoot)
         {
-          requirePlainPath(m_Root);
+          RequirePlainPath(m_Root);
           if(m_Root.parent_path() != m_Parent || m_Root.filename() != "simplnx-test-profile-" + m_Token || std::filesystem::canonical(m_Root) != m_Root)
           {
             throw std::runtime_error("Owned test profile path changed");
@@ -231,7 +231,7 @@ public:
           // Nested profile markers and links can belong to independent or active owners.
           for(const auto& entry : std::filesystem::recursive_directory_iterator(m_Root))
           {
-            requirePlainEntry(entry.path());
+            RequirePlainEntry(entry.path());
             if(entry.path().filename() == ".simplnx-test-profile" && entry.path().parent_path() != m_Root)
             {
               throw std::runtime_error("Independent test profile remains below the owned root");
@@ -281,7 +281,7 @@ public:
     return result > 0 && result <= 255 ? result : 1;
   }
 
-  static const char* homeVariable() noexcept
+  static const char* HomeVariable() noexcept
   {
 #ifdef _WIN32
     return "USERPROFILE";
@@ -291,7 +291,7 @@ public:
   }
 
 private:
-  static void setEnvironment(const char* name, const char* value)
+  static void SetEnvironment(const char* name, const char* value)
   {
 #ifdef _WIN32
     const int result = _putenv_s(name, value == nullptr ? "" : value);
@@ -304,7 +304,7 @@ private:
     }
   }
 
-  static void writeFile(const std::filesystem::path& path, const std::string& text)
+  static void WriteFile(const std::filesystem::path& path, const std::string& text)
   {
     std::ofstream stream(path, std::ios::binary);
     stream << text;
@@ -315,7 +315,7 @@ private:
     }
   }
 
-  static void requirePlainEntry(const std::filesystem::path& path)
+  static void RequirePlainEntry(const std::filesystem::path& path)
   {
     const auto status = std::filesystem::symlink_status(path);
     if(!std::filesystem::is_directory(status) && !std::filesystem::is_regular_file(status))
@@ -331,11 +331,11 @@ private:
 #endif
   }
 
-  static void requirePlainPath(const std::filesystem::path& path)
+  static void RequirePlainPath(const std::filesystem::path& path)
   {
     for(auto parent = path; !parent.empty(); parent = parent.parent_path())
     {
-      requirePlainEntry(parent);
+      RequirePlainEntry(parent);
       if(parent == parent.root_path())
       {
         break;
@@ -350,7 +350,7 @@ private:
       throw std::runtime_error("Test profile is not a directory");
     }
     const auto marker = m_Root / ".simplnx-test-profile";
-    requirePlainEntry(marker);
+    RequirePlainEntry(marker);
     if(!std::filesystem::is_regular_file(marker) || std::filesystem::file_size(marker) != m_Token.size())
     {
       throw std::runtime_error("Test profile marker is not a matching regular file");
@@ -373,4 +373,4 @@ private:
   bool m_Finished = false;
   bool m_FinishSucceeded = false;
 };
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test

@@ -27,8 +27,7 @@ class SIMPLNX_EXPORT InMemoryPluginLoader : public IPluginLoader
 {
 public:
   InMemoryPluginLoader(std::shared_ptr<AbstractPlugin> plugin)
-  : IPluginLoader()
-  , m_Plugin(std::move(plugin))
+  : m_Plugin(std::move(plugin))
   {
   }
 
@@ -68,7 +67,7 @@ public:
    * destroyed.
    * @param path
    */
-  PluginLoader(const std::filesystem::path& path);
+  PluginLoader(std::filesystem::path path);
 
   ~PluginLoader() noexcept override;
 

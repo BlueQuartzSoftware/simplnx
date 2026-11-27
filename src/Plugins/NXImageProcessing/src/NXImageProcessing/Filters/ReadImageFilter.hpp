@@ -25,25 +25,25 @@ public:
   ReadImageFilter& operator=(ReadImageFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_FileName_Key = "file_name";
-  static constexpr StringLiteral k_ImageGeometryPath_Key = "output_geometry_path";
-  static constexpr StringLiteral k_ImageDataArrayPath_Key = "image_data_array_name";
-  static constexpr StringLiteral k_CellDataName_Key = "cell_attribute_matrix_name";
+  static constexpr StringLiteralType k_FileName_Key = "file_name";
+  static constexpr StringLiteralType k_ImageGeometryPath_Key = "output_geometry_path";
+  static constexpr StringLiteralType k_ImageDataArrayPath_Key = "image_data_array_name";
+  static constexpr StringLiteralType k_CellDataName_Key = "cell_attribute_matrix_name";
 
-  static constexpr StringLiteral k_LengthUnit_Key = "length_unit_index";
+  static constexpr StringLiteralType k_LengthUnit_Key = "length_unit_index";
 
-  static constexpr StringLiteral k_ChangeOrigin_Key = ImageIO::k_ChangeOrigin;
-  static constexpr StringLiteral k_CenterOrigin_Key = "center_origin";
-  static constexpr StringLiteral k_Origin_Key = ImageIO::k_Origin;
+  static constexpr StringLiteralType k_ChangeOrigin_Key = image_io::k_ChangeOrigin;
+  static constexpr StringLiteralType k_CenterOrigin_Key = "center_origin";
+  static constexpr StringLiteralType k_Origin_Key = image_io::k_Origin;
 
-  static constexpr StringLiteral k_ChangeSpacing_Key = ImageIO::k_ChangeSpacing;
-  static constexpr StringLiteral k_Spacing_Key = ImageIO::k_Spacing;
-  static constexpr StringLiteral k_OriginSpacingProcessing_Key = "origin_spacing_processing_index";
+  static constexpr StringLiteralType k_ChangeSpacing_Key = image_io::k_ChangeSpacing;
+  static constexpr StringLiteralType k_Spacing_Key = image_io::k_Spacing;
+  static constexpr StringLiteralType k_OriginSpacingProcessing_Key = "origin_spacing_processing_index";
 
-  static constexpr StringLiteral k_ChangeDataType_Key = "change_image_data_type";
-  static constexpr StringLiteral k_ImageDataType_Key = "image_data_type_index";
+  static constexpr StringLiteralType k_ChangeDataType_Key = "change_image_data_type";
+  static constexpr StringLiteralType k_ImageDataType_Key = "image_data_type_index";
 
-  static constexpr StringLiteral k_CroppingOptions_Key = "cropping_options";
+  static constexpr StringLiteralType k_CroppingOptions_Key = "cropping_options";
 
   /**
    * @brief Returns the name of the filter.
@@ -100,7 +100,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Requests page 0 as one two-dimensional slice for a multi-page raster.

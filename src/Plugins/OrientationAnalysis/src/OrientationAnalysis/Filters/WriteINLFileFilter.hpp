@@ -24,14 +24,14 @@ public:
   WriteINLFileFilter& operator=(WriteINLFileFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_OutputFile_Key = "output_file";
-  static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
-  static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
-  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static constexpr StringLiteral k_MaterialNameArrayPath_Key = "material_name_array_path";
-  static constexpr StringLiteral k_NumFeaturesArrayPath_Key = "num_features_array_path";
-  static constexpr StringLiteral k_ImageGeomPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_OutputFile_Key = "output_file";
+  static constexpr StringLiteralType k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
+  static constexpr StringLiteralType k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static constexpr StringLiteralType k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
+  static constexpr StringLiteralType k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteralType k_MaterialNameArrayPath_Key = "material_name_array_path";
+  static constexpr StringLiteralType k_NumFeaturesArrayPath_Key = "num_features_array_path";
+  static constexpr StringLiteralType k_ImageGeomPath_Key = "input_image_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -88,7 +88,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

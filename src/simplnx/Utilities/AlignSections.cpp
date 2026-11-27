@@ -32,7 +32,7 @@ public:
   AlignSectionsTransferDataImpl(const AlignSectionsTransferDataImpl&) = default;
   AlignSectionsTransferDataImpl(AlignSectionsTransferDataImpl&&) noexcept = default;
 
-  AlignSectionsTransferDataImpl(AlignSections* filter, SizeVec3 dims, std::vector<int64_t> xShifts, std::vector<int64_t> yShifts, IDataArray& dataArray)
+  AlignSectionsTransferDataImpl(AlignSections* filter, SizeVec3Type dims, std::vector<int64_t> xShifts, std::vector<int64_t> yShifts, IDataArray& dataArray)
   : m_Filter(filter)
   , m_Dims(std::move(dims))
   , m_Xshifts(std::move(xShifts))
@@ -103,7 +103,7 @@ public:
 
 private:
   AlignSections* m_Filter = nullptr;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   std::vector<int64_t> m_Xshifts;
   std::vector<int64_t> m_Yshifts;
   nx::core::DataArray<T>& m_DataArray;
@@ -127,7 +127,7 @@ public:
   AlignSectionsTransferDataOocImpl(const AlignSectionsTransferDataOocImpl&) = default;
   AlignSectionsTransferDataOocImpl(AlignSectionsTransferDataOocImpl&&) noexcept = default;
 
-  AlignSectionsTransferDataOocImpl(AlignSections* filter, SizeVec3 dims, std::vector<int64_t> xShifts, std::vector<int64_t> yShifts, IDataArray& dataArray)
+  AlignSectionsTransferDataOocImpl(AlignSections* filter, SizeVec3Type dims, std::vector<int64_t> xShifts, std::vector<int64_t> yShifts, IDataArray& dataArray)
   : m_Filter(filter)
   , m_Dims(std::move(dims))
   , m_Xshifts(std::move(xShifts))
@@ -211,7 +211,7 @@ public:
 
 private:
   AlignSections* m_Filter = nullptr;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   std::vector<int64_t> m_Xshifts;
   std::vector<int64_t> m_Yshifts;
   nx::core::DataArray<T>& m_DataArray;
@@ -234,7 +234,7 @@ struct AlignSectionsTransferDataOocFunctor
    * @return Valid result or the first bulk-I/O error.
    */
   template <typename T>
-  Result<> operator()(IDataArray& dataArray, AlignSections* filter, SizeVec3 dims, std::vector<int64_t> xShifts, std::vector<int64_t> yShifts) const
+  Result<> operator()(IDataArray& dataArray, AlignSections* filter, SizeVec3Type dims, std::vector<int64_t> xShifts, std::vector<int64_t> yShifts) const
   {
     return AlignSectionsTransferDataOocImpl<T>(filter, std::move(dims), std::move(xShifts), std::move(yShifts), dataArray)();
   }
@@ -267,11 +267,11 @@ const IFilter::MessageHandler& AlignSections::getThreadSafeMessageHandler()
 
 void AlignSections::sendThreadSafeProgressMessage(usize counter)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_Throttle.incrementPercent(counter);
 }
 
-Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeometryPath)
+Result<> AlignSections::execute(const SizeVec3Type& udims, const DataPath& imageGeometryPath)
 {
   std::array<int64, 3> dims = {static_cast<int64_t>(udims[0]), static_cast<int64_t>(udims[1]), static_cast<int64_t>(udims[2])};
   std::vector<int64_t> xShifts(dims[2], 0);
@@ -296,8 +296,8 @@ Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeom
   bool usesOutOfCoreStore = false;
   for(const auto& cellArrayPath : selectedCellArrays)
   {
-    const auto* cellArray = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
-    if(cellArray != nullptr && IsOutOfCore(*cellArray))
+    const auto* cellArrayPtr = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
+    if(cellArrayPtr != nullptr && IsOutOfCore(*cellArrayPtr))
     {
       usesOutOfCoreStore = true;
       break;
@@ -335,15 +335,15 @@ Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeom
     }
 
     m_ThreadSafeMessageHandler.sendInfoMessage(fmt::format("Updating DataArray '{}'", cellArrayPath.toString()));
-    auto* cellArray = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
-    if(cellArray == nullptr)
+    auto* cellArrayPtr = m_DataStructure.getDataAs<IDataArray>(cellArrayPath);
+    if(cellArrayPtr == nullptr)
     {
       continue;
     }
 
     if(useOoc)
     {
-      auto transferResult = ExecuteDataFunction(AlignSectionsTransferDataOocFunctor{}, cellArray->getDataType(), *cellArray, this, udims, xShifts, yShifts);
+      auto transferResult = ExecuteDataFunction(AlignSectionsTransferDataOocFunctor{}, cellArrayPtr->getDataType(), *cellArrayPtr, this, udims, xShifts, yShifts);
       if(transferResult.invalid())
       {
         return transferResult;
@@ -351,7 +351,7 @@ Result<> AlignSections::execute(const SizeVec3& udims, const DataPath& imageGeom
     }
     else
     {
-      ExecuteParallelFunction<AlignSectionsTransferDataImpl>(cellArray->getDataType(), taskRunner, this, udims, xShifts, yShifts, *cellArray);
+      ExecuteParallelFunction<AlignSectionsTransferDataImpl>(cellArrayPtr->getDataType(), taskRunner, this, udims, xShifts, yShifts, *cellArrayPtr);
     }
   }
 

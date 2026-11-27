@@ -16,10 +16,8 @@ ComputeFeatureSizes::ComputeFeatureSizes(DataStructure& dataStructure, const IFi
 {
 }
 
-ComputeFeatureSizes::~ComputeFeatureSizes() noexcept = default;
-
 Result<> ComputeFeatureSizes::operator()()
 {
-  auto* featureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath);
-  return DispatchAlgorithm<ComputeFeatureSizesDirect, ComputeFeatureSizesScanline>({featureIdsArray}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
+  auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_path);
+  return DispatchAlgorithm<ComputeFeatureSizesDirect, ComputeFeatureSizesScanline>({featureIdsArrayPtr}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

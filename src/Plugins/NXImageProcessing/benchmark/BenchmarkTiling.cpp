@@ -92,14 +92,14 @@ Result<usize> CheckedCeilDiv(usize dividend, usize divisor, std::string_view con
 // Everything the fill functor needs. Shapes are in ELEMENTS (tuple count * components).
 struct TileParams
 {
-  usize srcX = 0;
-  usize srcY = 0;
-  usize srcZ = 0;
-  usize dstX = 0;
-  usize dstY = 0;
-  usize dstZ = 0;
-  usize numComp = 1;
-  DataStorageMode storeMode = DataStorageMode::Adaptive;
+  usize src_x = 0;
+  usize src_y = 0;
+  usize src_z = 0;
+  usize dst_x = 0;
+  usize dst_y = 0;
+  usize dst_z = 0;
+  usize num_comp = 1;
+  DataStorageMode store_mode = DataStorageMode::Adaptive;
 };
 
 bool IsInMemoryFormat(const std::string& format)
@@ -113,18 +113,18 @@ bool IsInMemoryFormat(const std::string& format)
 struct FillTiledFunctor
 {
   template <typename T>
-  Result<> operator()(DataStructure& ds, DataObject::IdType cellAmId, const IDataArray& srcArrayBase, const DataPath& arrayPath, const TileParams& p)
+  Result<> operator()(DataStructure& dataStructure, DataObject::IdType cellAmId, const IDataArray& srcArrayBase, const DataPath& arrayPath, const TileParams& p)
   {
     const auto& srcStore = srcArrayBase.getIDataStoreRefAs<AbstractDataStore<T>>();
-    if(p.srcX == 0 || p.srcY == 0 || p.srcZ == 0 || p.dstX == 0 || p.dstY == 0 || p.dstZ == 0 || p.numComp == 0)
+    if(p.src_x == 0 || p.src_y == 0 || p.src_z == 0 || p.dst_x == 0 || p.dst_y == 0 || p.dst_z == 0 || p.num_comp == 0)
     {
       return MakeErrorResult(-9124, fmt::format("Benchmark tiling cannot fill destination array '{}' because source dimensions are X={}, Y={}, Z={}, destination dimensions are X={}, Y={}, Z={}, and "
                                                 "component count is {}. All values must be positive.",
-                                                arrayPath.toString(), p.srcX, p.srcY, p.srcZ, p.dstX, p.dstY, p.dstZ, p.numComp));
+                                                arrayPath.toString(), p.src_x, p.src_y, p.src_z, p.dst_x, p.dst_y, p.dst_z, p.num_comp));
     }
 
-    Result<usize> srcRowResult = CheckedProduct({p.srcX, p.numComp}, fmt::format("source row elements for '{}'", srcArrayBase.getName()));
-    Result<usize> dstRowResult = CheckedProduct({p.dstX, p.numComp}, fmt::format("destination row elements for '{}'", arrayPath.toString()));
+    Result<usize> srcRowResult = CheckedProduct({p.src_x, p.num_comp}, fmt::format("source row elements for '{}'", srcArrayBase.getName()));
+    Result<usize> dstRowResult = CheckedProduct({p.dst_x, p.num_comp}, fmt::format("destination row elements for '{}'", arrayPath.toString()));
     if(srcRowResult.invalid())
     {
       return ConvertResult(std::move(srcRowResult));
@@ -136,8 +136,8 @@ struct FillTiledFunctor
     const usize srcRowElems = srcRowResult.value();
     const usize dstRowElems = dstRowResult.value();
 
-    Result<usize> srcSliceResult = CheckedMultiply(p.srcY, srcRowElems, fmt::format("source slice elements for '{}'", srcArrayBase.getName()));
-    Result<usize> dstSliceResult = CheckedMultiply(p.dstY, dstRowElems, fmt::format("destination slice elements for '{}'", arrayPath.toString()));
+    Result<usize> srcSliceResult = CheckedMultiply(p.src_y, srcRowElems, fmt::format("source slice elements for '{}'", srcArrayBase.getName()));
+    Result<usize> dstSliceResult = CheckedMultiply(p.dst_y, dstRowElems, fmt::format("destination slice elements for '{}'", arrayPath.toString()));
     if(srcSliceResult.invalid())
     {
       return ConvertResult(std::move(srcSliceResult));
@@ -149,8 +149,8 @@ struct FillTiledFunctor
     const usize srcSliceElems = srcSliceResult.value();
     const usize dstSliceElems = dstSliceResult.value();
 
-    Result<usize> srcTotalResult = CheckedMultiply(p.srcZ, srcSliceElems, fmt::format("source volume elements for '{}'", srcArrayBase.getName()));
-    Result<usize> dstTotalResult = CheckedMultiply(p.dstZ, dstSliceElems, fmt::format("destination volume elements for '{}'", arrayPath.toString()));
+    Result<usize> srcTotalResult = CheckedMultiply(p.src_z, srcSliceElems, fmt::format("source volume elements for '{}'", srcArrayBase.getName()));
+    Result<usize> dstTotalResult = CheckedMultiply(p.dst_z, dstSliceElems, fmt::format("destination volume elements for '{}'", arrayPath.toString()));
     Result<usize> srcSliceBytesResult = CheckedMultiply(srcSliceElems, sizeof(T), fmt::format("source slice bytes for '{}'", srcArrayBase.getName()));
     Result<usize> dstSliceBytesResult = CheckedMultiply(dstSliceElems, sizeof(T), fmt::format("destination slice bytes for '{}'", arrayPath.toString()));
     if(srcTotalResult.invalid())
@@ -182,7 +182,7 @@ struct FillTiledFunctor
     if(srcStore.getSize() != srcTotalResult.value())
     {
       return MakeErrorResult(-9124, fmt::format("Benchmark tiling source array '{}' has {} element(s), but its checked dimensions Z={}, Y={}, X={} with {} component(s) require {} element(s).",
-                                                srcArrayBase.getName(), srcStore.getSize(), p.srcZ, p.srcY, p.srcX, p.numComp, srcTotalResult.value()));
+                                                srcArrayBase.getName(), srcStore.getSize(), p.src_z, p.src_y, p.src_x, p.num_comp, srcTotalResult.value()));
     }
     if(srcSliceElems > std::vector<T>{}.max_size() || dstSliceElems > std::vector<T>{}.max_size())
     {
@@ -190,47 +190,47 @@ struct FillTiledFunctor
                                                 DataTypeToString(GetDataType<T>()), srcSliceElems, srcSliceBytesResult.value(), dstSliceElems, dstSliceBytesResult.value()));
     }
 
-    const ShapeType tupleShape = {p.dstZ, p.dstY, p.dstX};
-    const ShapeType componentShape = {p.numComp};
+    const ShapeType tupleShape = {p.dst_z, p.dst_y, p.dst_x};
+    const ShapeType componentShape = {p.num_comp};
     std::shared_ptr<AbstractDataStore<T>> store;
     {
-      const StorageModeSentinel storageModeSentinel(p.storeMode);
-      store = DataStoreUtilities::CreateDataStore<T>(ds, arrayPath, tupleShape, componentShape);
+      const StorageModeSentinel storageModeSentinel(p.store_mode);
+      store = data_store_utilities::CreateDataStore<T>(dataStructure, arrayPath, tupleShape, componentShape);
     }
     if(store == nullptr)
     {
       return MakeErrorResult(
           -9110,
           fmt::format("Benchmark tiling could not create a resolver-selected DataStore for destination array '{}' with type '{}', dimensions Z={}, Y={}, X={}, {} component(s), and {} checked bytes.",
-                      arrayPath.toString(), DataTypeToString(GetDataType<T>()), p.dstZ, p.dstY, p.dstX, p.numComp, dstTotalBytesResult.value()));
+                      arrayPath.toString(), DataTypeToString(GetDataType<T>()), p.dst_z, p.dst_y, p.dst_x, p.num_comp, dstTotalBytesResult.value()));
     }
     const bool isInMemory = IsInMemoryFormat(store->getDataFormat());
-    if((p.storeMode == DataStorageMode::ForceOutOfCore && isInMemory) || (p.storeMode == DataStorageMode::ForceInCore && !isInMemory))
+    if((p.store_mode == DataStorageMode::ForceOutOfCore && isInMemory) || (p.store_mode == DataStorageMode::ForceInCore && !isInMemory))
     {
       return MakeErrorResult(-9125, fmt::format("Benchmark tiling requested storage mode '{}' for destination array '{}', but the canonical resolver selected format '{}'. Ensure the expected format "
                                                 "resolver and IO backend are registered.",
-                                                p.storeMode == DataStorageMode::ForceOutOfCore ? "ForceOutOfCore" : "ForceInCore", arrayPath.toString(),
+                                                p.store_mode == DataStorageMode::ForceOutOfCore ? "ForceOutOfCore" : "ForceInCore", arrayPath.toString(),
                                                 store->getDataFormat().empty() ? "in-memory" : store->getDataFormat()));
     }
-    auto* dstArray = DataArray<T>::Create(ds, arrayPath.getTargetName(), store, cellAmId);
-    if(dstArray == nullptr)
+    auto* dstArrayPtr = DataArray<T>::Create(dataStructure, arrayPath.getTargetName(), store, cellAmId);
+    if(dstArrayPtr == nullptr)
     {
       return MakeErrorResult(-9111, fmt::format("Benchmark tiling could not create destination DataArray '{}' with type '{}', dimensions Z={}, Y={}, X={}, and {} component(s).", arrayPath.toString(),
-                                                DataTypeToString(GetDataType<T>()), p.dstZ, p.dstY, p.dstX, p.numComp));
+                                                DataTypeToString(GetDataType<T>()), p.dst_z, p.dst_y, p.dst_x, p.num_comp));
     }
-    auto& dstStore = dstArray->getDataStoreRef();
+    auto& dstStore = dstArrayPtr->getDataStoreRef();
     if(dstStore.getSize() != dstTotalResult.value())
     {
       return MakeErrorResult(-9124, fmt::format("Benchmark tiling destination array '{}' has {} element(s), but its checked dimensions Z={}, Y={}, X={} with {} component(s) require {} element(s).",
-                                                arrayPath.toString(), dstStore.getSize(), p.dstZ, p.dstY, p.dstX, p.numComp, dstTotalResult.value()));
+                                                arrayPath.toString(), dstStore.getSize(), p.dst_z, p.dst_y, p.dst_x, p.num_comp, dstTotalResult.value()));
     }
 
     std::vector<T> srcSlice(srcSliceElems);
     std::vector<T> dstSlice(dstSliceElems);
 
-    for(usize dz = 0; dz < p.dstZ; ++dz)
+    for(usize dz = 0; dz < p.dst_z; ++dz)
     {
-      const usize sz = dz % p.srcZ;
+      const usize sz = dz % p.src_z;
       Result<usize> srcOffsetResult = CheckedMultiply(sz, srcSliceElems, fmt::format("source slice offset {} for '{}'", sz, srcArrayBase.getName()));
       if(srcOffsetResult.invalid())
       {
@@ -242,29 +242,29 @@ struct FillTiledFunctor
         {
           return MakeErrorResult(
               -9121, fmt::format("Benchmark tiling could not read source array '{}' slice {} of {} while tiling type '{}' data with {} component(s); the data store did not provide an error message.",
-                                 srcArrayBase.getName(), sz, p.srcZ, DataTypeToString(GetDataType<T>()), p.numComp));
+                                 srcArrayBase.getName(), sz, p.src_z, DataTypeToString(GetDataType<T>()), p.num_comp));
         }
         for(Error& error : r.errors())
         {
-          error.message = fmt::format("Benchmark tiling could not read source array '{}' slice {} of {} while tiling type '{}' data with {} component(s): {}", srcArrayBase.getName(), sz, p.srcZ,
-                                      DataTypeToString(GetDataType<T>()), p.numComp, error.message);
+          error.message = fmt::format("Benchmark tiling could not read source array '{}' slice {} of {} while tiling type '{}' data with {} component(s): {}", srcArrayBase.getName(), sz, p.src_z,
+                                      DataTypeToString(GetDataType<T>()), p.num_comp, error.message);
         }
         return r;
       }
 
       // Tile the source slice across the destination slice (X fastest, then Y), preserving component interleave.
-      for(usize y = 0; y < p.dstY; ++y)
+      for(usize y = 0; y < p.dst_y; ++y)
       {
-        const usize sy = y % p.srcY;
+        const usize sy = y % p.src_y;
         // These products and sums are bounded by the checked row/slice maxima above.
         const usize srcRowOffset = sy * srcRowElems;
         const usize dstRowOffset = y * dstRowElems;
-        for(usize x = 0; x < p.dstX; ++x)
+        for(usize x = 0; x < p.dst_x; ++x)
         {
-          const usize sx = x % p.srcX;
-          const usize s = srcRowOffset + sx * p.numComp;
-          const usize d = dstRowOffset + x * p.numComp;
-          for(usize c = 0; c < p.numComp; ++c)
+          const usize sx = x % p.src_x;
+          const usize s = srcRowOffset + sx * p.num_comp;
+          const usize d = dstRowOffset + x * p.num_comp;
+          for(usize c = 0; c < p.num_comp; ++c)
           {
             dstSlice[d + c] = srcSlice[s + c];
           }
@@ -283,12 +283,12 @@ struct FillTiledFunctor
           return MakeErrorResult(
               -9122,
               fmt::format("Benchmark tiling could not write destination array '{}' slice {} of {} while tiling type '{}' data with {} component(s); the data store did not provide an error message.",
-                          arrayPath.toString(), dz, p.dstZ, DataTypeToString(GetDataType<T>()), p.numComp));
+                          arrayPath.toString(), dz, p.dst_z, DataTypeToString(GetDataType<T>()), p.num_comp));
         }
         for(Error& error : w.errors())
         {
-          error.message = fmt::format("Benchmark tiling could not write destination array '{}' slice {} of {} while tiling type '{}' data with {} component(s): {}", arrayPath.toString(), dz, p.dstZ,
-                                      DataTypeToString(GetDataType<T>()), p.numComp, error.message);
+          error.message = fmt::format("Benchmark tiling could not write destination array '{}' slice {} of {} while tiling type '{}' data with {} component(s): {}", arrayPath.toString(), dz, p.dst_z,
+                                      DataTypeToString(GetDataType<T>()), p.num_comp, error.message);
         }
         return w;
       }
@@ -301,8 +301,8 @@ struct FillTiledFunctor
 
 namespace ip_bench
 {
-Result<> BuildTiledInput(DataStructure& ds, const fs::path& realInput, const DataPath& geomPath, const std::string& cellAmName, const std::string& arrayName, usize targetVoxels, usize minZSlices,
-                         DataStorageMode storeMode, DataPath& outArrayPath, bool force2D, const SourceArrayValidator& sourceValidator)
+Result<> BuildTiledInput(DataStructure& dataStructure, const fs::path& realInput, const DataPath& geomPath, const std::string& cellAmName, const std::string& arrayName, usize targetVoxels,
+                         usize minZSlices, DataStorageMode storeMode, DataPath& outArrayPath, bool force2D, const SourceArrayValidator& sourceValidator)
 {
   // --- 1) Read the real input ONCE into a scratch DataStructure to recover dims/type/components. Force the scratch
   //        in-core (fast slice reads) regardless of the caller's active preference; restore the preference after. ---
@@ -318,32 +318,32 @@ Result<> BuildTiledInput(DataStructure& ds, const fs::path& realInput, const Dat
     return readResult;
   }
 
-  const auto* srcGeom = scratch.getDataAs<ImageGeom>(scratchGeom);
+  const auto* srcGeomPtr = scratch.getDataAs<ImageGeom>(scratchGeom);
   const DataPath scratchArray = scratchGeom.createChildPath(cellAmName).createChildPath(arrayName);
-  const auto* srcArray = scratch.getDataAs<IDataArray>(scratchArray);
-  if(srcGeom == nullptr || srcArray == nullptr)
+  const auto* srcArrayPtr = scratch.getDataAs<IDataArray>(scratchArray);
+  if(srcGeomPtr == nullptr || srcArrayPtr == nullptr)
   {
     return MakeErrorResult(
         -9113, fmt::format("BuildTiledInput: reading '{}' did not produce the expected ImageGeom '{}' and array '{}'.", realInput.string(), scratchGeom.toString(), scratchArray.toString()));
   }
   if(sourceValidator)
   {
-    if(Result<> validationResult = sourceValidator(*srcArray, realInput); validationResult.invalid())
+    if(Result<> validationResult = sourceValidator(*srcArrayPtr, realInput); validationResult.invalid())
     {
       return validationResult;
     }
   }
 
-  const SizeVec3 srcDims = srcGeom->getDimensions(); // {X, Y, Z}
+  const SizeVec3Type srcDims = srcGeomPtr->getDimensions(); // {X, Y, Z}
   const usize srcX = srcDims[0];
   const usize srcY = srcDims[1];
   const usize srcZ = srcDims[2];
   if(srcX == 0 || srcY == 0 || srcZ == 0)
   {
-    return MakeErrorResult(-9114, fmt::format("BuildTiledInput: source image '{}' has invalid dimensions ({}).", realInput.string(), StringUtilities::formatDimensions3D(srcDims)));
+    return MakeErrorResult(-9114, fmt::format("BuildTiledInput: source image '{}' has invalid dimensions ({}).", realInput.string(), string_utilities::FormatDimensions3D(srcDims)));
   }
-  const usize numComp = srcArray->getNumberOfComponents();
-  const DataType dataType = srcArray->getDataType();
+  const usize numComp = srcArrayPtr->getNumberOfComponents();
+  const DataType dataType = srcArrayPtr->getDataType();
   if(numComp == 0)
   {
     return MakeErrorResult(-9124, fmt::format("BuildTiledInput: source array '{}' from '{}' has zero components.", scratchArray.toString(), realInput.string()));
@@ -354,10 +354,10 @@ Result<> BuildTiledInput(DataStructure& ds, const fs::path& realInput, const Dat
   {
     return ConvertResult(std::move(srcVoxelResult));
   }
-  if(srcArray->getNumberOfTuples() != srcVoxelResult.value())
+  if(srcArrayPtr->getNumberOfTuples() != srcVoxelResult.value())
   {
     return MakeErrorResult(-9124, fmt::format("BuildTiledInput: source array '{}' from '{}' has {} tuple(s), but image dimensions ({}) require {} voxel tuple(s).", scratchArray.toString(),
-                                              realInput.string(), srcArray->getNumberOfTuples(), StringUtilities::formatDimensions3D(srcDims), srcVoxelResult.value()));
+                                              realInput.string(), srcArrayPtr->getNumberOfTuples(), string_utilities::FormatDimensions3D(srcDims), srcVoxelResult.value()));
   }
 
   // --- 2) Tile factors: either select one source slice for an explicit 2-D benchmark, or grow Z first to guarantee
@@ -434,49 +434,49 @@ Result<> BuildTiledInput(DataStructure& ds, const fs::path& realInput, const Dat
   std::optional<DataObject::IdType> parentId;
   if(geomPath.getLength() > 1)
   {
-    parentId = ds.getId(geomPath.getParent());
+    parentId = dataStructure.getId(geomPath.getParent());
     if(!parentId.has_value())
     {
       return MakeErrorResult(-9115, fmt::format("BuildTiledInput: destination geometry parent '{}' does not exist", geomPath.getParent().toString()));
     }
   }
-  auto* dstGeom = ImageGeom::Create(ds, geomPath.getTargetName(), parentId);
-  if(dstGeom == nullptr)
+  auto* dstGeomPtr = ImageGeom::Create(dataStructure, geomPath.getTargetName(), parentId);
+  if(dstGeomPtr == nullptr)
   {
     return MakeErrorResult(-9116, fmt::format("BuildTiledInput: could not create destination ImageGeom '{}'", geomPath.toString()));
   }
-  dstGeom->setDimensions({dstX, dstY, dstZ});
-  if(auto result = dstGeom->setSpacing(srcGeom->getSpacing()); result.invalid())
+  dstGeomPtr->setDimensions({dstX, dstY, dstZ});
+  if(auto result = dstGeomPtr->setSpacing(srcGeomPtr->getSpacing()); result.invalid())
   {
     return result;
   }
-  if(auto result = dstGeom->setOrigin(srcGeom->getOrigin()); result.invalid())
+  if(auto result = dstGeomPtr->setOrigin(srcGeomPtr->getOrigin()); result.invalid())
   {
     return result;
   }
 
   const ShapeType tupleShape = {dstZ, dstY, dstX}; // AttributeMatrix tuple shape is slowest-to-fastest (Z, Y, X)
-  auto* cellAM = AttributeMatrix::Create(ds, cellAmName, tupleShape, dstGeom->getId());
-  if(cellAM == nullptr)
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, cellAmName, tupleShape, dstGeomPtr->getId());
+  if(cellAmPtr == nullptr)
   {
     return MakeErrorResult(-9117, fmt::format("BuildTiledInput: could not create destination cell AttributeMatrix '{}'", cellAmName));
   }
-  dstGeom->setCellData(*cellAM);
+  dstGeomPtr->setCellData(*cellAmPtr);
 
   // --- 4) Resolver-create + stream-fill the typed destination array (bounded memory). ---
   TileParams params;
-  params.srcX = srcX;
-  params.srcY = srcY;
-  params.srcZ = srcZ;
-  params.dstX = dstX;
-  params.dstY = dstY;
-  params.dstZ = dstZ;
-  params.numComp = numComp;
-  params.storeMode = storeMode;
+  params.src_x = srcX;
+  params.src_y = srcY;
+  params.src_z = srcZ;
+  params.dst_x = dstX;
+  params.dst_y = dstY;
+  params.dst_z = dstZ;
+  params.num_comp = numComp;
+  params.store_mode = storeMode;
 
   // NoBool: image voxel data is never boolean, and std::vector<bool> has no contiguous buffer to stream.
   const DataPath destinationArrayPath = geomPath.createChildPath(cellAmName).createChildPath(arrayName);
-  const Result<> fillResult = ExecuteDataFunctionNoBool(FillTiledFunctor{}, dataType, ds, cellAM->getId(), *srcArray, destinationArrayPath, params);
+  const Result<> fillResult = ExecuteDataFunctionNoBool(FillTiledFunctor{}, dataType, dataStructure, cellAmPtr->getId(), *srcArrayPtr, destinationArrayPath, params);
   if(fillResult.invalid())
   {
     return fillResult;
@@ -486,7 +486,7 @@ Result<> BuildTiledInput(DataStructure& ds, const fs::path& realInput, const Dat
   return {};
 }
 
-Result<> AddTiledArray(DataStructure& ds, const fs::path& realInput, const DataPath& geomPath, const std::string& cellAmName, const std::string& arrayName, DataStorageMode storeMode,
+Result<> AddTiledArray(DataStructure& dataStructure, const fs::path& realInput, const DataPath& geomPath, const std::string& cellAmName, const std::string& arrayName, DataStorageMode storeMode,
                        DataPath& outArrayPath, const SourceArrayValidator& sourceValidator)
 {
   DataStructure scratch;
@@ -501,55 +501,55 @@ Result<> AddTiledArray(DataStructure& ds, const fs::path& realInput, const DataP
     return readResult;
   }
 
-  const auto* srcGeom = scratch.getDataAs<ImageGeom>(scratchGeom);
+  const auto* srcGeomPtr = scratch.getDataAs<ImageGeom>(scratchGeom);
   const DataPath scratchArray = scratchGeom.createChildPath(cellAmName).createChildPath(arrayName);
-  const auto* srcArray = scratch.getDataAs<IDataArray>(scratchArray);
-  if(srcGeom == nullptr || srcArray == nullptr)
+  const auto* srcArrayPtr = scratch.getDataAs<IDataArray>(scratchArray);
+  if(srcGeomPtr == nullptr || srcArrayPtr == nullptr)
   {
     return MakeErrorResult(-9118,
                            fmt::format("AddTiledArray: reading '{}' did not produce the expected ImageGeom '{}' and array '{}'.", realInput.string(), scratchGeom.toString(), scratchArray.toString()));
   }
   if(sourceValidator)
   {
-    if(Result<> validationResult = sourceValidator(*srcArray, realInput); validationResult.invalid())
+    if(Result<> validationResult = sourceValidator(*srcArrayPtr, realInput); validationResult.invalid())
     {
       return validationResult;
     }
   }
 
-  const auto* dstGeom = ds.getDataAs<ImageGeom>(geomPath);
+  const auto* dstGeomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
   const DataPath cellAmPath = geomPath.createChildPath(cellAmName);
-  const auto* cellAM = ds.getDataAs<AttributeMatrix>(cellAmPath);
-  if(dstGeom == nullptr || cellAM == nullptr)
+  const auto* cellAmPtr = dataStructure.getDataAs<AttributeMatrix>(cellAmPath);
+  if(dstGeomPtr == nullptr || cellAmPtr == nullptr)
   {
     return MakeErrorResult(-9119, fmt::format("AddTiledArray: destination ImageGeom '{}' or cell AttributeMatrix '{}' does not exist while adding source '{}'.", geomPath.toString(),
                                               cellAmPath.toString(), realInput.string()));
   }
 
-  const SizeVec3 srcDims = srcGeom->getDimensions();
-  const SizeVec3 dstDims = dstGeom->getDimensions();
+  const SizeVec3Type srcDims = srcGeomPtr->getDimensions();
+  const SizeVec3Type dstDims = dstGeomPtr->getDimensions();
   for(usize axis = 0; axis < 3; ++axis)
   {
     if(srcDims[axis] == 0 || dstDims[axis] == 0 || dstDims[axis] % srcDims[axis] != 0)
     {
       return MakeErrorResult(-9120, fmt::format("AddTiledArray: source '{}' dimensions ({}) do not tile exactly into destination ImageGeom '{}' dimensions ({}). Use companion images with dimensions "
                                                 "matching the primary benchmark source.",
-                                                realInput.string(), StringUtilities::formatDimensions3D(srcDims), geomPath.toString(), StringUtilities::formatDimensions3D(dstDims)));
+                                                realInput.string(), string_utilities::FormatDimensions3D(srcDims), geomPath.toString(), string_utilities::FormatDimensions3D(dstDims)));
     }
   }
 
   TileParams params;
-  params.srcX = srcDims[0];
-  params.srcY = srcDims[1];
-  params.srcZ = srcDims[2];
-  params.dstX = dstDims[0];
-  params.dstY = dstDims[1];
-  params.dstZ = dstDims[2];
-  params.numComp = srcArray->getNumberOfComponents();
-  params.storeMode = storeMode;
+  params.src_x = srcDims[0];
+  params.src_y = srcDims[1];
+  params.src_z = srcDims[2];
+  params.dst_x = dstDims[0];
+  params.dst_y = dstDims[1];
+  params.dst_z = dstDims[2];
+  params.num_comp = srcArrayPtr->getNumberOfComponents();
+  params.store_mode = storeMode;
 
   const DataPath destinationArrayPath = cellAmPath.createChildPath(arrayName);
-  const Result<> fillResult = ExecuteDataFunctionNoBool(FillTiledFunctor{}, srcArray->getDataType(), ds, cellAM->getId(), *srcArray, destinationArrayPath, params);
+  const Result<> fillResult = ExecuteDataFunctionNoBool(FillTiledFunctor{}, srcArrayPtr->getDataType(), dataStructure, cellAmPtr->getId(), *srcArrayPtr, destinationArrayPath, params);
   if(fillResult.invalid())
   {
     return fillResult;

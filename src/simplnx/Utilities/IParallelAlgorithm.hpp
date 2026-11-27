@@ -12,8 +12,8 @@ namespace nx::core
 class SIMPLNX_EXPORT IParallelAlgorithm
 {
 public:
-  using AlgorithmArrays = std::vector<const IDataArray*>;
-  using AlgorithmStores = std::vector<const IDataStore*>;
+  using AlgorithmArraysType = std::vector<const IDataArray*>;
+  using AlgorithmStoresType = std::vector<const IDataStore*>;
 
   IParallelAlgorithm(const IParallelAlgorithm&) = default;
   IParallelAlgorithm(IParallelAlgorithm&&) noexcept = default;
@@ -43,7 +43,7 @@ public:
    * Each call preserves a disabled state. Call
    * setParallelizationEnabled(true) to reset the state in a multicore build.
    */
-  void requireArraysInMemory(const AlgorithmArrays& arrays);
+  void requireArraysInMemory(const AlgorithmArraysType& arrays);
 
   /**
    * @brief Requires stores to be in memory for parallel work.
@@ -52,11 +52,11 @@ public:
    * Each call preserves a disabled state. Call
    * setParallelizationEnabled(true) to reset the state in a multicore build.
    */
-  void requireStoresInMemory(const AlgorithmStores& arrays);
+  void requireStoresInMemory(const AlgorithmStoresType& arrays);
 
 protected:
   IParallelAlgorithm();
-  ~IParallelAlgorithm();
+  ~IParallelAlgorithm() = default;
 
 private:
 #ifdef SIMPLNX_ENABLE_MULTICORE

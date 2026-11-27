@@ -32,9 +32,9 @@ bool IsTwinBoundary(const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T
   T zVal;
 
   Eigen::Quaternion<T> misq;
-  Eigen::Quaternion<T> sym_q;
-  Eigen::Quaternion<T> s1_misq;
-  Eigen::Quaternion<T> s2_misq;
+  Eigen::Quaternion<T> symQ;
+  Eigen::Quaternion<T> s1Misq;
+  Eigen::Quaternion<T> s2Misq;
 
   const int32 nsym = orientationOps[laueClass]->getNumSymOps();
   const Eigen::Quaternion<T> q2 = quat2.conjugate();
@@ -43,18 +43,18 @@ bool IsTwinBoundary(const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T
   for(int32 j = 0; j < nsym; j++)
   {
     ebsdlib::Quaternion<T> jQuat = orientationOps[laueClass]->getQuatSymOp(j);
-    sym_q = Eigen::Quaterniond(jQuat.w(), jQuat.x(), jQuat.y(), jQuat.z());
+    symQ = Eigen::Quaterniond(jQuat.w(), jQuat.x(), jQuat.y(), jQuat.z());
 
-    s1_misq = misq * sym_q;
+    s1Misq = misq * symQ;
 
     for(int32 k = 0; k < nsym; k++)
     {
       ebsdlib::Quaternion<T> kQuat = orientationOps[laueClass]->getQuatSymOp(k);
-      sym_q = Eigen::Quaterniond(kQuat.w(), kQuat.x(), kQuat.y(), kQuat.z());
-      sym_q = sym_q.conjugate();
-      s2_misq = sym_q * s1_misq;
+      symQ = Eigen::Quaterniond(kQuat.w(), kQuat.x(), kQuat.y(), kQuat.z());
+      symQ = symQ.conjugate();
+      s2Misq = symQ * s1Misq;
 
-      ebsdlib::Quaternion<T> quat(s2_misq.coeffs());
+      ebsdlib::Quaternion<T> quat(s2Misq.coeffs());
       ebsdlib::AxisAngleDType ax = quat.toAxisAngle();
 
       xVal = ax[0];
@@ -62,7 +62,7 @@ bool IsTwinBoundary(const Eigen::Quaternion<T>& quat1, const Eigen::Quaternion<T
       zVal = ax[2];
       real = ax[3];
 
-      real = real * 180.0f / nx::core::Constants::k_PiD;
+      real = real * 180.0f / nx::core::constants::k_PiD;
       axisdiff111 = acos((std::abs(xVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(yVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(zVal) * std::numbers::inv_sqrt3_v<T>));
       angdiff60 = std::abs(real - 60.0f);
       if(axisdiff111 < axisTolerance && angdiff60 < angTolerance)
@@ -88,10 +88,10 @@ std::optional<T> FindTwinBoundaryIncoherence(const Eigen::Vector3d& xstl_norm, c
   T minIncoherence = 180.0;
 
   Eigen::Quaternion<T> misq;
-  Eigen::Quaternion<T> j_sym_q;
-  Eigen::Quaternion<T> sym_q;
-  Eigen::Quaternion<T> s1_misq;
-  Eigen::Quaternion<T> s2_misq;
+  Eigen::Quaternion<T> jSymQ;
+  Eigen::Quaternion<T> symQ;
+  Eigen::Quaternion<T> s1Misq;
+  Eigen::Quaternion<T> s2Misq;
 
   const int32 nsym = orientationOps[laueClass]->getNumSymOps();
   const Eigen::Quaternion<T> q2 = quat2.conjugate();
@@ -101,18 +101,18 @@ std::optional<T> FindTwinBoundaryIncoherence(const Eigen::Vector3d& xstl_norm, c
   for(int32 j = 0; j < nsym; j++)
   {
     ebsdlib::Quaternion<T> jQuat = orientationOps[laueClass]->getQuatSymOp(j);
-    j_sym_q = Eigen::Quaterniond(jQuat.w(), jQuat.x(), jQuat.y(), jQuat.z());
+    jSymQ = Eigen::Quaterniond(jQuat.w(), jQuat.x(), jQuat.y(), jQuat.z());
 
-    s1_misq = misq * j_sym_q;
+    s1Misq = misq * jSymQ;
 
     for(int32 k = 0; k < nsym; k++)
     {
       ebsdlib::Quaternion<T> kQuat = orientationOps[laueClass]->getQuatSymOp(k);
-      sym_q = Eigen::Quaterniond(kQuat.w(), kQuat.x(), kQuat.y(), kQuat.z());
-      sym_q = sym_q.conjugate();
-      s2_misq = sym_q * s1_misq;
+      symQ = Eigen::Quaterniond(kQuat.w(), kQuat.x(), kQuat.y(), kQuat.z());
+      symQ = symQ.conjugate();
+      s2Misq = symQ * s1Misq;
 
-      ebsdlib::Quaternion<T> quat(s2_misq.coeffs());
+      ebsdlib::Quaternion<T> quat(s2Misq.coeffs());
       ebsdlib::AxisAngleDType ax = quat.toAxisAngle();
 
       xVal = ax[0];
@@ -120,15 +120,15 @@ std::optional<T> FindTwinBoundaryIncoherence(const Eigen::Vector3d& xstl_norm, c
       zVal = ax[2];
       real = ax[3];
 
-      real = real * 180.0f / nx::core::Constants::k_PiD;
+      real = real * 180.0f / nx::core::constants::k_PiD;
       axisdiff111 = acos((std::abs(xVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(yVal) * std::numbers::inv_sqrt3_v<T>)+(std::abs(zVal) * std::numbers::inv_sqrt3_v<T>));
       angdiff60 = std::abs(real - 60.0f);
       if(axisdiff111 < axisTolerance && angdiff60 < angTolerance)
       {
         const Eigen::Vector3d axVec{xVal, yVal, zVal};
-        const Eigen::Vector3d s_xstl_norm = j_sym_q.conjugate()._transformVector(xstl_norm);
+        const Eigen::Vector3d sXstlNorm = jSymQ.conjugate()._transformVector(xstl_norm);
 
-        T incoherence = 180.0 * std::acos(GeometryMath::CosThetaBetweenVectors(axVec, s_xstl_norm)) / nx::core::Constants::k_PiD;
+        T incoherence = 180.0 * std::acos(geometry_math::CosThetaBetweenVectors(axVec, sXstlNorm)) / nx::core::constants::k_PiD;
         if(incoherence > 90.0)
         {
           incoherence = 180.0 - incoherence;
@@ -158,7 +158,7 @@ std::optional<T> FindTwinBoundaryIncoherence(const Eigen::Vector3d& xstl_norm, c
  */
 class CalculateTwinBoundaryWithIncoherenceImpl
 {
-  using Matrix3x3 = Eigen::Matrix<float64, 3, 3, Eigen::RowMajor>;
+  using Matrix3x3Type = Eigen::Matrix<float64, 3, 3, Eigen::RowMajor>;
 
 public:
   CalculateTwinBoundaryWithIncoherenceImpl(ComputeTwinBoundaries* algorithm, float32 angtol, float32 axistol, const std::vector<int32>& faceLabels, const std::vector<float64>& faceNormals,
@@ -205,9 +205,9 @@ public:
           const Eigen::Quaterniond q1(m_AvgQuats[(feature1 * 4) + 3], m_AvgQuats[feature1 * 4], m_AvgQuats[(feature1 * 4) + 1], m_AvgQuats[(feature1 * 4) + 2]);
           const Eigen::Quaterniond q2(m_AvgQuats[(feature2 * 4) + 3], m_AvgQuats[feature2 * 4], m_AvgQuats[(feature2 * 4) + 1], m_AvgQuats[(feature2 * 4) + 2]);
 
-          const Matrix3x3 orientationMatrix = q1.matrix().transpose();
+          const Matrix3x3Type orientationMatrix = q1.matrix().transpose();
           const Eigen::Vector3d normals{m_FaceNormals[3 * i], m_FaceNormals[3 * i + 1], m_FaceNormals[3 * i + 2]};
-          const Eigen::Vector3d xstl_norm = normals.transpose() * orientationMatrix;
+          const Eigen::Vector3d xstlNorm = normals.transpose() * orientationMatrix;
 
           if(normals.hasNaN())
           {
@@ -215,7 +215,7 @@ public:
             continue;
           }
 
-          std::optional<float64> minIncoherence = FindTwinBoundaryIncoherence(xstl_norm, q1, q2, m_OrientationOps, crystalStructure, m_AngTol, m_AxisTol);
+          std::optional<float64> minIncoherence = FindTwinBoundaryIncoherence(xstlNorm, q1, q2, m_OrientationOps, crystalStructure, m_AngTol, m_AxisTol);
 
           if(minIncoherence.has_value())
           {
@@ -348,13 +348,13 @@ const std::atomic_bool& ComputeTwinBoundaries::getCancel()
 
 void ComputeTwinBoundaries::sendThreadSafeProgressMessage(usize counter)
 {
-  const std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  const std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_Throttle.incrementPercent(counter);
 }
 
 Result<> ComputeTwinBoundaries::operator()()
 {
-  const auto& crystalStructuresStore = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath)->getDataStoreRef();
+  const auto& crystalStructuresStore = m_DataStructure.getDataAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path)->getDataStoreRef();
   const usize numCrystalStructures = crystalStructuresStore.getNumberOfTuples();
   std::vector<uint32> crystalStructures(numCrystalStructures);
   if(Result<> ioResult = crystalStructuresStore.copyIntoBuffer(0, nonstd::span<uint32>(crystalStructures.data(), numCrystalStructures)); ioResult.invalid())
@@ -384,7 +384,7 @@ Result<> ComputeTwinBoundaries::operator()()
   }
 
   // Feature buffers support random face-to-feature lookup.
-  const auto& featurePhasesStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath)->getDataStoreRef();
+  const auto& featurePhasesStore = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_phases_array_path)->getDataStoreRef();
   const usize numFeatures = featurePhasesStore.getNumberOfTuples();
   std::vector<int32> featurePhases(numFeatures);
   if(Result<> ioResult = featurePhasesStore.copyIntoBuffer(0, nonstd::span<int32>(featurePhases.data(), numFeatures)); ioResult.invalid())
@@ -392,7 +392,7 @@ Result<> ComputeTwinBoundaries::operator()()
     return MergeResults(std::move(result), std::move(ioResult));
   }
 
-  const auto& avgQuatsStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AvgQuatsArrayPath)->getDataStoreRef();
+  const auto& avgQuatsStore = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->avg_quats_array_path)->getDataStoreRef();
   std::vector<float32> avgQuats(numFeatures * 4);
   if(Result<> ioResult = avgQuatsStore.copyIntoBuffer(0, nonstd::span<float32>(avgQuats.data(), numFeatures * 4)); ioResult.invalid())
   {
@@ -400,7 +400,7 @@ Result<> ComputeTwinBoundaries::operator()()
   }
 
   // Face buffers keep workers outside DataStore access.
-  const auto& faceLabelsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsArrayPath)->getDataStoreRef();
+  const auto& faceLabelsStore = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->face_labels_array_path)->getDataStoreRef();
   const usize numFaces = faceLabelsStore.getNumberOfTuples();
 
   std::vector<int32> faceLabels(numFaces * 2);
@@ -428,16 +428,16 @@ Result<> ComputeTwinBoundaries::operator()()
       Result<> phaseError = MakeErrorResult(
           -93215,
           fmt::format("Feature Phases array '{}' has value {} at Feature index {}, referenced by face {}, but Crystal Structures array '{}' contains {} tuples. Valid Phase indices are in [0, {}).",
-                      m_InputValues->FeaturePhasesArrayPath.toString(), currentPhaseIdx, firstFeatureIdx, faceIdx, m_InputValues->CrystalStructuresArrayPath.toString(), numCrystalStructures,
+                      m_InputValues->feature_phases_array_path.toString(), currentPhaseIdx, firstFeatureIdx, faceIdx, m_InputValues->crystal_structures_array_path.toString(), numCrystalStructures,
                       numCrystalStructures));
       return MergeResults(std::move(result), std::move(phaseError));
     }
   }
 
   std::vector<float64> faceNormals;
-  if(m_InputValues->FindCoherence)
+  if(m_InputValues->find_coherence)
   {
-    const auto& faceNormalsStore = m_DataStructure.getDataAs<Float64Array>(m_InputValues->FaceNormalsArrayPath)->getDataStoreRef();
+    const auto& faceNormalsStore = m_DataStructure.getDataAs<Float64ArrayType>(m_InputValues->face_normals_array_path)->getDataStoreRef();
     faceNormals.resize(numFaces * 3);
     if(Result<> ioResult = faceNormalsStore.copyIntoBuffer(0, nonstd::span<float64>(faceNormals.data(), numFaces * 3)); ioResult.invalid())
     {
@@ -447,13 +447,13 @@ Result<> ComputeTwinBoundaries::operator()()
 
   std::vector<uint8> twinBoundariesOut(numFaces, 0);
   std::vector<float32> twinBoundaryIncoherenceOut;
-  if(m_InputValues->FindCoherence)
+  if(m_InputValues->find_coherence)
   {
     twinBoundaryIncoherenceOut.resize(numFaces, 180.0f);
   }
 
-  const float32 angtol = m_InputValues->AngleTolerance;
-  const float32 axistol = m_InputValues->AxisTolerance * Constants::k_PiF / 180.0f;
+  const float32 angtol = m_InputValues->angle_tolerance;
+  const float32 axistol = m_InputValues->axis_tolerance * constants::k_PiF / 180.0f;
 
   m_MessageHandler.sendInfoMessage("Computing Twin Boundaries");
   m_Throttle.reset(numFaces, "Computing Twin Boundaries");
@@ -461,7 +461,7 @@ Result<> ComputeTwinBoundaries::operator()()
   dataAlg.setRange(0, numFaces);
 
   std::atomic_bool hasNaN = false;
-  if(m_InputValues->FindCoherence)
+  if(m_InputValues->find_coherence)
   {
     dataAlg.execute(CalculateTwinBoundaryWithIncoherenceImpl(this, angtol, axistol, faceLabels, faceNormals, avgQuats, featurePhases, crystalStructures, twinBoundariesOut, twinBoundaryIncoherenceOut,
                                                              m_ShouldCancel, hasNaN));
@@ -472,35 +472,35 @@ Result<> ComputeTwinBoundaries::operator()()
   }
 
   // MaskCompare has no bulk write API for twin-boundary flags.
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> twinBoundaries;
+  std::unique_ptr<mask_compare_utilities::MaskCompare> twinBoundaries;
   try
   {
-    twinBoundaries = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->TwinBoundariesArrayPath);
+    twinBoundaries = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->twin_boundaries_array_path);
   } catch(const std::out_of_range& exception)
   {
-    return MakeErrorResult(-93212, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->TwinBoundariesArrayPath.toString()));
+    return MakeErrorResult(-93212, fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->twin_boundaries_array_path.toString()));
   }
 
   for(usize i = 0; i < numFaces; i++)
   {
-    if(twinBoundariesOut[i])
+    if(twinBoundariesOut[i] != 0u)
     {
       twinBoundaries->setValue(i, true);
     }
   }
 
-  if(m_InputValues->FindCoherence)
+  if(m_InputValues->find_coherence)
   {
-    auto& incoherenceStore = m_DataStructure.getDataAs<Float32Array>(m_InputValues->TwinBoundaryIncoherenceArrayPath)->getDataStoreRef();
+    auto& incoherenceStore = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->twin_boundary_incoherence_array_path)->getDataStoreRef();
     if(Result<> ioResult = incoherenceStore.copyFromBuffer(0, nonstd::span<const float32>(twinBoundaryIncoherenceOut.data(), numFaces)); ioResult.invalid())
     {
       return MergeResults(std::move(result), std::move(ioResult));
     }
   }
 
-  if(m_InputValues->FindCoherence && hasNaN.load())
+  if(m_InputValues->find_coherence && hasNaN.load())
   {
-    return MakeWarningVoidResult(-93213, fmt::format("NaNs were detected in the normals array ({}). These values were marked false.", m_InputValues->FaceNormalsArrayPath.toString()));
+    return MakeWarningVoidResult(-93213, fmt::format("NaNs were detected in the normals array ({}). These values were marked false.", m_InputValues->face_normals_array_path.toString()));
   }
 
   return result;

@@ -30,12 +30,12 @@ namespace
 template <bool UseAddition, bool UseSubtraction>
 struct IncrementalOptions
 {
-  static constexpr bool UsingAddition = UseAddition;
-  static constexpr bool UsingSubtraction = UseSubtraction;
+  static constexpr bool k_UsingAddition = UseAddition;
+  static constexpr bool k_UsingSubtraction = UseSubtraction;
 };
 
-using AdditionT = IncrementalOptions<true, false>;
-using SubtractionT = IncrementalOptions<false, true>;
+using AdditionTType = IncrementalOptions<true, false>;
+using SubtractionTType = IncrementalOptions<false, true>;
 
 // Generated buffers target 65,536 values and retain at least one complete tuple.
 constexpr usize k_InitializationChunkValues = 65536;
@@ -105,7 +105,7 @@ Result<> ValueFill(AbstractDataStore<T>& dataStore, const std::vector<std::strin
   values.reserve(numComponents);
   for(const auto& stringValue : stringValues)
   {
-    values.push_back(StringInterpretationUtilities::Convert<T>(stringValue).value());
+    values.push_back(string_interpretation_utilities::Convert<T>(stringValue).value());
   }
   return WriteGeneratedValues<T>(dataStore, [&values](usize, usize component) { return values[component]; }, shouldCancel);
 }
@@ -122,7 +122,7 @@ Result<> ValueFill(AbstractDataStore<T>& dataStore, const std::vector<std::strin
  * @pre Value lists have one convertible string per component.
  * @pre Signed generated values remain representable in T.
  */
-template <typename T, class IncrementalOptions = AdditionT>
+template <typename T, class IncrementalOptions = AdditionTType>
 Result<> IncrementalFill(AbstractDataStore<T>& dataStore, const std::vector<std::string>& startValues, const std::vector<std::string>& stepValues, const std::atomic_bool& shouldCancel)
 {
   const usize numComponents = dataStore.getNumberOfComponents();
@@ -132,8 +132,8 @@ Result<> IncrementalFill(AbstractDataStore<T>& dataStore, const std::vector<std:
 
   for(usize component = 0; component < numComponents; component++)
   {
-    values[component] = StringInterpretationUtilities::Convert<T>(startValues[component]).value();
-    steps[component] = StringInterpretationUtilities::Convert<T>(stepValues[component]).value();
+    values[component] = string_interpretation_utilities::Convert<T>(startValues[component]).value();
+    steps[component] = string_interpretation_utilities::Convert<T>(stepValues[component]).value();
   }
 
   if constexpr(std::is_same_v<T, bool>)
@@ -144,7 +144,7 @@ Result<> IncrementalFill(AbstractDataStore<T>& dataStore, const std::vector<std:
           const bool value = values[component];
           if(tupleIndex == 0 && steps[component])
           {
-            values[component] = IncrementalOptions::UsingAddition;
+            values[component] = IncrementalOptions::k_UsingAddition;
           }
           return value;
         },
@@ -156,11 +156,11 @@ Result<> IncrementalFill(AbstractDataStore<T>& dataStore, const std::vector<std:
         dataStore,
         [&values, &steps](usize, usize component) {
           const T value = values[component];
-          if constexpr(IncrementalOptions::UsingAddition)
+          if constexpr(IncrementalOptions::k_UsingAddition)
           {
             values[component] += steps[component];
           }
-          if constexpr(IncrementalOptions::UsingSubtraction)
+          if constexpr(IncrementalOptions::k_UsingSubtraction)
           {
             values[component] -= steps[component];
           }
@@ -233,10 +233,10 @@ Result<> FillIncForwarder(const StepType& stepType, ArgsT&&... args)
   switch(stepType)
   {
   case StepType::Addition: {
-    return ::IncrementalFill<T, AdditionT>(std::forward<ArgsT>(args)...);
+    return ::IncrementalFill<T, AdditionTType>(std::forward<ArgsT>(args)...);
   }
   case StepType::Subtraction: {
-    return ::IncrementalFill<T, SubtractionT>(std::forward<ArgsT>(args)...);
+    return ::IncrementalFill<T, SubtractionTType>(std::forward<ArgsT>(args)...);
   }
   }
   return MakeErrorResult(-11620, "InitializeData received an invalid incremental operation.");
@@ -293,21 +293,19 @@ Result<> FillRandomForwarder(const std::vector<T>& range, usize numComponents, A
  * @param componentValues Provides one or all component values.
  * @return Explicit component values.
  */
-std::vector<std::string> standardizeMultiComponent(const usize numComps, const std::vector<std::string>& componentValues)
+std::vector<std::string> StandardizeMultiComponent(const usize numComps, const std::vector<std::string>& componentValues)
 {
   if(componentValues.size() == numComps)
   {
     return {componentValues};
   }
-  else
+
+  std::vector<std::string> standardized(numComps);
+  for(usize comp = 0; comp < numComps; comp++)
   {
-    std::vector<std::string> standardized(numComps);
-    for(usize comp = 0; comp < numComps; comp++)
-    {
-      standardized[comp] = componentValues[0];
-    }
-    return standardized;
+    standardized[comp] = componentValues[0];
   }
+  return standardized;
 }
 
 /**
@@ -331,13 +329,13 @@ struct FillArrayFunctor
     auto& dataStore = iDataArray.template getIDataStoreRefAs<AbstractDataStore<T>>();
     const usize numComp = dataStore.getNumberOfComponents();
 
-    switch(inputValues.initType)
+    switch(inputValues.init_type)
     {
     case InitializeType::FillValue: {
-      return ::ValueFill<T>(dataStore, standardizeMultiComponent(numComp, inputValues.stringValues), shouldCancel);
+      return ::ValueFill<T>(dataStore, StandardizeMultiComponent(numComp, inputValues.string_values), shouldCancel);
     }
     case InitializeType::Incremental: {
-      return ::FillIncForwarder<T>(inputValues.stepType, dataStore, standardizeMultiComponent(numComp, inputValues.startValues), standardizeMultiComponent(numComp, inputValues.stepValues),
+      return ::FillIncForwarder<T>(inputValues.step_type, dataStore, StandardizeMultiComponent(numComp, inputValues.start_values), StandardizeMultiComponent(numComp, inputValues.step_values),
                                    shouldCancel);
     }
     case InitializeType::Random: {
@@ -358,21 +356,21 @@ struct FillArrayFunctor
           range.push_back(true);
         }
       }
-      return ::FillRandomForwarder<T, false>(range, numComp, dataStore, inputValues.seed, inputValues.standardizeSeed, shouldCancel);
+      return ::FillRandomForwarder<T, false>(range, numComp, dataStore, inputValues.seed, inputValues.standardize_seed, shouldCancel);
     }
     case InitializeType::RangedRandom: {
-      auto randBegin = standardizeMultiComponent(numComp, inputValues.randBegin);
-      auto randEnd = standardizeMultiComponent(numComp, inputValues.randEnd);
+      auto randBegin = StandardizeMultiComponent(numComp, inputValues.rand_begin);
+      auto randEnd = StandardizeMultiComponent(numComp, inputValues.rand_end);
 
       std::vector<T> range;
       for(usize comp = 0; comp < numComp; comp++)
       {
-        Result<T> result = StringInterpretationUtilities::Convert<T>(randBegin[comp]);
+        Result<T> result = string_interpretation_utilities::Convert<T>(randBegin[comp]);
         range.push_back(result.value());
-        result = StringInterpretationUtilities::Convert<T>(randEnd[comp]);
+        result = string_interpretation_utilities::Convert<T>(randEnd[comp]);
         range.push_back(result.value());
       }
-      return ::FillRandomForwarder<T, true>(range, numComp, dataStore, inputValues.seed, inputValues.standardizeSeed, shouldCancel);
+      return ::FillRandomForwarder<T, true>(range, numComp, dataStore, inputValues.seed, inputValues.standardize_seed, shouldCancel);
     }
     }
     return MakeErrorResult(-11621, "InitializeData received an invalid initialization type.");
@@ -386,7 +384,7 @@ struct FillArrayFunctor
  */
 float64 CreateCompValFromStr(const std::string& s)
 {
-  const std::string lower = StringUtilities::toLower(StringUtilities::trimmed(s));
+  const std::string lower = string_utilities::ToLower(string_utilities::Trimmed(s));
   if(lower == "true")
   {
     return 1.0;
@@ -395,7 +393,7 @@ float64 CreateCompValFromStr(const std::string& s)
   {
     return 0.0;
   }
-  Result<float64> result = StringInterpretationUtilities::Convert<float64>(s);
+  Result<float64> result = string_interpretation_utilities::Convert<float64>(s);
   return result.valid() ? result.value() : 0.0;
 }
 
@@ -422,9 +420,7 @@ std::vector<float64> PreviewValues(const std::vector<std::string>& tokens, usize
 }
 } // namespace
 
-namespace nx
-{
-namespace core
+namespace nx::core
 {
 std::string CreateCompValsStr(const std::vector<float64>& componentValues, usize numComps)
 {
@@ -467,7 +463,7 @@ void CreateFillPreflightVals(const std::string& initFillValueStr, usize numComps
 
   std::stringstream updatedValStrm;
 
-  auto initFillTokens = StringUtilities::split(initFillValueStr, std::vector<char>{';'}, false);
+  auto initFillTokens = string_utilities::Split(initFillValueStr, std::vector<char>{';'}, false);
   if(initFillTokens.size() == 1)
   {
     updatedValStrm << "Each tuple will contain the same values for all components: ";
@@ -487,8 +483,8 @@ void CreateIncrementalPreflightVals(const std::string& initFillValueStr, usize s
 {
   std::stringstream ss;
 
-  auto initFillTokens = StringUtilities::split(initFillValueStr, std::vector<char>{';'}, false);
-  auto stepValueTokens = StringUtilities::split(stepValueStr, ";", false);
+  auto initFillTokens = string_utilities::Split(initFillValueStr, std::vector<char>{';'}, false);
+  auto stepValueTokens = string_utilities::Split(stepValueStr, ";", false);
 
   if(numComps > 1)
   {
@@ -570,8 +566,8 @@ void CreateRandomPreflightVals(bool standardizeSeed, InitializeType initType, co
     }
     else if(initType == InitializeType::RangedRandom)
     {
-      ss << fmt::format("The 1 component in each of the {} tuples will be filled with random values ranging from {} to {}.", numTuples, StringUtilities::trimmed(initStartRange),
-                        StringUtilities::trimmed(initEndRange));
+      ss << fmt::format("The 1 component in each of the {} tuples will be filled with random values ranging from {} to {}.", numTuples, string_utilities::Trimmed(initStartRange),
+                        string_utilities::Trimmed(initEndRange));
     }
 
     if(standardizeSeed)
@@ -588,10 +584,10 @@ void CreateRandomPreflightVals(bool standardizeSeed, InitializeType initType, co
     else if(initType == InitializeType::RangedRandom)
     {
       ss << fmt::format("All {} components in each of the {} tuples will be filled with random values ranging from these starting values:", numComps, numTuples);
-      auto startRangeTokens = StringUtilities::split(initStartRange, ";", false);
+      auto startRangeTokens = string_utilities::Split(initStartRange, ";", false);
       ss << "\n" << CreateCompValsStr(startRangeTokens, numComps);
       ss << "\nto these ending values:";
-      auto endRangeTokens = StringUtilities::split(initEndRange, ";", false);
+      auto endRangeTokens = string_utilities::Split(initEndRange, ";", false);
       ss << "\n" << CreateCompValsStr(endRangeTokens, numComps);
     }
 
@@ -609,8 +605,7 @@ void CreateRandomPreflightVals(bool standardizeSeed, InitializeType initType, co
 
   preflightUpdatedValues.push_back({"Tuple Details", ss.str()});
 }
-} // namespace core
-} // namespace nx
+} // namespace nx::core
 
 InitializeData::InitializeData(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, InitializeDataInputValues* inputValues)
 : m_DataStructure(dataStructure)
@@ -620,8 +615,6 @@ InitializeData::InitializeData(DataStructure& dataStructure, const IFilter::Mess
 {
 }
 
-InitializeData::~InitializeData() noexcept = default;
-
 const std::atomic_bool& InitializeData::getCancel()
 {
   return m_ShouldCancel;
@@ -629,7 +622,7 @@ const std::atomic_bool& InitializeData::getCancel()
 
 Result<> InitializeData::operator()()
 {
-  auto& iDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->InputArrayPath);
+  auto& iDataArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->input_array_path);
   const AlgorithmArrayTargets targets({&iDataArray});
   const bool usesOutOfCoreStore = AnyOutOfCore(targets);
   const bool useOutOfCorePath = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());

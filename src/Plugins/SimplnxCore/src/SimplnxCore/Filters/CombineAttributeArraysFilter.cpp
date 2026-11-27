@@ -60,8 +60,8 @@ Parameters CombineAttributeArraysFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Combine", "The complete path to each of the Attribute Arrays to combine",
-                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::DataArray},
-                                                               MultiArraySelectionParameter::AllowedDataTypes{}));
+                                                               MultiArraySelectionParameter::ValueType{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray},
+                                                               MultiArraySelectionParameter::AllowedDataTypesType{}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Array"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_StackedDataArrayName_Key, "Created Data Array", "This is the name of the created output array of the combined attribute arrays.",
@@ -77,14 +77,14 @@ IFilter::VersionType CombineAttributeArraysFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CombineAttributeArraysFilter::clone() const
+IFilter::UniquePointerType CombineAttributeArraysFilter::clone() const
 {
   return std::make_unique<CombineAttributeArraysFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                     const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   // auto normalizeDataValue = filterArgs.value<bool>(k_NormalizeData_Key);
   auto moveValuesValue = filterArgs.value<bool>(k_MoveValues_Key);
@@ -99,33 +99,33 @@ IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataS
 
   if(selectedDataArrayPathsValue.empty())
   {
-    return {MakeErrorResult<OutputActions>(-66005, "Please select arrays to combine")};
+    return {.output_actions = MakeErrorResult<OutputActions>(-66005, "Please select arrays to combine")};
   }
 
   bool result = nx::core::CheckArraysAreSameType(dataStructure, selectedDataArrayPathsValue);
   if(!result)
   {
-    return {MakeErrorResult<OutputActions>(-66006, "All selected arrays must be of the same type")};
+    return {.output_actions = MakeErrorResult<OutputActions>(-66006, "All selected arrays must be of the same type")};
   }
   result = nx::core::CheckArraysHaveSameTupleCount(dataStructure, selectedDataArrayPathsValue);
   if(!result)
   {
-    return {MakeErrorResult<OutputActions>(-66007, "All selected arrays must have the same number of tuples")};
+    return {.output_actions = MakeErrorResult<OutputActions>(-66007, "All selected arrays must have the same number of tuples")};
   }
 
   // Figure out the total number of components
   size_t numComps = 0;
   for(const auto& dataPath : selectedDataArrayPathsValue)
   {
-    const auto* dataArray = dataStructure.getDataAs<IDataArray>(dataPath);
-    numComps += dataArray->getNumberOfComponents();
+    const auto* dataArrayPtr = dataStructure.getDataAs<IDataArray>(dataPath);
+    numComps += dataArrayPtr->getNumberOfComponents();
   }
 
   // Create the output array
   {
-    const auto* dataArray = dataStructure.getDataAs<IDataArray>(selectedDataArrayPathsValue[0]);
-    auto tupleShape = dataArray->getTupleShape();
-    auto action = std::make_unique<CreateArrayAction>(dataArray->getDataType(), tupleShape, std::vector<usize>{numComps}, selectedDataArrayPathsValue[0].replaceName(stackedDataArrayName));
+    const auto* dataArrayPtr = dataStructure.getDataAs<IDataArray>(selectedDataArrayPathsValue[0]);
+    auto tupleShape = dataArrayPtr->getTupleShape();
+    auto action = std::make_unique<CreateArrayAction>(dataArrayPtr->getDataType(), tupleShape, std::vector<usize>{numComps}, selectedDataArrayPathsValue[0].replaceName(stackedDataArrayName));
     resultOutputActions.value().appendAction(std::move(action));
   }
 
@@ -141,19 +141,19 @@ IFilter::PreflightResult CombineAttributeArraysFilter::preflightImpl(const DataS
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> CombineAttributeArraysFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> CombineAttributeArraysFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   CombineAttributeArraysInputValues inputValues;
 
-  inputValues.NormalizeData = filterArgs.value<bool>(k_NormalizeData_Key);
-  inputValues.SelectedDataArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
+  inputValues.normalize_data = filterArgs.value<bool>(k_NormalizeData_Key);
+  inputValues.selected_data_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_SelectedDataArrayPaths_Key);
 
-  inputValues.StackedDataArrayPath = inputValues.SelectedDataArrayPaths[0].replaceName(filterArgs.value<DataObjectNameParameter::ValueType>(k_StackedDataArrayName_Key));
+  inputValues.stacked_data_array_path = inputValues.selected_data_array_paths[0].replaceName(filterArgs.value<DataObjectNameParameter::ValueType>(k_StackedDataArrayName_Key));
 
   return CombineAttributeArrays(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -161,13 +161,13 @@ Result<> CombineAttributeArraysFilter::executeImpl(DataStructure& dataStructure,
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_NormalizeDataKey = "NormalizeData";
-constexpr StringLiteral k_MoveValuesKey = "MoveValues";
-constexpr StringLiteral k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
-constexpr StringLiteral k_StackedDataArrayNameKey = "StackedDataArrayName";
-} // namespace SIMPL
+constexpr StringLiteralType k_NormalizeDataKey = "NormalizeData";
+constexpr StringLiteralType k_MoveValuesKey = "MoveValues";
+constexpr StringLiteralType k_SelectedDataArrayPathsKey = "SelectedDataArrayPaths";
+constexpr StringLiteralType k_StackedDataArrayNameKey = "StackedDataArrayName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CombineAttributeArraysFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -176,15 +176,16 @@ Result<Arguments> CombineAttributeArraysFilter::FromSIMPLJson(const nlohmann::js
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_NormalizeDataKey, k_NormalizeData_Key));
-  Result<> moveResult = SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_MoveValuesKey, k_MoveValues_Key);
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_NormalizeDataKey, k_NormalizeData_Key));
+  Result<> moveResult = simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_MoveValuesKey, k_MoveValues_Key);
   if(moveResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(moveResult));
   }
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::MultiDataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_StackedDataArrayNameKey, k_StackedDataArrayName_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_StackedDataArrayNameKey, k_StackedDataArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

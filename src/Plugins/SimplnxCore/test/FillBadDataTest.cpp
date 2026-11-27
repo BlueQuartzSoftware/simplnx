@@ -25,8 +25,8 @@
 namespace fs = std::filesystem;
 
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -34,26 +34,26 @@ namespace
  * @brief Builds a FillBadData test dataset with block-patterned FeatureIds
  * and ~10% scattered bad voxels (FeatureId=0) using a deterministic pattern.
  */
-void BuildFillBadDataTestData(DataStructure& ds, usize dimX, usize dimY, usize dimZ, usize blockSize, bool addLargeDefect = false)
+void BuildFillBadDataTestData(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ, usize blockSize, bool addLargeDefect = false)
 {
   const ShapeType cellShape = {dimZ, dimY, dimX};
-  auto* imageGeom = ImageGeom::Create(ds, "DataContainer");
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "DataContainer");
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath featureIdsPath = DataPath({"DataContainer", "CellData", "FeatureIds"});
-  auto featureIdsDataStore = DataStoreUtilities::CreateDataStore<int32>(ds, featureIdsPath, cellShape, {1});
-  auto* featureIdsArray = DataArray<int32>::Create(ds, "FeatureIds", featureIdsDataStore, cellAM->getId());
-  auto& featureIdsStore = featureIdsArray->getDataStoreRef();
+  auto featureIdsDataStore = data_store_utilities::CreateDataStore<int32>(dataStructure, featureIdsPath, cellShape, {1});
+  auto* featureIdsArrayPtr = DataArray<int32>::Create(dataStructure, "FeatureIds", featureIdsDataStore, cellAmPtr->getId());
+  auto& featureIdsStore = featureIdsArrayPtr->getDataStoreRef();
 
   const DataPath phasesPath = DataPath({"DataContainer", "CellData", "Phases"});
-  auto phasesDataStore = DataStoreUtilities::CreateDataStore<int32>(ds, phasesPath, cellShape, {1});
-  auto* phasesArray = DataArray<int32>::Create(ds, "Phases", phasesDataStore, cellAM->getId());
-  auto& phasesStore = phasesArray->getDataStoreRef();
+  auto phasesDataStore = data_store_utilities::CreateDataStore<int32>(dataStructure, phasesPath, cellShape, {1});
+  auto* phasesArrayPtr = DataArray<int32>::Create(dataStructure, "Phases", phasesDataStore, cellAmPtr->getId());
+  auto& phasesStore = phasesArrayPtr->getDataStoreRef();
 
   const usize blocksPerDim = dimX / blockSize;
   const usize sliceSize = dimY * dimX;
@@ -104,19 +104,19 @@ constexpr int32 k_MinDefectSize = 50;
 TEST_CASE("SimplnxCore::FillBadData_SmallIN100", "[Core][FillBadDataFilter]")
 {
   // Load the application and plugins.
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
+  const unit_test::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
   // Load the exemplar output.
   auto exemplarFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/6_5_exemplar.dream3d", unit_test::k_TestFilesDir));
-  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure exemplarDataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   // Load the Small IN100 input.
   auto baseDataFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/6_5_input.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
   {
     // Configure the filter arguments.
@@ -125,50 +125,50 @@ TEST_CASE("SimplnxCore::FillBadData_SmallIN100", "[Core][FillBadDataFilter]")
 
     args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(1000));
     args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
-    args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(Constants::k_FeatureIdsArrayPath));
-    args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(Constants::k_PhasesArrayPath));
+    args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(constants::k_FeatureIdsArrayPath));
+    args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(constants::k_PhasesArrayPath));
 
     args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
-    args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(Constants::k_DataContainerPath));
+    args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(constants::k_DataContainerPath));
 
     // Preflight the filter and check the result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
   }
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, Constants::k_CellAttributeMatrix, Constants::k_DataContainer);
+  unit_test::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, constants::k_CellAttributeMatrix, constants::k_DataContainer);
 
 // The optional output supports manual inspection.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_fill_bad_data.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_fill_bad_data.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::FillBadData::Test01_SingleSmallDefect", "[Core][FillBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // SIMPLNX_TEST_ALGORITHM_PATH selects the algorithm scenarios.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   // Configure OOC settings for this scenario.
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
 
   // Load the input data.
   auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_01_input.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFilePath);
 
   // Load the expected output.
   auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_01_expected.dream3d", unit_test::k_TestFilesDir));
-  DataStructure expectedDataStructure = UnitTest::LoadDataStructure(expectedFilePath);
+  DataStructure expectedDataStructure = unit_test::LoadDataStructure(expectedFilePath);
 
-  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
 
   // Execute the filter.
   FillBadDataFilter filter;
@@ -181,38 +181,38 @@ TEST_CASE("SimplnxCore::FillBadData::Test01_SingleSmallDefect", "[Core][FillBadD
   args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   // Compare the generated results.
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  unit_test::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::FillBadData::Test02_SingleLargeDefect", "[Core][FillBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // SIMPLNX_TEST_ALGORITHM_PATH selects the algorithm scenarios.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Configure OOC settings for this scenario.
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
 
   // Load the input data.
   auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_02_input.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFilePath);
 
   // Load the expected output.
   auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_02_expected.dream3d", unit_test::k_TestFilesDir));
-  DataStructure expectedDataStructure = UnitTest::LoadDataStructure(expectedFilePath);
+  DataStructure expectedDataStructure = unit_test::LoadDataStructure(expectedFilePath);
 
-  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
 
   // Execute the filter.
   FillBadDataFilter filter;
@@ -225,36 +225,36 @@ TEST_CASE("SimplnxCore::FillBadData::Test02_SingleLargeDefect", "[Core][FillBadD
   args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   // Compare the generated results.
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  unit_test::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::FillBadData::Test03_ThresholdBoundary", "[Core][FillBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // SIMPLNX_TEST_ALGORITHM_PATH selects the algorithm scenarios.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Configure OOC settings for this scenario.
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
 
   auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_03_input.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFilePath);
 
   auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_03_expected.dream3d", unit_test::k_TestFilesDir));
-  DataStructure expectedDataStructure = UnitTest::LoadDataStructure(expectedFilePath);
+  DataStructure expectedDataStructure = unit_test::LoadDataStructure(expectedFilePath);
 
-  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
 
   FillBadDataFilter filter;
   Arguments args;
@@ -266,34 +266,34 @@ TEST_CASE("SimplnxCore::FillBadData::Test03_ThresholdBoundary", "[Core][FillBadD
   args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::FillBadData::Test04_MultipleSmallDefects", "[Core][FillBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // SIMPLNX_TEST_ALGORITHM_PATH selects the algorithm scenarios.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Configure OOC settings for this scenario.
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
 
   auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_04_input.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFilePath);
 
   auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_04_expected.dream3d", unit_test::k_TestFilesDir));
-  DataStructure expectedDataStructure = UnitTest::LoadDataStructure(expectedFilePath);
+  DataStructure expectedDataStructure = unit_test::LoadDataStructure(expectedFilePath);
 
-  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
 
   FillBadDataFilter filter;
   Arguments args;
@@ -305,34 +305,34 @@ TEST_CASE("SimplnxCore::FillBadData::Test04_MultipleSmallDefects", "[Core][FillB
   args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::FillBadData::Test05_MixedSmallAndLarge", "[Core][FillBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // SIMPLNX_TEST_ALGORITHM_PATH selects the algorithm scenarios.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Configure OOC settings for this scenario.
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
 
   auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_05_input.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFilePath);
 
   auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_05_expected.dream3d", unit_test::k_TestFilesDir));
-  DataStructure expectedDataStructure = UnitTest::LoadDataStructure(expectedFilePath);
+  DataStructure expectedDataStructure = unit_test::LoadDataStructure(expectedFilePath);
 
-  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
 
   FillBadDataFilter filter;
   Arguments args;
@@ -344,34 +344,34 @@ TEST_CASE("SimplnxCore::FillBadData::Test05_MixedSmallAndLarge", "[Core][FillBad
   args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::FillBadData::Test06_SingleVoxelDefects", "[Core][FillBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // SIMPLNX_TEST_ALGORITHM_PATH selects the algorithm scenarios.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Configure OOC settings for this scenario.
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
 
   auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_06_input.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFilePath);
 
   auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_06_expected.dream3d", unit_test::k_TestFilesDir));
-  DataStructure expectedDataStructure = UnitTest::LoadDataStructure(expectedFilePath);
+  DataStructure expectedDataStructure = unit_test::LoadDataStructure(expectedFilePath);
 
-  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
 
   FillBadDataFilter filter;
   Arguments args;
@@ -383,32 +383,32 @@ TEST_CASE("SimplnxCore::FillBadData::Test06_SingleVoxelDefects", "[Core][FillBad
   args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::FillBadData::Test07_DefectsAtBoundaries", "[Core][FillBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // SIMPLNX_TEST_ALGORITHM_PATH selects the algorithm scenarios.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Configure OOC settings for this scenario.
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
 
   auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_07_input.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFilePath);
 
   auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_07_expected.dream3d", unit_test::k_TestFilesDir));
-  DataStructure expectedDataStructure = UnitTest::LoadDataStructure(expectedFilePath);
+  DataStructure expectedDataStructure = unit_test::LoadDataStructure(expectedFilePath);
 
   FillBadDataFilter filter;
   Arguments args;
@@ -420,34 +420,34 @@ TEST_CASE("SimplnxCore::FillBadData::Test07_DefectsAtBoundaries", "[Core][FillBa
   args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::FillBadData::Test11_NeighborTieBreaking", "[Core][FillBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // SIMPLNX_TEST_ALGORITHM_PATH selects the algorithm scenarios.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Configure OOC settings for this scenario.
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
 
   // Load the input data.
   auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_11_input.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFilePath);
 
   // Load the expected output.
   auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_11_expected.dream3d", unit_test::k_TestFilesDir));
-  DataStructure expectedDataStructure = UnitTest::LoadDataStructure(expectedFilePath);
+  DataStructure expectedDataStructure = unit_test::LoadDataStructure(expectedFilePath);
 
   // Execute the filter.
   FillBadDataFilter filter;
@@ -460,36 +460,36 @@ TEST_CASE("SimplnxCore::FillBadData::Test11_NeighborTieBreaking", "[Core][FillBa
   args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   // Compare the generated results.
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  unit_test::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::FillBadData::Test13_StoreAsNewPhase", "[Core][FillBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // SIMPLNX_TEST_ALGORITHM_PATH selects the algorithm scenarios.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Configure OOC settings for this scenario.
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_fill_bad_data.tar.gz", "6_5_fill_bad_data");
 
   // Load the input data.
   auto inputFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_13_input.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFilePath);
 
   // Load the expected output.
   auto expectedFilePath = fs::path(fmt::format("{}/6_5_fill_bad_data/test_13_expected.dream3d", unit_test::k_TestFilesDir));
-  DataStructure expectedDataStructure = UnitTest::LoadDataStructure(expectedFilePath);
+  DataStructure expectedDataStructure = unit_test::LoadDataStructure(expectedFilePath);
 
   // Execute the filter.
   FillBadDataFilter filter;
@@ -502,20 +502,20 @@ TEST_CASE("SimplnxCore::FillBadData::Test13_StoreAsNewPhase", "[Core][FillBadDat
   args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   // Compare the generated results.
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
+  unit_test::CompareExemplarToGeneratedData(dataStructure, expectedDataStructure, DataPath({"DataContainer", "CellData"}), "DataContainer");
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::FillBadDataFilter: Preflight Feature Data Modification Warning", "[Core][FillBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   BuildFillBadDataTestData(dataStructure, 2, 2, 2, 1);
@@ -530,89 +530,89 @@ TEST_CASE("SimplnxCore::FillBadDataFilter: Preflight Feature Data Modification W
   args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
 
   const auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.valid());
-  const auto& warnings = preflightResult.outputActions.warnings();
+  REQUIRE(preflightResult.output_actions.valid());
+  const auto& warnings = preflightResult.output_actions.warnings();
   REQUIRE(std::any_of(warnings.begin(), warnings.end(), [](const auto& warning) { return warning.code == -14600; }));
-  const auto& outputValues = preflightResult.outputValues;
+  const auto& outputValues = preflightResult.output_values;
   REQUIRE(std::any_of(outputValues.begin(), outputValues.end(), [](const auto& value) { return value.name == "Feature Data Modification Warning"; }));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::FillBadDataFilter:: Invalid Preflight Min Defect Size", "[Core][FillBadDataFilter]")
 {
   DataStructure dataStructure;
-  const DataPath k_GeomPath({"DataContainer"});
-  const DataPath k_FeatureIdsPath({"DataContainer", "CellData", "FeatureIds"});
+  const DataPath kGeomPath({"DataContainer"});
+  const DataPath kFeatureIdsPath({"DataContainer", "CellData", "FeatureIds"});
 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "DataContainer");
   imageGeomPtr->setDimensions({1, 1, 1});
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 1, 1}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellDataPtr);
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {1, 1, 1}, {1}, cellDataPtr->getId());
+  unit_test::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {1, 1, 1}, {1}, cellDataPtr->getId());
 
   FillBadDataFilter filter;
   Arguments args;
   args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(0));
   args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
-  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(kGeomPath));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(kFeatureIdsPath));
   args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(DataPath{}));
   args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -16500);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -16500);
 }
 
 // A volume with no good neighbor cannot be filled.
 // The no-progress guard must return and leave those voxels unchanged.
 TEST_CASE("SimplnxCore::FillBadData::AllBadData_TerminatesWithoutHang", "[Core][FillBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
-  const DataPath k_GeomPath({"DataContainer"});
-  const DataPath k_CellDataPath = k_GeomPath.createChildPath("CellData");
-  const DataPath k_FeatureIdsPath = k_CellDataPath.createChildPath("FeatureIds");
-  const DataPath k_PhasesPath = k_CellDataPath.createChildPath("Phases");
+  const DataPath kGeomPath({"DataContainer"});
+  const DataPath kCellDataPath = kGeomPath.createChildPath("CellData");
+  const DataPath kFeatureIdsPath = kCellDataPath.createChildPath("FeatureIds");
+  const DataPath kPhasesPath = kCellDataPath.createChildPath("Phases");
 
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "DataContainer");
   imageGeomPtr->setDimensions({3, 3, 1});
   auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 3, 3}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellDataPtr);
-  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {1, 3, 3}, {1}, cellDataPtr->getId());
-  auto* phases = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {1, 3, 3}, {1}, cellDataPtr->getId());
+  auto* featureIdsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {1, 3, 3}, {1}, cellDataPtr->getId());
+  auto* phasesPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Phases", {1, 3, 3}, {1}, cellDataPtr->getId());
   // Every voxel is bad data (featureId 0 -> marked for fill); there is no good neighbor to fill from.
-  featureIds->fill(0);
-  phases->fill(1);
+  featureIdsPtr->fill(0);
+  phasesPtr->fill(1);
 
   FillBadDataFilter filter;
   Arguments args;
   args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(1));
   args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
-  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
-  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_FeatureIdsPath));
-  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_PhasesPath));
+  args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(kGeomPath));
+  args.insertOrAssign(FillBadDataFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(kFeatureIdsPath));
+  args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(kPhasesPath));
   args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // The call must return because the no-progress guard stops the fill loop.
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::FillBadData: real HDF5 cross-slice defect oracle", "[SimplnxCore][FillBadDataFilter][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
   const bool newPhase = GENERATE(false, true);
   const PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
@@ -621,14 +621,14 @@ TEST_CASE("SimplnxCore::FillBadData: real HDF5 cross-slice defect oracle", "[Sim
   const DataPath featureIdsPath({"DataContainer", "CellData", "FeatureIds"});
   const DataPath phasesPath({"DataContainer", "CellData", "Phases"});
   const DataPath payloadPath({"DataContainer", "CellData", "Payload"});
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(featureIdsPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(phasesPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(phasesPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(payloadPath.getParent()));
-  auto& featureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
-  auto& phases = dataStructure.getDataRefAs<Int32Array>(phasesPath);
+  auto& featureIds = dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath);
+  auto& phases = dataStructure.getDataRefAs<Int32ArrayType>(phasesPath);
   auto& cells = dataStructure.getDataRefAs<AttributeMatrix>(payloadPath.getParent());
-  auto payloadStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, payloadPath, cells.getShape(), {2});
-  auto* payloadPtr = Float32Array::Create(dataStructure, "Payload", payloadStore, cells.getId());
+  auto payloadStore = data_store_utilities::CreateDataStore<float32>(dataStructure, payloadPath, cells.getShape(), {2});
+  auto* payloadPtr = Float32ArrayType::Create(dataStructure, "Payload", payloadStore, cells.getId());
   REQUIRE(payloadPtr != nullptr);
   featureIds.fill(1);
   phases.fill(1);
@@ -660,8 +660,8 @@ TEST_CASE("SimplnxCore::FillBadData: real HDF5 cross-slice defect oracle", "[Sim
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   const auto after = GetAlgorithmPathExecutionCounts();
-  REQUIRE(after.OutOfCoreOnOutOfCoreStore == before.OutOfCoreOnOutOfCoreStore + 1);
-  REQUIRE(after.InCore == before.InCore);
+  REQUIRE(after.out_of_core_on_out_of_core_store == before.out_of_core_on_out_of_core_store + 1);
+  REQUIRE(after.in_core == before.in_core);
   for(usize voxelIdx = 0; voxelIdx < 125; voxelIdx++)
   {
     const bool retainedDefect = voxelIdx == 37 || voxelIdx == 62 || voxelIdx == 87;
@@ -671,14 +671,14 @@ TEST_CASE("SimplnxCore::FillBadData: real HDF5 cross-slice defect oracle", "[Sim
     REQUIRE((*payloadPtr)[voxelIdx * 2] == (retainedDefect ? -5.0F : 7.0F));
     REQUIRE((*payloadPtr)[voxelIdx * 2 + 1] == (retainedDefect ? -6.0F : -2.0F));
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::FillBadDataFilter: SIMPL Backwards Compatibility", "[SimplnxCore][FillBadDataFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -691,22 +691,22 @@ TEST_CASE("SimplnxCore::FillBadDataFilter: SIMPL Backwards Compatibility", "[Sim
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<FillBadDataFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<FillBadDataFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<int32>(FillBadDataFilter::k_MinAllowedDefectSize_Key) == 5);
       CHECK(args.value<bool>(FillBadDataFilter::k_StoreAsNewPhase_Key) == true);
       CHECK(args.value<DataPath>(FillBadDataFilter::k_SelectedImageGeometryPath_Key) == DataPath({"DataContainer"}));
@@ -720,15 +720,15 @@ TEST_CASE("SimplnxCore::FillBadDataFilter: SIMPL Backwards Compatibility", "[Sim
 
 TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Correctness", "[Core][FillBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // SIMPLNX_TEST_ALGORITHM_PATH selects the algorithm scenarios.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   // int32 1-comp => 200*200*4 = 160,000 bytes/slice
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_ArchiveName, k_DataDirName);
-  DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_ArchiveName, k_DataDirName);
+  DataStructure exemplarDS = unit_test::LoadDataStructure(k_ExemplarFile);
 
   std::string testName = GENERATE("NoNewPhase", "NewPhase");
   DYNAMIC_SECTION("Variant: " << testName)
@@ -738,7 +738,7 @@ TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Correctness", "[Core][FillBadDa
     DataStructure dataStructure;
     BuildFillBadDataTestData(dataStructure, k_Dim, k_Dim, k_Dim, k_BlockSize, true);
 
-    scope.requireExpectedStore(dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+    scope.requireExpectedStore(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
 
     FillBadDataFilter filter;
     Arguments args;
@@ -750,7 +750,7 @@ TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Correctness", "[Core][FillBadDa
     args.insertOrAssign(FillBadDataFilter::k_SelectedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({"DataContainer"})));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
@@ -759,25 +759,25 @@ TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Correctness", "[Core][FillBadDa
     const DataPath exemplarFeatureIdsPath({exemplarGeomName, "CellData", "FeatureIds"});
     const DataPath exemplarPhasesPath({exemplarGeomName, "CellData", "Phases"});
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
-    REQUIRE_NOTHROW(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath));
-    CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarFeatureIdsPath), dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+    REQUIRE_NOTHROW(exemplarDS.getDataRefAs<Int32ArrayType>(exemplarFeatureIdsPath));
+    CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32ArrayType>(exemplarFeatureIdsPath), dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "Phases"})));
-    REQUIRE_NOTHROW(exemplarDS.getDataRefAs<Int32Array>(exemplarPhasesPath));
-    CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32Array>(exemplarPhasesPath), dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "Phases"})));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"DataContainer", "CellData", "Phases"})));
+    REQUIRE_NOTHROW(exemplarDS.getDataRefAs<Int32ArrayType>(exemplarPhasesPath));
+    CompareDataArrays<int32>(exemplarDS.getDataRefAs<Int32ArrayType>(exemplarPhasesPath), dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"DataContainer", "CellData", "Phases"})));
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Ignored Arrays", "[Core][FillBadDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // SIMPLNX_TEST_ALGORITHM_PATH selects the algorithm scenarios.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   // int32 1-comp => 200*200*4 = 160,000 bytes/slice
 
   constexpr int32 k_Sentinel = -999;
@@ -785,27 +785,27 @@ TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Ignored Arrays", "[Core][FillBa
   DataStructure dataStructure;
   BuildFillBadDataTestData(dataStructure, k_Dim, k_Dim, k_Dim, k_BlockSize, false);
 
-  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
+  scope.requireExpectedStore(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"DataContainer", "CellData", "FeatureIds"})));
 
   // Add an extra "IgnoredArray" filled with a sentinel value
   auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"DataContainer", "CellData"}));
   const DataPath ignoredArrayPath = DataPath({"DataContainer", "CellData", "IgnoredArray"});
-  auto ignoredDataStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, ignoredArrayPath, cellAM.getShape(), {1});
-  auto* ignoredArray = DataArray<int32>::Create(dataStructure, "IgnoredArray", ignoredDataStore, cellAM.getId());
-  auto& ignoredStore = ignoredArray->getDataStoreRef();
+  auto ignoredDataStore = data_store_utilities::CreateDataStore<int32>(dataStructure, ignoredArrayPath, cellAM.getShape(), {1});
+  auto* ignoredArrayPtr = DataArray<int32>::Create(dataStructure, "IgnoredArray", ignoredDataStore, cellAM.getId());
+  auto& ignoredStore = ignoredArrayPtr->getDataStoreRef();
   ignoredStore.fill(k_Sentinel);
 
   // Record bad-voxel count before fill using bulk reads
-  const auto& featureIdsBefore = dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"}));
+  const auto& featureIdsBefore = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"DataContainer", "CellData", "FeatureIds"}));
   const auto& fidsStore = featureIdsBefore.getDataStoreRef();
   const usize totalTuples = fidsStore.getNumberOfTuples();
   usize badCount = 0;
   {
-    constexpr usize kChunk = 40000;
-    auto buf = std::make_unique<int32[]>(kChunk);
-    for(usize off = 0; off < totalTuples; off += kChunk)
+    constexpr usize k_Chunk = 40000;
+    auto buf = std::make_unique<int32[]>(k_Chunk);
+    for(usize off = 0; off < totalTuples; off += k_Chunk)
     {
-      const usize count = std::min(kChunk, totalTuples - off);
+      const usize count = std::min(k_Chunk, totalTuples - off);
       auto fidsStoreReadResult = fidsStore.copyIntoBuffer(off, nonstd::span<int32>(buf.get(), count));
       SIMPLNX_RESULT_REQUIRE_VALID(fidsStoreReadResult);
       for(usize i = 0; i < count; i++)
@@ -833,20 +833,20 @@ TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Ignored Arrays", "[Core][FillBa
     args.insertOrAssign(FillBadDataFilter::k_IgnoredDataArrayPaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(ignoredPaths));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
   // Verify: FeatureIds has no zeros (all scattered bad voxels filled) — bulk read
-  const auto& featureIdsAfter = dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "FeatureIds"}));
+  const auto& featureIdsAfter = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"DataContainer", "CellData", "FeatureIds"}));
   {
     const auto& fidsAfterStore = featureIdsAfter.getDataStoreRef();
-    constexpr usize kChunk = 40000;
-    auto buf = std::make_unique<int32[]>(kChunk);
-    for(usize off = 0; off < totalTuples; off += kChunk)
+    constexpr usize k_Chunk = 40000;
+    auto buf = std::make_unique<int32[]>(k_Chunk);
+    for(usize off = 0; off < totalTuples; off += k_Chunk)
     {
-      const usize count = std::min(kChunk, totalTuples - off);
+      const usize count = std::min(k_Chunk, totalTuples - off);
       auto fidsAfterStoreReadResult = fidsAfterStore.copyIntoBuffer(off, nonstd::span<int32>(buf.get(), count));
       SIMPLNX_RESULT_REQUIRE_VALID(fidsAfterStoreReadResult);
       for(usize i = 0; i < count; i++)
@@ -861,14 +861,14 @@ TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Ignored Arrays", "[Core][FillBa
   }
 
   // Verify: IgnoredArray is completely unchanged (sentinel at every voxel) — bulk read
-  const auto& ignoredAfter = dataStructure.getDataRefAs<Int32Array>(DataPath({"DataContainer", "CellData", "IgnoredArray"}));
+  const auto& ignoredAfter = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"DataContainer", "CellData", "IgnoredArray"}));
   {
     const auto& ignoredAfterStore = ignoredAfter.getDataStoreRef();
-    constexpr usize kChunk = 40000;
-    auto buf = std::make_unique<int32[]>(kChunk);
-    for(usize off = 0; off < totalTuples; off += kChunk)
+    constexpr usize k_Chunk = 40000;
+    auto buf = std::make_unique<int32[]>(k_Chunk);
+    for(usize off = 0; off < totalTuples; off += k_Chunk)
     {
-      const usize count = std::min(kChunk, totalTuples - off);
+      const usize count = std::min(k_Chunk, totalTuples - off);
       auto ignoredAfterStoreReadResult = ignoredAfterStore.copyIntoBuffer(off, nonstd::span<int32>(buf.get(), count));
       SIMPLNX_RESULT_REQUIRE_VALID(ignoredAfterStoreReadResult);
       for(usize i = 0; i < count; i++)
@@ -882,12 +882,12 @@ TEST_CASE("SimplnxCore::FillBadData: 200x200x200 Ignored Arrays", "[Core][FillBa
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::FillBadDataFilter: Strict Feature Ids", "[SimplnxCore][FillBadDataFilter][StrictFeatureIds]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   const DataPath geometryPath({"Strict Geometry"});
   const DataPath cellPath = geometryPath.createChildPath("Cell Data");
@@ -903,8 +903,8 @@ TEST_CASE("SimplnxCore::FillBadDataFilter: Strict Feature Ids", "[SimplnxCore][F
   REQUIRE(AttributeMatrix::Create(dataStructure, "Feature Data", ShapeType{3}, imageGeomPtr->getId()) != nullptr);
   auto* otherPtr = AttributeMatrix::Create(dataStructure, "Other Data", shape, imageGeomPtr->getId());
   REQUIRE(otherPtr != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "Feature Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), cellsPtr->getId()) != nullptr);
-  REQUIRE(Int32Array::Create(dataStructure, "Other Values", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), otherPtr->getId()) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, "Feature Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), cellsPtr->getId()) != nullptr);
+  REQUIRE(Int32ArrayType::Create(dataStructure, "Other Values", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), otherPtr->getId()) != nullptr);
 
   FillBadDataFilter filter;
   auto args = filter.getDefaultArguments();
@@ -940,33 +940,33 @@ TEST_CASE("SimplnxCore::FillBadDataFilter: Strict Feature Ids", "[SimplnxCore][F
   SECTION("Modified Cell Phases in the Cell Attribute Matrix")
   {
     const auto phasesPath = cellPath.createChildPath("Phases");
-    REQUIRE(Int32Array::Create(dataStructure, "Phases", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), cellsPtr->getId()) != nullptr);
+    REQUIRE(Int32ArrayType::Create(dataStructure, "Phases", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 1), cellsPtr->getId()) != nullptr);
     args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(true));
     args.insertOrAssign(FillBadDataFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(phasesPath));
   }
   const auto result = filter.preflight(dataStructure, args);
   if(expectedCode == 0)
   {
-    REQUIRE(result.outputActions.valid());
+    REQUIRE(result.output_actions.valid());
   }
   else
   {
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().size() == 1);
-    CHECK(result.outputActions.errors().front().code == expectedCode);
-    CHECK(result.outputActions.errors().front().message.find(otherPath.toString()) != std::string::npos);
-    CHECK(result.outputActions.errors().front().message.find(cellPath.toString()) != std::string::npos);
-    CHECK(result.outputActions.errors().front().message.find(geometryPath.toString()) != std::string::npos);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().size() == 1);
+    CHECK(result.output_actions.errors().front().code == expectedCode);
+    CHECK(result.output_actions.errors().front().message.find(otherPath.toString()) != std::string::npos);
+    CHECK(result.output_actions.errors().front().message.find(cellPath.toString()) != std::string::npos);
+    CHECK(result.output_actions.errors().front().message.find(geometryPath.toString()) != std::string::npos);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::FillBadDataFilter: Ignored Array Cell AM Alias", "[SimplnxCore][FillBadDataFilter][StrictFeatureIds]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   const DataPath geometryPath({"Alias Test Geometry"});
   const DataPath cellPath = geometryPath.createChildPath("Cells");
@@ -983,8 +983,8 @@ TEST_CASE("SimplnxCore::FillBadDataFilter: Ignored Array Cell AM Alias", "[Simpl
   REQUIRE(alternateParentPtr != nullptr);
   REQUIRE(dataStructure.setAdditionalParent(cellsPtr->getId(), alternateParentPtr->getId()));
   REQUIRE(imageGeomPtr->getCellDataPath() == cellPath);
-  auto* idsPtr = Int32Array::Create(dataStructure, "Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), cellsPtr->getId());
-  auto* ignoredPtr = Int32Array::Create(dataStructure, "Ignored", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), cellsPtr->getId());
+  auto* idsPtr = Int32ArrayType::Create(dataStructure, "Ids", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), cellsPtr->getId());
+  auto* ignoredPtr = Int32ArrayType::Create(dataStructure, "Ignored", std::make_shared<DataStore<int32>>(shape, ShapeType{1}, 0), cellsPtr->getId());
   REQUIRE(idsPtr != nullptr);
   REQUIRE(ignoredPtr != nullptr);
   const std::vector<int32> originalIds{1, 0, 0, 1};
@@ -1001,10 +1001,10 @@ TEST_CASE("SimplnxCore::FillBadDataFilter: Ignored Array Cell AM Alias", "[Simpl
   args.insertOrAssign(FillBadDataFilter::k_StoreAsNewPhase_Key, std::make_any<bool>(false));
   args.insertOrAssign(FillBadDataFilter::k_MinAllowedDefectSize_Key, std::make_any<int32>(10));
   const auto preflight = filter.preflight(dataStructure, args);
-  REQUIRE(preflight.outputActions.valid());
-  for(const auto& modification : preflight.outputActions.value().modifiedActions)
+  REQUIRE(preflight.output_actions.valid());
+  for(const auto& modification : preflight.output_actions.value().modified_actions)
   {
-    CHECK(modification.modifiedPath != ignoredPath);
+    CHECK(modification.modified_path != ignoredPath);
   }
   const auto execute = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execute.result);
@@ -1015,20 +1015,20 @@ TEST_CASE("SimplnxCore::FillBadDataFilter: Ignored Array Cell AM Alias", "[Simpl
     idsChanged = idsChanged || (*idsPtr)[index] != originalIds[index];
   }
   CHECK(idsChanged);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::FillBadData: Generate Test Data", "[Core][FillBadDataFilter][.GenerateTestData]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const auto outputDir = fs::path(fmt::format("{}/generated_test_data/fill_bad_data", unit_test::k_BinaryTestOutputDir));
   fs::create_directories(outputDir);
 
   // 200^3 input data with large defect (full z=k_Dim/2 plane)
   {
-    DataStructure ds;
-    BuildFillBadDataTestData(ds, k_Dim, k_Dim, k_Dim, k_BlockSize, true);
-    UnitTest::WriteTestDataStructure(ds, outputDir / "input.dream3d");
+    DataStructure dataStructure;
+    BuildFillBadDataTestData(dataStructure, k_Dim, k_Dim, k_Dim, k_BlockSize, true);
+    unit_test::WriteTestDataStructure(dataStructure, outputDir / "input.dream3d");
   }
 }

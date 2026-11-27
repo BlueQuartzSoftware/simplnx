@@ -49,15 +49,15 @@ Supporting Paper: https://www.researchgate.net/publication/308703724_Flying_edge
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
 #include "simplnx/simplnx_export.hpp"
 
+#include <algorithm>
 #include <nonstd/span.hpp>
 
-#include <algorithm>
 #include <array>
 #include <vector>
 
 namespace util
 {
-const nx::core::uint8 numTris[256] =
+const nx::core::uint8 k_NumTris[256] =
     {
         0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 2,
         1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 3,
@@ -77,7 +77,7 @@ const nx::core::uint8 numTris[256] =
         2, 3, 3, 2, 3, 4, 2, 1, 3, 2, 4, 1, 2, 1, 1, 0
 };
 
-const nx::core::uint8 isCut[256][12] =
+const nx::core::uint8 k_IsCut[256][12] =
 {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
     {1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0},
@@ -337,7 +337,7 @@ const nx::core::uint8 isCut[256][12] =
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
 
-const char caseTriangles[256][16]
+const char k_CaseTriangles[256][16]
     {
         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
         {0,  3,  8,  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
@@ -597,7 +597,7 @@ const char caseTriangles[256][16]
         {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}
     };
 
-const nx::core::uint8 edgeVertices[12][2] = { {0,1}, {1,2}, {3,2},
+const nx::core::uint8 k_EdgeVertices[12][2] = { {0,1}, {1,2}, {3,2},
                                    {0,3}, {4,5}, {5,6},
                                    {7,6}, {4,7}, {0,4},
                                    {1,5}, {3,7}, {2,6} };
@@ -618,8 +618,8 @@ namespace nx::core
 template <typename T>
 class FlyingEdgesAlgorithm
 {
-  using cube = std::array<std::array<float32, 3>, 8>;
-  using TCube = std::array<T, 8>;
+  using CubeType = std::array<std::array<float32, 3>, 8>;
+  using TCubeType = std::array<T, 8>;
 
 public:
   /**
@@ -632,7 +632,7 @@ public:
    *
    * All inputs and outputs remain caller-owned.
    */
-  FlyingEdgesAlgorithm(const ImageGeom& image, const AbstractDataStore<T>& dataStore, const T isoVal, TriangleGeom& triangleGeom, Float32AbstractDataStore& normals)
+  FlyingEdgesAlgorithm(const ImageGeom& image, const AbstractDataStore<T>& dataStore, const T isoVal, TriangleGeom& triangleGeom, Float32AbstractDataStoreType& normals)
   : m_Image(image)
   , m_DataStore(dataStore)
   , m_IsoVal(isoVal)
@@ -678,7 +678,7 @@ public:
       for(usize j = 0; j != m_NY; ++j)
       {
         GridEdge& curGridEdge = m_GridEdges[k * m_NY + j];
-        curGridEdge.xl = m_NX;
+        curGridEdge.x_left = m_NX;
         const usize rowOffset = j * m_NX;
         const usize nextRowOffset = (j + 1) * m_NX;
         for(usize i = 0; i + 1 < m_NX; ++i)
@@ -689,11 +689,11 @@ public:
           const bool zEdgeCut = k + 1 < m_NZ && originSign != (nextKSlice[rowOffset + i] >= m_IsoVal);
           if(xEdgeCut || yEdgeCut || zEdgeCut)
           {
-            if(curGridEdge.xl == m_NX)
+            if(curGridEdge.x_left == m_NX)
             {
-              curGridEdge.xl = i;
+              curGridEdge.x_left = i;
             }
-            curGridEdge.xr = i + 1;
+            curGridEdge.x_right = i + 1;
           }
         }
       }
@@ -719,7 +719,8 @@ public:
       }
       for(usize j = 0; j != m_NY - 1; ++j)
       {
-        usize xl, xr;
+        usize xl = 0;
+        usize xr = 0;
         calcTrimValues(xl, xr, j, k);
 
         // ge0 belongs to this cube row. Neighbor rows own ge1 through ge3.
@@ -744,43 +745,43 @@ public:
             continue;
           }
 
-          curTriCounter += util::numTris[caseId];
+          curTriCounter += util::k_NumTris[caseId];
 
-          const uint8* isCut = util::isCut[caseId]; // size 12
+          const uint8* isCutPtr = util::k_IsCut[caseId]; // size 12
 
-          ge0.xstart += isCut[0];
-          ge0.ystart += isCut[3];
-          ge0.zstart += isCut[8];
+          ge0.x_start += isCutPtr[0];
+          ge0.y_start += isCutPtr[3];
+          ge0.z_start += isCutPtr[8];
 
           // Only boundary cubes update edges owned by adjacent rows. Other updates
           // would race with the row that owns each GridEdge.
           if(isXEnd)
           {
-            ge0.ystart += isCut[1];
-            ge0.zstart += isCut[9];
+            ge0.y_start += isCutPtr[1];
+            ge0.z_start += isCutPtr[9];
           }
           if(isYEnd)
           {
-            ge1.xstart += isCut[2];
-            ge1.zstart += isCut[10];
+            ge1.x_start += isCutPtr[2];
+            ge1.z_start += isCutPtr[10];
           }
           if(isZEnd)
           {
-            ge2.xstart += isCut[4];
-            ge2.ystart += isCut[7];
+            ge2.x_start += isCutPtr[4];
+            ge2.y_start += isCutPtr[7];
           }
 
           if(isXEnd and isYEnd)
           {
-            ge1.zstart += isCut[11];
+            ge1.z_start += isCutPtr[11];
           }
           if(isXEnd and isZEnd)
           {
-            ge2.ystart += isCut[5];
+            ge2.y_start += isCutPtr[5];
           }
           if(isYEnd and isZEnd)
           {
-            ge3.xstart += isCut[6];
+            ge3.x_start += isCutPtr[6];
           }
         }
       }
@@ -794,7 +795,7 @@ public:
   [[nodiscard]] Result<> pass3()
   {
     // Convert row triangle counts to deterministic starting offsets.
-    usize tmp;
+    usize tmp = 0;
     usize triAccum = 0;
     for(usize k = 0; k != m_NZ - 1; ++k)
     {
@@ -816,16 +817,16 @@ public:
       {
         GridEdge& curGridEdge = m_GridEdges[k * m_NY + j];
 
-        tmp = curGridEdge.xstart;
-        curGridEdge.xstart = pointAccum;
+        tmp = curGridEdge.x_start;
+        curGridEdge.x_start = pointAccum;
         pointAccum += tmp;
 
-        tmp = curGridEdge.ystart;
-        curGridEdge.ystart = pointAccum;
+        tmp = curGridEdge.y_start;
+        curGridEdge.y_start = pointAccum;
         pointAccum += tmp;
 
-        tmp = curGridEdge.zstart;
-        curGridEdge.zstart = pointAccum;
+        tmp = curGridEdge.z_start;
+        curGridEdge.z_start = pointAccum;
         pointAccum += tmp;
       }
     }
@@ -899,11 +900,14 @@ public:
       }
       for(usize j = 0; j != m_NY - 1; ++j)
       {
-        usize xl, xr;
+        usize xl = 0;
+        usize xr = 0;
         calcTrimValues(xl, xr, j, k);
 
         if(xl == xr)
+        {
           continue;
+        }
 
         usize triIdx = m_TriCounter[k * (m_NY - 1) + j];
         GridEdge const& ge0 = m_GridEdges[k * m_NY + j];
@@ -937,11 +941,11 @@ public:
             continue;
           }
 
-          const uint8* isCut = util::isCut[caseId]; // has 12 elements
+          const uint8* isCutPtr = util::k_IsCut[caseId]; // has 12 elements
 
-          cube pointCube = getPosCube(i, j, k);
-          TCube isoValCube = getValCube(i, j, k);
-          cube gradCube = getGradCube(i, j, k);
+          CubeType pointCube = getPosCube(i, j, k);
+          TCubeType isoValCube = getValCube(i, j, k);
+          CubeType gradCube = getGradCube(i, j, k);
           if(m_ReadResult.invalid())
           {
             return std::move(m_ReadResult);
@@ -950,138 +954,138 @@ public:
           // Interpolate cut edges and record their global vertex indexes.
           std::array<usize, 12> globalIdxs = {};
 
-          if(isCut[0])
+          if(isCutPtr[0] != 0u)
           {
-            usize idx = ge0.xstart + x0counter;
-            InterpolateIntoArrays(pointCube, gradCube, isoValCube, 0, idx * 3);
+            usize idx = ge0.x_start + x0counter;
+            interpolateIntoArrays(pointCube, gradCube, isoValCube, 0, idx * 3);
             globalIdxs[0] = idx;
             ++x0counter;
           }
 
-          if(isCut[3])
+          if(isCutPtr[3] != 0u)
           {
-            usize idx = ge0.ystart + y0counter;
-            InterpolateIntoArrays(pointCube, gradCube, isoValCube, 3, idx * 3);
+            usize idx = ge0.y_start + y0counter;
+            interpolateIntoArrays(pointCube, gradCube, isoValCube, 3, idx * 3);
             globalIdxs[3] = idx;
             ++y0counter;
           }
 
-          if(isCut[8])
+          if(isCutPtr[8] != 0u)
           {
-            usize idx = ge0.zstart + z0counter;
-            InterpolateIntoArrays(pointCube, gradCube, isoValCube, 8, idx * 3);
+            usize idx = ge0.z_start + z0counter;
+            interpolateIntoArrays(pointCube, gradCube, isoValCube, 8, idx * 3);
             globalIdxs[8] = idx;
             ++z0counter;
           }
 
           // Edges 1, 5, 9, and 11 reuse counters under their owner-edge numbers.
           // Boundary versions have no later owner and need no counter increment.
-          if(isCut[1])
+          if(isCutPtr[1] != 0u)
           {
-            usize idx = ge0.ystart + y0counter;
+            usize idx = ge0.y_start + y0counter;
             if(isXEnd)
             {
-              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 1, idx * 3);
+              interpolateIntoArrays(pointCube, gradCube, isoValCube, 1, idx * 3);
               // This boundary edge has no later owner.
             }
             globalIdxs[1] = idx;
           }
 
-          if(isCut[9])
+          if(isCutPtr[9] != 0u)
           {
-            usize idx = ge0.zstart + z0counter;
+            usize idx = ge0.z_start + z0counter;
             if(isXEnd)
             {
-              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 9, idx * 3);
+              interpolateIntoArrays(pointCube, gradCube, isoValCube, 9, idx * 3);
               // This boundary edge has no later owner.
             }
             globalIdxs[9] = idx;
           }
 
-          if(isCut[2])
+          if(isCutPtr[2] != 0u)
           {
-            usize idx = ge1.xstart + x1counter;
+            usize idx = ge1.x_start + x1counter;
             if(isYEnd)
             {
-              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 2, idx * 3);
+              interpolateIntoArrays(pointCube, gradCube, isoValCube, 2, idx * 3);
             }
             globalIdxs[2] = idx;
             ++x1counter;
           }
 
-          if(isCut[10])
+          if(isCutPtr[10] != 0u)
           {
-            usize idx = ge1.zstart + z1counter;
+            usize idx = ge1.z_start + z1counter;
             if(isYEnd)
             {
-              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 10, idx * 3);
+              interpolateIntoArrays(pointCube, gradCube, isoValCube, 10, idx * 3);
             }
             globalIdxs[10] = idx;
             ++z1counter;
           }
 
-          if(isCut[4])
+          if(isCutPtr[4] != 0u)
           {
-            usize idx = ge2.xstart + x2counter;
+            usize idx = ge2.x_start + x2counter;
             if(isZEnd)
             {
-              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 4, idx * 3);
+              interpolateIntoArrays(pointCube, gradCube, isoValCube, 4, idx * 3);
             }
             globalIdxs[4] = idx;
             ++x2counter;
           }
 
-          if(isCut[7])
+          if(isCutPtr[7] != 0u)
           {
-            usize idx = ge2.ystart + y2counter;
+            usize idx = ge2.y_start + y2counter;
             if(isZEnd)
             {
-              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 7, idx * 3);
+              interpolateIntoArrays(pointCube, gradCube, isoValCube, 7, idx * 3);
             }
             globalIdxs[7] = idx;
             ++y2counter;
           }
 
-          if(isCut[11])
+          if(isCutPtr[11] != 0u)
           {
-            usize idx = ge1.zstart + z1counter;
+            usize idx = ge1.z_start + z1counter;
             if(isXEnd and isYEnd)
             {
-              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 11, idx * 3);
+              interpolateIntoArrays(pointCube, gradCube, isoValCube, 11, idx * 3);
               // This boundary edge has no later owner.
             }
             globalIdxs[11] = idx;
           }
 
-          if(isCut[5])
+          if(isCutPtr[5] != 0u)
           {
-            usize idx = ge2.ystart + y2counter;
+            usize idx = ge2.y_start + y2counter;
             if(isXEnd and isZEnd)
             {
-              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 5, idx * 3);
+              interpolateIntoArrays(pointCube, gradCube, isoValCube, 5, idx * 3);
               // This boundary edge has no later owner.
             }
             globalIdxs[5] = idx;
           }
 
-          if(isCut[6])
+          if(isCutPtr[6] != 0u)
           {
-            usize idx = ge3.xstart + x3counter;
+            usize idx = ge3.x_start + x3counter;
             if(isYEnd and isZEnd)
             {
-              InterpolateIntoArrays(pointCube, gradCube, isoValCube, 6, idx * 3);
+              interpolateIntoArrays(pointCube, gradCube, isoValCube, 6, idx * 3);
             }
             globalIdxs[6] = idx;
             ++x3counter;
           }
 
           // Write triangle connectivity from the case-table edge indexes.
-          const char* caseTri = util::caseTriangles[caseId]; // size 16
-          for(int idx = 0; caseTri[idx] != -1; idx += 3)
+          const char* caseTriPtr = util::k_CaseTriangles[caseId]; // size 16
+          for(int idx = 0; caseTriPtr[idx] != -1; idx += 3)
           {
-            m_TrisStore[triIdx * 3] = globalIdxs[caseTri[idx]];
-            m_TrisStore[triIdx * 3 + 1] = globalIdxs[caseTri[idx + 1]];
-            m_TrisStore[triIdx * 3 + 2] = globalIdxs[caseTri[idx + 2]];
+            m_TrisStore[triIdx * 3] = globalIdxs[caseTriPtr[idx]];
+            m_TrisStore[triIdx * 3 + 1] = globalIdxs[caseTriPtr[idx + 1]];
+            m_TrisStore[triIdx * 3 + 2] = globalIdxs[caseTriPtr[idx + 2]];
             triIdx++;
           }
         }
@@ -1098,22 +1102,22 @@ private:
   struct GridEdge
   {
     GridEdge()
-    : xl(0)
-    , xr(0)
-    , xstart(0)
-    , ystart(0)
-    , zstart(0)
+    : x_left(0)
+    , x_right(0)
+    , x_start(0)
+    , y_start(0)
+    , z_start(0)
     {
     }
 
     // Pass 1 sets row trim bounds.
-    usize xl;
-    usize xr;
+    usize x_left;
+    usize x_right;
 
     // Pass 2 counts cuts. Pass 3 converts counts to offsets.
-    usize xstart;
-    usize ystart;
-    usize zstart;
+    usize x_start;
+    usize y_start;
+    usize z_start;
   };
 
   const ImageGeom& m_Image;
@@ -1128,16 +1132,16 @@ private:
   std::vector<GridEdge> m_GridEdges;
   std::vector<usize> m_TriCounter;
 
-  AbstractDataStore<IGeometry::SharedVertexList::value_type>& m_PointsStore;
-  AbstractDataStore<IGeometry::SharedTriList::value_type>& m_TrisStore;
-  Float32AbstractDataStore& m_NormalsStore;
+  AbstractDataStore<IGeometry::SharedVertexListType::value_type>& m_PointsStore;
+  AbstractDataStore<IGeometry::SharedTriListType::value_type>& m_TrisStore;
+  Float32AbstractDataStoreType& m_NormalsStore;
 
   // Passes 1 and 2 need current and next Z slices. Pass 4 gradients can need
   // k-1 through k+2. Four modulo-addressed slots cover both access patterns.
   // Advancing one cube row loads at most one new slice.
   static constexpr usize k_MaxResidentSlices = 4;
   mutable std::array<std::vector<T>, k_MaxResidentSlices> m_SliceBuffers;
-  mutable std::array<int64, k_MaxResidentSlices> m_SliceBufferZ;
+  mutable std::array<int64, k_MaxResidentSlices> m_SliceBufferZ{};
   mutable Result<> m_ReadResult;
 
   /**
@@ -1148,7 +1152,7 @@ private:
    * @param edgeNum Specifies the marching-cubes edge.
    * @param idx Specifies the flat output component offset.
    */
-  void InterpolateIntoArrays(cube& pointCube, cube& gradCube, TCube& isoValCube, uint8 edgeNum, usize idx)
+  void interpolateIntoArrays(CubeType& pointCube, CubeType& gradCube, TCubeType& isoValCube, uint8 edgeNum, usize idx)
   {
     auto pointsArray = interpolateOnCube(pointCube, isoValCube, edgeNum);
 
@@ -1171,27 +1175,43 @@ private:
    * @param j Specifies cube Y index.
    * @return Eight-bit corner classification.
    */
-  [[nodiscard]] inline uint8 calcCubeCase(nonstd::span<const T> lowerSlice, nonstd::span<const T> upperSlice, usize i, usize j) const
+  [[nodiscard]] uint8 calcCubeCase(nonstd::span<const T> lowerSlice, nonstd::span<const T> upperSlice, usize i, usize j) const
   {
     const usize lowerRow = j * m_NX;
     const usize upperRow = (j + 1) * m_NX;
     uint8 caseId = 0;
     if(lowerSlice[lowerRow + i] >= m_IsoVal)
+    {
       caseId |= 1;
+    }
     if(lowerSlice[lowerRow + i + 1] >= m_IsoVal)
+    {
       caseId |= 2;
+    }
     if(lowerSlice[upperRow + i + 1] >= m_IsoVal)
+    {
       caseId |= 4;
+    }
     if(lowerSlice[upperRow + i] >= m_IsoVal)
+    {
       caseId |= 8;
+    }
     if(upperSlice[lowerRow + i] >= m_IsoVal)
+    {
       caseId |= 16;
+    }
     if(upperSlice[lowerRow + i + 1] >= m_IsoVal)
+    {
       caseId |= 32;
+    }
     if(upperSlice[upperRow + i + 1] >= m_IsoVal)
+    {
       caseId |= 64;
+    }
     if(upperSlice[upperRow + i] >= m_IsoVal)
+    {
       caseId |= 128;
+    }
     return caseId;
   }
 
@@ -1202,18 +1222,17 @@ private:
    * @param j Specifies cube-row Y index.
    * @param k Specifies cube-row Z index.
    */
-  inline void calcTrimValues(usize& xl, usize& xr, usize const& j, usize const& k) const
+  void calcTrimValues(usize& xl, usize& xr, usize const& j, usize const& k) const
   {
     GridEdge const& ge0 = m_GridEdges[k * m_NY + j];
     GridEdge const& ge1 = m_GridEdges[k * m_NY + j + 1];
     GridEdge const& ge2 = m_GridEdges[(k + 1) * m_NY + j];
     GridEdge const& ge3 = m_GridEdges[(k + 1) * m_NY + j + 1];
 
-    xl = usize(std::min({ge0.xl, ge1.xl, ge2.xl, ge3.xl}));
-    xr = usize(std::max({ge0.xr, ge1.xr, ge2.xr, ge3.xr}));
+    xl = usize(std::min({ge0.x_left, ge1.x_left, ge2.x_left, ge3.x_left}));
+    xr = usize(std::max({ge0.x_right, ge1.x_right, ge2.x_right, ge3.x_right}));
 
-    if(xl > xr)
-      xl = xr;
+    xl = std::min(xl, xr);
   }
 
   /**
@@ -1223,10 +1242,10 @@ private:
    * @param edge Specifies the marching-cubes edge.
    * @return Interpolated vector at the isovalue crossing.
    */
-  inline std::array<float32, 3> interpolateOnCube(cube const& pts, TCube const& isoVals, uint8 const& edge) const
+  std::array<float32, 3> interpolateOnCube(CubeType const& pts, TCubeType const& isoVals, uint8 const& edge) const
   {
-    uint8 i0 = util::edgeVertices[edge][0];
-    uint8 i1 = util::edgeVertices[edge][1];
+    uint8 i0 = util::k_EdgeVertices[edge][0];
+    uint8 i1 = util::k_EdgeVertices[edge][1];
 
     T weight = (m_IsoVal - isoVals[i0]) / (isoVals[i1] - isoVals[i0]);
     return interpolate(pts[i0], pts[i1], weight);
@@ -1239,7 +1258,7 @@ private:
    * @param weight Specifies interpolation weight.
    * @return Interpolated vector.
    */
-  inline std::array<float32, 3> interpolate(std::array<float32, 3> const& a, std::array<float32, 3> const& b, T const& weight) const
+  std::array<float32, 3> interpolate(std::array<float32, 3> const& a, std::array<float32, 3> const& b, T const& weight) const
   {
     std::array<float32, 3> ret = {};
     ret[0] = a[0] + (weight * (b[0] - a[0]));
@@ -1255,9 +1274,9 @@ private:
    * @param k Specifies cube Z index.
    * @return Eight scalar corner values.
    */
-  TCube getValCube(usize i, usize j, usize k) const
+  TCubeType getValCube(usize i, usize j, usize k) const
   {
-    TCube vals;
+    TCubeType vals;
 
     vals[0] = getData(i, j, k);
     vals[1] = getData(i + 1, j, k);
@@ -1278,11 +1297,11 @@ private:
    * @param k Specifies cube Z index.
    * @return Eight corner coordinates.
    */
-  [[nodiscard]] cube getPosCube(usize i, usize j, usize k) const
+  [[nodiscard]] CubeType getPosCube(usize i, usize j, usize k) const
   {
-    cube pos;
-    const FloatVec3 zeroPos = m_Image.getOrigin();
-    const FloatVec3 spacing = m_Image.getSpacing();
+    CubeType pos;
+    const FloatVec3Type zeroPos = m_Image.getOrigin();
+    const FloatVec3Type spacing = m_Image.getSpacing();
 
     float32 xPos = zeroPos[0] + i * spacing[0];
     float32 yPos = zeroPos[1] + j * spacing[1];
@@ -1330,9 +1349,9 @@ private:
    * @param k Specifies cube Z index.
    * @return Eight corner gradients.
    */
-  [[nodiscard]] cube getGradCube(usize i, usize j, usize k) const
+  [[nodiscard]] CubeType getGradCube(usize i, usize j, usize k) const
   {
-    cube grad;
+    CubeType grad;
 
     grad[0] = computeGradient(i, j, k);
     grad[1] = computeGradient(i + 1, j, k);
@@ -1380,7 +1399,7 @@ private:
    * @param k Specifies Z index.
    * @return Scalar value.
    */
-  inline T getData(usize i, usize j, usize k) const
+  T getData(usize i, usize j, usize k) const
   {
     return sliceData(k)[j * m_NX + i];
   }
@@ -1398,7 +1417,7 @@ private:
   {
     std::array<std::array<float32, 2>, 3> x = {};
     std::array<float32, 3> run = {};
-    FloatVec3 spacing = m_Image.getSpacing();
+    FloatVec3Type spacing = m_Image.getSpacing();
 
     // planeIdx addresses the X-Y location in each fetched Z slice.
     const usize planeIdx = j * m_NX + i;

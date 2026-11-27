@@ -42,7 +42,7 @@
  * @namespace nx::core::HDF5
  * @brief Provides process-locked HDF5 object wrappers.
  */
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 class FileIO;
 class GroupIO;
@@ -149,7 +149,7 @@ public:
    * @brief Returns the parent object name.
    * @return Name, or empty string for an invalid object.
    */
-  std::string getParentName() const;
+  static std::string GetParentName();
 
   /**
    * @brief Returns object attribute count.
@@ -174,7 +174,7 @@ public:
    * @brief Deletes one attribute.
    * @param name Specifies the attribute.
    */
-  void deleteAttribute(const std::string& name);
+  void deleteAttribute(const std::string& name) const;
 
   /**
    * @brief Tests whether one attribute exists.
@@ -218,7 +218,7 @@ public:
     if(vector.size() != 1)
     {
       std::string ss = fmt::format("Attribute values of unexpected size. One value expected. {} values read", std::to_string(vector.size()));
-      std::cout << ss << std::endl;
+      std::cout << ss << '\n';
       return MakeErrorResult<T>(-972, ss);
     }
 
@@ -256,7 +256,7 @@ public:
 
     // getNumElementsInAttribute() self-locks, so it runs between the leaf locks (holding the open
     // attribId across it needs no lock — only the H5 calls do).
-    std::vector<T> values(getNumElementsInAttribute(attribId));
+    std::vector<T> values(GetNumElementsInAttribute(attribId));
 
     herr_t error = 0;
     bool compatibleType = false;
@@ -481,7 +481,7 @@ protected:
    * @throws std::runtime_error If T is unsupported.
    */
   template <typename T>
-  static inline hid_t HdfTypeForPrimitive()
+  static hid_t HdfTypeForPrimitive()
   {
     if constexpr(std::is_same_v<T, float>)
     {
@@ -554,13 +554,13 @@ protected:
    * @param filepath Specifies the HDF5 file.
    * @param objectPath Specifies the object path.
    */
-  ObjectIO(const std::filesystem::path& filepath, const std::string& objectPath);
+  ObjectIO(std::filesystem::path filepath, std::string objectPath);
   /**
    * @brief Creates a wrapper from a parent ID and child name.
    * @param parentId Specifies the parent HDF5 object.
    * @param objectName Specifies the child object name.
    */
-  ObjectIO(hid_t parentId, const std::string& objectName);
+  ObjectIO(hid_t parentId, std::string objectName);
 
   /**
    * @brief Sets the target HDF5 file path.
@@ -628,7 +628,7 @@ protected:
    * @param attribId Specifies the attribute ID.
    * @return Element count, or 0 after a query failure.
    */
-  usize getNumElementsInAttribute(hid_t attribId) const;
+  static usize GetNumElementsInAttribute(hid_t attribId);
 
 private:
   std::filesystem::path m_FilePath;
@@ -636,4 +636,4 @@ private:
   mutable hid_t m_Id = -1;
   hid_t m_ParentId = 0;
 };
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

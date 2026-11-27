@@ -43,7 +43,7 @@ public:
   using ValueType = ReadCSVData;
 
   ReadCSVFileParameter() = delete;
-  ReadCSVFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  ReadCSVFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~ReadCSVFileParameter() override = default;
 
   ReadCSVFileParameter(const ReadCSVFileParameter&) = delete;
@@ -62,13 +62,13 @@ public:
    * @brief Returns a list of accpeted input types.
    * @return AcceptedTypes
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief Creates a copy of the parameter.
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the user defined default value.
@@ -121,16 +121,16 @@ private:
   ValueType m_DefaultValue = {};
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT ReadASCIIWizardDataFilterParameterConverter
 {
   using ParameterType = ReadCSVFileParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::ReadCSVFileParameter, "4f6d6a33-48da-427a-8b17-61e07d1d5b45");

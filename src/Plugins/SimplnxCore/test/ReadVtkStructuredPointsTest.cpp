@@ -32,16 +32,16 @@ const std::string k_CompressedTestDirName = k_TestDirName + ".tar.gz";
 const fs::path k_InputDirPath = fs::path(unit_test::k_TestFilesDir.view()) / k_TestDirName;
 
 template <typename T>
-void validateReadVtkStructuredPointsFilter(const DataStructure& ds, const DataPath& cellDataArrayPath, T cellDataValue, const DataPath& pointDataArrayPath, T pointDataValue)
+static void ValidateReadVtkStructuredPointsFilter(const DataStructure& dataStructure, const DataPath& cellDataArrayPath, T cellDataValue, const DataPath& pointDataArrayPath, T pointDataValue)
 {
-  auto& cellDataArray = ds.getDataRefAs<DataArray<T>>(cellDataArrayPath);
+  auto& cellDataArray = dataStructure.getDataRefAs<DataArray<T>>(cellDataArrayPath);
   REQUIRE(std::all_of(cellDataArray.begin(), cellDataArray.end(), [&cellDataValue](const auto& value) { return value == cellDataValue; }));
 
-  auto& pointDataArray = ds.getDataRefAs<DataArray<T>>(pointDataArrayPath);
+  auto& pointDataArray = dataStructure.getDataRefAs<DataArray<T>>(pointDataArrayPath);
   REQUIRE(std::all_of(pointDataArray.begin(), pointDataArray.end(), [&pointDataValue](const auto& value) { return value == pointDataValue; }));
 }
 
-Arguments createArgs(const fs::path& filePath)
+static Arguments CreateArgs(const fs::path& filePath)
 {
   Arguments args;
 
@@ -61,14 +61,14 @@ Arguments createArgs(const fs::path& filePath)
   return args;
 }
 
-void test_invalid_case(const fs::path& filePath, int32 expectedErrCode)
+static void TestInvalidCase(const fs::path& filePath, int32 expectedErrCode)
 {
   // Configure the filter arguments.
   ReadVtkStructuredPointsFilter filter;
-  DataStructure ds;
-  Arguments args = createArgs(filePath);
+  DataStructure dataStructure;
+  Arguments args = CreateArgs(filePath);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().size() == 1);
   REQUIRE(executeResult.result.errors()[0].code == expectedErrCode);
@@ -106,8 +106,8 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton and Zero Dimens
     fs::remove(filePath, errorCode);
   });
   ReadVtkStructuredPointsFilter filter;
-  DataStructure ds;
-  Arguments args = createArgs(filePath);
+  DataStructure dataStructure;
+  Arguments args = CreateArgs(filePath);
 
   SECTION("Singleton axes retain one cell dimension")
   {
@@ -117,10 +117,10 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton and Zero Dimens
     // Hand calculation: adjacent points define n-1 cells along an active axis.
     // A singleton axis contributes a factor of one, including a single vertex cell.
     // Thus 10x10x1 points have 9x9x1 = 81 cells, and 4x1x1 points have 3 cells.
-    const std::array<SizeVec3, 8> pointDimensions = {SizeVec3{10, 10, 1}, SizeVec3{3, 1, 4}, SizeVec3{1, 3, 4}, SizeVec3{4, 1, 1},
-                                                     SizeVec3{1, 4, 1},   SizeVec3{1, 1, 4}, SizeVec3{1, 1, 1}, SizeVec3{3, 3, 3}};
-    const std::array<SizeVec3, 8> cellDimensions = {SizeVec3{9, 9, 1}, SizeVec3{2, 1, 3}, SizeVec3{1, 2, 3}, SizeVec3{3, 1, 1},
-                                                    SizeVec3{1, 3, 1}, SizeVec3{1, 1, 3}, SizeVec3{1, 1, 1}, SizeVec3{2, 2, 2}};
+    const std::array<SizeVec3Type, 8> pointDimensions = {SizeVec3Type{10, 10, 1}, SizeVec3Type{3, 1, 4}, SizeVec3Type{1, 3, 4}, SizeVec3Type{4, 1, 1},
+                                                         SizeVec3Type{1, 4, 1},   SizeVec3Type{1, 1, 4}, SizeVec3Type{1, 1, 1}, SizeVec3Type{3, 3, 3}};
+    const std::array<SizeVec3Type, 8> cellDimensions = {SizeVec3Type{9, 9, 1}, SizeVec3Type{2, 1, 3}, SizeVec3Type{1, 2, 3}, SizeVec3Type{3, 1, 1},
+                                                        SizeVec3Type{1, 3, 1}, SizeVec3Type{1, 1, 3}, SizeVec3Type{1, 1, 1}, SizeVec3Type{2, 2, 2}};
     const auto& pointDims = pointDimensions[grid];
     const auto& cellDims = cellDimensions[grid];
     std::vector<int32> pointValues(pointDims[0] * pointDims[1] * pointDims[2]);
@@ -146,16 +146,16 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton and Zero Dimens
       REQUIRE(output.good());
     }
 
-    const auto preflightResult = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    const auto executeResult = filter.execute(ds, args);
+    const auto preflightResult = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    const auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     for(const bool points : {false, true})
     {
       const DataPath geomPath({points ? "VTK Point Data" : "VTK Cell Data"});
-      const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+      const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
       REQUIRE(geom.getDimensions() == (points ? pointDims : cellDims));
-      const auto& values = ds.getDataRefAs<Int32Array>(geomPath.createChildPath(points ? "Vertex Data" : "Cell Data").createChildPath("Values"));
+      const auto& values = dataStructure.getDataRefAs<Int32ArrayType>(geomPath.createChildPath(points ? "Vertex Data" : "Cell Data").createChildPath("Values"));
       REQUIRE(values.getNumberOfTuples() == (points ? pointValues.size() : cellValues.size()));
       REQUIRE(values.getNumberOfComponents() == 1);
       for(usize index = 0; index < values.getNumberOfTuples(); index++)
@@ -163,14 +163,14 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton and Zero Dimens
         REQUIRE(values[index] == static_cast<int32>(index) + (points ? 1 : 100));
       }
     }
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Zero dimensions are rejected before creating geometry")
   {
     const usize axis = GENERATE(0, 1, 2);
     CAPTURE(axis);
-    SizeVec3 pointDims{1, 1, 1};
+    SizeVec3Type pointDims{1, 1, 1};
     pointDims[axis] = 0;
     // A structured-points dimension must be at least one. A zero axis is invalid,
     // even when CELL_DATA declares zero tuples; unsigned subtraction must not wrap.
@@ -184,18 +184,18 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton and Zero Dimens
     }
     args.insertOrAssign(ReadVtkStructuredPointsFilter::k_ReadPointData_Key, std::make_any<bool>(false));
     IFilter::PreflightResult preflightResult;
-    REQUIRE_NOTHROW(preflightResult = filter.preflight(ds, args));
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors()[0].code == -10354);
+    REQUIRE_NOTHROW(preflightResult = filter.preflight(dataStructure, args));
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors()[0].code == -10354);
     // The message names the axis as X, Y or Z, not as a zero-based index.
     const std::array<std::string, 3> axisNames = {"X axis", "Y axis", "Z axis"};
-    REQUIRE(preflightResult.outputActions.errors()[0].message.find(axisNames[axis]) != std::string::npos);
+    REQUIRE(preflightResult.output_actions.errors()[0].message.find(axisNames[axis]) != std::string::npos);
     IFilter::ExecuteResult executeResult;
-    REQUIRE_NOTHROW(executeResult = filter.execute(ds, args));
+    REQUIRE_NOTHROW(executeResult = filter.execute(dataStructure, args));
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors().size() == 1);
     REQUIRE(executeResult.result.errors()[0].code == -10354);
-    REQUIRE(ds.getData(DataPath({"VTK Cell Data"})) == nullptr);
+    REQUIRE(dataStructure.getData(DataPath({"VTK Cell Data"})) == nullptr);
   }
 }
 
@@ -209,10 +209,10 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton Axis Physical P
   // The Z plane therefore has origin Z = 8 and center Z = 10. The next three
   // cases are X, Y and Z lines; the last is a 3D control with unchanged origin.
   // Active axes have n-1 cells and retain their original origin and spacing.
-  const std::array<SizeVec3, 5> pointDimensions = {SizeVec3{3, 3, 1}, SizeVec3{3, 1, 1}, SizeVec3{1, 3, 1}, SizeVec3{1, 1, 3}, SizeVec3{3, 3, 3}};
-  const std::array<SizeVec3, 5> cellDimensions = {SizeVec3{2, 2, 1}, SizeVec3{2, 1, 1}, SizeVec3{1, 2, 1}, SizeVec3{1, 1, 2}, SizeVec3{2, 2, 2}};
-  const std::array<FloatVec3, 5> expectedOrigins = {FloatVec3{2, 6, 8}, FloatVec3{2, 3, 8}, FloatVec3{1, 6, 8}, FloatVec3{1, 3, 10}, FloatVec3{2, 6, 10}};
-  const std::array<FloatVec3, 5> expectedCenters = {FloatVec3{3, 9, 10}, FloatVec3{3, 6, 10}, FloatVec3{2, 9, 10}, FloatVec3{2, 6, 12}, FloatVec3{3, 9, 12}};
+  const std::array<SizeVec3Type, 5> pointDimensions = {SizeVec3Type{3, 3, 1}, SizeVec3Type{3, 1, 1}, SizeVec3Type{1, 3, 1}, SizeVec3Type{1, 1, 3}, SizeVec3Type{3, 3, 3}};
+  const std::array<SizeVec3Type, 5> cellDimensions = {SizeVec3Type{2, 2, 1}, SizeVec3Type{2, 1, 1}, SizeVec3Type{1, 2, 1}, SizeVec3Type{1, 1, 2}, SizeVec3Type{2, 2, 2}};
+  const std::array<FloatVec3Type, 5> expectedOrigins = {FloatVec3Type{2, 6, 8}, FloatVec3Type{2, 3, 8}, FloatVec3Type{1, 6, 8}, FloatVec3Type{1, 3, 10}, FloatVec3Type{2, 6, 10}};
+  const std::array<FloatVec3Type, 5> expectedCenters = {FloatVec3Type{3, 9, 10}, FloatVec3Type{3, 6, 10}, FloatVec3Type{2, 9, 10}, FloatVec3Type{2, 6, 12}, FloatVec3Type{3, 9, 12}};
   const auto& pointDims = pointDimensions[grid];
   const auto& cellDims = cellDimensions[grid];
   std::vector<int32> pointValues(pointDims[0] * pointDims[1] * pointDims[2]);
@@ -245,30 +245,30 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton Axis Physical P
   }
 
   ReadVtkStructuredPointsFilter filter;
-  Arguments args = createArgs(filePath);
+  Arguments args = CreateArgs(filePath);
   for(const bool preflight : {true, false})
   {
     CAPTURE(preflight);
-    DataStructure ds;
+    DataStructure dataStructure;
     if(preflight)
     {
-      auto preflightResult = filter.preflight(ds, args);
-      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-      const auto applyResult = preflightResult.outputActions.value().applyRegular(ds, IDataAction::Mode::Preflight);
+      auto preflightResult = filter.preflight(dataStructure, args);
+      SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+      const auto applyResult = preflightResult.output_actions.value().applyRegular(dataStructure, IDataAction::Mode::Preflight);
       SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
     }
     else
     {
-      const auto executeResult = filter.execute(ds, args);
+      const auto executeResult = filter.execute(dataStructure, args);
       SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     }
     for(const bool points : {false, true})
     {
       CAPTURE(points);
       const DataPath geomPath({points ? "VTK Point Data" : "VTK Cell Data"});
-      const auto& geom = ds.getDataRefAs<ImageGeom>(geomPath);
+      const auto& geom = dataStructure.getDataRefAs<ImageGeom>(geomPath);
       REQUIRE(geom.getDimensions() == (points ? pointDims : cellDims));
-      REQUIRE(geom.getSpacing() == FloatVec3{2, 6, 4});
+      REQUIRE(geom.getSpacing() == FloatVec3Type{2, 6, 4});
       const auto center = geom.getCoordsf(0, 0, 0);
       for(usize axis = 0; axis < 3; axis++)
       {
@@ -276,7 +276,7 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton Axis Physical P
         CHECK(geom.getOrigin()[axis] == expectedOrigins[grid][axis]);
         CHECK(center[axis] == expectedCenters[grid][axis]);
       }
-      const auto& values = ds.getDataRefAs<Int32Array>(geomPath.createChildPath(points ? "Vertex Data" : "Cell Data").createChildPath("Values"));
+      const auto& values = dataStructure.getDataRefAs<Int32ArrayType>(geomPath.createChildPath(points ? "Vertex Data" : "Cell Data").createChildPath("Values"));
       REQUIRE(values.getNumberOfTuples() == (points ? pointValues.size() : cellValues.size()));
       REQUIRE(values.getNumberOfComponents() == 1);
       if(!preflight)
@@ -288,13 +288,13 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton Axis Physical P
         }
       }
     }
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Section Selection", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const bool binary = GENERATE(false, true);
   const bool pointsFirst = GENERATE(false, true);
@@ -329,13 +329,13 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Section Selection", "[Sim
   }
 
   ReadVtkStructuredPointsFilter filter;
-  DataStructure ds;
-  Arguments args = createArgs(filePath);
+  DataStructure dataStructure;
+  Arguments args = CreateArgs(filePath);
   args.insertOrAssign(ReadVtkStructuredPointsFilter::k_ReadPointData_Key, std::make_any<bool>(readPoints));
   args.insertOrAssign(ReadVtkStructuredPointsFilter::k_ReadCellData_Key, std::make_any<bool>(readCells));
-  const auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   for(const bool pointSection : {false, true})
@@ -343,50 +343,50 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Section Selection", "[Sim
     const DataPath geomPath({pointSection ? "VTK Point Data" : "VTK Cell Data"});
     if(!(pointSection ? readPoints : readCells))
     {
-      REQUIRE(ds.getData(geomPath) == nullptr);
+      REQUIRE(dataStructure.getData(geomPath) == nullptr);
       continue;
     }
-    const auto* geom = ds.getDataAs<ImageGeom>(geomPath);
-    REQUIRE(geom != nullptr);
-    REQUIRE(geom->getDimensions() == (pointSection ? SizeVec3{2, 2, 2} : SizeVec3{1, 1, 1}));
+    const auto* geomPtr = dataStructure.getDataAs<ImageGeom>(geomPath);
+    REQUIRE(geomPtr != nullptr);
+    REQUIRE(geomPtr->getDimensions() == (pointSection ? SizeVec3Type{2, 2, 2} : SizeVec3Type{1, 1, 1}));
     const DataPath matrixPath = geomPath.createChildPath(pointSection ? "Vertex Data" : "Cell Data");
-    const auto* scalars = ds.getDataAs<Int16Array>(matrixPath.createChildPath("Scalars"));
-    const auto* vectors = ds.getDataAs<Int32Array>(matrixPath.createChildPath("Vectors"));
-    REQUIRE(scalars != nullptr);
-    REQUIRE(vectors != nullptr);
+    const auto* scalarsPtr = dataStructure.getDataAs<Int16ArrayType>(matrixPath.createChildPath("Scalars"));
+    const auto* vectorsPtr = dataStructure.getDataAs<Int32ArrayType>(matrixPath.createChildPath("Vectors"));
+    REQUIRE(scalarsPtr != nullptr);
+    REQUIRE(vectorsPtr != nullptr);
     const auto expectedScalars = pointSection ? nonstd::span<const int16>(pointScalars) : nonstd::span<const int16>(cellScalars);
     const auto expectedVectors = pointSection ? nonstd::span<const int32>(pointVectors) : nonstd::span<const int32>(cellVectors);
-    REQUIRE(scalars->getNumberOfTuples() == expectedScalars.size());
-    REQUIRE(scalars->getNumberOfComponents() == 1);
-    REQUIRE(vectors->getNumberOfTuples() == expectedScalars.size());
-    REQUIRE(vectors->getNumberOfComponents() == 3);
+    REQUIRE(scalarsPtr->getNumberOfTuples() == expectedScalars.size());
+    REQUIRE(scalarsPtr->getNumberOfComponents() == 1);
+    REQUIRE(vectorsPtr->getNumberOfTuples() == expectedScalars.size());
+    REQUIRE(vectorsPtr->getNumberOfComponents() == 3);
     for(usize index = 0; index < expectedScalars.size(); index++)
     {
-      REQUIRE((*scalars)[index] == expectedScalars[index]);
+      REQUIRE((*scalarsPtr)[index] == expectedScalars[index]);
     }
     for(usize index = 0; index < expectedVectors.size(); index++)
     {
-      REQUIRE((*vectors)[index] == expectedVectors[index]);
+      REQUIRE((*vectorsPtr)[index] == expectedVectors[index]);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
   // Configure the filter arguments.
   ReadVtkStructuredPointsFilter filter;
-  DataStructure ds;
-  Arguments args = createArgs(k_InputDirPath / "exemplary.vtk");
+  DataStructure dataStructure;
+  Arguments args = CreateArgs(k_InputDirPath / "exemplary.vtk");
 
-  auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const std::string cellDataContainerName = "VTK Cell Data";
@@ -396,115 +396,115 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter", "[SimplnxCore][ReadVtkSt
   DataPath cellAttrMatrixPath = DataPath({cellDataContainerName, cellAttrMatrixName});
   DataPath pointAttrMatrixPath = DataPath({pointDataContainerName, pointAttrMatrixName});
 
-  validateReadVtkStructuredPointsFilter<uint8>(ds, cellAttrMatrixPath.createChildPath("cell_u8_data"), 0, pointAttrMatrixPath.createChildPath("point_u8_data"), 3);
-  validateReadVtkStructuredPointsFilter<uint16>(ds, cellAttrMatrixPath.createChildPath("cell_u16_data"), 2, pointAttrMatrixPath.createChildPath("point_u16_data"), 0);
-  validateReadVtkStructuredPointsFilter<uint32>(ds, cellAttrMatrixPath.createChildPath("cell_u32_data"), 4, pointAttrMatrixPath.createChildPath("point_u32_data"), 1);
-  validateReadVtkStructuredPointsFilter<uint64>(ds, cellAttrMatrixPath.createChildPath("cell_u64_data"), 5, pointAttrMatrixPath.createChildPath("point_u64_data"), 2);
-  validateReadVtkStructuredPointsFilter<int8>(ds, cellAttrMatrixPath.createChildPath("cell_i8_data"), 6, pointAttrMatrixPath.createChildPath("point_i8_data"), 4);
-  validateReadVtkStructuredPointsFilter<int16>(ds, cellAttrMatrixPath.createChildPath("cell_i16_data"), 7, pointAttrMatrixPath.createChildPath("point_i16_data"), 5);
-  validateReadVtkStructuredPointsFilter<int32>(ds, cellAttrMatrixPath.createChildPath("cell_i32_data"), 8, pointAttrMatrixPath.createChildPath("point_i32_data"), 6);
-  validateReadVtkStructuredPointsFilter<int64>(ds, cellAttrMatrixPath.createChildPath("cell_i64_data"), 9, pointAttrMatrixPath.createChildPath("point_i64_data"), 7);
-  validateReadVtkStructuredPointsFilter<float32>(ds, cellAttrMatrixPath.createChildPath("cell_float_data"), 3, pointAttrMatrixPath.createChildPath("point_float_data"), 8);
-  validateReadVtkStructuredPointsFilter<float64>(ds, cellAttrMatrixPath.createChildPath("cell_double_data"), 1, pointAttrMatrixPath.createChildPath("point_double_data"), 9);
+  ValidateReadVtkStructuredPointsFilter<uint8>(dataStructure, cellAttrMatrixPath.createChildPath("cell_u8_data"), 0, pointAttrMatrixPath.createChildPath("point_u8_data"), 3);
+  ValidateReadVtkStructuredPointsFilter<uint16>(dataStructure, cellAttrMatrixPath.createChildPath("cell_u16_data"), 2, pointAttrMatrixPath.createChildPath("point_u16_data"), 0);
+  ValidateReadVtkStructuredPointsFilter<uint32>(dataStructure, cellAttrMatrixPath.createChildPath("cell_u32_data"), 4, pointAttrMatrixPath.createChildPath("point_u32_data"), 1);
+  ValidateReadVtkStructuredPointsFilter<uint64>(dataStructure, cellAttrMatrixPath.createChildPath("cell_u64_data"), 5, pointAttrMatrixPath.createChildPath("point_u64_data"), 2);
+  ValidateReadVtkStructuredPointsFilter<int8>(dataStructure, cellAttrMatrixPath.createChildPath("cell_i8_data"), 6, pointAttrMatrixPath.createChildPath("point_i8_data"), 4);
+  ValidateReadVtkStructuredPointsFilter<int16>(dataStructure, cellAttrMatrixPath.createChildPath("cell_i16_data"), 7, pointAttrMatrixPath.createChildPath("point_i16_data"), 5);
+  ValidateReadVtkStructuredPointsFilter<int32>(dataStructure, cellAttrMatrixPath.createChildPath("cell_i32_data"), 8, pointAttrMatrixPath.createChildPath("point_i32_data"), 6);
+  ValidateReadVtkStructuredPointsFilter<int64>(dataStructure, cellAttrMatrixPath.createChildPath("cell_i64_data"), 9, pointAttrMatrixPath.createChildPath("point_i64_data"), 7);
+  ValidateReadVtkStructuredPointsFilter<float32>(dataStructure, cellAttrMatrixPath.createChildPath("cell_float_data"), 3, pointAttrMatrixPath.createChildPath("point_float_data"), 8);
+  ValidateReadVtkStructuredPointsFilter<float64>(dataStructure, cellAttrMatrixPath.createChildPath("cell_double_data"), 1, pointAttrMatrixPath.createChildPath("point_double_data"), 9);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Dimensions Errors", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
-  test_invalid_case(k_InputDirPath / "dims_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DimsKeywordErr));
-  test_invalid_case(k_InputDirPath / "dims_number_convert_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
-  test_invalid_case(k_InputDirPath / "dims_number_convert_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
-  test_invalid_case(k_InputDirPath / "dims_number_convert_err3.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
-  test_invalid_case(k_InputDirPath / "dims_word_count_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DimsWordCountErr));
-  test_invalid_case(k_InputDirPath / "dims_word_count_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DimsWordCountErr));
+  TestInvalidCase(k_InputDirPath / "dims_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DimsKeywordErr));
+  TestInvalidCase(k_InputDirPath / "dims_number_convert_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
+  TestInvalidCase(k_InputDirPath / "dims_number_convert_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
+  TestInvalidCase(k_InputDirPath / "dims_number_convert_err3.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
+  TestInvalidCase(k_InputDirPath / "dims_word_count_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DimsWordCountErr));
+  TestInvalidCase(k_InputDirPath / "dims_word_count_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DimsWordCountErr));
 }
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Origin Errors", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
-  test_invalid_case(k_InputDirPath / "origin_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::OriginKeywordErr));
-  test_invalid_case(k_InputDirPath / "origin_number_convert_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
-  test_invalid_case(k_InputDirPath / "origin_number_convert_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
-  test_invalid_case(k_InputDirPath / "origin_number_convert_err3.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
-  test_invalid_case(k_InputDirPath / "origin_word_count_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::OriginWordCountErr));
-  test_invalid_case(k_InputDirPath / "origin_word_count_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::OriginWordCountErr));
-  test_invalid_case(k_InputDirPath / "origin_word_count_err3.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::OriginWordCountErr));
+  TestInvalidCase(k_InputDirPath / "origin_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::OriginKeywordErr));
+  TestInvalidCase(k_InputDirPath / "origin_number_convert_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
+  TestInvalidCase(k_InputDirPath / "origin_number_convert_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
+  TestInvalidCase(k_InputDirPath / "origin_number_convert_err3.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
+  TestInvalidCase(k_InputDirPath / "origin_word_count_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::OriginWordCountErr));
+  TestInvalidCase(k_InputDirPath / "origin_word_count_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::OriginWordCountErr));
+  TestInvalidCase(k_InputDirPath / "origin_word_count_err3.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::OriginWordCountErr));
 }
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Spacing Errors", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
-  test_invalid_case(k_InputDirPath / "spacing_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::SpacingKeywordErr));
-  test_invalid_case(k_InputDirPath / "spacing_number_convert_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
-  test_invalid_case(k_InputDirPath / "spacing_number_convert_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
-  test_invalid_case(k_InputDirPath / "spacing_number_convert_err3.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
-  test_invalid_case(k_InputDirPath / "spacing_word_count_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::SpacingWordCountErr));
-  test_invalid_case(k_InputDirPath / "spacing_word_count_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::SpacingWordCountErr));
-  test_invalid_case(k_InputDirPath / "spacing_word_count_err3.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::SpacingWordCountErr));
+  TestInvalidCase(k_InputDirPath / "spacing_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::SpacingKeywordErr));
+  TestInvalidCase(k_InputDirPath / "spacing_number_convert_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
+  TestInvalidCase(k_InputDirPath / "spacing_number_convert_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
+  TestInvalidCase(k_InputDirPath / "spacing_number_convert_err3.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
+  TestInvalidCase(k_InputDirPath / "spacing_word_count_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::SpacingWordCountErr));
+  TestInvalidCase(k_InputDirPath / "spacing_word_count_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::SpacingWordCountErr));
+  TestInvalidCase(k_InputDirPath / "spacing_word_count_err3.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::SpacingWordCountErr));
 }
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Lookup Table Errors", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
-  test_invalid_case(k_InputDirPath / "read_lookup_table_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadLookupTableKeywordErr));
-  test_invalid_case(k_InputDirPath / "read_lookup_table_keyword_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadLookupTableKeywordErr));
-  test_invalid_case(k_InputDirPath / "read_lookup_table_word_count_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadLookupTableWordCountErr));
-  test_invalid_case(k_InputDirPath / "read_lookup_table_word_count_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadLookupTableWordCountErr));
+  TestInvalidCase(k_InputDirPath / "read_lookup_table_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadLookupTableKeywordErr));
+  TestInvalidCase(k_InputDirPath / "read_lookup_table_keyword_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadLookupTableKeywordErr));
+  TestInvalidCase(k_InputDirPath / "read_lookup_table_word_count_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadLookupTableWordCountErr));
+  TestInvalidCase(k_InputDirPath / "read_lookup_table_word_count_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadLookupTableWordCountErr));
 }
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Dataset Errors", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
-  test_invalid_case(k_InputDirPath / "dataset_data_type_number_conversion_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
-  test_invalid_case(k_InputDirPath / "dataset_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DatasetKeywordErr));
-  test_invalid_case(k_InputDirPath / "dataset_structured_pts_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DatasetStructuredPtsErr));
-  test_invalid_case(k_InputDirPath / "dataset_type_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DatasetTypeKeywordErr));
-  test_invalid_case(k_InputDirPath / "dataset_type_word_count_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DatasetTypeWordCountErr));
-  test_invalid_case(k_InputDirPath / "dataset_word_count_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DatasetWordCountErr));
+  TestInvalidCase(k_InputDirPath / "dataset_data_type_number_conversion_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
+  TestInvalidCase(k_InputDirPath / "dataset_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DatasetKeywordErr));
+  TestInvalidCase(k_InputDirPath / "dataset_structured_pts_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DatasetStructuredPtsErr));
+  TestInvalidCase(k_InputDirPath / "dataset_type_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DatasetTypeKeywordErr));
+  TestInvalidCase(k_InputDirPath / "dataset_type_word_count_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DatasetTypeWordCountErr));
+  TestInvalidCase(k_InputDirPath / "dataset_word_count_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::DatasetWordCountErr));
 }
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Other Errors", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, k_CompressedTestDirName, k_TestDirName);
 
-  test_invalid_case(k_InputDirPath / "convert_vtk_data_type_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ConvertVtkDataTypeErr));
-  test_invalid_case(k_InputDirPath / "file_type_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::FileTypeErr));
-  test_invalid_case(k_InputDirPath / "mismatched_cells_and_tuples_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::MismatchedCellsAndTuplesErr));
-  test_invalid_case(k_InputDirPath / "mismatched_points_and_tuples_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::MismatchedPointsAndTuplesErr));
-  test_invalid_case(k_InputDirPath / "read_data_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
-  test_invalid_case(k_InputDirPath / "read_data_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
-  test_invalid_case(k_InputDirPath / "read_scalar_header_word_count_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadScalarHeaderWordCountErr));
-  test_invalid_case(k_InputDirPath / "read_scalar_header_word_count_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadScalarHeaderWordCountErr));
-  test_invalid_case(k_InputDirPath / "unknown_section_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::UnknownSectionKeywordErr));
-  test_invalid_case(k_InputDirPath / "unknown_section_keyword_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::UnknownSectionKeywordErr));
-  test_invalid_case(k_InputDirPath / "unknown_section_keyword_err3.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::UnknownSectionKeywordErr));
-  test_invalid_case(k_InputDirPath / "unknown_section_keyword_err4.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::UnknownSectionKeywordErr));
+  TestInvalidCase(k_InputDirPath / "convert_vtk_data_type_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ConvertVtkDataTypeErr));
+  TestInvalidCase(k_InputDirPath / "file_type_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::FileTypeErr));
+  TestInvalidCase(k_InputDirPath / "mismatched_cells_and_tuples_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::MismatchedCellsAndTuplesErr));
+  TestInvalidCase(k_InputDirPath / "mismatched_points_and_tuples_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::MismatchedPointsAndTuplesErr));
+  TestInvalidCase(k_InputDirPath / "read_data_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
+  TestInvalidCase(k_InputDirPath / "read_data_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::NumberConvertErr));
+  TestInvalidCase(k_InputDirPath / "read_scalar_header_word_count_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadScalarHeaderWordCountErr));
+  TestInvalidCase(k_InputDirPath / "read_scalar_header_word_count_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::ReadScalarHeaderWordCountErr));
+  TestInvalidCase(k_InputDirPath / "unknown_section_keyword_err.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::UnknownSectionKeywordErr));
+  TestInvalidCase(k_InputDirPath / "unknown_section_keyword_err2.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::UnknownSectionKeywordErr));
+  TestInvalidCase(k_InputDirPath / "unknown_section_keyword_err3.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::UnknownSectionKeywordErr));
+  TestInvalidCase(k_InputDirPath / "unknown_section_keyword_err4.vtk", to_underlying(ReadVtkStructuredPoints::ErrorCodes::UnknownSectionKeywordErr));
 }
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ReadVtkStructuredPointsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -517,22 +517,22 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: SIMPL Backwards Compatibi
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ReadVtkStructuredPointsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ReadVtkStructuredPointsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<std::string>(ReadVtkStructuredPointsFilter::k_CellAttributeMatrixName_Key) == "TestName");
       CHECK(args.value<FileSystemPathParameter::ValueType>(ReadVtkStructuredPointsFilter::k_InputFile_Key) == fs::path("/test/path/file.txt"));
       CHECK(args.value<bool>(ReadVtkStructuredPointsFilter::k_ReadCellData_Key) == true);
@@ -555,15 +555,15 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: uses supplied values befo
     REQUIRE(stream.good());
   }
   const ReadVtkStructuredPointsFilter filter;
-  auto args = createArgs(file);
-  UnitTest::RequireBadReaderMetadata(filter, args, file, true);
-  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
-  DataStructure ds;
-  const auto result = filter.execute(ds, args);
+  auto args = CreateArgs(file);
+  unit_test::RequireBadReaderMetadata(filter, args, file, true);
+  unit_test::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  DataStructure dataStructure;
+  const auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   // The singleton Z coordinate is a point center, so the voxel starts two units below it.
-  UnitTest::RequireReaderGeometry(ds, DataPath({"VTK Point Data"}), {4, -3, 6}, {2, 3, 4});
-  UnitTest::RequireReaderGeometry(ds, DataPath({"VTK Cell Data"}), {4, -3, 6}, {2, 3, 4});
+  unit_test::RequireReaderGeometry(dataStructure, DataPath({"VTK Point Data"}), {4, -3, 6}, {2, 3, 4});
+  unit_test::RequireReaderGeometry(dataStructure, DataPath({"VTK Cell Data"}), {4, -3, 6}, {2, 3, 4});
 }
 
 TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: overrides out-of-range stored fields", "[SimplnxCore][ReadVtkStructuredPointsFilter]")
@@ -580,14 +580,14 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: overrides out-of-range st
     REQUIRE(stream.good());
   }
   const ReadVtkStructuredPointsFilter filter;
-  auto args = createArgs(file);
-  UnitTest::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
-  const auto key = badSpacing ? ImageIO::k_ChangeSpacing : ImageIO::k_ChangeOrigin;
+  auto args = CreateArgs(file);
+  unit_test::SetReaderGeometryOverrides(args, {4, -3, 8}, {2, 3, 4});
+  const auto key = badSpacing ? image_io::k_ChangeSpacing : image_io::k_ChangeOrigin;
   args.insertOrAssign(key, false);
-  DataStructure ds;
-  const auto strict = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(strict.outputActions);
-  const auto& diagnostic = strict.outputActions.errors().front();
+  DataStructure dataStructure;
+  const auto strict = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(strict.output_actions);
+  const auto& diagnostic = strict.output_actions.errors().front();
   INFO(diagnostic.message);
   CHECK(diagnostic.code == -10352);
   CHECK(diagnostic.message.find(file.string()) != std::string::npos);
@@ -596,9 +596,9 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: overrides out-of-range st
   CHECK(diagnostic.message.find(badSpacing ? "Enable 'Set Spacing' to use your own values." : "Enable 'Set Origin' to use your own values.") != std::string::npos);
 
   args.insertOrAssign(key, true);
-  args.insertOrAssign(badSpacing ? ImageIO::k_ChangeOrigin : ImageIO::k_ChangeSpacing, false);
-  const auto result = filter.execute(ds, args);
+  args.insertOrAssign(badSpacing ? image_io::k_ChangeOrigin : image_io::k_ChangeSpacing, false);
+  const auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
-  UnitTest::RequireReaderGeometry(ds, DataPath({"VTK Point Data"}), {4, -3, 6}, {2, 3, 4});
-  UnitTest::RequireReaderGeometry(ds, DataPath({"VTK Cell Data"}), {4, -3, 6}, {2, 3, 4});
+  unit_test::RequireReaderGeometry(dataStructure, DataPath({"VTK Point Data"}), {4, -3, 6}, {2, 3, 4});
+  unit_test::RequireReaderGeometry(dataStructure, DataPath({"VTK Cell Data"}), {4, -3, 6}, {2, 3, 4});
 }

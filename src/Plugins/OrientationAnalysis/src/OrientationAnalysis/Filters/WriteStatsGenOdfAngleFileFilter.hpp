@@ -24,15 +24,15 @@ public:
   WriteStatsGenOdfAngleFileFilter& operator=(WriteStatsGenOdfAngleFileFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_OutputFile_Key = "output_file";
-  static constexpr StringLiteral k_Weight_Key = "weight";
-  static constexpr StringLiteral k_Sigma_Key = "sigma";
-  static constexpr StringLiteral k_Delimiter_Key = "delimiter_index";
-  static constexpr StringLiteral k_ConvertToDegrees_Key = "convert_to_degrees";
-  static constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
-  static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteralType k_OutputFile_Key = "output_file";
+  static constexpr StringLiteralType k_Weight_Key = "weight";
+  static constexpr StringLiteralType k_Sigma_Key = "sigma";
+  static constexpr StringLiteralType k_Delimiter_Key = "delimiter_index";
+  static constexpr StringLiteralType k_ConvertToDegrees_Key = "convert_to_degrees";
+  static constexpr StringLiteralType k_UseMask_Key = "use_mask";
+  static constexpr StringLiteralType k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
+  static constexpr StringLiteralType k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static constexpr StringLiteralType k_MaskArrayPath_Key = "mask_array_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -41,11 +41,11 @@ public:
    */
   static Result<Arguments> FromSIMPLJson(const nlohmann::json& json);
 
-  static inline constexpr uint64 k_CommaDelimiter = 0;
-  static inline constexpr uint64 k_SemiColonDelimiter = 1;
-  static inline constexpr uint64 k_SpaceDelimiter = 2;
-  static inline constexpr uint64 k_ColonDelimiter = 3;
-  static inline constexpr uint64 k_TabDelimiter = 4;
+  static constexpr uint64 k_CommaDelimiter = 0;
+  static constexpr uint64 k_SemiColonDelimiter = 1;
+  static constexpr uint64 k_SpaceDelimiter = 2;
+  static constexpr uint64 k_ColonDelimiter = 3;
+  static constexpr uint64 k_TabDelimiter = 4;
 
   /**
    * @brief Returns the name of the filter.
@@ -95,7 +95,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

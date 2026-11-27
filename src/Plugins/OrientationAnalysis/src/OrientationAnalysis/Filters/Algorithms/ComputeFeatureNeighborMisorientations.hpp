@@ -11,13 +11,13 @@ namespace nx::core
 
 struct ORIENTATIONANALYSIS_EXPORT ComputeFeatureNeighborMisorientationsInputValues
 {
-  bool ComputeAvgMisors;
-  DataPath NeighborListArrayPath;
-  DataPath AvgQuatsArrayPath;
-  DataPath FeaturePhasesArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath MisorientationListArrayName;
-  DataPath AvgMisorientationsArrayName;
+  bool compute_avg_misors{};
+  DataPath neighbor_list_array_path;
+  DataPath avg_quats_array_path;
+  DataPath feature_phases_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath misorientation_list_array_name;
+  DataPath avg_misorientations_array_name;
 };
 
 /**
@@ -29,7 +29,7 @@ class ORIENTATIONANALYSIS_EXPORT ComputeFeatureNeighborMisorientations
 public:
   ComputeFeatureNeighborMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                         ComputeFeatureNeighborMisorientationsInputValues* inputValues);
-  ~ComputeFeatureNeighborMisorientations() noexcept;
+  ~ComputeFeatureNeighborMisorientations() noexcept = default;
 
   ComputeFeatureNeighborMisorientations(const ComputeFeatureNeighborMisorientations&) = delete;
   ComputeFeatureNeighborMisorientations(ComputeFeatureNeighborMisorientations&&) noexcept = delete;

@@ -38,7 +38,7 @@ public:
   /**
    * @brief Destroys the scanline ImageGeom mask algorithm.
    */
-  ~ComputeCoordinateThresholdScanline() noexcept;
+  ~ComputeCoordinateThresholdScanline() noexcept = default;
 
   ComputeCoordinateThresholdScanline(const ComputeCoordinateThresholdScanline&) = delete;
   ComputeCoordinateThresholdScanline(ComputeCoordinateThresholdScanline&&) noexcept = delete;

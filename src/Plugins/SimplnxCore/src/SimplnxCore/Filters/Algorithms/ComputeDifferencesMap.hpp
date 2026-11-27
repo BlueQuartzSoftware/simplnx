@@ -22,9 +22,9 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeDifferencesMapInputValues
 {
-  ArrayCreationParameter::ValueType DifferenceMapArrayPath;
-  ArraySelectionParameter::ValueType FirstInputArrayPath;
-  ArraySelectionParameter::ValueType SecondInputArrayPath;
+  ArrayCreationParameter::ValueType difference_map_array_path;
+  ArraySelectionParameter::ValueType first_input_array_path;
+  ArraySelectionParameter::ValueType second_input_array_path;
 };
 
 /**
@@ -50,7 +50,7 @@ public:
   /**
    * @brief Destroys the difference-map algorithm.
    */
-  ~ComputeDifferencesMap() noexcept;
+  ~ComputeDifferencesMap() noexcept = default;
 
   ComputeDifferencesMap(const ComputeDifferencesMap&) = delete;
   ComputeDifferencesMap(ComputeDifferencesMap&&) noexcept = delete;

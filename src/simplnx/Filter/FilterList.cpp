@@ -40,7 +40,7 @@ AbstractPlugin* FilterList::getPluginById(const FilterHandle::PluginIdType& iden
   return nullptr;
 }
 
-IFilter::UniquePointer FilterList::createFilter(const FilterHandle& handle) const
+IFilter::UniquePointerType FilterList::createFilter(const FilterHandle& handle) const
 {
   // Core filter
   if(handle.getPluginId() == Uuid{})
@@ -62,7 +62,7 @@ IFilter::UniquePointer FilterList::createFilter(const FilterHandle& handle) cons
   return loader->getPlugin()->createFilter(handle.getFilterId());
 }
 
-IFilter::UniquePointer FilterList::createFilter(const Uuid& uuid) const
+IFilter::UniquePointerType FilterList::createFilter(const Uuid& uuid) const
 {
   auto iter = std::find_if(m_PluginMap.cbegin(), m_PluginMap.cend(), [uuid](decltype(*m_PluginMap.cbegin())& item) { return item.second->getPlugin()->containsFilterId(uuid); });
 
@@ -97,14 +97,14 @@ Result<> FilterList::addPlugin(const std::shared_ptr<IPluginLoader>& loader)
   {
     return MakeErrorResult(-444, "Plugin was not loaded");
   }
-  AbstractPlugin* plugin = loader->getPlugin();
-  Uuid pluginUuid = plugin->getId();
-  if(m_PluginMap.count(pluginUuid) > 0)
+  AbstractPlugin* pluginPtr = loader->getPlugin();
+  Uuid pluginUuid = pluginPtr->getId();
+  if(m_PluginMap.contains(pluginUuid))
   {
-    return MakeErrorResult(-445, fmt::format("Attempted to add plugin '{}' with uuid '{}', but plugin '{}' already exists with that uuid", plugin->getName(), pluginUuid.str(),
+    return MakeErrorResult(-445, fmt::format("Attempted to add plugin '{}' with uuid '{}', but plugin '{}' already exists with that uuid", pluginPtr->getName(), pluginUuid.str(),
                                              m_PluginMap[pluginUuid]->getPlugin()->getName()));
   }
-  auto pluginHandles = plugin->getFilterHandles();
+  auto pluginHandles = pluginPtr->getFilterHandles();
   m_FilterHandles.merge(pluginHandles);
   m_PluginMap[pluginUuid] = loader;
   return {};
@@ -136,7 +136,7 @@ std::unordered_set<AbstractPlugin*> FilterList::getLoadedPlugins() const
 
 void FilterList::removePlugin(const Uuid& pluginId)
 {
-  if(m_PluginMap.count(pluginId) == 0)
+  if(!m_PluginMap.contains(pluginId))
   {
     return;
   }

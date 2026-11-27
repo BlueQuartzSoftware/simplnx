@@ -27,8 +27,8 @@ class SIMPLNX_EXPORT DataMap
 public:
   using IdType = uint64;
   using MapType = std::map<IdType, std::shared_ptr<DataObject>>;
-  using Iterator = typename MapType::iterator;
-  using ConstIterator = typename MapType::const_iterator;
+  using iterator = typename MapType::iterator;
+  using const_iterator = typename MapType::const_iterator;
 
   /**
    * @brief Constructs an empty DataMap.
@@ -103,7 +103,7 @@ public:
    * @param iter
    * @return bool
    */
-  bool erase(const Iterator& iter);
+  bool erase(const iterator& iter);
 
   /**
    * @brief Removes all DataObjects from the map.
@@ -210,7 +210,7 @@ public:
    * @param identifier The ID to search for
    * @return Iterator An iterator to the found DataObject, or end() if not found
    */
-  Iterator find(IdType identifier);
+  iterator find(IdType identifier);
 
   /**
    * @brief Searches the DataMap for the target IdType.
@@ -219,7 +219,7 @@ public:
    * @param identifier The ID to search for
    * @return ConstIterator A const iterator to the found DataObject, or end() if not found
    */
-  ConstIterator find(IdType identifier) const;
+  const_iterator find(IdType identifier) const;
 
   /**
    * @brief Searches the DataMap for the target name.
@@ -228,7 +228,7 @@ public:
    * @param name The name to search for
    * @return Iterator An iterator to the found DataObject, or end() if not found
    */
-  Iterator find(const std::string& name);
+  iterator find(const std::string& name);
 
   /**
    * @brief Searches the DataMap for the target name.
@@ -237,7 +237,7 @@ public:
    * @param name The name to search for
    * @return ConstIterator A const iterator to the found DataObject, or end() if not found
    */
-  ConstIterator find(const std::string& name) const;
+  const_iterator find(const std::string& name) const;
 
   /**
    * @brief Sets a new DataStructure for all items in the DataMap.
@@ -251,13 +251,13 @@ public:
    * Children are not expanded in this calculation.
    * @return Iterator
    */
-  Iterator begin();
+  iterator begin();
 
   /**
    * @brief Returns an iterator to the end of the DataMap.
    * @return Iterator An iterator to the element following the last element
    */
-  Iterator end();
+  iterator end();
 
   /**
    * @brief Returns a const iterator to the beginning of the DataMap.
@@ -265,13 +265,13 @@ public:
    * Children are not expanded in this calculation.
    * @return ConstIterator
    */
-  ConstIterator begin() const;
+  const_iterator begin() const;
 
   /**
    * @brief Returns a const iterator to the end of the DataMap.
    * @return ConstIterator A const iterator to the element following the last element
    */
-  ConstIterator end() const;
+  const_iterator end() const;
 
   /**
    * @brief Copies values from the specified DataMap.

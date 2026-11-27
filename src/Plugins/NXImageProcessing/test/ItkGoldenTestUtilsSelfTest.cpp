@@ -6,16 +6,16 @@ using namespace nx::core;
 
 TEST_CASE("NXImageProcessing::ItkGoldenTestUtils self-test", "[NXImageProcessing][ItkGolden]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   // (1) NRRD reader route: read RA-Short.nrrd; array + geom must materialize.
-  DataStructure ds;
+  DataStructure dataStructure;
   const DataPath geom({"G"});
-  const auto rNrrd = ip_golden::ReadInputImage(ds, ip_golden::InputPath("RA-Short.nrrd"), geom, "CellData", "Input");
+  const auto rNrrd = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath("RA-Short.nrrd"), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(rNrrd);
   const DataPath arr = geom.createChildPath("CellData").createChildPath("Input");
-  REQUIRE_NOTHROW(ds.getDataRefAs<IDataArray>(arr));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(arr));
 
   // (2) PNG reader route: read STAPLE1.png.
   DataStructure dsPng;
@@ -28,11 +28,11 @@ TEST_CASE("NXImageProcessing::ItkGoldenTestUtils self-test", "[NXImageProcessing
   SIMPLNX_RESULT_REQUIRE_VALID(rMha);
 
   // (4) md5 is stable + non-empty; self-compare at tol 0 is exact.
-  const std::string h1 = ip_golden::ComputeMd5Hash(ds, arr);
+  const std::string h1 = ip_golden::ComputeMd5Hash(dataStructure, arr);
   REQUIRE(h1.size() == 32);
-  REQUIRE(ip_golden::ComputeMd5Hash(ds, arr) == h1);
+  REQUIRE(ip_golden::ComputeMd5Hash(dataStructure, arr) == h1);
 
   // (5) CompareImages of an array against itself is valid at tolerance 0.
-  const auto self = ip_golden::CompareImages(ds, geom, arr, geom, arr, 0.0);
+  const auto self = ip_golden::CompareImages(dataStructure, geom, arr, geom, arr, 0.0);
   SIMPLNX_RESULT_REQUIRE_VALID(self);
 }

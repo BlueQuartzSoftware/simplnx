@@ -13,11 +13,11 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT FlyingEdges3DInputValues
 {
-  DataPath imageGeomPath;
-  DataPath triangleGeomPath;
-  DataPath contouringArrayPath;
-  DataPath normalsArrayPath;
-  float64 isoVal;
+  DataPath image_geom_path;
+  DataPath triangle_geom_path;
+  DataPath contouring_array_path;
+  DataPath normals_array_path;
+  float64 iso_val{};
 };
 
 /**
@@ -43,7 +43,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   FlyingEdges3D(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, FlyingEdges3DInputValues* inputValues);
-  ~FlyingEdges3D() noexcept;
+  ~FlyingEdges3D() noexcept = default;
 
   FlyingEdges3D(const FlyingEdges3D&) = delete;
   FlyingEdges3D(FlyingEdges3D&&) noexcept = delete;

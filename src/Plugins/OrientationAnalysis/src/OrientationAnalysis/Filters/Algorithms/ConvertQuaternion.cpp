@@ -136,8 +136,8 @@ public:
 
   Result<> operator()()
   {
-    const auto& inputArray = m_DataStructure.getDataRefAs<DataArray<T>>(m_InputValues->QuaternionDataArrayPath);
-    auto& outputArray = m_DataStructure.getDataRefAs<DataArray<T>>(m_InputValues->OutputDataArrayPath);
+    const auto& inputArray = m_DataStructure.getDataRefAs<DataArray<T>>(m_InputValues->quaternion_data_array_path);
+    auto& outputArray = m_DataStructure.getDataRefAs<DataArray<T>>(m_InputValues->output_data_array_path);
     const auto& inputStoreRef = inputArray.getDataStoreRef();
     auto& outputStoreRef = outputArray.getDataStoreRef();
     const usize totalTuples = inputArray.getNumberOfTuples();
@@ -158,7 +158,7 @@ public:
         return result;
       }
 
-      if(m_InputValues->ConversionType == k_ToVectorScalar)
+      if(m_InputValues->conversion_type == k_ToVectorScalar)
       {
         ConvertBuffer<T, true>(buffer.get(), tupleCount);
       }
@@ -202,8 +202,8 @@ public:
 
   Result<> operator()()
   {
-    const auto& inputArray = m_DataStructure.getDataRefAs<DataArray<T>>(m_InputValues->QuaternionDataArrayPath);
-    auto& outputArray = m_DataStructure.getDataRefAs<DataArray<T>>(m_InputValues->OutputDataArrayPath);
+    const auto& inputArray = m_DataStructure.getDataRefAs<DataArray<T>>(m_InputValues->quaternion_data_array_path);
+    auto& outputArray = m_DataStructure.getDataRefAs<DataArray<T>>(m_InputValues->output_data_array_path);
     const auto* inputStorePtr = dynamic_cast<const DataStore<T>*>(&inputArray.getDataStoreRef());
     auto* outputStorePtr = dynamic_cast<DataStore<T>*>(&outputArray.getDataStoreRef());
 
@@ -216,7 +216,7 @@ public:
     // Workers use disjoint raw-pointer ranges and never access non-thread-safe DataStore APIs.
     ParallelDataAlgorithm dataAlgorithm;
     dataAlgorithm.setRange(0, inputArray.getNumberOfTuples());
-    dataAlgorithm.execute(ConvertQuaternionContiguousImpl<T>(inputStorePtr->data(), outputStorePtr->data(), m_InputValues->ConversionType, m_ShouldCancel));
+    dataAlgorithm.execute(ConvertQuaternionContiguousImpl<T>(inputStorePtr->data(), outputStorePtr->data(), m_InputValues->conversion_type, m_ShouldCancel));
     return {};
   }
 
@@ -244,8 +244,8 @@ public:
 
   Result<> operator()()
   {
-    const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->QuaternionDataArrayPath);
-    return RunTemplateClass<ConvertQuaternionDirectType, ArrayUseFloatingTypes>(inputArray.getDataType(), m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
+    const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->quaternion_data_array_path);
+    return RunTemplateClass<ConvertQuaternionDirectType, ArrayUseFloatingTypesType>(inputArray.getDataType(), m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
   }
 
 private:
@@ -272,8 +272,8 @@ public:
 
   Result<> operator()()
   {
-    const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->QuaternionDataArrayPath);
-    return RunTemplateClass<ConvertQuaternionScanlineType, ArrayUseFloatingTypes>(inputArray.getDataType(), m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
+    const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->quaternion_data_array_path);
+    return RunTemplateClass<ConvertQuaternionScanlineType, ArrayUseFloatingTypesType>(inputArray.getDataType(), m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
   }
 
 private:
@@ -293,8 +293,6 @@ ConvertQuaternion::ConvertQuaternion(DataStructure& dataStructure, const IFilter
 {
 }
 
-ConvertQuaternion::~ConvertQuaternion() noexcept = default;
-
 const std::atomic_bool& ConvertQuaternion::getCancel()
 {
   return m_ShouldCancel;
@@ -302,13 +300,13 @@ const std::atomic_bool& ConvertQuaternion::getCancel()
 
 Result<> ConvertQuaternion::operator()()
 {
-  const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->QuaternionDataArrayPath);
+  const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->quaternion_data_array_path);
   if(inputArray.getDataType() != DataType::float32 && inputArray.getDataType() != DataType::float64)
   {
-    return MakeErrorResult(-74836, fmt::format("The input quaternion array at path '{}' has data type '{}', but must be either Float32 or Float64.", m_InputValues->QuaternionDataArrayPath.toString(),
-                                               DataTypeToString(inputArray.getDataType())));
+    return MakeErrorResult(-74836, fmt::format("The input quaternion array at path '{}' has data type '{}', but must be either Float32 or Float64.",
+                                               m_InputValues->quaternion_data_array_path.toString(), DataTypeToString(inputArray.getDataType())));
   }
 
-  const auto& outputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->OutputDataArrayPath);
+  const auto& outputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->output_data_array_path);
   return DispatchAlgorithm<ConvertQuaternionDirect, ConvertQuaternionScanline>({&inputArray, &outputArray}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

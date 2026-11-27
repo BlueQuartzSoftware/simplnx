@@ -49,7 +49,7 @@ struct IdentifySampleFunctor
 
     const auto totalPoints = static_cast<int64>(goodVoxelsPtr->getNumberOfTuples());
 
-    SizeVec3 udims = imageGeom->getDimensions();
+    SizeVec3Type udims = imageGeom->getDimensions();
 
     std::array<int64_t, 3> dims = {
         static_cast<int64_t>(udims[0]),
@@ -58,8 +58,8 @@ struct IdentifySampleFunctor
     };
 
     int64_t neighborPoint = 0;
-    const std::array<int64, k_NeighborCount> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets<ImageDimsStateT>(dims);
-    constexpr std::array<FaceNeighborType, k_NeighborCount> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx<ImageDimsStateT>();
+    const std::array<int64, k_NeighborCount> neighborVoxelIndexOffsets = InitializeFaceNeighborOffsets<ImageDimsStateT>(dims);
+    constexpr std::array<FaceNeighborType, k_NeighborCount> k_FaceNeighborInternalIdx = InitializeFaceNeighborInternalIdx<ImageDimsStateT>();
 
     std::vector<int64> currentVList;
     std::vector<bool> checked(totalPoints, false);
@@ -92,8 +92,8 @@ struct IdentifySampleFunctor
               int64 xIndex = index % dims[0];
               int64 yIndex = (index / dims[0]) % dims[1];
               int64 zIndex = index / (dims[0] * dims[1]);
-              const std::array<bool, k_NeighborCount> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimsStateT>(xIndex, yIndex, zIndex, dims);
-              for(const auto& faceIndex : faceNeighborInternalIdx)
+              const std::array<bool, k_NeighborCount> isValidFaceNeighbor = ComputeValidFaceNeighbors<ImageDimsStateT>(xIndex, yIndex, zIndex, dims);
+              for(const auto& faceIndex : k_FaceNeighborInternalIdx)
               {
                 if(!isValidFaceNeighbor[faceIndex])
                 {
@@ -166,8 +166,8 @@ struct IdentifySampleFunctor
                 int64 yIndex = (index / dims[0]) % dims[1];
                 int64 zIndex = index / (dims[0] * dims[1]);
                 // Loop over the 6 face neighbors of the voxel
-                const std::array<bool, k_NeighborCount> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimsStateT>(xIndex, yIndex, zIndex, dims);
-                for(const auto faceIndex : faceNeighborInternalIdx) // ref more expensive than trivial copy for scalar types
+                const std::array<bool, k_NeighborCount> isValidFaceNeighbor = ComputeValidFaceNeighbors<ImageDimsStateT>(xIndex, yIndex, zIndex, dims);
+                for(const auto faceIndex : k_FaceNeighborInternalIdx) // ref more expensive than trivial copy for scalar types
                 {
                   if(!isValidFaceNeighbor[faceIndex])
                   {
@@ -224,41 +224,41 @@ void ProcessVoxels(const DataType& dataType, const ImageGeom* imageGeom, ArgsT&&
   // Treat a unit dimension as flat.
   if(emptyDimCount == 0)
   {
-    return ExecuteDataFunction(FunctorT<Image3D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+    return ExecuteDataFunction(FunctorT<Image3DType>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
   }
   if(emptyDimCount == 1)
   {
     if(zDimEmpty)
     {
-      return ExecuteDataFunction(FunctorT<EmptyZImage2D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+      return ExecuteDataFunction(FunctorT<EmptyZImage2DType>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
     }
     if(yDimEmpty)
     {
-      return ExecuteDataFunction(FunctorT<EmptyYImage2D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+      return ExecuteDataFunction(FunctorT<EmptyYImage2DType>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
     }
     if(xDimEmpty)
     {
-      return ExecuteDataFunction(FunctorT<EmptyXImage2D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+      return ExecuteDataFunction(FunctorT<EmptyXImage2DType>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
     }
   }
   if(emptyDimCount == 2)
   {
     if(xDimEmpty && yDimEmpty)
     {
-      return ExecuteDataFunction(FunctorT<ZImage1D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+      return ExecuteDataFunction(FunctorT<ZImage1DType>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
     }
     if(xDimEmpty && zDimEmpty)
     {
-      return ExecuteDataFunction(FunctorT<YImage1D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+      return ExecuteDataFunction(FunctorT<YImage1DType>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
     }
     if(yDimEmpty && zDimEmpty)
     {
-      return ExecuteDataFunction(FunctorT<XImage1D>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+      return ExecuteDataFunction(FunctorT<XImage1DType>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
     }
   }
   if(emptyDimCount == 3)
   {
-    return ExecuteDataFunction(FunctorT<SingleVoxelImage>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
+    return ExecuteDataFunction(FunctorT<SingleVoxelImageType>{}, dataType, imageGeom, std::forward<ArgsT>(args)...);
   }
 }
 } // namespace
@@ -273,23 +273,20 @@ IdentifySampleBFS::IdentifySampleBFS(DataStructure& dataStructure, const IFilter
 }
 
 // -----------------------------------------------------------------------------
-IdentifySampleBFS::~IdentifySampleBFS() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> IdentifySampleBFS::operator()()
 {
-  auto* inputData = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);
-  const auto* imageGeom = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometryPath);
+  auto* inputDataPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path);
+  const auto* imageGeomPtr = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->input_image_geometry_path);
 
-  if(m_InputValues->SliceBySlice)
+  if(m_InputValues->slice_by_slice)
   {
-    return ExecuteDataFunction(IdentifySampleSliceBySliceFunctor{}, inputData->getDataType(), imageGeom, inputData, m_InputValues->FillHoles,
-                               static_cast<IdentifySampleSliceBySliceFunctor::Plane>(m_InputValues->SliceBySlicePlaneIndex), m_MessageHandler, m_ShouldCancel);
+    return ExecuteDataFunction(IdentifySampleSliceBySliceFunctor{}, inputDataPtr->getDataType(), imageGeomPtr, inputDataPtr, m_InputValues->fill_holes,
+                               static_cast<IdentifySampleSliceBySliceFunctor::Plane>(m_InputValues->slice_by_slice_plane_index), m_MessageHandler, m_ShouldCancel);
   }
-  else
-  {
-    ProcessVoxels<IdentifySampleFunctor>(inputData->getDataType(), imageGeom, inputData, m_InputValues->FillHoles, m_MessageHandler, m_ShouldCancel);
-  }
+
+  ProcessVoxels<IdentifySampleFunctor>(inputDataPtr->getDataType(), imageGeomPtr, inputDataPtr, m_InputValues->fill_holes, m_MessageHandler, m_ShouldCancel);
 
   return {};
 }

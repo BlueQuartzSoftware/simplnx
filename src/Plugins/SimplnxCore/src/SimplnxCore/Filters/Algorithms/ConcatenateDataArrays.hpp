@@ -13,24 +13,24 @@
 namespace nx::core
 {
 template <typename T>
-struct is_allowed_array_type : std::false_type
+struct IsConcatenatableArrayType : std::false_type
 {
 };
 
 template <typename T>
-struct is_allowed_array_type<DataArray<T>> : std::true_type
+struct IsConcatenatableArrayType<DataArray<T>> : std::true_type
 {
 };
 
 template <>
-struct is_allowed_array_type<StringArray> : std::true_type
+struct IsConcatenatableArrayType<StringArray> : std::true_type
 {
 };
 
 template <typename ArrayType>
-typename std::enable_if<is_allowed_array_type<ArrayType>::value, Result<>>::type ConcatenateArraysImpl(DataStructure& dataStructure, const std::vector<DataPath>& inputArrayPaths,
-                                                                                                       const DataPath& outputArrayPath, const IFilter::MessageHandler& messageHandler,
-                                                                                                       const std::atomic_bool& shouldCancel)
+Result<> ConcatenateArraysImpl(DataStructure& dataStructure, const std::vector<DataPath>& inputArrayPaths, const DataPath& outputArrayPath, const IFilter::MessageHandler& messageHandler,
+                               const std::atomic_bool& shouldCancel)
+requires IsConcatenatableArrayType<ArrayType>::value
 {
   auto& outputDataArray = dataStructure.getDataRefAs<ArrayType>(outputArrayPath);
   usize destTupleOffset = 0;
@@ -43,7 +43,7 @@ typename std::enable_if<is_allowed_array_type<ArrayType>::value, Result<>>::type
 
     messageHandler.sendInfoMessage(fmt::format("Concatenating array '{}'...", inputArrayPath.toString()));
     const auto& inputDataArray = dataStructure.getDataRefAs<ArrayType>(inputArrayPath);
-    auto result = CopyFromArray::CopyData(inputDataArray, outputDataArray, destTupleOffset, 0, inputDataArray.getNumberOfTuples());
+    auto result = copy_from_array::CopyData(inputDataArray, outputDataArray, destTupleOffset, 0, inputDataArray.getNumberOfTuples());
     if(result.invalid())
     {
       return result;
@@ -81,8 +81,8 @@ Result<> ConcatenateNeighborListsImpl(DataStructure& dataStructure, const std::v
 
 struct SIMPLNXCORE_EXPORT ConcatenateDataArraysInputValues
 {
-  std::vector<DataPath> InputArrayPaths;
-  DataPath OutputArrayPath;
+  std::vector<DataPath> input_array_paths;
+  DataPath output_array_path;
 };
 
 /**
@@ -92,7 +92,7 @@ class SIMPLNXCORE_EXPORT ConcatenateDataArrays
 {
 public:
   ConcatenateDataArrays(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ConcatenateDataArraysInputValues* inputValues);
-  ~ConcatenateDataArrays() noexcept;
+  ~ConcatenateDataArrays() noexcept = default;
 
   ConcatenateDataArrays(const ConcatenateDataArrays&) = delete;
   ConcatenateDataArrays(ConcatenateDataArrays&&) noexcept = delete;

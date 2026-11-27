@@ -26,11 +26,11 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
 namespace
 {
-constexpr StringLiteral k_FaceEnsembleDataPath("FaceEnsembleData [NX]");
+constexpr StringLiteralType k_FaceEnsembleDataPath("FaceEnsembleData [NX]");
 
 constexpr usize k_GbcdChunkBoundaryFaceCount = 100003;
 // These placements cross two full 50,000-face chunks and the partial final chunk.
@@ -43,15 +43,15 @@ constexpr std::array<float64, 6> k_GbcdContributorAreas = {1.0, 2.0, 4.0, 8.0, 1
 
 struct GbcdBoundaryFixture
 {
-  DataStructure dataStructure;
-  DataPath triangleGeometryPath;
-  DataPath faceLabelsPath;
-  DataPath faceNormalsPath;
-  DataPath faceAreasPath;
-  DataPath featureEulerAnglesPath;
-  DataPath featurePhasesPath;
-  DataPath crystalStructuresPath;
-  DataPath outputPath;
+  DataStructure data_structure;
+  DataPath triangle_geometry_path;
+  DataPath face_labels_path;
+  DataPath face_normals_path;
+  DataPath face_areas_path;
+  DataPath feature_euler_angles_path;
+  DataPath feature_phases_path;
+  DataPath crystal_structures_path;
+  DataPath output_path;
 };
 
 /**
@@ -66,56 +66,56 @@ GbcdBoundaryFixture CreateGbcdBoundaryFixture(const usize faceCount, const std::
   REQUIRE(contributorFaceIndices.size() == contributorIndices.size());
 
   GbcdBoundaryFixture fixture;
-  fixture.triangleGeometryPath = DataPath({"GBCD Triangle Geometry"});
-  const DataPath faceDataPath = fixture.triangleGeometryPath.createChildPath(Constants::k_FaceData);
-  const DataPath featureDataPath = fixture.triangleGeometryPath.createChildPath(Constants::k_Grain_Data);
-  const DataPath phaseDataPath = fixture.triangleGeometryPath.createChildPath(Constants::k_Phase_Data);
-  fixture.faceLabelsPath = faceDataPath.createChildPath(Constants::k_FaceLabels);
-  fixture.faceNormalsPath = faceDataPath.createChildPath(Constants::k_FaceNormals);
-  fixture.faceAreasPath = faceDataPath.createChildPath(Constants::k_FaceAreas);
-  fixture.featureEulerAnglesPath = featureDataPath.createChildPath(Constants::k_AvgEulerAngles);
-  fixture.featurePhasesPath = featureDataPath.createChildPath(Constants::k_Phases);
-  fixture.crystalStructuresPath = phaseDataPath.createChildPath(Constants::k_CrystalStructures);
-  fixture.outputPath = fixture.triangleGeometryPath.createChildPath("GBCD Face Ensemble Data").createChildPath(Constants::k_GBCD_Name);
+  fixture.triangle_geometry_path = DataPath({"GBCD Triangle Geometry"});
+  const DataPath faceDataPath = fixture.triangle_geometry_path.createChildPath(constants::k_FaceData);
+  const DataPath featureDataPath = fixture.triangle_geometry_path.createChildPath(constants::k_GrainDataWithSpaces);
+  const DataPath phaseDataPath = fixture.triangle_geometry_path.createChildPath(constants::k_PhaseData);
+  fixture.face_labels_path = faceDataPath.createChildPath(constants::k_FaceLabels);
+  fixture.face_normals_path = faceDataPath.createChildPath(constants::k_FaceNormals);
+  fixture.face_areas_path = faceDataPath.createChildPath(constants::k_FaceAreas);
+  fixture.feature_euler_angles_path = featureDataPath.createChildPath(constants::k_AvgEulerAngles);
+  fixture.feature_phases_path = featureDataPath.createChildPath(constants::k_Phases);
+  fixture.crystal_structures_path = phaseDataPath.createChildPath(constants::k_CrystalStructures);
+  fixture.output_path = fixture.triangle_geometry_path.createChildPath("GBCD Face Ensemble Data").createChildPath(constants::k_GbcdName);
 
-  auto* triangleGeomPtr = TriangleGeom::Create(fixture.dataStructure, fixture.triangleGeometryPath.getTargetName());
+  auto* triangleGeomPtr = TriangleGeom::Create(fixture.data_structure, fixture.triangle_geometry_path.getTargetName());
   REQUIRE(triangleGeomPtr != nullptr);
-  auto* faceDataPtr = AttributeMatrix::Create(fixture.dataStructure, faceDataPath.getTargetName(), {faceCount}, triangleGeomPtr->getId());
+  auto* faceDataPtr = AttributeMatrix::Create(fixture.data_structure, faceDataPath.getTargetName(), {faceCount}, triangleGeomPtr->getId());
   REQUIRE(faceDataPtr != nullptr);
-  auto* featureDataPtr = AttributeMatrix::Create(fixture.dataStructure, featureDataPath.getTargetName(), {3}, triangleGeomPtr->getId());
+  auto* featureDataPtr = AttributeMatrix::Create(fixture.data_structure, featureDataPath.getTargetName(), {3}, triangleGeomPtr->getId());
   REQUIRE(featureDataPtr != nullptr);
-  auto* phaseDataPtr = AttributeMatrix::Create(fixture.dataStructure, phaseDataPath.getTargetName(), {2}, triangleGeomPtr->getId());
+  auto* phaseDataPtr = AttributeMatrix::Create(fixture.data_structure, phaseDataPath.getTargetName(), {2}, triangleGeomPtr->getId());
   REQUIRE(phaseDataPtr != nullptr);
 
-  auto faceLabelsStore = DataStoreUtilities::CreateDataStore<int32>(fixture.dataStructure, fixture.faceLabelsPath, {faceCount}, {2});
-  auto* faceLabelsArrayPtr = Int32Array::Create(fixture.dataStructure, fixture.faceLabelsPath.getTargetName(), faceLabelsStore, faceDataPtr->getId());
+  auto faceLabelsStore = data_store_utilities::CreateDataStore<int32>(fixture.data_structure, fixture.face_labels_path, {faceCount}, {2});
+  auto* faceLabelsArrayPtr = Int32ArrayType::Create(fixture.data_structure, fixture.face_labels_path.getTargetName(), faceLabelsStore, faceDataPtr->getId());
   REQUIRE(faceLabelsArrayPtr != nullptr);
   faceLabelsStore->fill(-1);
 
-  auto faceNormalsStore = DataStoreUtilities::CreateDataStore<float64>(fixture.dataStructure, fixture.faceNormalsPath, {faceCount}, {3});
-  auto* faceNormalsArrayPtr = Float64Array::Create(fixture.dataStructure, fixture.faceNormalsPath.getTargetName(), faceNormalsStore, faceDataPtr->getId());
+  auto faceNormalsStore = data_store_utilities::CreateDataStore<float64>(fixture.data_structure, fixture.face_normals_path, {faceCount}, {3});
+  auto* faceNormalsArrayPtr = Float64ArrayType::Create(fixture.data_structure, fixture.face_normals_path.getTargetName(), faceNormalsStore, faceDataPtr->getId());
   REQUIRE(faceNormalsArrayPtr != nullptr);
   faceNormalsStore->fill(0.0);
 
-  auto faceAreasStore = DataStoreUtilities::CreateDataStore<float64>(fixture.dataStructure, fixture.faceAreasPath, {faceCount}, {1});
-  auto* faceAreasArrayPtr = Float64Array::Create(fixture.dataStructure, fixture.faceAreasPath.getTargetName(), faceAreasStore, faceDataPtr->getId());
+  auto faceAreasStore = data_store_utilities::CreateDataStore<float64>(fixture.data_structure, fixture.face_areas_path, {faceCount}, {1});
+  auto* faceAreasArrayPtr = Float64ArrayType::Create(fixture.data_structure, fixture.face_areas_path.getTargetName(), faceAreasStore, faceDataPtr->getId());
   REQUIRE(faceAreasArrayPtr != nullptr);
   faceAreasStore->fill(0.0);
 
-  auto eulerAnglesStore = DataStoreUtilities::CreateDataStore<float32>(fixture.dataStructure, fixture.featureEulerAnglesPath, {3}, {3});
-  auto* eulerAnglesArrayPtr = Float32Array::Create(fixture.dataStructure, fixture.featureEulerAnglesPath.getTargetName(), eulerAnglesStore, featureDataPtr->getId());
+  auto eulerAnglesStore = data_store_utilities::CreateDataStore<float32>(fixture.data_structure, fixture.feature_euler_angles_path, {3}, {3});
+  auto* eulerAnglesArrayPtr = Float32ArrayType::Create(fixture.data_structure, fixture.feature_euler_angles_path.getTargetName(), eulerAnglesStore, featureDataPtr->getId());
   REQUIRE(eulerAnglesArrayPtr != nullptr);
   eulerAnglesStore->fill(0.0F);
 
-  auto featurePhasesStore = DataStoreUtilities::CreateDataStore<int32>(fixture.dataStructure, fixture.featurePhasesPath, {3}, {1});
-  auto* featurePhasesArrayPtr = Int32Array::Create(fixture.dataStructure, fixture.featurePhasesPath.getTargetName(), featurePhasesStore, featureDataPtr->getId());
+  auto featurePhasesStore = data_store_utilities::CreateDataStore<int32>(fixture.data_structure, fixture.feature_phases_path, {3}, {1});
+  auto* featurePhasesArrayPtr = Int32ArrayType::Create(fixture.data_structure, fixture.feature_phases_path.getTargetName(), featurePhasesStore, featureDataPtr->getId());
   REQUIRE(featurePhasesArrayPtr != nullptr);
   featurePhasesStore->fill(0);
   (*featurePhasesStore)[1] = 1;
   (*featurePhasesStore)[2] = 1;
 
-  auto crystalStructuresStore = DataStoreUtilities::CreateDataStore<uint32>(fixture.dataStructure, fixture.crystalStructuresPath, {2}, {1});
-  auto* crystalStructuresArrayPtr = UInt32Array::Create(fixture.dataStructure, fixture.crystalStructuresPath.getTargetName(), crystalStructuresStore, phaseDataPtr->getId());
+  auto crystalStructuresStore = data_store_utilities::CreateDataStore<uint32>(fixture.data_structure, fixture.crystal_structures_path, {2}, {1});
+  auto* crystalStructuresArrayPtr = UInt32ArrayType::Create(fixture.data_structure, fixture.crystal_structures_path.getTargetName(), crystalStructuresStore, phaseDataPtr->getId());
   REQUIRE(crystalStructuresArrayPtr != nullptr);
   crystalStructuresStore->fill(0);
   (*crystalStructuresStore)[1] = 4;
@@ -144,21 +144,21 @@ void ExecuteGbcd(GbcdBoundaryFixture& fixture)
   ComputeGBCDFilter filter;
   Arguments args = filter.getDefaultArguments();
   args.insertOrAssign(ComputeGBCDFilter::k_GBCDRes_Key, std::make_any<float32>(9.0F));
-  args.insertOrAssign(ComputeGBCDFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(fixture.triangleGeometryPath));
-  args.insertOrAssign(ComputeGBCDFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(fixture.faceLabelsPath));
-  args.insertOrAssign(ComputeGBCDFilter::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(fixture.faceNormalsPath));
-  args.insertOrAssign(ComputeGBCDFilter::k_SurfaceMeshFaceAreasArrayPath_Key, std::make_any<DataPath>(fixture.faceAreasPath));
-  args.insertOrAssign(ComputeGBCDFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(fixture.featureEulerAnglesPath));
-  args.insertOrAssign(ComputeGBCDFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(fixture.featurePhasesPath));
-  args.insertOrAssign(ComputeGBCDFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(fixture.crystalStructuresPath));
+  args.insertOrAssign(ComputeGBCDFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(fixture.triangle_geometry_path));
+  args.insertOrAssign(ComputeGBCDFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(fixture.face_labels_path));
+  args.insertOrAssign(ComputeGBCDFilter::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(fixture.face_normals_path));
+  args.insertOrAssign(ComputeGBCDFilter::k_SurfaceMeshFaceAreasArrayPath_Key, std::make_any<DataPath>(fixture.face_areas_path));
+  args.insertOrAssign(ComputeGBCDFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(fixture.feature_euler_angles_path));
+  args.insertOrAssign(ComputeGBCDFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(fixture.feature_phases_path));
+  args.insertOrAssign(ComputeGBCDFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(fixture.crystal_structures_path));
   args.insertOrAssign(ComputeGBCDFilter::k_FaceEnsembleAttributeMatrixName_Key, std::make_any<std::string>("GBCD Face Ensemble Data"));
-  args.insertOrAssign(ComputeGBCDFilter::k_GBCDArrayName_Key, std::make_any<std::string>(Constants::k_GBCD_Name));
+  args.insertOrAssign(ComputeGBCDFilter::k_GBCDArrayName_Key, std::make_any<std::string>(constants::k_GbcdName));
 
-  const auto preflightResult = filter.preflight(fixture.dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(fixture.dataStructure, args);
+  const auto preflightResult = filter.preflight(fixture.data_structure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  const auto executeResult = filter.execute(fixture.data_structure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-  UnitTest::CheckArraysInheritTupleDims(fixture.dataStructure);
+  unit_test::CheckArraysInheritTupleDims(fixture.data_structure);
 }
 
 /**
@@ -166,7 +166,7 @@ void ExecuteGbcd(GbcdBoundaryFixture& fixture)
  * @param gbcdArrayRef Contains the GBCD output.
  * @return Indices of finite positive bins.
  */
-std::set<usize> GetPositiveGbcdBins(const Float64Array& gbcdArrayRef)
+std::set<usize> GetPositiveGbcdBins(const Float64ArrayType& gbcdArrayRef)
 {
   std::set<usize> populatedBins;
   for(usize binIdx = 0; binIdx < gbcdArrayRef.getSize(); binIdx++)
@@ -190,7 +190,7 @@ std::set<usize> GetPositiveGbcdBins(const Float64Array& gbcdArrayRef)
  * @param actualArrayRef Contains the expanded output.
  * @param expectedArrayRef Contains the compact oracle output.
  */
-void RequireExactGbcdEquality(const Float64Array& actualArrayRef, const Float64Array& expectedArrayRef)
+void RequireExactGbcdEquality(const Float64ArrayType& actualArrayRef, const Float64ArrayType& expectedArrayRef)
 {
   REQUIRE(actualArrayRef.getSize() == expectedArrayRef.getSize());
   for(usize binIdx = 0; binIdx < actualArrayRef.getSize(); binIdx++)
@@ -212,28 +212,28 @@ void RequireExactGbcdEquality(const Float64Array& actualArrayRef, const Float64A
 
 TEST_CASE("OrientationAnalysis::ComputeGBCD", "[OrientationAnalysis][ComputeGBCD]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
 
   // Read the Small IN100 Data set
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  DataPath smallIn100Group({nx::core::Constants::k_SmallIN100});
-  DataPath featureDataPath = smallIn100Group.createChildPath(Constants::k_Grain_Data);
-  DataPath avgEulerAnglesPath = featureDataPath.createChildPath(Constants::k_AvgEulerAngles);
-  DataPath featurePhasesPath = featureDataPath.createChildPath(Constants::k_Phases);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
+  DataPath smallIn100Group({nx::core::constants::k_SmallIN100});
+  DataPath featureDataPath = smallIn100Group.createChildPath(constants::k_GrainDataWithSpaces);
+  DataPath avgEulerAnglesPath = featureDataPath.createChildPath(constants::k_AvgEulerAngles);
+  DataPath featurePhasesPath = featureDataPath.createChildPath(constants::k_Phases);
 
-  DataPath ensembleDataPath = smallIn100Group.createChildPath(Constants::k_Phase_Data);
-  DataPath crystalStructurePath = ensembleDataPath.createChildPath(Constants::k_CrystalStructures);
+  DataPath ensembleDataPath = smallIn100Group.createChildPath(constants::k_PhaseData);
+  DataPath crystalStructurePath = ensembleDataPath.createChildPath(constants::k_CrystalStructures);
 
-  DataPath triangleDataContainerPath({Constants::k_TriangleDataContainerName});
-  DataPath faceDataGroup = triangleDataContainerPath.createChildPath(Constants::k_FaceData);
+  DataPath triangleDataContainerPath({constants::k_TriangleDataContainerName});
+  DataPath faceDataGroup = triangleDataContainerPath.createChildPath(constants::k_FaceData);
   DataPath faceEnsemblePath = triangleDataContainerPath.createChildPath(k_FaceEnsembleDataPath);
 
-  DataPath faceLabels = faceDataGroup.createChildPath(Constants::k_FaceLabels);
-  DataPath faceNormals = faceDataGroup.createChildPath(Constants::k_FaceNormals);
-  DataPath faceAreas = faceDataGroup.createChildPath(Constants::k_FaceAreas);
+  DataPath faceLabels = faceDataGroup.createChildPath(constants::k_FaceLabels);
+  DataPath faceNormals = faceDataGroup.createChildPath(constants::k_FaceNormals);
+  DataPath faceAreas = faceDataGroup.createChildPath(constants::k_FaceAreas);
 
   {
     // Instantiate the filter, a DataStructure object and an Arguments Object
@@ -241,7 +241,7 @@ TEST_CASE("OrientationAnalysis::ComputeGBCD", "[OrientationAnalysis][ComputeGBCD
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(ComputeGBCDFilter::k_GBCDRes_Key, std::make_any<Float32Parameter::ValueType>(9.0F));
+    args.insertOrAssign(ComputeGBCDFilter::k_GBCDRes_Key, std::make_any<Float32ParameterType::ValueType>(9.0F));
 
     args.insertOrAssign(ComputeGBCDFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<GeometrySelectionParameter::ValueType>(triangleDataContainerPath));
 
@@ -252,11 +252,11 @@ TEST_CASE("OrientationAnalysis::ComputeGBCD", "[OrientationAnalysis][ComputeGBCD
     args.insertOrAssign(ComputeGBCDFilter::k_FeaturePhasesArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(featurePhasesPath));
     args.insertOrAssign(ComputeGBCDFilter::k_CrystalStructuresArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(crystalStructurePath));
     args.insertOrAssign(ComputeGBCDFilter::k_FaceEnsembleAttributeMatrixName_Key, std::make_any<DataObjectNameParameter::ValueType>(k_FaceEnsembleDataPath));
-    args.insertOrAssign(ComputeGBCDFilter::k_GBCDArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(Constants::k_GBCD_Name));
+    args.insertOrAssign(ComputeGBCDFilter::k_GBCDArrayName_Key, std::make_any<DataObjectNameParameter::ValueType>(constants::k_GbcdName));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -265,23 +265,23 @@ TEST_CASE("OrientationAnalysis::ComputeGBCD", "[OrientationAnalysis][ComputeGBCD
 
   // Compare the Output GBCD Data
   {
-    const DataPath k_GeneratedDataPath = faceEnsemblePath.createChildPath(Constants::k_GBCD_Name);
-    const DataPath k_ExemplarArrayPath = triangleDataContainerPath.createChildPath("FaceEnsembleData").createChildPath(Constants::k_GBCD_Name);
+    const DataPath kGeneratedDataPath = faceEnsemblePath.createChildPath(constants::k_GbcdName);
+    const DataPath kExemplarArrayPath = triangleDataContainerPath.createChildPath("FaceEnsembleData").createChildPath(constants::k_GbcdName);
 
-    UnitTest::CompareFloatArraysWithNans<float64>(dataStructure, k_ExemplarArrayPath, k_GeneratedDataPath);
+    unit_test::CompareFloatArraysWithNans<float64>(dataStructure, kExemplarArrayPath, kGeneratedDataPath);
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/find_gbcd.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeGBCDFilter: Chunk Boundaries", "[OrientationAnalysis][ComputeGBCDFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, 1);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceInCore, 1);
   constexpr std::array<usize, 6> k_CompactContributorFaceIndices = {0, 1, 2, 3, 4, 5};
   constexpr std::array<usize, 6> k_ContributorIndices = {0, 1, 2, 3, 4, 5};
 
@@ -295,8 +295,8 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDFilter: Chunk Boundaries", "[Orientat
     GbcdBoundaryFixture singleFaceFixture = CreateGbcdBoundaryFixture(1, faceIndices, contributorIndices);
     ExecuteGbcd(singleFaceFixture);
 
-    REQUIRE_NOTHROW(singleFaceFixture.dataStructure.getDataRefAs<Float64Array>(singleFaceFixture.outputPath));
-    const auto& singleFaceGbcdArrayRef = singleFaceFixture.dataStructure.getDataRefAs<Float64Array>(singleFaceFixture.outputPath);
+    REQUIRE_NOTHROW(singleFaceFixture.data_structure.getDataRefAs<Float64ArrayType>(singleFaceFixture.output_path));
+    const auto& singleFaceGbcdArrayRef = singleFaceFixture.data_structure.getDataRefAs<Float64ArrayType>(singleFaceFixture.output_path);
     singleFaceBinSets[contributorIdx] = GetPositiveGbcdBins(singleFaceGbcdArrayRef);
     REQUIRE(singleFaceBinSets[contributorIdx].size() == 2);
     const float64 expectedPopulatedValue = static_cast<float64>(singleFaceGbcdArrayRef.getNumberOfComponents()) / 2.0;
@@ -343,45 +343,45 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDFilter: Chunk Boundaries", "[Orientat
 
   GbcdBoundaryFixture compactFixture = CreateGbcdBoundaryFixture(k_CompactContributorFaceIndices.size(), k_CompactContributorFaceIndices, k_ContributorIndices);
   ExecuteGbcd(compactFixture);
-  REQUIRE_NOTHROW(compactFixture.dataStructure.getDataRefAs<Float64Array>(compactFixture.outputPath));
-  const auto& compactGbcdArrayRef = compactFixture.dataStructure.getDataRefAs<Float64Array>(compactFixture.outputPath);
+  REQUIRE_NOTHROW(compactFixture.data_structure.getDataRefAs<Float64ArrayType>(compactFixture.output_path));
+  const auto& compactGbcdArrayRef = compactFixture.data_structure.getDataRefAs<Float64ArrayType>(compactFixture.output_path);
   const std::set<usize> compactBinSet = GetPositiveGbcdBins(compactGbcdArrayRef);
   REQUIRE(compactBinSet == singleFaceBinUnion);
 
   GbcdBoundaryFixture expandedFixture = CreateGbcdBoundaryFixture(k_GbcdChunkBoundaryFaceCount, k_GbcdContributorFaceIndices, k_ContributorIndices);
   ExecuteGbcd(expandedFixture);
-  REQUIRE_NOTHROW(expandedFixture.dataStructure.getDataRefAs<Float64Array>(expandedFixture.outputPath));
-  const auto& expandedGbcdArrayRef = expandedFixture.dataStructure.getDataRefAs<Float64Array>(expandedFixture.outputPath);
+  REQUIRE_NOTHROW(expandedFixture.data_structure.getDataRefAs<Float64ArrayType>(expandedFixture.output_path));
+  const auto& expandedGbcdArrayRef = expandedFixture.data_structure.getDataRefAs<Float64ArrayType>(expandedFixture.output_path);
   RequireExactGbcdEquality(expandedGbcdArrayRef, compactGbcdArrayRef);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeGBCDFilter: Phase and Laue Index Bounds", "[OrientationAnalysis][ComputeGBCDFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
-  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_6_Small_IN100_GBCD.tar.gz", "6_6_Small_IN100_GBCD");
   const fs::path inputFile = fs::path(unit_test::k_TestFilesDir.view()) / "6_6_Small_IN100_GBCD" / "6_6_Small_IN100_GBCD.dream3d";
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFile);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFile);
 
-  const DataPath featureDataPath = DataPath({Constants::k_SmallIN100}).createChildPath(Constants::k_Grain_Data);
-  const DataPath avgEulerAnglesPath = featureDataPath.createChildPath(Constants::k_AvgEulerAngles);
-  const DataPath featurePhasesPath = featureDataPath.createChildPath(Constants::k_Phases);
-  const DataPath crystalStructuresPath = DataPath({Constants::k_SmallIN100}).createChildPath(Constants::k_Phase_Data).createChildPath(Constants::k_CrystalStructures);
-  const DataPath triangleGeometryPath({Constants::k_TriangleDataContainerName});
-  const DataPath faceDataPath = triangleGeometryPath.createChildPath(Constants::k_FaceData);
+  const DataPath featureDataPath = DataPath({constants::k_SmallIN100}).createChildPath(constants::k_GrainDataWithSpaces);
+  const DataPath avgEulerAnglesPath = featureDataPath.createChildPath(constants::k_AvgEulerAngles);
+  const DataPath featurePhasesPath = featureDataPath.createChildPath(constants::k_Phases);
+  const DataPath crystalStructuresPath = DataPath({constants::k_SmallIN100}).createChildPath(constants::k_PhaseData).createChildPath(constants::k_CrystalStructures);
+  const DataPath triangleGeometryPath({constants::k_TriangleDataContainerName});
+  const DataPath faceDataPath = triangleGeometryPath.createChildPath(constants::k_FaceData);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(featurePhasesPath));
-  auto& featurePhasesArrayRef = dataStructure.getDataRefAs<Int32Array>(featurePhasesPath);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(crystalStructuresPath));
-  auto& crystalStructuresArrayRef = dataStructure.getDataRefAs<UInt32Array>(crystalStructuresPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(featurePhasesPath));
+  auto& featurePhasesArrayRef = dataStructure.getDataRefAs<Int32ArrayType>(featurePhasesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(crystalStructuresPath));
+  auto& crystalStructuresArrayRef = dataStructure.getDataRefAs<UInt32ArrayType>(crystalStructuresPath);
 
   ComputeGBCDFilter filter;
   Arguments args = filter.getDefaultArguments();
-  args.insertOrAssign(ComputeGBCDFilter::k_GBCDRes_Key, std::make_any<Float32Parameter::ValueType>(9.0F));
+  args.insertOrAssign(ComputeGBCDFilter::k_GBCDRes_Key, std::make_any<Float32ParameterType::ValueType>(9.0F));
   args.insertOrAssign(ComputeGBCDFilter::k_SelectedTriangleGeometryPath_Key, std::make_any<DataPath>(triangleGeometryPath));
-  args.insertOrAssign(ComputeGBCDFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(faceDataPath.createChildPath(Constants::k_FaceLabels)));
-  args.insertOrAssign(ComputeGBCDFilter::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(faceDataPath.createChildPath(Constants::k_FaceNormals)));
-  args.insertOrAssign(ComputeGBCDFilter::k_SurfaceMeshFaceAreasArrayPath_Key, std::make_any<DataPath>(faceDataPath.createChildPath(Constants::k_FaceAreas)));
+  args.insertOrAssign(ComputeGBCDFilter::k_SurfaceMeshFaceLabelsArrayPath_Key, std::make_any<DataPath>(faceDataPath.createChildPath(constants::k_FaceLabels)));
+  args.insertOrAssign(ComputeGBCDFilter::k_SurfaceMeshFaceNormalsArrayPath_Key, std::make_any<DataPath>(faceDataPath.createChildPath(constants::k_FaceNormals)));
+  args.insertOrAssign(ComputeGBCDFilter::k_SurfaceMeshFaceAreasArrayPath_Key, std::make_any<DataPath>(faceDataPath.createChildPath(constants::k_FaceAreas)));
   args.insertOrAssign(ComputeGBCDFilter::k_FeatureEulerAnglesArrayPath_Key, std::make_any<DataPath>(avgEulerAnglesPath));
   args.insertOrAssign(ComputeGBCDFilter::k_FeaturePhasesArrayPath_Key, std::make_any<DataPath>(featurePhasesPath));
   args.insertOrAssign(ComputeGBCDFilter::k_CrystalStructuresArrayPath_Key, std::make_any<DataPath>(crystalStructuresPath));
@@ -408,14 +408,14 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDFilter: Phase and Laue Index Bounds",
     REQUIRE(executeResult.result.errors()[0].code == -75001);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::ComputeGBCDFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][ComputeGBCDFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -428,22 +428,22 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDFilter: SIMPL Backwards Compatibility
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeGBCDFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeGBCDFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<float32>(ComputeGBCDFilter::k_GBCDRes_Key) == 2.5f);
       CHECK(args.value<DataPath>(ComputeGBCDFilter::k_SelectedTriangleGeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(ComputeGBCDFilter::k_SurfaceMeshFaceLabelsArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));

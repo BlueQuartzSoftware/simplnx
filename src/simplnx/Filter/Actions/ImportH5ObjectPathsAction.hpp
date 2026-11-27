@@ -25,7 +25,7 @@ public:
    * @param paths The paths to import. An empty list imports no objects.
    * @param useDefaultGeometryValues Use 0 for invalid stored image origin components and 1 for invalid spacing components.
    */
-  ImportH5ObjectPathsAction(const std::filesystem::path& importFile, const PathsType& paths, bool useDefaultGeometryValues = false);
+  ImportH5ObjectPathsAction(std::filesystem::path importFile, PathsType paths, bool useDefaultGeometryValues = false);
 
   ~ImportH5ObjectPathsAction() noexcept override;
 
@@ -50,7 +50,7 @@ public:
    * @brief Returns a copy of the action.
    * @return UniquePointer A unique pointer to the cloned action
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns all of the DataPaths to be created.

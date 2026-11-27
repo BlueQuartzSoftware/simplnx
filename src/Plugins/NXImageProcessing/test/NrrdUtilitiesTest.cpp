@@ -28,7 +28,7 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -127,10 +127,10 @@ TEST_CASE("NXImageProcessing::NrrdUtilities: parse scalar 3D header", "[NXImageP
 
   auto result = nrrd::ReadNrrdHeader(p);
   REQUIRE(result.valid());
-  const auto md = result.value();
-  REQUIRE(md.dataType == DataType::int16);
-  REQUIRE(md.componentCount == 1);
-  REQUIRE(md.spatialDim == 3);
+  const auto& md = result.value();
+  REQUIRE(md.data_type == DataType::int16);
+  REQUIRE(md.component_count == 1);
+  REQUIRE(md.spatial_dim == 3);
   REQUIRE(md.dimensions == std::array<usize, 3>{4, 3, 2});
   REQUIRE(md.spacing[0] == Approx(0.5f));
   REQUIRE(md.spacing[1] == Approx(0.75f));
@@ -139,10 +139,10 @@ TEST_CASE("NXImageProcessing::NrrdUtilities: parse scalar 3D header", "[NXImageP
   REQUIRE(md.origin[1] == Approx(2.0f));
   REQUIRE(md.origin[2] == Approx(3.5f));
   REQUIRE(md.encoding == nrrd::Encoding::Raw);
-  REQUIRE(md.byteSwapRequired == false); // little endian on a little-endian host
-  REQUIRE_FALSE(md.affineHasRotation);
+  REQUIRE(md.byte_swap_required == false); // little endian on a little-endian host
+  REQUIRE_FALSE(md.affine_has_rotation);
   REQUIRE(md.detached == false);
-  REQUIRE(md.dataStartOffset > 0);
+  REQUIRE(md.data_start_offset > 0);
 }
 
 TEST_CASE("NXImageProcessing::NrrdUtilities: parse 2D scalar (Z=1)", "[NXImageProcessing][NrrdUtilities]")
@@ -153,11 +153,11 @@ TEST_CASE("NXImageProcessing::NrrdUtilities: parse 2D scalar (Z=1)", "[NXImagePr
                std::vector<uint8_t>(5 * 4, 0));
   auto result = nrrd::ReadNrrdHeader(p);
   REQUIRE(result.valid());
-  const auto md = result.value();
-  REQUIRE(md.spatialDim == 2);
+  const auto& md = result.value();
+  REQUIRE(md.spatial_dim == 2);
   REQUIRE(md.dimensions == std::array<usize, 3>{5, 4, 1});
-  REQUIRE(md.componentCount == 1);
-  REQUIRE(md.dataType == DataType::uint8);
+  REQUIRE(md.component_count == 1);
+  REQUIRE(md.data_type == DataType::uint8);
 }
 
 TEST_CASE("NXImageProcessing::NrrdUtilities: parse RGB/vector component axis", "[NXImageProcessing][NrrdUtilities]")
@@ -169,12 +169,12 @@ TEST_CASE("NXImageProcessing::NrrdUtilities: parse RGB/vector component axis", "
                std::vector<uint8_t>(3 * 8 * 6, 0));
   auto result = nrrd::ReadNrrdHeader(p);
   REQUIRE(result.valid());
-  const auto md = result.value();
-  REQUIRE(md.componentCount == 3);
-  REQUIRE(md.spatialDim == 2);
+  const auto& md = result.value();
+  REQUIRE(md.component_count == 3);
+  REQUIRE(md.spatial_dim == 2);
   REQUIRE(md.dimensions == std::array<usize, 3>{8, 6, 1}); // X=8, Y=6, Z=1
-  REQUIRE(md.dataType == DataType::uint8);
-  REQUIRE_FALSE(md.affineHasRotation);
+  REQUIRE(md.data_type == DataType::uint8);
+  REQUIRE_FALSE(md.affine_has_rotation);
 }
 
 TEST_CASE("NXImageProcessing::NrrdUtilities: permuted directions flag rotation", "[NXImageProcessing][NrrdUtilities]")
@@ -186,8 +186,8 @@ TEST_CASE("NXImageProcessing::NrrdUtilities: permuted directions flag rotation",
                std::vector<uint8_t>(4 * 4 * 4 * 2, 0));
   auto result = nrrd::ReadNrrdHeader(p);
   REQUIRE(result.valid());
-  const auto md = result.value();
-  REQUIRE(md.affineHasRotation);          // permutation is not axis-aligned
+  const auto& md = result.value();
+  REQUIRE(md.affine_has_rotation);        // permutation is not axis-aligned
   REQUIRE(md.spacing[0] == Approx(2.0f)); // ||(0,-2,0)||
   REQUIRE(md.spacing[2] == Approx(2.5f)); // ||(2.5,0,0)||
 }
@@ -410,51 +410,51 @@ DataPath ImageDataPath()
 // exercised directly. The cell AttributeMatrix tuple dims are [Z, Y, X].
 DataStructure BuildNrrdTarget(DataType dataType, const std::array<usize, 3>& destDims, usize comp)
 {
-  DataStructure ds;
+  DataStructure dataStructure;
   const CreateImageGeometryAction::DimensionType dims = {destDims[0], destDims[1], destDims[2]};
   const CreateImageGeometryAction::OriginType origin = {0.0f, 0.0f, 0.0f};
   const CreateImageGeometryAction::SpacingType spacing = {1.0f, 1.0f, 1.0f};
   auto geomAction = CreateImageGeometryAction(k_GeomPath, dims, origin, spacing, k_CellDataName);
-  REQUIRE(geomAction.apply(ds, IDataAction::Mode::Execute).valid());
+  REQUIRE(geomAction.apply(dataStructure, IDataAction::Mode::Execute).valid());
 
   const std::vector<usize> tupleDims = {destDims[2], destDims[1], destDims[0]}; // [Z, Y, X]
   auto arrayAction = CreateArrayAction(dataType, tupleDims, {comp}, ImageDataPath());
-  REQUIRE(arrayAction.apply(ds, IDataAction::Mode::Execute).valid());
-  return ds;
+  REQUIRE(arrayAction.apply(dataStructure, IDataAction::Mode::Execute).valid());
+  return dataStructure;
 }
 
-Result<> RunReadNrrdFile(DataStructure& ds, const fs::path& inputFile, const CropGeometryParameter::ValueType& crop = {})
+Result<> RunReadNrrdFile(DataStructure& dataStructure, const fs::path& inputFile, const CropGeometryParameter::ValueType& crop = {})
 {
   ReadNrrdFileInputValues inputValues;
-  inputValues.InputFilePath = inputFile;
-  inputValues.ImageGeometryPath = k_GeomPath;
-  inputValues.CellAttributeMatrixName = k_CellDataName;
-  inputValues.ImageDataArrayName = k_ArrayName;
-  inputValues.CroppingOptions = crop;
+  inputValues.input_file_path = inputFile;
+  inputValues.image_geometry_path = k_GeomPath;
+  inputValues.cell_attribute_matrix_name = k_CellDataName;
+  inputValues.image_data_array_name = k_ArrayName;
+  inputValues.cropping_options = crop;
 
   const IFilter::MessageHandler messageHandler{};
   const std::atomic_bool shouldCancel{false};
-  ReadNrrdFile algorithm(ds, messageHandler, shouldCancel, &inputValues);
+  ReadNrrdFile algorithm(dataStructure, messageHandler, shouldCancel, &inputValues);
   return algorithm();
 }
 } // namespace
 
 TEST_CASE("NXImageProcessing::ReadNrrdFile: scalar 3D streams X-fastest [Z,Y,X]", "[NXImageProcessing][NrrdUtilities]")
 {
-  constexpr usize X = 4;
-  constexpr usize Y = 3;
-  constexpr usize Z = 2;
-  std::vector<int16_t> fileValues(X * Y * Z);
+  constexpr usize k_X = 4;
+  constexpr usize k_Y = 3;
+  constexpr usize k_Z = 2;
+  std::vector<int16_t> fileValues(k_X * k_Y * k_Z);
   std::iota(fileValues.begin(), fileValues.end(), static_cast<int16_t>(-5));
 
   const fs::path p = NrrdOutputDir() / "algo_scalar3d.nrrd";
   WriteNrrdRaw(p, {"NRRD0004", "type: short", "dimension: 3", "sizes: 4 3 2", "kinds: domain domain domain", "endian: little", "encoding: raw"}, ToBytes(fileValues));
 
-  DataStructure ds = BuildNrrdTarget(DataType::int16, {X, Y, Z}, 1);
-  REQUIRE(RunReadNrrdFile(ds, p).valid());
+  DataStructure dataStructure = BuildNrrdTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
+  REQUIRE(RunReadNrrdFile(dataStructure, p).valid());
 
-  const auto& store = ds.getDataRefAs<DataArray<int16>>(ImageDataPath()).getDataStoreRef();
-  REQUIRE(store.getNumberOfTuples() == X * Y * Z);
+  const auto& store = dataStructure.getDataRefAs<DataArray<int16>>(ImageDataPath()).getDataStoreRef();
+  REQUIRE(store.getNumberOfTuples() == k_X * k_Y * k_Z);
   REQUIRE(store.getNumberOfComponents() == 1);
   // No cropping => destination tuple order equals file order, so store[i] == fileValues[i].
   for(usize i = 0; i < fileValues.size(); i++)
@@ -465,10 +465,10 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: scalar 3D streams X-fastest [Z,Y,X]"
 
 TEST_CASE("NXImageProcessing::ReadNrrdFile: big-endian data is byteswapped", "[NXImageProcessing][NrrdUtilities]")
 {
-  constexpr usize X = 4;
-  constexpr usize Y = 3;
-  constexpr usize Z = 2;
-  std::vector<int16_t> logical(X * Y * Z);
+  constexpr usize k_X = 4;
+  constexpr usize k_Y = 3;
+  constexpr usize k_Z = 2;
+  std::vector<int16_t> logical(k_X * k_Y * k_Z);
   for(usize i = 0; i < logical.size(); i++)
   {
     logical[i] = static_cast<int16_t>(static_cast<int>(i) * 257 - 1000);
@@ -487,10 +487,10 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: big-endian data is byteswapped", "[N
   const fs::path p = NrrdOutputDir() / "algo_bigendian.nrrd";
   WriteNrrdRaw(p, {"NRRD0004", "type: short", "dimension: 3", "sizes: 4 3 2", "kinds: domain domain domain", "endian: big", "encoding: raw"}, data);
 
-  DataStructure ds = BuildNrrdTarget(DataType::int16, {X, Y, Z}, 1);
-  REQUIRE(RunReadNrrdFile(ds, p).valid());
+  DataStructure dataStructure = BuildNrrdTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
+  REQUIRE(RunReadNrrdFile(dataStructure, p).valid());
 
-  const auto& store = ds.getDataRefAs<DataArray<int16>>(ImageDataPath()).getDataStoreRef();
+  const auto& store = dataStructure.getDataRefAs<DataArray<int16>>(ImageDataPath()).getDataStoreRef();
   for(usize i = 0; i < logical.size(); i++)
   {
     REQUIRE(store.getValue(i) == logical[i]);
@@ -499,22 +499,22 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: big-endian data is byteswapped", "[N
 
 TEST_CASE("NXImageProcessing::ReadNrrdFile: RGB component axis interleaves components", "[NXImageProcessing][NrrdUtilities]")
 {
-  constexpr usize comp = 3;
-  constexpr usize X = 4;
-  constexpr usize Y = 2; // Z == 1 (2D image)
-  std::vector<uint8_t> fileValues(comp * X * Y);
+  constexpr usize k_Comp = 3;
+  constexpr usize k_X = 4;
+  constexpr usize k_Y = 2; // Z == 1 (2D image)
+  std::vector<uint8_t> fileValues(k_Comp * k_X * k_Y);
   std::iota(fileValues.begin(), fileValues.end(), static_cast<uint8_t>(0));
 
   const fs::path p = NrrdOutputDir() / "algo_rgb.nrrd";
   WriteNrrdRaw(p, {"NRRD0004", "type: unsigned char", "dimension: 3", "space dimension: 2", "sizes: 3 4 2", "space directions: none (1,0) (0,1)", "kinds: vector domain domain", "encoding: raw"},
                fileValues);
 
-  DataStructure ds = BuildNrrdTarget(DataType::uint8, {X, Y, 1}, comp);
-  REQUIRE(RunReadNrrdFile(ds, p).valid());
+  DataStructure dataStructure = BuildNrrdTarget(DataType::uint8, {k_X, k_Y, 1}, k_Comp);
+  REQUIRE(RunReadNrrdFile(dataStructure, p).valid());
 
-  const auto& store = ds.getDataRefAs<DataArray<uint8>>(ImageDataPath()).getDataStoreRef();
-  REQUIRE(store.getNumberOfTuples() == X * Y);
-  REQUIRE(store.getNumberOfComponents() == comp);
+  const auto& store = dataStructure.getDataRefAs<DataArray<uint8>>(ImageDataPath()).getDataStoreRef();
+  REQUIRE(store.getNumberOfTuples() == k_X * k_Y);
+  REQUIRE(store.getNumberOfComponents() == k_Comp);
   // Component axis is fastest in the file (comp, X, Y) which already matches the
   // interleaved simplnx layout, so store[i] == fileValues[i].
   for(usize i = 0; i < fileValues.size(); i++)
@@ -525,10 +525,10 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: RGB component axis interleaves compo
 
 TEST_CASE("NXImageProcessing::ReadNrrdFile: voxel subvolume crop keeps only the requested region", "[NXImageProcessing][NrrdUtilities]")
 {
-  constexpr usize X = 4;
-  constexpr usize Y = 3;
-  constexpr usize Z = 2;
-  std::vector<int16_t> fileValues(X * Y * Z);
+  constexpr usize k_X = 4;
+  constexpr usize k_Y = 3;
+  constexpr usize k_Z = 2;
+  std::vector<int16_t> fileValues(k_X * k_Y * k_Z);
   std::iota(fileValues.begin(), fileValues.end(), static_cast<int16_t>(0)); // value == flat file position
 
   const fs::path p = NrrdOutputDir() / "algo_crop.nrrd";
@@ -536,18 +536,18 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: voxel subvolume crop keeps only the 
 
   CropGeometryParameter::ValueType crop;
   crop.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
-  crop.cropX = true;
-  crop.xBoundVoxels = {1, 2};
-  crop.cropY = true;
-  crop.yBoundVoxels = {0, 1};
-  crop.cropZ = true;
-  crop.zBoundVoxels = {1, 1};
+  crop.crop_x = true;
+  crop.x_bound_voxels = {1, 2};
+  crop.crop_y = true;
+  crop.y_bound_voxels = {0, 1};
+  crop.crop_z = true;
+  crop.z_bound_voxels = {1, 1};
 
   // Cropped extent is X=2, Y=2, Z=1.
-  DataStructure ds = BuildNrrdTarget(DataType::int16, {2, 2, 1}, 1);
-  REQUIRE(RunReadNrrdFile(ds, p, crop).valid());
+  DataStructure dataStructure = BuildNrrdTarget(DataType::int16, {2, 2, 1}, 1);
+  REQUIRE(RunReadNrrdFile(dataStructure, p, crop).valid());
 
-  const auto& store = ds.getDataRefAs<DataArray<int16>>(ImageDataPath()).getDataStoreRef();
+  const auto& store = dataStructure.getDataRefAs<DataArray<int16>>(ImageDataPath()).getDataStoreRef();
   // Destination order z=1,y=0,x=1..2 then z=1,y=1,x=1..2; file pos = (z*Y + y)*X + x.
   const std::vector<int16_t> expected = {13, 14, 17, 18};
   REQUIRE(store.getNumberOfTuples() == expected.size());
@@ -559,10 +559,10 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: voxel subvolume crop keeps only the 
 
 TEST_CASE("NXImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file", "[NXImageProcessing][NrrdUtilities]")
 {
-  constexpr usize X = 4;
-  constexpr usize Y = 3;
-  constexpr usize Z = 2;
-  std::vector<int16_t> voxels(X * Y * Z);
+  constexpr usize k_X = 4;
+  constexpr usize k_Y = 3;
+  constexpr usize k_Z = 2;
+  std::vector<int16_t> voxels(k_X * k_Y * k_Z);
   std::iota(voxels.begin(), voxels.end(), static_cast<int16_t>(-5));
   const std::vector<uint8_t> raw = ToBytes(voxels);
 
@@ -572,10 +572,10 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file",
     auto mdResult = nrrd::ReadNrrdHeader(hdr);
     REQUIRE(mdResult.valid());
     REQUIRE(mdResult.value().detached == true);
-    DataStructure ds = BuildNrrdTarget(DataType::int16, {X, Y, Z}, 1);
-    REQUIRE(RunReadNrrdFile(ds, hdr).valid());
-    const auto& store = ds.getDataRefAs<DataArray<int16>>(ImageDataPath()).getDataStoreRef();
-    REQUIRE(store.getNumberOfTuples() == X * Y * Z);
+    DataStructure dataStructure = BuildNrrdTarget(DataType::int16, {k_X, k_Y, k_Z}, 1);
+    REQUIRE(RunReadNrrdFile(dataStructure, hdr).valid());
+    const auto& store = dataStructure.getDataRefAs<DataArray<int16>>(ImageDataPath()).getDataStoreRef();
+    REQUIRE(store.getNumberOfTuples() == k_X * k_Y * k_Z);
     for(usize i = 0; i < voxels.size(); i++)
     {
       REQUIRE(store.getValue(i) == voxels[i]);
@@ -586,8 +586,8 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file",
   {
     const fs::path hdr = NrrdOutputDir() / "detached_raw.nhdr";
     std::vector<std::string> lines = commonHdr;
-    lines.push_back("encoding: raw");
-    lines.push_back("data file: detached_raw.rawdata");
+    lines.emplace_back("encoding: raw");
+    lines.emplace_back("data file: detached_raw.rawdata");
     WriteNhdrDetached(hdr, lines, NrrdOutputDir() / "detached_raw.rawdata", raw);
     readAndCheck(hdr);
   }
@@ -595,8 +595,8 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file",
   {
     const fs::path hdr = NrrdOutputDir() / "detached_gz.nhdr";
     std::vector<std::string> lines = commonHdr;
-    lines.push_back("encoding: gzip");
-    lines.push_back("data file: detached_gz.rawdata.gz");
+    lines.emplace_back("encoding: gzip");
+    lines.emplace_back("data file: detached_gz.rawdata.gz");
     WriteNhdrDetached(hdr, lines, NrrdOutputDir() / "detached_gz.rawdata.gz", GzipCompress(raw));
     readAndCheck(hdr);
   }
@@ -604,8 +604,8 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file",
   {
     const fs::path hdr = NrrdOutputDir() / "detached_spaces.nhdr";
     std::vector<std::string> lines = commonHdr;
-    lines.push_back("encoding: raw");
-    lines.push_back("data file: my scan data.rawdata");
+    lines.emplace_back("encoding: raw");
+    lines.emplace_back("data file: my scan data.rawdata");
     WriteNhdrDetached(hdr, lines, NrrdOutputDir() / "my scan data.rawdata", raw);
     readAndCheck(hdr);
   }
@@ -613,8 +613,8 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file",
   {
     const fs::path hdr = NrrdOutputDir() / "detached_list.nhdr";
     std::vector<std::string> lines = commonHdr;
-    lines.push_back("encoding: raw");
-    lines.push_back("data file: LIST");
+    lines.emplace_back("encoding: raw");
+    lines.emplace_back("data file: LIST");
     WriteNhdrHeaderOnly(hdr, lines);
     const auto result = nrrd::ReadNrrdHeader(hdr);
     REQUIRE(result.invalid());
@@ -624,8 +624,8 @@ TEST_CASE("NXImageProcessing::ReadNrrdFile: detached .nhdr + sibling data file",
   {
     const fs::path hdr = NrrdOutputDir() / "detached_missing.nhdr";
     std::vector<std::string> lines = commonHdr;
-    lines.push_back("encoding: raw");
-    lines.push_back("data file: does_not_exist_zzz.rawdata");
+    lines.emplace_back("encoding: raw");
+    lines.emplace_back("data file: does_not_exist_zzz.rawdata");
     WriteNhdrHeaderOnly(hdr, lines);
     const auto result = nrrd::ReadNrrdHeader(hdr);
     REQUIRE(result.invalid());

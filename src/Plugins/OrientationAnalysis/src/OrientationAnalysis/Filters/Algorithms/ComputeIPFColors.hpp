@@ -22,14 +22,14 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeIPFColorsInputValues
 {
-  std::vector<float> referenceDirection;
-  bool useMask = false;
-  DataPath maskArrayPath;
-  DataPath cellPhasesArrayPath;
-  DataPath cellEulerAnglesArrayPath;
-  DataPath crystalStructuresArrayPath;
-  DataPath cellIpfColorsArrayPath;
-  ebsdlib::ColorKeyKind colorKey = ebsdlib::ColorKeyKind::TSL;
+  std::vector<float> reference_direction;
+  bool use_mask = false;
+  DataPath mask_array_path;
+  DataPath cell_phases_array_path;
+  DataPath cell_euler_angles_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath cell_ipf_colors_array_path;
+  ebsdlib::ColorKeyKind color_key = ebsdlib::ColorKeyKind::TSL;
 };
 
 /**
@@ -59,7 +59,7 @@ public:
   /**
    * @brief Destroys the IPF color dispatcher.
    */
-  ~ComputeIPFColors() noexcept;
+  ~ComputeIPFColors() noexcept = default;
 
   ComputeIPFColors(const ComputeIPFColors&) = delete;
   ComputeIPFColors(ComputeIPFColors&&) = delete;

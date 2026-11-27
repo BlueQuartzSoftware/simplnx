@@ -52,8 +52,8 @@ Parameters ComputeNumFeaturesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Feature Phases", "Array specifying which Ensemble each Feature belongs",
-                                                          DataPath({"DataContainer", "Feature Data", "Phases"}), ArraySelectionParameter::AllowedTypes{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          DataPath({"DataContainer", "Feature Data", "Phases"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_EnsembleAttributeMatrixPath_Key, "Ensemble Attribute Matrix",
@@ -73,14 +73,14 @@ IFilter::VersionType ComputeNumFeaturesFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeNumFeaturesFilter::clone() const
+IFilter::UniquePointerType ComputeNumFeaturesFilter::clone() const
 {
   return std::make_unique<ComputeNumFeaturesFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeNumFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeNumFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   auto pEnsembleDataPathValue = filterArgs.value<DataPath>(k_EnsembleAttributeMatrixPath_Key);
@@ -95,19 +95,19 @@ IFilter::PreflightResult ComputeNumFeaturesFilter::preflightImpl(const DataStruc
   auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::int32, cellEnsembleData.getShape(), std::vector<usize>{1}, pNumFeaturesArrayPathValue);
   resultOutputActions.value().appendAction(std::move(createArrayAction));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeNumFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeNumFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                                               const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pFeaturePhasesArrayPathValue = filterArgs.value<DataPath>(k_FeaturePhasesArrayPath_Key);
   auto pEnsembleDataPathValue = filterArgs.value<DataPath>(k_EnsembleAttributeMatrixPath_Key);
   auto pNumFeaturesArrayPathValue = pEnsembleDataPathValue.createChildPath(filterArgs.value<std::string>(k_NumFeaturesArrayName_Key));
 
-  const auto& featurePhasesStore = dataStructure.getDataAs<Int32Array>(pFeaturePhasesArrayPathValue)->getDataStoreRef();
-  auto& numFeaturesStore = dataStructure.getDataAs<Int32Array>(pNumFeaturesArrayPathValue)->getDataStoreRef();
+  const auto& featurePhasesStore = dataStructure.getDataAs<Int32ArrayType>(pFeaturePhasesArrayPathValue)->getDataStoreRef();
+  auto& numFeaturesStore = dataStructure.getDataAs<Int32ArrayType>(pNumFeaturesArrayPathValue)->getDataStoreRef();
 
   const usize ensembleTupleCount = numFeaturesStore.getNumberOfTuples();
   for(usize index = 1; index < featurePhasesStore.getNumberOfTuples(); index++)
@@ -131,11 +131,11 @@ Result<> ComputeNumFeaturesFilter::executeImpl(DataStructure& dataStructure, con
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
-constexpr StringLiteral k_NumFeaturesArrayPathKey = "NumFeaturesArrayPath";
-} // namespace SIMPL
+constexpr StringLiteralType k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
+constexpr StringLiteralType k_NumFeaturesArrayPathKey = "NumFeaturesArrayPath";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeNumFeaturesFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -144,11 +144,11 @@ Result<Arguments> ComputeNumFeaturesFilter::FromSIMPLJson(const nlohmann::json& 
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_NumFeaturesArrayPathKey, k_EnsembleAttributeMatrixPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_NumFeaturesArrayPathKey, k_EnsembleAttributeMatrixPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_NumFeaturesArrayPathKey, k_NumFeaturesArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_NumFeaturesArrayPathKey, k_NumFeaturesArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

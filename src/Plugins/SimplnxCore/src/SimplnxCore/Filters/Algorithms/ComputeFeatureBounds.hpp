@@ -26,18 +26,18 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeFeatureBoundsInputValues
 {
-  ChoicesParameter::ValueType OutputType;
-  DataPath GeometryPath;
-  DataPath FeatureAMPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath MinArrayPath;
-  DataPath MaxArrayPath;
-  DataPath UnifiedArrayPath;
+  ChoicesParameter::ValueType output_type{};
+  DataPath geometry_path;
+  DataPath feature_am_path;
+  DataPath feature_ids_array_path;
+  DataPath min_array_path;
+  DataPath max_array_path;
+  DataPath unified_array_path;
 
-  bool CreateEdgeGeometry;
-  DataGroupCreationParameter::ValueType EdgeGeometryDataPath;
-  DataObjectNameParameter::ValueType EdgeAttributeMatrixName;
-  DataObjectNameParameter::ValueType FeatureIdsArrayName;
+  bool create_edge_geometry{};
+  DataGroupCreationParameter::ValueType edge_geometry_data_path;
+  DataObjectNameParameter::ValueType edge_attribute_matrix_name;
+  DataObjectNameParameter::ValueType feature_ids_array_name;
 };
 
 /**
@@ -65,7 +65,7 @@ public:
   /**
    * @brief Destroys the feature-bound dispatcher.
    */
-  ~ComputeFeatureBounds() noexcept;
+  ~ComputeFeatureBounds() noexcept = default;
 
   ComputeFeatureBounds(const ComputeFeatureBounds&) = delete;
   ComputeFeatureBounds(ComputeFeatureBounds&&) noexcept = delete;

@@ -15,10 +15,10 @@ class SIMPLNX_EXPORT AttributeMatrixSelectionParameter : public MutableDataParam
 public:
   using ValueType = DataPath;
 
-  using AllowedTypes = std::set<DataObject::Type>;
+  using AllowedTypeSetType = std::set<DataObject::Type>;
 
   AttributeMatrixSelectionParameter() = delete;
-  AttributeMatrixSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  AttributeMatrixSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~AttributeMatrixSelectionParameter() override = default;
 
   AttributeMatrixSelectionParameter(const AttributeMatrixSelectionParameter&) = delete;
@@ -37,13 +37,13 @@ public:
    * @brief Returns a list of accpeted input types.
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief Creates a copy of the parameter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the user defined default value.
@@ -106,17 +106,17 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
+  ValueType m_DefaultValue;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT DataArrayCreationToAMFilterParameterConverter
 {
   using ParameterType = AttributeMatrixSelectionParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT AttributeMatrixSelectionFilterParameterConverter
@@ -124,8 +124,8 @@ struct SIMPLNX_EXPORT AttributeMatrixSelectionFilterParameterConverter
   using ParameterType = AttributeMatrixSelectionParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::AttributeMatrixSelectionParameter, "a3619d74-a1d9-4bc2-9e03-ca001d65b119");

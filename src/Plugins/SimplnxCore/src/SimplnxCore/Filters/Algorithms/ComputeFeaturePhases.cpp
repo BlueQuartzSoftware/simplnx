@@ -32,19 +32,17 @@ ComputeFeaturePhases::ComputeFeaturePhases(DataStructure& dataStructure, const I
 {
 }
 
-ComputeFeaturePhases::~ComputeFeaturePhases() noexcept = default;
-
 Result<> ComputeFeaturePhases::operator()()
 {
-  auto featurePhasesArrayPath = m_InputValues->CellFeaturesAttributeMatrixPath.createChildPath(m_InputValues->FeaturePhasesArrayName);
+  auto featurePhasesArrayPath = m_InputValues->cell_features_attribute_matrix_path.createChildPath(m_InputValues->feature_phases_array_name);
 
-  const auto& cellPhases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CellPhasesArrayPath)->getDataStoreRef();
-  const auto& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsPath);
+  const auto& cellPhases = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->cell_phases_array_path)->getDataStoreRef();
+  const auto& featureIdsArray = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_path);
   const auto& featureIds = featureIdsArray.getDataStoreRef();
-  auto& featurePhases = m_DataStructure.getDataAs<Int32Array>(featurePhasesArrayPath)->getDataStoreRef();
+  auto& featurePhases = m_DataStructure.getDataAs<Int32ArrayType>(featurePhasesArrayPath)->getDataStoreRef();
 
   // Validation makes every Feature ID valid for the feature-sized caches.
-  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->CellFeaturesAttributeMatrixPath, featureIdsArray, false, m_MessageHandler);
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->cell_features_attribute_matrix_path, featureIdsArray, false, m_MessageHandler);
   if(validateNumFeatResult.invalid())
   {
     return validateNumFeatResult;
@@ -138,7 +136,7 @@ Result<> ComputeFeaturePhases::operator()()
       const usize remainder = position - k_MaxListedFeatures;
       warnStr.append(fmt::format(", and {} more {}", remainder, remainder == 1 ? "occurrence" : "occurrences"));
     }
-    result.warnings().push_back(Warning{-500, std::move(warnStr)});
+    result.warnings().push_back(Warning{.code = -500, .message = std::move(warnStr)});
   }
 
   return result;

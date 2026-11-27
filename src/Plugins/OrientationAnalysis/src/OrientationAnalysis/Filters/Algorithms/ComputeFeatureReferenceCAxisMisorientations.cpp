@@ -21,7 +21,7 @@
 #include <memory>
 
 using namespace nx::core;
-using namespace nx::core::OrientationUtilities;
+using namespace nx::core::orientation_utilities;
 
 ComputeFeatureReferenceCAxisMisorientations::ComputeFeatureReferenceCAxisMisorientations(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel,
                                                                                          ComputeFeatureReferenceCAxisMisorientationsInputValues* inputValues)
@@ -32,12 +32,10 @@ ComputeFeatureReferenceCAxisMisorientations::ComputeFeatureReferenceCAxisMisorie
 {
 }
 
-ComputeFeatureReferenceCAxisMisorientations::~ComputeFeatureReferenceCAxisMisorientations() noexcept = default;
-
 Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
 {
   // The local ensemble cache avoids repeated cell-loop access.
-  const auto& crystalStructuresArrayRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  const auto& crystalStructuresArrayRef = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
   const usize numCrystalStructures = crystalStructuresArrayRef.getNumberOfTuples();
   std::vector<uint32> crystalStructuresCache(numCrystalStructures);
   Result<> readResult = crystalStructuresArrayRef.getDataStoreRef().copyIntoBuffer(0, nonstd::span<uint32>(crystalStructuresCache.data(), numCrystalStructures));
@@ -70,12 +68,12 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
          "Finding the feature reference c-axis misorientation requires Hexagonal-Low 6/m or Hexagonal-High 6/mmm type crystal structures. Calculations for non Hexagonal phases will be skipped."});
   }
 
-  const auto& featureIdsStoreRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
-  const auto& quatsStoreRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath).getDataStoreRef();
-  const auto& cellPhasesStoreRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath).getDataStoreRef();
+  const auto& featureIdsStoreRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getDataStoreRef();
+  const auto& quatsStoreRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->quats_array_path).getDataStoreRef();
+  const auto& cellPhasesStoreRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path).getDataStoreRef();
 
   // Feature references stay local because cells access them by feature ID.
-  const auto& avgCAxes = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->AvgCAxesArrayPath);
+  const auto& avgCAxes = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->avg_c_axes_array_path);
   const usize totalFeatures = avgCAxes.getNumberOfTuples();
   const usize avgCAxesSize = totalFeatures * 3;
   std::vector<float32> avgCAxesLocal(avgCAxesSize);
@@ -85,19 +83,19 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
     return readResult;
   }
 
-  auto& cellRefCAxisMisStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureReferenceCAxisMisorientationsArrayPath).getDataStoreRef();
+  auto& cellRefCAxisMisStore = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->feature_reference_c_axis_misorientations_array_path).getDataStoreRef();
 
-  auto& featAvgCAxisMis = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureAvgCAxisMisorientationsArrayPath);
+  auto& featAvgCAxisMis = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->feature_avg_c_axis_misorientations_array_path);
   featAvgCAxisMis.fill(0.0f);
-  auto& featStdevCAxisMis = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureStdevCAxisMisorientationsArrayPath);
+  auto& featStdevCAxisMis = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->feature_stdev_c_axis_misorientations_array_path);
   featStdevCAxisMis.fill(0.0f);
 
-  const usize numQuatComps = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath).getNumberOfComponents();
+  const usize numQuatComps = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->quats_array_path).getNumberOfComponents();
 
   std::vector<usize> counts(totalFeatures, 0);
   std::vector<float32> avgMisorientations(totalFeatures, 0.0f);
 
-  SizeVec3 uDims = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath).getDimensions();
+  SizeVec3Type uDims = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path).getDimensions();
 
   const auto xPoints = static_cast<int64>(uDims[0]);
   const auto yPoints = static_cast<int64>(uDims[1]);
@@ -151,7 +149,7 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
           {
             return MakeErrorResult(-9804,
                                    fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' has {} tuples. Valid positive Phase indices are in [1, {}).",
-                                               m_InputValues->CellPhasesArrayPath.toString(), currentPhaseIdx, sliceOffset + localIdx, m_InputValues->CrystalStructuresArrayPath.toString(),
+                                               m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, sliceOffset + localIdx, m_InputValues->crystal_structures_array_path.toString(),
                                                numCrystalStructures, numCrystalStructures));
           }
           const uint32 crystalStructureType = crystalStructuresCache[currentPhaseIdx];
@@ -171,10 +169,10 @@ Result<> ComputeFeatureReferenceCAxisMisorientations::operator()()
           Eigen::Vector3d avgCAxisMis = {avgCAxesLocal[avgCAxesIdx], avgCAxesLocal[avgCAxesIdx + 1], avgCAxesLocal[avgCAxesIdx + 2]};
           avgCAxisMis.normalize();
 
-          float64 w = ImageRotationUtilities::CosBetweenVectors(c1, avgCAxisMis);
+          float64 w = image_rotation_utilities::CosBetweenVectors(c1, avgCAxisMis);
           w = std::clamp(w, -1.0, 1.0);
           w = std::acos(w);
-          w *= Constants::k_180OverPiD;
+          w *= constants::k_180OverPiD;
           if(w > 90.0)
           {
             w = 180.0 - w;

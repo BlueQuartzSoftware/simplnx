@@ -85,7 +85,7 @@ public:
     T gamma = latticeParameters[5];
 
     // auxiliary variables for the various tensors
-    double pirad = Constants::k_PiOver180D;
+    double pirad = constants::k_PiOver180D;
     double ca = std::cos(pirad * alpha);
     double cb = std::cos(pirad * beta);
     double cg = std::cos(pirad * gamma);
@@ -250,9 +250,9 @@ public:
    * @param rhs
    * @return a 3x1 Matrix
    */
-  Matrix3X1<T> operator*(const Matrix3X1<T>& rhs) const
+  Matrix3X1Type<T> operator*(const Matrix3X1Type<T>& rhs) const
   {
-    Matrix3X1<T> outMat;
+    Matrix3X1Type<T> outMat;
     outMat[0] = m_Data[0] * rhs[0] + m_Data[1] * rhs[1] + m_Data[2] * rhs[2];
     outMat[1] = m_Data[3] * rhs[0] + m_Data[4] * rhs[1] + m_Data[5] * rhs[2];
     outMat[2] = m_Data[6] * rhs[0] + m_Data[7] * rhs[1] + m_Data[8] * rhs[2];
@@ -278,7 +278,7 @@ public:
    * @param col
    * @return
    */
-  Matrix3X1<T> col(size_t col) const
+  Matrix3X1Type<T> col(size_t col) const
   {
     return {m_Data[col], m_Data[col + 3], m_Data[col + 6]};
   }
@@ -288,7 +288,7 @@ public:
    * @param row
    * @return
    */
-  Matrix3X1<T> row(size_t row) const
+  Matrix3X1Type<T> row(size_t row) const
   {
     return {m_Data[row * 3], m_Data[row * 3 + 1], m_Data[row * 3 + 2]};
   }
@@ -504,8 +504,8 @@ private:
   std::array<T, 9> m_Data = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 };
 
-using Matrix3X3F = Matrix3X3<float>;
-using Matrix3X3D = Matrix3X3<double>;
+using Matrix3X3FType = Matrix3X3<float>;
+using Matrix3X3DType = Matrix3X3<double>;
 
 template <typename T>
 inline std::ostream& operator<<(std::ostream& os, const Matrix3X3<T>& obj)

@@ -24,10 +24,10 @@ namespace
 {
 struct TemporaryRecordStoreStats
 {
-  uint64 readBytes = 0;
-  uint64 writeBytes = 0;
-  std::vector<uint64> readByteCounts;
-  std::vector<uint64> writeByteCounts;
+  uint64 read_bytes = 0;
+  uint64 write_bytes = 0;
+  std::vector<uint64> read_byte_counts;
+  std::vector<uint64> write_byte_counts;
 };
 
 class CountingTemporaryRecordStore final : public ITemporaryRecordStore
@@ -65,8 +65,8 @@ public:
     if(result.valid())
     {
       const uint64 transferredBytes = result.value() * recordSize();
-      m_Stats->readBytes += transferredBytes;
-      m_Stats->readByteCounts.push_back(transferredBytes);
+      m_Stats->read_bytes += transferredBytes;
+      m_Stats->read_byte_counts.push_back(transferredBytes);
     }
     return result;
   }
@@ -77,8 +77,8 @@ public:
     if(result.valid())
     {
       const uint64 transferredBytes = count * recordSize();
-      m_Stats->writeBytes += transferredBytes;
-      m_Stats->writeByteCounts.push_back(transferredBytes);
+      m_Stats->write_bytes += transferredBytes;
+      m_Stats->write_byte_counts.push_back(transferredBytes);
     }
     return result;
   }
@@ -112,7 +112,7 @@ std::vector<uint32> RunFlood(const std::vector<TInput>& gray, const std::vector<
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
   const uint32 borderSentinel = std::numeric_limits<uint32>::max();
-  const Result<> r = ApplyWatershedFromMarkers<TInput>(inStore, markerStore, outStore, SizeVec3{dx, dy, dz}, markWatershedLine, fullyConnected, borderSentinel, shouldCancel, messageHandler);
+  const Result<> r = ApplyWatershedFromMarkers<TInput>(inStore, markerStore, outStore, SizeVec3Type{dx, dy, dz}, markWatershedLine, fullyConnected, borderSentinel, shouldCancel, messageHandler);
   REQUIRE(r.valid());
   std::vector<uint32> out(gray.size());
   for(usize i = 0; i < out.size(); ++i)
@@ -139,22 +139,22 @@ std::vector<uint32> RunExternalFlood(const std::vector<TInput>& gray, const std:
   SIMPLNX_RESULT_REQUIRE_VALID(planResult);
   const auto& plan = planResult.value();
   TemporaryRecordStoreConfig voxelConfig;
-  voxelConfig.recordSize = plan.voxelRecordBytes;
-  voxelConfig.maxRecordsPerBatch = std::max(plan.voxelRecordsPerPage, plan.transferRecords);
-  voxelConfig.initialRecordCount = gray.size();
-  if(plan.useTiledVoxelLayout)
+  voxelConfig.record_size = plan.voxel_record_bytes;
+  voxelConfig.max_records_per_batch = std::max(plan.voxel_records_per_page, plan.transfer_records);
+  voxelConfig.initial_record_count = gray.size();
+  if(plan.use_tiled_voxel_layout)
   {
-    auto layoutResult = ImageProcessing::detail::CreateWatershedTiledRecordLayout(SizeVec3{dimX, dimY, dimZ}, plan.voxelRecordsPerPage);
+    auto layoutResult = ImageProcessing::detail::CreateWatershedTiledRecordLayout(SizeVec3Type{dimX, dimY, dimZ}, plan.voxel_records_per_page);
     SIMPLNX_RESULT_REQUIRE_VALID(layoutResult);
-    voxelConfig.initialRecordCount = layoutResult.value().recordCount;
+    voxelConfig.initial_record_count = layoutResult.value().record_count;
   }
   auto voxelStoreResult = InMemoryTemporaryRecordStore::Create(voxelConfig);
   SIMPLNX_RESULT_REQUIRE_VALID(voxelStoreResult);
 
   TemporaryRecordStoreConfig queueConfig;
-  queueConfig.recordSize = plan.useBucketQueue ? sizeof(ImageProcessing::detail::WatershedQueueBlock) : sizeof(ImageProcessing::detail::WatershedHeapRecord<TInput>);
-  queueConfig.maxRecordsPerBatch = plan.useBucketQueue ? plan.bucketBlocksPerPage : plan.heapRecordsPerPage;
-  queueConfig.initialRecordCount = plan.useBucketQueue ? plan.bucketBlockCount : gray.size();
+  queueConfig.record_size = plan.use_bucket_queue ? sizeof(ImageProcessing::detail::WatershedQueueBlock) : sizeof(ImageProcessing::detail::WatershedHeapRecord<TInput>);
+  queueConfig.max_records_per_batch = plan.use_bucket_queue ? plan.bucket_blocks_per_page : plan.heap_records_per_page;
+  queueConfig.initial_record_count = plan.use_bucket_queue ? plan.bucket_block_count : gray.size();
   auto queueStoreResult = InMemoryTemporaryRecordStore::Create(queueConfig);
   SIMPLNX_RESULT_REQUIRE_VALID(queueStoreResult);
 
@@ -165,7 +165,7 @@ std::vector<uint32> RunExternalFlood(const std::vector<TInput>& gray, const std:
   }
 
   std::atomic_bool shouldCancel{false};
-  const Result<> result = ApplyWatershedFromMarkersExternal<TInput>(inputStore, markerStore, outputStore, SizeVec3{dimX, dimY, dimZ}, markWatershedLine, fullyConnected,
+  const Result<> result = ApplyWatershedFromMarkersExternal<TInput>(inputStore, markerStore, outputStore, SizeVec3Type{dimX, dimY, dimZ}, markWatershedLine, fullyConnected,
                                                                     std::numeric_limits<uint32>::max(), shouldCancel, std::move(voxelStore), std::move(queueStoreResult.value()), plan);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   std::vector<uint32> output(gray.size());
@@ -201,7 +201,9 @@ TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: 1D double-well, one ma
 
 TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: single marker floods the whole basin", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
-  const usize dx = 5, dy = 5, dz = 1;
+  const usize dx = 5;
+  const usize dy = 5;
+  const usize dz = 1;
   std::vector<int32> gray(dx * dy);
   for(usize y = 0; y < dy; ++y)
   {
@@ -221,7 +223,9 @@ TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: single marker floods t
 
 TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: determinism", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
-  const usize dx = 8, dy = 8, dz = 4;
+  const usize dx = 8;
+  const usize dy = 8;
+  const usize dz = 4;
   std::vector<int32> gray(dx * dy * dz);
   std::vector<uint32> markers(dx * dy * dz, 0u);
   for(usize i = 0; i < gray.size(); ++i)
@@ -241,7 +245,9 @@ TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: fullyConnected offset 
   // label among a voxel's neighbors, so no collision/watershed line ever forms. This exercises the fullyConnected=true
   // 8-neighbor offset generation and confirms it does not break the flood. A true-vs-false split where the watershed
   // LINE differs is a non-unique-plateau case gated by the direct-ITK grid in Task 2, not asserted analytically here.
-  const usize dx = 5, dy = 5, dz = 1;
+  const usize dx = 5;
+  const usize dy = 5;
+  const usize dz = 1;
   std::vector<int32> gray(dx * dy);
   for(usize y = 0; y < dy; ++y)
   {
@@ -267,7 +273,9 @@ TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: a marker valued at the
   // out-of-image boundary. Place it at a border-touching corner so its OOB neighbors also read as the sentinel: with a
   // single marker the whole grid still floods to that label (OOB reads are neutral and never collide).
   const uint32 sentinel = std::numeric_limits<uint32>::max();
-  const usize dx = 4, dy = 4, dz = 1;
+  const usize dx = 4;
+  const usize dy = 4;
+  const usize dz = 1;
   std::vector<int32> gray(dx * dy);
   for(usize y = 0; y < dy; ++y)
   {
@@ -294,18 +302,18 @@ TEMPLATE_TEST_CASE("NXImageProcessing::WatershedExternalMemory: checked plan res
   const auto planResult = ImageProcessing::detail::CreateWatershedExternalMemoryPlan<T>(33'554'432, targetBytes);
   SIMPLNX_RESULT_REQUIRE_VALID(planResult);
   const auto& plan = planResult.value();
-  REQUIRE(plan.voxelRecordsPerPage > 0);
-  REQUIRE(plan.voxelCachePages > 0);
-  REQUIRE(plan.heapRecordsPerPage > 0);
-  REQUIRE((plan.heapCachePages > 0 || plan.useBucketQueue));
-  REQUIRE(plan.useBucketQueue == (std::is_integral_v<T> && sizeof(T) <= sizeof(uint16)));
-  REQUIRE(plan.transferRecords > 0);
-  REQUIRE(plan.residentBytes <= targetBytes);
+  REQUIRE(plan.voxel_records_per_page > 0);
+  REQUIRE(plan.voxel_cache_pages > 0);
+  REQUIRE(plan.heap_records_per_page > 0);
+  REQUIRE((plan.heap_cache_pages > 0 || plan.use_bucket_queue));
+  REQUIRE(plan.use_bucket_queue == (std::is_integral_v<T> && sizeof(T) <= sizeof(uint16)));
+  REQUIRE(plan.transfer_records > 0);
+  REQUIRE(plan.resident_bytes <= targetBytes);
   if constexpr(ImageProcessing::detail::k_UseWatershedBucketQueue<T>)
   {
-    REQUIRE(plan.bucketBlockCount > 0);
-    REQUIRE(plan.bucketBlocksPerPage > 0);
-    REQUIRE(plan.bucketCachePages > 0);
+    REQUIRE(plan.bucket_block_count > 0);
+    REQUIRE(plan.bucket_blocks_per_page > 0);
+    REQUIRE(plan.bucket_cache_pages > 0);
   }
 
   auto createWatershedExternalMemoryPlanResult = ImageProcessing::detail::CreateWatershedExternalMemoryPlan<T>(0);
@@ -327,28 +335,28 @@ TEMPLATE_TEST_CASE("NXImageProcessing::WatershedExternalMemory: larger working-m
   SIMPLNX_RESULT_REQUIRE_VALID(largerResult);
   const auto& larger = largerResult.value();
 
-  REQUIRE(larger.heapRecordsPerPage == base.heapRecordsPerPage);
-  REQUIRE(larger.voxelCachePages > base.voxelCachePages);
+  REQUIRE(larger.heap_records_per_page == base.heap_records_per_page);
+  REQUIRE(larger.voxel_cache_pages > base.voxel_cache_pages);
   if constexpr(ImageProcessing::detail::k_UseWatershedBucketQueue<T>)
   {
-    REQUIRE(base.usePackedResidentStatusState);
-    REQUIRE(larger.usePackedCombinedState);
-    REQUIRE(base.voxelRecordBytes == sizeof(ImageProcessing::detail::WatershedPackedResidentStatusVoxelRecord<T>));
-    REQUIRE(larger.voxelRecordBytes == sizeof(ImageProcessing::detail::WatershedPackedVoxelRecord<T>));
-    REQUIRE(base.useTiledVoxelLayout);
-    REQUIRE(larger.completePrimaryStateCache);
-    REQUIRE_FALSE(larger.useTiledVoxelLayout);
-    REQUIRE(larger.voxelCachePages * larger.voxelRecordsPerPage > base.voxelCachePages * base.voxelRecordsPerPage);
-    REQUIRE(larger.bucketCachePages > base.bucketCachePages);
+    REQUIRE(base.use_packed_resident_status_state);
+    REQUIRE(larger.use_packed_combined_state);
+    REQUIRE(base.voxel_record_bytes == sizeof(ImageProcessing::detail::WatershedPackedResidentStatusVoxelRecordType<T>));
+    REQUIRE(larger.voxel_record_bytes == sizeof(ImageProcessing::detail::WatershedPackedVoxelRecordType<T>));
+    REQUIRE(base.use_tiled_voxel_layout);
+    REQUIRE(larger.complete_primary_state_cache);
+    REQUIRE_FALSE(larger.use_tiled_voxel_layout);
+    REQUIRE(larger.voxel_cache_pages * larger.voxel_records_per_page > base.voxel_cache_pages * base.voxel_records_per_page);
+    REQUIRE(larger.bucket_cache_pages > base.bucket_cache_pages);
   }
   else
   {
-    REQUIRE(larger.voxelRecordsPerPage == base.voxelRecordsPerPage);
-    REQUIRE(larger.heapCachePages > base.heapCachePages);
+    REQUIRE(larger.voxel_records_per_page == base.voxel_records_per_page);
+    REQUIRE(larger.heap_cache_pages > base.heap_cache_pages);
   }
-  REQUIRE(base.residentBytes <= k_BaseTargetBytes);
-  REQUIRE(larger.residentBytes <= k_LargerTargetBytes);
-  REQUIRE(larger.residentBytes > base.residentBytes);
+  REQUIRE(base.resident_bytes <= k_BaseTargetBytes);
+  REQUIRE(larger.resident_bytes <= k_LargerTargetBytes);
+  REQUIRE(larger.resident_bytes > base.resident_bytes);
 
   auto createWatershedExternalMemoryPlanResult = ImageProcessing::detail::CreateWatershedExternalMemoryPlan<T>(k_ValueCount, /*targetBytes=*/1);
   SIMPLNX_RESULT_REQUIRE_INVALID(createWatershedExternalMemoryPlanResult);
@@ -356,51 +364,51 @@ TEMPLATE_TEST_CASE("NXImageProcessing::WatershedExternalMemory: larger working-m
 
 TEST_CASE("NXImageProcessing::WatershedExternalMemory: packed combined voxel record preserves every field", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
-  using Uint8Record = ImageProcessing::detail::WatershedVoxelRecord<uint8>;
-  using Uint16Record = ImageProcessing::detail::WatershedVoxelRecord<uint16>;
-  static_assert(sizeof(ImageProcessing::detail::WatershedPackedVoxelRecord<uint8>) == 6);
-  static_assert(sizeof(ImageProcessing::detail::WatershedPackedVoxelRecord<uint16>) == 7);
+  using Uint8RecordType = ImageProcessing::detail::WatershedVoxelRecord<uint8>;
+  using Uint16RecordType = ImageProcessing::detail::WatershedVoxelRecord<uint16>;
+  static_assert(sizeof(ImageProcessing::detail::WatershedPackedVoxelRecordType<uint8>) == 6);
+  static_assert(sizeof(ImageProcessing::detail::WatershedPackedVoxelRecordType<uint16>) == 7);
 
-  for(const Uint8Record record :
-      {Uint8Record{0, 0, std::numeric_limits<uint8>::lowest()}, Uint8Record{std::numeric_limits<uint32>::max(), std::numeric_limits<uint8>::max(), std::numeric_limits<uint8>::max()}})
+  for(const Uint8RecordType record :
+      {Uint8RecordType{0, 0, std::numeric_limits<uint8>::lowest()}, Uint8RecordType{std::numeric_limits<uint32>::max(), std::numeric_limits<uint8>::max(), std::numeric_limits<uint8>::max()}})
   {
     const auto decoded = ImageProcessing::detail::DecodeWatershedPackedVoxelRecord<uint8>(ImageProcessing::detail::EncodeWatershedPackedVoxelRecord(record));
     REQUIRE(decoded.output == record.output);
     REQUIRE(decoded.status == record.status);
-    REQUIRE(decoded.grayValue == record.grayValue);
+    REQUIRE(decoded.gray_value == record.gray_value);
   }
-  for(const Uint16Record record :
-      {Uint16Record{0, 0, std::numeric_limits<uint16>::lowest()}, Uint16Record{std::numeric_limits<uint32>::max(), std::numeric_limits<uint8>::max(), std::numeric_limits<uint16>::max()}})
+  for(const Uint16RecordType record :
+      {Uint16RecordType{0, 0, std::numeric_limits<uint16>::lowest()}, Uint16RecordType{std::numeric_limits<uint32>::max(), std::numeric_limits<uint8>::max(), std::numeric_limits<uint16>::max()}})
   {
     const auto decoded = ImageProcessing::detail::DecodeWatershedPackedVoxelRecord<uint16>(ImageProcessing::detail::EncodeWatershedPackedVoxelRecord(record));
     REQUIRE(decoded.output == record.output);
     REQUIRE(decoded.status == record.status);
-    REQUIRE(decoded.grayValue == record.grayValue);
+    REQUIRE(decoded.gray_value == record.gray_value);
   }
 }
 
 TEST_CASE("NXImageProcessing::WatershedExternalMemory: packed resident-status voxel record preserves output and gray value", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
-  using Uint8Record = ImageProcessing::detail::WatershedVoxelRecord<uint8>;
-  using Uint16Record = ImageProcessing::detail::WatershedVoxelRecord<uint16>;
-  static_assert(sizeof(ImageProcessing::detail::WatershedPackedResidentStatusVoxelRecord<uint8>) == 5);
-  static_assert(sizeof(ImageProcessing::detail::WatershedPackedResidentStatusVoxelRecord<uint16>) == 6);
+  using Uint8RecordType = ImageProcessing::detail::WatershedVoxelRecord<uint8>;
+  using Uint16RecordType = ImageProcessing::detail::WatershedVoxelRecord<uint16>;
+  static_assert(sizeof(ImageProcessing::detail::WatershedPackedResidentStatusVoxelRecordType<uint8>) == 5);
+  static_assert(sizeof(ImageProcessing::detail::WatershedPackedResidentStatusVoxelRecordType<uint16>) == 6);
 
-  for(const Uint8Record record :
-      {Uint8Record{0, 0, std::numeric_limits<uint8>::lowest()}, Uint8Record{std::numeric_limits<uint32>::max(), std::numeric_limits<uint8>::max(), std::numeric_limits<uint8>::max()}})
+  for(const Uint8RecordType record :
+      {Uint8RecordType{0, 0, std::numeric_limits<uint8>::lowest()}, Uint8RecordType{std::numeric_limits<uint32>::max(), std::numeric_limits<uint8>::max(), std::numeric_limits<uint8>::max()}})
   {
     const auto decoded = ImageProcessing::detail::DecodeWatershedPackedResidentStatusVoxelRecord<uint8>(ImageProcessing::detail::EncodeWatershedPackedResidentStatusVoxelRecord(record));
     REQUIRE(decoded.output == record.output);
     REQUIRE(decoded.status == 0);
-    REQUIRE(decoded.grayValue == record.grayValue);
+    REQUIRE(decoded.gray_value == record.gray_value);
   }
-  for(const Uint16Record record :
-      {Uint16Record{0, 0, std::numeric_limits<uint16>::lowest()}, Uint16Record{std::numeric_limits<uint32>::max(), std::numeric_limits<uint8>::max(), std::numeric_limits<uint16>::max()}})
+  for(const Uint16RecordType record :
+      {Uint16RecordType{0, 0, std::numeric_limits<uint16>::lowest()}, Uint16RecordType{std::numeric_limits<uint32>::max(), std::numeric_limits<uint8>::max(), std::numeric_limits<uint16>::max()}})
   {
     const auto decoded = ImageProcessing::detail::DecodeWatershedPackedResidentStatusVoxelRecord<uint16>(ImageProcessing::detail::EncodeWatershedPackedResidentStatusVoxelRecord(record));
     REQUIRE(decoded.output == record.output);
     REQUIRE(decoded.status == 0);
-    REQUIRE(decoded.grayValue == record.grayValue);
+    REQUIRE(decoded.gray_value == record.gray_value);
   }
 }
 
@@ -411,13 +419,13 @@ TEST_CASE("NXImageProcessing::WatershedExternalMemory: packed resident-status ti
   auto planResult = ImageProcessing::detail::CreateWatershedExternalMemoryPlan<uint8>(k_ValueCount, k_TargetBytes);
   SIMPLNX_RESULT_REQUIRE_VALID(planResult);
   const auto& plan = planResult.value();
-  REQUIRE(plan.usePackedResidentStatusState);
-  REQUIRE_FALSE(plan.useSplitBucketState);
-  REQUIRE(plan.useTiledVoxelLayout);
-  REQUIRE(plan.voxelRecordBytes == 5);
-  REQUIRE(plan.voxelRecordsPerPage == 12'288);
-  REQUIRE(plan.voxelRecordsPerPage % (32 * 32) == 0);
-  REQUIRE(plan.voxelRecordsPerPage * plan.voxelRecordBytes == 61'440);
+  REQUIRE(plan.use_packed_resident_status_state);
+  REQUIRE_FALSE(plan.use_split_bucket_state);
+  REQUIRE(plan.use_tiled_voxel_layout);
+  REQUIRE(plan.voxel_record_bytes == 5);
+  REQUIRE(plan.voxel_records_per_page == 12'288);
+  REQUIRE(plan.voxel_records_per_page % (32 * 32) == 0);
+  REQUIRE(plan.voxel_records_per_page * plan.voxel_record_bytes == 61'440);
 }
 
 TEST_CASE("NXImageProcessing::WatershedExternalMemory: 16 MiB route retains packed resident status and one full initialization page", "[NXImageProcessing][WatershedFromMarkersEngine]")
@@ -427,27 +435,27 @@ TEST_CASE("NXImageProcessing::WatershedExternalMemory: 16 MiB route retains pack
   auto planResult = ImageProcessing::detail::CreateWatershedExternalMemoryPlan<uint8>(k_ValueCount, k_TargetBytes, /*markWatershedLine=*/true);
   SIMPLNX_RESULT_REQUIRE_VALID(planResult);
   const auto& plan = planResult.value();
-  REQUIRE(plan.usePackedResidentStatusState);
-  REQUIRE(plan.useResidentStatus);
-  REQUIRE_FALSE(plan.completePrimaryStateCache);
-  REQUIRE(plan.useTiledVoxelLayout);
-  REQUIRE(plan.voxelRecordBytes == sizeof(ImageProcessing::detail::WatershedPackedResidentStatusVoxelRecord<uint8>));
-  REQUIRE(plan.transferRecords >= plan.voxelRecordsPerPage);
-  REQUIRE(plan.residentBytes <= k_TargetBytes);
+  REQUIRE(plan.use_packed_resident_status_state);
+  REQUIRE(plan.use_resident_status);
+  REQUIRE_FALSE(plan.complete_primary_state_cache);
+  REQUIRE(plan.use_tiled_voxel_layout);
+  REQUIRE(plan.voxel_record_bytes == sizeof(ImageProcessing::detail::WatershedPackedResidentStatusVoxelRecordType<uint8>));
+  REQUIRE(plan.transfer_records >= plan.voxel_records_per_page);
+  REQUIRE(plan.resident_bytes <= k_TargetBytes);
 }
 
 TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: packed bucket state matches resident ordering", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
   struct Geometry
   {
-    usize dimX;
-    usize dimY;
-    usize dimZ;
+    usize dim_x;
+    usize dim_y;
+    usize dim_z;
   };
-  const std::array<Geometry, 2> geometries = {{{9, 7, 1}, {8, 7, 3}}};
+  const std::array<Geometry, 2> geometries = {{{.dim_x = 9, .dim_y = 7, .dim_z = 1}, {.dim_x = 8, .dim_y = 7, .dim_z = 3}}};
   for(const Geometry& geometry : geometries)
   {
-    const usize count = geometry.dimX * geometry.dimY * geometry.dimZ;
+    const usize count = geometry.dim_x * geometry.dim_y * geometry.dim_z;
     std::vector<uint8> gray(count);
     std::vector<uint32> markers(count, 0u);
     for(usize index = 0; index < count; ++index)
@@ -455,15 +463,15 @@ TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: packed bucket state ma
       gray[index] = static_cast<uint8>((index * 31) % 19);
     }
     markers[0] = std::numeric_limits<uint32>::max();
-    markers[geometry.dimX + 1] = 1u;
+    markers[geometry.dim_x + 1] = 1u;
     markers[count - 1] = 2u;
     for(const bool markWatershedLine : {false, true})
     {
       for(const bool fullyConnected : {false, true})
       {
-        CAPTURE(geometry.dimX, geometry.dimY, geometry.dimZ, markWatershedLine, fullyConnected);
-        const auto resident = RunFlood(gray, markers, geometry.dimX, geometry.dimY, geometry.dimZ, markWatershedLine, fullyConnected);
-        const auto external = RunExternalFlood(gray, markers, geometry.dimX, geometry.dimY, geometry.dimZ, markWatershedLine, fullyConnected);
+        CAPTURE(geometry.dim_x, geometry.dim_y, geometry.dim_z, markWatershedLine, fullyConnected);
+        const auto resident = RunFlood(gray, markers, geometry.dim_x, geometry.dim_y, geometry.dim_z, markWatershedLine, fullyConnected);
+        const auto external = RunExternalFlood(gray, markers, geometry.dim_x, geometry.dim_y, geometry.dim_z, markWatershedLine, fullyConnected);
         REQUIRE(external == resident);
       }
     }
@@ -481,10 +489,10 @@ TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: packed bucket state us
 
   const auto output = RunExternalFlood(gray, markers, k_DimX, k_DimY, 1, /*markWatershedLine=*/false, /*fullyConnected=*/false, stats);
   REQUIRE(output == markers);
-  REQUIRE(stats->writeBytes == 6 * k_ValueCount);
-  REQUIRE(stats->readBytes == 12 * k_ValueCount);
-  REQUIRE(stats->writeByteCounts == std::vector<uint64>{6 * k_ValueCount});
-  REQUIRE(stats->readByteCounts == std::vector<uint64>{6 * k_ValueCount, 6 * k_ValueCount});
+  REQUIRE(stats->write_bytes == 6 * k_ValueCount);
+  REQUIRE(stats->read_bytes == 12 * k_ValueCount);
+  REQUIRE(stats->write_byte_counts == std::vector<uint64>{6 * k_ValueCount});
+  REQUIRE(stats->read_byte_counts == std::vector<uint64>{6 * k_ValueCount, 6 * k_ValueCount});
 }
 
 TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: packed resident-status bucket state uses five-byte raw transfers", "[NXImageProcessing][WatershedFromMarkersEngine]")
@@ -500,20 +508,20 @@ TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: packed resident-status
   auto planResult = ImageProcessing::detail::CreateWatershedExternalMemoryPlan<uint8>(k_ValueCount, k_TargetBytes, /*markWatershedLine=*/true);
   SIMPLNX_RESULT_REQUIRE_VALID(planResult);
   const auto& plan = planResult.value();
-  REQUIRE(plan.usePackedResidentStatusState);
-  REQUIRE(plan.useTiledVoxelLayout);
-  auto layoutResult = ImageProcessing::detail::CreateWatershedTiledRecordLayout(SizeVec3{k_DimX, k_DimY, 1}, plan.voxelRecordsPerPage);
+  REQUIRE(plan.use_packed_resident_status_state);
+  REQUIRE(plan.use_tiled_voxel_layout);
+  auto layoutResult = ImageProcessing::detail::CreateWatershedTiledRecordLayout(SizeVec3Type{k_DimX, k_DimY, 1}, plan.voxel_records_per_page);
   SIMPLNX_RESULT_REQUIRE_VALID(layoutResult);
-  const uint64 expectedPageBytes = static_cast<uint64>(plan.voxelRecordsPerPage) * sizeof(ImageProcessing::detail::WatershedPackedResidentStatusVoxelRecord<uint8>);
-  const usize expectedPageCount = layoutResult.value().recordCount / plan.voxelRecordsPerPage;
+  const uint64 expectedPageBytes = static_cast<uint64>(plan.voxel_records_per_page) * sizeof(ImageProcessing::detail::WatershedPackedResidentStatusVoxelRecordType<uint8>);
+  const usize expectedPageCount = layoutResult.value().record_count / plan.voxel_records_per_page;
   const uint64 expectedPhysicalBytes = static_cast<uint64>(expectedPageCount) * expectedPageBytes;
 
   const auto output = RunExternalFlood(gray, markers, k_DimX, k_DimY, 1, /*markWatershedLine=*/true, /*fullyConnected=*/false, stats, k_TargetBytes);
   REQUIRE(output == markers);
-  REQUIRE(stats->writeBytes == expectedPhysicalBytes);
-  REQUIRE(stats->readBytes == 2 * expectedPhysicalBytes);
-  REQUIRE(stats->writeByteCounts == std::vector<uint64>(expectedPageCount, expectedPageBytes));
-  REQUIRE(stats->readByteCounts == std::vector<uint64>(2 * expectedPageCount, expectedPageBytes));
+  REQUIRE(stats->write_bytes == expectedPhysicalBytes);
+  REQUIRE(stats->read_bytes == 2 * expectedPhysicalBytes);
+  REQUIRE(stats->write_byte_counts == std::vector<uint64>(expectedPageCount, expectedPageBytes));
+  REQUIRE(stats->read_byte_counts == std::vector<uint64>(2 * expectedPageCount, expectedPageBytes));
 }
 
 TEST_CASE("NXImageProcessing::WatershedExternalMemory: useful endpoint retains complete primary state before extra queue pages", "[NXImageProcessing][WatershedFromMarkersEngine]")
@@ -525,13 +533,13 @@ TEST_CASE("NXImageProcessing::WatershedExternalMemory: useful endpoint retains c
   SIMPLNX_RESULT_REQUIRE_VALID(planResult);
   const auto& plan = planResult.value();
 
-  const usize expectedVoxelPages = k_ValueCount / plan.voxelRecordsPerPage + static_cast<usize>(k_ValueCount % plan.voxelRecordsPerPage != 0);
-  const usize completeBucketPages = plan.bucketBlockCount / plan.bucketBlocksPerPage + static_cast<usize>(plan.bucketBlockCount % plan.bucketBlocksPerPage != 0);
-  REQUIRE(plan.completePrimaryStateCache);
-  REQUIRE(plan.voxelCachePages == expectedVoxelPages);
-  REQUIRE(plan.bucketCachePages > 2 * plan.bucketCount);
-  REQUIRE(plan.bucketCachePages <= completeBucketPages);
-  REQUIRE(plan.residentBytes <= usefulBytesResult.value());
+  const usize expectedVoxelPages = k_ValueCount / plan.voxel_records_per_page + static_cast<usize>(k_ValueCount % plan.voxel_records_per_page != 0);
+  const usize completeBucketPages = plan.bucket_block_count / plan.bucket_blocks_per_page + static_cast<usize>(plan.bucket_block_count % plan.bucket_blocks_per_page != 0);
+  REQUIRE(plan.complete_primary_state_cache);
+  REQUIRE(plan.voxel_cache_pages == expectedVoxelPages);
+  REQUIRE(plan.bucket_cache_pages > 2 * plan.bucket_count);
+  REQUIRE(plan.bucket_cache_pages <= completeBucketPages);
+  REQUIRE(plan.resident_bytes <= usefulBytesResult.value());
 }
 
 TEST_CASE("NXImageProcessing::WatershedExternalMemory: resident status selection follows data size and grant", "[NXImageProcessing][WatershedFromMarkersEngine]")
@@ -541,76 +549,76 @@ TEST_CASE("NXImageProcessing::WatershedExternalMemory: resident status selection
   auto fittingResult = ImageProcessing::detail::CreateWatershedExternalMemoryPlan<uint8>(k_FittingValueCount, k_TargetBytes, /*markWatershedLine=*/true);
   SIMPLNX_RESULT_REQUIRE_VALID(fittingResult);
   const auto& fitting = fittingResult.value();
-  REQUIRE_FALSE(fitting.useSplitBucketState);
-  REQUIRE(fitting.usePackedCombinedState);
-  REQUIRE(fitting.useResidentStatus);
-  REQUIRE(fitting.voxelRecordBytes == sizeof(ImageProcessing::detail::WatershedPackedVoxelRecord<uint8>));
-  REQUIRE(fitting.inputRecordsPerPage == 0);
-  REQUIRE(fitting.inputCachePages == 0);
-  REQUIRE(fitting.residentStatusWordCount == (k_FittingValueCount + 63) / 64);
-  REQUIRE(fitting.residentStatusBytes == fitting.residentStatusWordCount * sizeof(uint64));
-  REQUIRE(fitting.residentBytes <= k_TargetBytes);
+  REQUIRE_FALSE(fitting.use_split_bucket_state);
+  REQUIRE(fitting.use_packed_combined_state);
+  REQUIRE(fitting.use_resident_status);
+  REQUIRE(fitting.voxel_record_bytes == sizeof(ImageProcessing::detail::WatershedPackedVoxelRecordType<uint8>));
+  REQUIRE(fitting.input_records_per_page == 0);
+  REQUIRE(fitting.input_cache_pages == 0);
+  REQUIRE(fitting.resident_status_word_count == (k_FittingValueCount + 63) / 64);
+  REQUIRE(fitting.resident_status_bytes == fitting.resident_status_word_count * sizeof(uint64));
+  REQUIRE(fitting.resident_bytes <= k_TargetBytes);
 
   constexpr usize k_LargerCompleteValueCount = 67'108'864;
   auto largerCompleteResult = ImageProcessing::detail::CreateWatershedExternalMemoryPlan<uint8>(k_LargerCompleteValueCount, k_TargetBytes, /*markWatershedLine=*/true);
   SIMPLNX_RESULT_REQUIRE_VALID(largerCompleteResult);
   const auto& largerComplete = largerCompleteResult.value();
-  REQUIRE_FALSE(largerComplete.useSplitBucketState);
-  REQUIRE(largerComplete.usePackedCombinedState);
-  REQUIRE(largerComplete.useResidentStatus);
-  REQUIRE(largerComplete.voxelRecordBytes == sizeof(ImageProcessing::detail::WatershedPackedVoxelRecord<uint8>));
-  REQUIRE(largerComplete.inputRecordsPerPage == 0);
-  REQUIRE(largerComplete.inputCachePages == 0);
+  REQUIRE_FALSE(largerComplete.use_split_bucket_state);
+  REQUIRE(largerComplete.use_packed_combined_state);
+  REQUIRE(largerComplete.use_resident_status);
+  REQUIRE(largerComplete.voxel_record_bytes == sizeof(ImageProcessing::detail::WatershedPackedVoxelRecordType<uint8>));
+  REQUIRE(largerComplete.input_records_per_page == 0);
+  REQUIRE(largerComplete.input_cache_pages == 0);
 
   constexpr usize k_PartialValueCount = 268'435'456;
   auto partialResult = ImageProcessing::detail::CreateWatershedExternalMemoryPlan<uint8>(k_PartialValueCount, k_TargetBytes, /*markWatershedLine=*/true);
   SIMPLNX_RESULT_REQUIRE_VALID(partialResult);
-  REQUIRE_FALSE(partialResult.value().useSplitBucketState);
-  REQUIRE(partialResult.value().usePackedResidentStatusState);
-  REQUIRE(partialResult.value().useResidentStatus);
-  REQUIRE_FALSE(partialResult.value().completePrimaryStateCache);
-  REQUIRE(partialResult.value().useTiledVoxelLayout);
-  REQUIRE(partialResult.value().bucketCachePages <= 2 * partialResult.value().bucketCount);
+  REQUIRE_FALSE(partialResult.value().use_split_bucket_state);
+  REQUIRE(partialResult.value().use_packed_resident_status_state);
+  REQUIRE(partialResult.value().use_resident_status);
+  REQUIRE_FALSE(partialResult.value().complete_primary_state_cache);
+  REQUIRE(partialResult.value().use_tiled_voxel_layout);
+  REQUIRE(partialResult.value().bucket_cache_pages <= 2 * partialResult.value().bucket_count);
 
   constexpr usize k_TooLargeValueCount = 1'073'741'824;
   auto fallbackResult = ImageProcessing::detail::CreateWatershedExternalMemoryPlan<uint8>(k_TooLargeValueCount, 64ULL * 1024ULL * 1024ULL, /*markWatershedLine=*/true);
   SIMPLNX_RESULT_REQUIRE_VALID(fallbackResult);
-  REQUIRE_FALSE(fallbackResult.value().useSplitBucketState);
-  REQUIRE_FALSE(fallbackResult.value().useResidentStatus);
+  REQUIRE_FALSE(fallbackResult.value().use_split_bucket_state);
+  REQUIRE_FALSE(fallbackResult.value().use_resident_status);
 
   auto noLineResult = ImageProcessing::detail::CreateWatershedExternalMemoryPlan<uint8>(k_FittingValueCount, k_TargetBytes, /*markWatershedLine=*/false);
   SIMPLNX_RESULT_REQUIRE_VALID(noLineResult);
-  REQUIRE_FALSE(noLineResult.value().useResidentStatus);
-  REQUIRE_FALSE(noLineResult.value().usePackedResidentStatusState);
-  REQUIRE(noLineResult.value().usePackedCombinedState);
+  REQUIRE_FALSE(noLineResult.value().use_resident_status);
+  REQUIRE_FALSE(noLineResult.value().use_packed_resident_status_state);
+  REQUIRE(noLineResult.value().use_packed_combined_state);
 }
 
 TEST_CASE("NXImageProcessing::WatershedExternalMemory: tiled voxel layout is a checked 64-bit bijection", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
-  const SizeVec3 k_Dims = {65, 34, 9};
+  const SizeVec3Type kDims = {65, 34, 9};
   constexpr usize k_RecordsPerPage = 8192;
-  auto layoutResult = ImageProcessing::detail::CreateWatershedTiledRecordLayout(k_Dims, k_RecordsPerPage);
+  auto layoutResult = ImageProcessing::detail::CreateWatershedTiledRecordLayout(kDims, k_RecordsPerPage);
   SIMPLNX_RESULT_REQUIRE_VALID(layoutResult);
   const auto& layout = layoutResult.value();
-  REQUIRE(layout.tileDimensions == SizeVec3{32, 32, 8});
-  REQUIRE(layout.recordCount >= k_Dims[0] * k_Dims[1] * k_Dims[2]);
+  REQUIRE(layout.tile_dimensions == SizeVec3Type{32, 32, 8});
+  REQUIRE(layout.record_count >= kDims[0] * kDims[1] * kDims[2]);
 
-  std::vector<uint8> seen(layout.recordCount, uint8{0});
-  const usize logicalCount = k_Dims[0] * k_Dims[1] * k_Dims[2];
+  std::vector<uint8> seen(layout.record_count, uint8{0});
+  const usize logicalCount = kDims[0] * kDims[1] * kDims[2];
   for(usize logicalIndex = 0; logicalIndex < logicalCount; ++logicalIndex)
   {
     auto physicalResult = layout.physicalIndex(logicalIndex);
     SIMPLNX_RESULT_REQUIRE_VALID(physicalResult);
-    REQUIRE(physicalResult.value() < layout.recordCount);
+    REQUIRE(physicalResult.value() < layout.record_count);
     REQUIRE(seen[physicalResult.value()] == uint8{0});
     seen[physicalResult.value()] = uint8{1};
   }
 
-  const usize center = (4 * k_Dims[1] + 10) * k_Dims[0] + 10;
+  const usize center = (4 * kDims[1] + 10) * kDims[0] + 10;
   auto centerResult = layout.physicalIndex(center);
   auto xResult = layout.physicalIndex(center + 1);
-  auto yResult = layout.physicalIndex(center + k_Dims[0]);
-  auto zResult = layout.physicalIndex(center + k_Dims[0] * k_Dims[1]);
+  auto yResult = layout.physicalIndex(center + kDims[0]);
+  auto zResult = layout.physicalIndex(center + kDims[0] * kDims[1]);
   SIMPLNX_RESULT_REQUIRE_VALID(centerResult);
   SIMPLNX_RESULT_REQUIRE_VALID(xResult);
   SIMPLNX_RESULT_REQUIRE_VALID(yResult);
@@ -619,7 +627,7 @@ TEST_CASE("NXImageProcessing::WatershedExternalMemory: tiled voxel layout is a c
   REQUIRE(centerResult.value() / k_RecordsPerPage == yResult.value() / k_RecordsPerPage);
   REQUIRE(centerResult.value() / k_RecordsPerPage == zResult.value() / k_RecordsPerPage);
 
-  auto createWatershedTiledRecordLayoutResult = ImageProcessing::detail::CreateWatershedTiledRecordLayout(k_Dims, 0);
+  auto createWatershedTiledRecordLayoutResult = ImageProcessing::detail::CreateWatershedTiledRecordLayout(kDims, 0);
   SIMPLNX_RESULT_REQUIRE_INVALID(createWatershedTiledRecordLayoutResult);
 }
 
@@ -630,7 +638,7 @@ TEST_CASE("NXImageProcessing::WatershedExternalMemory: reserved plan honors the 
   constexpr uint64 k_RequestedBytes = 512ULL * 1024ULL * 1024ULL;
   constexpr uint64 k_ExpectedGrantBytes = 256ULL * 1024ULL * 1024ULL;
 
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
   manager.setBudgetBytes(k_OneGiB);
@@ -642,11 +650,11 @@ TEST_CASE("NXImageProcessing::WatershedExternalMemory: reserved plan honors the 
     const auto& allocation = allocationResult.value();
     REQUIRE(allocation.reservation.sizeBytes() == k_ExpectedGrantBytes);
     REQUIRE(manager.reservedWorkingMemoryBytes() == k_ExpectedGrantBytes);
-    REQUIRE(allocation.plan.residentBytes <= k_ExpectedGrantBytes);
+    REQUIRE(allocation.plan.resident_bytes <= k_ExpectedGrantBytes);
 
     auto baselineResult = ImageProcessing::detail::CreateWatershedExternalMemoryPlan<uint8>(k_ValueCount);
     SIMPLNX_RESULT_REQUIRE_VALID(baselineResult);
-    REQUIRE(allocation.plan.voxelCachePages > baselineResult.value().voxelCachePages);
+    REQUIRE(allocation.plan.voxel_cache_pages > baselineResult.value().voxel_cache_pages);
   }
 
   REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
@@ -660,7 +668,7 @@ TEST_CASE("NXImageProcessing::WatershedExternalMemory: production request scales
   const std::array<uint64, 3> cacheBudgets = {256 * k_MiB, 512 * k_MiB, 1024 * k_MiB};
 
   // Cache budgets of at most 1 GiB avoid the machine-dependent upper cap.
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
   uint64 previousGrant = 0;
@@ -673,7 +681,7 @@ TEST_CASE("NXImageProcessing::WatershedExternalMemory: production request scales
       const auto& allocation = allocationResult.value();
       REQUIRE(allocation.reservation.sizeBytes() > previousGrant);
       REQUIRE(allocation.reservation.sizeBytes() <= cacheBudget / 4);
-      REQUIRE(allocation.plan.residentBytes <= allocation.reservation.sizeBytes());
+      REQUIRE(allocation.plan.resident_bytes <= allocation.reservation.sizeBytes());
       previousGrant = allocation.reservation.sizeBytes();
     }
     REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
@@ -703,7 +711,7 @@ TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: resident bucket workin
   SIMPLNX_RESULT_REQUIRE_INVALID(calculateWatershedResidentWorkingMemoryBytesResult);
 
   // Cache budgets of at most 1 GiB avoid the machine-dependent upper cap.
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
   REQUIRE_FALSE(manager.setBudgetBytes(512 * k_MiB));
@@ -728,15 +736,15 @@ TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: resident bucket workin
 
 TEST_CASE("NXImageProcessing::WatershedExternalMemory: external min-heap preserves level and FIFO order", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
-  using Heap = ImageProcessing::detail::WatershedExternalMinHeap<int32>;
+  using HeapType = ImageProcessing::detail::WatershedExternalMinHeap<int32>;
   TemporaryRecordStoreConfig config;
-  config.recordSize = sizeof(ImageProcessing::detail::WatershedHeapRecord<int32>);
-  config.maxRecordsPerBatch = 4;
-  config.initialRecordCount = 8;
+  config.record_size = sizeof(ImageProcessing::detail::WatershedHeapRecord<int32>);
+  config.max_records_per_batch = 4;
+  config.initial_record_count = 8;
   auto storeResult = InMemoryTemporaryRecordStore::Create(config);
   SIMPLNX_RESULT_REQUIRE_VALID(storeResult);
   std::atomic_bool shouldCancel{false};
-  auto heapResult = Heap::Create(std::move(storeResult.value()), /*recordsPerPage=*/2, /*maximumPages=*/2, shouldCancel);
+  auto heapResult = HeapType::Create(std::move(storeResult.value()), /*recordsPerPage=*/2, /*maximumPages=*/2, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_VALID(heapResult);
   auto& heap = *heapResult.value();
 
@@ -759,7 +767,7 @@ TEST_CASE("NXImageProcessing::WatershedExternalMemory: external min-heap preserv
     auto popResult = heap.pop();
     SIMPLNX_RESULT_REQUIRE_VALID(popResult);
     REQUIRE(popResult.value().level == level);
-    REQUIRE(popResult.value().flatIndex == flatIndex);
+    REQUIRE(popResult.value().flat_index == flatIndex);
   }
   REQUIRE(heap.empty());
   auto popResult2 = heap.pop();
@@ -774,16 +782,16 @@ TEST_CASE("NXImageProcessing::WatershedExternalMemory: external min-heap preserv
 
 TEST_CASE("NXImageProcessing::WatershedExternalMemory: external min-heap rejects capacity and provider metadata", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
-  using Heap = ImageProcessing::detail::WatershedExternalMinHeap<float32>;
+  using HeapType = ImageProcessing::detail::WatershedExternalMinHeap<float32>;
   std::atomic_bool shouldCancel{false};
 
   TemporaryRecordStoreConfig smallConfig;
-  smallConfig.recordSize = sizeof(ImageProcessing::detail::WatershedHeapRecord<float32>);
-  smallConfig.maxRecordsPerBatch = 2;
-  smallConfig.initialRecordCount = 2;
+  smallConfig.record_size = sizeof(ImageProcessing::detail::WatershedHeapRecord<float32>);
+  smallConfig.max_records_per_batch = 2;
+  smallConfig.initial_record_count = 2;
   auto smallStore = InMemoryTemporaryRecordStore::Create(smallConfig);
   SIMPLNX_RESULT_REQUIRE_VALID(smallStore);
-  auto heapResult = Heap::Create(std::move(smallStore.value()), /*recordsPerPage=*/2, /*maximumPages=*/1, shouldCancel);
+  auto heapResult = HeapType::Create(std::move(smallStore.value()), /*recordsPerPage=*/2, /*maximumPages=*/1, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_VALID(heapResult);
   auto pushResult = heapResult.value()->push(1.5f, 1);
   SIMPLNX_RESULT_REQUIRE_VALID(pushResult);
@@ -793,26 +801,26 @@ TEST_CASE("NXImageProcessing::WatershedExternalMemory: external min-heap rejects
   SIMPLNX_RESULT_REQUIRE_INVALID(pushResult3);
 
   TemporaryRecordStoreConfig wrongConfig = smallConfig;
-  wrongConfig.recordSize = sizeof(uint8);
+  wrongConfig.record_size = sizeof(uint8);
   auto wrongStore = InMemoryTemporaryRecordStore::Create(wrongConfig);
   SIMPLNX_RESULT_REQUIRE_VALID(wrongStore);
-  auto createResult = Heap::Create(std::move(wrongStore.value()), /*recordsPerPage=*/2, /*maximumPages=*/1, shouldCancel);
+  auto createResult = HeapType::Create(std::move(wrongStore.value()), /*recordsPerPage=*/2, /*maximumPages=*/1, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_INVALID(createResult);
 }
 
 TEST_CASE("NXImageProcessing::WatershedExternalMemory: fixed-level external buckets preserve numeric and FIFO order", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
-  using Block = ImageProcessing::detail::WatershedQueueBlock;
-  using Queue = ImageProcessing::detail::WatershedExternalBucketQueue<int16>;
+  using BlockType = ImageProcessing::detail::WatershedQueueBlock;
+  using QueueType = ImageProcessing::detail::WatershedExternalBucketQueue<int16>;
   TemporaryRecordStoreConfig config;
-  config.recordSize = sizeof(Block);
-  config.maxRecordsPerBatch = 2;
-  config.initialRecordCount = 8;
+  config.record_size = sizeof(BlockType);
+  config.max_records_per_batch = 2;
+  config.initial_record_count = 8;
   auto storeResult = InMemoryTemporaryRecordStore::Create(config);
   SIMPLNX_RESULT_REQUIRE_VALID(storeResult);
   std::atomic_bool shouldCancel{false};
   constexpr uint64 k_Capacity = static_cast<uint64>(std::numeric_limits<uint32>::max()) + 16;
-  auto queueResult = Queue::Create(std::move(storeResult.value()), /*recordsPerPage=*/2, /*maximumPages=*/2, k_Capacity, shouldCancel);
+  auto queueResult = QueueType::Create(std::move(storeResult.value()), /*recordsPerPage=*/2, /*maximumPages=*/2, k_Capacity, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_VALID(queueResult);
   auto& queue = *queueResult.value();
 
@@ -836,7 +844,7 @@ TEST_CASE("NXImageProcessing::WatershedExternalMemory: fixed-level external buck
     auto popResult = queue.pop();
     SIMPLNX_RESULT_REQUIRE_VALID(popResult);
     REQUIRE(popResult.value().level == level);
-    REQUIRE(popResult.value().flatIndex == flatIndex);
+    REQUIRE(popResult.value().flat_index == flatIndex);
   }
   REQUIRE(queue.empty());
   auto popResult2 = queue.pop();
@@ -848,15 +856,15 @@ TEST_CASE("NXImageProcessing::WatershedExternalMemory: fixed-level external buck
   SIMPLNX_RESULT_REQUIRE_VALID(pushResult8);
   auto firstInterleaved = queue.pop();
   SIMPLNX_RESULT_REQUIRE_VALID(firstInterleaved);
-  REQUIRE(firstInterleaved.value().flatIndex == 6);
+  REQUIRE(firstInterleaved.value().flat_index == 6);
   auto pushResult9 = queue.push(7, largeFlatIndex);
   SIMPLNX_RESULT_REQUIRE_VALID(pushResult9);
   auto secondInterleaved = queue.pop();
   auto thirdInterleaved = queue.pop();
   SIMPLNX_RESULT_REQUIRE_VALID(secondInterleaved);
   SIMPLNX_RESULT_REQUIRE_VALID(thirdInterleaved);
-  REQUIRE(secondInterleaved.value().flatIndex == 7);
-  REQUIRE(thirdInterleaved.value().flatIndex == largeFlatIndex);
+  REQUIRE(secondInterleaved.value().flat_index == 7);
+  REQUIRE(thirdInterleaved.value().flat_index == largeFlatIndex);
   REQUIRE(queue.empty());
   auto flushResult = queue.flush();
   SIMPLNX_RESULT_REQUIRE_VALID(flushResult);
@@ -866,14 +874,14 @@ TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: injected external floo
 {
   struct Geometry
   {
-    usize dimX;
-    usize dimY;
-    usize dimZ;
+    usize dim_x;
+    usize dim_y;
+    usize dim_z;
   };
-  const std::array<Geometry, 2> geometries = {{{9, 7, 1}, {8, 7, 3}}};
+  const std::array<Geometry, 2> geometries = {{{.dim_x = 9, .dim_y = 7, .dim_z = 1}, {.dim_x = 8, .dim_y = 7, .dim_z = 3}}};
   for(const Geometry& geometry : geometries)
   {
-    const usize count = geometry.dimX * geometry.dimY * geometry.dimZ;
+    const usize count = geometry.dim_x * geometry.dim_y * geometry.dim_z;
     std::vector<int32> gray(count);
     std::vector<uint32> markers(count, 0u);
     for(usize index = 0; index < count; ++index)
@@ -881,61 +889,61 @@ TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: injected external floo
       gray[index] = static_cast<int32>((index * 31) % 19) - 9;
     }
     markers[0] = std::numeric_limits<uint32>::max();
-    markers[geometry.dimX + 1] = 1u;
+    markers[geometry.dim_x + 1] = 1u;
     markers[count - 1] = 2u;
 
     for(const bool markWatershedLine : {false, true})
     {
       for(const bool fullyConnected : {false, true})
       {
-        CAPTURE(geometry.dimX, geometry.dimY, geometry.dimZ, markWatershedLine, fullyConnected);
-        const std::vector<uint32> resident = RunFlood(gray, markers, geometry.dimX, geometry.dimY, geometry.dimZ, markWatershedLine, fullyConnected);
-        const std::vector<uint32> external = RunExternalFlood(gray, markers, geometry.dimX, geometry.dimY, geometry.dimZ, markWatershedLine, fullyConnected);
+        CAPTURE(geometry.dim_x, geometry.dim_y, geometry.dim_z, markWatershedLine, fullyConnected);
+        const std::vector<uint32> resident = RunFlood(gray, markers, geometry.dim_x, geometry.dim_y, geometry.dim_z, markWatershedLine, fullyConnected);
+        const std::vector<uint32> external = RunExternalFlood(gray, markers, geometry.dim_x, geometry.dim_y, geometry.dim_z, markWatershedLine, fullyConnected);
         REQUIRE(external == resident);
       }
     }
 
     std::fill(markers.begin(), markers.end(), 0u);
-    REQUIRE(RunExternalFlood(gray, markers, geometry.dimX, geometry.dimY, geometry.dimZ, true, false) == RunFlood(gray, markers, geometry.dimX, geometry.dimY, geometry.dimZ, true, false));
+    REQUIRE(RunExternalFlood(gray, markers, geometry.dim_x, geometry.dim_y, geometry.dim_z, true, false) == RunFlood(gray, markers, geometry.dim_x, geometry.dim_y, geometry.dim_z, true, false));
   }
 }
 
 TEST_CASE("NXImageProcessing::WatershedFromMarkersEngine: external initialization failure preserves output", "[NXImageProcessing][WatershedFromMarkersEngine]")
 {
-  constexpr usize dimX = 5;
-  constexpr usize dimY = 4;
-  constexpr usize valueCount = dimX * dimY;
-  constexpr uint32 poison = 73u;
-  DataStore<int32> inputStore(ShapeType{1, dimY, dimX}, ShapeType{1}, 2);
-  DataStore<uint32> markerStore(ShapeType{1, dimY, dimX}, ShapeType{1}, 0u);
+  constexpr usize k_DimX = 5;
+  constexpr usize k_DimY = 4;
+  constexpr usize k_ValueCount = k_DimX * k_DimY;
+  constexpr uint32 k_Poison = 73u;
+  DataStore<int32> inputStore(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, 2);
+  DataStore<uint32> markerStore(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, 0u);
   markerStore.setValue(0, 1u);
-  DataStore<uint32> outputStore(ShapeType{1, dimY, dimX}, ShapeType{1}, poison);
-  auto planResult = ImageProcessing::detail::CreateWatershedExternalMemoryPlan<int32>(valueCount);
+  DataStore<uint32> outputStore(ShapeType{1, k_DimY, k_DimX}, ShapeType{1}, k_Poison);
+  auto planResult = ImageProcessing::detail::CreateWatershedExternalMemoryPlan<int32>(k_ValueCount);
   SIMPLNX_RESULT_REQUIRE_VALID(planResult);
   const auto& plan = planResult.value();
 
   TemporaryRecordStoreConfig voxelConfig;
-  voxelConfig.recordSize = plan.voxelRecordBytes;
-  voxelConfig.maxRecordsPerBatch = std::max(plan.voxelRecordsPerPage, plan.transferRecords);
-  voxelConfig.initialRecordCount = valueCount;
-  voxelConfig.readOnly = true;
+  voxelConfig.record_size = plan.voxel_record_bytes;
+  voxelConfig.max_records_per_batch = std::max(plan.voxel_records_per_page, plan.transfer_records);
+  voxelConfig.initial_record_count = k_ValueCount;
+  voxelConfig.read_only = true;
   auto voxelStore = InMemoryTemporaryRecordStore::Create(voxelConfig);
   SIMPLNX_RESULT_REQUIRE_VALID(voxelStore);
 
   TemporaryRecordStoreConfig heapConfig;
-  heapConfig.recordSize = sizeof(ImageProcessing::detail::WatershedHeapRecord<int32>);
-  heapConfig.maxRecordsPerBatch = plan.heapRecordsPerPage;
-  heapConfig.initialRecordCount = valueCount;
+  heapConfig.record_size = sizeof(ImageProcessing::detail::WatershedHeapRecord<int32>);
+  heapConfig.max_records_per_batch = plan.heap_records_per_page;
+  heapConfig.initial_record_count = k_ValueCount;
   auto heapStore = InMemoryTemporaryRecordStore::Create(heapConfig);
   SIMPLNX_RESULT_REQUIRE_VALID(heapStore);
 
   std::atomic_bool shouldCancel{false};
-  const Result<> result = ApplyWatershedFromMarkersExternal<int32>(inputStore, markerStore, outputStore, SizeVec3{dimX, dimY, 1}, /*markWatershedLine=*/true, /*fullyConnected=*/false,
+  const Result<> result = ApplyWatershedFromMarkersExternal<int32>(inputStore, markerStore, outputStore, SizeVec3Type{k_DimX, k_DimY, 1}, /*markWatershedLine=*/true, /*fullyConnected=*/false,
                                                                    std::numeric_limits<uint32>::max(), shouldCancel, std::move(voxelStore.value()), std::move(heapStore.value()), plan);
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().front().code == -79057);
   for(const uint32 value : outputStore)
   {
-    REQUIRE(value == poison);
+    REQUIRE(value == k_Poison);
   }
 }

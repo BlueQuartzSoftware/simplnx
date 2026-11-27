@@ -16,7 +16,7 @@ namespace nx::core
 class ITemporaryRecordStore;
 }
 
-namespace nx::core::MeshingUtilities
+namespace nx::core::meshing_utilities
 {
 namespace detail
 {
@@ -30,7 +30,7 @@ namespace detail
  * @return Shape, index, capacity, or read error, or success with backend warnings.
  * @note Sorts only read requests. The caller owns admission and cancellation checkpoints.
  */
-SIMPLNX_EXPORT Result<> GatherVertexCoordinates(const Float32AbstractDataStore& vertices, nonstd::span<const IGeometry::MeshIndexType> indexes, nonstd::span<usize> order,
+SIMPLNX_EXPORT Result<> GatherVertexCoordinates(const Float32AbstractDataStoreType& vertices, nonstd::span<const IGeometry::MeshIndexType> indexes, nonstd::span<usize> order,
                                                 nonstd::span<float32> gathered, nonstd::span<float32> page);
 
 /**
@@ -73,7 +73,7 @@ SIMPLNX_EXPORT SortedVerticesList OrderSharedVertices(const INodeGeometry0D& geo
  * @param geom The input mesh
  * @returns std::vector<IGeometry::MeshIndexType> which is the sorted indices along the given axis
  */
-SIMPLNX_EXPORT std::vector<IGeometry::MeshIndexType> OrderSharedVerticesAlongAxis(nx::core::MeshingUtilities::AxialAlignment axis, const INodeGeometry0D::SharedVertexList::store_type& vertexList,
+SIMPLNX_EXPORT std::vector<IGeometry::MeshIndexType> OrderSharedVerticesAlongAxis(nx::core::meshing_utilities::AxialAlignment axis, const INodeGeometry0D::SharedVertexListType::StoreType& vertexList,
                                                                                   const std::atomic_bool& shouldCancel);
 
 /**
@@ -82,5 +82,5 @@ SIMPLNX_EXPORT std::vector<IGeometry::MeshIndexType> OrderSharedVerticesAlongAxi
  * @param sortedVertices The object containing a sorted list of vertices and the axis it was sorted on
  * @returns bool false means vertices are unique
  */
-SIMPLNX_EXPORT bool HasDuplicateVertices(const IGeometry::SharedVertexList::store_type& verts, const SortedVerticesList& sortedVertices);
-} // namespace nx::core::MeshingUtilities
+SIMPLNX_EXPORT bool HasDuplicateVertices(const IGeometry::SharedVertexListType::StoreType& verts, const SortedVerticesList& sortedVertices);
+} // namespace nx::core::meshing_utilities

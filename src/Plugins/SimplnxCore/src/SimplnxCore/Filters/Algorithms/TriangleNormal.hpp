@@ -13,8 +13,8 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT TriangleNormalInputValues
 {
-  GeometrySelectionParameter::ValueType InputTriangleGeometryPath;
-  DataObjectNameParameter::ValueType OutputNormalsArrayName;
+  GeometrySelectionParameter::ValueType input_triangle_geometry_path;
+  DataObjectNameParameter::ValueType output_normals_array_name;
 };
 
 /**
@@ -26,7 +26,7 @@ class SIMPLNXCORE_EXPORT TriangleNormal
 {
 public:
   TriangleNormal(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, TriangleNormalInputValues* inputValues);
-  ~TriangleNormal() noexcept;
+  ~TriangleNormal() noexcept = default;
 
   TriangleNormal(const TriangleNormal&) = delete;
   TriangleNormal(TriangleNormal&&) noexcept = delete;

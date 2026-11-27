@@ -142,8 +142,8 @@ Result<> SplitDataArraysDirectTyped(DataStructure& dataStructure, const DataPath
                                     const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   const auto& inputArray = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath);
-  const auto* inputStore = dynamic_cast<const DataStore<T>*>(&inputArray.getDataStoreRef());
-  if(inputStore == nullptr)
+  const auto* inputStorePtr = dynamic_cast<const DataStore<T>*>(&inputArray.getDataStoreRef());
+  if(inputStorePtr == nullptr)
   {
     return SplitDataArraysScanlineTyped<T>(dataStructure, inputArrayPath, outputArrayPaths, splitDimension, messageHandler, shouldCancel);
   }
@@ -163,8 +163,8 @@ Result<> SplitDataArraysDirectTyped(DataStructure& dataStructure, const DataPath
                                                 outputArray.getNumberOfComponents()));
     }
 
-    auto* outputStore = dynamic_cast<DataStore<T>*>(&outputArray.getDataStoreRef());
-    if(outputStore == nullptr)
+    auto* outputStorePtr = dynamic_cast<DataStore<T>*>(&outputArray.getDataStoreRef());
+    if(outputStorePtr == nullptr)
     {
       return SplitDataArraysScanlineTyped<T>(dataStructure, inputArrayPath, outputArrayPaths, splitDimension, messageHandler, shouldCancel);
     }
@@ -187,7 +187,7 @@ Result<> SplitDataArraysDirectTyped(DataStructure& dataStructure, const DataPath
     const usize outputSplitCount = outputArray.getTupleShape()[splitDimension];
     const usize outputScanlineTuples = outputSplitCount * innerTuples;
     const auto task =
-        CopySplitDataArrayDirectTask<T>(inputStore->data(), outputStore.data(), inputScanlineTuples, outputScanlineTuples, splitStart * innerTuples, outerCount, numComponents, shouldCancel);
+        CopySplitDataArrayDirectTask<T>(inputStorePtr->data(), outputStore.data(), inputScanlineTuples, outputScanlineTuples, splitStart * innerTuples, outerCount, numComponents, shouldCancel);
     taskRunner.execute([&, task] {
       task();
       const std::lock_guard<std::mutex> guard(progressMutex);
@@ -452,8 +452,8 @@ public:
    * @param taskResult Stores the first copy error from all output tasks.
    * @pre All arguments outlive this task.
    */
-  SplitDataArrayByTupleImpl(const ArrayType& inputArray, ArrayType& outputArray, const std::vector<usize> inputTupleShapeOffsets, const std::atomic_bool& shouldCancel,
-                            CopyFromArray::ParallelTaskResult& taskResult)
+  SplitDataArrayByTupleImpl(const ArrayType& inputArray, ArrayType& outputArray, const std::vector<usize>& inputTupleShapeOffsets, const std::atomic_bool& shouldCancel,
+                            copy_from_array::ParallelTaskResult& taskResult)
   : m_InputArray(inputArray)
   , m_OutputArray(outputArray)
   , m_InputTupleShapeOffsets(inputTupleShapeOffsets)
@@ -493,7 +493,7 @@ protected:
     auto inputTupleShape = m_InputArray.getTupleShape();
     auto outputTupleShape = m_OutputArray.getTupleShape();
     const std::vector<usize> startOutputTupleOffsets(inputTupleShape.size(), 0);
-    m_TaskResult.store(CopyFromArray::CopyDataND(m_InputArray, m_OutputArray, m_InputTupleShapeOffsets, startOutputTupleOffsets, outputTupleShape));
+    m_TaskResult.store(copy_from_array::CopyDataND(m_InputArray, m_OutputArray, m_InputTupleShapeOffsets, startOutputTupleOffsets, outputTupleShape));
   }
 
 private:
@@ -501,7 +501,7 @@ private:
   ArrayType& m_OutputArray;
   const std::vector<usize> m_InputTupleShapeOffsets;
   const std::atomic_bool& m_ShouldCancel;
-  CopyFromArray::ParallelTaskResult& m_TaskResult;
+  copy_from_array::ParallelTaskResult& m_TaskResult;
 };
 
 /**
@@ -524,7 +524,7 @@ public:
    * @param taskResult Stores the first copy error from all output tasks.
    * @pre All arguments outlive this task.
    */
-  SplitNeighborListByTupleImpl(const NeighborList<T>& inputNL, NeighborList<T>& outputNL, usize inputTupleOffset, const std::atomic_bool& shouldCancel, CopyFromArray::ParallelTaskResult& taskResult)
+  SplitNeighborListByTupleImpl(const NeighborList<T>& inputNL, NeighborList<T>& outputNL, usize inputTupleOffset, const std::atomic_bool& shouldCancel, copy_from_array::ParallelTaskResult& taskResult)
   : m_InputNL(inputNL)
   , m_OutputNL(outputNL)
   , m_InputTupleOffset(inputTupleOffset)
@@ -563,7 +563,7 @@ protected:
 
     auto outputTupleShape = m_OutputNL.getTupleShape();
     usize startOutputOffset = 0;
-    m_TaskResult.store(CopyFromArray::CopyDataND(m_InputNL, m_OutputNL, {m_InputTupleOffset}, {startOutputOffset}, outputTupleShape));
+    m_TaskResult.store(copy_from_array::CopyDataND(m_InputNL, m_OutputNL, {m_InputTupleOffset}, {startOutputOffset}, outputTupleShape));
   }
 
 private:
@@ -571,21 +571,21 @@ private:
   NeighborList<T>& m_OutputNL;
   usize m_InputTupleOffset;
   const std::atomic_bool& m_ShouldCancel;
-  CopyFromArray::ParallelTaskResult& m_TaskResult;
+  copy_from_array::ParallelTaskResult& m_TaskResult;
 };
 
 template <typename T>
-struct is_allowed_array_type : std::false_type
+struct IsSplittableArrayType : std::false_type
 {
 };
 
 template <typename T>
-struct is_allowed_array_type<DataArray<T>> : std::true_type
+struct IsSplittableArrayType<DataArray<T>> : std::true_type
 {
 };
 
 template <>
-struct is_allowed_array_type<StringArray> : std::true_type
+struct IsSplittableArrayType<StringArray> : std::true_type
 {
 };
 
@@ -604,13 +604,13 @@ struct is_allowed_array_type<StringArray> : std::true_type
  * Each task copies one output without further cancellation checks. Outputs can complete in a different order.
  */
 template <typename ArrayType>
-typename std::enable_if<is_allowed_array_type<ArrayType>::value, Result<>>::type SplitArraysByTupleImpl(DataStructure& dataStructure, const DataPath& inputArrayPath,
+typename std::enable_if<IsSplittableArrayType<ArrayType>::value, Result<>>::type SplitArraysByTupleImpl(DataStructure& dataStructure, const DataPath& inputArrayPath,
                                                                                                         const std::vector<DataPath>& outputArrayPaths, usize splitDimension,
                                                                                                         const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   // Independent output blocks run as separate tasks.
   // Declared before the task runner so the runner's destructor joins every worker while this holder is still alive.
-  CopyFromArray::ParallelTaskResult taskResult;
+  copy_from_array::ParallelTaskResult taskResult;
   const std::string progressLabel = fmt::format("Splitting '{}' By Tuple", inputArrayPath.toString());
   usize completedOutputs = 0;
   std::mutex progressMutex;
@@ -661,7 +661,7 @@ Result<> SplitNeighborListsByTupleImpl(DataStructure& dataStructure, const DataP
                                        const std::atomic_bool& shouldCancel)
 {
   // Declared before the task runner so the runner's destructor joins every worker while this holder is still alive.
-  CopyFromArray::ParallelTaskResult taskResult;
+  copy_from_array::ParallelTaskResult taskResult;
   const std::string progressLabel = fmt::format("Splitting '{}' By Tuple", inputArrayPath.toString());
   usize completedOutputs = 0;
   std::mutex progressMutex;
@@ -734,13 +734,13 @@ Result<> SplitArraysByTuple(DataStructure& dataStructure, const DataPath& inputA
                             const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   const auto& inputDataArray = dataStructure.getDataRefAs<IDataArray>(inputArrayPath);
-  const IDataArray* representativeOutputArray = nullptr;
+  const IDataArray* representativeOutputArrayPtr = nullptr;
   for(const DataPath& outputArrayPath : outputArrayPaths)
   {
     const auto& outputArray = dataStructure.getDataRefAs<IDataArray>(outputArrayPath);
-    if(representativeOutputArray == nullptr || IsOutOfCore(outputArray))
+    if(representativeOutputArrayPtr == nullptr || IsOutOfCore(outputArray))
     {
-      representativeOutputArray = &outputArray;
+      representativeOutputArrayPtr = &outputArray;
     }
     if(IsOutOfCore(outputArray))
     {
@@ -748,7 +748,7 @@ Result<> SplitArraysByTuple(DataStructure& dataStructure, const DataPath& inputA
     }
   }
 
-  return DispatchAlgorithm<SplitDataArraysDirect, SplitDataArraysScanline>({&inputDataArray, representativeOutputArray}, dataStructure, inputArrayPath, outputArrayPaths, splitDimension,
+  return DispatchAlgorithm<SplitDataArraysDirect, SplitDataArraysScanline>({&inputDataArray, representativeOutputArrayPtr}, dataStructure, inputArrayPath, outputArrayPaths, splitDimension,
                                                                            messageHandler, shouldCancel);
 }
 
@@ -780,8 +780,6 @@ SplitDataArrayByTuple::SplitDataArrayByTuple(DataStructure& dataStructure, const
 {
 }
 
-SplitDataArrayByTuple::~SplitDataArrayByTuple() noexcept = default;
-
 const std::atomic_bool& SplitDataArrayByTuple::getCancel()
 {
   return m_ShouldCancel;
@@ -789,27 +787,27 @@ const std::atomic_bool& SplitDataArrayByTuple::getCancel()
 
 Result<> SplitDataArrayByTuple::operator()()
 {
-  const auto& inputDataArray = m_DataStructure.getDataRefAs<IArray>(m_InputValues->InputArrayPath);
+  const auto& inputDataArray = m_DataStructure.getDataRefAs<IArray>(m_InputValues->input_array_path);
   std::string arrayTypeName = inputDataArray.getTypeName();
   switch(inputDataArray.getArrayType())
   {
   case IArray::ArrayType::DataArray: {
-    return SplitArraysByTuple(m_DataStructure, m_InputValues->InputArrayPath, m_InputValues->OutputArrayPaths, m_InputValues->SplitDimension, m_MessageHandler, m_ShouldCancel);
+    return SplitArraysByTuple(m_DataStructure, m_InputValues->input_array_path, m_InputValues->output_array_paths, m_InputValues->split_dimension, m_MessageHandler, m_ShouldCancel);
   }
   case IArray::ArrayType::StringArray: {
-    return SplitArraysByTupleImpl<StringArray>(m_DataStructure, m_InputValues->InputArrayPath, m_InputValues->OutputArrayPaths, m_InputValues->SplitDimension, m_MessageHandler, m_ShouldCancel);
+    return SplitArraysByTupleImpl<StringArray>(m_DataStructure, m_InputValues->input_array_path, m_InputValues->output_array_paths, m_InputValues->split_dimension, m_MessageHandler, m_ShouldCancel);
   }
   case IArray::ArrayType::NeighborListArray: {
-    return SplitNeighborLists(m_DataStructure, m_InputValues->InputArrayPath, m_InputValues->OutputArrayPaths, m_MessageHandler, m_ShouldCancel);
+    return SplitNeighborLists(m_DataStructure, m_InputValues->input_array_path, m_InputValues->output_array_paths, m_MessageHandler, m_ShouldCancel);
   }
   case IArray::ArrayType::Any: {
     return MakeErrorResult(to_underlying(SplitDataArrayByTuple::ErrorCodes::AnyArrayType),
-                           fmt::format("The input array '{}' has array type 'Any'.  This SHOULD NOT be possible, so please contact the developers.", m_InputValues->InputArrayPath.toString()));
+                           fmt::format("The input array '{}' has array type 'Any'.  This SHOULD NOT be possible, so please contact the developers.", m_InputValues->input_array_path.toString()));
   }
   default: {
     return MakeErrorResult(
         to_underlying(SplitDataArrayByTuple::ErrorCodes::UnsupportedArrayType),
-        fmt::format("The input array '{}' has an array type that is currently not supported by this filter, so please contact the developers.", m_InputValues->InputArrayPath.toString()));
+        fmt::format("The input array '{}' has an array type that is currently not supported by this filter, so please contact the developers.", m_InputValues->input_array_path.toString()));
   }
   }
 }

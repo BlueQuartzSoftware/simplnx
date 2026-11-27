@@ -57,11 +57,11 @@ Parameters ComputeMomentInvariants2DFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "2D Image Geometry", "The path to the 2D image geometry to be used as input", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureRectArrayPath_Key, "Feature Rect", "Array holding the min xy and max xy pixel coordinates of each feature id", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapes{{6}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::uint32}, ArraySelectionParameter::AllowedComponentShapesType{{6}}));
   params.insert(std::make_unique<BoolParameter>(k_NormalizeMomentInvariants_Key, "Normalize Moment Invariants", "Should the algorithm normalize the results to unit circle.", true));
   params.insertSeparator(Parameters::Separator{"Output Feature Data"});
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAttributeMatrixPath_Key, "Feature Attribute Matrix",
@@ -83,14 +83,14 @@ IFilter::VersionType ComputeMomentInvariants2DFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeMomentInvariants2DFilter::clone() const
+IFilter::UniquePointerType ComputeMomentInvariants2DFilter::clone() const
 {
   return std::make_unique<ComputeMomentInvariants2DFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeMomentInvariants2DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeMomentInvariants2DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                        const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pGeometryPathValue = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
@@ -103,7 +103,7 @@ IFilter::PreflightResult ComputeMomentInvariants2DFilter::preflightImpl(const Da
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, pGeometryPathValue, {pFeatureIdsArrayPathValue}, -9511);
   if(tupleCountResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   const DataPath omega1Path = pFeatureAttributeMatrixPathValue.createChildPath(pOmega1ArrayNameValue);
@@ -114,7 +114,7 @@ IFilter::PreflightResult ComputeMomentInvariants2DFilter::preflightImpl(const Da
   std::vector<PreflightValue> preflightUpdatedValues;
 
   const auto& imageGeometry = dataStructure.getDataRefAs<ImageGeom>(pGeometryPathValue);
-  const SizeVec3 imageDimensions = imageGeometry.getDimensions();
+  const SizeVec3Type imageDimensions = imageGeometry.getDimensions();
   if(imageDimensions[2] != 1)
   {
     return MakePreflightErrorResult(-9510, fmt::format("This filter currently only works on XY Planes in 2D data and the input geometry at '{}' has more than 1 dimension in the Z direction. "
@@ -144,26 +144,26 @@ IFilter::PreflightResult ComputeMomentInvariants2DFilter::preflightImpl(const Da
     resultOutputActions.value().appendAction(std::move(createArrayAction));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeMomentInvariants2DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeMomentInvariants2DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeMomentInvariants2DInputValues inputValues;
 
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.FeatureRectArrayPath = filterArgs.value<DataPath>(k_FeatureRectArrayPath_Key);
-  inputValues.NormalizeMomentInvariants = filterArgs.value<bool>(k_NormalizeMomentInvariants_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_ImageGeometryPath_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.feature_rect_array_path = filterArgs.value<DataPath>(k_FeatureRectArrayPath_Key);
+  inputValues.normalize_moment_invariants = filterArgs.value<bool>(k_NormalizeMomentInvariants_Key);
   const auto pFeatureAttributeMatrixPathValue = filterArgs.value<DataPath>(k_FeatureAttributeMatrixPath_Key);
-  inputValues.Omega1ArrayPath = pFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_Omega1ArrayName_Key));
-  inputValues.Omega2ArrayPath = pFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_Omega2ArrayName_Key));
-  inputValues.SaveCentralMoments = filterArgs.value<bool>(k_SaveCentralMoments_Key);
-  if(inputValues.SaveCentralMoments)
+  inputValues.omega1_array_path = pFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_Omega1ArrayName_Key));
+  inputValues.omega2_array_path = pFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_Omega2ArrayName_Key));
+  inputValues.save_central_moments = filterArgs.value<bool>(k_SaveCentralMoments_Key);
+  if(inputValues.save_central_moments)
   {
-    inputValues.CentralMomentsArrayPath = pFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_CentralMomentsArrayName_Key));
+    inputValues.central_moments_array_path = pFeatureAttributeMatrixPathValue.createChildPath(filterArgs.value<std::string>(k_CentralMomentsArrayName_Key));
   }
 
   return ComputeMomentInvariants2D(dataStructure, messageHandler, shouldCancel, &inputValues)();
@@ -171,16 +171,16 @@ Result<> ComputeMomentInvariants2DFilter::executeImpl(DataStructure& dataStructu
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_FeatureRectArrayPathKey = "FeatureRectArrayPath";
-constexpr StringLiteral k_NormalizeMomentInvariantsKey = "NormalizeMomentInvariants";
-constexpr StringLiteral k_Omega1ArrayPathKey = "Omega1ArrayPath";
-constexpr StringLiteral k_Omega2ArrayPathKey = "Omega2ArrayPath";
-constexpr StringLiteral k_SaveCentralMomentsKey = "SaveCentralMoments";
-constexpr StringLiteral k_CentralMomentsArrayPathKey = "CentralMomentsArrayPath";
-} // namespace SIMPL
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_FeatureRectArrayPathKey = "FeatureRectArrayPath";
+constexpr StringLiteralType k_NormalizeMomentInvariantsKey = "NormalizeMomentInvariants";
+constexpr StringLiteralType k_Omega1ArrayPathKey = "Omega1ArrayPath";
+constexpr StringLiteralType k_Omega2ArrayPathKey = "Omega2ArrayPath";
+constexpr StringLiteralType k_SaveCentralMomentsKey = "SaveCentralMoments";
+constexpr StringLiteralType k_CentralMomentsArrayPathKey = "CentralMomentsArrayPath";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeMomentInvariants2DFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -189,16 +189,16 @@ Result<Arguments> ComputeMomentInvariants2DFilter::FromSIMPLJson(const nlohmann:
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_ImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureRectArrayPathKey, k_FeatureRectArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_NormalizeMomentInvariantsKey, k_NormalizeMomentInvariants_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, SIMPL::k_Omega1ArrayPathKey, k_FeatureAttributeMatrixPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_Omega1ArrayPathKey, k_Omega1ArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_Omega2ArrayPathKey, k_Omega2ArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_SaveCentralMomentsKey, k_SaveCentralMoments_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_ImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureRectArrayPathKey, k_FeatureRectArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_NormalizeMomentInvariantsKey, k_NormalizeMomentInvariants_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_Omega1ArrayPathKey, k_FeatureAttributeMatrixPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_Omega1ArrayPathKey, k_Omega1ArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_Omega2ArrayPathKey, k_Omega2ArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_SaveCentralMomentsKey, k_SaveCentralMoments_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_CentralMomentsArrayPathKey, k_CentralMomentsArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_CentralMomentsArrayPathKey, k_CentralMomentsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

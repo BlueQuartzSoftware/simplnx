@@ -71,7 +71,6 @@ CombineTransformationMatrices::CombineTransformationMatrices(DataStructure& data
 }
 
 // -----------------------------------------------------------------------------
-CombineTransformationMatrices::~CombineTransformationMatrices() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& CombineTransformationMatrices::getCancel()
@@ -82,8 +81,8 @@ const std::atomic_bool& CombineTransformationMatrices::getCancel()
 // -----------------------------------------------------------------------------
 Result<> CombineTransformationMatrices::operator()()
 {
-  auto& outputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->OutputPath);
-  auto pathsIter = m_InputValues->SelectedPaths.begin();
+  auto& outputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->output_path);
+  auto pathsIter = m_InputValues->selected_paths.begin();
 
   const auto& array1 = m_DataStructure.getDataRefAs<IDataArray>(*pathsIter++);
   const auto& array2 = m_DataStructure.getDataRefAs<IDataArray>(*pathsIter++);
@@ -95,7 +94,7 @@ Result<> CombineTransformationMatrices::operator()()
   // Combine first two matrices: second * first
   ExecuteDataFunction(MatrixOperationFunctor{}, array1.getDataType(), array2, array1, outputArray);
 
-  for(; pathsIter != m_InputValues->SelectedPaths.end(); ++pathsIter)
+  for(; pathsIter != m_InputValues->selected_paths.end(); ++pathsIter)
   {
     const auto& arrayRef = m_DataStructure.getDataRefAs<IDataArray>(*pathsIter);
     ExecuteDataFunction(MatrixOperationFunctor{}, outputArray.getDataType(), arrayRef, outputArray, outputArray);

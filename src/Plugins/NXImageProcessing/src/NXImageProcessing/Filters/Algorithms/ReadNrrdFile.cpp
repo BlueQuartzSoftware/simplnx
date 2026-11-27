@@ -22,44 +22,44 @@ namespace
 {
 struct CropBounds
 {
-  usize xStart{0};
-  usize xEnd{0};
-  usize yStart{0};
-  usize yEnd{0};
-  usize zStart{0};
-  usize zEnd{0};
+  usize x_start{0};
+  usize x_end{0};
+  usize y_start{0};
+  usize y_end{0};
+  usize z_start{0};
+  usize z_end{0};
 };
 
 // Mirrors Algorithms/ReadNIfTIFile.cpp ComputeCropBounds (error codes shifted to -3574x).
 Result<CropBounds> ComputeCropBounds(const nx::core::nrrd::NrrdMetadata& md, const CropGeometryParameter::ValueType& opts)
 {
   CropBounds b;
-  b.xEnd = md.dimensions[0] - 1;
-  b.yEnd = md.dimensions[1] - 1;
-  b.zEnd = md.dimensions[2] - 1;
+  b.x_end = md.dimensions[0] - 1;
+  b.y_end = md.dimensions[1] - 1;
+  b.z_end = md.dimensions[2] - 1;
 
-  using Type = CropGeometryParameter::CropValues::TypeEnum;
-  if(opts.type == Type::NoCropping)
+  using _Type = CropGeometryParameter::CropValues::TypeEnum;
+  if(opts.type == _Type::NoCropping)
   {
     return {b};
   }
 
-  if(opts.type == Type::VoxelSubvolume)
+  if(opts.type == _Type::VoxelSubvolume)
   {
-    if(opts.cropX)
+    if(opts.crop_x)
     {
-      b.xStart = opts.xBoundVoxels[0];
-      b.xEnd = opts.xBoundVoxels[1];
+      b.x_start = opts.x_bound_voxels[0];
+      b.x_end = opts.x_bound_voxels[1];
     }
-    if(opts.cropY)
+    if(opts.crop_y)
     {
-      b.yStart = opts.yBoundVoxels[0];
-      b.yEnd = opts.yBoundVoxels[1];
+      b.y_start = opts.y_bound_voxels[0];
+      b.y_end = opts.y_bound_voxels[1];
     }
-    if(opts.cropZ)
+    if(opts.crop_z)
     {
-      b.zStart = opts.zBoundVoxels[0];
-      b.zEnd = opts.zBoundVoxels[1];
+      b.z_start = opts.z_bound_voxels[0];
+      b.z_end = opts.z_bound_voxels[1];
     }
   }
   else // PhysicalSubvolume
@@ -95,25 +95,25 @@ Result<CropBounds> ComputeCropBounds(const nx::core::nrrd::NrrdMetadata& md, con
       return {start, end};
     };
 
-    const auto [xStart, xEnd] = axisBounds(opts.cropX, opts.xBoundPhysical, md.origin[0], md.spacing[0], md.dimensions[0]);
-    const auto [yStart, yEnd] = axisBounds(opts.cropY, opts.yBoundPhysical, md.origin[1], md.spacing[1], md.dimensions[1]);
-    const auto [zStart, zEnd] = axisBounds(opts.cropZ, opts.zBoundPhysical, md.origin[2], md.spacing[2], md.dimensions[2]);
-    b.xStart = xStart;
-    b.xEnd = xEnd;
-    b.yStart = yStart;
-    b.yEnd = yEnd;
-    b.zStart = zStart;
-    b.zEnd = zEnd;
+    const auto [xStart, xEnd] = axisBounds(opts.crop_x, opts.x_bound_physical, md.origin[0], md.spacing[0], md.dimensions[0]);
+    const auto [yStart, yEnd] = axisBounds(opts.crop_y, opts.y_bound_physical, md.origin[1], md.spacing[1], md.dimensions[1]);
+    const auto [zStart, zEnd] = axisBounds(opts.crop_z, opts.z_bound_physical, md.origin[2], md.spacing[2], md.dimensions[2]);
+    b.x_start = xStart;
+    b.x_end = xEnd;
+    b.y_start = yStart;
+    b.y_end = yEnd;
+    b.z_start = zStart;
+    b.z_end = zEnd;
   }
 
-  if(b.xStart > b.xEnd || b.yStart > b.yEnd || b.zStart > b.zEnd)
+  if(b.x_start > b.x_end || b.y_start > b.y_end || b.z_start > b.z_end)
   {
-    return MakeErrorResult<CropBounds>(-35742, fmt::format("Invalid crop bounds: start ({}, {}, {}) must be <= end ({}, {}, {}).", b.xStart, b.yStart, b.zStart, b.xEnd, b.yEnd, b.zEnd));
+    return MakeErrorResult<CropBounds>(-35742, fmt::format("Invalid crop bounds: start ({}, {}, {}) must be <= end ({}, {}, {}).", b.x_start, b.y_start, b.z_start, b.x_end, b.y_end, b.z_end));
   }
-  if(b.xEnd >= md.dimensions[0] || b.yEnd >= md.dimensions[1] || b.zEnd >= md.dimensions[2])
+  if(b.x_end >= md.dimensions[0] || b.y_end >= md.dimensions[1] || b.z_end >= md.dimensions[2])
   {
     return MakeErrorResult<CropBounds>(
-        -35743, fmt::format("Crop end voxel ({}, {}, {}) exceeds NRRD volume extent ({}, {}, {}).", b.xEnd, b.yEnd, b.zEnd, md.dimensions[0] - 1, md.dimensions[1] - 1, md.dimensions[2] - 1));
+        -35743, fmt::format("Crop end voxel ({}, {}, {}) exceeds NRRD volume extent ({}, {}, {}).", b.x_end, b.y_end, b.z_end, md.dimensions[0] - 1, md.dimensions[1] - 1, md.dimensions[2] - 1));
   }
 
   return {b};
@@ -133,20 +133,20 @@ Result<> StreamCroppedVoxels(nx::core::nrrd::NrrdDataReader& reader, AbstractDat
   const usize srcNx = md.dimensions[0];
   const usize srcNy = md.dimensions[1];
   const usize srcNz = md.dimensions[2];
-  const usize comp = md.componentCount;
-  const bool byteSwap = md.byteSwapRequired;
+  const usize comp = md.component_count;
+  const bool byteSwap = md.byte_swap_required;
 
   const usize srcScanlineElements = srcNx * comp;
   const usize srcScanlineBytes = srcScanlineElements * sizeof(T);
   std::vector<T> srcScanline(srcScanlineElements);
 
-  const usize destNx = b.xEnd - b.xStart + 1;
+  const usize destNx = b.x_end - b.x_start + 1;
   const usize destScanlineElements = destNx * comp;
   std::vector<T> destScanline(destScanlineElements);
 
   usize destTupleOffset = 0;
   ThrottledMessageHandler progressThrottle(messageHandler);
-  progressThrottle.reset((b.zEnd + 1) * srcNy, "Reading source rows");
+  progressThrottle.reset((b.z_end + 1) * srcNy, "Reading source rows");
   messageHandler.sendInfoMessage("Reading source rows and copying the selected volume; rows outside the crop are read and discarded");
 
   for(usize srcZ = 0; srcZ < srcNz; srcZ++)
@@ -158,11 +158,11 @@ Result<> StreamCroppedVoxels(nx::core::nrrd::NrrdDataReader& reader, AbstractDat
     // All in-range z-slices have already been written (srcZ has passed
     // the end of the crop), so stop instead of reading + discarding the remaining
     // slices. For gzip this also avoids inflating the rest of the volume.
-    if(srcZ > b.zEnd)
+    if(srcZ > b.z_end)
     {
       break;
     }
-    const bool zInRange = (srcZ >= b.zStart && srcZ <= b.zEnd);
+    const bool zInRange = (srcZ >= b.z_start && srcZ <= b.z_end);
 
     for(usize srcY = 0; srcY < srcNy; srcY++)
     {
@@ -181,7 +181,7 @@ Result<> StreamCroppedVoxels(nx::core::nrrd::NrrdDataReader& reader, AbstractDat
         progressThrottle.updatePercent(srcZ * srcNy + srcY + 1);
         continue;
       }
-      const bool yInRange = (srcY >= b.yStart && srcY <= b.yEnd);
+      const bool yInRange = (srcY >= b.y_start && srcY <= b.y_end);
       if(!yInRange)
       {
         progressThrottle.updatePercent(srcZ * srcNy + srcY + 1);
@@ -189,7 +189,7 @@ Result<> StreamCroppedVoxels(nx::core::nrrd::NrrdDataReader& reader, AbstractDat
       }
 
       usize writeIdx = 0;
-      for(usize srcX = b.xStart; srcX <= b.xEnd; srcX++)
+      for(usize srcX = b.x_start; srcX <= b.x_end; srcX++)
       {
         const usize baseIdx = srcX * comp;
         for(usize c = 0; c < comp; c++)
@@ -197,13 +197,13 @@ Result<> StreamCroppedVoxels(nx::core::nrrd::NrrdDataReader& reader, AbstractDat
           T raw = srcScanline[baseIdx + c];
           if(byteSwap)
           {
-            raw = nx::core::byteswap(raw);
+            raw = nx::core::Byteswap(raw);
           }
           destScanline[writeIdx++] = raw;
         }
       }
 
-      Result<> copyResult = CopyFromArray::CopyData(destScanline, store, destTupleOffset, 0, destNx, comp);
+      Result<> copyResult = copy_from_array::CopyData(destScanline, store, destTupleOffset, 0, destNx, comp);
       if(copyResult.invalid())
       {
         return copyResult;
@@ -212,7 +212,7 @@ Result<> StreamCroppedVoxels(nx::core::nrrd::NrrdDataReader& reader, AbstractDat
       progressThrottle.updatePercent(srcZ * srcNy + srcY + 1);
     }
   }
-  messageHandler.sendProgressPercent("Reading source rows", (b.zEnd + 1) * srcNy, (b.zEnd + 1) * srcNy);
+  messageHandler.sendProgressPercent("Reading source rows", (b.z_end + 1) * srcNy, (b.z_end + 1) * srcNy);
   return {};
 }
 
@@ -228,20 +228,18 @@ ReadNrrdFile::ReadNrrdFile(DataStructure& dataStructure, const IFilter::MessageH
 {
 }
 
-ReadNrrdFile::~ReadNrrdFile() noexcept = default;
-
 Result<> ReadNrrdFile::operator()()
 {
-  auto metadataResult = nrrd::ReadNrrdHeader(m_InputValues->InputFilePath);
+  auto metadataResult = nrrd::ReadNrrdHeader(m_InputValues->input_file_path);
   if(metadataResult.invalid())
   {
     return ConvertResult(std::move(metadataResult));
   }
   auto md = std::move(metadataResult).value();
-  FloatVec3 origin{md.origin[0], md.origin[1], md.origin[2]};
-  FloatVec3 spacing{md.spacing[0], md.spacing[1], md.spacing[2]};
-  if(auto result = ImageIO::ResolveCropGeometry(m_InputValues->InputFilePath, m_InputValues->GeometryOverrides, m_InputValues->Processing, m_InputValues->CenterOrigin,
-                                                SizeVec3{md.dimensions[0], md.dimensions[1], md.dimensions[2]}, origin, spacing);
+  FloatVec3Type origin{md.origin[0], md.origin[1], md.origin[2]};
+  FloatVec3Type spacing{md.spacing[0], md.spacing[1], md.spacing[2]};
+  if(auto result = image_io::ResolveCropGeometry(m_InputValues->input_file_path, m_InputValues->geometry_overrides, m_InputValues->processing, m_InputValues->center_origin,
+                                                 SizeVec3Type{md.dimensions[0], md.dimensions[1], md.dimensions[2]}, origin, spacing);
      result.invalid())
   {
     return result;
@@ -252,7 +250,7 @@ Result<> ReadNrrdFile::operator()()
     md.spacing[axis] = spacing[axis];
   }
 
-  auto boundsResult = ComputeCropBounds(md, m_InputValues->CroppingOptions);
+  auto boundsResult = ComputeCropBounds(md, m_InputValues->cropping_options);
   if(boundsResult.invalid())
   {
     return ConvertResult(std::move(boundsResult));
@@ -266,7 +264,7 @@ Result<> ReadNrrdFile::operator()()
   }
   auto& reader = *readerResult.value();
 
-  const DataPath dataArrayPath = m_InputValues->ImageGeometryPath.createChildPath(m_InputValues->CellAttributeMatrixName).createChildPath(m_InputValues->ImageDataArrayName);
+  const DataPath dataArrayPath = m_InputValues->image_geometry_path.createChildPath(m_InputValues->cell_attribute_matrix_name).createChildPath(m_InputValues->image_data_array_name);
   auto& dataArrayBase = m_DataStructure.getDataRefAs<IDataArray>(dataArrayPath);
 
   switch(dataArrayBase.getDataType())

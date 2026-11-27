@@ -4,28 +4,28 @@
 
 namespace nx::core
 {
-namespace NodeType
+namespace node_type
 {
-inline constexpr int8_t Unused = 0;
-inline constexpr int8_t Default = 2;
-inline constexpr int8_t TriplePoint = 3;
-inline constexpr int8_t QuadPoint = 4;
-inline constexpr int8_t SurfaceDefault = 12;
-inline constexpr int8_t SurfaceTriplePoint = 13;
-inline constexpr int8_t SurfaceQuadPoint = 14;
-} // namespace NodeType
+inline constexpr int8_t k_Unused = 0;
+inline constexpr int8_t k_Default = 2;
+inline constexpr int8_t k_TriplePoint = 3;
+inline constexpr int8_t k_QuadPoint = 4;
+inline constexpr int8_t k_SurfaceDefault = 12;
+inline constexpr int8_t k_SurfaceTriplePoint = 13;
+inline constexpr int8_t k_SurfaceQuadPoint = 14;
+} // namespace node_type
 
 class SIMPLNX_EXPORT INodeGeometry2D : public INodeGeometry1D
 {
 public:
-  static inline constexpr StringLiteral k_FaceAttributeMatrixName = "Face Data";
-  static inline constexpr StringLiteral k_FaceFeatureAttributeMatrixName = "Face Feature Data";
-  static inline constexpr StringLiteral k_SharedFacesListName = "Shared Faces List";
-  static inline constexpr StringLiteral k_TypeName = "INodeGeometry2D";
+  static constexpr StringLiteralType k_FaceAttributeMatrixName = "Face Data";
+  static constexpr StringLiteralType k_FaceFeatureAttributeMatrixName = "Face Feature Data";
+  static constexpr StringLiteralType k_SharedFacesListName = "Shared Faces List";
+  static constexpr StringLiteralType k_TypeName = "INodeGeometry2D";
 
   INodeGeometry2D() = delete;
   INodeGeometry2D(const INodeGeometry2D&) = default;
-  INodeGeometry2D(INodeGeometry2D&&) = default;
+  INodeGeometry2D(INodeGeometry2D&&) noexcept = default;
 
   INodeGeometry2D& operator=(const INodeGeometry2D&) = delete;
   INodeGeometry2D& operator=(INodeGeometry2D&&) noexcept = delete;
@@ -36,43 +36,43 @@ public:
    * @brief Returns a pointer to the Face List
    * @return
    */
-  SharedFaceList* getFaces();
+  SharedFaceListType* getFaces();
 
   /**
    * @brief Returns a pointer to the Face List
    * @return
    */
-  const SharedFaceList* getFaces() const;
+  const SharedFaceListType* getFaces() const;
 
   /**
    * @brief Returns a reference to the Face List
    * @return
    */
-  SharedFaceList& getFacesRef();
+  SharedFaceListType& getFacesRef();
 
   /**
    * @brief Returns a reference to the Face List
    * @return
    */
-  const SharedFaceList& getFacesRef() const;
+  const SharedFaceListType& getFacesRef() const;
 
   /**
    * @brief Sets the list of Faces for this geometry
    * @param faces The new list of faces
    */
-  void setFaceList(const SharedFaceList& faces);
+  void setFaceList(const SharedFaceListType& faces);
 
   /**
    * @brief Returns the optional ID of the face list array.
    * @return OptionalId The face list ID if it exists
    */
-  OptionalId getFaceListId() const;
+  OptionalIdType getFaceListId() const;
 
   /**
    * @brief Sets the ID of the face list array.
    * @param facesId The optional ID of the face list array
    */
-  void setFaceListId(const OptionalId& facesId);
+  void setFaceListId(const OptionalIdType& facesId);
 
   /**
    * @brief Resizes the face list to the target size.
@@ -112,7 +112,7 @@ public:
    * @param faceId The index of the face to query
    * @param coords The coordinates of each vertex
    */
-  void getFaceCoordinates(usize faceId, nonstd::span<Point3Df> coords) const;
+  void getFaceCoordinates(usize faceId, nonstd::span<FloatVec3Type> coords) const;
 
   /**
    * @brief Pure-Virtual intended to find the shared edges of each element
@@ -138,7 +138,7 @@ public:
    * @brief Sets the ID of the unshared edges array.
    * @param unsharedEdgesId The optional ID of the unshared edges array
    */
-  void setUnsharedEdgesId(const OptionalId& unsharedEdgesId);
+  void setUnsharedEdgesId(const OptionalIdType& unsharedEdgesId);
 
   /**
    * @brief Pure-Virtual intended to find the unshared edges of each element
@@ -154,7 +154,7 @@ public:
    * if no unshared edge list could be found.
    * @return const SharedEdgeList*
    */
-  const SharedEdgeList* getUnsharedEdges() const;
+  const SharedEdgeListType* getUnsharedEdges() const;
 
   /**
    * @brief Deletes the unshared edge list and removes it from the DataStructure.
@@ -177,7 +177,7 @@ public:
    * @brief Sets the ID of the face data AttributeMatrix.
    * @param faceDataId The optional ID of the face data AttributeMatrix
    */
-  void setFaceDataId(const OptionalId& faceDataId);
+  void setFaceDataId(const OptionalIdType& faceDataId);
 
   /**
    * @brief Returns pointer to the Attribute Matrix that holds data assigned to each face.
@@ -242,7 +242,7 @@ protected:
    * @param numEdges The number of edges to allocate space for
    * @return SharedEdgeList* Pointer to the created shared edge list
    */
-  SharedEdgeList* createSharedEdgeList(usize numEdges);
+  SharedEdgeListType* createSharedEdgeList(usize numEdges);
 
   /**
    * @brief Updates the array IDs. Should only be called by DataObject::checkUpdatedIds.

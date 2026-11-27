@@ -41,13 +41,12 @@ CropVertexGeometry::CropVertexGeometry(DataStructure& dataStructure, const IFilt
 }
 
 // -----------------------------------------------------------------------------
-CropVertexGeometry::~CropVertexGeometry() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> CropVertexGeometry::operator()()
 {
-  auto posMin = m_InputValues->MinPos;
-  auto posMax = m_InputValues->MaxPos;
+  auto posMin = m_InputValues->min_pos;
+  auto posMax = m_InputValues->max_pos;
 
   auto xMin = posMin[0];
   auto yMin = posMin[1];
@@ -56,7 +55,7 @@ Result<> CropVertexGeometry::operator()()
   auto yMax = posMax[1];
   auto zMax = posMax[2];
 
-  auto& vertices = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->InputVertexGeometryPath);
+  auto& vertices = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->input_vertex_geometry_path);
   auto numVerts = static_cast<int64>(vertices.getNumberOfVertices());
   auto* verticesPtr = vertices.getVertices();
   auto& allVerts = verticesPtr->getDataStoreRef();
@@ -77,7 +76,7 @@ Result<> CropVertexGeometry::operator()()
 
   croppedPoints.shrink_to_fit();
 
-  auto& crop = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->OutputVertexGeometryPath);
+  auto& crop = m_DataStructure.getDataRefAs<VertexGeom>(m_InputValues->output_vertex_geometry_path);
   usize numTuples = croppedPoints.size();
   Result<> resizeResult = crop.resizeVertexList(numTuples);
   if(resizeResult.invalid())
@@ -86,7 +85,7 @@ Result<> CropVertexGeometry::operator()()
   }
   ShapeType tDims = {numTuples};
 
-  DataPath croppedVertexDataPath = m_InputValues->OutputVertexGeometryPath.createChildPath(m_InputValues->VertexAttributeMatrixName);
+  DataPath croppedVertexDataPath = m_InputValues->output_vertex_geometry_path.createChildPath(m_InputValues->vertex_attribute_matrix_name);
   auto& vertexDataAttMatrix = m_DataStructure.getDataRefAs<AttributeMatrix>(croppedVertexDataPath);
   resizeResult = vertexDataAttMatrix.resizeTuples(tDims);
   if(resizeResult.invalid())
@@ -104,14 +103,14 @@ Result<> CropVertexGeometry::operator()()
     crop.setVertexCoordinate(i, coords);
   }
 
-  for(auto&& targetArrayPath : m_InputValues->TargetArrayPaths)
+  for(auto&& targetArrayPath : m_InputValues->target_array_paths)
   {
     DataPath destArrayPath(croppedVertexDataPath.createChildPath(targetArrayPath.getTargetName()));
 
-    const auto* srcArray = m_DataStructure.getDataAs<IDataArray>(targetArrayPath);
-    auto* destArray = m_DataStructure.getDataAs<IDataArray>(destArrayPath);
+    const auto* srcArrayPtr = m_DataStructure.getDataAs<IDataArray>(targetArrayPath);
+    auto* destArrayPtr = m_DataStructure.getDataAs<IDataArray>(destArrayPath);
 
-    ExecuteDataFunction(CopyDataToCroppedGeometryFunctor{}, srcArray->getDataType(), srcArray, destArray, croppedPoints);
+    ExecuteDataFunction(CopyDataToCroppedGeometryFunctor{}, srcArrayPtr->getDataType(), srcArrayPtr, destArrayPtr, croppedPoints);
   }
 
   return {};

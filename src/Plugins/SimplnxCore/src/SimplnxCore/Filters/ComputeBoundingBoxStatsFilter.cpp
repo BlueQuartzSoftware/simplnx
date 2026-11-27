@@ -32,7 +32,7 @@ struct IsIntegerType
   }
 };
 
-void CreateCompatibleArrays(Result<OutputActions>& resultOutputActions, const DataStructure& dataStructure, const Arguments& filterArgs, ShapeType tupleDims, const DataPath& outputAMPath)
+void CreateCompatibleArrays(Result<OutputActions>& resultOutputActions, const DataStructure& dataStructure, const Arguments& filterArgs, const ShapeType& tupleDims, const DataPath& outputAMPath)
 {
   auto calculateLength = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateLength_Key);
   auto calculateMin = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateMin_Key);
@@ -44,8 +44,8 @@ void CreateCompatibleArrays(Result<OutputActions>& resultOutputActions, const Da
   auto calculateSummation = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateSummation_Key);
   auto calculateNumUniqueValuesValue = filterArgs.value<bool>(ComputeBoundingBoxStatsFilter::k_CalculateUniqueValues_Key);
 
-  auto* inputArray = dataStructure.getDataAs<IDataArray>(filterArgs.value<DataPath>(ComputeBoundingBoxStatsFilter::k_InputArrayPath_Key));
-  DataType dataType = inputArray->getDataType();
+  const auto* inputArrayPtr = dataStructure.getDataAs<IDataArray>(filterArgs.value<DataPath>(ComputeBoundingBoxStatsFilter::k_InputArrayPath_Key));
+  DataType dataType = inputArrayPtr->getDataType();
 
   {
     auto arrayPath = filterArgs.value<std::string>(ComputeBoundingBoxStatsFilter::k_BoundsHasDataName_Key);
@@ -149,12 +149,12 @@ Parameters ComputeBoundingBoxStatsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GeometryPath_Key, "Selected Image Geometry", "The DataPath to the Geometry that contains the points/edges/faces for the geometry",
-                                                             DataPath{}, GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             DataPath{}, GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputArrayPath_Key, "Attribute Array to Compute Statistics", "Input Attribute Array for which to compute statistics", DataPath{},
-                                                          nx::core::GetAllNumericTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          nx::core::GetAllNumericTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_UnifiedBoundsPath_Key, "Unified Bounding Boxes Array",
                                                           "The array containing the min and max point of the bounding box for each feature | tuple ordering {Min-X,Min-Y,Min-Z,Max-X,Max-Y,Max-Z}",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::float32}, ArraySelectionParameter::AllowedComponentShapes{{6}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{6}}));
 
   params.insertSeparator(Parameters::Separator{"Output Destination"});
   params.insertLinkableParameter(
@@ -226,14 +226,14 @@ IFilter::VersionType ComputeBoundingBoxStatsFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeBoundingBoxStatsFilter::clone() const
+IFilter::UniquePointerType ComputeBoundingBoxStatsFilter::clone() const
 {
   return std::make_unique<ComputeBoundingBoxStatsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                      const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pCalculateLengthValue = filterArgs.value<bool>(k_CalculateLength_Key);
   auto pCalculateMinValue = filterArgs.value<bool>(k_CalculateMin_Key);
@@ -254,10 +254,10 @@ IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const Data
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, pGeometryPathValue, {pInputArrayPathValue}, -59204);
   if(tupleCountResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
-  FloatVec3 imageGeomSpacing = dataStructure.getDataAs<ImageGeom>(pGeometryPathValue)->getSpacing();
+  FloatVec3Type imageGeomSpacing = dataStructure.getDataAs<ImageGeom>(pGeometryPathValue)->getSpacing();
 
   if(std::count(imageGeomSpacing.begin(), imageGeomSpacing.end(), 0.0f) != 0)
   {
@@ -303,50 +303,50 @@ IFilter::PreflightResult ComputeBoundingBoxStatsFilter::preflightImpl(const Data
   CreateCompatibleArrays(resultOutputActions, dataStructure, filterArgs, unifiedBoundsPtr->getTupleShape(), outputAMPath);
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeBoundingBoxStatsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeBoundingBoxStatsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeBoundingBoxStatsInputValues inputValues;
 
-  inputValues.CalculateLength = filterArgs.value<bool>(k_CalculateLength_Key);
-  inputValues.CalculateMin = filterArgs.value<bool>(k_CalculateMin_Key);
-  inputValues.CalculateMax = filterArgs.value<bool>(k_CalculateMax_Key);
-  inputValues.CalculateSummation = filterArgs.value<bool>(k_CalculateSummation_Key);
-  inputValues.CalculateMean = filterArgs.value<bool>(k_CalculateMean_Key);
-  inputValues.CalculateMedian = filterArgs.value<bool>(k_CalculateMedian_Key);
-  inputValues.CalculateMode = filterArgs.value<bool>(k_CalculateMode_Key);
-  inputValues.CalculateNumUniqueValues = filterArgs.value<bool>(k_CalculateUniqueValues_Key);
-  inputValues.CalculateStdDev = filterArgs.value<bool>(k_CalculateStandardDeviation_Key);
+  inputValues.calculate_length = filterArgs.value<bool>(k_CalculateLength_Key);
+  inputValues.calculate_min = filterArgs.value<bool>(k_CalculateMin_Key);
+  inputValues.calculate_max = filterArgs.value<bool>(k_CalculateMax_Key);
+  inputValues.calculate_summation = filterArgs.value<bool>(k_CalculateSummation_Key);
+  inputValues.calculate_mean = filterArgs.value<bool>(k_CalculateMean_Key);
+  inputValues.calculate_median = filterArgs.value<bool>(k_CalculateMedian_Key);
+  inputValues.calculate_mode = filterArgs.value<bool>(k_CalculateMode_Key);
+  inputValues.calculate_num_unique_values = filterArgs.value<bool>(k_CalculateUniqueValues_Key);
+  inputValues.calculate_std_dev = filterArgs.value<bool>(k_CalculateStandardDeviation_Key);
 
-  inputValues.GeometryPath = filterArgs.value<DataPath>(k_GeometryPath_Key);
-  inputValues.UnifiedPath = filterArgs.value<DataPath>(k_UnifiedBoundsPath_Key);
-  inputValues.InputPath = filterArgs.value<DataPath>(k_InputArrayPath_Key);
+  inputValues.geometry_path = filterArgs.value<DataPath>(k_GeometryPath_Key);
+  inputValues.unified_path = filterArgs.value<DataPath>(k_UnifiedBoundsPath_Key);
+  inputValues.input_path = filterArgs.value<DataPath>(k_InputArrayPath_Key);
 
   DataPath outputAMPath = {};
 
   if(filterArgs.value<bool>(k_CreateNewAM_Key))
   {
-    outputAMPath = inputValues.GeometryPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_NewAMName_Key));
+    outputAMPath = inputValues.geometry_path.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_NewAMName_Key));
   }
   else
   {
     outputAMPath = filterArgs.value<DataPath>(k_OutputAMPath_Key);
   }
 
-  inputValues.BoundsHasDataPath = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_BoundsHasDataName_Key));
-  inputValues.LengthPath = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_LengthName_Key));
-  inputValues.MinPath = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_MinName_Key));
-  inputValues.MaxPath = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_MaxName_Key));
-  inputValues.SummationPath = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_SummationName_Key));
-  inputValues.MeanPath = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_MeanName_Key));
-  inputValues.MedianPath = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_MedianName_Key));
-  inputValues.ModePath = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_ModeName_Key));
-  inputValues.NumUniqueValuesPath = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_NumUniqueValuesName_Key));
-  inputValues.StdDevPath = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_StdDevName_Key));
+  inputValues.bounds_has_data_path = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_BoundsHasDataName_Key));
+  inputValues.length_path = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_LengthName_Key));
+  inputValues.min_path = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_MinName_Key));
+  inputValues.max_path = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_MaxName_Key));
+  inputValues.summation_path = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_SummationName_Key));
+  inputValues.mean_path = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_MeanName_Key));
+  inputValues.median_path = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_MedianName_Key));
+  inputValues.mode_path = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_ModeName_Key));
+  inputValues.num_unique_values_path = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_NumUniqueValuesName_Key));
+  inputValues.std_dev_path = outputAMPath.createChildPath(filterArgs.value<DataObjectNameParameter::ValueType>(k_StdDevName_Key));
 
   return ComputeBoundingBoxStats(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

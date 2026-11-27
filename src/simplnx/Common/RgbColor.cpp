@@ -1,54 +1,54 @@
 #include "RgbColor.hpp"
 
-namespace nx::core
+#include <cmath>
+
+namespace nx::core::rgb_color
 {
-namespace RgbColor
-{
-Component dRed(Rgba rgb)
+ComponentType DRed(RgbaType rgb)
 {
   return ((rgb >> 16) & 0xff);
 }
 
-Component dGreen(Rgba rgb)
+ComponentType DGreen(RgbaType rgb)
 {
   return ((rgb >> 8) & 0xff);
 }
 
-Component dBlue(Rgba rgb)
+ComponentType DBlue(RgbaType rgb)
 {
   return (rgb & 0xff);
 }
 
-Component dAlpha(Rgba rgb)
+ComponentType DAlpha(RgbaType rgb)
 {
   return rgb >> 24;
 }
 
-Component dGray(Rgba rgb)
+ComponentType DGray(RgbaType rgb)
 {
   return (((rgb >> 16) & 0xff) * 11 + ((rgb >> 8) & 0xff) * 16 + (rgb & 0xff) * 5) / 32;
 }
 
-Rgba dRgb(Component r, Component g, Component b, Component a)
+RgbaType DRgb(ComponentType r, ComponentType g, ComponentType b, ComponentType a)
 {
   return ((a & 0xff) << 24) | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
 }
 
-void print(std::ostream& out, const char* sep, Rgba rgb)
+void Print(std::ostream& out, const char* sep, RgbaType rgb)
 {
-  out << "rgb: " << RgbColor::dRed(rgb) << sep << RgbColor::dGreen(rgb) << sep << RgbColor::dBlue(rgb);
+  out << "rgb: " << rgb_color::DRed(rgb) << sep << rgb_color::DGreen(rgb) << sep << rgb_color::DBlue(rgb);
 }
 
-bool isEqual(Rgba lhs, Rgba rhs)
+bool IsEqual(RgbaType lhs, RgbaType rhs)
 {
   return lhs == rhs;
 }
 
-std::tuple<float32, float32, float32> fRgb(Rgba rgb)
+std::tuple<float32, float32, float32> FRgb(RgbaType rgb)
 {
-  float32 r = dRed(rgb) / 255.0f;
-  float32 g = dGreen(rgb) / 255.0f;
-  float32 b = dBlue(rgb) / 255.0f;
+  float32 r = DRed(rgb) / 255.0f;
+  float32 g = DGreen(rgb) / 255.0f;
+  float32 b = DBlue(rgb) / 255.0f;
   return std::make_tuple(r, g, b);
 }
 
@@ -76,9 +76,9 @@ void GetColorTable(int numColors, std::vector<float>& colorsOut)
     int currColorBin = static_cast<int>(pos / nodeStepSize);
     const float currFraction = (pos / nodeStepSize) - static_cast<float>(currColorBin);
 
-    float r;
-    float g;
-    float b;
+    float r = NAN;
+    float g = NAN;
+    float b = NAN;
     currColorBin = std::min(currColorBin, maxNodeIndex);
     // currColorBin + 1 causes this to step out of color[] bounds when currColorBin == (numColorNodes - 1)
     if(i < numColors - 1)
@@ -99,5 +99,4 @@ void GetColorTable(int numColors, std::vector<float>& colorsOut)
   }
 }
 
-} // namespace RgbColor
-} // namespace nx::core
+} // namespace nx::core::rgb_color

@@ -42,7 +42,7 @@ namespace
  *
  * Fixed pages avoid a FeatureIds-sized resident buffer.
  */
-Result<usize> findFeatureCount(const AbstractDataStore<int32>& featureIdsStore, const std::atomic_bool& shouldCancel)
+Result<usize> FindFeatureCount(const AbstractDataStore<int32>& featureIdsStore, const std::atomic_bool& shouldCancel)
 {
   constexpr usize k_ChunkTuples = 65536;
   const usize numTuples = featureIdsStore.getNumberOfTuples();
@@ -112,8 +112,8 @@ public:
    */
   GenerateFeatureHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, NeighborList<Type>* modalBinRangesList,
                                const AbstractDataStore<int32>& featureIdsStore, float64 histMin, float64 histMax, bool histFullRange, const std::atomic_bool& shouldCancel, const int32 numBins,
-                               AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask,
-                               std::atomic<usize>& overflow, const std::function<void(usize)>& reportProgress, CopyFromArray::ParallelTaskResult& taskResult)
+                               AbstractDataStore<SizeType>& histogramStore, AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask,
+                               std::atomic<usize>& overflow, const std::function<void(usize)>& reportProgress, copy_from_array::ParallelTaskResult& taskResult)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
   , m_NumBins(numBins)
@@ -152,8 +152,8 @@ public:
    */
   GenerateFeatureHistogramImpl(const AbstractDataStore<Type>& inputStore, AbstractDataStore<Type>& binRangesStore, const AbstractDataStore<int32>& featureIdsStore, float64 histMin, float64 histMax,
                                bool histFullRange, const std::atomic_bool& shouldCancel, const int32 numBins, AbstractDataStore<SizeType>& histogramStore,
-                               AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, std::atomic<usize>& overflow,
-                               const std::function<void(usize)>& reportProgress, CopyFromArray::ParallelTaskResult& taskResult)
+                               AbstractDataStore<SizeType>& mostPopulatedStore, const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, std::atomic<usize>& overflow,
+                               const std::function<void(usize)>& reportProgress, copy_from_array::ParallelTaskResult& taskResult)
   : m_InputStore(inputStore)
   , m_ShouldCancel(shouldCancel)
   , m_NumBins(numBins)
@@ -200,7 +200,7 @@ public:
     const usize numTuples = m_FeatureIdsStore.getNumberOfTuples();
     const usize numCurrentFeatures = end - start;
 
-    auto [length, min, max, summation, modalMaps] = HistogramUtilities::concurrent::CalculateFeatureHasDataStats(m_InputStore, m_FeatureIdsStore, start, end, m_Mask, {}, m_ShouldCancel);
+    auto [length, min, max, summation, modalMaps] = histogram_utilities::concurrent::CalculateFeatureHasDataStats(m_InputStore, m_FeatureIdsStore, start, end, m_Mask, {}, m_ShouldCancel);
     if(m_ShouldCancel)
     {
       return;
@@ -235,9 +235,9 @@ public:
         histMax = max[localFeatureIndex] + static_cast<Type>(1.0);
       }
 
-      HistogramUtilities::serial::FillBinRanges(rangesPerFeature[localFeatureIndex], std::make_pair(histMin, histMax), m_NumBins);
+      histogram_utilities::serial::FillBinRanges(rangesPerFeature[localFeatureIndex], std::make_pair(histMin, histMax), m_NumBins);
 
-      const float32 increment = HistogramUtilities::serial::CalculateIncrement(histMin, histMax, m_NumBins);
+      const float32 increment = histogram_utilities::serial::CalculateIncrement(histMin, histMax, m_NumBins);
       histMinPerFeature[localFeatureIndex] = histMin;
       incrementPerFeature[localFeatureIndex] = increment;
 
@@ -303,7 +303,7 @@ public:
         // vector<bool> yields a proxy, so CalculateBin needs a concrete Type value.
         const Type histMin = histMinPerFeature[localFeatureIndex];
         const Type value = valueBuffer[cellIdx];
-        const auto bin = static_cast<int32>(HistogramUtilities::serial::CalculateBin(value, histMin, increment));
+        const auto bin = static_cast<int32>(histogram_utilities::serial::CalculateBin(value, histMin, increment));
         if((bin >= 0) && (bin < m_NumBins))
         {
           histogramPerFeature[localFeatureIndex][bin]++;
@@ -354,7 +354,7 @@ public:
                 if(modalPair.second == maxCount)
                 {
                   const Type mode = modalPair.first;
-                  const auto modalRange = StatisticsCalculations::findModalBinRange(mode, histMin, increment, m_NumBins, nonstd::span<const Type>(ranges.data(), ranges.size()));
+                  const auto modalRange = statistics_calculations::FindModalBinRange(mode, histMin, increment, m_NumBins, nonstd::span<const Type>(ranges.data(), ranges.size()));
                   if(modalRange.has_value())
                   {
                     m_ModalBinRangesList->addEntry(j, modalRange->first);
@@ -398,7 +398,7 @@ private:
   float64 m_HistMax;
   bool m_HistFullRange;
   int32 m_NumBins;
-  const std::unique_ptr<MaskCompareUtilities::MaskCompare>& m_Mask;
+  const std::unique_ptr<mask_compare_utilities::MaskCompare>& m_Mask;
   const AbstractDataStore<Type>& m_InputStore;
   const AbstractDataStore<int32>& m_FeatureIdsStore;
   AbstractDataStore<SizeType>& m_HistogramStore;
@@ -407,7 +407,7 @@ private:
   NeighborList<Type>* m_ModalBinRangesList;
   std::atomic<usize>& m_Overflow;
   const std::function<void(usize)>& m_ReportProgress;
-  CopyFromArray::ParallelTaskResult& m_TaskResult;
+  copy_from_array::ParallelTaskResult& m_TaskResult;
 };
 
 /**
@@ -461,7 +461,7 @@ constexpr usize k_HistogramChunkTuples = 65536; // Bounds each scanline input pa
  * @param product Receives the product when representable.
  * @return True when the product fits usize.
  */
-bool checkedMultiply(usize lhs, usize rhs, usize& product)
+bool CheckedMultiply(usize lhs, usize rhs, usize& product)
 {
   if(lhs != 0 && rhs > std::numeric_limits<usize>::max() / lhs)
   {
@@ -485,7 +485,7 @@ constexpr uint64 k_ModalRecordSize = sizeof(int32) + sizeof(T) + sizeof(uint64);
  * The tuple identifier provides deterministic ordering for equal values.
  */
 template <typename T>
-void encodeModalRecord(nonstd::span<std::byte> bytes, int32 featureId, T value, uint64 originalTupleIndex)
+void EncodeModalRecord(nonstd::span<std::byte> bytes, int32 featureId, T value, uint64 originalTupleIndex)
 {
   std::memcpy(bytes.data(), &featureId, sizeof(featureId));
   std::memcpy(bytes.data() + sizeof(featureId), &value, sizeof(value));
@@ -501,7 +501,7 @@ void encodeModalRecord(nonstd::span<std::byte> bytes, int32 featureId, T value, 
  * @param originalTupleIndex Receives the source tuple identifier.
  */
 template <typename T>
-void decodeModalRecord(nonstd::span<const std::byte> bytes, int32& featureId, T& value, uint64& originalTupleIndex)
+void DecodeModalRecord(nonstd::span<const std::byte> bytes, int32& featureId, T& value, uint64& originalTupleIndex)
 {
   std::memcpy(&featureId, bytes.data(), sizeof(featureId));
   std::memcpy(&value, bytes.data() + sizeof(featureId), sizeof(value));
@@ -518,7 +518,7 @@ void decodeModalRecord(nonstd::span<const std::byte> bytes, int32& featureId, T&
  * Equal values become contiguous while the tuple identifier keeps the order deterministic.
  */
 template <typename T>
-int32 compareModalRecords(nonstd::span<const std::byte> left, nonstd::span<const std::byte> right)
+int32 CompareModalRecords(nonstd::span<const std::byte> left, nonstd::span<const std::byte> right)
 {
   int32 leftFeature = 0;
   int32 rightFeature = 0;
@@ -526,8 +526,8 @@ int32 compareModalRecords(nonstd::span<const std::byte> left, nonstd::span<const
   T rightValue{};
   uint64 leftIndex = 0;
   uint64 rightIndex = 0;
-  decodeModalRecord(left, leftFeature, leftValue, leftIndex);
-  decodeModalRecord(right, rightFeature, rightValue, rightIndex);
+  DecodeModalRecord(left, leftFeature, leftValue, leftIndex);
+  DecodeModalRecord(right, rightFeature, rightValue, rightIndex);
   if(leftFeature != rightFeature)
   {
     return leftFeature < rightFeature ? -1 : 1;
@@ -555,7 +555,7 @@ int32 compareModalRecords(nonstd::span<const std::byte> left, nonstd::span<const
  * @return True when neither value is less than the other.
  */
 template <typename T>
-bool equivalentModalValues(const T& left, const T& right)
+bool EquivalentModalValues(const T& left, const T& right)
 {
   return !(left < right) && !(right < left);
 }
@@ -569,7 +569,7 @@ bool equivalentModalValues(const T& left, const T& right)
  * @return True when value is in [minimum, maximum).
  */
 template <typename T>
-bool isInHistogramRange(const T& value, const T& minimum, const T& maximum)
+bool IsInHistogramRange(const T& value, const T& minimum, const T& maximum)
 {
   return !(value < minimum) && value < maximum;
 }
@@ -587,7 +587,7 @@ bool isInHistogramRange(const T& value, const T& minimum, const T& maximum)
  * exact modal grouping from requiring the full input in RAM.
  */
 template <typename T, typename GroupFunction>
-Result<> scanSortedModalRecords(const IExternalSort& externalSort, const std::atomic_bool& shouldCancel, GroupFunction&& groupFunction)
+Result<> ScanSortedModalRecords(const IExternalSort& externalSort, const std::atomic_bool& shouldCancel, GroupFunction&& groupFunction)
 {
   constexpr uint64 k_RecordsPerRead = k_HistogramChunkTuples;
   std::vector<std::byte> bytes(static_cast<usize>(k_RecordsPerRead * k_ModalRecordSize<T>));
@@ -618,8 +618,8 @@ Result<> scanSortedModalRecords(const IExternalSort& externalSort, const std::at
       T value{};
       uint64 originalIndex = 0;
       const usize byteOffset = static_cast<usize>(index * k_ModalRecordSize<T>);
-      decodeModalRecord(nonstd::span<const std::byte>(bytes.data() + byteOffset, k_ModalRecordSize<T>), feature, value, originalIndex);
-      if(currentFeature.has_value() && *currentFeature == feature && equivalentModalValues(*currentValue, value))
+      DecodeModalRecord(nonstd::span<const std::byte>(bytes.data() + byteOffset, k_ModalRecordSize<T>), feature, value, originalIndex);
+      if(currentFeature.has_value() && *currentFeature == feature && EquivalentModalValues(*currentValue, value))
       {
         if(currentCount == std::numeric_limits<uint64>::max())
         {
@@ -665,7 +665,7 @@ Result<> scanSortedModalRecords(const IExternalSort& externalSort, const std::at
  * input-sized scratch allocation when no external-sort provider is registered.
  */
 template <typename T, typename MaskT, typename GroupFunction>
-Result<> scanFallbackModalGroups(const AbstractDataStore<T>& inputStore, const AbstractDataStore<int32>& featureIdsStore, const AbstractDataStore<MaskT>* maskStore, usize tupleCount, int32 featureId,
+Result<> ScanFallbackModalGroups(const AbstractDataStore<T>& inputStore, const AbstractDataStore<int32>& featureIdsStore, const AbstractDataStore<MaskT>* maskStore, usize tupleCount, int32 featureId,
                                  const std::atomic_bool& shouldCancel, GroupFunction&& groupFunction)
 {
   auto values = std::make_unique<T[]>(k_HistogramChunkTuples);
@@ -729,7 +729,7 @@ Result<> scanFallbackModalGroups(const AbstractDataStore<T>& inputStore, const A
     uint64 count = 0;
     bool countOverflow = false;
     result = scan([&](const T& value) {
-      if(equivalentModalValues(value, *next))
+      if(EquivalentModalValues(value, *next))
       {
         if(count == std::numeric_limits<uint64>::max())
         {
@@ -777,7 +777,7 @@ Result<> scanFallbackModalGroups(const AbstractDataStore<T>& inputStore, const A
  * final bulk writes leaves feature-scale output contents unwritten.
  */
 template <typename T, typename MaskT>
-Result<> generateScanlineHistogram(const IDataArray& inputArray, IDataArray& binRangesArray, const AbstractDataStore<int32>& featureIdsStore, const AbstractDataStore<MaskT>* maskStore,
+Result<> GenerateScanlineHistogram(const IDataArray& inputArray, IDataArray& binRangesArray, const AbstractDataStore<int32>& featureIdsStore, const AbstractDataStore<MaskT>* maskStore,
                                    DataArray<uint64>& countsArray, DataArray<uint64>& mostPopulatedArray, INeighborList* modalBinRanges, const ComputeArrayHistogramByFeatureInputValues& inputValues,
                                    usize numFeatures, std::atomic<usize>& overflow, const std::atomic_bool& shouldCancel)
 {
@@ -794,7 +794,7 @@ Result<> generateScanlineHistogram(const IDataArray& inputArray, IDataArray& bin
     return MakeErrorResult(-23813, fmt::format("ComputeArrayHistogramByFeature: modal NeighborList '{}' is incompatible with input array '{}' and cannot store its modal bin ranges.",
                                                modalBinRanges->getName(), inputArray.getName()));
   }
-  const int32 numBins = inputValues.NumberOfBins;
+  const int32 numBins = inputValues.number_of_bins;
   if(numBins <= 0)
   {
     return MakeErrorResult(-23803, fmt::format("ComputeArrayHistogramByFeature: NumberOfBins ({}) must be greater than zero for input array '{}'.", numBins, inputArray.getName()));
@@ -802,7 +802,7 @@ Result<> generateScanlineHistogram(const IDataArray& inputArray, IDataArray& bin
   const usize bins = static_cast<usize>(numBins);
   usize featureBins = 0;
   usize rangeValues = 0;
-  if(!checkedMultiply(numFeatures, bins, featureBins) || !checkedMultiply(featureBins, 2, rangeValues))
+  if(!CheckedMultiply(numFeatures, bins, featureBins) || !CheckedMultiply(featureBins, 2, rangeValues))
   {
     return MakeErrorResult(
         -23804, fmt::format("ComputeArrayHistogramByFeature: output shape for input array '{}' overflows the platform size type ({} features, {} bins).", inputArray.getName(), numFeatures, bins));
@@ -850,13 +850,13 @@ Result<> generateScanlineHistogram(const IDataArray& inputArray, IDataArray& bin
   std::vector<std::byte> modalRecordBytes;
   if constexpr(!std::is_same_v<T, bool>)
   {
-    if(modalBinRanges != nullptr && DataStoreUtilities::GetIOCollection().hasExternalSortCapability())
+    if(modalBinRanges != nullptr && data_store_utilities::GetIOCollection().hasExternalSortCapability())
     {
       ExternalSortConfig config;
-      config.recordSize = k_ModalRecordSize<T>;
-      config.maxRecordsPerBatch = k_HistogramChunkTuples;
-      config.compare = compareModalRecords<T>;
-      Result<std::unique_ptr<IExternalSort>> sortResult = DataStoreUtilities::GetIOCollection().createExternalSort(config);
+      config.record_size = k_ModalRecordSize<T>;
+      config.max_records_per_batch = k_HistogramChunkTuples;
+      config.compare = CompareModalRecords<T>;
+      Result<std::unique_ptr<IExternalSort>> sortResult = data_store_utilities::GetIOCollection().createExternalSort(config);
       if(sortResult.invalid())
       {
         return ConvertResult(std::move(sortResult));
@@ -943,9 +943,9 @@ Result<> generateScanlineHistogram(const IDataArray& inputArray, IDataArray& bin
     {
       continue;
     }
-    T histMin = static_cast<T>(inputValues.MinRange);
-    T histMax = static_cast<T>(inputValues.MaxRange);
-    if(!inputValues.UserDefinedRange)
+    T histMin = static_cast<T>(inputValues.min_range);
+    T histMax = static_cast<T>(inputValues.max_range);
+    if(!inputValues.user_defined_range)
     {
       histMin = minimums[feature];
       if constexpr(std::is_integral_v<T> && !std::is_same_v<T, bool>)
@@ -975,11 +975,11 @@ Result<> generateScanlineHistogram(const IDataArray& inputArray, IDataArray& bin
                                                    inputArray.getName()));
       }
     }
-    const float32 increment = HistogramUtilities::serial::CalculateIncrement(histMin, histMax, numBins);
+    const float32 increment = histogram_utilities::serial::CalculateIncrement(histMin, histMax, numBins);
     histogramMinimums[feature] = histMin;
     increments[feature] = increment;
     auto range = nonstd::span<T>(ranges.get() + feature * bins * 2, bins * 2);
-    HistogramUtilities::serial::FillBinRanges(range, std::make_pair(histMin, histMax), numBins, increment);
+    histogram_utilities::serial::FillBinRanges(range, std::make_pair(histMin, histMax), numBins, increment);
     if(std::fabs(increment) < 1.0E-10F)
     {
       counts[feature * bins] = lengths[feature];
@@ -1013,19 +1013,19 @@ Result<> generateScanlineHistogram(const IDataArray& inputArray, IDataArray& bin
       {
         if(externalSort != nullptr && modalBinRanges != nullptr)
         {
-          encodeModalRecord<T>(nonstd::span<std::byte>(modalRecordBytes.data() + index * k_ModalRecordSize<T>, k_ModalRecordSize<T>), featureId, value, static_cast<uint64>(offset + index));
+          EncodeModalRecord<T>(nonstd::span<std::byte>(modalRecordBytes.data() + index * k_ModalRecordSize<T>, k_ModalRecordSize<T>), featureId, value, static_cast<uint64>(offset + index));
         }
       }
       if(std::fabs(increment) < 1.0E-10F)
       {
         continue;
       }
-      if(!isInHistogramRange(value, histogramMinimums[feature], inputValues.UserDefinedRange ? static_cast<T>(inputValues.MaxRange) : static_cast<T>(maximums[feature] + static_cast<T>(1))))
+      if(!IsInHistogramRange(value, histogramMinimums[feature], inputValues.user_defined_range ? static_cast<T>(inputValues.max_range) : static_cast<T>(maximums[feature] + static_cast<T>(1))))
       {
         ++overflow;
         continue;
       }
-      const auto bin = StatisticsCalculations::CalculateBin<StatisticsCalculations::HistogramBinPolicy::LegacyInt32>(value, histogramMinimums[feature], increment);
+      const auto bin = statistics_calculations::CalculateBin<statistics_calculations::HistogramBinPolicy::LegacyInt32>(value, histogramMinimums[feature], increment);
       if(bin >= 0 && bin < numBins)
       {
         uint64& binCount = counts[feature * bins + static_cast<usize>(bin)];
@@ -1113,7 +1113,7 @@ Result<> generateScanlineHistogram(const IDataArray& inputArray, IDataArray& bin
       if(externalSort != nullptr)
       {
         std::vector<uint64> maxCounts(numFeatures, 0);
-        Result<> scanResult = scanSortedModalRecords<T>(*externalSort, shouldCancel, [&](int32 featureId, T, uint64 count) {
+        Result<> scanResult = ScanSortedModalRecords<T>(*externalSort, shouldCancel, [&](int32 featureId, T, uint64 count) {
           if(featureId >= 0 && static_cast<usize>(featureId) < numFeatures)
           {
             maxCounts[static_cast<usize>(featureId)] = std::max(maxCounts[static_cast<usize>(featureId)], count);
@@ -1123,14 +1123,14 @@ Result<> generateScanlineHistogram(const IDataArray& inputArray, IDataArray& bin
         {
           return scanResult;
         }
-        scanResult = scanSortedModalRecords<T>(*externalSort, shouldCancel, [&](int32 featureId, T value, uint64 count) {
+        scanResult = ScanSortedModalRecords<T>(*externalSort, shouldCancel, [&](int32 featureId, T value, uint64 count) {
           const usize feature = static_cast<usize>(featureId);
           if(featureId >= 0 && feature < numFeatures && std::fabs(increments[feature]) >= 1.0E-10F && count == maxCounts[feature])
           {
-            const T maximum = inputValues.UserDefinedRange ? static_cast<T>(inputValues.MaxRange) : static_cast<T>(maximums[feature] + static_cast<T>(1));
-            if(isInHistogramRange(value, histogramMinimums[feature], maximum))
+            const T maximum = inputValues.user_defined_range ? static_cast<T>(inputValues.max_range) : static_cast<T>(maximums[feature] + static_cast<T>(1));
+            if(IsInHistogramRange(value, histogramMinimums[feature], maximum))
             {
-              const auto modalRange = StatisticsCalculations::findModalBinRange<StatisticsCalculations::HistogramBinPolicy::LegacyInt32>(
+              const auto modalRange = statistics_calculations::FindModalBinRange<statistics_calculations::HistogramBinPolicy::LegacyInt32>(
                   value, histogramMinimums[feature], increments[feature], numBins, nonstd::span<const T>(ranges.get() + feature * bins * usize{2}, bins * usize{2}));
               if(modalRange.has_value())
               {
@@ -1155,18 +1155,18 @@ Result<> generateScanlineHistogram(const IDataArray& inputArray, IDataArray& bin
           }
           uint64 maxCount = 0;
           Result<> scanResult =
-              scanFallbackModalGroups(inputStore, featureIdsStore, maskStore, tupleCount, static_cast<int32>(feature), shouldCancel, [&](T, uint64 count) { maxCount = std::max(maxCount, count); });
+              ScanFallbackModalGroups(inputStore, featureIdsStore, maskStore, tupleCount, static_cast<int32>(feature), shouldCancel, [&](T, uint64 count) { maxCount = std::max(maxCount, count); });
           if(scanResult.invalid() || shouldCancel)
           {
             return scanResult;
           }
-          scanResult = scanFallbackModalGroups(inputStore, featureIdsStore, maskStore, tupleCount, static_cast<int32>(feature), shouldCancel, [&](T value, uint64 count) {
+          scanResult = ScanFallbackModalGroups(inputStore, featureIdsStore, maskStore, tupleCount, static_cast<int32>(feature), shouldCancel, [&](T value, uint64 count) {
             if(count == maxCount)
             {
-              const T maximum = inputValues.UserDefinedRange ? static_cast<T>(inputValues.MaxRange) : static_cast<T>(maximums[feature] + static_cast<T>(1));
-              if(isInHistogramRange(value, histogramMinimums[feature], maximum))
+              const T maximum = inputValues.user_defined_range ? static_cast<T>(inputValues.max_range) : static_cast<T>(maximums[feature] + static_cast<T>(1));
+              if(IsInHistogramRange(value, histogramMinimums[feature], maximum))
               {
-                const auto modalRange = StatisticsCalculations::findModalBinRange<StatisticsCalculations::HistogramBinPolicy::LegacyInt32>(
+                const auto modalRange = statistics_calculations::FindModalBinRange<statistics_calculations::HistogramBinPolicy::LegacyInt32>(
                     value, histogramMinimums[feature], increments[feature], numBins, nonstd::span<const T>(ranges.get() + feature * bins * usize{2}, bins * usize{2}));
                 if(modalRange.has_value())
                 {
@@ -1227,15 +1227,15 @@ struct HistogramScanlineFunctor
   {
     if(maskArray == nullptr)
     {
-      return generateScanlineHistogram<T, uint8>(inputArray, binRangesArray, featureIdsStore, nullptr, countsArray, mostPopulatedArray, modalBinRanges, inputValues, numFeatures, overflow,
+      return GenerateScanlineHistogram<T, uint8>(inputArray, binRangesArray, featureIdsStore, nullptr, countsArray, mostPopulatedArray, modalBinRanges, inputValues, numFeatures, overflow,
                                                  shouldCancel);
     }
     if(maskArray->getDataType() == DataType::boolean)
     {
-      return generateScanlineHistogram<T, bool>(inputArray, binRangesArray, featureIdsStore, &maskArray->template getIDataStoreRefAs<AbstractDataStore<bool>>(), countsArray, mostPopulatedArray,
+      return GenerateScanlineHistogram<T, bool>(inputArray, binRangesArray, featureIdsStore, &maskArray->template getIDataStoreRefAs<AbstractDataStore<bool>>(), countsArray, mostPopulatedArray,
                                                 modalBinRanges, inputValues, numFeatures, overflow, shouldCancel);
     }
-    return generateScanlineHistogram<T, uint8>(inputArray, binRangesArray, featureIdsStore, &maskArray->template getIDataStoreRefAs<AbstractDataStore<uint8>>(), countsArray, mostPopulatedArray,
+    return GenerateScanlineHistogram<T, uint8>(inputArray, binRangesArray, featureIdsStore, &maskArray->template getIDataStoreRefAs<AbstractDataStore<uint8>>(), countsArray, mostPopulatedArray,
                                                modalBinRanges, inputValues, numFeatures, overflow, shouldCancel);
   }
 };
@@ -1354,15 +1354,15 @@ ComputeArrayHistogramByFeature::~ComputeArrayHistogramByFeature() noexcept = def
 
 Result<> ComputeArrayHistogramByFeature::operator()()
 {
-  const int32 numBins = m_InputValues->NumberOfBins;
-  const std::vector<DataPath> selectedArrayPaths = m_InputValues->SelectedArrayPaths;
+  const int32 numBins = m_InputValues->number_of_bins;
+  const std::vector<DataPath> selectedArrayPaths = m_InputValues->selected_array_paths;
   std::atomic<usize> overflow = 0;
 
-  const auto& featureIdsArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIdsArray = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
   const auto& featureIdsStore = featureIdsArray.getDataStoreRef();
 
   // Discover the feature count before output changes so entry cancellation preserves existing output values.
-  Result<usize> featureCountResult = findFeatureCount(featureIdsStore, m_ShouldCancel);
+  Result<usize> featureCountResult = FindFeatureCount(featureIdsStore, m_ShouldCancel);
   if(featureCountResult.invalid())
   {
     return ConvertResult(std::move(featureCountResult));
@@ -1382,21 +1382,21 @@ Result<> ComputeArrayHistogramByFeature::operator()()
       return {};
     }
 
-    const auto* inputData = m_DataStructure.getDataAs<IDataArray>(selectedArrayPaths[i]);
-    const IDataArray* maskArray = m_InputValues->UseMask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath) : nullptr;
-    auto* binRanges = m_DataStructure.getDataAs<IDataArray>(m_InputValues->CreatedBinRangeDataPaths.at(i));
-    auto* countsArray = m_DataStructure.getDataAs<DataArray<uint64>>(m_InputValues->CreatedHistogramCountsDataPaths.at(i));
-    auto* mostPopulatedArray = m_DataStructure.getDataAs<DataArray<uint64>>(m_InputValues->CreatedBinMostPopulatedDataPaths.at(i));
-    auto& counts = countsArray->getDataStoreRef();
-    auto& mostPopulated = mostPopulatedArray->getDataStoreRef();
-    INeighborList* modalBinRanges = nullptr;
-    if(m_InputValues->CreatedBinModalRangesDataPaths.has_value())
+    const auto* inputDataPtr = m_DataStructure.getDataAs<IDataArray>(selectedArrayPaths[i]);
+    const IDataArray* maskArrayPtr = m_InputValues->use_mask ? m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path) : nullptr;
+    auto* binRangesPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->created_bin_range_data_paths.at(i));
+    auto* countsArrayPtr = m_DataStructure.getDataAs<DataArray<uint64>>(m_InputValues->created_histogram_counts_data_paths.at(i));
+    auto* mostPopulatedArrayPtr = m_DataStructure.getDataAs<DataArray<uint64>>(m_InputValues->created_bin_most_populated_data_paths.at(i));
+    auto& counts = countsArrayPtr->getDataStoreRef();
+    auto& mostPopulated = mostPopulatedArrayPtr->getDataStoreRef();
+    INeighborList* modalBinRangesPtr = nullptr;
+    if(m_InputValues->created_bin_modal_ranges_data_paths.has_value())
     {
-      modalBinRanges = m_DataStructure.getDataAs<INeighborList>(m_InputValues->CreatedBinModalRangesDataPaths->at(i));
+      modalBinRangesPtr = m_DataStructure.getDataAs<INeighborList>(m_InputValues->created_bin_modal_ranges_data_paths->at(i));
     }
 
     const std::function<Result<>()> executeDirect = [&]() -> Result<> {
-      Result<> resizeResult = binRanges->resizeTuples({numFeatures});
+      Result<> resizeResult = binRangesPtr->resizeTuples({numFeatures});
       if(resizeResult.invalid())
       {
         return resizeResult;
@@ -1412,34 +1412,34 @@ Result<> ComputeArrayHistogramByFeature::operator()()
         return resizeResult;
       }
 
-      std::unique_ptr<MaskCompareUtilities::MaskCompare> mask = nullptr;
-      if(m_InputValues->UseMask)
+      std::unique_ptr<mask_compare_utilities::MaskCompare> mask = nullptr;
+      if(m_InputValues->use_mask)
       {
-        mask = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+        mask = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->mask_array_path);
       }
 
       ParallelDataAlgorithm dataAlg;
       dataAlg.setRange(0, numFeatures);
-      const bool histFullRange = !m_InputValues->UserDefinedRange;
+      const bool histFullRange = !m_InputValues->user_defined_range;
       const std::function<void(usize)> reportProgress = [this](usize count) { sendThreadSafeProgressMessage(count); };
       m_Throttle.reset(numFeatures, "Calculating feature histograms");
-      CopyFromArray::ParallelTaskResult taskResult;
+      copy_from_array::ParallelTaskResult taskResult;
 
-      if(m_InputValues->CreatedBinModalRangesDataPaths.has_value())
+      if(m_InputValues->created_bin_modal_ranges_data_paths.has_value())
       {
-        resizeResult = modalBinRanges->resizeTuples({numFeatures});
+        resizeResult = modalBinRangesPtr->resizeTuples({numFeatures});
         if(resizeResult.invalid())
         {
           return resizeResult;
         }
-        ExecuteParallelFunctor<InstantiateHistogramByFeatureImplFunctor, NoBooleanType>(InstantiateHistogramByFeatureImplFunctor{}, inputData->getDataType(), dataAlg, modalBinRanges, inputData,
-                                                                                        binRanges, featureIdsStore, m_InputValues->MinRange, m_InputValues->MaxRange, histFullRange, m_ShouldCancel,
-                                                                                        numBins, counts, mostPopulated, mask, overflow, reportProgress, taskResult);
+        ExecuteParallelFunctor<InstantiateHistogramByFeatureImplFunctor, NoBooleanType>(InstantiateHistogramByFeatureImplFunctor{}, inputDataPtr->getDataType(), dataAlg, modalBinRangesPtr,
+                                                                                        inputDataPtr, binRangesPtr, featureIdsStore, m_InputValues->min_range, m_InputValues->max_range, histFullRange,
+                                                                                        m_ShouldCancel, numBins, counts, mostPopulated, mask, overflow, reportProgress, taskResult);
       }
       else
       {
-        ExecuteParallelFunctor(InstantiateHistogramByFeatureImplFunctor{}, inputData->getDataType(), dataAlg, inputData, binRanges, featureIdsStore, m_InputValues->MinRange, m_InputValues->MaxRange,
-                               histFullRange, m_ShouldCancel, numBins, counts, mostPopulated, mask, overflow, reportProgress, taskResult);
+        ExecuteParallelFunctor(InstantiateHistogramByFeatureImplFunctor{}, inputDataPtr->getDataType(), dataAlg, inputDataPtr, binRangesPtr, featureIdsStore, m_InputValues->min_range,
+                               m_InputValues->max_range, histFullRange, m_ShouldCancel, numBins, counts, mostPopulated, mask, overflow, reportProgress, taskResult);
       }
       return taskResult.takeResult();
     };
@@ -1447,29 +1447,29 @@ Result<> ComputeArrayHistogramByFeature::operator()()
     // Every read and created write target participates in storage-based dispatch.
     // A disk-backed participant requires the bounded implementation.
     Result<> executeResult;
-    if(maskArray != nullptr && modalBinRanges != nullptr)
+    if(maskArrayPtr != nullptr && modalBinRangesPtr != nullptr)
     {
       executeResult = DispatchAlgorithm<ComputeArrayHistogramByFeatureDirect, ComputeArrayHistogramByFeatureScanline>(
-          AlgorithmArrayTargets{inputData, &featureIdsArray, maskArray, binRanges, countsArray, mostPopulatedArray, modalBinRanges}, executeDirect, *inputData, *binRanges, featureIdsStore, maskArray,
-          *countsArray, *mostPopulatedArray, modalBinRanges, *m_InputValues, numFeatures, overflow, m_ShouldCancel);
+          AlgorithmArrayTargets{inputDataPtr, &featureIdsArray, maskArrayPtr, binRangesPtr, countsArrayPtr, mostPopulatedArrayPtr, modalBinRangesPtr}, executeDirect, *inputDataPtr, *binRangesPtr,
+          featureIdsStore, maskArrayPtr, *countsArrayPtr, *mostPopulatedArrayPtr, modalBinRangesPtr, *m_InputValues, numFeatures, overflow, m_ShouldCancel);
     }
-    else if(maskArray != nullptr)
+    else if(maskArrayPtr != nullptr)
     {
       executeResult = DispatchAlgorithm<ComputeArrayHistogramByFeatureDirect, ComputeArrayHistogramByFeatureScanline>(
-          AlgorithmArrayTargets{inputData, &featureIdsArray, maskArray, binRanges, countsArray, mostPopulatedArray}, executeDirect, *inputData, *binRanges, featureIdsStore, maskArray, *countsArray,
-          *mostPopulatedArray, nullptr, *m_InputValues, numFeatures, overflow, m_ShouldCancel);
+          AlgorithmArrayTargets{inputDataPtr, &featureIdsArray, maskArrayPtr, binRangesPtr, countsArrayPtr, mostPopulatedArrayPtr}, executeDirect, *inputDataPtr, *binRangesPtr, featureIdsStore,
+          maskArrayPtr, *countsArrayPtr, *mostPopulatedArrayPtr, nullptr, *m_InputValues, numFeatures, overflow, m_ShouldCancel);
     }
-    else if(modalBinRanges != nullptr)
+    else if(modalBinRangesPtr != nullptr)
     {
       executeResult = DispatchAlgorithm<ComputeArrayHistogramByFeatureDirect, ComputeArrayHistogramByFeatureScanline>(
-          AlgorithmArrayTargets{inputData, &featureIdsArray, binRanges, countsArray, mostPopulatedArray, modalBinRanges}, executeDirect, *inputData, *binRanges, featureIdsStore, nullptr, *countsArray,
-          *mostPopulatedArray, modalBinRanges, *m_InputValues, numFeatures, overflow, m_ShouldCancel);
+          AlgorithmArrayTargets{inputDataPtr, &featureIdsArray, binRangesPtr, countsArrayPtr, mostPopulatedArrayPtr, modalBinRangesPtr}, executeDirect, *inputDataPtr, *binRangesPtr, featureIdsStore,
+          nullptr, *countsArrayPtr, *mostPopulatedArrayPtr, modalBinRangesPtr, *m_InputValues, numFeatures, overflow, m_ShouldCancel);
     }
     else
     {
       executeResult = DispatchAlgorithm<ComputeArrayHistogramByFeatureDirect, ComputeArrayHistogramByFeatureScanline>(
-          AlgorithmArrayTargets{inputData, &featureIdsArray, binRanges, countsArray, mostPopulatedArray}, executeDirect, *inputData, *binRanges, featureIdsStore, nullptr, *countsArray,
-          *mostPopulatedArray, nullptr, *m_InputValues, numFeatures, overflow, m_ShouldCancel);
+          AlgorithmArrayTargets{inputDataPtr, &featureIdsArray, binRangesPtr, countsArrayPtr, mostPopulatedArrayPtr}, executeDirect, *inputDataPtr, *binRangesPtr, featureIdsStore, nullptr,
+          *countsArrayPtr, *mostPopulatedArrayPtr, nullptr, *m_InputValues, numFeatures, overflow, m_ShouldCancel);
     }
     if(executeResult.invalid())
     {
@@ -1480,7 +1480,7 @@ Result<> ComputeArrayHistogramByFeature::operator()()
 
     if(overflow > 0)
     {
-      messageHandler.sendInfoMessage(fmt::format("{} values not categorized into bin for array {}", overflow.load(), inputData->getName()));
+      messageHandler.sendInfoMessage(fmt::format("{} values not categorized into bin for array {}", overflow.load(), inputDataPtr->getName()));
     }
   }
 
@@ -1489,6 +1489,6 @@ Result<> ComputeArrayHistogramByFeature::operator()()
 
 void ComputeArrayHistogramByFeature::sendThreadSafeProgressMessage(usize counter)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_Throttle.incrementPercent(counter);
 }

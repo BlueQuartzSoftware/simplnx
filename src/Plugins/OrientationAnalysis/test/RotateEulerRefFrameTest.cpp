@@ -26,7 +26,7 @@ namespace fs = std::filesystem;
 
 using namespace nx::core;
 
-namespace AnalyticalFixtures
+namespace analytical_fixtures
 {
 // Class 1 (Analytical) oracle fixtures for RotateEulerRefFrameFilter.
 //
@@ -47,77 +47,77 @@ namespace AnalyticalFixtures
 struct FixtureData
 {
   std::string name;
-  std::array<float32, 3> eulerIn;   // radians
+  std::array<float32, 3> euler_in;  // radians
   std::array<float32, 4> axisAngle; // i, j, k, w (degrees)
   std::array<float64, 3> expected;  // radians, canonical ranges
 };
 
 const std::vector<FixtureData> k_Fixtures = {
     // F1: g = I, rotate frame +90 about z. phi1' = 0 - pi/2 mod 2pi = 3pi/2.
-    {"F1 identity + z90", {0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 1.0F, 90.0F}, {4.712388980384709, 0.0, 0.0}},
+    {.name = "F1 identity + z90", .euler_in = {0.0F, 0.0F, 0.0F}, .axisAngle = {0.0F, 0.0F, 1.0F, 90.0F}, .expected = {4.712388980384709, 0.0, 0.0}},
     // F2: general orientation, z-axis: phi1' = 1.0 - pi/6; Phi, phi2 unchanged.
-    {"F2 general + z30", {1.0F, 0.5F, 0.3F}, {0.0F, 0.0F, 1.0F, 30.0F}, {0.476401224401701, 0.5, 0.3}},
+    {.name = "F2 general + z30", .euler_in = {1.0F, 0.5F, 0.3F}, .axisAngle = {0.0F, 0.0F, 1.0F, 30.0F}, .expected = {0.476401224401701, 0.5, 0.3}},
     // F3: wrap-around: phi1' = 0.1 - pi/2 + 2pi.
-    {"F3 wraparound + z90", {0.1F, 0.5F, 0.3F}, {0.0F, 0.0F, 1.0F, 90.0F}, {4.812388980384732, 0.5, 0.3}},
+    {.name = "F3 wraparound + z90", .euler_in = {0.1F, 0.5F, 0.3F}, .axisAngle = {0.0F, 0.0F, 1.0F, 90.0F}, .expected = {4.812388980384732, 0.5, 0.3}},
     // F4: g = I, +90 about x: g' = R_active(x, 90) => om2eu = (pi, pi/2, pi) by hand.
-    {"F4 identity + x90", {0.0F, 0.0F, 0.0F}, {1.0F, 0.0F, 0.0F, 90.0F}, {3.141592653589793, 1.570796326794897, 3.141592653589793}},
+    {.name = "F4 identity + x90", .euler_in = {0.0F, 0.0F, 0.0F}, .axisAngle = {1.0F, 0.0F, 0.0F, 90.0F}, .expected = {3.141592653589793, 1.570796326794897, 3.141592653589793}},
     // F5: axis (2,0,0) must normalize to (1,0,0); expected identical to F4.
-    {"F5 unnormalized axis x90", {0.0F, 0.0F, 0.0F}, {2.0F, 0.0F, 0.0F, 90.0F}, {3.141592653589793, 1.570796326794897, 3.141592653589793}},
+    {.name = "F5 unnormalized axis x90", .euler_in = {0.0F, 0.0F, 0.0F}, .axisAngle = {2.0F, 0.0F, 0.0F, 90.0F}, .expected = {3.141592653589793, 1.570796326794897, 3.141592653589793}},
     // F6: w = 0 is a no-op for already-canonical inputs.
-    {"F6 zero angle no-op", {5.0F, 1.0F, 2.0F}, {0.0F, 0.0F, 1.0F, 0.0F}, {5.0, 1.0, 2.0}},
+    {.name = "F6 zero angle no-op", .euler_in = {5.0F, 1.0F, 2.0F}, .axisAngle = {0.0F, 0.0F, 1.0F, 0.0F}, .expected = {5.0, 1.0, 2.0}},
     // F7: g = I, +120 about (1,1,1): R_active maps x->y->z->x; om2eu = (pi, pi/2, pi/2) by hand.
-    {"F7 identity + 111 120", {0.0F, 0.0F, 0.0F}, {1.0F, 1.0F, 1.0F, 120.0F}, {3.141592653589793, 1.570796326794896, 1.570796326794897}},
+    {.name = "F7 identity + 111 120", .euler_in = {0.0F, 0.0F, 0.0F}, .axisAngle = {1.0F, 1.0F, 1.0F, 120.0F}, .expected = {3.141592653589793, 1.570796326794896, 1.570796326794897}},
     // F8: general orientation, y-axis 45 deg. No closed form; value from the numpy oracle script.
-    {"F8 general + y45", {0.8F, 1.1F, 0.4F}, {0.0F, 1.0F, 0.0F, 45.0F}, {0.208427151998385, 0.687549596714496, 1.288701818256954}},
+    {.name = "F8 general + y45", .euler_in = {0.8F, 1.1F, 0.4F}, .axisAngle = {0.0F, 1.0F, 0.0F, 45.0F}, .expected = {0.208427151998385, 0.687549596714496, 1.288701818256954}},
 };
 
 // Creates a DataStructure holding a cell AttributeMatrix with one float32 3-component
 // Euler angles array of numTuples tuples, returning the array pointer.
-inline Float32Array* CreateEulerArray(DataStructure& dataStructure, usize numTuples)
+inline static Float32ArrayType* CreateEulerArray(DataStructure& dataStructure, usize numTuples)
 {
-  AttributeMatrix* cellData = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{numTuples});
-  return UnitTest::CreateTestDataArray<float32>(dataStructure, "EulerAngles", {numTuples}, {3}, cellData->getId());
+  AttributeMatrix* cellDataPtr = AttributeMatrix::Create(dataStructure, "CellData", ShapeType{numTuples});
+  return unit_test::CreateTestDataArray<float32>(dataStructure, "EulerAngles", {numTuples}, {3}, cellDataPtr->getId());
 }
 
 // Runs RotateEulerRefFrameFilter in place on the given euler array.
-inline void RunRotateFilter(DataStructure& dataStructure, const DataPath& eulerPath, const std::array<float32, 4>& axisAngle)
+inline static void RunRotateFilter(DataStructure& dataStructure, const DataPath& eulerPath, const std::array<float32, 4>& axisAngle)
 {
   RotateEulerRefFrameFilter filter;
   Arguments args;
   args.insertOrAssign(RotateEulerRefFrameFilter::k_RotationAxisAngle_Key,
-                      std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{axisAngle[0], axisAngle[1], axisAngle[2], axisAngle[3]}));
+                      std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{axisAngle[0], axisAngle[1], axisAngle[2], axisAngle[3]}));
   args.insertOrAssign(RotateEulerRefFrameFilter::k_EulerAnglesArrayPath_Key, std::make_any<DataPath>(eulerPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
-} // namespace AnalyticalFixtures
+} // namespace analytical_fixtures
 
 TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis][RotateEulerRefFrameFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ASCIIData.tar.gz", "ASCIIData");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ASCIIData.tar.gz", "ASCIIData");
 
   // Instantiate an "Application" instance to load plugins
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const uint64 k_NumComponents = 3;
-  const static DynamicTableInfo::TableDataType k_NumTuples = {{static_cast<double>(480000)}};
-  const nx::core::NumericType k_NumericType = nx::core::NumericType::float32;
+  const uint64 kNumComponents = 3;
+  const static DynamicTableInfo::TableDataType kNumTuples = {{static_cast<double>(480000)}};
+  const nx::core::NumericType kNumericType = nx::core::NumericType::float32;
 
   // Constant strings and DataPaths to be used later
-  const DataPath k_EulerAnglesDataPath({Constants::k_EulerAngles});
+  const DataPath kEulerAnglesDataPath({constants::k_EulerAngles});
 
-  const std::string k_EulersRotated("EulersRotated");
-  const DataPath k_EulersRotatedDataPath({k_EulersRotated});
+  const std::string kEulersRotated("EulersRotated");
+  const DataPath kEulersRotatedDataPath({kEulersRotated});
 
   std::string inputFile = fmt::format("{}/ASCIIData/EulerAngles.csv", unit_test::k_TestFilesDir.view());
   std::string comparisonDataFile = fmt::format("{}/ASCIIData/EulersRotated.csv", unit_test::k_TestFilesDir.view());
 
   // Make sure we can load the "Import Text Filter" filter from the plugin
-  auto* filterList = Application::Instance()->getFilterList();
+  auto* filterListPtr = Application::Instance()->getFilterList();
   // Make sure we can instantiate the Import Text Filter
 
   DataStructure dataStructure;
@@ -125,20 +125,20 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis][Rot
   // Run the "Import Text" Filter to import the data for the EulerAngles and EulersRotated
   {
     Arguments args;
-    args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
-    args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(k_NumericType));
-    args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(k_NumTuples));
-    args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(k_NumComponents));
-    args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(0));
-    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_EulerAnglesDataPath));
+    args.insertOrAssign(read_text_data_array_filter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputFile)));
+    args.insertOrAssign(read_text_data_array_filter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(kNumericType));
+    args.insertOrAssign(read_text_data_array_filter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(kNumTuples));
+    args.insertOrAssign(read_text_data_array_filter::k_NComp_Key, std::make_any<uint64>(kNumComponents));
+    args.insertOrAssign(read_text_data_array_filter::k_NSkipLines_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(read_text_data_array_filter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(0));
+    args.insertOrAssign(read_text_data_array_filter::k_DataArrayPath_Key, std::make_any<DataPath>(kEulerAnglesDataPath));
 
-    auto filter = filterList->createFilter(k_ReadTextDataArrayFilterHandle);
+    auto filter = filterListPtr->createFilter(k_ReadTextDataArrayFilterHandle);
     REQUIRE(nullptr != filter);
 
     // Preflight the filter and check result
     auto preflightResult = filter->preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter->execute(dataStructure, args);
@@ -147,20 +147,20 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis][Rot
 
   {
     Arguments args;
-    args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(comparisonDataFile)));
-    args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(k_NumericType));
-    args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(k_NumTuples));
-    args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(k_NumComponents));
-    args.insertOrAssign(ReadTextDataArrayFilter::k_NSkipLines_Key, std::make_any<uint64>(0));
-    args.insertOrAssign(ReadTextDataArrayFilter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(0));
-    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(k_EulersRotatedDataPath));
+    args.insertOrAssign(read_text_data_array_filter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(comparisonDataFile)));
+    args.insertOrAssign(read_text_data_array_filter::k_ScalarType_Key, std::make_any<NumericTypeParameter::ValueType>(kNumericType));
+    args.insertOrAssign(read_text_data_array_filter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(kNumTuples));
+    args.insertOrAssign(read_text_data_array_filter::k_NComp_Key, std::make_any<uint64>(kNumComponents));
+    args.insertOrAssign(read_text_data_array_filter::k_NSkipLines_Key, std::make_any<uint64>(0));
+    args.insertOrAssign(read_text_data_array_filter::k_DelimiterChoice_Key, std::make_any<ChoicesParameter::ValueType>(0));
+    args.insertOrAssign(read_text_data_array_filter::k_DataArrayPath_Key, std::make_any<DataPath>(kEulersRotatedDataPath));
 
-    auto filter = filterList->createFilter(k_ReadTextDataArrayFilterHandle);
+    auto filter = filterListPtr->createFilter(k_ReadTextDataArrayFilterHandle);
     REQUIRE(nullptr != filter);
 
     // Preflight the filter and check result
     auto preflightResult = filter->preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter->execute(dataStructure, args);
@@ -173,12 +173,12 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis][Rot
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(RotateEulerRefFrameFilter::k_RotationAxisAngle_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{1.0F, 1.0F, 1.0F, 30.0F}));
-    args.insertOrAssign(RotateEulerRefFrameFilter::k_EulerAnglesArrayPath_Key, std::make_any<DataPath>(k_EulerAnglesDataPath));
+    args.insertOrAssign(RotateEulerRefFrameFilter::k_RotationAxisAngle_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{1.0F, 1.0F, 1.0F, 30.0F}));
+    args.insertOrAssign(RotateEulerRefFrameFilter::k_EulerAnglesArrayPath_Key, std::make_any<DataPath>(kEulerAnglesDataPath));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -187,8 +187,8 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis][Rot
 
   // Compare the 2 data sets
   {
-    const auto& eulerAngles = dataStructure.getDataRefAs<Float32Array>(k_EulerAnglesDataPath);
-    const auto& eulersRotated = dataStructure.getDataRefAs<Float32Array>(k_EulersRotatedDataPath);
+    const auto& eulerAngles = dataStructure.getDataRefAs<Float32ArrayType>(kEulerAnglesDataPath);
+    const auto& eulersRotated = dataStructure.getDataRefAs<Float32ArrayType>(kEulersRotatedDataPath);
 
     size_t numElements = eulerAngles.getSize();
     for(size_t i = 0; i < numElements; i++)
@@ -202,14 +202,14 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrame", "[OrientationAnalysis][Rot
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::RotateEulerRefFrameFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][RotateEulerRefFrameFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -222,22 +222,22 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrameFilter: SIMPL Backwards Compa
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<RotateEulerRefFrameFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<RotateEulerRefFrameFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       // Complex type (FloatVec3p1FilterParameterConverter) - verified by successful pipeline loading
       CHECK(args.value<DataPath>(RotateEulerRefFrameFilter::k_EulerAnglesArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
     }
@@ -246,29 +246,29 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrameFilter: SIMPL Backwards Compa
 
 TEST_CASE("OrientationAnalysis::RotateEulerRefFrameFilter: Class 1 Analytical Fixtures", "[OrientationAnalysis][RotateEulerRefFrameFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Single-pass double-precision math on float32 storage: float32 rounding of the decimal
   // inputs perturbs the output by O(1e-7); 1e-5 rad is a comfortable-but-tight bound.
   constexpr float64 k_Tolerance = 1.0e-5;
 
-  const DataPath k_EulerPath({"CellData", "EulerAngles"});
+  const DataPath kEulerPath({"CellData", "EulerAngles"});
 
-  for(const auto& fixture : AnalyticalFixtures::k_Fixtures)
+  for(const auto& fixture : analytical_fixtures::k_Fixtures)
   {
     DYNAMIC_SECTION(fixture.name)
     {
       DataStructure dataStructure;
-      Float32Array* eulerArray = AnalyticalFixtures::CreateEulerArray(dataStructure, 1);
+      Float32ArrayType* eulerArrayPtr = analytical_fixtures::CreateEulerArray(dataStructure, 1);
       for(usize c = 0; c < 3; c++)
       {
-        (*eulerArray)[c] = fixture.eulerIn[c];
+        (*eulerArrayPtr)[c] = fixture.euler_in[c];
       }
 
-      AnalyticalFixtures::RunRotateFilter(dataStructure, k_EulerPath, fixture.axisAngle);
+      analytical_fixtures::RunRotateFilter(dataStructure, kEulerPath, fixture.axisAngle);
 
-      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_EulerPath));
-      const auto& resultRef = dataStructure.getDataRefAs<Float32Array>(k_EulerPath);
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(kEulerPath));
+      const auto& resultRef = dataStructure.getDataRefAs<Float32ArrayType>(kEulerPath);
       for(usize c = 0; c < 3; c++)
       {
         const float64 absDif = std::fabs(static_cast<float64>(resultRef[c]) - fixture.expected[c]);
@@ -276,66 +276,66 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrameFilter: Class 1 Analytical Fi
         REQUIRE(absDif < k_Tolerance);
       }
 
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }
 
 TEST_CASE("OrientationAnalysis::RotateEulerRefFrameFilter: real HDF5 65536-block rotation oracle", "[OrientationAnalysis][RotateEulerRefFrameFilter][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
   constexpr usize k_BlockTuples = 65536;
   DataStructure dataStructure;
-  auto* eulersPtr = AnalyticalFixtures::CreateEulerArray(dataStructure, k_BlockTuples + 1);
+  auto* eulersPtr = analytical_fixtures::CreateEulerArray(dataStructure, k_BlockTuples + 1);
   REQUIRE(eulersPtr != nullptr);
   eulersPtr->fill(0);
   (*eulersPtr)[k_BlockTuples * 3] = 0.1F;
   (*eulersPtr)[k_BlockTuples * 3 + 1] = 0.5F;
   (*eulersPtr)[k_BlockTuples * 3 + 2] = 0.3F;
-  auto store = DataStoreUtilities::ConvertDataStore<float32>(eulersPtr->getDataStoreRef(), "HDF5-OOC");
+  auto store = data_store_utilities::ConvertDataStore<float32>(eulersPtr->getDataStoreRef(), "HDF5-OOC");
   REQUIRE(store != nullptr);
   auto replaceResult = eulersPtr->setDataStore(store);
   SIMPLNX_RESULT_REQUIRE_VALID(replaceResult);
   REQUIRE(store->getDataFormat() == "HDF5-OOC");
   const DataPath path({"CellData", "EulerAngles"});
-  AnalyticalFixtures::RunRotateFilter(dataStructure, path, {0.0F, 0.0F, 1.0F, 90.0F});
+  analytical_fixtures::RunRotateFilter(dataStructure, path, {0.0F, 0.0F, 1.0F, 90.0F});
   REQUIRE(eulersPtr->getDataStoreRef().getDataFormat() == "HDF5-OOC");
   const std::array<float64, 6> expected = {4.712388980384709, 0.0, 0.0, 4.812388980384732, 0.5, 0.3};
   for(usize compIdx = 0; compIdx < expected.size(); compIdx++)
   {
     REQUIRE(std::abs(static_cast<float64>((*eulersPtr)[(k_BlockTuples - 1) * 3 + compIdx]) - expected[compIdx]) < 1.0E-5);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::RotateEulerRefFrameFilter: Zero-Length Axis Fails Preflight", "[OrientationAnalysis][RotateEulerRefFrameFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const DataPath k_EulerPath({"CellData", "EulerAngles"});
+  const DataPath kEulerPath({"CellData", "EulerAngles"});
 
   DataStructure dataStructure;
-  AnalyticalFixtures::CreateEulerArray(dataStructure, 1);
+  analytical_fixtures::CreateEulerArray(dataStructure, 1);
 
   RotateEulerRefFrameFilter filter;
   Arguments args;
-  args.insertOrAssign(RotateEulerRefFrameFilter::k_RotationAxisAngle_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.0F, 0.0F, 0.0F, 90.0F}));
-  args.insertOrAssign(RotateEulerRefFrameFilter::k_EulerAnglesArrayPath_Key, std::make_any<DataPath>(k_EulerPath));
+  args.insertOrAssign(RotateEulerRefFrameFilter::k_RotationAxisAngle_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{0.0F, 0.0F, 0.0F, 90.0F}));
+  args.insertOrAssign(RotateEulerRefFrameFilter::k_EulerAnglesArrayPath_Key, std::make_any<DataPath>(kEulerPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
 }
 
 TEST_CASE("OrientationAnalysis::RotateEulerRefFrameFilter: Class 4 Invariants", "[OrientationAnalysis][RotateEulerRefFrameFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const DataPath k_EulerPath({"CellData", "EulerAngles"});
+  const DataPath kEulerPath({"CellData", "EulerAngles"});
 
   // A batch of canonical-range orientations (phi1, phi2 in [0, 2pi), Phi in [0, pi]).
-  const std::vector<std::array<float32, 3>> k_BatchEulers = {
+  const std::vector<std::array<float32, 3>> kBatchEulers = {
       {0.0F, 0.0F, 0.0F}, {1.0F, 0.5F, 0.3F}, {0.7F, 0.9F, 4.2F}, {2.0F, 2.5F, 1.0F}, {5.9F, 0.1F, 3.3F}, {3.1F, 1.6F, 6.0F},
   };
 
@@ -345,19 +345,19 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrameFilter: Class 4 Invariants", 
   SECTION("Output ranges: phi1, phi2 in [0, 2pi], Phi in [0, pi]")
   {
     DataStructure dataStructure;
-    Float32Array* eulerArray = AnalyticalFixtures::CreateEulerArray(dataStructure, k_BatchEulers.size());
-    for(usize t = 0; t < k_BatchEulers.size(); t++)
+    Float32ArrayType* eulerArrayPtr = analytical_fixtures::CreateEulerArray(dataStructure, kBatchEulers.size());
+    for(usize t = 0; t < kBatchEulers.size(); t++)
     {
       for(usize c = 0; c < 3; c++)
       {
-        (*eulerArray)[t * 3 + c] = k_BatchEulers[t][c];
+        (*eulerArrayPtr)[t * 3 + c] = kBatchEulers[t][c];
       }
     }
 
-    AnalyticalFixtures::RunRotateFilter(dataStructure, k_EulerPath, {0.3F, -0.5F, 0.81F, 37.0F});
+    analytical_fixtures::RunRotateFilter(dataStructure, kEulerPath, {0.3F, -0.5F, 0.81F, 37.0F});
 
-    const auto& resultRef = dataStructure.getDataRefAs<Float32Array>(k_EulerPath);
-    for(usize t = 0; t < k_BatchEulers.size(); t++)
+    const auto& resultRef = dataStructure.getDataRefAs<Float32ArrayType>(kEulerPath);
+    for(usize t = 0; t < kBatchEulers.size(); t++)
     {
       INFO(fmt::format("tuple {}", t));
       REQUIRE(resultRef[t * 3 + 0] >= 0.0F);
@@ -368,66 +368,66 @@ TEST_CASE("OrientationAnalysis::RotateEulerRefFrameFilter: Class 4 Invariants", 
       REQUIRE(resultRef[t * 3 + 2] <= k_TwoPi);
     }
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Round-trip: rotate by (n, w) then (-n, w) recovers the input")
   {
     DataStructure dataStructure;
-    Float32Array* eulerArray = AnalyticalFixtures::CreateEulerArray(dataStructure, k_BatchEulers.size());
-    for(usize t = 0; t < k_BatchEulers.size(); t++)
+    Float32ArrayType* eulerArrayPtr = analytical_fixtures::CreateEulerArray(dataStructure, kBatchEulers.size());
+    for(usize t = 0; t < kBatchEulers.size(); t++)
     {
       for(usize c = 0; c < 3; c++)
       {
-        (*eulerArray)[t * 3 + c] = k_BatchEulers[t][c];
+        (*eulerArrayPtr)[t * 3 + c] = kBatchEulers[t][c];
       }
     }
 
-    AnalyticalFixtures::RunRotateFilter(dataStructure, k_EulerPath, {0.3F, -0.5F, 0.81F, 37.0F});
-    AnalyticalFixtures::RunRotateFilter(dataStructure, k_EulerPath, {-0.3F, 0.5F, -0.81F, 37.0F});
+    analytical_fixtures::RunRotateFilter(dataStructure, kEulerPath, {0.3F, -0.5F, 0.81F, 37.0F});
+    analytical_fixtures::RunRotateFilter(dataStructure, kEulerPath, {-0.3F, 0.5F, -0.81F, 37.0F});
 
-    const auto& resultRef = dataStructure.getDataRefAs<Float32Array>(k_EulerPath);
+    const auto& resultRef = dataStructure.getDataRefAs<Float32ArrayType>(kEulerPath);
     constexpr float32 k_Tolerance = 1.0e-4F; // two float32 store/load passes
-    for(usize i = 0; i < k_BatchEulers.size() * 3; i++)
+    for(usize i = 0; i < kBatchEulers.size() * 3; i++)
     {
-      const float32 absDif = std::fabs(resultRef[i] - k_BatchEulers[i / 3][i % 3]);
+      const float32 absDif = std::fabs(resultRef[i] - kBatchEulers[i / 3][i % 3]);
       INFO(fmt::format("flat index {}", i));
       REQUIRE(absDif < k_Tolerance);
     }
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 
   SECTION("Composability: 45 deg twice equals 90 deg once")
   {
     DataStructure twiceDataStructure;
-    Float32Array* twiceArray = AnalyticalFixtures::CreateEulerArray(twiceDataStructure, k_BatchEulers.size());
+    Float32ArrayType* twiceArrayPtr = analytical_fixtures::CreateEulerArray(twiceDataStructure, kBatchEulers.size());
     DataStructure onceDataStructure;
-    Float32Array* onceArray = AnalyticalFixtures::CreateEulerArray(onceDataStructure, k_BatchEulers.size());
-    for(usize t = 0; t < k_BatchEulers.size(); t++)
+    Float32ArrayType* onceArrayPtr = analytical_fixtures::CreateEulerArray(onceDataStructure, kBatchEulers.size());
+    for(usize t = 0; t < kBatchEulers.size(); t++)
     {
       for(usize c = 0; c < 3; c++)
       {
-        (*twiceArray)[t * 3 + c] = k_BatchEulers[t][c];
-        (*onceArray)[t * 3 + c] = k_BatchEulers[t][c];
+        (*twiceArrayPtr)[t * 3 + c] = kBatchEulers[t][c];
+        (*onceArrayPtr)[t * 3 + c] = kBatchEulers[t][c];
       }
     }
 
-    AnalyticalFixtures::RunRotateFilter(twiceDataStructure, k_EulerPath, {0.0F, 0.0F, 1.0F, 45.0F});
-    AnalyticalFixtures::RunRotateFilter(twiceDataStructure, k_EulerPath, {0.0F, 0.0F, 1.0F, 45.0F});
-    AnalyticalFixtures::RunRotateFilter(onceDataStructure, k_EulerPath, {0.0F, 0.0F, 1.0F, 90.0F});
+    analytical_fixtures::RunRotateFilter(twiceDataStructure, kEulerPath, {0.0F, 0.0F, 1.0F, 45.0F});
+    analytical_fixtures::RunRotateFilter(twiceDataStructure, kEulerPath, {0.0F, 0.0F, 1.0F, 45.0F});
+    analytical_fixtures::RunRotateFilter(onceDataStructure, kEulerPath, {0.0F, 0.0F, 1.0F, 90.0F});
 
-    const auto& twiceRef = twiceDataStructure.getDataRefAs<Float32Array>(k_EulerPath);
-    const auto& onceRef = onceDataStructure.getDataRefAs<Float32Array>(k_EulerPath);
+    const auto& twiceRef = twiceDataStructure.getDataRefAs<Float32ArrayType>(kEulerPath);
+    const auto& onceRef = onceDataStructure.getDataRefAs<Float32ArrayType>(kEulerPath);
     constexpr float32 k_Tolerance = 1.0e-4F;
-    for(usize i = 0; i < k_BatchEulers.size() * 3; i++)
+    for(usize i = 0; i < kBatchEulers.size() * 3; i++)
     {
       const float32 absDif = std::fabs(twiceRef[i] - onceRef[i]);
       INFO(fmt::format("flat index {}", i));
       REQUIRE(absDif < k_Tolerance);
     }
 
-    UnitTest::CheckArraysInheritTupleDims(twiceDataStructure);
-    UnitTest::CheckArraysInheritTupleDims(onceDataStructure);
+    unit_test::CheckArraysInheritTupleDims(twiceDataStructure);
+    unit_test::CheckArraysInheritTupleDims(onceDataStructure);
   }
 }

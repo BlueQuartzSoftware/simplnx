@@ -19,14 +19,14 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT WriteAbaqusHexahedronInputValues
 {
-  bool UseReducedIntegration;
-  int32 HourglassStiffness;
-  StringParameter::ValueType JobName;
-  FileSystemPathParameter::ValueType OutputPath;
-  StringParameter::ValueType FilePrefix;
-  DataPath FeatureIdsArrayPath;
-  DataPath ImageGeometryPath;
-  bool WriteDummyNode;
+  bool use_reduced_integration{};
+  int32 hourglass_stiffness{};
+  StringParameter::ValueType job_name;
+  FileSystemPathParameter::ValueType output_path;
+  StringParameter::ValueType file_prefix;
+  DataPath feature_ids_array_path;
+  DataPath image_geometry_path;
+  bool write_dummy_node{};
 };
 
 /**
@@ -64,7 +64,7 @@ public:
   /**
    * @brief Destroys the Abaqus hexahedron writer.
    */
-  ~WriteAbaqusHexahedron() noexcept;
+  ~WriteAbaqusHexahedron() noexcept = default;
 
   WriteAbaqusHexahedron(const WriteAbaqusHexahedron&) = delete;
   WriteAbaqusHexahedron(WriteAbaqusHexahedron&&) noexcept = delete;

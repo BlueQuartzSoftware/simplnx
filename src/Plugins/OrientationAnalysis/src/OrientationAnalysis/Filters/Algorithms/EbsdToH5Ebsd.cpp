@@ -11,6 +11,8 @@
 #include <EbsdLib/IO/TSL/AngFields.h>
 #include <EbsdLib/IO/TSL/H5AngImporter.h>
 
+#include <algorithm>
+
 #include "H5Support/H5Lite.h"
 #include "H5Support/H5ScopedSentinel.h"
 #include "H5Support/H5Utilities.h"
@@ -27,7 +29,6 @@ EbsdToH5Ebsd::EbsdToH5Ebsd(DataStructure& dataStructure, const IFilter::MessageH
 }
 
 // -----------------------------------------------------------------------------
-EbsdToH5Ebsd::~EbsdToH5Ebsd() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& EbsdToH5Ebsd::getCancel()
@@ -38,7 +39,7 @@ const std::atomic_bool& EbsdToH5Ebsd::getCancel()
 // -----------------------------------------------------------------------------
 Result<> EbsdToH5Ebsd::operator()()
 {
-  auto absPath = m_InputValues->OutputPath;
+  auto absPath = m_InputValues->output_path;
   if(!absPath.is_absolute())
   {
     try
@@ -47,7 +48,7 @@ Result<> EbsdToH5Ebsd::operator()()
     } catch(const std::filesystem::filesystem_error& error)
     {
       return MakeErrorResult(-15000,
-                             fmt::format("EbsdToH5Ebsd::operator()() threw an error when creating absolute path from '{}'. Reported error is '{}'", m_InputValues->OutputPath.string(), error.what()));
+                             fmt::format("EbsdToH5Ebsd::operator()() threw an error when creating absolute path from '{}'. Reported error is '{}'", m_InputValues->output_path.string(), error.what()));
     }
   }
 
@@ -68,48 +69,48 @@ Result<> EbsdToH5Ebsd::operator()()
 
     H5Support::H5ScopedFileSentinel sentinel(fileId, true);
 
-    herr_t err = H5Support::H5Lite::writeScalarDataset(fileId, ebsdlib::H5Ebsd::ZResolution, m_InputValues->ZSpacing);
+    herr_t err = H5Support::H5Lite::writeScalarDataset(fileId, ebsdlib::H5Ebsd::ZResolution, m_InputValues->z_spacing);
     if(err < 0)
     {
       std::string ss = fmt::format("Could not write the Z Spacing Scalar to the HDF5 File");
       return MakeErrorResult(-99502, ss);
     }
 
-    err = H5Support::H5Lite::writeScalarDataset<uint32>(fileId, ebsdlib::H5Ebsd::StackingOrder, static_cast<uint32>(m_InputValues->StackingOrder));
+    err = H5Support::H5Lite::writeScalarDataset<uint32>(fileId, ebsdlib::H5Ebsd::StackingOrder, static_cast<uint32>(m_InputValues->stacking_order));
     if(err < 0)
     {
       std::string ss = fmt::format("Could not write the Stacking Order Scalar to the HDF5 File");
       return MakeErrorResult(-99503, ss);
     }
 
-    err = H5Support::H5Lite::writeStringAttribute(fileId, ebsdlib::H5Ebsd::StackingOrder, "Name", EbsdToH5EbsdInputConstants::k_StackingChoices[m_InputValues->StackingOrder]);
+    err = H5Support::H5Lite::writeStringAttribute(fileId, ebsdlib::H5Ebsd::StackingOrder, "Name", ebsd_to_h5_ebsd_input_constants::k_StackingChoices[m_InputValues->stacking_order]);
     if(err < 0)
     {
       std::string ss = fmt::format("Could not write the Stacking Order Name Attribute to the HDF5 File");
       return MakeErrorResult(-99504, ss);
     }
 
-    auto eulerTransformation = EbsdToH5EbsdInputConstants::k_NoEulerTransform;
-    auto sampleTransformation = EbsdToH5EbsdInputConstants::k_NoSampleTransform;
-    switch(m_InputValues->ReferenceFrame)
+    auto eulerTransformation = ebsd_to_h5_ebsd_input_constants::k_NoEulerTransform;
+    auto sampleTransformation = ebsd_to_h5_ebsd_input_constants::k_NoSampleTransform;
+    switch(m_InputValues->reference_frame)
     {
-    case EbsdToH5EbsdInputConstants::k_Edax:
-      eulerTransformation = EbsdToH5EbsdInputConstants::k_EdaxEulerTransform;
-      sampleTransformation = EbsdToH5EbsdInputConstants::k_EdaxSampleTransform;
+    case ebsd_to_h5_ebsd_input_constants::k_Edax:
+      eulerTransformation = ebsd_to_h5_ebsd_input_constants::k_EdaxEulerTransform;
+      sampleTransformation = ebsd_to_h5_ebsd_input_constants::k_EdaxSampleTransform;
       break;
-    case EbsdToH5EbsdInputConstants::k_Oxford:
-      eulerTransformation = EbsdToH5EbsdInputConstants::k_OxfordEulerTransform;
-      sampleTransformation = EbsdToH5EbsdInputConstants::k_OxfordSampleTransform;
+    case ebsd_to_h5_ebsd_input_constants::k_Oxford:
+      eulerTransformation = ebsd_to_h5_ebsd_input_constants::k_OxfordEulerTransform;
+      sampleTransformation = ebsd_to_h5_ebsd_input_constants::k_OxfordSampleTransform;
       break;
-    case EbsdToH5EbsdInputConstants::k_Hedm:
-      eulerTransformation = EbsdToH5EbsdInputConstants::k_HedmEulerTransform;
-      sampleTransformation = EbsdToH5EbsdInputConstants::k_HedmSampleTransform;
+    case ebsd_to_h5_ebsd_input_constants::k_Hedm:
+      eulerTransformation = ebsd_to_h5_ebsd_input_constants::k_HedmEulerTransform;
+      sampleTransformation = ebsd_to_h5_ebsd_input_constants::k_HedmSampleTransform;
       break;
     default:
       break;
     }
 
-    err = H5Support::H5Lite::writeScalarDataset(fileId, ebsdlib::H5Ebsd::SampleTransformationAngle, sampleTransformation[EbsdToH5EbsdInputConstants::k_AngleIndex]);
+    err = H5Support::H5Lite::writeScalarDataset(fileId, ebsdlib::H5Ebsd::SampleTransformationAngle, sampleTransformation[ebsd_to_h5_ebsd_input_constants::k_AngleIndex]);
     if(err < 0)
     {
       std::string ss = fmt::format("Could not write the Sample Transformation Angle to the HDF5 File");
@@ -125,7 +126,7 @@ Result<> EbsdToH5Ebsd::operator()()
       return MakeErrorResult(-99506, ss);
     }
 
-    err = H5Support::H5Lite::writeScalarDataset(fileId, ebsdlib::H5Ebsd::EulerTransformationAngle, eulerTransformation[EbsdToH5EbsdInputConstants::k_AngleIndex]);
+    err = H5Support::H5Lite::writeScalarDataset(fileId, ebsdlib::H5Ebsd::EulerTransformationAngle, eulerTransformation[ebsd_to_h5_ebsd_input_constants::k_AngleIndex]);
     if(err < 0)
     {
       std::string ss = fmt::format("Could not write the Euler Transformation Angle to the HDF5 File");
@@ -140,14 +141,14 @@ Result<> EbsdToH5Ebsd::operator()()
     }
 
     // Now generate all the file names the user is asking for and populate the table
-    std::vector<std::string> fileList = m_InputValues->InputFileListInfo.generate();
+    std::vector<std::string> fileList = m_InputValues->input_file_list_info.generate();
     if(fileList.empty())
     {
-      return MakeErrorResult(-99509, fmt::format("Generated File List was empty. Parent path to files is '{}'", m_InputValues->InputFileListInfo.inputPath));
+      return MakeErrorResult(-99509, fmt::format("Generated File List was empty. Parent path to files is '{}'", m_InputValues->input_file_list_info.input_path));
     }
     ebsdlib::EbsdImporter::Pointer fileImporter;
 
-    int32 zStartIndex = m_InputValues->InputFileListInfo.startIndex;
+    int32 zStartIndex = m_InputValues->input_file_list_info.start_index;
 
     // Write the Manufacturer of the OIM file here
     // This list will grow to be the number of EBSD file formats we support
@@ -196,8 +197,10 @@ Result<> EbsdToH5Ebsd::operator()()
     std::vector<int32_t> indices;
     // Loop on Each EBSD File
     int64_t z = zStartIndex;
-    int64_t xDim = 0, yDim = 0;
-    float xRes = 0.0f, yRes = 0.0f;
+    int64_t xDim = 0;
+    int64_t yDim = 0;
+    float xRes = 0.0f;
+    float yRes = 0.0f;
     /* There is a frailness about the z index and the file list. The programmer
      * using this code MUST ensure that the list of files that is sent into this
      * class is in the appropriate order to match up with the z index (slice index)
@@ -237,14 +240,8 @@ Result<> EbsdToH5Ebsd::operator()()
 
       fileImporter->getDims(xDim, yDim);
       fileImporter->getSpacing(xRes, yRes);
-      if(xDim > biggestXDim)
-      {
-        biggestXDim = xDim;
-      }
-      if(yDim > biggestYDim)
-      {
-        biggestYDim = yDim;
-      }
+      biggestXDim = std::max(xDim, biggestXDim);
+      biggestYDim = std::max(yDim, biggestYDim);
 
       indices.push_back(static_cast<int32_t>(z));
       ++z;
@@ -312,7 +309,7 @@ Result<> EbsdToH5Ebsd::operator()()
     }
   }
 
-  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Saving converted data to '{}'", m_InputValues->OutputPath.string()));
+  m_MessageHandler.sendMessage(IFilter::Message::Type::Info, fmt::format("Saving converted data to '{}'", m_InputValues->output_path.string()));
   if(m_ShouldCancel)
   {
     return MakeErrorResult(-1, "Filter cancelled");

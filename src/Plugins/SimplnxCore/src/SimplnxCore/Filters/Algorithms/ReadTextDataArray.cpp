@@ -33,7 +33,7 @@ struct CSVReadFileFunctor
   Result<> operator()(IDataArray* inputIDataArray, const fs::path& inputFilePath, uint64 skipLines, char delimiter)
   {
     auto& store = inputIDataArray->template getIDataStoreRefAs<AbstractDataStore<T>>();
-    return CsvParser::ReadFile<T>(inputFilePath, store, skipLines, delimiter);
+    return csv_parser::ReadFile<T>(inputFilePath, store, skipLines, delimiter);
   }
 };
 } // namespace
@@ -46,17 +46,15 @@ ReadTextDataArray::ReadTextDataArray(DataStructure& dataStructure, const IFilter
 {
 }
 
-ReadTextDataArray::~ReadTextDataArray() noexcept = default;
-
 Result<> ReadTextDataArray::operator()()
 {
-  const auto& inputFilePath = m_InputValues->InputFile;
-  auto skipLines = m_InputValues->SkipLineCount;
-  auto choiceIndex = m_InputValues->DelimiterIndex;
-  const auto& path = m_InputValues->OutputDataArrayPath;
+  const auto& inputFilePath = m_InputValues->input_file;
+  auto skipLines = m_InputValues->skip_line_count;
+  auto choiceIndex = m_InputValues->delimiter_index;
+  const auto& path = m_InputValues->output_data_array_path;
 
-  char delimiter = nx::core::CsvParser::IndexToDelimiter(choiceIndex);
+  char delimiter = nx::core::csv_parser::IndexToDelimiter(choiceIndex);
 
-  auto* iDataArray = m_DataStructure.getDataAs<IDataArray>(path);
-  return ExecuteDataFunction(CSVReadFileFunctor{}, iDataArray->getDataType(), iDataArray, inputFilePath, skipLines, delimiter);
+  auto* iDataArrayPtr = m_DataStructure.getDataAs<IDataArray>(path);
+  return ExecuteDataFunction(CSVReadFileFunctor{}, iDataArrayPtr->getDataType(), iDataArrayPtr, inputFilePath, skipLines, delimiter);
 }

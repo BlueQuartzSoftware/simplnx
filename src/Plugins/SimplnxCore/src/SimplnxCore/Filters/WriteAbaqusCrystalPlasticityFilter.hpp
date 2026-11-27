@@ -24,22 +24,22 @@ public:
   WriteAbaqusCrystalPlasticityFilter& operator=(WriteAbaqusCrystalPlasticityFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_OutputPath_Key = "output_path";
-  static constexpr StringLiteral k_FilePrefix_Key = "file_prefix";
-  static constexpr StringLiteral k_JobName_Key = "job_name";
-  static constexpr StringLiteral k_UseReducedIntegration_Key = "use_reduced_integration";
-  static constexpr StringLiteral k_HourglassStiffness_Key = "hourglass_stiffness";
-  static constexpr StringLiteral k_WriteEulerAnglesInDegrees_Key = "write_euler_angles_in_degrees";
-  static constexpr StringLiteral k_NumDepvar_Key = "num_depvar";
-  static constexpr StringLiteral k_NumUserOutVar_Key = "num_user_out_var";
-  static constexpr StringLiteral k_UseUnsymmetricSolver_Key = "use_unsymmetric_solver";
-  static constexpr StringLiteral k_IncludeGrainAndPhaseIds_Key = "include_grain_and_phase_ids";
-  static constexpr StringLiteral k_EulerAnglesStartIndex_Key = "euler_angles_start_index";
-  static constexpr StringLiteral k_MaterialConstants_Key = "material_constants";
-  static constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
-  static constexpr StringLiteral k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
-  static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static constexpr StringLiteralType k_OutputPath_Key = "output_path";
+  static constexpr StringLiteralType k_FilePrefix_Key = "file_prefix";
+  static constexpr StringLiteralType k_JobName_Key = "job_name";
+  static constexpr StringLiteralType k_UseReducedIntegration_Key = "use_reduced_integration";
+  static constexpr StringLiteralType k_HourglassStiffness_Key = "hourglass_stiffness";
+  static constexpr StringLiteralType k_WriteEulerAnglesInDegrees_Key = "write_euler_angles_in_degrees";
+  static constexpr StringLiteralType k_NumDepvar_Key = "num_depvar";
+  static constexpr StringLiteralType k_NumUserOutVar_Key = "num_user_out_var";
+  static constexpr StringLiteralType k_UseUnsymmetricSolver_Key = "use_unsymmetric_solver";
+  static constexpr StringLiteralType k_IncludeGrainAndPhaseIds_Key = "include_grain_and_phase_ids";
+  static constexpr StringLiteralType k_EulerAnglesStartIndex_Key = "euler_angles_start_index";
+  static constexpr StringLiteralType k_MaterialConstants_Key = "material_constants";
+  static constexpr StringLiteralType k_ImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
+  static constexpr StringLiteralType k_CellEulerAnglesArrayPath_Key = "cell_euler_angles_array_path";
+  static constexpr StringLiteralType k_CellPhasesArrayPath_Key = "cell_phases_array_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -96,7 +96,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

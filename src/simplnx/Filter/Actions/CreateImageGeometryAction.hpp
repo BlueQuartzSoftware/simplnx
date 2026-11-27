@@ -28,7 +28,7 @@ public:
    * @param cellAttributeMatrixName The name of the cell AttributeMatrix to be created
    * @param units The length units for the geometry
    */
-  CreateImageGeometryAction(const DataPath& path, const DimensionType& dims, const OriginType& origin, const SpacingType& spacing, const std::string& cellAttributeMatrixName,
+  CreateImageGeometryAction(const DataPath& path, DimensionType dims, OriginType origin, SpacingType spacing, std::string cellAttributeMatrixName,
                             IGeometry::LengthUnit units = IGeometry::LengthUnit::Micrometer);
 
   ~CreateImageGeometryAction() noexcept override;
@@ -53,7 +53,7 @@ public:
    * @brief Returns a copy of the action.
    * @return UniquePointer A unique pointer to the cloned action
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the path of the ImageGeometry to be created.

@@ -24,12 +24,12 @@ public:
   WriteOnScaleTableFileFilter& operator=(WriteOnScaleTableFileFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_OutputPath_Key = "output_path";
-  static constexpr StringLiteral k_FilePrefix_Key = "file_prefix";
-  static constexpr StringLiteral k_NumKeypoints_Key = "num_keypoints";
-  static constexpr StringLiteral k_InputGeometryPath_Key = "input_geometry_path";
-  static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
-  static constexpr StringLiteral k_PhaseNamesArrayPath_Key = "phase_names_array_path";
+  static constexpr StringLiteralType k_OutputPath_Key = "output_path";
+  static constexpr StringLiteralType k_FilePrefix_Key = "file_prefix";
+  static constexpr StringLiteralType k_NumKeypoints_Key = "num_keypoints";
+  static constexpr StringLiteralType k_InputGeometryPath_Key = "input_geometry_path";
+  static constexpr StringLiteralType k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
+  static constexpr StringLiteralType k_PhaseNamesArrayPath_Key = "phase_names_array_path";
 
   /**
    * @brief Converts a legacy ExportOnScaleTableFile JSON object to filter arguments.
@@ -84,7 +84,7 @@ public:
    * @brief Creates a new filter instance.
    * @return New filter instance.
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

@@ -15,11 +15,11 @@ using namespace nx::core;
 
 namespace
 {
-std::filesystem::path requireOwnedProfile()
+std::filesystem::path RequireOwnedProfile()
 {
-  const char* rootText = std::getenv("SIMPLNX_P1_OWNED_ROOT");
-  REQUIRE(rootText != nullptr);
-  const std::filesystem::path root(rootText);
+  const char* rootTextPtr = std::getenv("SIMPLNX_P1_OWNED_ROOT");
+  REQUIRE(rootTextPtr != nullptr);
+  const std::filesystem::path root(rootTextPtr);
   REQUIRE(root.is_absolute());
 #if defined(_WIN32)
   const auto expected = root / "AppData/Local/DREAM3DNX/preferences.json";
@@ -33,7 +33,7 @@ std::filesystem::path requireOwnedProfile()
   return expected;
 }
 
-void requireThreshold(const Preferences& preferences, bool present, nlohmann::json::value_t type, uint64 value)
+void RequireThreshold(const Preferences& preferences, bool present, nlohmann::json::value_t type, uint64 value)
 {
   REQUIRE(preferences.contains(Preferences::k_LargeDataSize_Key) == present);
   const auto actual = preferences.value(Preferences::k_LargeDataSize_Key);
@@ -45,41 +45,41 @@ void requireThreshold(const Preferences& preferences, bool present, nlohmann::js
 
 TEST_CASE("P1 owned shared sentinel restores exact threshold and presence", "[.P1OwnedThreshold]")
 {
-  requireOwnedProfile();
+  RequireOwnedProfile();
   auto app = Application::GetOrCreateInstance();
-  auto* preferences = app->getPreferences();
-  preferences->removeValue(Preferences::k_LargeDataSize_Key);
-  preferences->removeValue(Preferences::k_DataStorageMode_Key);
+  auto* preferencesPtr = app->getPreferences();
+  preferencesPtr->removeValue(Preferences::k_LargeDataSize_Key);
+  preferencesPtr->removeValue(Preferences::k_DataStorageMode_Key);
 
   {
-    UnitTest::PreferencesSentinel sentinel(DataStorageMode::ForceInCore, nlohmann::json(uint64{0}));
-    REQUIRE(preferences->dataStorageMode() == DataStorageMode::ForceInCore);
-    requireThreshold(*preferences, true, nlohmann::json::value_t::number_unsigned, 0);
+    unit_test::PreferencesSentinel sentinel(DataStorageMode::ForceInCore, nlohmann::json(uint64{0}));
+    REQUIRE(preferencesPtr->dataStorageMode() == DataStorageMode::ForceInCore);
+    RequireThreshold(*preferencesPtr, true, nlohmann::json::value_t::number_unsigned, 0);
   }
-  CHECK_FALSE(preferences->contains(Preferences::k_LargeDataSize_Key));
-  CHECK_FALSE(preferences->contains(Preferences::k_DataStorageMode_Key));
+  CHECK_FALSE(preferencesPtr->contains(Preferences::k_LargeDataSize_Key));
+  CHECK_FALSE(preferencesPtr->contains(Preferences::k_DataStorageMode_Key));
 
-  preferences->setValue(Preferences::k_LargeDataSize_Key, std::numeric_limits<uint64>::max());
-  preferences->setDataStorageMode(DataStorageMode::Adaptive);
-  const auto originalMode = preferences->value(Preferences::k_DataStorageMode_Key);
+  preferencesPtr->setValue(Preferences::k_LargeDataSize_Key, std::numeric_limits<uint64>::max());
+  preferencesPtr->setDataStorageMode(DataStorageMode::Adaptive);
+  const auto originalMode = preferencesPtr->value(Preferences::k_DataStorageMode_Key);
   {
-    UnitTest::PreferencesSentinel sentinel(DataStorageMode::ForceOutOfCore, nlohmann::json(uint64{17}));
-    requireThreshold(*preferences, true, nlohmann::json::value_t::number_unsigned, 17);
+    unit_test::PreferencesSentinel sentinel(DataStorageMode::ForceOutOfCore, nlohmann::json(uint64{17}));
+    RequireThreshold(*preferencesPtr, true, nlohmann::json::value_t::number_unsigned, 17);
   }
-  requireThreshold(*preferences, true, nlohmann::json::value_t::number_unsigned, std::numeric_limits<uint64>::max());
-  CHECK(preferences->value(Preferences::k_DataStorageMode_Key) == originalMode);
+  RequireThreshold(*preferencesPtr, true, nlohmann::json::value_t::number_unsigned, std::numeric_limits<uint64>::max());
+  CHECK(preferencesPtr->value(Preferences::k_DataStorageMode_Key) == originalMode);
 
-  CHECK_THROWS_AS(UnitTest::PreferencesSentinel(DataStorageMode::ForceInCore, int64{-1}), std::invalid_argument);
-  requireThreshold(*preferences, true, nlohmann::json::value_t::number_unsigned, std::numeric_limits<uint64>::max());
-  CHECK(preferences->value(Preferences::k_DataStorageMode_Key) == originalMode);
+  CHECK_THROWS_AS(unit_test::PreferencesSentinel(DataStorageMode::ForceInCore, int64{-1}), std::invalid_argument);
+  RequireThreshold(*preferencesPtr, true, nlohmann::json::value_t::number_unsigned, std::numeric_limits<uint64>::max());
+  CHECK(preferencesPtr->value(Preferences::k_DataStorageMode_Key) == originalMode);
 
   for(const auto& value : {nlohmann::json(int64{37}), nlohmann::json(uint64{37})})
   {
-    preferences->setValue(Preferences::k_LargeDataSize_Key, value);
+    preferencesPtr->setValue(Preferences::k_LargeDataSize_Key, value);
     {
-      UnitTest::PreferencesSentinel sentinel(DataStorageMode::ForceInCore, nlohmann::json(uint64{0}));
+      unit_test::PreferencesSentinel sentinel(DataStorageMode::ForceInCore, nlohmann::json(uint64{0}));
     }
-    requireThreshold(*preferences, true, value.type(), 37);
+    RequireThreshold(*preferencesPtr, true, value.type(), 37);
   }
 
   app.reset();
@@ -88,51 +88,51 @@ TEST_CASE("P1 owned shared sentinel restores exact threshold and presence", "[.P
 
 TEST_CASE("P1 owned public algorithm scope retains maximum threshold", "[.P1OwnedThreshold]")
 {
-  requireOwnedProfile();
+  RequireOwnedProfile();
   auto app = Application::GetOrCreateInstance();
-  auto* preferences = app->getPreferences();
-  preferences->setValue(Preferences::k_LargeDataSize_Key, std::numeric_limits<uint64>::max());
+  auto* preferencesPtr = app->getPreferences();
+  preferencesPtr->setValue(Preferences::k_LargeDataSize_Key, std::numeric_limits<uint64>::max());
   {
-    UnitTest::AlgorithmTestScope scope(UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore);
-    REQUIRE(preferences->dataStorageMode() == DataStorageMode::ForceInCore);
+    unit_test::AlgorithmTestScope scope(unit_test::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore);
+    REQUIRE(preferencesPtr->dataStorageMode() == DataStorageMode::ForceInCore);
   }
-  requireThreshold(*preferences, true, nlohmann::json::value_t::number_unsigned, std::numeric_limits<uint64>::max());
-  preferences->removeValue(Preferences::k_LargeDataSize_Key);
-  preferences->removeValue(Preferences::k_DataStorageMode_Key);
+  RequireThreshold(*preferencesPtr, true, nlohmann::json::value_t::number_unsigned, std::numeric_limits<uint64>::max());
+  preferencesPtr->removeValue(Preferences::k_LargeDataSize_Key);
+  preferencesPtr->removeValue(Preferences::k_DataStorageMode_Key);
   {
-    UnitTest::AlgorithmTestScope scope(UnitTest::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore);
+    unit_test::AlgorithmTestScope scope(unit_test::AlgorithmTestScenario::InCoreAlgorithmOnInMemoryStore);
   }
-  CHECK_FALSE(preferences->contains(Preferences::k_LargeDataSize_Key));
-  CHECK_FALSE(preferences->contains(Preferences::k_DataStorageMode_Key));
+  CHECK_FALSE(preferencesPtr->contains(Preferences::k_LargeDataSize_Key));
+  CHECK_FALSE(preferencesPtr->contains(Preferences::k_DataStorageMode_Key));
   app.reset();
   Application::DeleteInstance();
 }
 
 TEST_CASE("P1 owned Application retains startup correction through clean reload", "[.P1OwnedThreshold]")
 {
-  const auto profile = requireOwnedProfile();
+  const auto profile = RequireOwnedProfile();
   std::filesystem::create_directories(profile.parent_path());
   {
     std::ofstream stream(profile);
     REQUIRE(stream.is_open());
-    stream << "{\"large_data_size\":-1,\"large_datastructure_size\":18446744073709551615,\"plugins\":{\"P1\":{\"keep\":17}}}";
+    stream << R"({"large_data_size":-1,"large_datastructure_size":18446744073709551615,"plugins":{"P1":{"keep":17}}})";
   }
   Preferences freshDefaults;
   const uint64 expectedDefault = freshDefaults.defaultValueAs<uint64>(Preferences::k_LargeDataSize_Key);
   auto app = Application::GetOrCreateInstance();
-  auto* preferences = app->getPreferences();
-  CHECK(preferences->valueAs<uint64>(Preferences::k_LargeDataSize_Key) == expectedDefault);
-  const auto validStructure = preferences->value(Preferences::k_LargeDataStructureSize_Key);
-  REQUIRE(preferences->contains(Preferences::k_LargeDataStructureSize_Key));
+  auto* preferencesPtr = app->getPreferences();
+  CHECK(preferencesPtr->valueAs<uint64>(Preferences::k_LargeDataSize_Key) == expectedDefault);
+  const auto validStructure = preferencesPtr->value(Preferences::k_LargeDataStructureSize_Key);
+  REQUIRE(preferencesPtr->contains(Preferences::k_LargeDataStructureSize_Key));
   REQUIRE(validStructure.is_number_unsigned());
   // A legacy byte value loads as the nearest 0.01-GB step; UINT64_MAX becomes 17179869183.99 GB.
   CHECK(validStructure.get<uint64>() == uint64{18446744073698814198ULL});
-  CHECK(preferences->pluginValue("P1", "keep") == nlohmann::json(17));
+  CHECK(preferencesPtr->pluginValue("P1", "keep") == nlohmann::json(17));
 
   {
     std::ofstream stream(profile);
     REQUIRE(stream.is_open());
-    stream << "{\"large_data_size\":0,\"large_datastructure_size\":18446744073709551615,\"plugins\":{\"P1\":{\"keep\":17}}}";
+    stream << R"({"large_data_size":0,"large_datastructure_size":18446744073709551615,"plugins":{"P1":{"keep":17}}})";
   }
   const auto cleanLoad = app->loadPreferences();
   REQUIRE(cleanLoad.valid());
@@ -146,7 +146,7 @@ TEST_CASE("P1 owned Application retains startup correction through clean reload"
   {
     std::ofstream stream(profile);
     REQUIRE(stream.is_open());
-    stream << "{\"large_datastructure_size\":\"bad\"}";
+    stream << R"({"large_datastructure_size":"bad"})";
   }
   REQUIRE(app->loadPreferences().valid());
   {

@@ -9,63 +9,52 @@
 #include "simplnx/DataStructure/Geometry/RectGridGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
 
+#include <algorithm>
 #include <array>
 
 using namespace nx::core;
 
 namespace
 {
-FloatVec3 extractOrigin(const IGeometry& geometry)
+FloatVec3Type ExtractOrigin(const IGeometry& geometry)
 {
   auto geomType = geometry.getGeomType();
   switch(geomType)
   {
   case IGeometry::Type::Image: {
-    auto& image = dynamic_cast<const ImageGeom&>(geometry);
+    const auto& image = dynamic_cast<const ImageGeom&>(geometry);
     return image.getOrigin();
   }
   case IGeometry::Type::RectGrid: {
-    auto& rectGrid = dynamic_cast<const RectGridGeom&>(geometry);
+    const auto& rectGrid = dynamic_cast<const RectGridGeom&>(geometry);
     const auto& xBounds = rectGrid.getXBounds()->getDataStoreRef();
     const auto& yBounds = rectGrid.getYBounds()->getDataStoreRef();
     const auto& zBounds = rectGrid.getZBounds()->getDataStoreRef();
-    FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    FloatVec3Type origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
     for(size_t i = 0; i < xBounds.getNumberOfTuples(); i++)
     {
-      if(xBounds[i] < origin[0])
-      {
-        origin[0] = xBounds[i];
-      }
+      origin[0] = std::min(xBounds[i], origin[0]);
     }
     for(size_t i = 0; i < yBounds.getNumberOfTuples(); i++)
     {
-      if(yBounds[i] < origin[1])
-      {
-        origin[1] = yBounds[i];
-      }
+      origin[1] = std::min(yBounds[i], origin[1]);
     }
     for(size_t i = 0; i < zBounds.getNumberOfTuples(); i++)
     {
-      if(zBounds[i] < origin[2])
-      {
-        origin[2] = zBounds[i];
-      }
+      origin[2] = std::min(zBounds[i], origin[2]);
     }
     return origin;
   }
   case IGeometry::Type::Vertex: {
-    auto& vertex = dynamic_cast<const VertexGeom&>(geometry);
+    const auto& vertex = dynamic_cast<const VertexGeom&>(geometry);
     const auto& vertices = vertex.getVertices()->getDataStoreRef();
-    FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    FloatVec3Type origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
     for(size_t i = 0; i < vertex.getNumberOfVertices(); i++)
     {
       for(size_t j = 0; j < 3; j++)
       {
-        if(vertices[3 * i + j] < origin[j])
-        {
-          origin[j] = vertices[3 * i + j];
-        }
+        origin[j] = std::min(vertices[3 * i + j], origin[j]);
       }
     }
     return origin;
@@ -73,16 +62,13 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
   case IGeometry::Type::Edge: {
     const auto& edge = dynamic_cast<const EdgeGeom&>(geometry);
     const auto& vertices = edge.getVertices()->getDataStoreRef();
-    FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    FloatVec3Type origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
     for(size_t i = 0; i < edge.getNumberOfVertices(); i++)
     {
       for(size_t j = 0; j < 3; j++)
       {
-        if(vertices[3 * i + j] < origin[j])
-        {
-          origin[j] = vertices[3 * i + j];
-        }
+        origin[j] = std::min(vertices[3 * i + j], origin[j]);
       }
     }
     return origin;
@@ -93,16 +79,13 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
   case IGeometry::Type::Quad: {
     const auto& geometry2d = dynamic_cast<const INodeGeometry2D&>(geometry);
     const auto& vertices = geometry2d.getVertices()->getDataStoreRef();
-    FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    FloatVec3Type origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
     for(size_t i = 0; i < geometry2d.getNumberOfVertices(); i++)
     {
       for(size_t j = 0; j < 3; j++)
       {
-        if(vertices[3 * i + j] < origin[j])
-        {
-          origin[j] = vertices[3 * i + j];
-        }
+        origin[j] = std::min(vertices[3 * i + j], origin[j]);
       }
     }
     return origin;
@@ -113,16 +96,13 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
   case IGeometry::Type::Tetrahedral: {
     const auto& geometry3d = dynamic_cast<const INodeGeometry3D&>(geometry);
     const auto& vertices = geometry3d.getVertices()->getDataStoreRef();
-    FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    FloatVec3Type origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
     for(size_t i = 0; i < geometry3d.getNumberOfVertices(); i++)
     {
       for(size_t j = 0; j < 3; j++)
       {
-        if(vertices[3 * i + j] < origin[j])
-        {
-          origin[j] = vertices[3 * i + j];
-        }
+        origin[j] = std::min(vertices[3 * i + j], origin[j]);
       }
     }
     return origin;
@@ -131,20 +111,20 @@ FloatVec3 extractOrigin(const IGeometry& geometry)
     break;
   }
 
-  FloatVec3 origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+  FloatVec3Type origin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
   return origin;
 }
 
-FloatVec3 extractCentroid(const IGeometry& geometry)
+FloatVec3Type ExtractCentroid(const IGeometry& geometry)
 {
-  FloatVec3 centroid(0.0f, 0.0f, 0.0f);
+  FloatVec3Type centroid(0.0f, 0.0f, 0.0f);
   switch(geometry.getGeomType())
   {
   case IGeometry::Type::Image: {
     const auto& image = dynamic_cast<const ImageGeom&>(geometry);
-    SizeVec3 dims = image.getDimensions();
-    FloatVec3 origin = image.getOrigin();
-    FloatVec3 res = image.getSpacing();
+    SizeVec3Type dims = image.getDimensions();
+    FloatVec3Type origin = image.getOrigin();
+    FloatVec3Type res = image.getSpacing();
 
     centroid[0] = (static_cast<float>(dims[0]) * res[0] / 2.0f) + origin[0];
     centroid[1] = (static_cast<float>(dims[1]) * res[1] / 2.0f) + origin[1];
@@ -160,36 +140,18 @@ FloatVec3 extractCentroid(const IGeometry& geometry)
     float max[3] = {std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest()};
     for(size_t i = 0; i < xBounds.getNumberOfTuples(); i++)
     {
-      if(xBounds[i] < min[0])
-      {
-        min[0] = xBounds[i];
-      }
-      if(xBounds[i] > max[0])
-      {
-        max[0] = xBounds[i];
-      }
+      min[0] = std::min(xBounds[i], min[0]);
+      max[0] = std::max(xBounds[i], max[0]);
     }
     for(size_t i = 0; i < yBounds.getNumberOfTuples(); i++)
     {
-      if(yBounds[i] < min[1])
-      {
-        min[1] = yBounds[i];
-      }
-      if(yBounds[i] > max[1])
-      {
-        max[1] = yBounds[i];
-      }
+      min[1] = std::min(yBounds[i], min[1]);
+      max[1] = std::max(yBounds[i], max[1]);
     }
     for(size_t i = 0; i < zBounds.getNumberOfTuples(); i++)
     {
-      if(zBounds[i] < min[2])
-      {
-        min[2] = zBounds[i];
-      }
-      if(zBounds[i] > max[2])
-      {
-        max[2] = zBounds[i];
-      }
+      min[2] = std::min(zBounds[i], min[2]);
+      max[2] = std::max(zBounds[i], max[2]);
     }
     centroid[0] = (max[0] + min[0]) / 2.0f;
     centroid[1] = (max[1] + min[1]) / 2.0f;
@@ -234,7 +196,7 @@ FloatVec3 extractCentroid(const IGeometry& geometry)
   case IGeometry::Type::Triangle:
     [[fallthrough]];
   case IGeometry::Type::Quad: {
-    auto& geometry2d = dynamic_cast<const INodeGeometry2D&>(geometry);
+    const auto& geometry2d = dynamic_cast<const INodeGeometry2D&>(geometry);
     const auto& vertices = geometry2d.getVertices()->getDataStoreRef();
     centroid[0] = 0.0f;
     centroid[1] = 0.0f;
@@ -275,13 +237,13 @@ FloatVec3 extractCentroid(const IGeometry& geometry)
   return centroid;
 }
 
-Result<> translateGeometry(IGeometry& geometry, const FloatVec3& translation)
+Result<> TranslateGeometry(IGeometry& geometry, const FloatVec3Type& translation)
 {
   switch(geometry.getGeomType())
   {
   case IGeometry::Type::Image: {
     auto& image = dynamic_cast<ImageGeom&>(geometry);
-    FloatVec3 origin = image.getOrigin();
+    FloatVec3Type origin = image.getOrigin();
     origin[0] += translation[0];
     origin[1] += translation[1];
     origin[2] += translation[2];
@@ -289,7 +251,7 @@ Result<> translateGeometry(IGeometry& geometry, const FloatVec3& translation)
   }
   case IGeometry::Type::RectGrid: {
     auto& rectGrid = dynamic_cast<RectGridGeom&>(geometry);
-    std::array<Float32Array*, 3> bounds{rectGrid.getXBounds(), rectGrid.getYBounds(), rectGrid.getZBounds()};
+    std::array<Float32ArrayType*, 3> bounds{rectGrid.getXBounds(), rectGrid.getYBounds(), rectGrid.getZBounds()};
     std::array<AbstractDataStore<float32>*, 3> stores{};
     constexpr std::array<char, 3> k_Axes{'X', 'Y', 'Z'};
     for(usize axis = 0; axis < bounds.size(); ++axis)
@@ -406,50 +368,49 @@ AlignGeometries::AlignGeometries(DataStructure& dataStructure, const IFilter::Me
 }
 
 // -----------------------------------------------------------------------------
-AlignGeometries::~AlignGeometries() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> AlignGeometries::operator()()
 {
 
-  auto movingGeometryPath = m_InputValues->InputMovingGeometryPath;
-  auto targetGeometryPath = m_InputValues->InputTargetGeometryPath;
-  auto alignmentType = m_InputValues->AlignmentTypeIndex;
+  auto movingGeometryPath = m_InputValues->input_moving_geometry_path;
+  auto targetGeometryPath = m_InputValues->input_target_geometry_path;
+  auto alignmentType = m_InputValues->alignment_type_index;
 
   auto& moving = m_DataStructure.getDataRefAs<IGeometry>(movingGeometryPath);
   auto& target = m_DataStructure.getDataRefAs<IGeometry>(targetGeometryPath);
 
   if(alignmentType == 0)
   {
-    FloatVec3 movingOrigin = extractOrigin(moving);
+    FloatVec3Type movingOrigin = ExtractOrigin(moving);
     if(m_ShouldCancel)
     {
       return {};
     }
-    FloatVec3 targetOrigin = extractOrigin(target);
+    FloatVec3Type targetOrigin = ExtractOrigin(target);
     if(m_ShouldCancel)
     {
       return {};
     }
 
     float translation[3] = {targetOrigin[0] - movingOrigin[0], targetOrigin[1] - movingOrigin[1], targetOrigin[2] - movingOrigin[2]};
-    return translateGeometry(moving, translation);
+    return TranslateGeometry(moving, translation);
   }
   if(alignmentType == 1)
   {
-    FloatVec3 movingCentroid = extractCentroid(moving);
+    FloatVec3Type movingCentroid = ExtractCentroid(moving);
     if(m_ShouldCancel)
     {
       return {};
     }
-    FloatVec3 targetCentroid = extractCentroid(target);
+    FloatVec3Type targetCentroid = ExtractCentroid(target);
     if(m_ShouldCancel)
     {
       return {};
     }
 
     float translation[3] = {targetCentroid[0] - movingCentroid[0], targetCentroid[1] - movingCentroid[1], targetCentroid[2] - movingCentroid[2]};
-    return translateGeometry(moving, translation);
+    return TranslateGeometry(moving, translation);
   }
   return MakeErrorResult(-13423, "Invalid selection for alignment type");
 }

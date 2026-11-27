@@ -18,7 +18,7 @@ using namespace nx::core;
 
 namespace
 {
-constexpr StringLiteral k_TriangleBounds("Triangle Bounds");
+constexpr StringLiteralType k_TriangleBounds("Triangle Bounds");
 }
 
 namespace nx::core
@@ -61,11 +61,11 @@ Parameters ComputeVertexToTriangleDistancesFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedVertexGeometryPath_Key, "Source Vertex Geometry", "The Vertex Geometry point cloud to map to triangles", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex}));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedTriangleGeometryPath_Key, "Target Triangle Geometry", "The triangle geometry to compare against", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_TriangleNormalsArrayPath_Key, "Triangle Normals", "The triangle geometry's normals array", DataPath{},
-                                                          std::set<DataType>{DataType::float64}, ArraySelectionParameter::AllowedComponentShapes{{3}}));
+                                                          std::set<DataType>{DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
 
   params.insertSeparator(Parameters::Separator{"Output Arrays"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_DistancesArrayName_Key, "Distances Array", "The array to store distance between vertex and triangle", ""));
@@ -81,14 +81,14 @@ IFilter::VersionType ComputeVertexToTriangleDistancesFilter::parametersVersion()
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeVertexToTriangleDistancesFilter::clone() const
+IFilter::UniquePointerType ComputeVertexToTriangleDistancesFilter::clone() const
 {
   return std::make_unique<ComputeVertexToTriangleDistancesFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeVertexToTriangleDistancesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeVertexToTriangleDistancesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                               const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pVertexGeometryDataPath = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
   auto pTriangleGeometryDataPath = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
@@ -124,39 +124,39 @@ IFilter::PreflightResult ComputeVertexToTriangleDistancesFilter::preflightImpl(c
   resultOutputActions.value().appendDeferredAction(std::move(removeTempArrayAction));
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeVertexToTriangleDistancesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeVertexToTriangleDistancesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeVertexToTriangleDistancesInputValues inputValues;
 
-  inputValues.VertexDataContainer = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
-  inputValues.TriangleDataContainer = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
-  inputValues.TriangleNormalsArrayPath = filterArgs.value<DataPath>(k_TriangleNormalsArrayPath_Key);
+  inputValues.vertex_data_container = filterArgs.value<DataPath>(k_SelectedVertexGeometryPath_Key);
+  inputValues.triangle_data_container = filterArgs.value<DataPath>(k_SelectedTriangleGeometryPath_Key);
+  inputValues.triangle_normals_array_path = filterArgs.value<DataPath>(k_TriangleNormalsArrayPath_Key);
 
-  auto vertexGeom = dataStructure.getDataRefAs<VertexGeom>(inputValues.VertexDataContainer);
-  const DataPath vertexDataPath = inputValues.VertexDataContainer.createChildPath(vertexGeom.getVertexAttributeMatrix()->getName());
-  inputValues.DistancesArrayPath = vertexDataPath.createChildPath(filterArgs.value<std::string>(k_DistancesArrayName_Key));
-  inputValues.ClosestTriangleIdArrayPath = vertexDataPath.createChildPath(filterArgs.value<std::string>(k_ClosestTriangleIdArrayName_Key));
+  auto vertexGeom = dataStructure.getDataRefAs<VertexGeom>(inputValues.vertex_data_container);
+  const DataPath vertexDataPath = inputValues.vertex_data_container.createChildPath(vertexGeom.getVertexAttributeMatrix()->getName());
+  inputValues.distances_array_path = vertexDataPath.createChildPath(filterArgs.value<std::string>(k_DistancesArrayName_Key));
+  inputValues.closest_triangle_id_array_path = vertexDataPath.createChildPath(filterArgs.value<std::string>(k_ClosestTriangleIdArrayName_Key));
 
-  inputValues.TriBoundsDataPath = DataPath({::k_TriangleBounds});
+  inputValues.tri_bounds_data_path = DataPath({::k_TriangleBounds});
 
   return ComputeVertexToTriangleDistances(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_VertexDataContainerKey = "VertexDataContainer";
-constexpr StringLiteral k_TriangleDataContainerKey = "TriangleDataContainer";
-constexpr StringLiteral k_TriangleNormalsArrayPathKey = "TriangleNormalsArrayPath";
-constexpr StringLiteral k_DistancesArrayPathKey = "DistancesArrayPath";
-constexpr StringLiteral k_ClosestTriangleIdArrayPathKey = "ClosestTriangleIdArrayPath";
-} // namespace SIMPL
+constexpr StringLiteralType k_VertexDataContainerKey = "VertexDataContainer";
+constexpr StringLiteralType k_TriangleDataContainerKey = "TriangleDataContainer";
+constexpr StringLiteralType k_TriangleNormalsArrayPathKey = "TriangleNormalsArrayPath";
+constexpr StringLiteralType k_DistancesArrayPathKey = "DistancesArrayPath";
+constexpr StringLiteralType k_ClosestTriangleIdArrayPathKey = "ClosestTriangleIdArrayPath";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeVertexToTriangleDistancesFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -165,14 +165,15 @@ Result<Arguments> ComputeVertexToTriangleDistancesFilter::FromSIMPLJson(const nl
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_VertexDataContainerKey, k_SelectedVertexGeometryPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_TriangleDataContainerKey, k_SelectedTriangleGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_TriangleNormalsArrayPathKey, k_TriangleNormalsArrayPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_VertexDataContainerKey, k_SelectedVertexGeometryPath_Key));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_DistancesArrayPathKey, k_DistancesArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, SIMPL::k_ClosestTriangleIdArrayPathKey,
-                                                                                                                                  k_ClosestTriangleIdArrayName_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_TriangleDataContainerKey, k_SelectedTriangleGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_TriangleNormalsArrayPathKey, k_TriangleNormalsArrayPath_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_DistancesArrayPathKey, k_DistancesArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_ClosestTriangleIdArrayPathKey,
+                                                                                                                                    k_ClosestTriangleIdArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

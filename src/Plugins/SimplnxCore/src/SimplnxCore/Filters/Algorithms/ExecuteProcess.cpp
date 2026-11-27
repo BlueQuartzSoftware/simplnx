@@ -25,7 +25,6 @@ ExecuteProcess::ExecuteProcess(DataStructure& dataStructure, const IFilter::Mess
 }
 
 // -----------------------------------------------------------------------------
-ExecuteProcess::~ExecuteProcess() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ExecuteProcess::getCancel()
@@ -36,7 +35,7 @@ const std::atomic_bool& ExecuteProcess::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ExecuteProcess::operator()()
 {
-  auto absPath = m_InputValues->LogFile;
+  auto absPath = m_InputValues->log_file;
   if(!absPath.is_absolute())
   {
     try
@@ -45,7 +44,7 @@ Result<> ExecuteProcess::operator()()
     } catch(const std::filesystem::filesystem_error& error)
     {
       return MakeErrorResult(-15000,
-                             fmt::format("ExecuteProcess::operator()() threw an error when creating absolute path from '{}'. Reported error is '{}'", m_InputValues->LogFile.string(), error.what()));
+                             fmt::format("ExecuteProcess::operator()() threw an error when creating absolute path from '{}'. Reported error is '{}'", m_InputValues->log_file.string(), error.what()));
     }
   }
 
@@ -59,18 +58,19 @@ Result<> ExecuteProcess::operator()()
 
   // open the log file for storing the process output
   std::ofstream outFile;
-  outFile.open(m_InputValues->LogFile, std::ios_base::out);
+  outFile.open(m_InputValues->log_file, std::ios_base::out);
   if(!outFile.is_open())
   {
-    return MakeErrorResult<>(-56411, fmt::format("Error creating output log file with file path {}", m_InputValues->LogFile.string()));
+    return MakeErrorResult<>(-56411, fmt::format("Error creating output log file with file path {}", m_InputValues->log_file.string()));
   }
 
   // gather the command/arguments and process options
-  std::vector<std::string> arguments = ExecuteProcess::splitArgumentsString(m_InputValues->Arguments);
+  std::vector<std::string> arguments = ExecuteProcess::SplitArgumentsString(m_InputValues->arguments);
   auto args = reproc::arguments(arguments);
 
   reproc::process process;
-  reproc::stop_actions stop = {{reproc::stop::terminate, reproc::milliseconds(m_InputValues->Timeout)}, {reproc::stop::kill, reproc::milliseconds(m_InputValues->Timeout)}};
+  reproc::stop_actions stop = {.first = {.action = reproc::stop::terminate, .timeout = reproc::milliseconds(m_InputValues->timeout)},
+                               .second = {.action = reproc::stop::kill, .timeout = reproc::milliseconds(m_InputValues->timeout)}};
   reproc::options options;
   options.stop = stop;
   // reproc sends stderr to the parent by default; a pipe lets both drain modes write it to the log.
@@ -82,21 +82,21 @@ Result<> ExecuteProcess::operator()()
     outFile.close();
     return MakeErrorResult<>(-56410, fmt::format("Program {} not found. Make sure it's available from the PATH.", arguments[0]));
   }
-  else if(ec)
+  if(ec)
   {
     outFile.close();
-    return MakeErrorResult<>(-56410, fmt::format("An error occurred while starting process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
+    return MakeErrorResult<>(-56410, fmt::format("An error occurred while starting process '{}'\n{} : {}", m_InputValues->arguments, ec.value(), ec.message()));
   }
 
   std::string output;
-  if(m_InputValues->Blocking)
+  if(m_InputValues->blocking)
   {
     reproc::sink::string sink(output);
     ec = reproc::drain(process, sink, sink);
     if(ec)
     {
       outFile.close();
-      return MakeErrorResult<>(-56413, fmt::format("An error occurred while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
+      return MakeErrorResult<>(-56413, fmt::format("An error occurred while executing process '{}'\n{} : {}", m_InputValues->arguments, ec.value(), ec.message()));
     }
     outFile << output;
   }
@@ -104,13 +104,13 @@ Result<> ExecuteProcess::operator()()
   {
     // redirect the process output to the output string so we can save it to a log file
     std::mutex mutex;
-    auto drain_async = std::async(std::launch::async, [&process, &output, &mutex]() {
+    auto drainAsync = std::async(std::launch::async, [&process, &output, &mutex]() {
       reproc::sink::thread_safe::string sink(output, mutex);
       return reproc::drain(process, sink, sink);
     });
 
     // Show new output every 2 seconds.
-    while(drain_async.wait_for(std::chrono::seconds(1)) != std::future_status::ready)
+    while(drainAsync.wait_for(std::chrono::seconds(1)) != std::future_status::ready)
     {
       std::lock_guard<std::mutex> lock(mutex);
       outFile << output;
@@ -126,11 +126,11 @@ Result<> ExecuteProcess::operator()()
     outFile << output;
 
     // Check if any errors occurred in the background thread.
-    ec = drain_async.get();
+    ec = drainAsync.get();
     if(ec)
     {
       outFile.close();
-      return MakeErrorResult<>(-56413, fmt::format("An error occurred while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
+      return MakeErrorResult<>(-56413, fmt::format("An error occurred while executing process '{}'\n{} : {}", m_InputValues->arguments, ec.value(), ec.message()));
     }
   }
 
@@ -139,7 +139,7 @@ Result<> ExecuteProcess::operator()()
   if(ec)
   {
     outFile.close();
-    return MakeErrorResult<>(-56414, fmt::format("An error occurred while executing process '{}'\n{} : {}", m_InputValues->Arguments, ec.value(), ec.message()));
+    return MakeErrorResult<>(-56414, fmt::format("An error occurred while executing process '{}'\n{} : {}", m_InputValues->arguments, ec.value(), ec.message()));
   }
 
   outFile.close();
@@ -147,7 +147,7 @@ Result<> ExecuteProcess::operator()()
 }
 
 // -----------------------------------------------------------------------------
-std::vector<std::string> ExecuteProcess::splitArgumentsString(const std::string& arguments)
+std::vector<std::string> ExecuteProcess::SplitArgumentsString(const std::string& arguments)
 {
   std::vector<std::string> argumentList;
   for(int i = 0; i < arguments.size(); i++)
@@ -160,7 +160,7 @@ std::vector<std::string> ExecuteProcess::splitArgumentsString(const std::string&
     {
       i++;
       int start = i;
-      int index = arguments.find_first_of("\"", start);
+      int index = arguments.find_first_of('\"', start);
       if(index == -1)
       {
         index = arguments.size();
@@ -172,7 +172,7 @@ std::vector<std::string> ExecuteProcess::splitArgumentsString(const std::string&
     else
     {
       int start = i;
-      int index = arguments.find_first_of(" ", start + 1);
+      int index = arguments.find_first_of(' ', start + 1);
       if(index == -1)
       {
         index = arguments.size();

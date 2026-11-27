@@ -14,13 +14,13 @@ class SIMPLNX_EXPORT EdgeGeom : public INodeGeometry1D
 public:
   friend class DataStructure;
 
-  static inline constexpr usize k_NumVerts = 2;
-  static inline constexpr usize k_NumEdgeVerts = 2;
-  static inline constexpr StringLiteral k_VoxelSizes = "Edge Lengths";
-  static inline constexpr StringLiteral k_EltsContainingVert = "Edges Containing Vert";
-  static inline constexpr StringLiteral k_EltNeighbors = "Edge Neighbors";
-  static inline constexpr StringLiteral k_EltCentroids = "Edge Centroids";
-  static inline constexpr StringLiteral k_TypeName = "EdgeGeom";
+  static constexpr usize k_NumVerts = 2;
+  static constexpr usize k_NumEdgeVerts = 2;
+  static constexpr StringLiteralType k_VoxelSizes = "Edge Lengths";
+  static constexpr StringLiteralType k_EltsContainingVert = "Edges Containing Vert";
+  static constexpr StringLiteralType k_EltNeighbors = "Edge Neighbors";
+  static constexpr StringLiteralType k_EltCentroids = "Edge Centroids";
+  static constexpr StringLiteralType k_TypeName = "EdgeGeom";
 
   /**
    * @brief Creates a new EdgeGeom in the specified DataStructure.
@@ -51,7 +51,7 @@ public:
    * @brief Move constructor.
    * @param other The EdgeGeom to move from
    */
-  EdgeGeom(EdgeGeom&& other) = default;
+  EdgeGeom(EdgeGeom&& other) noexcept = default;
 
   ~EdgeGeom() noexcept override = default;
 
@@ -138,16 +138,16 @@ public:
 
   /**
    * @brief Returns the parametric center of an edge element (0.5 along the edge).
-   * @return Point3D<float64> The parametric center coordinates
+   * @return Vec3<float64> The parametric center coordinates
    */
-  Point3D<float64> getParametricCenter() const override;
+  Vec3<float64> getParametricCenter() const override;
 
   /**
    * @brief Calculates shape functions at the given parametric coordinates.
    * @param pCoords The parametric coordinates
    * @param shape Output array to store the calculated shape function values
    */
-  void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
+  void getShapeFunctions(const Vec3<float64>& pCoords, float64* shape) const override;
 
 protected:
   /**

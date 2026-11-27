@@ -63,8 +63,8 @@ Parameters AppendImageGeometryFilter::parameters() const
                                                               "The incoming image geometries (cell data) that will be appended to the destination image geometry.", std::vector<DataPath>{}));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_DestinationGeometry_Key, "Destination Image Geometry",
                                                              "The destination image geometry (cell data) that is the final location for the appended data.", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
-  params.insert(std::make_unique<ChoicesParameter>(k_Direction_Key, "Direction", "The direction that will be used to append the geometries.", to_underlying(CopyFromArray::Direction::Z),
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
+  params.insert(std::make_unique<ChoicesParameter>(k_Direction_Key, "Direction", "The direction that will be used to append the geometries.", to_underlying(copy_from_array::Direction::Z),
                                                    std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<BoolParameter>(k_MirrorGeometry_Key, "Mirror Geometry In Direction", "Mirrors the resulting geometry in the chosen direction.", false));
   params.insert(std::make_unique<BoolParameter>(k_CheckResolution_Key, "Check Spacing", "Checks to make sure the spacing for the input geometry and destination geometry match", false));
@@ -96,18 +96,18 @@ IFilter::VersionType AppendImageGeometryFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer AppendImageGeometryFilter::clone() const
+IFilter::UniquePointerType AppendImageGeometryFilter::clone() const
 {
   return std::make_unique<AppendImageGeometryFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                  const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pInputGeometriesPathsValue = filterArgs.value<std::vector<DataPath>>(k_InputGeometries_Key);
   auto pDestinationGeometryPathValue = filterArgs.value<DataPath>(k_DestinationGeometry_Key);
-  auto pDirection = static_cast<CopyFromArray::Direction>(filterArgs.value<ChoicesParameter::ValueType>(k_Direction_Key));
+  auto pDirection = static_cast<copy_from_array::Direction>(filterArgs.value<ChoicesParameter::ValueType>(k_Direction_Key));
   auto pCheckResolutionValue = filterArgs.value<bool>(k_CheckResolution_Key);
   auto pSaveAsNewGeometry = filterArgs.value<bool>(k_SaveAsNewGeometry_Key);
   auto pDefaultValue = filterArgs.value<std::string>(k_DefaultValue_Key);
@@ -116,28 +116,28 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
   std::vector<PreflightValue> preflightUpdatedValues;
 
   const auto& destGeometry = dataStructure.getDataRefAs<ImageGeom>(pDestinationGeometryPathValue);
-  SizeVec3 destGeomDims = destGeometry.getDimensions();
+  SizeVec3Type destGeomDims = destGeometry.getDimensions();
   auto newDims = destGeomDims.toContainer<std::vector<usize>>();
   for(const DataPath& pInputGeometryPathValue : pInputGeometriesPathsValue)
   {
     const auto& inputGeometry = dataStructure.getDataRefAs<ImageGeom>(pInputGeometryPathValue);
-    SizeVec3 inputGeomDims = inputGeometry.getDimensions();
-    if((pDirection == CopyFromArray::Direction::Y || pDirection == CopyFromArray::Direction::Z) && destGeomDims[0] != inputGeomDims[0])
+    SizeVec3Type inputGeomDims = inputGeometry.getDimensions();
+    if((pDirection == copy_from_array::Direction::Y || pDirection == copy_from_array::Direction::Z) && destGeomDims[0] != inputGeomDims[0])
     {
       return MakePreflightErrorResult(-8200, fmt::format("Input X Dim ({}) not equal to Destination X Dim ({})", inputGeomDims[0], destGeomDims[0]));
     }
-    if((pDirection == CopyFromArray::Direction::X || pDirection == CopyFromArray::Direction::Z) && destGeomDims[1] != inputGeomDims[1])
+    if((pDirection == copy_from_array::Direction::X || pDirection == copy_from_array::Direction::Z) && destGeomDims[1] != inputGeomDims[1])
     {
       return MakePreflightErrorResult(-8201, fmt::format("Input Y Dim ({}) not equal to Destination Y Dim ({})", inputGeomDims[1], destGeomDims[1]));
     }
-    if((pDirection == CopyFromArray::Direction::X || pDirection == CopyFromArray::Direction::Y) && destGeomDims[2] != inputGeomDims[2])
+    if((pDirection == copy_from_array::Direction::X || pDirection == copy_from_array::Direction::Y) && destGeomDims[2] != inputGeomDims[2])
     {
       return MakePreflightErrorResult(-8201, fmt::format("Input Z Dim ({}) not equal to Destination Z Dim ({})", inputGeomDims[2], destGeomDims[2]));
     }
     if(pCheckResolutionValue)
     {
-      FloatVec3 inputRes = inputGeometry.getSpacing();
-      FloatVec3 destRes = destGeometry.getSpacing();
+      FloatVec3Type inputRes = inputGeometry.getSpacing();
+      FloatVec3Type destRes = destGeometry.getSpacing();
 
       if(inputRes[0] != destRes[0])
       {
@@ -158,25 +158,25 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
     if(inputUnits != destUnits)
     {
       resultOutputActions.warnings().push_back(
-          Warning{-8310, fmt::format("Input units ({}) not equal to Destination units ({}).", IGeometry::LengthUnitToString(inputUnits), IGeometry::LengthUnitToString(destUnits))});
+          Warning{.code = -8310, .message = fmt::format("Input units ({}) not equal to Destination units ({}).", IGeometry::LengthUnitToString(inputUnits), IGeometry::LengthUnitToString(destUnits))});
     }
 
     switch(pDirection)
     {
-    case CopyFromArray::Direction::X:
+    case copy_from_array::Direction::X:
       newDims[0] += inputGeomDims[0];
       break;
-    case CopyFromArray::Direction::Y:
+    case copy_from_array::Direction::Y:
       newDims[1] += inputGeomDims[1];
       break;
-    case CopyFromArray::Direction::Z:
+    case copy_from_array::Direction::Z:
       newDims[2] += inputGeomDims[2];
       break;
     }
   }
 
-  FloatVec3 origin = destGeometry.getOrigin();
-  FloatVec3 spacing = destGeometry.getSpacing();
+  FloatVec3Type origin = destGeometry.getOrigin();
+  FloatVec3Type spacing = destGeometry.getSpacing();
   DataPath pNewImageGeomPath;
   if(pSaveAsNewGeometry)
   {
@@ -198,17 +198,17 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
   for(const DataPath& pInputGeometryPathValue : pInputGeometriesPathsValue)
   {
     const auto& inputGeometry = dataStructure.getDataRefAs<ImageGeom>(pInputGeometryPathValue);
-    const AttributeMatrix* inputCellData = inputGeometry.getCellData();
-    const AttributeMatrix* destCellData = destGeometry.getCellData();
-    const DataPath destCellDataPath = pDestinationGeometryPathValue.createChildPath(destCellData->getName());
+    const AttributeMatrix* inputCellDataPtr = inputGeometry.getCellData();
+    const AttributeMatrix* destCellDataPtr = destGeometry.getCellData();
+    const DataPath destCellDataPath = pDestinationGeometryPathValue.createChildPath(destCellDataPtr->getName());
     const DataPath inputCellDataPath = pInputGeometryPathValue.createChildPath(inputGeometry.getCellData()->getName());
     DataPath newCellDataPath;
     if(pSaveAsNewGeometry)
     {
       newCellDataPath = pNewImageGeomPath.createChildPath(ImageGeom::k_CellAttributeMatrixName);
     }
-    std::vector<std::string> childNames1 = inputCellData->getDataMap().getNames();
-    std::vector<std::string> childNames2 = destCellData->getDataMap().getNames();
+    std::vector<std::string> childNames1 = inputCellDataPtr->getDataMap().getNames();
+    std::vector<std::string> childNames2 = destCellDataPtr->getDataMap().getNames();
     std::vector<std::string> combinedArrayNames;
     std::sort(childNames1.begin(), childNames1.end());
     std::sort(childNames2.begin(), childNames2.end());
@@ -224,36 +224,36 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
       auto inputDataArrayPath = inputCellDataPath.createChildPath(name);
       auto destDataArrayPath = destCellDataPath.createChildPath(name);
 
-      auto inputDataArray = dataStructure.getDataAs<IArray>(inputDataArrayPath);
-      auto destDataArray = dataStructure.getDataAs<IArray>(destDataArrayPath);
-      if(inputDataArray == nullptr && dataStructure.containsData(inputDataArrayPath))
+      const auto* inputDataArrayPtr = dataStructure.getDataAs<IArray>(inputDataArrayPath);
+      const auto* destDataArrayPtr = dataStructure.getDataAs<IArray>(destDataArrayPath);
+      if(inputDataArrayPtr == nullptr && dataStructure.containsData(inputDataArrayPath))
       {
         resultOutputActions.warnings().push_back(
             {-8206, fmt::format("Cannot append data array {} in cell data attribute matrix at path '{}' because it is not of type IArray.", name, inputCellDataPath.toString())});
         continue;
       }
 
-      if(destDataArray == nullptr && dataStructure.containsData(destDataArrayPath))
+      if(destDataArrayPtr == nullptr && dataStructure.containsData(destDataArrayPath))
       {
         resultOutputActions.warnings().push_back(
             {-8207, fmt::format("Cannot append data array {} in cell data attribute matrix at path '{}' because it is not of type IArray.", name, destCellDataPath.toString())});
         continue;
       }
 
-      if(inputDataArray != nullptr && destDataArray != nullptr)
+      if(inputDataArrayPtr != nullptr && destDataArrayPtr != nullptr)
       {
-        const IArray::ArrayType arrayType = destDataArray->getArrayType();
-        if(arrayType != inputDataArray->getArrayType())
+        const IArray::ArrayType arrayType = destDataArrayPtr->getArrayType();
+        if(arrayType != inputDataArrayPtr->getArrayType())
         {
-          const std::string inputArrayStr = *IArray::StringListFromArrayType({inputDataArray->getArrayType()}).begin();
+          const std::string inputArrayStr = *IArray::StringListFromArrayType({inputDataArrayPtr->getArrayType()}).begin();
           const std::string destArrayStr = *IArray::StringListFromArrayType({arrayType}).begin();
           resultOutputActions.warnings().push_back({-8208, fmt::format("Cannot append data from input data object of array type {} to destination data object of array type {} because "
                                                                        "the array types do not match.",
                                                                        inputArrayStr, destArrayStr)});
           continue;
         }
-        const usize srcNumComps = inputDataArray->getNumberOfComponents();
-        const usize numComps = destDataArray->getNumberOfComponents();
+        const usize srcNumComps = inputDataArrayPtr->getNumberOfComponents();
+        const usize numComps = destDataArrayPtr->getNumberOfComponents();
         if(srcNumComps != numComps)
         {
           resultOutputActions.warnings().push_back(
@@ -263,8 +263,8 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
 
         if(arrayType == IArray::ArrayType::DataArray)
         {
-          DataType dataType1 = dynamic_cast<const IDataArray*>(inputDataArray)->getDataType();
-          DataType dataType2 = dynamic_cast<const IDataArray*>(destDataArray)->getDataType();
+          DataType dataType1 = dynamic_cast<const IDataArray*>(inputDataArrayPtr)->getDataType();
+          DataType dataType2 = dynamic_cast<const IDataArray*>(destDataArrayPtr)->getDataType();
           if(dataType1 != dataType2)
           {
             resultOutputActions.warnings().push_back(
@@ -276,8 +276,8 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
 
         if(arrayType == IArray::ArrayType::NeighborListArray)
         {
-          DataType dataType1 = dynamic_cast<const INeighborList*>(inputDataArray)->getDataType();
-          DataType dataType2 = dynamic_cast<const INeighborList*>(destDataArray)->getDataType();
+          DataType dataType1 = dynamic_cast<const INeighborList*>(inputDataArrayPtr)->getDataType();
+          DataType dataType2 = dynamic_cast<const INeighborList*>(destDataArrayPtr)->getDataType();
           if(dataType1 != dataType2)
           {
             resultOutputActions.warnings().push_back(
@@ -288,7 +288,7 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
         }
       }
 
-      if(pSaveAsNewGeometry || destDataArray == nullptr)
+      if(pSaveAsNewGeometry || destDataArrayPtr == nullptr)
       {
         // pSaveAsNewGeometry = true, destDataArray == valid -> create new geometry array
         // pSaveAsNewGeometry = true, destDataArray == nullptr -> create new geometry array
@@ -296,15 +296,15 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
 
         auto destArrayPath = destCellDataPath.createChildPath(name);
         auto newArrayPath = newCellDataPath.createChildPath(name);
-        auto arrayType = inputDataArray != nullptr ? inputDataArray->getArrayType() : destDataArray->getArrayType();
+        auto arrayType = inputDataArrayPtr != nullptr ? inputDataArrayPtr->getArrayType() : destDataArrayPtr->getArrayType();
         auto destGeomDimsVec = destGeomDims.toContainer<std::vector<usize>>();
         std::vector<usize> destCellDataDims(destGeomDimsVec.rbegin(), destGeomDimsVec.rend());
         if(arrayType == IArray::ArrayType::DataArray)
         {
-          auto inputIDataArray = dataStructure.getDataAs<IDataArray>(inputDataArrayPath);
-          auto destIDataArray = dataStructure.getDataAs<IDataArray>(destDataArrayPath);
-          auto dataType = inputIDataArray != nullptr ? inputIDataArray->getDataType() : destIDataArray->getDataType();
-          auto compShape = inputDataArray != nullptr ? inputDataArray->getComponentShape() : destDataArray->getComponentShape();
+          const auto* inputIDataArrayPtr = dataStructure.getDataAs<IDataArray>(inputDataArrayPath);
+          const auto* destIDataArrayPtr = dataStructure.getDataAs<IDataArray>(destDataArrayPath);
+          auto dataType = inputIDataArrayPtr != nullptr ? inputIDataArrayPtr->getDataType() : destIDataArrayPtr->getDataType();
+          auto compShape = inputDataArrayPtr != nullptr ? inputDataArrayPtr->getComponentShape() : destDataArrayPtr->getComponentShape();
           auto cellDataDims = pSaveAsNewGeometry ? newCellDataDims : destCellDataDims;
           auto cellArrayPath = pSaveAsNewGeometry ? newArrayPath : destArrayPath;
           auto createArrayAction = std::make_unique<CreateArrayAction>(dataType, cellDataDims, compShape, cellArrayPath, "", pDefaultValue);
@@ -312,9 +312,9 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
         }
         if(arrayType == IArray::ArrayType::NeighborListArray)
         {
-          auto inputINeighborlist = dataStructure.getDataAs<INeighborList>(inputDataArrayPath);
-          auto destINeighborlist = dataStructure.getDataAs<INeighborList>(destDataArrayPath);
-          auto dataType = inputINeighborlist != nullptr ? inputINeighborlist->getDataType() : destINeighborlist->getDataType();
+          const auto* inputINeighborlistPtr = dataStructure.getDataAs<INeighborList>(inputDataArrayPath);
+          const auto* destINeighborlistPtr = dataStructure.getDataAs<INeighborList>(destDataArrayPath);
+          auto dataType = inputINeighborlistPtr != nullptr ? inputINeighborlistPtr->getDataType() : destINeighborlistPtr->getDataType();
           auto cellDataDims = pSaveAsNewGeometry ? newCellDataDims : destCellDataDims;
           auto cellArrayPath = pSaveAsNewGeometry ? newArrayPath : destArrayPath;
           auto createArrayAction = std::make_unique<CreateNeighborListAction>(dataType, cellDataDims, cellArrayPath);
@@ -337,38 +337,38 @@ IFilter::PreflightResult AppendImageGeometryFilter::preflightImpl(const DataStru
   {
     resultOutputActions.warnings().push_back(
         {-8412, "You are appending cell data together which may change the number of features. As a result, any feature level attribute matrix data will likely be invalidated!"});
-    preflightUpdatedValues.push_back({"Appended Image Geometry Info", GeometryHelpers::Description::GenerateGeometryInfo(newDims, spacing, origin, destGeometry.getUnits())});
+    preflightUpdatedValues.push_back({"Appended Image Geometry Info", geometry_helpers::description::GenerateGeometryInfo(newDims, spacing, origin, destGeometry.getUnits())});
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> AppendImageGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> AppendImageGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   AppendImageGeometryInputValues inputValues;
 
-  inputValues.InputGeometriesPaths = filterArgs.value<std::vector<DataPath>>(k_InputGeometries_Key);
-  inputValues.DestinationGeometryPath = filterArgs.value<DataPath>(k_DestinationGeometry_Key);
-  inputValues.Direction = static_cast<CopyFromArray::Direction>(filterArgs.value<ChoicesParameter::ValueType>(k_Direction_Key));
-  inputValues.CheckResolution = filterArgs.value<bool>(k_CheckResolution_Key);
-  inputValues.DefaultValue = filterArgs.value<std::string>(k_DefaultValue_Key);
-  inputValues.MirrorGeometry = filterArgs.value<bool>(k_MirrorGeometry_Key);
-  inputValues.SaveAsNewGeometry = filterArgs.value<bool>(k_SaveAsNewGeometry_Key);
-  inputValues.NewGeometryPath = filterArgs.value<DataPath>(k_NewGeometry_Key);
+  inputValues.input_geometries_paths = filterArgs.value<std::vector<DataPath>>(k_InputGeometries_Key);
+  inputValues.destination_geometry_path = filterArgs.value<DataPath>(k_DestinationGeometry_Key);
+  inputValues.direction = static_cast<copy_from_array::Direction>(filterArgs.value<ChoicesParameter::ValueType>(k_Direction_Key));
+  inputValues.check_resolution = filterArgs.value<bool>(k_CheckResolution_Key);
+  inputValues.default_value = filterArgs.value<std::string>(k_DefaultValue_Key);
+  inputValues.mirror_geometry = filterArgs.value<bool>(k_MirrorGeometry_Key);
+  inputValues.save_as_new_geometry = filterArgs.value<bool>(k_SaveAsNewGeometry_Key);
+  inputValues.new_geometry_path = filterArgs.value<DataPath>(k_NewGeometry_Key);
 
   return AppendImageGeometry(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_InputAttributeMatrixKey = "InputAttributeMatrix";
-constexpr StringLiteral k_DestinationAttributeMatrixKey = "DestinationAttributeMatrix";
-constexpr StringLiteral k_CheckResolutionKey = "CheckResolution";
-} // namespace SIMPL
+constexpr StringLiteralType k_InputAttributeMatrixKey = "InputAttributeMatrix";
+constexpr StringLiteralType k_DestinationAttributeMatrixKey = "DestinationAttributeMatrix";
+constexpr StringLiteralType k_CheckResolutionKey = "CheckResolution";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> AppendImageGeometryFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -377,9 +377,10 @@ Result<Arguments> AppendImageGeometryFilter::FromSIMPLJson(const nlohmann::json&
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, SIMPL::k_InputAttributeMatrixKey, k_InputGeometries_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_DestinationAttributeMatrixKey, k_DestinationGeometry_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_CheckResolutionKey, k_CheckResolution_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_InputAttributeMatrixKey, k_InputGeometries_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DestinationAttributeMatrixKey, k_DestinationGeometry_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_CheckResolutionKey, k_CheckResolution_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

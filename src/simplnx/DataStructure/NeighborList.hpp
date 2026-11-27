@@ -20,16 +20,16 @@ public:
   using value_type = T;
   using VectorType = std::vector<T>;
   using SharedVectorType = std::shared_ptr<VectorType>;
-  using store_type = AbstractListStore<T>;
-  using iterator = typename store_type::iterator;
-  using const_iterator = typename store_type::const_iterator;
+  using StoreType = AbstractListStore<T>;
+  using iterator = typename StoreType::iterator;
+  using const_iterator = typename StoreType::const_iterator;
 
   /**
    * @brief Identifies a partial erase without an available destination path.
    *
    * eraseTuples returns this code before copying or resizing the store.
    */
-  static inline constexpr int32 k_MissingCopyDestinationError = -101;
+  static constexpr int32 k_MissingCopyDestinationError = -101;
 
   NeighborList() = default;
 
@@ -53,7 +53,7 @@ public:
    * @param parentId Optional parent object ID to insert the NeighborList under
    * @return NeighborList<T>* Pointer to the created NeighborList, or nullptr if creation failed
    */
-  static NeighborList* Create(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& listStore, const std::optional<IdType>& parentId = {});
+  static NeighborList* Create(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<StoreType>& listStore, const std::optional<IdType>& parentId = {});
 
   /**
    * @brief Imports a NeighborList into the specified DataStructure from a vector of shared vector pointers.
@@ -75,7 +75,7 @@ public:
    * @param parentId Optional parent object ID to insert the NeighborList under
    * @return NeighborList<T>* Pointer to the imported NeighborList, or nullptr if import failed
    */
-  static NeighborList* Import(DataStructure& dataStructure, const std::string& name, IdType importId, const std::shared_ptr<store_type>& storeData, const std::optional<IdType>& parentId = {});
+  static NeighborList* Import(DataStructure& dataStructure, const std::string& name, IdType importId, const std::shared_ptr<StoreType>& storeData, const std::optional<IdType>& parentId = {});
 
   ~NeighborList() override = default;
 
@@ -406,13 +406,13 @@ public:
    * @brief Returns a shared_ptr to the underlying list store.
    * @return std::shared_ptr<store_type>
    */
-  std::shared_ptr<store_type> getStore() const;
+  std::shared_ptr<StoreType> getStore() const;
 
   /**
    * @brief Replaces the AbstractListStore used to store values.
    * @param store
    */
-  void setStore(const std::shared_ptr<store_type>& store);
+  void setStore(const std::shared_ptr<StoreType>& store);
 
   /**
    * @brief Returns a vector of vectors containing the current values.
@@ -490,7 +490,7 @@ protected:
    * @param name The name for this NeighborList
    * @param dataStore Shared pointer to the AbstractListStore to use for storage
    */
-  NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& dataStore);
+  NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<StoreType>& dataStore);
 
   /**
    * @brief Constructs a NeighborList from a vector of shared vector pointers with an import ID.
@@ -508,11 +508,11 @@ protected:
    * @param listStore Shared pointer to the AbstractListStore to use for storage
    * @param importId The ID to use for this imported object
    */
-  NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<store_type>& listStore, IdType importId);
+  NeighborList(DataStructure& dataStructure, const std::string& name, const std::shared_ptr<StoreType>& listStore, IdType importId);
 
 private:
-  std::shared_ptr<store_type> m_Store;
-  bool m_IsAllocated;
+  std::shared_ptr<StoreType> m_Store;
+  bool m_IsAllocated{};
   value_type m_InitValue;
 };
 
@@ -567,18 +567,18 @@ extern template class NeighborList<float64>;
 extern template class NeighborList<usize>;
 
 // Declare Aliases
-using UInt8NeighborList = NeighborList<uint8>;
-using UInt16NeighborList = NeighborList<uint16>;
-using UInt32NeighborList = NeighborList<uint32>;
-using UInt64NeighborList = NeighborList<uint64>;
+using UInt8NeighborListType = NeighborList<uint8>;
+using UInt16NeighborListType = NeighborList<uint16>;
+using UInt32NeighborListType = NeighborList<uint32>;
+using UInt64NeighborListType = NeighborList<uint64>;
 
-using Int8NeighborList = NeighborList<int8>;
-using Int16NeighborList = NeighborList<int16>;
-using Int32NeighborList = NeighborList<int32>;
-using Int64NeighborList = NeighborList<int64>;
+using Int8NeighborListType = NeighborList<int8>;
+using Int16NeighborListType = NeighborList<int16>;
+using Int32NeighborListType = NeighborList<int32>;
+using Int64NeighborListType = NeighborList<int64>;
 
-using Float32NeighborList = NeighborList<float32>;
-using Float64NeighborList = NeighborList<float64>;
+using Float32NeighborListType = NeighborList<float32>;
+using Float64NeighborListType = NeighborList<float64>;
 
-using VectorOfFloat32NeighborList = std::vector<std::shared_ptr<Float32NeighborList>>;
+using VectorOfFloat32NeighborListType = std::vector<std::shared_ptr<Float32NeighborListType>>;
 } // namespace nx::core

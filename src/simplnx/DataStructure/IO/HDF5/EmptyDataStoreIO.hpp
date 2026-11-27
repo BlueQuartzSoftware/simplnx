@@ -5,24 +5,22 @@
 #include <iterator>
 #include <utility>
 
-namespace nx::core::HDF5
-{
-namespace EmptyDataStoreIO
+namespace nx::core::hdf5::empty_data_store_io
 {
 /**
  * @brief Reads numeric tuple and component shapes without creating a store.
  * @param datasetReader Source HDF5 dataset.
  * @return Exact stored shapes or the first attribute-read error.
  */
-inline Result<std::pair<ShapeType, ShapeType>> ReadShapes(const nx::core::HDF5::DatasetIO& datasetReader)
+inline Result<std::pair<ShapeType, ShapeType>> ReadShapes(const nx::core::hdf5::DatasetIO& datasetReader)
 {
-  auto tupleShapeResult = IDataStoreIO::ReadTupleShape(datasetReader);
+  auto tupleShapeResult = i_data_store_io::ReadTupleShape(datasetReader);
   if(tupleShapeResult.invalid())
   {
     return ConvertInvalidResult<std::pair<ShapeType, ShapeType>>(std::move(tupleShapeResult));
   }
   auto warnings = std::move(tupleShapeResult.warnings());
-  auto componentShapeResult = IDataStoreIO::ReadComponentShape(datasetReader);
+  auto componentShapeResult = i_data_store_io::ReadComponentShape(datasetReader);
   if(componentShapeResult.invalid())
   {
     auto result = ConvertInvalidResult<std::pair<ShapeType, ShapeType>>(std::move(componentShapeResult));
@@ -38,5 +36,4 @@ inline Result<std::pair<ShapeType, ShapeType>> ReadShapes(const nx::core::HDF5::
   }
   return result;
 }
-} // namespace EmptyDataStoreIO
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5::empty_data_store_io

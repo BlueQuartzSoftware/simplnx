@@ -64,7 +64,7 @@ public:
    * @param handle
    * @return IFilter*
    */
-  IFilter::UniquePointer createFilter(const FilterHandle& handle) const;
+  IFilter::UniquePointerType createFilter(const FilterHandle& handle) const;
 
   /**
    * @brief Attempts to create an IFilter specified by the given uuid.
@@ -73,7 +73,7 @@ public:
    * @param handle
    * @return IFilter::UniquePointer
    */
-  IFilter::UniquePointer createFilter(const Uuid& uuid) const;
+  IFilter::UniquePointerType createFilter(const Uuid& uuid) const;
 
   /**
    * @brief Returns the AbstractPlugin pointer corresponding to the specified

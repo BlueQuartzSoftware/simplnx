@@ -12,7 +12,7 @@
 #include <functional>
 #include <string>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 /**
  * @class FileIO
@@ -159,4 +159,4 @@ protected:
 
 private:
 };
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

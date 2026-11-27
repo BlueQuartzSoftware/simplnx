@@ -13,7 +13,7 @@
 namespace nx::core
 {
 
-namespace H5
+namespace h5
 {
 class IDataFactory;
 }
@@ -34,9 +34,9 @@ public:
 
   using FilterContainerType = std::unordered_set<FilterHandle>;
 
-  using IOManagerPointer = std::shared_ptr<IDataIOManager>;
+  using IoManagerPointerType = std::shared_ptr<IDataIOManager>;
 
-  using IOManagersContainerType = std::vector<IOManagerPointer>;
+  using IOManagersContainerType = std::vector<IoManagerPointerType>;
 
   /**
    * @struct SIMPLData
@@ -44,10 +44,10 @@ public:
    */
   struct SIMPLNX_EXPORT SIMPLData
   {
-    using ConversionFunction = std::function<Result<Arguments>(const nlohmann::json&)>;
+    using ConversionFunctionType = std::function<Result<Arguments>(const nlohmann::json&)>;
 
-    Uuid simplnxUuid;               // Simplnx filter UUID that receives the converted arguments.
-    ConversionFunction convertJson; // Converts legacy JSON to simplnx Arguments.
+    Uuid simplnx_uuid;                   // Simplnx filter UUID that receives the converted arguments.
+    ConversionFunctionType convert_json; // Converts legacy JSON to simplnx Arguments.
   };
 
   using SIMPLMapType = std::map<Uuid, SIMPLData>;
@@ -67,7 +67,7 @@ public:
    * @param filterId Filter UUID to create.
    * @return Owning filter pointer, or nullptr when no factory matches or returns null.
    */
-  IFilter::UniquePointer createFilter(FilterHandle::FilterIdType filterId) const;
+  IFilter::UniquePointerType createFilter(FilterHandle::FilterIdType filterId) const;
 
   FilterContainerType getFilterHandles() const;
 
@@ -93,7 +93,7 @@ public:
   }
 
 protected:
-  AbstractPlugin(IdType identifier, const std::string& name, const std::string& description, const std::string& vendor);
+  AbstractPlugin(IdType identifier, std::string name, std::string description, std::string vendor);
 
   /**
    * @brief Registers a filter factory.
@@ -102,9 +102,9 @@ protected:
    *
    * The method creates one filter to obtain and validate its UUID.
    */
-  void addFilter(FilterCreationFunc filterFunc);
+  void addFilter(const FilterCreationFuncType& filterFunc);
 
-  void addDataIOManager(const IOManagerPointer& ioManager);
+  void addDataIOManager(const IoManagerPointerType& ioManager);
 
   /**
    * @brief Registers a plugin default preference value.
@@ -113,7 +113,7 @@ protected:
    *
    * Application owns the shared Preferences instance.
    */
-  void addDefaultValue(std::string keyName, const nlohmann::json& value);
+  void addDefaultValue(std::string keyName, const nlohmann::json& value) const;
 
 private:
   IdType m_Id;
@@ -121,7 +121,7 @@ private:
   std::string m_Description;
   std::string m_Vendor;
   std::unordered_set<FilterHandle> m_FilterHandles;
-  std::unordered_map<FilterHandle::FilterIdType, FilterCreationFunc> m_InitializerMap;
+  std::unordered_map<FilterHandle::FilterIdType, FilterCreationFuncType> m_InitializerMap;
   IOManagersContainerType m_IOManagers;
 };
 
@@ -130,14 +130,14 @@ private:
  *
  * The caller owns the returned plugin and releases it through DestroyPluginFunc.
  */
-using CreatePluginFunc = AbstractPlugin* (*)();
+using CreatePluginFuncType = AbstractPlugin* (*)();
 
 /**
  * @brief Defines a C ABI plugin destruction function.
  *
  * The function deletes a plugin only when its concrete type matches the export.
  */
-using DestroyPluginFunc = bool (*)(AbstractPlugin*);
+using DestroyPluginFuncType = bool (*)(AbstractPlugin*);
 } // namespace nx::core
 
 #define SIMPLNX_CREATE_PLUGIN_FUNC SIMPLNX_CreatePlugin

@@ -75,31 +75,29 @@ using FaceNeighborType = usize;
 template <bool EmptyXV, bool EmptyYV, bool EmptyZV>
 struct ImageDimensionState
 {
-  static constexpr bool HasEmptyXDim = EmptyXV;
-  static constexpr bool HasEmptyYDim = EmptyYV;
-  static constexpr bool HasEmptyZDim = EmptyZV;
+  static constexpr bool k_HasEmptyXDim = EmptyXV;
+  static constexpr bool k_HasEmptyYDim = EmptyYV;
+  static constexpr bool k_HasEmptyZDim = EmptyZV;
 
   static constexpr bool Is1DImageDimsState()
   {
-    return (HasEmptyXDim == true && HasEmptyYDim == true && HasEmptyZDim == false) || (HasEmptyXDim == true && HasEmptyYDim == false && HasEmptyZDim == true) ||
-           (HasEmptyXDim == false && HasEmptyYDim == true && HasEmptyZDim == true);
+    return (k_HasEmptyXDim && k_HasEmptyYDim && !k_HasEmptyZDim) || (k_HasEmptyXDim && !k_HasEmptyYDim && k_HasEmptyZDim) || (!k_HasEmptyXDim && k_HasEmptyYDim && k_HasEmptyZDim);
   }
 
   static constexpr bool Is2DImageDimsState()
   {
-    return (HasEmptyXDim == true && HasEmptyYDim == false && HasEmptyZDim == false) || (HasEmptyXDim == false && HasEmptyYDim == true && HasEmptyZDim == false) ||
-           (HasEmptyXDim == false && HasEmptyYDim == false && HasEmptyZDim == true);
+    return (k_HasEmptyXDim && !k_HasEmptyYDim && !k_HasEmptyZDim) || (!k_HasEmptyXDim && k_HasEmptyYDim && !k_HasEmptyZDim) || (!k_HasEmptyXDim && !k_HasEmptyYDim && k_HasEmptyZDim);
   }
 };
 
-using Image3D = ImageDimensionState<false, false, false>;
-using EmptyXImage2D = ImageDimensionState<true, false, false>;
-using EmptyYImage2D = ImageDimensionState<false, true, false>;
-using EmptyZImage2D = ImageDimensionState<false, false, true>;
-using XImage1D = ImageDimensionState<false, true, true>;
-using YImage1D = ImageDimensionState<true, false, true>;
-using ZImage1D = ImageDimensionState<true, true, false>;
-using SingleVoxelImage = ImageDimensionState<true, true, true>;
+using Image3DType = ImageDimensionState<false, false, false>;
+using EmptyXImage2DType = ImageDimensionState<true, false, false>;
+using EmptyYImage2DType = ImageDimensionState<false, true, false>;
+using EmptyZImage2DType = ImageDimensionState<false, false, true>;
+using XImage1DType = ImageDimensionState<false, true, true>;
+using YImage1DType = ImageDimensionState<true, false, true>;
+using ZImage1DType = ImageDimensionState<true, true, false>;
+using SingleVoxelImageType = ImageDimensionState<true, true, true>;
 
 namespace detail
 {
@@ -122,7 +120,7 @@ struct VoxelNeighbors
 };
 
 template <>
-struct VoxelNeighbors<Image3D>
+struct VoxelNeighbors<Image3DType>
 {
   static constexpr FaceNeighborType k_NegativeZNeighbor = 0;
   static constexpr FaceNeighborType k_NegativeYNeighbor = 1;
@@ -134,7 +132,7 @@ struct VoxelNeighbors<Image3D>
 };
 
 template <>
-struct VoxelNeighbors<EmptyXImage2D>
+struct VoxelNeighbors<EmptyXImage2DType>
 {
   static constexpr FaceNeighborType k_NegativeZNeighbor = 0;
   static constexpr FaceNeighborType k_NegativeYNeighbor = 1;
@@ -144,7 +142,7 @@ struct VoxelNeighbors<EmptyXImage2D>
 };
 
 template <>
-struct VoxelNeighbors<EmptyYImage2D>
+struct VoxelNeighbors<EmptyYImage2DType>
 {
   static constexpr FaceNeighborType k_NegativeZNeighbor = 0;
   static constexpr FaceNeighborType k_NegativeXNeighbor = 1;
@@ -154,7 +152,7 @@ struct VoxelNeighbors<EmptyYImage2D>
 };
 
 template <>
-struct VoxelNeighbors<EmptyZImage2D>
+struct VoxelNeighbors<EmptyZImage2DType>
 {
   static constexpr FaceNeighborType k_NegativeYNeighbor = 0;
   static constexpr FaceNeighborType k_NegativeXNeighbor = 1;
@@ -164,7 +162,7 @@ struct VoxelNeighbors<EmptyZImage2D>
 };
 
 template <>
-struct VoxelNeighbors<XImage1D>
+struct VoxelNeighbors<XImage1DType>
 {
   static constexpr FaceNeighborType k_NegativeXNeighbor = 0;
   static constexpr FaceNeighborType k_PositiveXNeighbor = 1;
@@ -172,7 +170,7 @@ struct VoxelNeighbors<XImage1D>
 };
 
 template <>
-struct VoxelNeighbors<YImage1D>
+struct VoxelNeighbors<YImage1DType>
 {
   static constexpr FaceNeighborType k_NegativeYNeighbor = 0;
   static constexpr FaceNeighborType k_PositiveYNeighbor = 1;
@@ -180,7 +178,7 @@ struct VoxelNeighbors<YImage1D>
 };
 
 template <>
-struct VoxelNeighbors<ZImage1D>
+struct VoxelNeighbors<ZImage1DType>
 {
   static constexpr FaceNeighborType k_NegativeZNeighbor = 0;
   static constexpr FaceNeighborType k_PositiveZNeighbor = 1;
@@ -188,7 +186,7 @@ struct VoxelNeighbors<ZImage1D>
 };
 
 template <>
-struct VoxelNeighbors<SingleVoxelImage>
+struct VoxelNeighbors<SingleVoxelImageType>
 {
   static constexpr FaceNeighborType k_FaceNeighborCount = 0;
 };
@@ -197,38 +195,38 @@ struct VoxelNeighbors<SingleVoxelImage>
  * @brief
  * @return
  */
-template <detail::ImageDimensionality ImageDimensionStateT = Image3D>
-constexpr std::array<FaceNeighborType, VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount> initializeFaceNeighborInternalIdx()
+template <detail::ImageDimensionality ImageDimensionStateT = Image3DType>
+constexpr std::array<FaceNeighborType, VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount> InitializeFaceNeighborInternalIdx()
 {
-  using Neighbors = VoxelNeighbors<ImageDimensionStateT>;
-  if constexpr(std::is_same_v<ImageDimensionStateT, Image3D>)
+  using NeighborsType = VoxelNeighbors<ImageDimensionStateT>;
+  if constexpr(std::is_same_v<ImageDimensionStateT, Image3DType>)
   {
-    return {Neighbors::k_NegativeZNeighbor, Neighbors::k_NegativeYNeighbor, Neighbors::k_NegativeXNeighbor,
-            Neighbors::k_PositiveXNeighbor, Neighbors::k_PositiveYNeighbor, Neighbors::k_PositiveZNeighbor};
+    return {NeighborsType::k_NegativeZNeighbor, NeighborsType::k_NegativeYNeighbor, NeighborsType::k_NegativeXNeighbor,
+            NeighborsType::k_PositiveXNeighbor, NeighborsType::k_PositiveYNeighbor, NeighborsType::k_PositiveZNeighbor};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyXImage2D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyXImage2DType>)
   {
-    return {Neighbors::k_NegativeZNeighbor, Neighbors::k_NegativeYNeighbor, Neighbors::k_PositiveYNeighbor, Neighbors::k_PositiveZNeighbor};
+    return {NeighborsType::k_NegativeZNeighbor, NeighborsType::k_NegativeYNeighbor, NeighborsType::k_PositiveYNeighbor, NeighborsType::k_PositiveZNeighbor};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyYImage2D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyYImage2DType>)
   {
-    return {Neighbors::k_NegativeZNeighbor, Neighbors::k_NegativeXNeighbor, Neighbors::k_PositiveXNeighbor, Neighbors::k_PositiveZNeighbor};
+    return {NeighborsType::k_NegativeZNeighbor, NeighborsType::k_NegativeXNeighbor, NeighborsType::k_PositiveXNeighbor, NeighborsType::k_PositiveZNeighbor};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyZImage2D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyZImage2DType>)
   {
-    return {Neighbors::k_NegativeYNeighbor, Neighbors::k_NegativeXNeighbor, Neighbors::k_PositiveXNeighbor, Neighbors::k_PositiveYNeighbor};
+    return {NeighborsType::k_NegativeYNeighbor, NeighborsType::k_NegativeXNeighbor, NeighborsType::k_PositiveXNeighbor, NeighborsType::k_PositiveYNeighbor};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, XImage1D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, XImage1DType>)
   {
-    return {Neighbors::k_NegativeXNeighbor, Neighbors::k_PositiveXNeighbor};
+    return {NeighborsType::k_NegativeXNeighbor, NeighborsType::k_PositiveXNeighbor};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, YImage1D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, YImage1DType>)
   {
-    return {Neighbors::k_NegativeYNeighbor, Neighbors::k_PositiveYNeighbor};
+    return {NeighborsType::k_NegativeYNeighbor, NeighborsType::k_PositiveYNeighbor};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, ZImage1D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, ZImage1DType>)
   {
-    return {Neighbors::k_NegativeZNeighbor, Neighbors::k_PositiveZNeighbor};
+    return {NeighborsType::k_NegativeZNeighbor, NeighborsType::k_PositiveZNeighbor};
   }
 
   // Single Voxel State
@@ -240,22 +238,22 @@ constexpr std::array<FaceNeighborType, VoxelNeighbors<ImageDimensionStateT>::k_F
  * @param dims Image geometry dimensions
  * @return Array of 6 neighbor offsets
  */
-template <detail::ImageDimensionality ImageDimensionStateT = Image3D>
-std::array<int64, VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount> initializeFaceNeighborOffsets(const std::array<int64, 3>& dims)
+template <detail::ImageDimensionality ImageDimensionStateT = Image3DType>
+std::array<int64, VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount> InitializeFaceNeighborOffsets(const std::array<int64, 3>& dims)
 {
-  if constexpr(std::is_same_v<ImageDimensionStateT, Image3D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, Image3DType>)
   {
     return {-dims[0] * dims[1], -dims[0], -1, 1, dims[0], dims[0] * dims[1]};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyXImage2D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyXImage2DType>)
   {
     return {-dims[1], -1, 1, dims[1]};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyYImage2D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyYImage2DType>)
   {
     return {-dims[0], -1, 1, dims[0]};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyZImage2D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyZImage2DType>)
   {
     return {-dims[0], -1, 1, dims[0]};
   }
@@ -276,34 +274,34 @@ std::array<int64, VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount> ini
  * @param dims The dimensions of the virtual volume
  * @return
  */
-template <detail::ImageDimensionality ImageDimensionStateT = Image3D>
-std::array<bool, VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount> computeValidFaceNeighbors(int64 xIdx, int64 yIdx, int64 zIdx, const std::array<int64, 3>& dims)
+template <detail::ImageDimensionality ImageDimensionStateT = Image3DType>
+std::array<bool, VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount> ComputeValidFaceNeighbors(int64 xIdx, int64 yIdx, int64 zIdx, const std::array<int64, 3>& dims)
 {
-  if constexpr(std::is_same_v<ImageDimensionStateT, Image3D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, Image3DType>)
   {
     return {zIdx > 0, yIdx > 0, xIdx > 0, xIdx < dims[0] - 1, yIdx < dims[1] - 1, zIdx < dims[2] - 1};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyXImage2D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyXImage2DType>)
   {
     return {zIdx > 0, yIdx > 0, yIdx < dims[1] - 1, zIdx < dims[2] - 1};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyYImage2D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyYImage2DType>)
   {
     return {zIdx > 0, xIdx > 0, xIdx < dims[0] - 1, zIdx < dims[2] - 1};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyZImage2D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyZImage2DType>)
   {
     return {yIdx > 0, xIdx > 0, xIdx < dims[0] - 1, yIdx < dims[1] - 1};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, XImage1D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, XImage1DType>)
   {
     return {xIdx > 0, xIdx < dims[0] - 1};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, YImage1D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, YImage1DType>)
   {
     return {yIdx > 0, yIdx < dims[1] - 1};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, ZImage1D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, ZImage1DType>)
   {
     return {zIdx > 0, zIdx < dims[2] - 1};
   }
@@ -326,14 +324,14 @@ std::array<bool, VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount> comp
  * @param yDir Whether the Y direction is enabled.
  * @param zDir Whether the Z direction is enabled.
  */
-inline void adjustValidNeighbors(std::array<bool, VoxelNeighbors<Image3D>::k_FaceNeighborCount>& isValidFaceNeighbor, bool xDir, bool yDir, bool zDir)
+inline void AdjustValidNeighbors(std::array<bool, VoxelNeighbors<Image3DType>::k_FaceNeighborCount>& isValidFaceNeighbor, bool xDir, bool yDir, bool zDir)
 {
-  isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeZNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeZNeighbor] && zDir;
-  isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeYNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeYNeighbor] && yDir;
-  isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeXNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_NegativeXNeighbor] && xDir;
-  isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveXNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveXNeighbor] && xDir;
-  isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveYNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveYNeighbor] && yDir;
-  isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveZNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3D>::k_PositiveZNeighbor] && zDir;
+  isValidFaceNeighbor[VoxelNeighbors<Image3DType>::k_NegativeZNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3DType>::k_NegativeZNeighbor] && zDir;
+  isValidFaceNeighbor[VoxelNeighbors<Image3DType>::k_NegativeYNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3DType>::k_NegativeYNeighbor] && yDir;
+  isValidFaceNeighbor[VoxelNeighbors<Image3DType>::k_NegativeXNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3DType>::k_NegativeXNeighbor] && xDir;
+  isValidFaceNeighbor[VoxelNeighbors<Image3DType>::k_PositiveXNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3DType>::k_PositiveXNeighbor] && xDir;
+  isValidFaceNeighbor[VoxelNeighbors<Image3DType>::k_PositiveYNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3DType>::k_PositiveYNeighbor] && yDir;
+  isValidFaceNeighbor[VoxelNeighbors<Image3DType>::k_PositiveZNeighbor] = isValidFaceNeighbor[VoxelNeighbors<Image3DType>::k_PositiveZNeighbor] && zDir;
 }
 
 /**
@@ -342,38 +340,38 @@ inline void adjustValidNeighbors(std::array<bool, VoxelNeighbors<Image3D>::k_Fac
  * @param spacing The spacing of each voxel
  * @return
  */
-template <detail::ImageDimensionality ImageDimensionStateT = Image3D>
-std::array<float64, VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount> computeFaceSurfaceAreas(const std::array<float64, 3>& spacing)
+template <detail::ImageDimensionality ImageDimensionStateT = Image3DType>
+std::array<float64, VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount> ComputeFaceSurfaceAreas(const std::array<float64, 3>& spacing)
 {
   const auto zFace = spacing[0] * spacing[1];
   const auto yFace = spacing[0] * spacing[2];
   const auto xFace = spacing[1] * spacing[2];
 
-  if constexpr(std::is_same_v<ImageDimensionStateT, Image3D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, Image3DType>)
   {
     return {zFace, yFace, xFace, xFace, yFace, zFace};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyXImage2D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyXImage2DType>)
   {
     return {zFace, yFace, yFace, zFace};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyYImage2D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyYImage2DType>)
   {
     return {zFace, xFace, xFace, zFace};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyZImage2D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, EmptyZImage2DType>)
   {
     return {yFace, xFace, xFace, yFace};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, XImage1D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, XImage1DType>)
   {
     return {xFace, xFace};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, YImage1D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, YImage1DType>)
   {
     return {yFace, yFace};
   }
-  if constexpr(std::is_same_v<ImageDimensionStateT, ZImage1D>)
+  if constexpr(std::is_same_v<ImageDimensionStateT, ZImage1DType>)
   {
     return {zFace, zFace};
   }
@@ -382,7 +380,7 @@ std::array<float64, VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount> c
   return {};
 }
 
-namespace ImageDimensionalUtilities
+namespace image_dimensional_utilities
 {
 
 template <typename FT>
@@ -445,25 +443,25 @@ template <class ImageDimensionStateT, FrameCellFunction FunctionT>
 void ProcessCorners(const FunctionT& processCornerFunction, const std::array<int64, 3>& dims)
 {
   processCornerFunction(0, 0, 0);
-  if constexpr(!std::is_same_v<ImageDimensionStateT, SingleVoxelImage>)
+  if constexpr(!std::is_same_v<ImageDimensionStateT, SingleVoxelImageType>)
   {
     processCornerFunction(dims[2] - 1, dims[1] - 1, dims[0] - 1); // If 2D the dims in empty dimension is 1 so this line effectively preforms for all cases
 
     if constexpr(!ImageDimensionStateT::Is1DImageDimsState())
     {
-      if constexpr(!std::is_same_v<ImageDimensionStateT, EmptyXImage2D>)
+      if constexpr(!std::is_same_v<ImageDimensionStateT, EmptyXImage2DType>)
       {
         processCornerFunction(0, 0, dims[0] - 1);
       }
-      if constexpr(!std::is_same_v<ImageDimensionStateT, EmptyYImage2D>)
+      if constexpr(!std::is_same_v<ImageDimensionStateT, EmptyYImage2DType>)
       {
         processCornerFunction(0, dims[1] - 1, 0);
       }
-      if constexpr(!std::is_same_v<ImageDimensionStateT, EmptyZImage2D>)
+      if constexpr(!std::is_same_v<ImageDimensionStateT, EmptyZImage2DType>)
       {
         processCornerFunction(dims[2] - 1, 0, 0);
       }
-      if constexpr(std::is_same_v<ImageDimensionStateT, Image3D>)
+      if constexpr(std::is_same_v<ImageDimensionStateT, Image3DType>)
       {
         processCornerFunction(0, dims[1] - 1, dims[0] - 1);
         processCornerFunction(dims[2] - 1, 0, dims[0] - 1);
@@ -476,17 +474,17 @@ void ProcessCorners(const FunctionT& processCornerFunction, const std::array<int
 template <class ImageDimensionStateT, FrameCellFunction FunctionT>
 void ProcessEdges(const FunctionT& processEdgeFunction, const std::array<int64, 3>& dims)
 {
-  static_assert(!std::is_same_v<ImageDimensionStateT, SingleVoxelImage>);
+  static_assert(!std::is_same_v<ImageDimensionStateT, SingleVoxelImageType>);
   // X Edges
-  if constexpr((ImageDimensionStateT::Is2DImageDimsState() && !std::is_same_v<ImageDimensionStateT, EmptyXImage2D>) || std::is_same_v<ImageDimensionStateT, XImage1D> ||
-               std::is_same_v<ImageDimensionStateT, Image3D>)
+  if constexpr((ImageDimensionStateT::Is2DImageDimsState() && !std::is_same_v<ImageDimensionStateT, EmptyXImage2DType>) || std::is_same_v<ImageDimensionStateT, XImage1DType> ||
+               std::is_same_v<ImageDimensionStateT, Image3DType>)
   {
     for(int64 xIndex = 1; xIndex < dims[0] - 1; xIndex++)
     {
       processEdgeFunction(0, 0, xIndex);
       if constexpr(!ImageDimensionStateT::Is1DImageDimsState())
       {
-        if constexpr(std::is_same_v<ImageDimensionStateT, Image3D>)
+        if constexpr(std::is_same_v<ImageDimensionStateT, Image3DType>)
         {
           processEdgeFunction(0, dims[1] - 1, xIndex);
           processEdgeFunction(dims[2] - 1, 0, xIndex);
@@ -497,15 +495,15 @@ void ProcessEdges(const FunctionT& processEdgeFunction, const std::array<int64, 
   }
 
   // Y Edges
-  if constexpr((ImageDimensionStateT::Is2DImageDimsState() && !std::is_same_v<ImageDimensionStateT, EmptyYImage2D>) || std::is_same_v<ImageDimensionStateT, YImage1D> ||
-               std::is_same_v<ImageDimensionStateT, Image3D>)
+  if constexpr((ImageDimensionStateT::Is2DImageDimsState() && !std::is_same_v<ImageDimensionStateT, EmptyYImage2DType>) || std::is_same_v<ImageDimensionStateT, YImage1DType> ||
+               std::is_same_v<ImageDimensionStateT, Image3DType>)
   {
     for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
     {
       processEdgeFunction(0, yIndex, 0);
       if constexpr(!ImageDimensionStateT::Is1DImageDimsState())
       {
-        if constexpr(std::is_same_v<ImageDimensionStateT, Image3D>)
+        if constexpr(std::is_same_v<ImageDimensionStateT, Image3DType>)
         {
           processEdgeFunction(0, yIndex, dims[0] - 1);
           processEdgeFunction(dims[2] - 1, yIndex, 0);
@@ -516,15 +514,15 @@ void ProcessEdges(const FunctionT& processEdgeFunction, const std::array<int64, 
   }
 
   // Z Edges
-  if constexpr((ImageDimensionStateT::Is2DImageDimsState() && !std::is_same_v<ImageDimensionStateT, EmptyZImage2D>) || std::is_same_v<ImageDimensionStateT, ZImage1D> ||
-               std::is_same_v<ImageDimensionStateT, Image3D>)
+  if constexpr((ImageDimensionStateT::Is2DImageDimsState() && !std::is_same_v<ImageDimensionStateT, EmptyZImage2DType>) || std::is_same_v<ImageDimensionStateT, ZImage1DType> ||
+               std::is_same_v<ImageDimensionStateT, Image3DType>)
   {
     for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
     {
       processEdgeFunction(zIndex, 0, 0);
       if constexpr(!ImageDimensionStateT::Is1DImageDimsState())
       {
-        if constexpr(std::is_same_v<ImageDimensionStateT, Image3D>)
+        if constexpr(std::is_same_v<ImageDimensionStateT, Image3DType>)
         {
           processEdgeFunction(zIndex, 0, dims[0] - 1);
           processEdgeFunction(zIndex, dims[1] - 1, 0);
@@ -538,16 +536,16 @@ void ProcessEdges(const FunctionT& processEdgeFunction, const std::array<int64, 
 template <class ImageDimensionStateT, FaceCellFunction FunctionT>
 void ProcessFaces(const FunctionT& processFaceFunction, const std::array<int64, 3>& dims)
 {
-  static_assert(!ImageDimensionStateT::Is1DImageDimsState() && !std::is_same_v<ImageDimensionStateT, SingleVoxelImage>);
-  using Neighbors = VoxelNeighbors<ImageDimensionStateT>;
+  static_assert(!ImageDimensionStateT::Is1DImageDimsState() && !std::is_same_v<ImageDimensionStateT, SingleVoxelImageType>);
+  using NeighborsType = VoxelNeighbors<ImageDimensionStateT>;
   // Case 1: Z Planes
   {
-    if constexpr(std::is_same_v<ImageDimensionStateT, Image3D>)
+    if constexpr(std::is_same_v<ImageDimensionStateT, Image3DType>)
     {
-      std::vector<FaceNeighborType> negZValidFaces = {Neighbors::k_NegativeYNeighbor, Neighbors::k_NegativeXNeighbor, Neighbors::k_PositiveXNeighbor, Neighbors::k_PositiveYNeighbor,
-                                                      Neighbors::k_PositiveZNeighbor};
-      std::vector<FaceNeighborType> posZValidFaces = {Neighbors::k_NegativeZNeighbor, Neighbors::k_NegativeYNeighbor, Neighbors::k_NegativeXNeighbor, Neighbors::k_PositiveXNeighbor,
-                                                      Neighbors::k_PositiveYNeighbor};
+      std::vector<FaceNeighborType> negZValidFaces = {NeighborsType::k_NegativeYNeighbor, NeighborsType::k_NegativeXNeighbor, NeighborsType::k_PositiveXNeighbor, NeighborsType::k_PositiveYNeighbor,
+                                                      NeighborsType::k_PositiveZNeighbor};
+      std::vector<FaceNeighborType> posZValidFaces = {NeighborsType::k_NegativeZNeighbor, NeighborsType::k_NegativeYNeighbor, NeighborsType::k_NegativeXNeighbor, NeighborsType::k_PositiveXNeighbor,
+                                                      NeighborsType::k_PositiveYNeighbor};
       for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
       {
         for(int64 xIndex = 1; xIndex < dims[0] - 1; xIndex++)
@@ -557,9 +555,9 @@ void ProcessFaces(const FunctionT& processFaceFunction, const std::array<int64, 
         }
       }
     }
-    if constexpr(std::is_same_v<ImageDimensionStateT, EmptyZImage2D>)
+    if constexpr(std::is_same_v<ImageDimensionStateT, EmptyZImage2DType>)
     {
-      std::vector<FaceNeighborType> validFaces = {Neighbors::k_NegativeYNeighbor, Neighbors::k_NegativeXNeighbor, Neighbors::k_PositiveXNeighbor, Neighbors::k_PositiveYNeighbor};
+      std::vector<FaceNeighborType> validFaces = {NeighborsType::k_NegativeYNeighbor, NeighborsType::k_NegativeXNeighbor, NeighborsType::k_PositiveXNeighbor, NeighborsType::k_PositiveYNeighbor};
       for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
       {
         for(int64 xIndex = 1; xIndex < dims[0] - 1; xIndex++)
@@ -572,12 +570,12 @@ void ProcessFaces(const FunctionT& processFaceFunction, const std::array<int64, 
 
   // Case 2: Y Planes
   {
-    if constexpr(std::is_same_v<ImageDimensionStateT, Image3D>)
+    if constexpr(std::is_same_v<ImageDimensionStateT, Image3DType>)
     {
-      std::vector<FaceNeighborType> negYValidFaces = {Neighbors::k_NegativeZNeighbor, Neighbors::k_NegativeXNeighbor, Neighbors::k_PositiveXNeighbor, Neighbors::k_PositiveYNeighbor,
-                                                      Neighbors::k_PositiveZNeighbor};
-      std::vector<FaceNeighborType> posYValidFaces = {Neighbors::k_NegativeZNeighbor, Neighbors::k_NegativeYNeighbor, Neighbors::k_NegativeXNeighbor, Neighbors::k_PositiveXNeighbor,
-                                                      Neighbors::k_PositiveZNeighbor};
+      std::vector<FaceNeighborType> negYValidFaces = {NeighborsType::k_NegativeZNeighbor, NeighborsType::k_NegativeXNeighbor, NeighborsType::k_PositiveXNeighbor, NeighborsType::k_PositiveYNeighbor,
+                                                      NeighborsType::k_PositiveZNeighbor};
+      std::vector<FaceNeighborType> posYValidFaces = {NeighborsType::k_NegativeZNeighbor, NeighborsType::k_NegativeYNeighbor, NeighborsType::k_NegativeXNeighbor, NeighborsType::k_PositiveXNeighbor,
+                                                      NeighborsType::k_PositiveZNeighbor};
       for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
       {
         for(int64 xIndex = 1; xIndex < dims[0] - 1; xIndex++)
@@ -587,9 +585,9 @@ void ProcessFaces(const FunctionT& processFaceFunction, const std::array<int64, 
         }
       }
     }
-    if constexpr(std::is_same_v<ImageDimensionStateT, EmptyYImage2D>)
+    if constexpr(std::is_same_v<ImageDimensionStateT, EmptyYImage2DType>)
     {
-      std::vector<FaceNeighborType> validFaces = {Neighbors::k_NegativeZNeighbor, Neighbors::k_NegativeXNeighbor, Neighbors::k_PositiveXNeighbor, Neighbors::k_PositiveZNeighbor};
+      std::vector<FaceNeighborType> validFaces = {NeighborsType::k_NegativeZNeighbor, NeighborsType::k_NegativeXNeighbor, NeighborsType::k_PositiveXNeighbor, NeighborsType::k_PositiveZNeighbor};
       for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
       {
         for(int64 xIndex = 1; xIndex < dims[0] - 1; xIndex++)
@@ -602,12 +600,12 @@ void ProcessFaces(const FunctionT& processFaceFunction, const std::array<int64, 
 
   // Case 3: X Planes
   {
-    if constexpr(std::is_same_v<ImageDimensionStateT, Image3D>)
+    if constexpr(std::is_same_v<ImageDimensionStateT, Image3DType>)
     {
-      std::vector<FaceNeighborType> negXValidFaces = {Neighbors::k_NegativeZNeighbor, Neighbors::k_NegativeYNeighbor, Neighbors::k_PositiveXNeighbor, Neighbors::k_PositiveYNeighbor,
-                                                      Neighbors::k_PositiveZNeighbor};
-      std::vector<FaceNeighborType> posXValidFaces = {Neighbors::k_NegativeZNeighbor, Neighbors::k_NegativeYNeighbor, Neighbors::k_NegativeXNeighbor, Neighbors::k_PositiveYNeighbor,
-                                                      Neighbors::k_PositiveZNeighbor};
+      std::vector<FaceNeighborType> negXValidFaces = {NeighborsType::k_NegativeZNeighbor, NeighborsType::k_NegativeYNeighbor, NeighborsType::k_PositiveXNeighbor, NeighborsType::k_PositiveYNeighbor,
+                                                      NeighborsType::k_PositiveZNeighbor};
+      std::vector<FaceNeighborType> posXValidFaces = {NeighborsType::k_NegativeZNeighbor, NeighborsType::k_NegativeYNeighbor, NeighborsType::k_NegativeXNeighbor, NeighborsType::k_PositiveYNeighbor,
+                                                      NeighborsType::k_PositiveZNeighbor};
       for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
       {
         for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
@@ -617,9 +615,9 @@ void ProcessFaces(const FunctionT& processFaceFunction, const std::array<int64, 
         }
       }
     }
-    if constexpr(std::is_same_v<ImageDimensionStateT, EmptyXImage2D>)
+    if constexpr(std::is_same_v<ImageDimensionStateT, EmptyXImage2DType>)
     {
-      std::vector<FaceNeighborType> validFaces = {Neighbors::k_NegativeZNeighbor, Neighbors::k_NegativeYNeighbor, Neighbors::k_PositiveYNeighbor, Neighbors::k_PositiveZNeighbor};
+      std::vector<FaceNeighborType> validFaces = {NeighborsType::k_NegativeZNeighbor, NeighborsType::k_NegativeYNeighbor, NeighborsType::k_PositiveYNeighbor, NeighborsType::k_PositiveZNeighbor};
       for(int64 zIndex = 1; zIndex < dims[2] - 1; zIndex++)
       {
         for(int64 yIndex = 1; yIndex < dims[1] - 1; yIndex++)
@@ -630,5 +628,5 @@ void ProcessFaces(const FunctionT& processFaceFunction, const std::array<int64, 
     }
   }
 }
-} // namespace ImageDimensionalUtilities
+} // namespace image_dimensional_utilities
 } // namespace nx::core

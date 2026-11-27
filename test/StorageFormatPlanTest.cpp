@@ -64,8 +64,8 @@ namespace fs = std::filesystem;
 namespace
 {
 constexpr uint64 k_LogicalBytes = 100'000'000'000ULL;
-constexpr StringLiteral k_LargeArrayName = "LargeMetadata";
-constexpr StringLiteral k_SelectedFormat = "storage-format-plan-test";
+constexpr StringLiteralType k_LargeArrayName = "LargeMetadata";
+constexpr StringLiteralType k_SelectedFormat = "storage-format-plan-test";
 const DataPath k_LargeArrayPath({k_LargeArrayName});
 
 template <class Store>
@@ -102,14 +102,14 @@ class RecordingFormatResolver : public IDataStoreFormatResolver
 {
 public:
   mutable std::vector<DataPath> paths;
-  mutable std::vector<DataType> numericTypes;
-  mutable std::vector<uint64> logicalBytes;
+  mutable std::vector<DataType> numeric_types;
+  mutable std::vector<uint64> logical_bytes;
 
   std::string resolveFormat([[maybe_unused]] const DataStructure& dataStructure, const DataPath& arrayPath, DataType numericType, uint64 dataSizeBytes) const override
   {
     paths.push_back(arrayPath);
-    numericTypes.push_back(numericType);
-    logicalBytes.push_back(dataSizeBytes);
+    numeric_types.push_back(numericType);
+    logical_bytes.push_back(dataSizeBytes);
     return {};
   }
 };
@@ -154,17 +154,17 @@ struct ScopedTempFile
 
 void CreateLargeMetadataFile(const fs::path& filePath)
 {
-  HDF5::FileIO fileWriter = HDF5::FileIO::WriteFile(filePath);
+  hdf5::FileIO fileWriter = hdf5::FileIO::WriteFile(filePath);
   REQUIRE(fileWriter.isValid());
-  auto fileWriterFileVersionWriteResult = fileWriter.writeStringAttribute("FileVersion", DREAM3D::k_CurrentFileVersion.str());
+  auto fileWriterFileVersionWriteResult = fileWriter.writeStringAttribute("FileVersion", dream3d::k_CurrentFileVersion.str());
   SIMPLNX_RESULT_REQUIRE_VALID(fileWriterFileVersionWriteResult);
-  auto dataStructureGroup = fileWriter.createGroup(Constants::k_DataStructureTag);
+  auto dataStructureGroup = fileWriter.createGroup(constants::k_DataStructureTag);
   REQUIRE(dataStructureGroup.isValid());
-  auto dataStructureGroupNextIdWriteResult = dataStructureGroup.writeScalarAttribute(Constants::k_NextIdTag, DataObject::IdType{2});
+  auto dataStructureGroupNextIdWriteResult = dataStructureGroup.writeScalarAttribute(constants::k_NextIdTag, DataObject::IdType{2});
   SIMPLNX_RESULT_REQUIRE_VALID(dataStructureGroupNextIdWriteResult);
 
   {
-    std::lock_guard<std::mutex> hdf5Lock(HDF5::Support::ApiLock());
+    std::lock_guard<std::mutex> hdf5Lock(hdf5::Support::ApiLock());
     const std::array<hsize_t, 1> dimensions{static_cast<hsize_t>(k_LogicalBytes)};
     const std::array<hsize_t, 1> chunkDimensions{1024 * 1024};
     const hid_t dataspaceId = H5Screate_simple(static_cast<int>(dimensions.size()), dimensions.data(), nullptr);
@@ -183,15 +183,15 @@ void CreateLargeMetadataFile(const fs::path& filePath)
   }
 
   auto datasetWriter = dataStructureGroup.openDataset(k_LargeArrayName.str());
-  auto datasetWriterObjectTypeWriteResult = datasetWriter.writeStringAttribute(Constants::k_ObjectTypeTag, DataArray<uint8>::GetTypeName());
+  auto datasetWriterObjectTypeWriteResult = datasetWriter.writeStringAttribute(constants::k_ObjectTypeTag, DataArray<uint8>::GetTypeName());
   SIMPLNX_RESULT_REQUIRE_VALID(datasetWriterObjectTypeWriteResult);
-  auto datasetWriterObjectIdWriteResult = datasetWriter.writeScalarAttribute(Constants::k_ObjectIdTag, DataObject::IdType{1});
+  auto datasetWriterObjectIdWriteResult = datasetWriter.writeScalarAttribute(constants::k_ObjectIdTag, DataObject::IdType{1});
   SIMPLNX_RESULT_REQUIRE_VALID(datasetWriterObjectIdWriteResult);
-  auto datasetWriterImportableWriteResult = datasetWriter.writeScalarAttribute(Constants::k_ImportableTag, int32{1});
+  auto datasetWriterImportableWriteResult = datasetWriter.writeScalarAttribute(constants::k_ImportableTag, int32{1});
   SIMPLNX_RESULT_REQUIRE_VALID(datasetWriterImportableWriteResult);
-  auto datasetWriterTupleShapeWriteResult = datasetWriter.writeVectorAttribute(IOConstants::k_TupleShapeTag, ShapeType{static_cast<usize>(k_LogicalBytes)});
+  auto datasetWriterTupleShapeWriteResult = datasetWriter.writeVectorAttribute(io_constants::k_TupleShapeTag, ShapeType{static_cast<usize>(k_LogicalBytes)});
   SIMPLNX_RESULT_REQUIRE_VALID(datasetWriterTupleShapeWriteResult);
-  auto datasetWriterComponentShapeWriteResult = datasetWriter.writeVectorAttribute(IOConstants::k_ComponentShapeTag, ShapeType{1});
+  auto datasetWriterComponentShapeWriteResult = datasetWriter.writeVectorAttribute(io_constants::k_ComponentShapeTag, ShapeType{1});
   SIMPLNX_RESULT_REQUIRE_VALID(datasetWriterComponentShapeWriteResult);
 }
 } // namespace
@@ -200,28 +200,28 @@ TEST_CASE("StorageFormatPlan: placeholder registration preserves an existing man
 {
   DataIOCollection collection;
   const std::string format = "HDF5-OOC";
-  auto registration = UnitTest::RegisterPlaceholderPlanManager(collection, format);
+  auto registration = unit_test::RegisterPlaceholderPlanManager(collection, format);
   SIMPLNX_RESULT_REQUIRE_VALID(registration);
   auto firstManager = collection.getManager(format);
   REQUIRE(firstManager != nullptr);
   REQUIRE(firstManager->hasDataStoreCreationFnc(format));
 
-  auto repeatedRegistration = UnitTest::RegisterPlaceholderPlanManager(collection, format);
+  auto repeatedRegistration = unit_test::RegisterPlaceholderPlanManager(collection, format);
   SIMPLNX_RESULT_REQUIRE_VALID(repeatedRegistration);
   REQUIRE(collection.getManager(format) == firstManager);
 
   // Model an application-provided manager replacing the placeholder.
-  auto applicationManager = std::make_shared<UnitTest::PlaceholderPlanManager>(format);
+  auto applicationManager = std::make_shared<unit_test::PlaceholderPlanManager>(format);
   auto applicationRegistration = collection.addIOManager(applicationManager);
   SIMPLNX_RESULT_REQUIRE_VALID(applicationRegistration);
-  auto preservedRegistration = UnitTest::RegisterPlaceholderPlanManager(collection, format);
+  auto preservedRegistration = unit_test::RegisterPlaceholderPlanManager(collection, format);
   SIMPLNX_RESULT_REQUIRE_VALID(preservedRegistration);
   REQUIRE(collection.getManager(format) == applicationManager);
 }
 
 TEST_CASE("StorageFormatPlan: numeric selection validates capability without allocating", "[StorageFormatPlan][T04][T08][T09]")
 {
-  auto manager = std::make_shared<UnitTest::PlaceholderPlanManager>(k_SelectedFormat.str());
+  auto manager = std::make_shared<unit_test::PlaceholderPlanManager>(k_SelectedFormat.str());
   auto managerRegistrationResult = Application::GetOrCreateInstance()->getIOCollection().addIOManager(manager);
   SIMPLNX_RESULT_REQUIRE_VALID(managerRegistrationResult);
 
@@ -236,8 +236,8 @@ TEST_CASE("StorageFormatPlan: numeric selection validates capability without all
   DataStructure destination;
   auto resolver = std::make_shared<RecordingFormatResolver>();
   resolver->paths.clear();
-  resolver->numericTypes.clear();
-  resolver->logicalBytes.clear();
+  resolver->numeric_types.clear();
+  resolver->logical_bytes.clear();
   destination.setFormatResolver(resolver);
   const DataPath path({"Selected"});
 
@@ -250,15 +250,15 @@ TEST_CASE("StorageFormatPlan: numeric selection validates capability without all
   SIMPLNX_RESULT_REQUIRE_VALID(automaticMemory);
   REQUIRE(automaticMemory.value().empty());
   REQUIRE(resolver->paths == std::vector<DataPath>{path});
-  REQUIRE(resolver->numericTypes == std::vector<DataType>{DataType::float32});
-  REQUIRE(resolver->logicalBytes == std::vector<uint64>{48});
+  REQUIRE(resolver->numeric_types == std::vector<DataType>{DataType::float32});
+  REQUIRE(resolver->logical_bytes == std::vector<uint64>{48});
 
   auto repeatedValidation = ValidateNumericStorageFormat(Preferences::k_InMemoryFormat.str());
   SIMPLNX_RESULT_REQUIRE_VALID(repeatedValidation);
   REQUIRE(repeatedValidation.value().empty());
   REQUIRE(resolver->paths == std::vector<DataPath>{path});
-  REQUIRE(resolver->numericTypes == std::vector<DataType>{DataType::float32});
-  REQUIRE(resolver->logicalBytes == std::vector<uint64>{48});
+  REQUIRE(resolver->numeric_types == std::vector<DataType>{DataType::float32});
+  REQUIRE(resolver->logical_bytes == std::vector<uint64>{48});
 
   destination.setFormatResolver(std::make_shared<SelectedFormatResolver>(k_SelectedFormat.str()));
   auto automatic = ResolveNumericStorageFormat(destination, path, DataType::float32, 48, "");
@@ -318,7 +318,7 @@ TEST_CASE("StorageFormatPlan: factory creates validated memory and registered OO
   REQUIRE(namedMemoryResult.value()->getDataFormat().empty());
   REQUIRE(namedMemoryResult.value()->memoryUsage() == 48);
 
-  auto manager = std::make_shared<UnitTest::PlaceholderPlanManager>(k_SelectedFormat.str());
+  auto manager = std::make_shared<unit_test::PlaceholderPlanManager>(k_SelectedFormat.str());
   auto managerRegistrationResult = Application::GetOrCreateInstance()->getIOCollection().addIOManager(manager);
   SIMPLNX_RESULT_REQUIRE_VALID(managerRegistrationResult);
   auto registeredResult = EmptyDataStore<uint8>::Create(ShapeType{6}, ShapeType{1}, k_SelectedFormat.str());
@@ -329,7 +329,7 @@ TEST_CASE("StorageFormatPlan: factory creates validated memory and registered OO
   REQUIRE(registeredResult.value()->memoryUsage() == 0);
 
 #if SIMPLNX_STORE_COPY_STRICT_FORMAT
-  auto placeholderRegistration = UnitTest::RegisterPlaceholderPlanManager(Application::GetOrCreateInstance()->getIOCollection(), "HDF5-OOC");
+  auto placeholderRegistration = unit_test::RegisterPlaceholderPlanManager(Application::GetOrCreateInstance()->getIOCollection(), "HDF5-OOC");
   SIMPLNX_RESULT_REQUIRE_VALID(placeholderRegistration);
   auto oocResult = EmptyDataStore<float32>::Create(ShapeType{2, 3}, ShapeType{2}, "HDF5-OOC");
   SIMPLNX_RESULT_REQUIRE_VALID(oocResult);
@@ -433,24 +433,24 @@ TEST_CASE("StorageFormatPlan: placeholder resize validates complete counts befor
 
 TEST_CASE("StorageFormatPlan: construction API is mandatory", "[StorageFormatPlan][T03]")
 {
-  using Store = EmptyDataStore<float32>;
-  CHECK_FALSE(std::is_default_constructible_v<Store>);
-  CHECK_FALSE((std::is_constructible_v<Store, ShapeType, ShapeType>));
-  CHECK_FALSE((std::is_constructible_v<Store, ShapeType, ShapeType, std::string>));
-  CHECK(HasSelectedFactory<Store>);
+  using StoreType = EmptyDataStore<float32>;
+  CHECK_FALSE(std::is_default_constructible_v<StoreType>);
+  CHECK_FALSE((std::is_constructible_v<StoreType, ShapeType, ShapeType>));
+  CHECK_FALSE((std::is_constructible_v<StoreType, ShapeType, ShapeType, std::string>));
+  CHECK(HasSelectedFactory<StoreType>);
 }
 
 TEST_CASE("StorageFormatPlan: obsolete store getters are unavailable", "[StorageFormatPlan][T06]")
 {
-  using Store = EmptyDataStore<float32>;
-  CHECK_FALSE(HasLegacyFormatGetter<Store>);
-  CHECK_FALSE(HasPlannedFormatGetter<Store>);
+  using StoreType = EmptyDataStore<float32>;
+  CHECK_FALSE(HasLegacyFormatGetter<StoreType>);
+  CHECK_FALSE(HasPlannedFormatGetter<StoreType>);
   CHECK(HasActionFormatRequestAccessor<CreateArrayAction>);
 }
 
 TEST_CASE("StorageFormatPlan: common getter preserves the recorded source plan", "[StorageFormatPlan]")
 {
-  auto manager = std::make_shared<UnitTest::PlaceholderPlanManager>(k_SelectedFormat.str());
+  auto manager = std::make_shared<unit_test::PlaceholderPlanManager>(k_SelectedFormat.str());
   REQUIRE(Application::GetOrCreateInstance()->getIOCollection().addIOManager(manager).valid());
   auto sourceResult = EmptyDataStore<float32>::Create(ShapeType{4}, ShapeType{1}, k_SelectedFormat.str());
   SIMPLNX_RESULT_REQUIRE_VALID(sourceResult);
@@ -461,16 +461,16 @@ TEST_CASE("StorageFormatPlan: common getter preserves the recorded source plan",
 
 TEST_CASE("StorageFormatPlan: Empty conversion selects metadata without allocating values", "[StorageFormatPlan][T20]")
 {
-  auto manager = std::make_shared<UnitTest::PlaceholderPlanManager>(k_SelectedFormat.str());
+  auto manager = std::make_shared<unit_test::PlaceholderPlanManager>(k_SelectedFormat.str());
   REQUIRE(Application::GetOrCreateInstance()->getIOCollection().addIOManager(manager).valid());
   auto sourceResult = EmptyDataStore<float32>::Create(ShapeType{3}, ShapeType{1}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(sourceResult);
 
-  auto unchanged = DataStoreUtilities::ConvertDataStore<float32>(*sourceResult.value(), Preferences::k_InMemoryFormat.str());
+  auto unchanged = data_store_utilities::ConvertDataStore<float32>(*sourceResult.value(), Preferences::k_InMemoryFormat.str());
   CHECK(unchanged == nullptr);
   CHECK(sourceResult.value()->getStoreType() == IDataStore::StoreType::Empty);
 
-  auto converted = DataStoreUtilities::ConvertDataStore<float32>(*sourceResult.value(), k_SelectedFormat.str());
+  auto converted = data_store_utilities::ConvertDataStore<float32>(*sourceResult.value(), k_SelectedFormat.str());
   REQUIRE(converted != nullptr);
   CHECK(converted->getStoreType() == IDataStore::StoreType::Empty);
   CHECK(converted->getDataFormat() == k_SelectedFormat.str());
@@ -491,29 +491,29 @@ TEST_CASE("StorageFormatPlan: import resolver receives 100 GB logical bytes from
   CreateLargeMetadataFile(filePath);
   fs::last_write_time(filePath, fs::last_write_time(filePath) - std::chrono::seconds(10));
 
-  auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  auto& cache = dream3d::Dream3dPreflightCache::Instance();
   cache.clear();
   cache.resetStats();
   auto inMemoryResolver = std::make_shared<InMemoryFormatResolver>();
   auto cleanup = MakeScopeGuard([&cache, inMemoryResolver]() noexcept {
     cache.clear();
-    DataStructure::setDefaultFormatResolver(inMemoryResolver);
+    DataStructure::SetDefaultFormatResolver(inMemoryResolver);
   });
 
-  auto manager = std::make_shared<UnitTest::PlaceholderPlanManager>(k_SelectedFormat.str());
+  auto manager = std::make_shared<unit_test::PlaceholderPlanManager>(k_SelectedFormat.str());
   auto managerRegistrationResult = Application::GetOrCreateInstance()->getIOCollection().addIOManager(manager);
   SIMPLNX_RESULT_REQUIRE_VALID(managerRegistrationResult);
-  DataStructure::setDefaultFormatResolver(std::make_shared<SelectedFormatResolver>(k_SelectedFormat.str()));
+  DataStructure::SetDefaultFormatResolver(std::make_shared<SelectedFormatResolver>(k_SelectedFormat.str()));
 
   auto firstFetch = cache.fetch(filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(firstFetch);
-  auto* sourceArray = firstFetch.value().getDataAs<UInt8Array>(k_LargeArrayPath);
-  REQUIRE(sourceArray != nullptr);
-  REQUIRE(sourceArray->getTupleShape() == ShapeType{static_cast<usize>(k_LogicalBytes)});
-  REQUIRE(sourceArray->getComponentShape() == ShapeType{1});
-  REQUIRE(sourceArray->getIDataStore()->getStoreType() == IDataStore::StoreType::Empty);
-  REQUIRE(sourceArray->getIDataStore()->getPlannedStoreType() == IDataStore::StoreType::OutOfCore);
-  REQUIRE(sourceArray->memoryUsage() == 0);
+  auto* sourceArrayPtr = firstFetch.value().getDataAs<UInt8ArrayType>(k_LargeArrayPath);
+  REQUIRE(sourceArrayPtr != nullptr);
+  REQUIRE(sourceArrayPtr->getTupleShape() == ShapeType{static_cast<usize>(k_LogicalBytes)});
+  REQUIRE(sourceArrayPtr->getComponentShape() == ShapeType{1});
+  REQUIRE(sourceArrayPtr->getIDataStore()->getStoreType() == IDataStore::StoreType::Empty);
+  REQUIRE(sourceArrayPtr->getIDataStore()->getPlannedStoreType() == IDataStore::StoreType::OutOfCore);
+  REQUIRE(sourceArrayPtr->memoryUsage() == 0);
 
   DataStructure destination;
   auto recordingResolver = std::make_shared<RecordingFormatResolver>();
@@ -526,7 +526,7 @@ TEST_CASE("StorageFormatPlan: import resolver receives 100 GB logical bytes from
   REQUIRE(cache.missCount() == 2);
   REQUIRE(cache.hitCount() == 0);
   REQUIRE(recordingResolver->paths == std::vector<DataPath>{k_LargeArrayPath});
-  REQUIRE(recordingResolver->logicalBytes == std::vector<uint64>{k_LogicalBytes});
+  REQUIRE(recordingResolver->logical_bytes == std::vector<uint64>{k_LogicalBytes});
 }
 
 namespace
@@ -542,17 +542,17 @@ constexpr std::array<int32, 3> k_ImportPolicyExcludedValues{91, 92, 93};
 constexpr std::array<int32, 2> k_ImportPolicyMarkerValues{731, -204};
 
 template <usize Count>
-Int32Array* CreateImportPolicyArray(DataStructure& dataStructure, const DataPath& path, const std::array<int32, Count>& values, DataObject::OptionalId parentId = {})
+Int32ArrayType* CreateImportPolicyArray(DataStructure& dataStructure, const DataPath& path, const std::array<int32, Count>& values, DataObject::OptionalIdType parentId = {})
 {
-  auto store = DataStoreUtilities::CreateDataStore<int32>(dataStructure, path, ShapeType{Count}, ShapeType{1});
+  auto store = data_store_utilities::CreateDataStore<int32>(dataStructure, path, ShapeType{Count}, ShapeType{1});
   REQUIRE(store != nullptr);
-  auto* array = Int32Array::Create(dataStructure, path.getTargetName(), std::move(store), parentId);
-  REQUIRE(array != nullptr);
+  auto* arrayPtr = Int32ArrayType::Create(dataStructure, path.getTargetName(), std::move(store), parentId);
+  REQUIRE(arrayPtr != nullptr);
   for(usize valueIdx = 0; valueIdx < Count; ++valueIdx)
   {
-    (*array)[valueIdx] = values[valueIdx];
+    (*arrayPtr)[valueIdx] = values[valueIdx];
   }
-  return array;
+  return arrayPtr;
 }
 
 /**
@@ -563,10 +563,10 @@ Int32Array* CreateImportPolicyArray(DataStructure& dataStructure, const DataPath
  * @param expected Supplies literal values independent of import output.
  */
 template <usize Count>
-void CheckImportPolicyFileArray(const HDF5::FileIO& fileReader, const DataPath& path, const std::array<int32, Count>& expected)
+void CheckImportPolicyFileArray(const hdf5::FileIO& fileReader, const DataPath& path, const std::array<int32, Count>& expected)
 {
   const auto fileId = fileReader.getId();
-  const std::lock_guard<std::mutex> lock(HDF5::Support::ApiLock());
+  const std::lock_guard<std::mutex> lock(hdf5::Support::ApiLock());
   const std::string datasetPath = "/DataStructure/" + path.toString();
   const hid_t datasetId = H5Dopen2(fileId, datasetPath.c_str(), H5P_DEFAULT);
   REQUIRE(datasetId >= 0);
@@ -588,88 +588,88 @@ void WriteImportPolicyFile(const fs::path& path)
 {
   DataStructure source;
   source.setFormatResolver(std::make_shared<InMemoryFormatResolver>());
-  auto* group = DataGroup::Create(source, k_ImportPolicyGroup.getTargetName());
-  REQUIRE(group != nullptr);
-  CreateImportPolicyArray(source, k_ImportPolicyFirst, k_ImportPolicyFirstValues, group->getId());
-  CreateImportPolicyArray(source, k_ImportPolicySecond, k_ImportPolicySecondValues, group->getId());
-  CreateImportPolicyArray(source, k_ImportPolicyExcluded, k_ImportPolicyExcludedValues, group->getId());
-  const auto writeResult = DREAM3D::WriteFile(path, source);
+  auto* groupPtr = DataGroup::Create(source, k_ImportPolicyGroup.getTargetName());
+  REQUIRE(groupPtr != nullptr);
+  CreateImportPolicyArray(source, k_ImportPolicyFirst, k_ImportPolicyFirstValues, groupPtr->getId());
+  CreateImportPolicyArray(source, k_ImportPolicySecond, k_ImportPolicySecondValues, groupPtr->getId());
+  CreateImportPolicyArray(source, k_ImportPolicyExcluded, k_ImportPolicyExcludedValues, groupPtr->getId());
+  const auto writeResult = dream3d::WriteFile(path, source);
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   {
-    const auto fileReader = HDF5::FileIO::ReadFile(path);
+    const auto fileReader = hdf5::FileIO::ReadFile(path);
     REQUIRE(fileReader.isValid());
     CheckImportPolicyFileArray(fileReader, k_ImportPolicyFirst, k_ImportPolicyFirstValues);
     CheckImportPolicyFileArray(fileReader, k_ImportPolicySecond, k_ImportPolicySecondValues);
     CheckImportPolicyFileArray(fileReader, k_ImportPolicyExcluded, k_ImportPolicyExcludedValues);
   }
   fs::last_write_time(path, fs::file_time_type::clock::now() - std::chrono::seconds(10));
-  REQUIRE((fs::file_time_type::clock::now() - fs::last_write_time(path) >= DREAM3D::Dream3dPreflightCache::k_MtimeTrustWindow));
+  REQUIRE((fs::file_time_type::clock::now() - fs::last_write_time(path) >= dream3d::Dream3dPreflightCache::k_MtimeTrustWindow));
 }
 
 template <usize Count>
 void CheckImportPolicyArray(const DataStructure& dataStructure, const DataPath& path, const std::array<int32, Count>& expected, IDataAction::Mode mode)
 {
-  const auto* array = dataStructure.getDataAs<Int32Array>(path);
-  REQUIRE(array != nullptr);
-  CHECK(dataStructure.getData(array->getId()) == array);
-  REQUIRE(array->getTupleShape() == ShapeType{Count});
-  REQUIRE(array->getComponentShape() == ShapeType{1});
-  REQUIRE(array->size() == Count);
-  REQUIRE(array->getIDataStore() != nullptr);
-  CHECK(array->getDataFormat().empty());
-  CHECK(array->getIDataStore()->getPlannedStoreType() == IDataStore::StoreType::InMemory);
+  const auto* arrayPtr = dataStructure.getDataAs<Int32ArrayType>(path);
+  REQUIRE(arrayPtr != nullptr);
+  CHECK(dataStructure.getData(arrayPtr->getId()) == arrayPtr);
+  REQUIRE(arrayPtr->getTupleShape() == ShapeType{Count});
+  REQUIRE(arrayPtr->getComponentShape() == ShapeType{1});
+  REQUIRE(arrayPtr->size() == Count);
+  REQUIRE(arrayPtr->getIDataStore() != nullptr);
+  CHECK(arrayPtr->getDataFormat().empty());
+  CHECK(arrayPtr->getIDataStore()->getPlannedStoreType() == IDataStore::StoreType::InMemory);
   if(mode == IDataAction::Mode::Preflight)
   {
-    REQUIRE(array->getStoreType() == IDataStore::StoreType::Empty);
-    CHECK(array->memoryUsage() == Count * sizeof(int32));
+    REQUIRE(arrayPtr->getStoreType() == IDataStore::StoreType::Empty);
+    CHECK(arrayPtr->memoryUsage() == Count * sizeof(int32));
   }
   else
   {
-    REQUIRE(array->getStoreType() == IDataStore::StoreType::InMemory);
+    REQUIRE(arrayPtr->getStoreType() == IDataStore::StoreType::InMemory);
     for(usize valueIdx = 0; valueIdx < Count; ++valueIdx)
     {
-      CHECK((*array)[valueIdx] == expected[valueIdx]);
+      CHECK((*arrayPtr)[valueIdx] == expected[valueIdx]);
     }
   }
 }
 
 void CheckImportPolicyOutput(const DataStructure& dataStructure, IDataAction::Mode mode)
 {
-  const auto* group = dataStructure.getDataAs<DataGroup>(k_ImportPolicyGroup);
-  REQUIRE(group != nullptr);
-  CHECK(dataStructure.getData(group->getId()) == group);
+  const auto* groupPtr = dataStructure.getDataAs<DataGroup>(k_ImportPolicyGroup);
+  REQUIRE(groupPtr != nullptr);
+  CHECK(dataStructure.getData(groupPtr->getId()) == groupPtr);
   CheckImportPolicyArray(dataStructure, k_ImportPolicyFirst, k_ImportPolicyFirstValues, mode);
   CheckImportPolicyArray(dataStructure, k_ImportPolicySecond, k_ImportPolicySecondValues, mode);
   CHECK_FALSE(dataStructure.containsData(k_ImportPolicyExcluded));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 void CheckImportPolicyRecords(const RecordingFormatResolver& resolver)
 {
   REQUIRE(resolver.paths.size() == 2);
-  REQUIRE(resolver.numericTypes.size() == 2);
-  REQUIRE(resolver.logicalBytes.size() == 2);
+  REQUIRE(resolver.numeric_types.size() == 2);
+  REQUIRE(resolver.logical_bytes.size() == 2);
   CHECK(std::count(resolver.paths.begin(), resolver.paths.end(), k_ImportPolicyFirst) == 1);
   CHECK(std::count(resolver.paths.begin(), resolver.paths.end(), k_ImportPolicySecond) == 1);
   for(usize recordIdx = 0; recordIdx < resolver.paths.size(); ++recordIdx)
   {
-    CHECK(resolver.numericTypes[recordIdx] == DataType::int32);
+    CHECK(resolver.numeric_types[recordIdx] == DataType::int32);
     const uint64 expectedBytes = resolver.paths[recordIdx] == k_ImportPolicyFirst ? sizeof(int32) * k_ImportPolicyFirstValues.size() : sizeof(int32) * k_ImportPolicySecondValues.size();
-    CHECK(resolver.logicalBytes[recordIdx] == expectedBytes);
+    CHECK(resolver.logical_bytes[recordIdx] == expectedBytes);
   }
 }
 
 void CheckImportPolicyMarker(const DataStructure& destination, const std::shared_ptr<DataObject>& markerOwner, const IDataStore* originalStore)
 {
-  const auto* marker = destination.getDataAs<Int32Array>(k_ImportPolicyMarker);
-  REQUIRE(marker != nullptr);
-  CHECK(marker == markerOwner.get());
+  const auto* markerPtr = destination.getDataAs<Int32ArrayType>(k_ImportPolicyMarker);
+  REQUIRE(markerPtr != nullptr);
+  CHECK(markerPtr == markerOwner.get());
   CHECK(destination.getData(markerOwner->getId()) == markerOwner.get());
-  CHECK(marker->getIDataStore() == originalStore);
-  const auto tag = marker->getMetadata().getData("policy-marker");
-  const auto* tagValue = std::any_cast<std::string>(&tag);
-  REQUIRE(tagValue != nullptr);
-  CHECK(*tagValue == "keep-existing-metadata");
+  CHECK(markerPtr->getIDataStore() == originalStore);
+  const auto tag = markerPtr->getMetadata().getData("policy-marker");
+  const auto* tagValuePtr = std::any_cast<std::string>(&tag);
+  REQUIRE(tagValuePtr != nullptr);
+  CHECK(*tagValuePtr == "keep-existing-metadata");
   CheckImportPolicyArray(destination, k_ImportPolicyMarker, k_ImportPolicyMarkerValues, IDataAction::Mode::Execute);
 }
 
@@ -685,7 +685,7 @@ public:
 
   mutable usize calls = 0;
 
-  std::string resolveFormat(const DataStructure&, const DataPath&, DataType, uint64) const override
+  std::string resolveFormat(const DataStructure& /*dataStructure*/, const DataPath& /*arrayPath*/, DataType /*numericType*/, uint64 /*dataSizeBytes*/) const override
   {
     ++calls;
     throw std::runtime_error("selected-import process policy witness");
@@ -706,21 +706,21 @@ public:
   CompleteImportContextResolver& operator=(const CompleteImportContextResolver&) = default;
   CompleteImportContextResolver& operator=(CompleteImportContextResolver&&) = default;
 
-  mutable usize completeContextCalls = 0;
-  mutable usize placeholderContextCalls = 0;
+  mutable usize complete_context_calls = 0;
+  mutable usize placeholder_context_calls = 0;
 
   std::string resolveFormat(const DataStructure& dataStructure, const DataPath& path, DataType type, uint64 bytes) const override
   {
-    const auto* first = dataStructure.getDataAs<Int32Array>(k_ImportPolicyFirst);
-    const auto* second = dataStructure.getDataAs<Int32Array>(k_ImportPolicySecond);
-    if(dataStructure.containsData(k_ImportPolicyMarker) && dataStructure.getDataAs<DataGroup>(k_ImportPolicyGroup) != nullptr && first != nullptr && second != nullptr &&
+    const auto* firstPtr = dataStructure.getDataAs<Int32ArrayType>(k_ImportPolicyFirst);
+    const auto* secondPtr = dataStructure.getDataAs<Int32ArrayType>(k_ImportPolicySecond);
+    if(dataStructure.containsData(k_ImportPolicyMarker) && dataStructure.getDataAs<DataGroup>(k_ImportPolicyGroup) != nullptr && firstPtr != nullptr && secondPtr != nullptr &&
        !dataStructure.containsData(k_ImportPolicyExcluded))
     {
-      ++completeContextCalls;
+      ++complete_context_calls;
     }
-    if(first != nullptr && second != nullptr && first->getStoreType() == IDataStore::StoreType::Empty && second->getStoreType() == IDataStore::StoreType::Empty)
+    if(firstPtr != nullptr && secondPtr != nullptr && firstPtr->getStoreType() == IDataStore::StoreType::Empty && secondPtr->getStoreType() == IDataStore::StoreType::Empty)
     {
-      ++placeholderContextCalls;
+      ++placeholder_context_calls;
     }
     return RecordingFormatResolver::resolveFormat(dataStructure, path, type, bytes);
   }
@@ -733,7 +733,7 @@ public:
  */
 void CheckSelectedImportDefaultResolver(const std::shared_ptr<const IDataStoreFormatResolver>& expectedResolver, const std::string& expectedFormat)
 {
-  const auto actualResolver = DataStructure::getDefaultFormatResolver();
+  const auto actualResolver = DataStructure::GetDefaultFormatResolver();
   CHECK(actualResolver == expectedResolver);
   CHECK_FALSE(actualResolver.owner_before(expectedResolver));
   CHECK_FALSE(expectedResolver.owner_before(actualResolver));
@@ -747,20 +747,20 @@ void CheckSelectedImportDefaultResolver(const std::shared_ptr<const IDataStoreFo
 
 TEST_CASE("StorageFormatPlan: selected import does not consult process policy", "[StorageFormatPlan][SelectedImportPolicy]")
 {
-  UnitTest::LoadPlugins();
-  const auto registration = Application::GetOrCreateInstance()->getIOCollection().addIOManager(std::make_shared<UnitTest::PlaceholderPlanManager>(k_SelectedFormat.str()));
+  unit_test::LoadPlugins();
+  const auto registration = Application::GetOrCreateInstance()->getIOCollection().addIOManager(std::make_shared<unit_test::PlaceholderPlanManager>(k_SelectedFormat.str()));
   SIMPLNX_RESULT_REQUIRE_VALID(registration);
   const auto incomingResolver = std::make_shared<SelectedFormatResolver>(k_SelectedFormat.str());
-  const auto restoreIncoming = UnitTest::SetDefaultFormatResolverForScope(incomingResolver);
+  const auto restoreIncoming = unit_test::SetDefaultFormatResolverForScope(incomingResolver);
   {
     const auto application = Application::GetOrCreateInstance();
     const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
     const bool warmCache = GENERATE(false, true);
     CAPTURE(static_cast<int>(mode), warmCache);
     const ScopedTempFile file(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "selected_import_process_policy.dream3d");
-    auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+    auto& cache = dream3d::Dream3dPreflightCache::Instance();
     const auto memoryResolver = std::make_shared<InMemoryFormatResolver>();
-    const auto restoreResolver = UnitTest::SetDefaultFormatResolverForScope(memoryResolver);
+    const auto restoreResolver = unit_test::SetDefaultFormatResolverForScope(memoryResolver);
     const auto cleanup = MakeScopeGuard([&cache]() noexcept { cache.clear(); });
     cache.clear();
     cache.resetStats();
@@ -790,7 +790,7 @@ TEST_CASE("StorageFormatPlan: selected import does not consult process policy", 
     const auto destinationResolver = std::make_shared<RecordingFormatResolver>();
     destination.setFormatResolver(destinationResolver);
     const auto processResolver = std::make_shared<RejectingImportProcessResolver>();
-    DataStructure::setDefaultFormatResolver(processResolver);
+    DataStructure::SetDefaultFormatResolver(processResolver);
 
     const auto result = action.apply(destination, mode);
     INFO("Process-policy callbacks: " << processResolver->calls);
@@ -812,8 +812,8 @@ TEST_CASE("StorageFormatPlan: selected import does not consult process policy", 
     {
       for(const auto& path : {k_ImportPolicyFirst, k_ImportPolicySecond})
       {
-        const auto* firstHandoutPtr = warmDestination.getDataAs<Int32Array>(path);
-        const auto* secondHandoutPtr = destination.getDataAs<Int32Array>(path);
+        const auto* firstHandoutPtr = warmDestination.getDataAs<Int32ArrayType>(path);
+        const auto* secondHandoutPtr = destination.getDataAs<Int32ArrayType>(path);
         REQUIRE(firstHandoutPtr != nullptr);
         REQUIRE(secondHandoutPtr != nullptr);
         CHECK(firstHandoutPtr != secondHandoutPtr);
@@ -827,19 +827,19 @@ TEST_CASE("StorageFormatPlan: selected import does not consult process policy", 
 
 TEST_CASE("StorageFormatPlan: destination policy sees all selected metadata before values", "[StorageFormatPlan][SelectedImportPolicy]")
 {
-  UnitTest::LoadPlugins();
-  const auto registration = Application::GetOrCreateInstance()->getIOCollection().addIOManager(std::make_shared<UnitTest::PlaceholderPlanManager>(k_SelectedFormat.str()));
+  unit_test::LoadPlugins();
+  const auto registration = Application::GetOrCreateInstance()->getIOCollection().addIOManager(std::make_shared<unit_test::PlaceholderPlanManager>(k_SelectedFormat.str()));
   SIMPLNX_RESULT_REQUIRE_VALID(registration);
   const auto incomingResolver = std::make_shared<SelectedFormatResolver>(k_SelectedFormat.str());
-  const auto restoreIncoming = UnitTest::SetDefaultFormatResolverForScope(incomingResolver);
+  const auto restoreIncoming = unit_test::SetDefaultFormatResolverForScope(incomingResolver);
   {
     const auto application = Application::GetOrCreateInstance();
     const auto mode = GENERATE(IDataAction::Mode::Preflight, IDataAction::Mode::Execute);
     CAPTURE(static_cast<int>(mode));
     const ScopedTempFile file(fs::path(unit_test::k_BinaryTestOutputDir.view()) / "selected_import_complete_context.dream3d");
-    auto& cache = DREAM3D::Dream3dPreflightCache::Instance();
+    auto& cache = dream3d::Dream3dPreflightCache::Instance();
     const auto memoryResolver = std::make_shared<InMemoryFormatResolver>();
-    const auto restoreResolver = UnitTest::SetDefaultFormatResolverForScope(memoryResolver);
+    const auto restoreResolver = unit_test::SetDefaultFormatResolverForScope(memoryResolver);
     const auto cleanup = MakeScopeGuard([&cache]() noexcept { cache.clear(); });
     cache.clear();
     WriteImportPolicyFile(file.path);
@@ -855,8 +855,8 @@ TEST_CASE("StorageFormatPlan: destination policy sees all selected metadata befo
     const auto result = action.apply(destination, mode);
     SIMPLNX_RESULT_REQUIRE_VALID(result);
     CheckImportPolicyRecords(*resolver);
-    CHECK(resolver->completeContextCalls == 2);
-    CHECK(resolver->placeholderContextCalls == 2);
+    CHECK(resolver->complete_context_calls == 2);
+    CHECK(resolver->placeholder_context_calls == 2);
     CHECK(&destination.formatResolver() == resolver.get());
     CheckImportPolicyMarker(destination, markerOwner, markerStorePtr);
     CheckImportPolicyOutput(destination, mode);
@@ -873,11 +873,11 @@ namespace
  */
 struct SelectedImportTestContext
 {
-  std::shared_ptr<InMemoryFormatResolver> memoryResolver = std::make_shared<InMemoryFormatResolver>();
+  std::shared_ptr<InMemoryFormatResolver> memory_resolver = std::make_shared<InMemoryFormatResolver>();
   // The guard also restores the incoming owner if fixture construction throws.
-  decltype(UnitTest::SetDefaultFormatResolverForScope(nullptr)) RestoreResolver = UnitTest::SetDefaultFormatResolverForScope(memoryResolver);
+  decltype(unit_test::SetDefaultFormatResolverForScope(nullptr)) restore_resolver = unit_test::SetDefaultFormatResolverForScope(memory_resolver);
   ScopedTempFile file;
-  DREAM3D::Dream3dPreflightCache& cache = DREAM3D::Dream3dPreflightCache::Instance();
+  dream3d::Dream3dPreflightCache& cache = dream3d::Dream3dPreflightCache::Instance();
 
   explicit SelectedImportTestContext(const std::string& name)
   : file(fs::path(unit_test::k_BinaryTestOutputDir.view()) / name)
@@ -899,8 +899,8 @@ struct SelectedImportTestContext
 
 std::shared_ptr<DataObject> CreateSelectedImportMarker(DataStructure& destination)
 {
-  auto* marker = CreateImportPolicyArray(destination, k_ImportPolicyMarker, k_ImportPolicyMarkerValues);
-  marker->getMetadata().setData("policy-marker", std::string("keep-existing-metadata"));
+  auto* markerPtr = CreateImportPolicyArray(destination, k_ImportPolicyMarker, k_ImportPolicyMarkerValues);
+  markerPtr->getMetadata().setData("policy-marker", std::string("keep-existing-metadata"));
   return destination.getSharedData(k_ImportPolicyMarker);
 }
 
@@ -934,24 +934,24 @@ public:
 
 TEST_CASE("Selected import test context restores nested resolver ownership", "[StorageFormatPlan][SelectedImportPolicy][FormatResolver]")
 {
-  UnitTest::LoadPlugins();
-  const auto registration = Application::GetOrCreateInstance()->getIOCollection().addIOManager(std::make_shared<UnitTest::PlaceholderPlanManager>(k_SelectedFormat.str()));
+  unit_test::LoadPlugins();
+  const auto registration = Application::GetOrCreateInstance()->getIOCollection().addIOManager(std::make_shared<unit_test::PlaceholderPlanManager>(k_SelectedFormat.str()));
   SIMPLNX_RESULT_REQUIRE_VALID(registration);
   const bool throwFromNestedScope = GENERATE(false, true);
   CAPTURE(throwFromNestedScope);
   auto incomingResolver = std::make_shared<SelectedFormatResolver>(k_SelectedFormat.str());
   const std::weak_ptr<const IDataStoreFormatResolver> incomingLifetime = incomingResolver;
-  const auto restoreIncoming = UnitTest::SetDefaultFormatResolverForScope(std::move(incomingResolver));
+  const auto restoreIncoming = unit_test::SetDefaultFormatResolverForScope(std::move(incomingResolver));
   REQUIRE(incomingResolver == nullptr);
   {
     const SelectedImportTestContext outerContext("selected_import_outer_resolver.dream3d");
     REQUIRE_FALSE(incomingLifetime.expired());
-    CheckSelectedImportDefaultResolver(outerContext.memoryResolver, "");
+    CheckSelectedImportDefaultResolver(outerContext.memory_resolver, "");
     bool caughtException = false;
     try
     {
       const SelectedImportTestContext innerContext("selected_import_inner_resolver.dream3d");
-      CheckSelectedImportDefaultResolver(innerContext.memoryResolver, "");
+      CheckSelectedImportDefaultResolver(innerContext.memory_resolver, "");
       if(throwFromNestedScope)
       {
         throw std::runtime_error("selected import context unwind");
@@ -961,7 +961,7 @@ TEST_CASE("Selected import test context restores nested resolver ownership", "[S
       caughtException = true;
     }
     CHECK(caughtException == throwFromNestedScope);
-    CheckSelectedImportDefaultResolver(outerContext.memoryResolver, "");
+    CheckSelectedImportDefaultResolver(outerContext.memory_resolver, "");
   }
   REQUIRE_FALSE(incomingLifetime.expired());
   CheckSelectedImportDefaultResolver(incomingLifetime.lock(), k_SelectedFormat.str());
@@ -975,7 +975,7 @@ TEST_CASE("C8 later destination planning failure preserves destination and alloc
   CAPTURE(allocation, static_cast<int>(mode));
   DataStructure destination;
   const auto marker = CreateSelectedImportMarker(destination);
-  const auto* markerStore = dynamic_cast<const Int32Array*>(marker.get())->getIDataStore();
+  const auto* markerStorePtr = dynamic_cast<const Int32ArrayType*>(marker.get())->getIDataStore();
   const auto savedIds = destination.getAllDataObjectIds();
   const auto nextId = destination.getNextId();
   const auto resolver = std::make_shared<LaterImportPlanFailure>();
@@ -994,18 +994,18 @@ TEST_CASE("C8 later destination planning failure preserves destination and alloc
     CHECK(result.errors().front().message.find("second selected plan witness") != std::string::npos);
   }
   CheckImportPolicyRecords(*resolver);
-  CHECK(resolver->completeContextCalls == 2);
-  CHECK(resolver->placeholderContextCalls == 2);
+  CHECK(resolver->complete_context_calls == 2);
+  CHECK(resolver->placeholder_context_calls == 2);
   CHECK(destination.getAllDataObjectIds() == savedIds);
   CHECK(destination.getAllDataPaths() == std::vector<DataPath>{k_ImportPolicyMarker});
   CHECK(destination.getNextId() == nextId);
-  CheckImportPolicyMarker(destination, marker, markerStore);
+  CheckImportPolicyMarker(destination, marker, markerStorePtr);
 }
 
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
 TEST_CASE("C8 publication faults remove exact objects and permit immediate ID reuse", "[C8][SelectedImportPublication]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   using FaultType = ImportH5ObjectPathsAction::PublicationFaultType;
   const auto fault =
       GENERATE(FaultType::BeforePublication, FaultType::AfterSecondInsert, FaultType::AfterHierarchy, FaultType::BeforeTracking, FaultType::AllocationAfterSecond, FaultType::ReturnFalse);
@@ -1014,18 +1014,18 @@ TEST_CASE("C8 publication faults remove exact objects and permit immediate ID re
   SelectedImportTestContext context("selected_import_publication_faults.dream3d");
   DataStructure destination;
   const auto marker = CreateSelectedImportMarker(destination);
-  const auto* markerStore = dynamic_cast<const Int32Array*>(marker.get())->getIDataStore();
-  destination.setFormatResolver(context.memoryResolver);
+  const auto* markerStorePtr = dynamic_cast<const Int32ArrayType*>(marker.get())->getIDataStore();
+  destination.setFormatResolver(context.memory_resolver);
   const auto savedIds = destination.getAllDataObjectIds();
   const auto savedNextId = destination.getNextId();
   std::vector<DataObject::IdType> removals;
   usize additions = 0;
   nod::scoped_connection connection(destination.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>& message) {
-    if(message->getMsgType() == DataRemovedMessage::MsgType)
+    if(message->getMsgType() == DataRemovedMessage::k_MsgType)
     {
       removals.push_back(std::static_pointer_cast<DataRemovedMessage>(message)->getId());
     }
-    else if(message->getMsgType() == DataAddedMessage::MsgType)
+    else if(message->getMsgType() == DataAddedMessage::k_MsgType)
     {
       ++additions;
     }
@@ -1047,7 +1047,7 @@ TEST_CASE("C8 publication faults remove exact objects and permit immediate ID re
   CHECK(destination.getAllDataObjectIds() == savedIds);
   CHECK(destination.getAllDataPaths() == std::vector<DataPath>{k_ImportPolicyMarker});
   CHECK(destination.getNextId() == savedNextId);
-  CheckImportPolicyMarker(destination, marker, markerStore);
+  CheckImportPolicyMarker(destination, marker, markerStorePtr);
   usize expectedRemovals = 1;
   if(fault == FaultType::BeforePublication)
   {
@@ -1078,11 +1078,11 @@ TEST_CASE("C8 publication faults remove exact objects and permit immediate ID re
   CheckImportPolicyOutput(destination, mode);
   CHECK(additions == 0);
   const auto nextId = destination.getNextId();
-  auto* later = DataGroup::Create(destination, "AfterRetry");
-  REQUIRE(later != nullptr);
-  CHECK(later->getId() == nextId);
-  CHECK(destination.getData(nextId) == later);
-  CHECK(destination.getData(DataPath({"AfterRetry"})) == later);
+  auto* laterPtr = DataGroup::Create(destination, "AfterRetry");
+  REQUIRE(laterPtr != nullptr);
+  CHECK(laterPtr->getId() == nextId);
+  CHECK(destination.getData(nextId) == laterPtr);
+  CHECK(destination.getData(DataPath({"AfterRetry"})) == laterPtr);
   const auto beforeRelease = removals.size();
   retained.reset();
   action.setPublicationFaultForTesting(FaultType::None);
@@ -1093,7 +1093,7 @@ TEST_CASE("C8 publication faults remove exact objects and permit immediate ID re
   CHECK(removals.back() == nextId);
   const auto idsAfterOrdinaryRemoval = destination.getAllDataObjectIds();
   CHECK(std::find(idsAfterOrdinaryRemoval.begin(), idsAfterOrdinaryRemoval.end(), nextId) != idsAfterOrdinaryRemoval.end());
-  UnitTest::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(destination);
 }
 
 TEST_CASE("C8 refused partial publication retains ownership and reserves identifiers", "[C8][SelectedImportPublication]")
@@ -1104,7 +1104,7 @@ TEST_CASE("C8 refused partial publication retains ownership and reserves identif
   SelectedImportTestContext context("selected_import_refused_cleanup.dream3d");
   DataStructure destination;
   const auto marker = CreateSelectedImportMarker(destination);
-  const auto* markerStore = dynamic_cast<const Int32Array*>(marker.get())->getIDataStore();
+  const auto* markerStorePtr = dynamic_cast<const Int32ArrayType*>(marker.get())->getIDataStore();
   const auto savedNextId = destination.getNextId();
   ImportH5ObjectPathsAction action(context.file.path, {k_ImportPolicyGroup, k_ImportPolicyFirst, k_ImportPolicySecond});
   action.setPublicationFaultForTesting(fault, true);
@@ -1123,9 +1123,9 @@ TEST_CASE("C8 refused partial publication retains ownership and reserves identif
   CHECK(destination.getData(retained->getId()) == (fault == FaultType::AfterSecondInsert ? retained.get() : nullptr));
   CHECK(destination.getNextId() > retained->getId());
   CHECK(destination.getNextId() > savedNextId);
-  auto* unrelated = DataGroup::Create(destination, "AfterRefusal");
-  REQUIRE(unrelated != nullptr);
-  CHECK(unrelated->getId() > retained->getId());
+  auto* unrelatedPtr = DataGroup::Create(destination, "AfterRefusal");
+  REQUIRE(unrelatedPtr != nullptr);
+  CHECK(unrelatedPtr->getId() > retained->getId());
   const auto advancedNextId = destination.getNextId();
   const auto cleaned = action.cleanupFailedImportForTesting(destination);
   SIMPLNX_RESULT_REQUIRE_VALID(cleaned);
@@ -1134,9 +1134,9 @@ TEST_CASE("C8 refused partial publication retains ownership and reserves identif
   const auto remainingIds = destination.getAllDataObjectIds();
   CHECK(std::find(remainingIds.begin(), remainingIds.end(), retained->getId()) == remainingIds.end());
   CHECK(retained->getDataStructure() == nullptr);
-  CHECK(destination.getData(DataPath({"AfterRefusal"})) == unrelated);
+  CHECK(destination.getData(DataPath({"AfterRefusal"})) == unrelatedPtr);
   CHECK(destination.getNextId() == advancedNextId);
-  CheckImportPolicyMarker(destination, marker, markerStore);
+  CheckImportPolicyMarker(destination, marker, markerStorePtr);
   const ImportH5ObjectPathsAction retry(context.file.path, {k_ImportPolicyGroup, k_ImportPolicyFirst, k_ImportPolicySecond});
   auto retried = retry.apply(destination, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(retried);
@@ -1155,7 +1155,7 @@ TEST_CASE("C8 rollback settles all objects before callbacks and preserves callba
   bool fullyDetachedAtEveryCallback = true;
   DataObject::IdType callbackId = 0;
   nod::scoped_connection connection(destination.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>& message) {
-    if(message->getMsgType() != DataRemovedMessage::MsgType)
+    if(message->getMsgType() != DataRemovedMessage::k_MsgType)
     {
       return;
     }
@@ -1167,10 +1167,10 @@ TEST_CASE("C8 rollback settles all objects before callbacks and preserves callba
     }
     if(callbackId == 0)
     {
-      auto* added = DataGroup::Create(destination, "ObserverAdded");
-      if(added != nullptr)
+      auto* addedPtr = DataGroup::Create(destination, "ObserverAdded");
+      if(addedPtr != nullptr)
       {
-        callbackId = added->getId();
+        callbackId = addedPtr->getId();
       }
     }
   }));
@@ -1206,9 +1206,9 @@ TEST_CASE("C8 import rejects expired ID collisions and checked ID overflow befor
   const bool overflow = GENERATE(false, true);
   SelectedImportTestContext context("selected_import_id_precheck.dream3d");
   DataStructure destination;
-  auto* old = DataGroup::Create(destination, "Expired");
-  REQUIRE(old != nullptr);
-  const auto expiredId = old->getId();
+  auto* oldPtr = DataGroup::Create(destination, "Expired");
+  REQUIRE(oldPtr != nullptr);
+  const auto expiredId = oldPtr->getId();
   REQUIRE(destination.removeData(expiredId));
   REQUIRE(destination.getData(expiredId) == nullptr);
   const auto beforeIds = destination.getAllDataObjectIds();
@@ -1237,12 +1237,12 @@ TEST_CASE("C8 rollback preserves an existing destination parent and its other ch
   SelectedImportTestContext context("selected_import_existing_parent_rollback.dream3d");
   DataStructure destination;
   const auto marker = CreateSelectedImportMarker(destination);
-  auto* parent = DataGroup::Create(destination, k_ImportPolicyGroup.getTargetName());
-  REQUIRE(parent != nullptr);
+  auto* parentPtr = DataGroup::Create(destination, k_ImportPolicyGroup.getTargetName());
+  REQUIRE(parentPtr != nullptr);
   const DataPath otherPath({"SelectedGroup", "Other"});
-  auto* other = CreateImportPolicyArray(destination, otherPath, k_ImportPolicyMarkerValues, parent->getId());
-  const auto parentId = parent->getId();
-  const auto otherId = other->getId();
+  auto* otherPtr = CreateImportPolicyArray(destination, otherPath, k_ImportPolicyMarkerValues, parentPtr->getId());
+  const auto parentId = parentPtr->getId();
+  const auto otherId = otherPtr->getId();
   const auto nextId = destination.getNextId();
   const auto ids = destination.getAllDataObjectIds();
   const ImportH5ObjectPathsAction action(context.file.path, {k_ImportPolicyFirst, k_ImportPolicySecond});
@@ -1250,15 +1250,15 @@ TEST_CASE("C8 rollback preserves an existing destination parent and its other ch
   const auto failed = action.apply(destination, IDataAction::Mode::Execute);
   REQUIRE(failed.invalid());
   REQUIRE(action.publicationFaultConsumedForTesting());
-  CHECK(destination.getData(parentId) == parent);
-  CHECK(destination.getData(k_ImportPolicyGroup) == parent);
-  CHECK(destination.getData(otherId) == other);
-  CHECK(parent->getSize() == 1);
+  CHECK(destination.getData(parentId) == parentPtr);
+  CHECK(destination.getData(k_ImportPolicyGroup) == parentPtr);
+  CHECK(destination.getData(otherId) == otherPtr);
+  CHECK(parentPtr->getSize() == 1);
   CHECK(destination.getAllDataObjectIds() == ids);
   CHECK(destination.getNextId() == nextId);
   CheckImportPolicyArray(destination, otherPath, k_ImportPolicyMarkerValues, IDataAction::Mode::Execute);
   CHECK(destination.getData(marker->getId()) == marker.get());
-  UnitTest::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(destination);
 }
 #endif
 
@@ -1291,17 +1291,17 @@ public:
   C8SingleImportFinalizer& operator=(C8SingleImportFinalizer&&) = default;
 
   bool active = false;
-  bool failOnSecondLeaf = false;
-  bool failureConsumed = false;
+  bool fail_on_second_leaf = false;
+  bool failure_consumed = false;
   usize calls = 0;
-  usize leafAttempts = 0;
-  usize numericReads = 0;
-  bool completeEmptyContext = false;
-  std::vector<DataPath> expectedLeaves;
-  std::vector<DataPath> numericPaths;
+  usize leaf_attempts = 0;
+  usize numeric_reads = 0;
+  bool complete_empty_context = false;
+  std::vector<DataPath> expected_leaves;
+  std::vector<DataPath> numeric_paths;
   std::vector<DataPath> ancestors;
-  std::vector<DataPath> observedLeaves;
-  std::vector<DataPath> completedLeaves;
+  std::vector<DataPath> observed_leaves;
+  std::vector<DataPath> completed_leaves;
 
   std::string formatName() const override
   {
@@ -1320,58 +1320,59 @@ public:
    * @param reader Supplies the closed-and-reopened source fixture.
    * @return Completed-read warning or the deliberate second-leaf or duplicate-call error.
    */
-  Result<> onImportFinalize(DataStructure& structure, const std::vector<DataPath>& paths, const HDF5::FileIO& reader) override
+  Result<> onImportFinalize(DataStructure& structure, const std::vector<DataPath>& paths, const hdf5::FileIO& reader) override
   {
     ++calls;
     if(calls != 1)
     {
       return MakeErrorResult(k_C8DuplicateFinalizer, "duplicate selected-import finalizer witness");
     }
-    observedLeaves = paths;
+    observed_leaves = paths;
     auto actual = paths;
-    auto expected = expectedLeaves;
+    auto expected = expected_leaves;
     std::sort(actual.begin(), actual.end());
     std::sort(expected.begin(), expected.end());
-    completeEmptyContext = actual == expected && structure.containsData(k_ImportPolicyMarker) && !structure.containsData(k_ImportPolicyExcluded);
+    complete_empty_context = actual == expected && structure.containsData(k_ImportPolicyMarker) && !structure.containsData(k_ImportPolicyExcluded);
     for(const auto& path : ancestors)
     {
-      completeEmptyContext = completeEmptyContext && structure.getDataAs<BaseGroup>(path) != nullptr;
+      complete_empty_context = complete_empty_context && structure.getDataAs<BaseGroup>(path) != nullptr;
     }
-    for(const auto& path : numericPaths)
+    for(const auto& path : numeric_paths)
     {
-      const auto* array = structure.getDataAs<Int32Array>(path);
-      completeEmptyContext = completeEmptyContext && array != nullptr && array->getStoreType() == IDataStore::StoreType::Empty && array->getDataFormat().empty() &&
-                             array->getIDataStore()->getPlannedStoreType() == IDataStore::StoreType::InMemory;
+      const auto* arrayPtr = structure.getDataAs<Int32ArrayType>(path);
+      complete_empty_context = complete_empty_context && arrayPtr != nullptr && arrayPtr->getStoreType() == IDataStore::StoreType::Empty && arrayPtr->getDataFormat().empty() &&
+                               arrayPtr->getIDataStore()->getPlannedStoreType() == IDataStore::StoreType::InMemory;
     }
     if(std::find(paths.begin(), paths.end(), k_C8FinalizerLists) != paths.end())
     {
-      const auto* lists = structure.getDataAs<NeighborList<int32>>(k_C8FinalizerLists);
-      const auto* strings = structure.getDataAs<StringArray>(k_C8FinalizerStrings);
-      completeEmptyContext = completeEmptyContext && lists != nullptr && dynamic_cast<EmptyListStore<int32>*>(lists->getStore().get()) != nullptr && strings != nullptr && strings->isPlaceholder();
+      const auto* listsPtr = structure.getDataAs<NeighborList<int32>>(k_C8FinalizerLists);
+      const auto* stringsPtr = structure.getDataAs<StringArray>(k_C8FinalizerStrings);
+      complete_empty_context =
+          complete_empty_context && listsPtr != nullptr && dynamic_cast<EmptyListStore<int32>*>(listsPtr->getStore().get()) != nullptr && stringsPtr != nullptr && stringsPtr->isPlaceholder();
     }
-    if(!completeEmptyContext)
+    if(!complete_empty_context)
     {
       return MakeErrorResult(-89534, "selected-import finalizer received incomplete or materialized metadata");
     }
 
     Result<> result;
-    const std::string root = DREAM3D::GetFileVersion(reader) == DREAM3D::k_LegacyFileVersion ? "/DataContainers/" : "/DataStructure/";
-    for(const auto& path : expectedLeaves)
+    const std::string root = dream3d::GetFileVersion(reader) == dream3d::k_LegacyFileVersion ? "/DataContainers/" : "/DataStructure/";
+    for(const auto& path : expected_leaves)
     {
-      ++leafAttempts;
-      if(failOnSecondLeaf && leafAttempts == 2)
+      ++leaf_attempts;
+      if(fail_on_second_leaf && leaf_attempts == 2)
       {
-        failureConsumed = true;
+        failure_consumed = true;
         auto failure = MakeErrorResult(k_C8SecondLeafFailure, "second selected leaf materialization witness");
         failure.warnings() = std::move(result.warnings());
         return failure;
       }
       Result<> step;
-      if(auto* array = structure.getDataAs<Int32Array>(path); array != nullptr)
+      if(auto* arrayPtr = structure.getDataAs<Int32ArrayType>(path); arrayPtr != nullptr)
       {
         const auto dataset = reader.openDataset(root + path.toString());
-        ++numericReads;
-        auto read = HDF5::DataStoreIO::ReadDataStoreIntoMemory<int32>(dataset);
+        ++numeric_reads;
+        auto read = hdf5::data_store_io::ReadDataStoreIntoMemory<int32>(dataset);
         if(read.invalid())
         {
           return MergeResults(std::move(result), ConvertResult(std::move(read)));
@@ -1381,20 +1382,20 @@ public:
           return MergeResults(std::move(result), MakeErrorResult(-89535, "finalizer fixture unexpectedly returned a recovery placeholder"));
         }
         auto warnings = std::move(read.warnings());
-        step = array->setDataStore(std::move(read.value()));
+        step = arrayPtr->setDataStore(std::move(read.value()));
         step.warnings().insert(step.warnings().begin(), std::make_move_iterator(warnings.begin()), std::make_move_iterator(warnings.end()));
       }
       else
       {
-        step = HDF5::DataStructureReader::FinishImportingObject(structure, reader, path);
+        step = hdf5::DataStructureReader::FinishImportingObject(structure, reader, path);
       }
       result = MergeResults(std::move(result), std::move(step));
       if(result.invalid())
       {
         return result;
       }
-      completedLeaves.push_back(path);
-      if(completedLeaves.size() == 1)
+      completed_leaves.push_back(path);
+      if(completed_leaves.size() == 1)
       {
         result.warnings().push_back({k_C8FinalizerWarning, "first selected leaf materialized"});
       }
@@ -1411,26 +1412,26 @@ void WriteC8FinalizerFile(const fs::path& path)
 {
   DataStructure source;
   source.setFormatResolver(std::make_shared<InMemoryFormatResolver>());
-  auto* group = DataGroup::Create(source, k_ImportPolicyGroup.getTargetName());
-  REQUIRE(group != nullptr);
-  CreateImportPolicyArray(source, k_ImportPolicyFirst, k_ImportPolicyFirstValues, group->getId());
-  CreateImportPolicyArray(source, k_ImportPolicySecond, k_ImportPolicySecondValues, group->getId());
-  CreateImportPolicyArray(source, k_ImportPolicyExcluded, k_ImportPolicyExcludedValues, group->getId());
-  auto* lists = NeighborList<int32>::Create(source, "Lists", ShapeType{3}, group->getId());
-  REQUIRE(lists != nullptr);
-  lists->setList(0, std::vector<int32>{31, -7});
-  lists->setList(1, std::vector<int32>{});
-  lists->setList(2, std::vector<int32>{9});
-  REQUIRE(StringArray::CreateWithValues(source, "Strings", ShapeType{2}, {"first", "last"}, group->getId()) != nullptr);
-  auto write = DREAM3D::WriteFile(path, source);
+  auto* groupPtr = DataGroup::Create(source, k_ImportPolicyGroup.getTargetName());
+  REQUIRE(groupPtr != nullptr);
+  CreateImportPolicyArray(source, k_ImportPolicyFirst, k_ImportPolicyFirstValues, groupPtr->getId());
+  CreateImportPolicyArray(source, k_ImportPolicySecond, k_ImportPolicySecondValues, groupPtr->getId());
+  CreateImportPolicyArray(source, k_ImportPolicyExcluded, k_ImportPolicyExcludedValues, groupPtr->getId());
+  auto* listsPtr = NeighborList<int32>::Create(source, "Lists", ShapeType{3}, groupPtr->getId());
+  REQUIRE(listsPtr != nullptr);
+  listsPtr->setList(0, std::vector<int32>{31, -7});
+  listsPtr->setList(1, std::vector<int32>{});
+  listsPtr->setList(2, std::vector<int32>{9});
+  REQUIRE(StringArray::CreateWithValues(source, "Strings", ShapeType{2}, {"first", "last"}, groupPtr->getId()) != nullptr);
+  auto write = dream3d::WriteFile(path, source);
   SIMPLNX_RESULT_REQUIRE_VALID(write);
   {
-    const auto reader = HDF5::FileIO::ReadFile(path);
+    const auto reader = hdf5::FileIO::ReadFile(path);
     REQUIRE(reader.isValid());
     CheckImportPolicyFileArray(reader, k_ImportPolicyFirst, k_ImportPolicyFirstValues);
     CheckImportPolicyFileArray(reader, k_ImportPolicySecond, k_ImportPolicySecondValues);
     CheckImportPolicyFileArray(reader, k_C8FinalizerLists, std::array<int32, 3>{31, -7, 9});
-    CheckImportPolicyFileArray(reader, k_ImportPolicyGroup.createChildPath(lists->getNumNeighborsArrayName()), std::array<int32, 3>{2, 0, 1});
+    CheckImportPolicyFileArray(reader, k_ImportPolicyGroup.createChildPath(listsPtr->getNumNeighborsArrayName()), std::array<int32, 3>{2, 0, 1});
   }
   fs::last_write_time(path, fs::file_time_type::clock::now() - std::chrono::seconds(10));
 }
@@ -1442,9 +1443,9 @@ void WriteC8FinalizerFile(const fs::path& path)
 void WriteC8LegacyPlanWarningFile(const fs::path& path)
 {
   {
-    auto file = HDF5::FileIO::WriteFile(path);
+    auto file = hdf5::FileIO::WriteFile(path);
     REQUIRE(file.isValid());
-    REQUIRE(file.writeStringAttribute("FileVersion", DREAM3D::k_LegacyFileVersion.str()).valid());
+    REQUIRE(file.writeStringAttribute("FileVersion", dream3d::k_LegacyFileVersion.str()).valid());
     auto containers = file.createGroup("DataContainers");
     auto container = containers.createGroup("PlanContainer");
     auto matrix = container.createGroup("CellData");
@@ -1455,18 +1456,18 @@ void WriteC8LegacyPlanWarningFile(const fs::path& path)
       auto dataset = matrix.createDataset(name);
       const std::array<int32, 3> values = name == "First" ? std::array<int32, 3>{11, -4, 6} : std::array<int32, 3>{27, 0, -19};
       REQUIRE(dataset.writeSpan<int32>({3, 1}, nonstd::span<const int32>(values.data(), values.size())).valid());
-      REQUIRE(dataset.writeStringAttribute(Constants::k_ObjectTypeTag, Int32Array::GetTypeName()).valid());
+      REQUIRE(dataset.writeStringAttribute(constants::k_ObjectTypeTag, Int32ArrayType::GetTypeName()).valid());
       REQUIRE(dataset.writeVectorAttribute("TupleDimensions", ShapeType{3}).valid());
       REQUIRE(dataset.writeVectorAttribute("ComponentDimensions", ShapeType{1}).valid());
     }
     auto unsupported = matrix.createGroup("WarningSource");
-    REQUIRE(unsupported.writeStringAttribute(Constants::k_ObjectTypeTag, "UnsupportedLegacyObject").valid());
+    REQUIRE(unsupported.writeStringAttribute(constants::k_ObjectTypeTag, "UnsupportedLegacyObject").valid());
   }
   {
-    const auto reader = HDF5::FileIO::ReadFile(path);
+    const auto reader = hdf5::FileIO::ReadFile(path);
     REQUIRE(reader.isValid());
     const auto fileId = reader.getId();
-    const std::lock_guard lock(HDF5::Support::ApiLock());
+    const std::lock_guard lock(hdf5::Support::ApiLock());
     for(const std::string name : {"First", "Second"})
     {
       const std::string datasetPath = "/DataContainers/PlanContainer/CellData/" + name;
@@ -1504,20 +1505,20 @@ public:
   C8WarningPlanResolver& operator=(const C8WarningPlanResolver&) = default;
   C8WarningPlanResolver& operator=(C8WarningPlanResolver&&) = default;
 
-  bool failOnSecond = false;
-  mutable usize completeEmptyCalls = 0;
+  bool fail_on_second = false;
+  mutable usize complete_empty_calls = 0;
 
   std::string resolveFormat(const DataStructure& structure, const DataPath& path, DataType type, uint64 bytes) const override
   {
-    const auto* first = structure.getDataAs<Int32Array>(k_C8LegacyFirst);
-    const auto* second = structure.getDataAs<Int32Array>(k_C8LegacySecond);
-    if(first != nullptr && second != nullptr && first->getStoreType() == IDataStore::StoreType::Empty && second->getStoreType() == IDataStore::StoreType::Empty &&
+    const auto* firstPtr = structure.getDataAs<Int32ArrayType>(k_C8LegacyFirst);
+    const auto* secondPtr = structure.getDataAs<Int32ArrayType>(k_C8LegacySecond);
+    if(firstPtr != nullptr && secondPtr != nullptr && firstPtr->getStoreType() == IDataStore::StoreType::Empty && secondPtr->getStoreType() == IDataStore::StoreType::Empty &&
        structure.containsData(k_ImportPolicyMarker))
     {
-      ++completeEmptyCalls;
+      ++complete_empty_calls;
     }
     auto format = RecordingFormatResolver::resolveFormat(structure, path, type, bytes);
-    if(failOnSecond && paths.size() == 2)
+    if(fail_on_second && paths.size() == 2)
     {
       throw std::runtime_error("second selected plan after disk warning witness");
     }
@@ -1540,65 +1541,65 @@ TEST_CASE("C8 single active finalizer observes complete plans and exact leaves o
   const auto disable = MakeScopeGuard([manager]() noexcept { manager->active = false; });
   auto registration = collection.addIOManager(manager);
   SIMPLNX_RESULT_REQUIRE_VALID(registration);
-  manager->expectedLeaves = {k_ImportPolicyFirst, k_ImportPolicySecond, k_C8FinalizerLists, k_C8FinalizerStrings};
-  manager->numericPaths = {k_ImportPolicyFirst, k_ImportPolicySecond};
+  manager->expected_leaves = {k_ImportPolicyFirst, k_ImportPolicySecond, k_C8FinalizerLists, k_C8FinalizerStrings};
+  manager->numeric_paths = {k_ImportPolicyFirst, k_ImportPolicySecond};
   manager->ancestors = {k_ImportPolicyGroup};
   manager->active = true;
   REQUIRE(collection.anyManagerFinalizesImport());
   REQUIRE(collection.getManager(manager->formatName()) == manager);
   DataStructure destination;
   const auto marker = CreateSelectedImportMarker(destination);
-  const auto* markerStore = dynamic_cast<Int32Array*>(marker.get())->getIDataStore();
+  const auto* markerStorePtr = dynamic_cast<Int32ArrayType*>(marker.get())->getIDataStore();
   const auto resolver = std::make_shared<CompleteImportContextResolver>();
   destination.setFormatResolver(resolver);
   const ImportH5ObjectPathsAction action(context.file.path, {k_C8FinalizerStrings, k_ImportPolicySecond, k_ImportPolicyGroup, k_C8FinalizerLists, k_ImportPolicyFirst});
   auto result = action.apply(destination, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   CHECK(manager->calls == 1);
-  CHECK(manager->completeEmptyContext);
-  CHECK(manager->leafAttempts == 4);
-  CHECK(manager->numericReads == 2);
-  CHECK(manager->completedLeaves == manager->expectedLeaves);
+  CHECK(manager->complete_empty_context);
+  CHECK(manager->leaf_attempts == 4);
+  CHECK(manager->numeric_reads == 2);
+  CHECK(manager->completed_leaves == manager->expected_leaves);
   REQUIRE(result.warnings().size() == 1);
   CHECK(result.warnings()[0].code == k_C8FinalizerWarning);
   CheckImportPolicyRecords(*resolver);
-  CHECK(resolver->completeContextCalls == 2);
+  CHECK(resolver->complete_context_calls == 2);
   CheckImportPolicyOutput(destination, IDataAction::Mode::Execute);
-  CheckImportPolicyMarker(destination, marker, markerStore);
-  const auto* lists = destination.getDataAs<NeighborList<int32>>(k_C8FinalizerLists);
-  const auto* strings = destination.getDataAs<StringArray>(k_C8FinalizerStrings);
-  REQUIRE(lists != nullptr);
-  REQUIRE(strings != nullptr);
-  CHECK(lists->getList(0) == std::vector<int32>{31, -7});
-  CHECK(lists->getList(1).empty());
-  CHECK(lists->getList(2) == std::vector<int32>{9});
-  CHECK(strings->values() == std::vector<std::string>{"first", "last"});
+  CheckImportPolicyMarker(destination, marker, markerStorePtr);
+  const auto* listsPtr = destination.getDataAs<NeighborList<int32>>(k_C8FinalizerLists);
+  const auto* stringsPtr = destination.getDataAs<StringArray>(k_C8FinalizerStrings);
+  REQUIRE(listsPtr != nullptr);
+  REQUIRE(stringsPtr != nullptr);
+  CHECK(listsPtr->getList(0) == std::vector<int32>{31, -7});
+  CHECK(listsPtr->getList(1).empty());
+  CHECK(listsPtr->getList(2) == std::vector<int32>{9});
+  CHECK(stringsPtr->values() == std::vector<std::string>{"first", "last"});
   CHECK(destination.getAllDataPaths().size() == 6);
   const auto idsBeforeDuplicate = destination.getAllDataObjectIds();
-  const auto reader = HDF5::FileIO::ReadFile(context.file.path);
-  auto duplicate = manager->onImportFinalize(destination, manager->expectedLeaves, reader);
+  const auto reader = hdf5::FileIO::ReadFile(context.file.path);
+  auto duplicate = manager->onImportFinalize(destination, manager->expected_leaves, reader);
   REQUIRE(duplicate.invalid());
   REQUIRE(duplicate.errors().size() == 1);
   CHECK(duplicate.errors()[0].code == k_C8DuplicateFinalizer);
   CHECK(manager->calls == 2);
-  CHECK(manager->numericReads == 2);
-  CHECK(manager->completedLeaves.size() == 4);
+  CHECK(manager->numeric_reads == 2);
+  CHECK(manager->completed_leaves.size() == 4);
   CHECK(destination.getAllDataObjectIds() == idsBeforeDuplicate);
-  UnitTest::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(destination);
 }
 
 #if defined(SIMPLNX_BUILD_TESTS) && SIMPLNX_BUILD_TESTS
 TEST_CASE("C8 publication handoff preserves warning order and exact destination state", "[C8][SelectedImportPublication][SelectedImportFinalizer]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   auto& collection = Application::GetOrCreateInstance()->getIOCollection();
   if(collection.anyManagerFinalizesImport())
   {
     WARN("Skipping because an import finalizer is already active.");
     return;
   }
-  static_assert(noexcept(std::declval<WarningCollection&>().swap(std::declval<WarningCollection&>())));
-  static_assert(std::is_nothrow_move_constructible_v<WarningCollection>);
+  static_assert(noexcept(std::declval<WarningCollectionType&>().swap(std::declval<WarningCollectionType&>())));
+  static_assert(std::is_nothrow_move_constructible_v<WarningCollectionType>);
   enum class Outcome : uint8
   {
     OrdinarySuccess,
@@ -1614,13 +1615,13 @@ TEST_CASE("C8 publication handoff preserves warning order and exact destination 
   const auto disable = MakeScopeGuard([manager]() noexcept { manager->active = false; });
   auto registration = collection.addIOManager(manager);
   SIMPLNX_RESULT_REQUIRE_VALID(registration);
-  manager->expectedLeaves = {k_C8LegacyFirst, k_C8LegacySecond};
-  manager->numericPaths = manager->expectedLeaves;
+  manager->expected_leaves = {k_C8LegacyFirst, k_C8LegacySecond};
+  manager->numeric_paths = manager->expected_leaves;
   manager->ancestors = {k_C8LegacyContainer, k_C8LegacyMatrix};
   manager->active = true;
   DataStructure destination;
   const auto markerOwner = CreateSelectedImportMarker(destination);
-  const auto* markerStorePtr = dynamic_cast<const Int32Array*>(markerOwner.get())->getIDataStore();
+  const auto* markerStorePtr = dynamic_cast<const Int32ArrayType*>(markerOwner.get())->getIDataStore();
   REQUIRE(markerOwner->getId() == 1);
   REQUIRE(destination.getNextId() == 2);
   const auto resolver = std::make_shared<C8WarningPlanResolver>();
@@ -1643,11 +1644,11 @@ TEST_CASE("C8 publication handoff preserves warning order and exact destination 
   std::vector<DataObject::IdType> removals;
   usize additions = 0;
   const nod::scoped_connection connection(destination.getSignal().connect([&](DataStructure*, const std::shared_ptr<AbstractDataStructureMessage>& message) {
-    if(message->getMsgType() == DataRemovedMessage::MsgType)
+    if(message->getMsgType() == DataRemovedMessage::k_MsgType)
     {
       removals.push_back(std::static_pointer_cast<DataRemovedMessage>(message)->getId());
     }
-    else if(message->getMsgType() == DataAddedMessage::MsgType)
+    else if(message->getMsgType() == DataAddedMessage::k_MsgType)
     {
       ++additions;
     }
@@ -1676,11 +1677,11 @@ TEST_CASE("C8 publication handoff preserves warning order and exact destination 
     CHECK(result.warnings()[1].message == "first selected leaf materialized");
   }
   CHECK(manager->calls == 1);
-  CHECK(manager->completeEmptyContext);
-  CHECK(manager->leafAttempts == 2);
-  CHECK(manager->numericReads == 2);
-  CHECK(manager->completedLeaves == std::vector<DataPath>{k_C8LegacyFirst, k_C8LegacySecond});
-  CHECK(resolver->completeEmptyCalls == 2);
+  CHECK(manager->complete_empty_context);
+  CHECK(manager->leaf_attempts == 2);
+  CHECK(manager->numeric_reads == 2);
+  CHECK(manager->completed_leaves == std::vector<DataPath>{k_C8LegacyFirst, k_C8LegacySecond});
+  CHECK(resolver->complete_empty_calls == 2);
   CHECK(additions == 0);
   CheckImportPolicyMarker(destination, markerOwner, markerStorePtr);
   if(outcome == Outcome::PublicationFailure || outcome == Outcome::AllocationFailure)
@@ -1702,8 +1703,8 @@ TEST_CASE("C8 publication handoff preserves warning order and exact destination 
     CHECK(destination.getNextId() == 6);
     const auto* containerPtr = destination.getDataAs<BaseGroup>(k_C8LegacyContainer);
     const auto* matrixPtr = destination.getDataAs<BaseGroup>(k_C8LegacyMatrix);
-    const auto* firstPtr = destination.getDataAs<Int32Array>(k_C8LegacyFirst);
-    const auto* secondPtr = destination.getDataAs<Int32Array>(k_C8LegacySecond);
+    const auto* firstPtr = destination.getDataAs<Int32ArrayType>(k_C8LegacyFirst);
+    const auto* secondPtr = destination.getDataAs<Int32ArrayType>(k_C8LegacySecond);
     REQUIRE(containerPtr != nullptr);
     REQUIRE(matrixPtr != nullptr);
     REQUIRE(firstPtr != nullptr);
@@ -1717,7 +1718,7 @@ TEST_CASE("C8 publication handoff preserves warning order and exact destination 
     CHECK(removals.empty());
     CHECK_FALSE(action.publicationFaultConsumedForTesting());
   }
-  UnitTest::CheckArraysInheritTupleDims(destination);
+  unit_test::CheckArraysInheritTupleDims(destination);
 }
 #endif
 
@@ -1738,10 +1739,10 @@ TEST_CASE("C8 planning and second leaf failures retain earlier warnings without 
   const auto disable = MakeScopeGuard([manager]() noexcept { manager->active = false; });
   auto registration = collection.addIOManager(manager);
   SIMPLNX_RESULT_REQUIRE_VALID(registration);
-  manager->expectedLeaves = {k_C8LegacyFirst, k_C8LegacySecond};
-  manager->numericPaths = manager->expectedLeaves;
+  manager->expected_leaves = {k_C8LegacyFirst, k_C8LegacySecond};
+  manager->numeric_paths = manager->expected_leaves;
   manager->ancestors = {k_C8LegacyContainer, k_C8LegacyMatrix};
-  manager->failOnSecondLeaf = true;
+  manager->fail_on_second_leaf = true;
   manager->active = true;
   if(warm)
   {
@@ -1753,11 +1754,11 @@ TEST_CASE("C8 planning and second leaf failures retain earlier warnings without 
   context.cache.resetStats();
   DataStructure destination;
   const auto marker = CreateSelectedImportMarker(destination);
-  const auto* markerStore = dynamic_cast<Int32Array*>(marker.get())->getIDataStore();
+  const auto* markerStorePtr = dynamic_cast<Int32ArrayType*>(marker.get())->getIDataStore();
   const auto beforeIds = destination.getAllDataObjectIds();
   const auto beforeNextId = destination.getNextId();
   const auto resolver = std::make_shared<C8WarningPlanResolver>();
-  resolver->failOnSecond = planningFailure;
+  resolver->fail_on_second = planningFailure;
   destination.setFormatResolver(resolver);
   const ImportH5ObjectPathsAction action(context.file.path, {k_C8LegacySecond, k_C8LegacyContainer, k_C8LegacyFirst, k_C8LegacyMatrix});
   auto result = action.apply(destination, IDataAction::Mode::Execute);
@@ -1769,9 +1770,9 @@ TEST_CASE("C8 planning and second leaf failures retain earlier warnings without 
   CHECK(resolver->paths.size() == 2);
   CHECK(std::count(resolver->paths.begin(), resolver->paths.end(), k_C8LegacyFirst) == 1);
   CHECK(std::count(resolver->paths.begin(), resolver->paths.end(), k_C8LegacySecond) == 1);
-  CHECK(resolver->numericTypes == std::vector<DataType>{DataType::int32, DataType::int32});
-  CHECK(resolver->logicalBytes == std::vector<uint64>{12, 12});
-  CHECK(resolver->completeEmptyCalls == 2);
+  CHECK(resolver->numeric_types == std::vector<DataType>{DataType::int32, DataType::int32});
+  CHECK(resolver->logical_bytes == std::vector<uint64>{12, 12});
+  CHECK(resolver->complete_empty_calls == 2);
   CHECK(context.cache.hitCount() == (warm ? 1 : 0));
   CHECK(context.cache.missCount() == (warm ? 0 : 1));
   if(planningFailure)
@@ -1779,7 +1780,7 @@ TEST_CASE("C8 planning and second leaf failures retain earlier warnings without 
     CHECK(result.errors()[0].code == -10601);
     CHECK(result.errors()[0].message.find("second selected plan after disk warning witness") != std::string::npos);
     CHECK(manager->calls == 0);
-    CHECK(manager->leafAttempts == 0);
+    CHECK(manager->leaf_attempts == 0);
   }
   else
   {
@@ -1788,15 +1789,15 @@ TEST_CASE("C8 planning and second leaf failures retain earlier warnings without 
     CHECK(result.warnings()[1].code == k_C8FinalizerWarning);
     CHECK(result.warnings()[1].message == "first selected leaf materialized");
     CHECK(manager->calls == 1);
-    CHECK(manager->completeEmptyContext);
-    CHECK(manager->leafAttempts == 2);
-    CHECK(manager->numericReads == 1);
-    CHECK(manager->completedLeaves == std::vector<DataPath>{k_C8LegacyFirst});
-    CHECK(manager->failureConsumed);
+    CHECK(manager->complete_empty_context);
+    CHECK(manager->leaf_attempts == 2);
+    CHECK(manager->numeric_reads == 1);
+    CHECK(manager->completed_leaves == std::vector<DataPath>{k_C8LegacyFirst});
+    CHECK(manager->failure_consumed);
   }
   CHECK(destination.getAllDataPaths() == std::vector<DataPath>{k_ImportPolicyMarker});
   CHECK(destination.getAllDataObjectIds() == beforeIds);
   CHECK(destination.getNextId() == beforeNextId);
   CHECK(&destination.formatResolver() == resolver.get());
-  CheckImportPolicyMarker(destination, marker, markerStore);
+  CheckImportPolicyMarker(destination, marker, markerStorePtr);
 }

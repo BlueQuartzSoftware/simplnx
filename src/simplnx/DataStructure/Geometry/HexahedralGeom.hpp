@@ -14,14 +14,14 @@ class SIMPLNX_EXPORT HexahedralGeom : public INodeGeometry3D
 public:
   friend class DataStructure;
 
-  static inline constexpr usize k_NumEdgeVerts = 2;
-  static inline constexpr usize k_NumFaceVerts = 4;
-  static inline constexpr usize k_NumVerts = 8;
-  static inline constexpr StringLiteral k_VoxelSizes = "Hex Volumes";
-  static inline constexpr StringLiteral k_EltsContainingVert = "Hex Containing Vertices";
-  static inline constexpr StringLiteral k_EltNeighbors = "Hex Neighbors";
-  static inline constexpr StringLiteral k_EltCentroids = "Hex Centroids";
-  static inline constexpr StringLiteral k_TypeName = "HexahedralGeom";
+  static constexpr usize k_NumEdgeVerts = 2;
+  static constexpr usize k_NumFaceVerts = 4;
+  static constexpr usize k_NumVerts = 8;
+  static constexpr StringLiteralType k_VoxelSizes = "Hex Volumes";
+  static constexpr StringLiteralType k_EltsContainingVert = "Hex Containing Vertices";
+  static constexpr StringLiteralType k_EltNeighbors = "Hex Neighbors";
+  static constexpr StringLiteralType k_EltCentroids = "Hex Centroids";
+  static constexpr StringLiteralType k_TypeName = "HexahedralGeom";
 
   /**
    * @brief Creates a new HexahedralGeom in the specified DataStructure.
@@ -52,7 +52,7 @@ public:
    * @brief Move constructor.
    * @param other The HexahedralGeom to move from
    */
-  HexahedralGeom(HexahedralGeom&& other) = default;
+  HexahedralGeom(HexahedralGeom&& other) noexcept = default;
 
   ~HexahedralGeom() noexcept override = default;
 
@@ -157,16 +157,16 @@ public:
 
   /**
    * @brief Returns the parametric center of a hexahedral element.
-   * @return Point3D<float64> The parametric center coordinates
+   * @return Vec3<float64> The parametric center coordinates
    */
-  Point3D<float64> getParametricCenter() const override;
+  Vec3<float64> getParametricCenter() const override;
 
   /**
    * @brief Calculates shape functions at the given parametric coordinates.
    * @param pCoords The parametric coordinates
    * @param shape Output array to store the calculated shape function values
    */
-  void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
+  void getShapeFunctions(const Vec3<float64>& pCoords, float64* shape) const override;
 
   /**
    * @brief finds the shared edges (no duplicates) of each hexahedron in the

@@ -12,11 +12,11 @@ namespace nx::core
 class SIMPLNX_EXPORT ChoicesParameter : public ValueParameter
 {
 public:
-  using Choices = std::vector<std::string>;
+  using ChoicesType = std::vector<std::string>;
   using ValueType = uint64;
 
   ChoicesParameter() = delete;
-  ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const Choices& choices);
+  ChoicesParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, ChoicesType choices);
   ~ChoicesParameter() override = default;
 
   ChoicesParameter(const ChoicesParameter&) = delete;
@@ -35,13 +35,13 @@ public:
    * @brief
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -81,7 +81,7 @@ public:
    * @brief
    * @return
    */
-  Choices choices() const;
+  ChoicesType choices() const;
 
   /**
    * @brief Checks whether another parameter would be active when this parameter has the given value.
@@ -106,17 +106,17 @@ protected:
 
 private:
   ValueType m_DefaultValue = {};
-  Choices m_Choices = {};
+  ChoicesType m_Choices;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT LinkedChoicesFilterParameterConverter
 {
   using ParameterType = ChoicesParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT ChoiceFilterParameterConverter
@@ -124,9 +124,9 @@ struct SIMPLNX_EXPORT ChoiceFilterParameterConverter
   using ParameterType = ChoicesParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::ChoicesParameter, "ee4d5ce2-9582-48fa-b182-8a766ce0feff");

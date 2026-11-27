@@ -30,7 +30,7 @@ class JsonPipelineBuilder;
 class SIMPLNX_EXPORT Application
 {
 public:
-  using name_type_map = std::map<std::string, DataObject::Type>;
+  using NameTypeMapType = std::map<std::string, DataObject::Type>;
 
   /**
    * @brief Saves preferences and clears the global instance pointer.
@@ -133,13 +133,13 @@ public:
    * @brief Takes pending preference-load warnings once.
    * @return Warnings from all loads since the previous take, in load order.
    */
-  WarningCollection takePreferenceLoadWarnings();
+  WarningCollectionType takePreferenceLoadWarnings();
 
   /**
    * @brief Returns no JSON pipeline builder.
    * @return nullptr.
    */
-  JsonPipelineBuilder* getPipelineBuilder() const;
+  static JsonPipelineBuilder* GetPipelineBuilder();
 
   /**
    * @brief Returns the collection of data I/O managers.
@@ -227,15 +227,15 @@ private:
    */
   Result<> loadPlugin(const std::filesystem::path& path, bool verbose = false);
 
-  static std::shared_ptr<Application> s_Instance;
+  static std::shared_ptr<Application> SInstance;
 
   std::unique_ptr<nx::core::FilterList> m_FilterList;
   std::filesystem::path m_CurrentPath = "";
-  std::vector<Uuid> m_Simpl_Uuids;   // Legacy UUIDs are unique. Indices match m_Simplnx_Uuids.
-  std::vector<Uuid> m_Simplnx_Uuids; // Values can repeat. Indices match m_Simpl_Uuids.
+  std::vector<Uuid> m_SimplUuids;   // Legacy UUIDs are unique. Indices match m_Simplnx_Uuids.
+  std::vector<Uuid> m_SimplnxUuids; // Values can repeat. Indices match m_Simpl_Uuids.
   std::shared_ptr<DataIOCollection> m_DataIOCollection;
-  name_type_map m_NamedTypesMap;
+  NameTypeMapType m_NamedTypesMap;
   std::unique_ptr<Preferences> m_Preferences = nullptr;
-  WarningCollection m_PendingPreferenceLoadWarnings;
+  WarningCollectionType m_PendingPreferenceLoadWarnings;
 };
 } // namespace nx::core

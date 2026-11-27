@@ -25,14 +25,14 @@ public:
   ComputeShapesFilter& operator=(ComputeShapesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
-  static constexpr StringLiteral k_CentroidsArrayPath_Key = "centroids_array_path";
-  static constexpr StringLiteral k_Omega3sArrayName_Key = "omega3s_array_name";
-  static constexpr StringLiteral k_AxisLengthsArrayName_Key = "axis_lengths_array_name";
-  static constexpr StringLiteral k_AxisEulerAnglesArrayName_Key = "axis_euler_angles_array_name";
-  static constexpr StringLiteral k_AspectRatiosArrayName_Key = "aspect_ratios_array_name";
-  static constexpr StringLiteral k_VolumesArrayName_Key = "volumes_array_name";
-  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_CellFeatureIdsArrayPath_Key = "feature_ids_path";
+  static constexpr StringLiteralType k_CentroidsArrayPath_Key = "centroids_array_path";
+  static constexpr StringLiteralType k_Omega3sArrayName_Key = "omega3s_array_name";
+  static constexpr StringLiteralType k_AxisLengthsArrayName_Key = "axis_lengths_array_name";
+  static constexpr StringLiteralType k_AxisEulerAnglesArrayName_Key = "axis_euler_angles_array_name";
+  static constexpr StringLiteralType k_AspectRatiosArrayName_Key = "aspect_ratios_array_name";
+  static constexpr StringLiteralType k_VolumesArrayName_Key = "volumes_array_name";
+  static constexpr StringLiteralType k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -89,7 +89,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

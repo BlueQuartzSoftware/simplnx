@@ -26,10 +26,10 @@ namespace nx::core::orientation::detail
  */
 struct LookupPlan
 {
-  CacheMemoryBudgetManager::WorkingMemoryReservation Reservation;
-  usize FaceCapacity = 0;
-  usize PageCapacity = 0;
-  bool CacheWholeTables = false;
+  CacheMemoryBudgetManager::WorkingMemoryReservation reservation;
+  usize face_capacity = 0;
+  usize page_capacity = 0;
+  bool cache_whole_tables = false;
 };
 
 /**
@@ -38,11 +38,11 @@ struct LookupPlan
  */
 struct LookupSizes
 {
-  usize FaceCount = 0;
-  usize FeatureCount = 0;
-  usize EnsembleCount = 0;
-  usize OrientationComponents = 0;
-  usize FaceBytes = 0;
+  usize face_count = 0;
+  usize feature_count = 0;
+  usize ensemble_count = 0;
+  usize orientation_components = 0;
+  usize face_bytes = 0;
 };
 
 /**
@@ -53,30 +53,30 @@ struct LookupSizes
  */
 inline Result<LookupPlan> PlanLookups(const LookupSizes& sizes, int32 errorCode)
 {
-  constexpr usize maximumFaces = 262144;
-  constexpr usize maximumPageTuples = 4096;
-  constexpr uint64 maximumBytes = (std::numeric_limits<usize>::max)();
-  const usize desiredFaces = (std::min)(sizes.FaceCount, maximumFaces);
-  const usize orientationBytes = sizes.OrientationComponents * sizeof(float32);
+  constexpr usize k_MaximumFaces = 262144;
+  constexpr usize k_MaximumPageTuples = 4096;
+  constexpr uint64 k_MaximumBytes = (std::numeric_limits<usize>::max)();
+  const usize desiredFaces = (std::min)(sizes.face_count, k_MaximumFaces);
+  const usize orientationBytes = sizes.orientation_components * sizeof(float32);
   const usize featureBytes = sizeof(int32) + orientationBytes;
   const usize pageBytes = featureBytes + sizeof(uint32);
-  const usize gatheredFaceBytes = sizes.FaceBytes + (2 * (pageBytes + sizeof(usize)));
-  auto& budget = CacheMemoryBudgetManager::instance();
+  const usize gatheredFaceBytes = sizes.face_bytes + (2 * (pageBytes + sizeof(usize)));
+  auto& budget = CacheMemoryBudgetManager::Instance();
   LookupPlan plan;
 
   // A complete cache is optional. Its reservation also covers the ordinary face block.
-  if(sizes.FeatureCount <= maximumBytes / featureBytes && sizes.EnsembleCount <= maximumBytes / sizeof(uint32))
+  if(sizes.feature_count <= k_MaximumBytes / featureBytes && sizes.ensemble_count <= k_MaximumBytes / sizeof(uint32))
   {
-    const uint64 featurePayload = static_cast<uint64>(sizes.FeatureCount) * featureBytes;
-    const uint64 ensemblePayload = static_cast<uint64>(sizes.EnsembleCount) * sizeof(uint32);
-    const uint64 facePayload = static_cast<uint64>(desiredFaces) * sizes.FaceBytes;
-    if(featurePayload <= maximumBytes - ensemblePayload && featurePayload + ensemblePayload <= maximumBytes - facePayload)
+    const uint64 featurePayload = static_cast<uint64>(sizes.feature_count) * featureBytes;
+    const uint64 ensemblePayload = static_cast<uint64>(sizes.ensemble_count) * sizeof(uint32);
+    const uint64 facePayload = static_cast<uint64>(desiredFaces) * sizes.face_bytes;
+    if(featurePayload <= k_MaximumBytes - ensemblePayload && featurePayload + ensemblePayload <= k_MaximumBytes - facePayload)
     {
-      plan.Reservation = budget.tryReserveWorkingMemoryWithoutEviction(featurePayload + ensemblePayload + facePayload);
-      if(plan.Reservation.sizeBytes() != 0)
+      plan.reservation = budget.tryReserveWorkingMemoryWithoutEviction(featurePayload + ensemblePayload + facePayload);
+      if(plan.reservation.sizeBytes() != 0)
       {
-        plan.FaceCapacity = desiredFaces;
-        plan.CacheWholeTables = true;
+        plan.face_capacity = desiredFaces;
+        plan.cache_whole_tables = true;
         Result<LookupPlan> result;
         result.value() = std::move(plan);
         return result;
@@ -84,10 +84,10 @@ inline Result<LookupPlan> PlanLookups(const LookupSizes& sizes, int32 errorCode)
     }
   }
 
-  const usize desiredPages = (std::max)(usize{1}, (std::min)({maximumPageTuples, desiredFaces * 2, (std::max)(sizes.FeatureCount, sizes.EnsembleCount)}));
+  const usize desiredPages = (std::max)(usize{1}, (std::min)({k_MaximumPageTuples, desiredFaces * 2, (std::max)(sizes.feature_count, sizes.ensemble_count)}));
   const uint64 desiredBytes = (static_cast<uint64>(desiredFaces) * gatheredFaceBytes) + (static_cast<uint64>(desiredPages) * pageBytes);
-  plan.Reservation = budget.reserveWorkingMemory(desiredBytes);
-  const uint64 grantedBytes = plan.Reservation.sizeBytes();
+  plan.reservation = budget.reserveWorkingMemory(desiredBytes);
+  const uint64 grantedBytes = plan.reservation.sizeBytes();
   const usize minimumBytes = gatheredFaceBytes + pageBytes;
   if(grantedBytes < minimumBytes)
   {
@@ -99,14 +99,14 @@ inline Result<LookupPlan> PlanLookups(const LookupSizes& sizes, int32 errorCode)
   // Keep the ordinary face block when it fits. Smaller grants retain useful pages as well as faces.
   if(grantedBytes >= static_cast<uint64>(desiredFaces) * gatheredFaceBytes + pageBytes)
   {
-    plan.FaceCapacity = desiredFaces;
+    plan.face_capacity = desiredFaces;
   }
   else
   {
-    plan.FaceCapacity = (std::max)(usize{1}, static_cast<usize>(grantedBytes / (gatheredFaceBytes + (2 * pageBytes))));
+    plan.face_capacity = (std::max)(usize{1}, static_cast<usize>(grantedBytes / (gatheredFaceBytes + (2 * pageBytes))));
   }
-  plan.PageCapacity = (std::min)(desiredPages, static_cast<usize>((grantedBytes - (static_cast<uint64>(plan.FaceCapacity) * gatheredFaceBytes)) / pageBytes));
-  plan.Reservation.shrinkTo((static_cast<uint64>(plan.FaceCapacity) * gatheredFaceBytes) + (static_cast<uint64>(plan.PageCapacity) * pageBytes));
+  plan.page_capacity = (std::min)(desiredPages, static_cast<usize>((grantedBytes - (static_cast<uint64>(plan.face_capacity) * gatheredFaceBytes)) / pageBytes));
+  plan.reservation.shrinkTo((static_cast<uint64>(plan.face_capacity) * gatheredFaceBytes) + (static_cast<uint64>(plan.page_capacity) * pageBytes));
   Result<LookupPlan> result;
   result.value() = std::move(plan);
   return result;
@@ -151,9 +151,9 @@ template <typename T, usize Components>
 Result<> GatherLookupTuples(const AbstractDataStore<T>& store, nonstd::span<const int32> indexes, nonstd::span<usize> order, nonstd::span<T> gathered, nonstd::span<T> page,
                             const std::atomic_bool& shouldCancel, int32 errorCode, const DataPath& path, bool reuseOrder = false)
 {
-  constexpr usize maximum = (std::numeric_limits<usize>::max)();
-  if(indexes.size() > maximum / Components || gathered.size() < indexes.size() * Components || order.size() < indexes.size() || page.empty() || page.size() % Components != 0 ||
-     store.getNumberOfComponents() != Components || store.getNumberOfTuples() > maximum / Components)
+  constexpr usize k_Maximum = (std::numeric_limits<usize>::max)();
+  if(indexes.size() > k_Maximum / Components || gathered.size() < indexes.size() * Components || order.size() < indexes.size() || page.empty() || page.size() % Components != 0 ||
+     store.getNumberOfComponents() != Components || store.getNumberOfTuples() > k_Maximum / Components)
   {
     return MakeErrorResult(
         errorCode, fmt::format("Orientation lookup array '{}' requires {} components and complete tuple buffers. Check the selected array and working buffer sizes.", path.toString(), Components));
@@ -181,7 +181,7 @@ Result<> GatherLookupTuples(const AbstractDataStore<T>& store, nonstd::span<cons
     std::ranges::sort(order.first(requests), [&indexes](usize left, usize right) { return indexes[left] < indexes[right]; });
   }
   const usize pageTuples = page.size() / Components;
-  usize loadedPage = maximum;
+  usize loadedPage = k_Maximum;
   Result<> result;
   for(usize request = 0; request < requests; ++request)
   {

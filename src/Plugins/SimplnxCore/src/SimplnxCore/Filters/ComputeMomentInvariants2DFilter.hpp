@@ -25,15 +25,15 @@ public:
   ComputeMomentInvariants2DFilter& operator=(ComputeMomentInvariants2DFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
-  static constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
-  static constexpr StringLiteral k_FeatureRectArrayPath_Key = "feature_rect_array_path";
-  static constexpr StringLiteral k_NormalizeMomentInvariants_Key = "normalize_moment_invariants";
-  static constexpr StringLiteral k_Omega1ArrayName_Key = "omega1_array_name";
-  static constexpr StringLiteral k_Omega2ArrayName_Key = "omega2_array_name";
-  static constexpr StringLiteral k_SaveCentralMoments_Key = "save_central_moments";
-  static constexpr StringLiteral k_CentralMomentsArrayName_Key = "central_moments_array_name";
+  static constexpr StringLiteralType k_ImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
+  static constexpr StringLiteralType k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
+  static constexpr StringLiteralType k_FeatureRectArrayPath_Key = "feature_rect_array_path";
+  static constexpr StringLiteralType k_NormalizeMomentInvariants_Key = "normalize_moment_invariants";
+  static constexpr StringLiteralType k_Omega1ArrayName_Key = "omega1_array_name";
+  static constexpr StringLiteralType k_Omega2ArrayName_Key = "omega2_array_name";
+  static constexpr StringLiteralType k_SaveCentralMoments_Key = "save_central_moments";
+  static constexpr StringLiteralType k_CentralMomentsArrayName_Key = "central_moments_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -90,7 +90,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

@@ -15,7 +15,7 @@ public:
   using ValueType = std::vector<DataPath>;
 
   MultiPathSelectionParameter() = delete;
-  MultiPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  MultiPathSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~MultiPathSelectionParameter() override = default;
 
   MultiPathSelectionParameter(const MultiPathSelectionParameter&) = delete;
@@ -34,13 +34,13 @@ public:
    * @brief Returns a list of accpeted input types.
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief Creates a copy of the parameter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the user defined default value.
@@ -103,17 +103,17 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
+  ValueType m_DefaultValue;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT SingleToMultiDataPathSelectionFilterParameterConverter
 {
   using ParameterType = MultiPathSelectionParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT DataArraysToRemoveConverter
@@ -121,9 +121,9 @@ struct SIMPLNX_EXPORT DataArraysToRemoveConverter
   using ParameterType = MultiPathSelectionParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::MultiPathSelectionParameter, "b5632f4f-fc13-4234-beb2-8fd8820eb6b6");

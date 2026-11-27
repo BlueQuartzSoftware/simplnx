@@ -24,11 +24,11 @@ public:
   CreateImageGeometryFilter& operator=(CreateImageGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_GeometryDataPath_Key = "output_image_geometry_path";
-  static constexpr StringLiteral k_Dimensions_Key = "dimensions";
-  static constexpr StringLiteral k_Origin_Key = "origin";
-  static constexpr StringLiteral k_Spacing_Key = "spacing";
-  static constexpr StringLiteral k_CellDataName_Key = "cell_data_name";
+  static constexpr StringLiteralType k_GeometryDataPath_Key = "output_image_geometry_path";
+  static constexpr StringLiteralType k_Dimensions_Key = "dimensions";
+  static constexpr StringLiteralType k_Origin_Key = "origin";
+  static constexpr StringLiteralType k_Spacing_Key = "spacing";
+  static constexpr StringLiteralType k_CellDataName_Key = "cell_data_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -85,7 +85,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

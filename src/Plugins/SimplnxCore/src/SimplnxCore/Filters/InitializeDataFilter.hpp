@@ -21,18 +21,18 @@ public:
   InitializeDataFilter& operator=(InitializeDataFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_ArrayPath_Key = "array_path";
-  static constexpr StringLiteral k_InitType_Key = "init_type_index";
-  static constexpr StringLiteral k_InitValue_Key = "init_value";
-  static constexpr StringLiteral k_StartingFillValue_Key = "starting_fill_value";
-  static constexpr StringLiteral k_StepOperation_Key = "step_operation_index";
-  static constexpr StringLiteral k_StepValue_Key = "step_value";
-  static constexpr StringLiteral k_UseSeed_Key = "use_seed";
-  static constexpr StringLiteral k_SeedValue_Key = "seed_value";
-  static constexpr StringLiteral k_SeedArrayName_Key = "seed_array_name";
-  static constexpr StringLiteral k_InitStartRange_Key = "init_start_range";
-  static constexpr StringLiteral k_InitEndRange_Key = "init_end_range";
-  static constexpr StringLiteral k_StandardizeSeed_Key = "standardize_seed";
+  static constexpr StringLiteralType k_ArrayPath_Key = "array_path";
+  static constexpr StringLiteralType k_InitType_Key = "init_type_index";
+  static constexpr StringLiteralType k_InitValue_Key = "init_value";
+  static constexpr StringLiteralType k_StartingFillValue_Key = "starting_fill_value";
+  static constexpr StringLiteralType k_StepOperation_Key = "step_operation_index";
+  static constexpr StringLiteralType k_StepValue_Key = "step_value";
+  static constexpr StringLiteralType k_UseSeed_Key = "use_seed";
+  static constexpr StringLiteralType k_SeedValue_Key = "seed_value";
+  static constexpr StringLiteralType k_SeedArrayName_Key = "seed_array_name";
+  static constexpr StringLiteralType k_InitStartRange_Key = "init_start_range";
+  static constexpr StringLiteralType k_InitEndRange_Key = "init_end_range";
+  static constexpr StringLiteralType k_StandardizeSeed_Key = "standardize_seed";
 
   /**
    * @brief
@@ -82,7 +82,7 @@ public:
    * @brief
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

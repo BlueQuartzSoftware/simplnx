@@ -5,7 +5,7 @@
 namespace
 {
 // -----------------------------------------------------------------------------
-bool CheckStoresInMemory(const nx::core::IParallelAlgorithm::AlgorithmStores& stores)
+bool CheckStoresInMemory(const nx::core::IParallelAlgorithm::AlgorithmStoresType& stores)
 {
   if(stores.empty())
   {
@@ -29,7 +29,7 @@ bool CheckStoresInMemory(const nx::core::IParallelAlgorithm::AlgorithmStores& st
 }
 
 // -----------------------------------------------------------------------------
-bool CheckArraysInMemory(const nx::core::IParallelAlgorithm::AlgorithmArrays& arrays)
+bool CheckArraysInMemory(const nx::core::IParallelAlgorithm::AlgorithmArraysType& arrays)
 {
   if(arrays.empty())
   {
@@ -63,7 +63,6 @@ IParallelAlgorithm::IParallelAlgorithm()
 }
 
 // -----------------------------------------------------------------------------
-IParallelAlgorithm::~IParallelAlgorithm() = default;
 
 // -----------------------------------------------------------------------------
 bool IParallelAlgorithm::getParallelizationEnabled() const
@@ -79,13 +78,13 @@ void IParallelAlgorithm::setParallelizationEnabled(bool doParallel)
 #endif
 }
 // -----------------------------------------------------------------------------
-void IParallelAlgorithm::requireArraysInMemory(const AlgorithmArrays& arrays)
+void IParallelAlgorithm::requireArraysInMemory(const AlgorithmArraysType& arrays)
 {
   setParallelizationEnabled(getParallelizationEnabled() && CheckArraysInMemory(arrays));
 }
 
 // -----------------------------------------------------------------------------
-void IParallelAlgorithm::requireStoresInMemory(const AlgorithmStores& stores)
+void IParallelAlgorithm::requireStoresInMemory(const AlgorithmStoresType& stores)
 {
   setParallelizationEnabled(getParallelizationEnabled() && ::CheckStoresInMemory(stores));
 }

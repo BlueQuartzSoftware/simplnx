@@ -5,7 +5,7 @@
 
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 VertexGeomIO::VertexGeomIO() = default;
 VertexGeomIO::~VertexGeomIO() noexcept = default;
@@ -20,30 +20,30 @@ std::string VertexGeomIO::getTypeName() const
   return data_type::k_TypeName;
 }
 
-Result<> VertexGeomIO::readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
+Result<> VertexGeomIO::readData(DataStructureReader& dataStructureReader, const GroupReaderType& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                 const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const
 {
-  auto* geometry = VertexGeom::Import(dataStructureReader.getDataStructure(), objectName, importId, parentId);
-  return INodeGeom0dIO::ReadNodeGeom0dData(dataStructureReader, *geometry, parentGroup, objectName, importId, parentId, useEmptyDataStore);
+  auto* geometryPtr = VertexGeom::Import(dataStructureReader.getDataStructure(), objectName, importId, parentId);
+  return INodeGeom0dIO::ReadNodeGeom0dData(dataStructureReader, *geometryPtr, parentGroup, objectName, importId, parentId, useEmptyDataStore);
 }
 
-Result<> VertexGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup) const
+Result<> VertexGeomIO::finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& dataStructureGroup) const
 {
-  auto* geom = dataStructure.getDataAs<VertexGeom>(dataPath);
-  if(geom == nullptr)
+  auto* geomPtr = dataStructure.getDataAs<VertexGeom>(dataPath);
+  if(geomPtr == nullptr)
   {
     return MakeErrorResult(-50595, fmt::format("Failed to finish importing VertexGeom at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
   }
   return INodeGeom0dIO::FinishImportingNodeGeom0dData(dataStructure, dataPath, dataStructureGroup);
 }
 
-Result<> VertexGeomIO::writeData(DataStructureWriter& structureReader, const VertexGeom& geometry, group_writer_type& parentGroupWriter, bool importable) const
+Result<> VertexGeomIO::writeData(DataStructureWriter& structureReader, const VertexGeom& geometry, GroupWriterType& parentGroupWriter, bool importable)
 {
   return INodeGeom0dIO::WriteNodeGeom0dData(structureReader, geometry, parentGroupWriter, importable);
 }
 
-Result<> VertexGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const
+Result<> VertexGeomIO::writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, GroupWriterType& parentWriter) const
 {
   return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

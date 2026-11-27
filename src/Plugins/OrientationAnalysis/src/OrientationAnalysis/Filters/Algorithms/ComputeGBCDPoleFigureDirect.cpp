@@ -8,8 +8,7 @@
 #include <EbsdLib/Core/Orientation.hpp>
 #include <EbsdLib/LaueOps/LaueOps.h>
 #include <EbsdLib/Orientation/OrientationFwd.hpp>
-
-namespace fs = std::filesystem;
+#include <utility>
 
 using namespace nx::core;
 
@@ -36,12 +35,12 @@ private:
   const std::vector<float32>& m_MisorientationRotation;
 
 public:
-  ComputeGBCDPoleFigureImpl(float64* poleFigurePtr, const std::array<int32, 2>& dimensions, const ebsdlib::LaueOps::Pointer& orientOps, const std::vector<float32>& gbcdDeltasArray,
+  ComputeGBCDPoleFigureImpl(float64* poleFigurePtr, const std::array<int32, 2>& dimensions, ebsdlib::LaueOps::Pointer orientOps, const std::vector<float32>& gbcdDeltasArray,
                             const std::vector<float32>& gbcdLimitsArray, const std::vector<int32>& gbcdSizesArray, const float64* gbcdPtr, int32 phaseOfInterest,
                             const std::vector<float32>& misorientationRotation)
   : m_PoleFigure(poleFigurePtr)
   , m_Dimensions(dimensions)
-  , m_OrientOps(orientOps)
+  , m_OrientOps(std::move(orientOps))
   , m_GbcdDeltas(gbcdDeltasArray)
   , m_GbcdLimits(gbcdLimitsArray)
   , m_GbcdSizes(gbcdSizesArray)
@@ -69,8 +68,8 @@ public:
     // Matrix3X1<float32> misEuler1 = {0.0f, 0.0f, 0.0f};
 
     // The transpose applies the reciprocal misorientation in the second crystal frame.
-    float32 misAngle = m_MisorientationRotation[0] * nx::core::Constants::k_PiOver180F;
-    nx::core::FloatVec3 normAxis = {m_MisorientationRotation[1], m_MisorientationRotation[2], m_MisorientationRotation[3]};
+    float32 misAngle = m_MisorientationRotation[0] * nx::core::constants::k_PiOver180F;
+    nx::core::FloatVec3Type normAxis = {m_MisorientationRotation[1], m_MisorientationRotation[2], m_MisorientationRotation[3]};
     normAxis = normAxis.normalize();
     ebsdlib::Matrix3X3<float32> dg = ebsdlib::AxisAngleFType(normAxis[0], normAxis[1], normAxis[2], misAngle).toOrientationMatrix().toGMatrix();
     ebsdlib::Matrix3X3<float32> dgt = dg.transpose();
@@ -141,7 +140,7 @@ public:
 
               // convert to euler angle
               ebsdlib::EulerFType misEuler1 = ebsdlib::OrientationMatrixFType(dg2).toEuler();
-              if(misEuler1[0] < nx::core::Constants::k_PiOver2F && misEuler1[1] < nx::core::Constants::k_PiOver2F && misEuler1[2] < nx::core::Constants::k_PiOver2F)
+              if(misEuler1[0] < nx::core::constants::k_PiOver2F && misEuler1[1] < nx::core::constants::k_PiOver2F && misEuler1[2] < nx::core::constants::k_PiOver2F)
               {
                 misEuler1[1] = cosf(misEuler1[1]);
                 // find bins in GBCD
@@ -151,7 +150,7 @@ public:
                 // find symmetric poles using the first symmetry operator
                 rotNormal = sym1 * vec;
                 // get coordinates in square projection of crystal normal parallel to boundary normal
-                nhCheck = getSquareCoord(rotNormal.data(), sqCoord.data());
+                nhCheck = GetSquareCoord(rotNormal.data(), sqCoord.data());
                 // Note the switch to have theta in the 4 slot and cos(Phi) int he 3 slot
                 auto location4 = static_cast<int32>((sqCoord[0] - m_GbcdLimits[3]) / m_GbcdDeltas[3]);
                 auto location5 = static_cast<int32>((sqCoord[1] - m_GbcdLimits[4]) / m_GbcdDeltas[4]);
@@ -174,7 +173,7 @@ public:
               dg2 = sym1 * dg1;
               // convert to euler angle
               misEuler1 = ebsdlib::OrientationMatrixFType(dg2).toEuler();
-              if(misEuler1[0] < nx::core::Constants::k_PiOver2D && misEuler1[1] < nx::core::Constants::k_PiOver2F && misEuler1[2] < nx::core::Constants::k_PiOver2F)
+              if(misEuler1[0] < nx::core::constants::k_PiOver2D && misEuler1[1] < nx::core::constants::k_PiOver2F && misEuler1[2] < nx::core::constants::k_PiOver2F)
               {
                 misEuler1[1] = cosf(misEuler1[1]);
                 // find bins in GBCD
@@ -184,7 +183,7 @@ public:
                 // find symmetric poles using the first symmetry operator
                 rotNormal2 = sym1 * vec2;
                 // get coordinates in square projection of crystal normal parallel to boundary normal
-                nhCheck = getSquareCoord(rotNormal2.data(), sqCoord.data());
+                nhCheck = GetSquareCoord(rotNormal2.data(), sqCoord.data());
                 // Note the switch to have theta in the 4 slot and cos(Phi) int he 3 slot
                 auto location4 = static_cast<int32>((sqCoord[0] - m_GbcdLimits[3]) / m_GbcdDeltas[3]);
                 auto location5 = static_cast<int32>((sqCoord[1] - m_GbcdLimits[4]) / m_GbcdDeltas[4]);
@@ -217,7 +216,7 @@ public:
   }
 
 private:
-  static bool getSquareCoord(float32* crystalNormal, float32* sqCoord)
+  static bool GetSquareCoord(float32* crystalNormal, float32* sqCoord)
   {
     bool nhCheck = false;
     float32 adjust = 1.0;
@@ -228,15 +227,15 @@ private:
     }
     if(fabsf(crystalNormal[0]) >= fabsf(crystalNormal[1]))
     {
-      sqCoord[0] = (crystalNormal[0] / fabsf(crystalNormal[0])) * sqrtf(2.0f * 1.0f * (1.0f + (crystalNormal[2] * adjust))) * (nx::core::Constants::k_SqrtPiF / 2.0f);
+      sqCoord[0] = (crystalNormal[0] / fabsf(crystalNormal[0])) * sqrtf(2.0f * 1.0f * (1.0f + (crystalNormal[2] * adjust))) * (nx::core::constants::k_SqrtPiF / 2.0f);
       sqCoord[1] = (crystalNormal[0] / fabsf(crystalNormal[0])) * sqrtf(2.0f * 1.0f * (1.0f + (crystalNormal[2] * adjust))) *
-                   ((2.0f / nx::core::Constants::k_SqrtPiF) * atanf(crystalNormal[1] / crystalNormal[0]));
+                   ((2.0f / nx::core::constants::k_SqrtPiF) * atanf(crystalNormal[1] / crystalNormal[0]));
     }
     else
     {
       sqCoord[0] = (crystalNormal[1] / fabsf(crystalNormal[1])) * sqrtf(2.0f * 1.0f * (1.0f + (crystalNormal[2] * adjust))) *
-                   ((2.0f / nx::core::Constants::k_SqrtPiF) * atanf(crystalNormal[0] / crystalNormal[1]));
-      sqCoord[1] = (crystalNormal[1] / fabsf(crystalNormal[1])) * sqrtf(2.0f * 1.0f * (1.0f + (crystalNormal[2] * adjust))) * (nx::core::Constants::k_SqrtPiF / 2.0f);
+                   ((2.0f / nx::core::constants::k_SqrtPiF) * atanf(crystalNormal[0] / crystalNormal[1]));
+      sqCoord[1] = (crystalNormal[1] / fabsf(crystalNormal[1])) * sqrtf(2.0f * 1.0f * (1.0f + (crystalNormal[2] * adjust))) * (nx::core::constants::k_SqrtPiF / 2.0f);
     }
     return nhCheck;
   }
@@ -255,7 +254,6 @@ ComputeGBCDPoleFigureDirect::ComputeGBCDPoleFigureDirect(DataStructure& dataStru
 }
 
 // -----------------------------------------------------------------------------
-ComputeGBCDPoleFigureDirect::~ComputeGBCDPoleFigureDirect() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ComputeGBCDPoleFigureDirect::getCancel()
@@ -266,10 +264,10 @@ const std::atomic_bool& ComputeGBCDPoleFigureDirect::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ComputeGBCDPoleFigureDirect::operator()()
 {
-  auto& gbcd = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->GBCDArrayPath);
-  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  DataPath cellIntensityArrayPath = m_InputValues->ImageGeometryPath.createChildPath(m_InputValues->CellAttributeMatrixName).createChildPath(m_InputValues->CellIntensityArrayName);
-  auto& poleFigure = m_DataStructure.getDataRefAs<Float64Array>(cellIntensityArrayPath);
+  auto& gbcd = m_DataStructure.getDataRefAs<Float64ArrayType>(m_InputValues->gbcd_array_path);
+  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
+  DataPath cellIntensityArrayPath = m_InputValues->image_geometry_path.createChildPath(m_InputValues->cell_attribute_matrix_name).createChildPath(m_InputValues->cell_intensity_array_name);
+  auto& poleFigure = m_DataStructure.getDataRefAs<Float64ArrayType>(cellIntensityArrayPath);
 
   // Cache the entire GBCD array into a contiguous local buffer. This is the
   // in-core path: we expect the full array to fit in RAM. The buffer is passed
@@ -289,21 +287,21 @@ Result<> ComputeGBCDPoleFigureDirect::operator()()
     return ConvertResult(std::move(ioResult));
   }
 
-  const int32 phaseIdx = m_InputValues->PhaseOfInterest;
+  const int32 phaseIdx = m_InputValues->phase_of_interest;
   const usize numGbcdPhases = gbcd.getNumberOfTuples();
   if(phaseIdx <= 0 || static_cast<usize>(phaseIdx) >= numGbcdPhases || static_cast<usize>(phaseIdx) >= numCrystalStructures)
   {
     return MakeErrorResult(-34643,
                            fmt::format("Phase of Interest {} cannot index GBCD array '{}' with {} tuples and Crystal Structures array '{}' with {} tuples. Valid Phase indices must be positive and "
                                        "present in both arrays.",
-                                       phaseIdx, m_InputValues->GBCDArrayPath.toString(), numGbcdPhases, m_InputValues->CrystalStructuresArrayPath.toString(), numCrystalStructures));
+                                       phaseIdx, m_InputValues->gbcd_array_path.toString(), numGbcdPhases, m_InputValues->crystal_structures_array_path.toString(), numCrystalStructures));
   }
   const std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
   const uint32 currentLaueIndex = crystalStructuresCache[phaseIdx];
   if(currentLaueIndex >= orientationOps.size())
   {
     return MakeErrorResult(-34644, fmt::format("Crystal Structures array '{}' has value {} at Phase index {}, but only {} Laue operations are available. Valid Laue indices are in [0, {}).",
-                                               m_InputValues->CrystalStructuresArrayPath.toString(), currentLaueIndex, phaseIdx, orientationOps.size(), orientationOps.size()));
+                                               m_InputValues->crystal_structures_array_path.toString(), currentLaueIndex, phaseIdx, orientationOps.size(), orientationOps.size()));
   }
 
   // Pixels outside the stereographic unit disk retain zero intensity.
@@ -321,17 +319,17 @@ Result<> ComputeGBCDPoleFigureDirect::operator()()
   gbcdLimits[2] = 0.0f;
   gbcdLimits[3] = 0.0f;
   gbcdLimits[4] = 0.0f;
-  gbcdLimits[5] = Constants::k_PiOver2D;
+  gbcdLimits[5] = constants::k_PiOver2D;
   gbcdLimits[6] = 1.0f;
-  gbcdLimits[7] = Constants::k_PiOver2D;
+  gbcdLimits[7] = constants::k_PiOver2D;
   gbcdLimits[8] = 1.0f;
-  gbcdLimits[9] = Constants::k_2PiD;
+  gbcdLimits[9] = constants::k_2PiD;
 
   // Boundary-normal coordinates use the Lambert equal-area square.
-  gbcdLimits[3] = -sqrtf(Constants::k_PiOver2D);
-  gbcdLimits[4] = -sqrtf(Constants::k_PiOver2D);
-  gbcdLimits[8] = sqrtf(Constants::k_PiOver2D);
-  gbcdLimits[9] = sqrtf(Constants::k_PiOver2D);
+  gbcdLimits[3] = -sqrtf(constants::k_PiOver2D);
+  gbcdLimits[4] = -sqrtf(constants::k_PiOver2D);
+  gbcdLimits[8] = sqrtf(constants::k_PiOver2D);
+  gbcdLimits[9] = sqrtf(constants::k_PiOver2D);
 
   ShapeType cDims = gbcd.getComponentShape();
 
@@ -347,22 +345,22 @@ Result<> ComputeGBCDPoleFigureDirect::operator()()
   gbcdDeltas[3] = (gbcdLimits[8] - gbcdLimits[3]) / static_cast<float32>(gbcdSizes[3]);
   gbcdDeltas[4] = (gbcdLimits[9] - gbcdLimits[4]) / static_cast<float32>(gbcdSizes[4]);
 
-  ebsdlib::LaueOps::Pointer orientOps = orientationOps[currentLaueIndex];
+  const ebsdlib::LaueOps::Pointer& orientOps = orientationOps[currentLaueIndex];
 
-  int32 xPoints = m_InputValues->OutputImageDimension;
-  int32 yPoints = m_InputValues->OutputImageDimension;
+  int32 xPoints = m_InputValues->output_image_dimension;
+  int32 yPoints = m_InputValues->output_image_dimension;
   int32 zPoints = 1;
   float32 xRes = 2.0f / static_cast<float32>(xPoints);
   float32 yRes = 2.0f / static_cast<float32>(yPoints);
   float32 zRes = (xRes + yRes) / 2.0F;
 
-  m_MessageHandler.sendInfoMessage(fmt::format("Generating Intensity Plot for phase {}", m_InputValues->PhaseOfInterest));
+  m_MessageHandler.sendInfoMessage(fmt::format("Generating Intensity Plot for phase {}", m_InputValues->phase_of_interest));
 
   ParallelData2DAlgorithm dataAlg;
   dataAlg.setRange(0, xPoints, 0, yPoints);
 
-  dataAlg.execute(ComputeGBCDPoleFigureImpl(poleFigureCache.get(), {xPoints, yPoints}, orientOps, gbcdDeltas, gbcdLimits, gbcdSizes, gbcdCache.get(), m_InputValues->PhaseOfInterest,
-                                            m_InputValues->MisorientationRotation));
+  dataAlg.execute(ComputeGBCDPoleFigureImpl(poleFigureCache.get(), {xPoints, yPoints}, orientOps, gbcdDeltas, gbcdLimits, gbcdSizes, gbcdCache.get(), m_InputValues->phase_of_interest,
+                                            m_InputValues->misorientation_rotation));
 
   if(Result<> ioResult = poleFigure.getDataStoreRef().copyFromBuffer(0, nonstd::span<const float64>(poleFigureCache.get(), poleFigureSize)); ioResult.invalid())
   {

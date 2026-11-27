@@ -48,7 +48,6 @@ CreateEnsembleInfo::CreateEnsembleInfo(DataStructure& dataStructure, const IFilt
 }
 
 // -----------------------------------------------------------------------------
-CreateEnsembleInfo::~CreateEnsembleInfo() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& CreateEnsembleInfo::getCancel()
@@ -59,12 +58,12 @@ const std::atomic_bool& CreateEnsembleInfo::getCancel()
 // -----------------------------------------------------------------------------
 Result<> CreateEnsembleInfo::operator()()
 {
-  AttributeMatrix& cellEnsembleAttributeMatrix = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->CellEnsembleAttributeMatrixName);
-  UInt32Array& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CellEnsembleAttributeMatrixName.createChildPath(m_InputValues->CrystalStructuresArrayName));
-  UInt32Array& phaseTypes = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CellEnsembleAttributeMatrixName.createChildPath(m_InputValues->PhaseTypesArrayName));
-  StringArray& phaseNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->CellEnsembleAttributeMatrixName.createChildPath(m_InputValues->PhaseNamesArrayName));
+  AttributeMatrix& cellEnsembleAttributeMatrix = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->cell_ensemble_attribute_matrix_name);
+  UInt32ArrayType& crystalStructures = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->cell_ensemble_attribute_matrix_name.createChildPath(m_InputValues->crystal_structures_array_name));
+  UInt32ArrayType& phaseTypes = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->cell_ensemble_attribute_matrix_name.createChildPath(m_InputValues->phase_types_array_name));
+  StringArray& phaseNames = m_DataStructure.getDataRefAs<StringArray>(m_InputValues->cell_ensemble_attribute_matrix_name.createChildPath(m_InputValues->phase_names_array_name));
 
-  usize numPhases = m_InputValues->Ensemble.size();
+  usize numPhases = m_InputValues->ensemble.size();
   if(0 == numPhases) // Either the group name "EnsembleInfo" is incorrect or 0 was entered as the Number_Phases
   {
     return MakeErrorResult(-10001, "Check the group name EnsembleInfo and that the number of phases > 0");
@@ -76,7 +75,7 @@ Result<> CreateEnsembleInfo::operator()()
   for(int i = 0; i < numPhases; i++)
   {
     // Crystal Structure
-    uint32 crystalStructure = CrystalStructureFromString(m_InputValues->Ensemble[i][0]);
+    uint32 crystalStructure = CrystalStructureFromString(m_InputValues->ensemble[i][0]);
     if(crystalStructure == ebsdlib::CrystalStructure::UnknownCrystalStructure)
     {
       return MakeErrorResult(-10006, fmt::format("Incorrect crystal structure name '{}'", crystalStructure));
@@ -85,7 +84,7 @@ Result<> CreateEnsembleInfo::operator()()
     crystalStructures[i + 1] = crystalStructure;
 
     // Phase Type
-    uint32_t phaseType = PhaseTypeFromString(m_InputValues->Ensemble[i][1]); // static_cast<uint32_t>(phaseTypes[i]);
+    uint32_t phaseType = PhaseTypeFromString(m_InputValues->ensemble[i][1]); // static_cast<uint32_t>(phaseTypes[i]);
     if(static_cast<PhaseType::Type>(phaseType) == PhaseType::Type::Unknown)
     {
       return MakeErrorResult(-10007, fmt::format("Incorrect phase type '{}'", phaseType)); // The phase type name was not found in the lookup table
@@ -94,7 +93,7 @@ Result<> CreateEnsembleInfo::operator()()
     phaseTypes[i + 1] = phaseType;
 
     // Phase Name
-    std::string phaseName = m_InputValues->Ensemble[i][2];
+    std::string phaseName = m_InputValues->ensemble[i][2];
     if(phaseName.empty())
     {
       return MakeErrorResult(-10008, fmt::format("Phase name cannot be empty for phase index {}.", i + 1)); // The phase name was not found

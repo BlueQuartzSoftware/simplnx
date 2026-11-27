@@ -8,6 +8,7 @@
 #include <EbsdLib/Core/EbsdLibConstants.h>
 #include <EbsdLib/Orientation/Quaternion.hpp>
 
+#include <algorithm>
 #include <random>
 
 using namespace nx::core;
@@ -28,9 +29,9 @@ MergeTwins::~MergeTwins() noexcept = default;
 // -----------------------------------------------------------------------------
 Result<int32> MergeTwins::getSeed(int32 newFid)
 {
-  auto& phases = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath)->getDataStoreRef();
-  auto& featureParentIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureParentIdsArrayPath)->getDataStoreRef();
-  auto& cellFeaturesAttMatrix = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->NewCellFeatureAttributeMatrixPath);
+  auto& phases = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_phases_array_path)->getDataStoreRef();
+  auto& featureParentIds = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_parent_ids_array_path)->getDataStoreRef();
+  auto& cellFeaturesAttMatrix = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->new_cell_feature_attribute_matrix_path);
 
   auto numFeatures = static_cast<int32>(phases.getNumberOfTuples());
 
@@ -71,11 +72,11 @@ Result<int32> MergeTwins::getSeed(int32 newFid)
 // -----------------------------------------------------------------------------
 Result<bool> MergeTwins::determineGrouping(int32 referenceFeatureIdx, int32 neighborFeatureIdx, int32 newFid)
 {
-  const auto& featurePhasesStoreRef = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath)->getDataStoreRef();
-  auto& featureParentIdsStoreRef = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureParentIdsArrayPath)->getDataStoreRef();
-  const auto& crystalStructuresStoreRef = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath)->getDataStoreRef();
-  const auto& avgQuatsStoreRef = m_DataStructure.getDataAs<Float32Array>(m_InputValues->AvgQuatsArrayPath)->getDataStoreRef();
-  const float32 axisToleranceRad = m_InputValues->AxisTolerance * numbers::pi_v<float32> / 180.0F;
+  const auto& featurePhasesStoreRef = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_phases_array_path)->getDataStoreRef();
+  auto& featureParentIdsStoreRef = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_parent_ids_array_path)->getDataStoreRef();
+  const auto& crystalStructuresStoreRef = m_DataStructure.getDataAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path)->getDataStoreRef();
+  const auto& avgQuatsStoreRef = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->avg_quats_array_path)->getDataStoreRef();
+  const float32 axisToleranceRad = m_InputValues->axis_tolerance * numbers::k_PiV<float32> / 180.0F;
 
   bool twin = false;
 
@@ -89,15 +90,15 @@ Result<bool> MergeTwins::determineGrouping(int32 referenceFeatureIdx, int32 neig
       return MakeErrorResult<bool>(
           -23502,
           fmt::format("Feature Phases array '{}' has value {} at reference Feature index {}, but Crystal Structures array '{}' contains {} tuples. Valid positive Phase indices are in [1, {}).",
-                      m_InputValues->FeaturePhasesArrayPath.toString(), currentPhaseIdx, referenceFeatureIdx, m_InputValues->CrystalStructuresArrayPath.toString(), numCrystalStructures,
+                      m_InputValues->feature_phases_array_path.toString(), currentPhaseIdx, referenceFeatureIdx, m_InputValues->crystal_structures_array_path.toString(), numCrystalStructures,
                       numCrystalStructures));
     }
     if(static_cast<usize>(neighborFeaturePhaseIdx) >= numCrystalStructures)
     {
       return MakeErrorResult<bool>(
           -23502, fmt::format("Feature Phases array '{}' has value {} at neighbor Feature index {}, but Crystal Structures array '{}' contains {} tuples. Valid positive Phase indices are in [1, {}).",
-                              m_InputValues->FeaturePhasesArrayPath.toString(), neighborFeaturePhaseIdx, neighborFeatureIdx, m_InputValues->CrystalStructuresArrayPath.toString(), numCrystalStructures,
-                              numCrystalStructures));
+                              m_InputValues->feature_phases_array_path.toString(), neighborFeaturePhaseIdx, neighborFeatureIdx, m_InputValues->crystal_structures_array_path.toString(),
+                              numCrystalStructures, numCrystalStructures));
     }
 
     const uint32 currentLaueIndex = crystalStructuresStoreRef[currentPhaseIdx];
@@ -112,10 +113,10 @@ Result<bool> MergeTwins::determineGrouping(int32 referenceFeatureIdx, int32 neig
     {
       ebsdlib::AxisAngleDType axisAngle = m_OrientationOps[currentLaueIndex]->calculateMisorientation(q1, q2);
       double w = axisAngle[3];
-      w *= (180.0f / numbers::pi);
+      w *= (180.0f / numbers::k_Pi);
       double axisDiff111 = std::acos(std::fabs(axisAngle[0]) * 0.57735f + std::fabs(axisAngle[1]) * 0.57735f + fabs(axisAngle[2]) * 0.57735f);
       double angDiff60 = std::fabs(w - 60.0f);
-      if(axisDiff111 < axisToleranceRad && angDiff60 < m_InputValues->AngleTolerance)
+      if(axisDiff111 < axisToleranceRad && angDiff60 < m_InputValues->angle_tolerance)
       {
         twin = true;
       }
@@ -131,12 +132,14 @@ Result<bool> MergeTwins::determineGrouping(int32 referenceFeatureIdx, int32 neig
 
 Result<> MergeTwins::groupFeaturesExecute()
 {
-  auto& conNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->ContiguousNeighborListArrayPath);
+  auto& conNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->contiguous_neighbor_list_array_path);
   std::vector<int32_t> groupList;
 
   int32_t parentCount = 0;
   int32_t featureSeed = 0;
-  int32_t list1size = 0, list2size = 0, listsize = 0;
+  int32_t list1size = 0;
+  int32_t list2size = 0;
+  int32_t listsize = 0;
   int32 neighborFeatureIdx = 0;
 
   while(featureSeed >= 0)
@@ -146,7 +149,7 @@ Result<> MergeTwins::groupFeaturesExecute()
       return {};
     }
 
-    bool m_PatchGrouping = false;
+    bool mPatchGrouping = false;
     parentCount++;
     Result<int32> seedResult = getSeed(parentCount);
     if(seedResult.invalid())
@@ -190,7 +193,7 @@ Result<> MergeTwins::groupFeaturesExecute()
               }
               if(groupingResult.value())
               {
-                if(!m_PatchGrouping)
+                if(!mPatchGrouping)
                 {
                   groupList.push_back(neighborFeatureIdx);
                 }
@@ -215,10 +218,10 @@ Result<> MergeTwins::operator()()
   /* Sanity check that each phase is Cubic High (m3m) Laue class. If not then warn the user.
    * There is code later on to ensure that only m3m Laue class is used.
    */
-  auto& laueClasses = m_DataStructure.getDataAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath)->getDataStoreRef();
-  auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
-  auto& cellParentIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->CellParentIdsArrayPath)->getDataStoreRef();
-  auto& featureParentIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureParentIdsArrayPath)->getDataStoreRef();
+  auto& laueClasses = m_DataStructure.getDataAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path)->getDataStoreRef();
+  auto& featureIdsStore = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path)->getDataStoreRef();
+  auto& cellParentIdsStore = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->cell_parent_ids_array_path)->getDataStoreRef();
+  auto& featureParentIds = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_parent_ids_array_path)->getDataStoreRef();
 
   usize totalPoints = cellParentIdsStore.getNumberOfTuples();
 
@@ -257,7 +260,7 @@ Result<> MergeTwins::operator()()
     return mergeWarnings(std::move(groupingResult));
   }
 
-  auto& active = m_DataStructure.getDataAs<BoolArray>(m_InputValues->ActiveArrayPath)->getDataStoreRef();
+  auto& active = m_DataStructure.getDataAs<BoolArrayType>(m_InputValues->active_array_path)->getDataStoreRef();
   active.fill(true);
 
   usize totalFeatures = active.getNumberOfTuples();
@@ -299,10 +302,7 @@ Result<> MergeTwins::operator()()
       {
         int32 featureName = featureIdsBuf[i];
         cellParentIdsBuf[i] = featureParentIdsCache[featureName];
-        if(featureParentIdsCache[featureName] > numParents)
-        {
-          numParents = featureParentIdsCache[featureName];
-        }
+        numParents = std::max(featureParentIdsCache[featureName], numParents);
       }
 
       if(Result<> ioResult = cellParentIdsStore.copyFromBuffer(offset, nonstd::span<const int32>(cellParentIdsBuf.data(), count)); ioResult.invalid())
@@ -316,10 +316,10 @@ Result<> MergeTwins::operator()()
   // Randomize the feature Ids for purely visual clarify. Having random Feature Ids
   // allows users visualizing the data to better discern each grain otherwise the coloring
   // would look like a smooth gradient. This is a user input parameter
-  if(m_InputValues->RandomizeParentIds)
+  if(m_InputValues->randomize_parent_ids)
   { // Randomize Parent IDs
-    m_MessageHandler.sendMessage({IFilter::Message::Type::Info, "Randomizing Parent Ids...."});
-    if(Result<> randomizeResult = ClusterUtilities::RandomizeFeatureIds(featureParentIds, numParents); randomizeResult.invalid())
+    m_MessageHandler.sendMessage({.type = IFilter::Message::Type::Info, .message = "Randomizing Parent Ids...."});
+    if(Result<> randomizeResult = cluster_utilities::RandomizeFeatureIds(featureParentIds, numParents); randomizeResult.invalid())
     {
       return mergeWarnings(std::move(randomizeResult));
     }

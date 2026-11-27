@@ -16,80 +16,80 @@
 
 namespace nx::core
 {
-template <template <class> class ClassT, class ArrayTypeOptions = ArrayUseAllTypes, class... ArgsT>
+template <template <class> class ClassT, class ArrayTypeOptions = ArrayUseAllTypesType, class... ArgsT>
 auto RunTemplateClass(DataType dataType, ArgsT&&... args)
 {
-  if constexpr(ArrayTypeOptions::UsingBoolean)
+  if constexpr(ArrayTypeOptions::k_UsingBoolean)
   {
     if(dataType == DataType::boolean)
     {
       return ClassT<bool>(std::forward<ArgsT>(args)...)();
     }
   }
-  if constexpr(ArrayTypeOptions::UsingInt8)
+  if constexpr(ArrayTypeOptions::k_UsingInt8)
   {
     if(dataType == DataType::int8)
     {
       return ClassT<int8>(std::forward<ArgsT>(args)...)();
     }
   }
-  if constexpr(ArrayTypeOptions::UsingInt16)
+  if constexpr(ArrayTypeOptions::k_UsingInt16)
   {
     if(dataType == DataType::int16)
     {
       return ClassT<int16>(std::forward<ArgsT>(args)...)();
     }
   }
-  if constexpr(ArrayTypeOptions::UsingInt32)
+  if constexpr(ArrayTypeOptions::k_UsingInt32)
   {
     if(dataType == DataType::int32)
     {
       return ClassT<int32>(std::forward<ArgsT>(args)...)();
     }
   }
-  if constexpr(ArrayTypeOptions::UsingInt64)
+  if constexpr(ArrayTypeOptions::k_UsingInt64)
   {
     if(dataType == DataType::int64)
     {
       return ClassT<int64>(std::forward<ArgsT>(args)...)();
     }
   }
-  if constexpr(ArrayTypeOptions::UsingUInt8)
+  if constexpr(ArrayTypeOptions::k_UsingUInt8)
   {
     if(dataType == DataType::uint8)
     {
       return ClassT<uint8>(std::forward<ArgsT>(args)...)();
     }
   }
-  if constexpr(ArrayTypeOptions::UsingUInt16)
+  if constexpr(ArrayTypeOptions::k_UsingUInt16)
   {
     if(dataType == DataType::uint16)
     {
       return ClassT<uint16>(std::forward<ArgsT>(args)...)();
     }
   }
-  if constexpr(ArrayTypeOptions::UsingUInt32)
+  if constexpr(ArrayTypeOptions::k_UsingUInt32)
   {
     if(dataType == DataType::uint32)
     {
       return ClassT<uint32>(std::forward<ArgsT>(args)...)();
     }
   }
-  if constexpr(ArrayTypeOptions::UsingUInt64)
+  if constexpr(ArrayTypeOptions::k_UsingUInt64)
   {
     if(dataType == DataType::uint64)
     {
       return ClassT<uint64>(std::forward<ArgsT>(args)...)();
     }
   }
-  if constexpr(ArrayTypeOptions::UsingFloat32)
+  if constexpr(ArrayTypeOptions::k_UsingFloat32)
   {
     if(dataType == DataType::float32)
     {
       return ClassT<float32>(std::forward<ArgsT>(args)...)();
     }
   }
-  if constexpr(ArrayTypeOptions::UsingFloat64)
+  if constexpr(ArrayTypeOptions::k_UsingFloat64)
   {
     if(dataType == DataType::float64)
     {

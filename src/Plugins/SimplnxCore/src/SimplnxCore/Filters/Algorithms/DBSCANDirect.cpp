@@ -34,7 +34,7 @@ namespace
  *
  * The adapter avoids allocating one mask value for each coordinate tuple.
  */
-class AllTrueMaskCompare final : public MaskCompareUtilities::MaskCompare
+class AllTrueMaskCompare final : public mask_compare_utilities::MaskCompare
 {
 public:
   /**
@@ -43,7 +43,7 @@ public:
    * @param secondTuple Ignored second tuple index.
    * @return True.
    */
-  bool bothTrue(usize firstTuple, usize secondTuple) const override
+  bool bothTrue(usize /*firstTuple*/, usize /*secondTuple*/) const override
   {
     return true;
   }
@@ -54,7 +54,7 @@ public:
    * @param secondTuple Ignored second tuple index.
    * @return False.
    */
-  bool bothFalse(usize firstTuple, usize secondTuple) const override
+  bool bothFalse(usize /*firstTuple*/, usize /*secondTuple*/) const override
   {
     return false;
   }
@@ -64,7 +64,7 @@ public:
    * @param tupleIndex Ignored tuple index.
    * @return True.
    */
-  bool isTrue(usize tupleIndex) const override
+  bool isTrue(usize /*tupleIndex*/) const override
   {
     return true;
   }
@@ -118,9 +118,9 @@ public:
  */
 struct GridBitMap
 {
-  std::vector<uint8> gridTable = {}; // Bit-packed grid incidence rows.
-  usize numPositions = 0;            // Number of positions on the indexed axis.
-  usize rowLength = 0;               // Bytes in one axis-position row.
+  std::vector<uint8> grid_table; // Bit-packed grid incidence rows.
+  usize num_positions = 0;       // Number of positions on the indexed axis.
+  usize row_length = 0;          // Bytes in one axis-position row.
 };
 
 /**
@@ -135,16 +135,16 @@ struct GridBitMapFactory
    * @param numPositons Number of positions on the indexed axis.
    * @return Zeroed table with one bit for each grid and position pair.
    */
-  static GridBitMap createGridBitMap(usize numGrids, usize numPositons)
+  static GridBitMap CreateGridBitMap(usize numGrids, usize numPositons)
   {
     GridBitMap gridBitMap = {};
 
     usize bitPackSize = numGrids / 8;
     bitPackSize += static_cast<usize>((numGrids % 8 > 0));
 
-    gridBitMap.numPositions = numPositons;
-    gridBitMap.rowLength = bitPackSize;
-    gridBitMap.gridTable.resize(bitPackSize * numPositons);
+    gridBitMap.num_positions = numPositons;
+    gridBitMap.row_length = bitPackSize;
+    gridBitMap.grid_table.resize(bitPackSize * numPositons);
 
     return gridBitMap;
   }
@@ -157,7 +157,7 @@ struct GridBitMapFactory
 class HyperGridBitMap
 {
 public:
-  std::vector<std::vector<usize>> gridVoxels = {}; // Maps each occupied grid to its source tuple indices.
+  std::vector<std::vector<usize>> grid_voxels; // Maps each occupied grid to its source tuple indices.
 
   /**
    * @brief Moves the constructor-time coordinate and grid-sizing result to the caller.
@@ -191,9 +191,9 @@ class HyperGridBitMap3D : public HyperGridBitMap
 public:
   static constexpr float32 Dimensions = 3; // Number of coordinate components.
 
-  GridBitMap xTable; // Occupied-grid incidence by X position.
-  GridBitMap yTable; // Occupied-grid incidence by Y position.
-  GridBitMap zTable; // Occupied-grid incidence by Z position.
+  GridBitMap xTable;  // Occupied-grid incidence by X position.
+  GridBitMap yTable;  // Occupied-grid incidence by Y position.
+  GridBitMap z_table; // Occupied-grid incidence by Z position.
 
   HyperGridBitMap3D() = delete;
 
@@ -214,7 +214,7 @@ public:
    */
   template <typename T>
   HyperGridBitMap3D(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const AbstractDataStore<T>& inputArray, const DataPath& arrayPath, float32 epsilon,
-                    const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
+                    const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
     const usize numTuples = inputArray.getNumberOfTuples();
@@ -239,7 +239,7 @@ public:
       auto xVal = static_cast<float32>(inputArray[tup * numComps + 0]);
       auto yVal = static_cast<float32>(inputArray[tup * numComps + 1]);
       auto zVal = static_cast<float32>(inputArray[tup * numComps + 2]);
-      Result<> finiteResult = DBSCANCommon::CheckFiniteCoordinates<3>(arrayPath, tup, {xVal, yVal, zVal});
+      Result<> finiteResult = dbscan_common::CheckFiniteCoordinates<3>(arrayPath, tup, {xVal, yVal, zVal});
       if(finiteResult.invalid())
       {
         m_InitializationResult = std::move(finiteResult);
@@ -271,7 +271,7 @@ public:
     origin[1] = bounds[1] - buffer;
     origin[2] = bounds[2] - buffer;
 
-    Result<std::array<usize, 3>> dimsResult = DBSCANCommon::ComputeGridDimensions<3>(arrayPath, bounds, sideLength);
+    Result<std::array<usize, 3>> dimsResult = dbscan_common::ComputeGridDimensions<3>(arrayPath, bounds, sideLength);
     if(dimsResult.invalid())
     {
       m_InitializationResult = ConvertResult(std::move(dimsResult));
@@ -326,7 +326,7 @@ public:
           }
         }
 
-        gridVoxels = std::vector<std::vector<usize>>(activeGridCount, std::vector<usize>(0));
+        grid_voxels = std::vector<std::vector<usize>>(activeGridCount, std::vector<usize>(0));
         for(usize tup = 0; tup < numTuples; tup++)
         {
           if(shouldCancel)
@@ -344,12 +344,12 @@ public:
           usize zPos = std::floor((static_cast<float32>(inputArray[tup * numComps + 2]) - origin[2]) / spacing[2]);
 
           usize bin = (zPos * dims[1] * dims[0]) + (yPos * dims[0]) + xPos;
-          gridVoxels[gridMap[bin]].push_back(tup);
+          grid_voxels[gridMap[bin]].push_back(tup);
         }
       }
 
       // Release construction capacity before the clustering phase retains this index.
-      for(auto& grid : gridVoxels)
+      for(auto& grid : grid_voxels)
       {
         grid.shrink_to_fit();
       }
@@ -371,9 +371,9 @@ public:
         return;
       }
 
-      xTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), xSet.size());
-      yTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), ySet.size());
-      zTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), zSet.size());
+      xTable = GridBitMapFactory::CreateGridBitMap(grid_voxels.size(), xSet.size());
+      yTable = GridBitMapFactory::CreateGridBitMap(grid_voxels.size(), ySet.size());
+      z_table = GridBitMapFactory::CreateGridBitMap(grid_voxels.size(), zSet.size());
 
       if(shouldCancel)
       {
@@ -385,24 +385,24 @@ public:
         usize relativeGridBytePos = gridId / 8;
         uint8 bitGridOffset = gridId % 8;
 
-        usize xPos = std::distance(xSet.begin(), xSet.find(positions[gridId][0])) * xTable.rowLength;
-        usize yPos = std::distance(ySet.begin(), ySet.find(positions[gridId][1])) * yTable.rowLength;
-        usize zPos = std::distance(zSet.begin(), zSet.find(positions[gridId][2])) * zTable.rowLength;
+        usize xPos = std::distance(xSet.begin(), xSet.find(positions[gridId][0])) * xTable.row_length;
+        usize yPos = std::distance(ySet.begin(), ySet.find(positions[gridId][1])) * yTable.row_length;
+        usize zPos = std::distance(zSet.begin(), zSet.find(positions[gridId][2])) * z_table.row_length;
 
         usize xBytePos = xPos + relativeGridBytePos;
         uint8 xMask = 1;
         xMask <<= bitGridOffset;
-        xTable.gridTable[xBytePos] = xMask | xTable.gridTable[xBytePos];
+        xTable.grid_table[xBytePos] = xMask | xTable.grid_table[xBytePos];
 
         usize yBytePos = yPos + relativeGridBytePos;
         uint8 yMask = 1;
         yMask <<= bitGridOffset;
-        yTable.gridTable[yBytePos] = yMask | yTable.gridTable[yBytePos];
+        yTable.grid_table[yBytePos] = yMask | yTable.grid_table[yBytePos];
 
         usize zBytePos = zPos + relativeGridBytePos;
         uint8 zMask = 1;
         zMask <<= bitGridOffset;
-        zTable.gridTable[zBytePos] = zMask | zTable.gridTable[zBytePos];
+        z_table.grid_table[zBytePos] = zMask | z_table.grid_table[zBytePos];
       }
     }
   }
@@ -439,7 +439,7 @@ public:
    */
   template <typename T>
   HyperGridBitMap2D(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const AbstractDataStore<T>& inputArray, const DataPath& arrayPath, float32 epsilon,
-                    const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask)
+                    const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask)
   : HyperGridBitMap()
   {
     const usize numTuples = inputArray.getNumberOfTuples();
@@ -463,7 +463,7 @@ public:
 
       auto xVal = static_cast<float32>(inputArray[tup * numComps + 0]);
       auto yVal = static_cast<float32>(inputArray[tup * numComps + 1]);
-      Result<> finiteResult = DBSCANCommon::CheckFiniteCoordinates<2>(arrayPath, tup, {xVal, yVal});
+      Result<> finiteResult = dbscan_common::CheckFiniteCoordinates<2>(arrayPath, tup, {xVal, yVal});
       if(finiteResult.invalid())
       {
         m_InitializationResult = std::move(finiteResult);
@@ -492,7 +492,7 @@ public:
     origin[0] = bounds[0] - buffer;
     origin[1] = bounds[1] - buffer;
 
-    Result<std::array<usize, 2>> dimsResult = DBSCANCommon::ComputeGridDimensions<2>(arrayPath, bounds, sideLength);
+    Result<std::array<usize, 2>> dimsResult = dbscan_common::ComputeGridDimensions<2>(arrayPath, bounds, sideLength);
     if(dimsResult.invalid())
     {
       m_InitializationResult = ConvertResult(std::move(dimsResult));
@@ -544,7 +544,7 @@ public:
           }
         }
 
-        gridVoxels = std::vector<std::vector<usize>>(activeGridCount, std::vector<usize>(0));
+        grid_voxels = std::vector<std::vector<usize>>(activeGridCount, std::vector<usize>(0));
         for(usize tup = 0; tup < numTuples; tup++)
         {
           if(shouldCancel)
@@ -561,12 +561,12 @@ public:
           usize yPos = std::floor((static_cast<float32>(inputArray[tup * numComps + 1]) - origin[1]) / spacing[1]);
 
           usize bin = (yPos * dims[0]) + xPos;
-          gridVoxels[gridMap[bin]].push_back(tup);
+          grid_voxels[gridMap[bin]].push_back(tup);
         }
       }
 
       // Release construction capacity before the clustering phase retains this index.
-      for(auto& grid : gridVoxels)
+      for(auto& grid : grid_voxels)
       {
         grid.shrink_to_fit();
       }
@@ -586,8 +586,8 @@ public:
         return;
       }
 
-      xTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), xSet.size());
-      yTable = GridBitMapFactory::createGridBitMap(gridVoxels.size(), ySet.size());
+      xTable = GridBitMapFactory::CreateGridBitMap(grid_voxels.size(), xSet.size());
+      yTable = GridBitMapFactory::CreateGridBitMap(grid_voxels.size(), ySet.size());
 
       if(shouldCancel)
       {
@@ -599,18 +599,18 @@ public:
         usize relativeGridBytePos = gridId / 8;
         uint8 bitGridOffset = gridId % 8;
 
-        usize xPos = std::distance(xSet.begin(), xSet.find(positions[gridId][0])) * xTable.rowLength;
-        usize yPos = std::distance(ySet.begin(), ySet.find(positions[gridId][1])) * yTable.rowLength;
+        usize xPos = std::distance(xSet.begin(), xSet.find(positions[gridId][0])) * xTable.row_length;
+        usize yPos = std::distance(ySet.begin(), ySet.find(positions[gridId][1])) * yTable.row_length;
 
         usize xBytePos = xPos + relativeGridBytePos;
         uint8 xMask = 1;
         xMask <<= bitGridOffset;
-        xTable.gridTable[xBytePos] = xMask | xTable.gridTable[xBytePos];
+        xTable.grid_table[xBytePos] = xMask | xTable.grid_table[xBytePos];
 
         usize yBytePos = yPos + relativeGridBytePos;
         uint8 yMask = 1;
         yMask <<= bitGridOffset;
-        yTable.gridTable[yBytePos] = yMask | yTable.gridTable[yBytePos];
+        yTable.grid_table[yBytePos] = yMask | yTable.grid_table[yBytePos];
       }
     }
   }
@@ -625,20 +625,20 @@ public:
  */
 void SearchTablePositions(std::vector<uint8>& outputGridMask, usize searchSpace, usize targetPosition, const GridBitMap& selectedTable)
 {
-  std::vector<uint8> tempGridMask(selectedTable.rowLength, 0);
+  std::vector<uint8> tempGridMask(selectedTable.row_length, 0);
 
   usize xStart = (targetPosition < searchSpace) ? 0 : targetPosition - searchSpace;
-  usize xEnd = (targetPosition + searchSpace < selectedTable.numPositions) ? targetPosition + searchSpace + 1 : selectedTable.numPositions;
+  usize xEnd = (targetPosition + searchSpace < selectedTable.num_positions) ? targetPosition + searchSpace + 1 : selectedTable.num_positions;
 
   for(usize pos = xStart; pos < xEnd; pos++)
   {
-    for(usize i = 0; i < selectedTable.rowLength; i++)
+    for(usize i = 0; i < selectedTable.row_length; i++)
     {
-      tempGridMask[i] = tempGridMask[i] | selectedTable.gridTable[(pos * selectedTable.rowLength) + i];
+      tempGridMask[i] = tempGridMask[i] | selectedTable.grid_table[(pos * selectedTable.row_length) + i];
     }
   }
 
-  for(usize i = 0; i < selectedTable.rowLength; i++)
+  for(usize i = 0; i < selectedTable.row_length; i++)
   {
     outputGridMask[i] = tempGridMask[i] & outputGridMask[i];
   }
@@ -669,18 +669,18 @@ std::vector<usize> NeighborGridQuery(usize targetGridId, const HGBPT& hyperGridB
 
   std::vector<usize> neighborGridIds = {};
 
-  std::vector<uint8> finalGridMask(hyperGridBitMap.xTable.rowLength, std::numeric_limits<uint8>::max());
+  std::vector<uint8> finalGridMask(hyperGridBitMap.xTable.row_length, std::numeric_limits<uint8>::max());
 
   usize relativeGridBytePos = targetGridId / 8;
   uint8 bitGridOffset = targetGridId % 8;
 
   usize xPos = 0;
-  for(usize i = 0; i < hyperGridBitMap.xTable.numPositions; i++)
+  for(usize i = 0; i < hyperGridBitMap.xTable.num_positions; i++)
   {
-    usize gridPos = (i * hyperGridBitMap.xTable.rowLength) + relativeGridBytePos;
+    usize gridPos = (i * hyperGridBitMap.xTable.row_length) + relativeGridBytePos;
     uint8 mask = 1;
     mask <<= bitGridOffset;
-    uint8 result = hyperGridBitMap.xTable.gridTable[gridPos] & mask;
+    uint8 result = hyperGridBitMap.xTable.grid_table[gridPos] & mask;
     if(result > 0)
     {
       xPos = i;
@@ -690,12 +690,12 @@ std::vector<usize> NeighborGridQuery(usize targetGridId, const HGBPT& hyperGridB
   SearchTablePositions(finalGridMask, searchSpace, xPos, hyperGridBitMap.xTable);
 
   usize yPos = 0;
-  for(usize i = 0; i < hyperGridBitMap.yTable.numPositions; i++)
+  for(usize i = 0; i < hyperGridBitMap.yTable.num_positions; i++)
   {
-    usize gridPos = (i * hyperGridBitMap.yTable.rowLength) + relativeGridBytePos;
+    usize gridPos = (i * hyperGridBitMap.yTable.row_length) + relativeGridBytePos;
     uint8 mask = 1;
     mask <<= bitGridOffset;
-    uint8 result = hyperGridBitMap.yTable.gridTable[gridPos] & mask;
+    uint8 result = hyperGridBitMap.yTable.grid_table[gridPos] & mask;
     if(result > 0)
     {
       yPos = i;
@@ -707,19 +707,19 @@ std::vector<usize> NeighborGridQuery(usize targetGridId, const HGBPT& hyperGridB
   if constexpr(HGBPT::Dimensions == 3)
   {
     usize zPos = 0;
-    for(usize i = 0; i < hyperGridBitMap.zTable.numPositions; i++)
+    for(usize i = 0; i < hyperGridBitMap.z_table.num_positions; i++)
     {
-      usize gridPos = (i * hyperGridBitMap.zTable.rowLength) + relativeGridBytePos;
+      usize gridPos = (i * hyperGridBitMap.z_table.row_length) + relativeGridBytePos;
       uint8 mask = 1;
       mask <<= bitGridOffset;
-      uint8 result = hyperGridBitMap.zTable.gridTable[gridPos] & mask;
+      uint8 result = hyperGridBitMap.z_table.grid_table[gridPos] & mask;
       if(result > 0)
       {
         zPos = i;
         break;
       }
     }
-    SearchTablePositions(finalGridMask, searchSpace, zPos, hyperGridBitMap.zTable);
+    SearchTablePositions(finalGridMask, searchSpace, zPos, hyperGridBitMap.z_table);
   }
 
   for(usize i = 0; i < finalGridMask.size(); i++)
@@ -745,8 +745,8 @@ std::vector<usize> NeighborGridQuery(usize targetGridId, const HGBPT& hyperGridB
  */
 struct ClusterNode
 {
-  int32 clusterId = 0; // Feature identifier for a root grid.
-  usize parent = 0;    // Parent grid identifier in the union forest.
+  int32 cluster_id = 0; // Feature identifier for a root grid.
+  usize parent = 0;     // Parent grid identifier in the union forest.
 };
 
 /**
@@ -755,7 +755,7 @@ struct ClusterNode
  */
 struct ClusterForest
 {
-  std::vector<ClusterNode> clusterForestNodes = {}; // State for every occupied grid.
+  std::vector<ClusterNode> cluster_forest_nodes; // State for every occupied grid.
 
   /**
    * @brief Creates one singleton cluster node for each occupied grid.
@@ -763,21 +763,21 @@ struct ClusterForest
    */
   void initialize(usize numGrids)
   {
-    clusterForestNodes.resize(numGrids);
+    cluster_forest_nodes.resize(numGrids);
 
-    for(usize i = 0; i < clusterForestNodes.size(); i++)
+    for(usize i = 0; i < cluster_forest_nodes.size(); i++)
     {
-      clusterForestNodes[i].parent = i;
-      clusterForestNodes[i].clusterId = static_cast<int32>(i + 1);
+      cluster_forest_nodes[i].parent = i;
+      cluster_forest_nodes[i].cluster_id = static_cast<int32>(i + 1);
     }
   }
 
   /** @brief Finds the canonical cluster root without recursive stack growth. */
   usize findClusterRoot(usize gridId) const
   {
-    while(clusterForestNodes[gridId].parent != gridId)
+    while(cluster_forest_nodes[gridId].parent != gridId)
     {
-      gridId = clusterForestNodes[gridId].parent;
+      gridId = cluster_forest_nodes[gridId].parent;
     }
     return gridId;
   }
@@ -809,7 +809,7 @@ struct ClusterForest
     {
       usize clusterIndex = findClusterRoot(gridIds[i]);
       rootClusterIdx.push_back(clusterIndex);
-      if(clusterForestNodes[clusterIndex].clusterId < clusterForestNodes[lowestClusterIdx].clusterId)
+      if(cluster_forest_nodes[clusterIndex].cluster_id < cluster_forest_nodes[lowestClusterIdx].cluster_id)
       {
         lowestClusterIdx = clusterIndex;
       }
@@ -819,7 +819,7 @@ struct ClusterForest
     {
       if(lowestClusterIdx != clusterIdx)
       {
-        clusterForestNodes[clusterIdx].parent = lowestClusterIdx;
+        cluster_forest_nodes[clusterIdx].parent = lowestClusterIdx;
       }
     }
   }
@@ -851,8 +851,8 @@ public:
    * @param distMetric Distance metric for pairwise tests.
    */
   GDCF(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, const AbstractDataStore<T>& inputArray, const DataPath& arrayPath, float32 epsilon,
-       const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, ClusterUtilities::DistanceMetric distMetric)
-  : hyperGridBitMap(HGBPT(shouldCancel, messageHandler, inputArray, arrayPath, epsilon, mask))
+       const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, cluster_utilities::DistanceMetric distMetric)
+  : m_HyperGridBitMap(HGBPT(shouldCancel, messageHandler, inputArray, arrayPath, epsilon, mask))
   , m_Epsilon(epsilon)
   , m_InputDataStore(inputArray)
   , m_DistMetric(distMetric)
@@ -869,7 +869,7 @@ public:
    */
   Result<> takeInitializationResult()
   {
-    return hyperGridBitMap.takeInitializationResult();
+    return m_HyperGridBitMap.takeInitializationResult();
   }
 
   /**
@@ -886,9 +886,9 @@ public:
   {
     m_MessageHandler.sendInfoMessage(" - Identifying core grids...");
     std::vector<usize> coreGridIds = {};
-    for(usize i = 0; i < hyperGridBitMap.gridVoxels.size(); i++)
+    for(usize i = 0; i < m_HyperGridBitMap.grid_voxels.size(); i++)
     {
-      if(hyperGridBitMap.gridVoxels[i].size() >= minPoints)
+      if(m_HyperGridBitMap.grid_voxels[i].size() >= minPoints)
       {
         coreGridIds.push_back(i);
       }
@@ -908,7 +908,7 @@ public:
     switch(parseOrder)
     {
     case DBSCAN::ParseOrder::LowDensityFirst: {
-      QuickSortGrids(coreGridIds, 0, coreGridIds.size() - 1);
+      quickSortGrids(coreGridIds, 0, coreGridIds.size() - 1);
       break;
     }
     case DBSCAN::ParseOrder::Random:
@@ -927,30 +927,30 @@ public:
     }
 
     m_MessageHandler.sendInfoMessage("Identifying Qualifying Independent Clusters:");
-    clusterForest.initialize(hyperGridBitMap.gridVoxels.size());
-    for(usize i = 0; i < coreGridIds.size(); i++)
+    m_ClusterForest.initialize(m_HyperGridBitMap.grid_voxels.size());
+    for(usize& coreGridId : coreGridIds)
     {
       if(m_ShouldCancel)
       {
         return {};
       }
 
-      std::vector<usize> neighborGrids = NeighborGridQuery(coreGridIds[i], hyperGridBitMap);
+      std::vector<usize> neighborGrids = NeighborGridQuery(coreGridId, m_HyperGridBitMap);
 
       std::vector<usize> cluster = {};
-      cluster.push_back(coreGridIds[i]);
+      cluster.push_back(coreGridId);
       for(const usize gridId : neighborGrids)
       {
-        if(clusterForest.infer(coreGridIds[i], gridId))
+        if(m_ClusterForest.infer(coreGridId, gridId))
         {
           continue;
         }
 
-        if(canMerge(coreGridIds[i], gridId))
+        if(canMerge(coreGridId, gridId))
         {
-          if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints && clusterForest.clusterForestNodes[gridId].parent == gridId)
+          if(m_HyperGridBitMap.grid_voxels[gridId].size() < minPoints && m_ClusterForest.cluster_forest_nodes[gridId].parent == gridId)
           {
-            clusterForest.clusterForestNodes[gridId].parent = coreGridIds[i];
+            m_ClusterForest.cluster_forest_nodes[gridId].parent = coreGridId;
           }
           else
           {
@@ -959,7 +959,7 @@ public:
         }
       }
 
-      clusterForest.mergeLRC(cluster);
+      m_ClusterForest.mergeLRC(cluster);
     }
 
     // Non-core grids attach to connected clusters or remain labeled as noise.
@@ -970,51 +970,51 @@ public:
     {
       m_MessageHandler.sendInfoMessage(fmt::format(" - Beginning cluster expansion pass: {}...", loop++));
       operations = 0;
-      for(usize i = 0; i < hyperGridBitMap.gridVoxels.size(); i++)
+      for(usize i = 0; i < m_HyperGridBitMap.grid_voxels.size(); i++)
       {
         if(m_ShouldCancel)
         {
           return {};
         }
 
-        if(hyperGridBitMap.gridVoxels[i].size() < minPoints)
+        if(m_HyperGridBitMap.grid_voxels[i].size() < minPoints)
         {
-          std::vector<usize> neighborGrids = NeighborGridQuery(i, hyperGridBitMap);
+          std::vector<usize> neighborGrids = NeighborGridQuery(i, m_HyperGridBitMap);
 
           for(const usize gridId : neighborGrids)
           {
-            if(clusterForest.infer(i, gridId))
+            if(m_ClusterForest.infer(i, gridId))
             {
               continue;
             }
 
             if(canMerge(i, gridId))
             {
-              usize activeParent = clusterForest.findClusterRoot(i);
-              usize neighborGridParent = clusterForest.findClusterRoot(gridId);
+              usize activeParent = m_ClusterForest.findClusterRoot(i);
+              usize neighborGridParent = m_ClusterForest.findClusterRoot(gridId);
               if(activeParent == i)
               {
-                if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints && neighborGridParent == gridId)
+                if(m_HyperGridBitMap.grid_voxels[gridId].size() < minPoints && neighborGridParent == gridId)
                 {
                   continue;
                 }
-                clusterForest.clusterForestNodes[i].parent = neighborGridParent;
+                m_ClusterForest.cluster_forest_nodes[i].parent = neighborGridParent;
               }
               else
               {
-                if(hyperGridBitMap.gridVoxels[gridId].size() < minPoints && neighborGridParent == gridId)
+                if(m_HyperGridBitMap.grid_voxels[gridId].size() < minPoints && neighborGridParent == gridId)
                 {
-                  clusterForest.clusterForestNodes[gridId].parent = activeParent;
+                  m_ClusterForest.cluster_forest_nodes[gridId].parent = activeParent;
                 }
                 else
                 {
-                  if(clusterForest.clusterForestNodes[activeParent].clusterId < clusterForest.clusterForestNodes[neighborGridParent].clusterId)
+                  if(m_ClusterForest.cluster_forest_nodes[activeParent].cluster_id < m_ClusterForest.cluster_forest_nodes[neighborGridParent].cluster_id)
                   {
-                    clusterForest.clusterForestNodes[neighborGridParent].parent = activeParent;
+                    m_ClusterForest.cluster_forest_nodes[neighborGridParent].parent = activeParent;
                   }
                   else
                   {
-                    clusterForest.clusterForestNodes[activeParent].parent = neighborGridParent;
+                    m_ClusterForest.cluster_forest_nodes[activeParent].parent = neighborGridParent;
                   }
                 }
               }
@@ -1027,24 +1027,24 @@ public:
 
     m_MessageHandler.sendInfoMessage(" - Cleaning up cluster identifiers...");
     std::vector<usize> clusters = {};
-    for(usize i = 0; i < clusterForest.clusterForestNodes.size(); i++)
+    for(usize i = 0; i < m_ClusterForest.cluster_forest_nodes.size(); i++)
     {
-      if(clusterForest.clusterForestNodes[i].parent == i)
+      if(m_ClusterForest.cluster_forest_nodes[i].parent == i)
       {
-        if(hyperGridBitMap.gridVoxels[i].size() >= minPoints)
+        if(m_HyperGridBitMap.grid_voxels[i].size() >= minPoints)
         {
           clusters.push_back(i);
         }
         else
         {
-          clusterForest.clusterForestNodes[i].clusterId = 0;
+          m_ClusterForest.cluster_forest_nodes[i].cluster_id = 0;
         }
       }
     }
 
     for(usize i = 0; i < clusters.size(); i++)
     {
-      clusterForest.clusterForestNodes[clusters[i]].clusterId = static_cast<int32>(i + 1);
+      m_ClusterForest.cluster_forest_nodes[clusters[i]].cluster_id = static_cast<int32>(i + 1);
     }
 
     return {};
@@ -1053,28 +1053,28 @@ public:
   /** @brief Returns true when clustering created resident forest state. */
   bool forestBuilt() const
   {
-    return !clusterForest.clusterForestNodes.empty();
+    return !m_ClusterForest.cluster_forest_nodes.empty();
   }
 
   /** @brief Writes each point's final cluster ID, leaving masked/outlier points at zero. */
   Result<> label(AbstractDataStore<int32>& fIdsDataStore)
   {
-    if(clusterForest.clusterForestNodes.empty())
+    if(m_ClusterForest.cluster_forest_nodes.empty())
     {
       return MakeWarningVoidResult(-85640, "No clusters detected - If a mask is applied, verify that some points are unmasked. Otherwise, consider reducing the number of required points (`Minimum "
                                            "Points`) or increasing the acceptable distance (`Epsilon`).");
     }
 
     fIdsDataStore.fill(0);
-    for(usize gridIdx = 0; gridIdx < hyperGridBitMap.gridVoxels.size(); gridIdx++)
+    for(usize gridIdx = 0; gridIdx < m_HyperGridBitMap.grid_voxels.size(); gridIdx++)
     {
       if(m_ShouldCancel)
       {
         return {};
       }
 
-      int32 featureId = clusterForest.clusterForestNodes[clusterForest.findClusterRoot(gridIdx)].clusterId;
-      for(usize pointIdx : hyperGridBitMap.gridVoxels[gridIdx])
+      int32 featureId = m_ClusterForest.cluster_forest_nodes[m_ClusterForest.findClusterRoot(gridIdx)].cluster_id;
+      for(usize pointIdx : m_HyperGridBitMap.grid_voxels[gridIdx])
       {
         fIdsDataStore.setValue(pointIdx, featureId);
       }
@@ -1084,13 +1084,13 @@ public:
   }
 
 private:
-  HGBPT hyperGridBitMap;
+  HGBPT m_HyperGridBitMap;
 
-  ClusterForest clusterForest = {};
+  ClusterForest m_ClusterForest = {};
 
   float32 m_Epsilon = 0.0f;
   const AbstractDataStore<T>& m_InputDataStore;
-  ClusterUtilities::DistanceMetric m_DistMetric;
+  cluster_utilities::DistanceMetric m_DistMetric;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 
@@ -1103,21 +1103,21 @@ private:
    *
    * Hoare partitioning sorts in place and avoids another core-grid buffer.
    */
-  usize ProcessSection(std::vector<usize>& sorted, usize begin, usize end) const
+  usize processSection(std::vector<usize>& sorted, usize begin, usize end) const
   {
-    const usize threshold = hyperGridBitMap.gridVoxels[sorted[begin]].size();
+    const usize threshold = m_HyperGridBitMap.grid_voxels[sorted[begin]].size();
 
     usize front = begin;
     usize back = end;
 
     while(true)
     {
-      while(hyperGridBitMap.gridVoxels[sorted[front]].size() < threshold)
+      while(m_HyperGridBitMap.grid_voxels[sorted[front]].size() < threshold)
       {
         front++;
       }
 
-      while(hyperGridBitMap.gridVoxels[sorted[back]].size() > threshold)
+      while(m_HyperGridBitMap.grid_voxels[sorted[back]].size() > threshold)
       {
         back--;
       }
@@ -1139,19 +1139,19 @@ private:
    * @param begin First index in the sort range.
    * @param end Last index in the sort range.
    */
-  void QuickSortGrids(std::vector<usize>& sorted, usize begin, usize end) const
+  void quickSortGrids(std::vector<usize>& sorted, usize begin, usize end) const
   {
     while(begin < end)
     {
-      const usize next = ProcessSection(sorted, begin, end);
+      const usize next = processSection(sorted, begin, end);
       if((next - begin) < (end - (next + 1)))
       {
-        QuickSortGrids(sorted, begin, next);
+        quickSortGrids(sorted, begin, next);
         begin = next + 1;
       }
       else
       {
-        QuickSortGrids(sorted, next + 1, end);
+        quickSortGrids(sorted, next + 1, end);
         end = next;
       }
     }
@@ -1165,15 +1165,15 @@ private:
   /** @brief Tests whether any point pair across two candidate grids lies within epsilon. */
   bool canMerge(usize pGridId, usize qGridId) const
   {
-    for(usize pPointId : hyperGridBitMap.gridVoxels[pGridId])
+    for(usize pPointId : m_HyperGridBitMap.grid_voxels[pGridId])
     {
       if(m_ShouldCancel)
       {
         return false;
       }
-      for(usize qPointId : hyperGridBitMap.gridVoxels[qGridId])
+      for(usize qPointId : m_HyperGridBitMap.grid_voxels[qGridId])
       {
-        float64 dist = ClusterUtilities::GetDistance(m_InputDataStore, (HGBPT::Dimensions * pPointId), m_InputDataStore, (HGBPT::Dimensions * qPointId), HGBPT::Dimensions, m_DistMetric);
+        float64 dist = cluster_utilities::GetDistance(m_InputDataStore, (HGBPT::Dimensions * pPointId), m_InputDataStore, (HGBPT::Dimensions * qPointId), HGBPT::Dimensions, m_DistMetric);
         if(dist < m_Epsilon)
         {
           return true;
@@ -1197,11 +1197,11 @@ private:
  * @return Warning, error, or success from grid construction, clustering, and labeling.
  */
 template <class AlgorithmT, typename T>
-Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataStore<T>& inputArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds,
+Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataStore<T>& inputArray, const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, Int32ArrayType& featureIds,
                       const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   messageHandler.sendInfoMessage("Partitioning Input Data:");
-  AlgorithmT algorithm = AlgorithmT(shouldCancel, messageHandler, inputArray, inputValues->ClusteringArrayPath, inputValues->Epsilon, mask, inputValues->DistanceMetric);
+  AlgorithmT algorithm = AlgorithmT(shouldCancel, messageHandler, inputArray, inputValues->clustering_array_path, inputValues->epsilon, mask, inputValues->distance_metric);
 
   Result<> initializationResult = algorithm.takeInitializationResult();
   if(initializationResult.invalid())
@@ -1215,7 +1215,7 @@ Result<> RunAlgorithm(const DBSCANInputValues* inputValues, const AbstractDataSt
   }
 
   messageHandler.sendInfoMessage("Clustering:");
-  Result<> result = algorithm.cluster(inputValues->MinPoints, static_cast<DBSCAN::ParseOrder>(inputValues->ParseOrder), inputValues->Seed);
+  Result<> result = algorithm.cluster(inputValues->min_points, static_cast<DBSCAN::ParseOrder>(inputValues->parse_order), inputValues->seed);
   if(result.invalid())
   {
     return result;
@@ -1252,7 +1252,7 @@ struct DBSCANDirectFunctor
    * @return Result from the selected specialization, or an error for another component count.
    */
   template <typename T>
-  Result<> operator()(const DBSCANInputValues* inputValues, const IDataArray& clusterArray, const std::unique_ptr<MaskCompareUtilities::MaskCompare>& mask, Int32Array& featureIds,
+  Result<> operator()(const DBSCANInputValues* inputValues, const IDataArray& clusterArray, const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, Int32ArrayType& featureIds,
                       const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
   {
     const auto& inputArray = dynamic_cast<const DataArray<T>&>(clusterArray).getDataStoreRef();
@@ -1260,7 +1260,7 @@ struct DBSCANDirectFunctor
     {
       return RunAlgorithm<GDCF<HyperGridBitMap2D, T>, T>(inputValues, inputArray, mask, featureIds, messageHandler, shouldCancel);
     }
-    else if(inputArray.getNumberOfComponents() == 3)
+    if(inputArray.getNumberOfComponents() == 3)
     {
       return RunAlgorithm<GDCF<HyperGridBitMap3D, T>, T>(inputValues, inputArray, mask, featureIds, messageHandler, shouldCancel);
     }
@@ -1280,24 +1280,22 @@ DBSCANDirect::DBSCANDirect(DataStructure& dataStructure, const IFilter::MessageH
 {
 }
 
-DBSCANDirect::~DBSCANDirect() noexcept = default;
-
 Result<> DBSCANDirect::operator()()
 {
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;
 
-  auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->ClusteringArrayPath);
-  auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  auto& clusteringArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->clustering_array_path);
+  auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
-  if(m_InputValues->UseMask)
+  std::unique_ptr<mask_compare_utilities::MaskCompare> maskCompare;
+  if(m_InputValues->use_mask)
   {
     try
     {
-      maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+      maskCompare = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->mask_array_path);
     } catch(const std::out_of_range& exception)
     {
-      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
+      std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->mask_array_path.toString());
       return MakeErrorResult(-54060, message);
     }
   }
@@ -1320,7 +1318,7 @@ Result<> DBSCANDirect::operator()()
   messageHandler.sendInfoMessage("Resizing clustering Attribute Matrix:");
   auto& featureIdsDataStore = featureIds.getDataStoreRef();
   int32 maxCluster = *std::max_element(featureIdsDataStore.begin(), featureIdsDataStore.end());
-  Result<> resizeResult = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->FeatureAM)->resizeTuples(ShapeType{static_cast<usize>(maxCluster + 1)});
+  Result<> resizeResult = m_DataStructure.getDataAs<AttributeMatrix>(m_InputValues->feature_am)->resizeTuples(ShapeType{static_cast<usize>(maxCluster + 1)});
   if(resizeResult.invalid())
   {
     return resizeResult;

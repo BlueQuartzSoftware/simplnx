@@ -42,9 +42,9 @@ std::vector<int32> CreateRandomizedIdsList(usize totalFeatures)
 }
 } // namespace
 
-namespace nx::core::ClusterUtilities
+namespace nx::core::cluster_utilities
 {
-Result<> RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize totalFeatures)
+Result<> RandomizeFeatureIds(Int32AbstractDataStoreType& featureIdsStore, usize totalFeatures)
 {
   std::vector<int32> randomIds = CreateRandomizedIdsList(totalFeatures);
 
@@ -73,7 +73,7 @@ Result<> RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize tota
   return {};
 }
 
-Result<> RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize totalFeatures, std::vector<IArray*>& featureIArrays)
+Result<> RandomizeFeatureIds(Int32AbstractDataStoreType& featureIdsStore, usize totalFeatures, std::vector<IArray*>& featureIArrays)
 {
   std::vector<int32> randomIds = CreateRandomizedIdsList(totalFeatures);
 
@@ -127,4 +127,4 @@ Result<> RandomizeFeatureIds(Int32AbstractDataStore& featureIdsStore, usize tota
   }
   return {};
 }
-} // namespace nx::core::ClusterUtilities
+} // namespace nx::core::cluster_utilities

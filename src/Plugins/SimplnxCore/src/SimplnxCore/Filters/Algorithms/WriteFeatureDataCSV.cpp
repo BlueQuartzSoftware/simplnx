@@ -20,12 +20,11 @@ WriteFeatureDataCSV::WriteFeatureDataCSV(DataStructure& dataStructure, const IFi
 }
 
 // -----------------------------------------------------------------------------
-WriteFeatureDataCSV::~WriteFeatureDataCSV() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> WriteFeatureDataCSV::operator()()
 {
-  auto atomicFileResult = AtomicFile::Create(m_InputValues->FeatureDataFile);
+  auto atomicFileResult = AtomicFile::Create(m_InputValues->feature_data_file);
   if(atomicFileResult.invalid())
   {
     return ConvertResult(std::move(atomicFileResult));
@@ -34,7 +33,7 @@ Result<> WriteFeatureDataCSV::operator()()
 
   auto pOutputFilePath = atomicFile.tempFilePath();
 
-  const std::string delimiter = OStreamUtilities::DelimiterToString(m_InputValues->DelimiterIndex);
+  const std::string delimiter = o_stream_utilities::DelimiterToString(m_InputValues->delimiter_index);
 
   // Ensure the complete path to the output file exists or can be created
   auto parentPath = pOutputFilePath.parent_path();
@@ -48,7 +47,7 @@ Result<> WriteFeatureDataCSV::operator()()
 
   // load list of DataPaths
   std::vector<DataObject::Type> dataTypesToExtract;
-  if(m_InputValues->WriteNeighborlistData)
+  if(m_InputValues->write_neighborlist_data)
   {
     dataTypesToExtract = {DataObject::Type::DataArray, DataObject::Type::StringArray, DataObject::Type::NeighborList};
   }
@@ -61,7 +60,7 @@ Result<> WriteFeatureDataCSV::operator()()
   std::vector<DataPath> neighborPaths;
   for(const auto& element : dataTypesToExtract)
   {
-    auto requestedPaths = *std::move(GetAllChildDataPaths(m_DataStructure, m_InputValues->CellFeatureAttributeMatrixPath, element));
+    auto requestedPaths = *std::move(GetAllChildDataPaths(m_DataStructure, m_InputValues->cell_feature_attribute_matrix_path, element));
     if(element == DataObject::Type::NeighborList)
     {
       neighborPaths.insert(neighborPaths.end(), std::make_move_iterator(requestedPaths.begin()), std::make_move_iterator(requestedPaths.end()));
@@ -81,8 +80,8 @@ Result<> WriteFeatureDataCSV::operator()()
     }
 
     // call ostream function
-    OStreamUtilities::PrintDataSetsToSingleFile(fout, arrayPaths, m_DataStructure, m_MessageHandler, m_ShouldCancel, delimiter, true, true, false, "Feature_ID", neighborPaths,
-                                                m_InputValues->WriteNumFeaturesLine);
+    o_stream_utilities::PrintDataSetsToSingleFile(fout, arrayPaths, m_DataStructure, m_MessageHandler, m_ShouldCancel, delimiter, true, true, false, "Feature_ID", neighborPaths,
+                                                  m_InputValues->write_num_features_line);
   }
 
   if(m_ShouldCancel)

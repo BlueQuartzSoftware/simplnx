@@ -13,7 +13,7 @@ class CacheBudgetSentinel
 {
 public:
   explicit CacheBudgetSentinel(uint64 budgetBytes)
-  : m_Manager(CacheMemoryBudgetManager::instance())
+  : m_Manager(CacheMemoryBudgetManager::Instance())
   , m_PreviousBudget(m_Manager.budgetBytes())
   {
     m_Manager.clear();
@@ -56,7 +56,7 @@ TEST_CASE("NXImageProcessing::WorkingMemory request clamps to useful bytes and t
 {
   using namespace ImageProcessing;
 
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const CacheBudgetSentinel budgetSentinel(1000);
 
   {

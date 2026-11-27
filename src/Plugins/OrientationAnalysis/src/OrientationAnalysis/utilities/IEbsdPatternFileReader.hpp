@@ -16,22 +16,22 @@ namespace nx::core
 {
 struct ORIENTATIONANALYSIS_EXPORT EbsdPatternFileInfo
 {
-  std::string formatName;
-  uint32 headerVersion = 0;
-  DataType pixelDataType = DataType::uint8;
-  uint64 bytesPerPixel = 0;
-  uint64 patternWidth = 0;
-  uint64 patternHeight = 0;
-  uint64 dataOffset = 0;
-  uint64 patternStride = 0;
-  uint64 numberOfPatterns = 0;
-  std::optional<uint64> numberOfRows;
-  std::optional<uint64> numberOfColumns;
-  uint8 extraPatterns = 0;
-  bool isHexagonal = false;
-  std::optional<float64> xStep;
-  std::optional<float64> yStep;
-  uint64 fileSize = 0;
+  std::string format_name;
+  uint32 header_version = 0;
+  DataType pixel_data_type = DataType::uint8;
+  uint64 bytes_per_pixel = 0;
+  uint64 pattern_width = 0;
+  uint64 pattern_height = 0;
+  uint64 data_offset = 0;
+  uint64 pattern_stride = 0;
+  uint64 number_of_patterns = 0;
+  std::optional<uint64> number_of_rows;
+  std::optional<uint64> number_of_columns;
+  uint8 extra_patterns = 0;
+  bool is_hexagonal = false;
+  std::optional<float64> x_step;
+  std::optional<float64> y_step;
+  uint64 file_size = 0;
 };
 
 class ORIENTATIONANALYSIS_EXPORT IEbsdPatternFileReader

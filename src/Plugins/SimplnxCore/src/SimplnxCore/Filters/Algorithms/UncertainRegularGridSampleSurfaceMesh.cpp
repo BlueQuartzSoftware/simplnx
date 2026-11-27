@@ -9,7 +9,7 @@ UncertainRegularGridSampleSurfaceMesh::UncertainRegularGridSampleSurfaceMesh(Dat
 , m_InputValues(inputValues)
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
-, m_Generator(inputValues->SeedValue)
+, m_Generator(inputValues->seed_value)
 {
 }
 
@@ -20,18 +20,18 @@ const std::atomic_bool& UncertainRegularGridSampleSurfaceMesh::getCancel()
   return m_ShouldCancel;
 }
 
-SizeVec3 UncertainRegularGridSampleSurfaceMesh::getGridDimensions() const
+SizeVec3Type UncertainRegularGridSampleSurfaceMesh::getGridDimensions() const
 {
-  const auto& dims = m_InputValues->Dimensions;
+  const auto& dims = m_InputValues->dimensions;
   return {static_cast<usize>(dims[0]), static_cast<usize>(dims[1]), static_cast<usize>(dims[2])};
 }
 
-void UncertainRegularGridSampleSurfaceMesh::generateSlicePoints(usize zSlice, std::vector<Point3Df>& slicePoints)
+void UncertainRegularGridSampleSurfaceMesh::generateSlicePoints(usize zSlice, std::vector<FloatVec3Type>& slicePoints)
 {
-  const auto& dims = m_InputValues->Dimensions;
-  const auto& spacing = m_InputValues->Spacing;
-  const auto& origin = m_InputValues->Origin;
-  const auto& uncertainty = m_InputValues->Uncertainty;
+  const auto& dims = m_InputValues->dimensions;
+  const auto& spacing = m_InputValues->spacing;
+  const auto& origin = m_InputValues->origin;
+  const auto& uncertainty = m_InputValues->uncertainty;
 
   const usize xDim = dims[0];
   const usize yDim = dims[1];
@@ -50,7 +50,7 @@ void UncertainRegularGridSampleSurfaceMesh::generateSlicePoints(usize zSlice, st
     {
       const float32 randomX = 2.0f * m_Distribution(m_Generator) - 1.0f;
       const float32 xCoord = ((static_cast<float32>(i) + 0.5f) * spacing[0]) + (uncertainty[0] * randomX) + origin[0];
-      slicePoints[outIdx++] = Point3Df(xCoord, yCoord, zCoord);
+      slicePoints[outIdx++] = FloatVec3Type(xCoord, yCoord, zCoord);
     }
   }
 }
@@ -58,8 +58,8 @@ void UncertainRegularGridSampleSurfaceMesh::generateSlicePoints(usize zSlice, st
 Result<> UncertainRegularGridSampleSurfaceMesh::operator()()
 {
   SampleSurfaceMeshInputValues inputs;
-  inputs.TriangleGeometryPath = m_InputValues->TriangleGeometryPath;
-  inputs.SurfaceMeshFaceLabelsArrayPath = m_InputValues->SurfaceMeshFaceLabelsArrayPath;
-  inputs.FeatureIdsArrayPath = m_InputValues->FeatureIdsArrayPath;
+  inputs.triangle_geometry_path = m_InputValues->triangle_geometry_path;
+  inputs.surface_mesh_face_labels_array_path = m_InputValues->surface_mesh_face_labels_array_path;
+  inputs.feature_ids_array_path = m_InputValues->feature_ids_array_path;
   return execute(inputs);
 }

@@ -8,6 +8,7 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace fs = std::filesystem;
 
@@ -15,9 +16,9 @@ using namespace nx::core;
 
 namespace
 {
-constexpr StringLiteral k_FilePathKey = "file_path";
-constexpr StringLiteral k_DataPathsKey = "data_paths";
-constexpr StringLiteral k_PathImportPolicyKey = "path_import_policy";
+constexpr StringLiteralType k_FilePathKey = "file_path";
+constexpr StringLiteralType k_DataPathsKey = "data_paths";
+constexpr StringLiteralType k_PathImportPolicyKey = "path_import_policy";
 } // namespace
 
 namespace nx::core
@@ -35,9 +36,9 @@ void Dream3dImportParameter::AddImageGeometryImportHint(std::vector<Error>& erro
 }
 
 //-----------------------------------------------------------------------------
-Dream3dImportParameter::Dream3dImportParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+Dream3dImportParameter::Dream3dImportParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -48,7 +49,7 @@ Uuid Dream3dImportParameter::uuid() const
 }
 
 //-----------------------------------------------------------------------------
-IParameter::AcceptedTypes Dream3dImportParameter::acceptedTypes() const
+IParameter::AcceptedTypesType Dream3dImportParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -63,8 +64,8 @@ IParameter::VersionType Dream3dImportParameter::getVersion() const
 std::any Dream3dImportParameter::construct(const Arguments& args, const ExecutionContext& executionContext) const
 {
   auto value = args.value<ValueType>(name());
-  std::filesystem::path absolutePath = executionContext.getAbsolutePath(value.FilePath);
-  value.FilePath = absolutePath;
+  std::filesystem::path absolutePath = executionContext.getAbsolutePath(value.file_path);
+  value.file_path = absolutePath;
   return value;
 }
 
@@ -74,17 +75,17 @@ nlohmann::json Dream3dImportParameter::toJsonImpl(const std::any& value) const
   const auto& importData = GetAnyRef<ValueType>(value);
   nlohmann::json json;
   // File path
-  json[k_FilePathKey] = importData.FilePath.string();
+  json[k_FilePathKey] = importData.file_path.string();
 
   // DataPaths
   nlohmann::json dataPathsJson = nlohmann::json::array();
-  for(const auto& dataPath : importData.DataPaths)
+  for(const auto& dataPath : importData.data_paths)
   {
     dataPathsJson.push_back(dataPath.toString());
   }
   json[k_DataPathsKey] = std::move(dataPathsJson);
 
-  json[k_PathImportPolicyKey] = importData.ImportPolicy;
+  json[k_PathImportPolicyKey] = importData.import_policy;
 
   return json;
 }
@@ -92,26 +93,26 @@ nlohmann::json Dream3dImportParameter::toJsonImpl(const std::any& value) const
 //-----------------------------------------------------------------------------
 Result<std::any> Dream3dImportParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'Dream3dImportParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'Dream3dImportParameter' JSON Error: ";
   if(!json.is_object())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an object", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an object", k_Prefix, name()));
   }
 
   if(!json.contains(k_FilePathKey.view()))
   {
-    return MakeErrorResult<std::any>(-3, fmt::format("{}JSON does not contain key '{} / {}'", prefix, name(), k_FilePathKey.view()));
+    return MakeErrorResult<std::any>(-3, fmt::format("{}JSON does not contain key '{} / {}'", k_Prefix, name(), k_FilePathKey.view()));
   }
 
   if(!json.contains(k_DataPathsKey.view()))
   {
-    return MakeErrorResult<std::any>(-4, fmt::format("{}JSON does not contain key '{} / {}'", prefix, name(), k_DataPathsKey.view()));
+    return MakeErrorResult<std::any>(-4, fmt::format("{}JSON does not contain key '{} / {}'", k_Prefix, name(), k_DataPathsKey.view()));
   }
 
   const auto& jsonFilePath = json[k_FilePathKey];
   if(!jsonFilePath.is_string())
   {
-    return MakeErrorResult<std::any>(-5, fmt::format("{}JSON value for key '{} / {}' is not an string", prefix, name(), k_FilePathKey));
+    return MakeErrorResult<std::any>(-5, fmt::format("{}JSON value for key '{} / {}' is not an string", k_Prefix, name(), k_FilePathKey));
   }
   auto filePath = fs::path(jsonFilePath.get<std::string>());
 
@@ -121,7 +122,7 @@ Result<std::any> Dream3dImportParameter::fromJsonImpl(const nlohmann::json& json
   {
     if(!jsonDataPaths.is_array())
     {
-      return MakeErrorResult<std::any>(-6, fmt::format("{}JSON value for key '{} / {}' is not an array", prefix, name(), k_DataPathsKey));
+      return MakeErrorResult<std::any>(-6, fmt::format("{}JSON value for key '{} / {}' is not an array", k_Prefix, name(), k_DataPathsKey));
     }
     auto dataPathStrings = jsonDataPaths.get<std::vector<std::string>>();
     std::vector<Error> errors;
@@ -130,7 +131,7 @@ Result<std::any> Dream3dImportParameter::fromJsonImpl(const nlohmann::json& json
       std::optional<DataPath> dataPath = DataPath::FromString(dataPathString);
       if(!dataPath.has_value())
       {
-        errors.push_back(Error{FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), dataPathString)});
+        errors.push_back(Error{.code = filter_parameter::constants::k_JsonValueNotValueType, .message = fmt::format("{}Failed to parse '{}' as DataPath", k_Prefix.view(), dataPathString)});
         continue;
       }
       dataPaths.push_back(std::move(*dataPath));
@@ -148,7 +149,7 @@ Result<std::any> Dream3dImportParameter::fromJsonImpl(const nlohmann::json& json
     const auto& pathImportPolicyJson = json[k_PathImportPolicyKey];
     if(!pathImportPolicyJson.is_number_integer())
     {
-      return MakeErrorResult<std::any>(-5, fmt::format("{}JSON value for key '{} / {}' is not an integer", prefix, name(), k_PathImportPolicyKey));
+      return MakeErrorResult<std::any>(-5, fmt::format("{}JSON value for key '{} / {}' is not an integer", k_Prefix, name(), k_PathImportPolicyKey));
     }
     pathImportPolicy = PathImportPolicy(pathImportPolicyJson.get<uint8>());
   }
@@ -162,7 +163,7 @@ Result<std::any> Dream3dImportParameter::fromJsonImpl(const nlohmann::json& json
 }
 
 //-----------------------------------------------------------------------------
-IParameter::UniquePointer Dream3dImportParameter::clone() const
+IParameter::UniquePointerType Dream3dImportParameter::clone() const
 {
   return std::make_unique<Dream3dImportParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -177,15 +178,15 @@ std::any Dream3dImportParameter::defaultValue() const
 Result<> Dream3dImportParameter::validate(const std::any& value) const
 {
   const auto& importData = GetAnyRef<ValueType>(value);
-  return validatePath(importData);
+  return ValidatePath(importData);
 }
 
 //-----------------------------------------------------------------------------
-Result<> Dream3dImportParameter::validatePath(const ValueType& importData) const
+Result<> Dream3dImportParameter::ValidatePath(const ValueType& importData)
 {
   try
   {
-    std::filesystem::path path = importData.FilePath;
+    std::filesystem::path path = importData.file_path;
     if(!fs::exists(path))
     {
       return MakeErrorResult(-2, fmt::format("Path '{}' does not exist", path.string()));
@@ -210,19 +211,19 @@ Result<> Dream3dImportParameter::validatePath(const ValueType& importData) const
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 namespace
 {
-constexpr StringLiteral k_InputFileKey = "InputFile";
-constexpr StringLiteral k_InputFileDataContainerArrayProxyKey = "InputFileDataContainerArrayProxy";
-constexpr StringLiteral k_DataContainerProxyKey = "Data Containers";
-constexpr StringLiteral k_AttributeMatrixProxyKey = "Attribute Matricies";
-constexpr StringLiteral k_DataArrayProxyKey = "Data Arrays";
-constexpr StringLiteral k_DataObjectNameKey = "Name";
+constexpr StringLiteralType k_InputFileKey = "InputFile";
+constexpr StringLiteralType k_InputFileDataContainerArrayProxyKey = "InputFileDataContainerArrayProxy";
+constexpr StringLiteralType k_DataContainerProxyKey = "Data Containers";
+constexpr StringLiteralType k_AttributeMatrixProxyKey = "Attribute Matricies";
+constexpr StringLiteralType k_DataArrayProxyKey = "Data Arrays";
+constexpr StringLiteralType k_DataObjectNameKey = "Name";
 } // namespace
 
-Result<DataContainerReaderFilterParameterConverter::ValueType> DataContainerReaderFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataContainerReaderFilterParameterConverter::ValueType> DataContainerReaderFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json[k_InputFileKey].is_string())
   {
@@ -269,5 +270,5 @@ Result<DataContainerReaderFilterParameterConverter::ValueType> DataContainerRead
   ParameterType::ValueType value(filePath, pathImportPolicy, dataPaths);
   return {std::move(value)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

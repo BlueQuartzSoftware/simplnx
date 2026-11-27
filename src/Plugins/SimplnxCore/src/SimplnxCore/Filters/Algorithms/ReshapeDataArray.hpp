@@ -12,22 +12,22 @@
 namespace nx::core
 {
 template <typename T>
-struct is_allowed_array_type : std::false_type
+struct IsAllowedArrayType : std::false_type
 {
 };
 
 template <typename T>
-struct is_allowed_array_type<DataArray<T>> : std::true_type
+struct IsAllowedArrayType<DataArray<T>> : std::true_type
 {
 };
 
 template <>
-struct is_allowed_array_type<StringArray> : std::true_type
+struct IsAllowedArrayType<StringArray> : std::true_type
 {
 };
 
 template <class Class>
-concept AllowedType = is_allowed_array_type<Class>::value;
+concept AllowedType = IsAllowedArrayType<Class>::value;
 
 template <AllowedType ArrayType>
 Result<> ReshapeArrayImpl(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& outputArrayPath, const IFilter::MessageHandler& messageHandler)
@@ -37,7 +37,7 @@ Result<> ReshapeArrayImpl(DataStructure& dataStructure, const DataPath& inputArr
   messageHandler.sendInfoMessage(
       fmt::format("Reshaping data array '{}' from [{}] to [{}]...", inputArrayPath.toString(), fmt::join(inputDataArray.getTupleShape(), ","), fmt::join(outputDataArray.getTupleShape(), ",")));
   usize tuplesToCopy = std::min(inputDataArray.getNumberOfTuples(), outputDataArray.getNumberOfTuples());
-  auto result = CopyFromArray::CopyData(inputDataArray, outputDataArray, 0, 0, tuplesToCopy);
+  auto result = copy_from_array::CopyData(inputDataArray, outputDataArray, 0, 0, tuplesToCopy);
   if(result.invalid())
   {
     return result;
@@ -72,8 +72,8 @@ Result<> ReshapeNeighborListImpl(DataStructure& dataStructure, const DataPath& i
 
 struct SIMPLNXCORE_EXPORT ReshapeDataArrayInputValues
 {
-  DataPath InputArrayPath;
-  DynamicTableParameter::ValueType TupleDims;
+  DataPath input_array_path;
+  DynamicTableParameter::ValueType tuple_dims;
 };
 
 /**
@@ -83,7 +83,7 @@ class SIMPLNXCORE_EXPORT ReshapeDataArray
 {
 public:
   ReshapeDataArray(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReshapeDataArrayInputValues* inputValues);
-  ~ReshapeDataArray() noexcept;
+  ~ReshapeDataArray() noexcept = default;
 
   ReshapeDataArray(const ReshapeDataArray&) = delete;
   ReshapeDataArray(ReshapeDataArray&&) noexcept = delete;

@@ -41,11 +41,11 @@ enum class DataInitOption : uint8
   ElementsAndData
 };
 
-std::vector<std::string> k_DataInitOptionStrings = {"None", "Elements Only", "Elements & No Data", "Elements & Data"};
+static std::vector<std::string> KDataInitOptionStrings = {"None", "Elements Only", "Elements & No Data", "Elements & Data"};
 
-std::string GetDataInitOptionString(const DataInitOption& initOption)
+static std::string GetDataInitOptionString(const DataInitOption& initOption)
 {
-  return k_DataInitOptionStrings[to_underlying(initOption)];
+  return KDataInitOptionStrings[to_underlying(initOption)];
 }
 
 const std::vector<DataInitOption> k_DataInitOptions = {DataInitOption::None, DataInitOption::ElementsOnly, DataInitOption::ElementsAndNoData, DataInitOption::ElementsAndData};
@@ -59,7 +59,7 @@ struct GeometryInitOptions
 };
 
 // Overload the stream operator for easy logging with CAPTURE or INFO.
-std::ostream& operator<<(std::ostream& os, const GeometryInitOptions& opts)
+static std::ostream& operator<<(std::ostream& os, const GeometryInitOptions& opts)
 {
   os << "Vertex: " << GetDataInitOptionString(opts.vertex) << ", Edge: " << GetDataInitOptionString(opts.edge) << ", Face: " << GetDataInitOptionString(opts.face)
      << ", Poly: " << GetDataInitOptionString(opts.poly);
@@ -67,60 +67,60 @@ std::ostream& operator<<(std::ostream& os, const GeometryInitOptions& opts)
 }
 
 template <typename T>
-DataArray<T>* CreateDataArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure, const std::string& arrayName, const std::vector<usize>& cDims)
+static DataArray<T>* CreateDataArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure, const std::string& arrayName, const std::vector<usize>& cDims)
 {
   return DataArray<T>::template CreateWithStore<DataStore<T>>(dataStructure, arrayName, {attrMatrix.getNumberOfTuples()}, cDims, attrMatrix.getId());
 }
 
 template <typename T, usize CompCount>
-DataArray<T>* CreateDataArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure, const std::string& arrayName)
+static DataArray<T>* CreateDataArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure, const std::string& arrayName)
 {
   return CreateDataArray<T>(attrMatrix, dataStructure, arrayName, {CompCount});
 }
 
 template <typename T, usize CompCount>
-void AddDataArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
+static void AddDataArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
 {
   DataType dataType = GetDataType<T>();
   std::string dataTypeStr = DataTypeToString(dataType);
-  auto arr = CreateDataArray<T, CompCount>(attrMatrix, dataStructure, fmt::format("{}_Array_{}", dataTypeStr, CompCount));
-  std::iota(arr->begin(), arr->end(), static_cast<T>(0));
+  auto arrPtr = CreateDataArray<T, CompCount>(attrMatrix, dataStructure, fmt::format("{}_Array_{}", dataTypeStr, CompCount));
+  std::iota(arrPtr->begin(), arrPtr->end(), static_cast<T>(0));
 }
 
-StringArray* CreateStringArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure, const std::string& arrayName)
+static StringArray* CreateStringArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure, const std::string& arrayName)
 {
   return StringArray::CreateWithValues(dataStructure, arrayName, attrMatrix.getShape(), std::vector<std::string>(attrMatrix.getNumberOfTuples()), attrMatrix.getId());
 }
 
-void AddStringArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
+static void AddStringArray(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
 {
-  auto strArray = CreateStringArray(attrMatrix, dataStructure, "StringArray");
+  auto* strArrayPtr = CreateStringArray(attrMatrix, dataStructure, "StringArray");
   int counter = 1;
-  std::generate(strArray->begin(), strArray->end(), [&counter]() { return "Item" + std::to_string(counter++); });
+  std::generate(strArrayPtr->begin(), strArrayPtr->end(), [&counter]() { return "Item" + std::to_string(counter++); });
 }
 
 template <typename T>
-NeighborList<T>* CreateNeighborList(AttributeMatrix& attrMatrix, DataStructure& dataStructure, const std::string& nlName)
+static NeighborList<T>* CreateNeighborList(AttributeMatrix& attrMatrix, DataStructure& dataStructure, const std::string& nlName)
 {
   return NeighborList<T>::Create(dataStructure, nlName, attrMatrix.getShape(), attrMatrix.getId());
 }
 
 template <typename T>
-void AddNeighborList(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
+static void AddNeighborList(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
 {
   DataType dataType = GetDataType<T>();
   std::string dataTypeStr = DataTypeToString(dataType);
-  auto nl = CreateNeighborList<T>(attrMatrix, dataStructure, fmt::format("{}_NeighborList", dataTypeStr));
+  auto nlPtr = CreateNeighborList<T>(attrMatrix, dataStructure, fmt::format("{}_NeighborList", dataTypeStr));
   for(usize i = 0; i < attrMatrix.getNumberOfTuples(); i++)
   {
     typename NeighborList<T>::SharedVectorType inputList(new std::vector<T>(k_NeighborListListSize));
     std::iota(inputList->begin(), inputList->end(), static_cast<T>(0));
-    nl->setList(i, inputList);
+    nlPtr->setList(i, inputList);
   }
 }
 
 template <usize CompCount>
-void CreateDataArrays(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
+static void CreateDataArrays(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
 {
   AddDataArray<int8, CompCount>(attrMatrix, dataStructure);
   AddDataArray<uint8, CompCount>(attrMatrix, dataStructure);
@@ -134,7 +134,7 @@ void CreateDataArrays(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
   AddDataArray<float64, CompCount>(attrMatrix, dataStructure);
 }
 
-void CreateDataArrays(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
+static void CreateDataArrays(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
 {
   CreateDataArrays<1>(attrMatrix, dataStructure);
   CreateDataArrays<2>(attrMatrix, dataStructure);
@@ -154,35 +154,35 @@ void CreateDataArrays(AttributeMatrix& attrMatrix, DataStructure& dataStructure)
   AddNeighborList<float64>(attrMatrix, dataStructure);
 }
 
-AttributeMatrix* CreateNodeAttributeMatrix(IGeometry& geom, DataStructure& dataStructure, const std::string& attrMatrixName, usize numElements)
+static AttributeMatrix* CreateNodeAttributeMatrix(IGeometry& geom, DataStructure& dataStructure, const std::string& attrMatrixName, usize numElements)
 {
   return AttributeMatrix::Create(dataStructure, attrMatrixName, {numElements}, geom.getId());
 }
 
 template <typename TGeom, typename TSetAttrMatrix>
-void CreateNodeAttributeMatrix(TGeom& geom, DataStructure& dataStructure, const std::string& attrMatrixName, usize numElements, TSetAttrMatrix setAttrMatrix)
+static void CreateNodeAttributeMatrix(TGeom& geom, DataStructure& dataStructure, const std::string& attrMatrixName, usize numElements, TSetAttrMatrix setAttrMatrix)
 {
-  auto attrMatrix = CreateNodeAttributeMatrix(geom, dataStructure, attrMatrixName, numElements);
-  setAttrMatrix(geom, *attrMatrix);
+  auto attrMatrixPtr = CreateNodeAttributeMatrix(geom, dataStructure, attrMatrixName, numElements);
+  setAttrMatrix(geom, *attrMatrixPtr);
 }
 
 template <typename TNode>
-DataArray<TNode>* CreateNodeArray(IGeometry& geom, DataStructure& dataStructure, const std::string& sharedListName, usize numElements, usize numPerElement)
+static DataArray<TNode>* CreateNodeArray(IGeometry& geom, DataStructure& dataStructure, const std::string& sharedListName, usize numElements, usize numPerElement)
 {
   return DataArray<TNode>::template CreateWithStore<DataStore<TNode>>(dataStructure, sharedListName, {numElements}, {numPerElement}, geom.getId());
 }
 
 template <typename TGeom, typename TNode, typename TGetNumPerElement, typename TSetNodeArray>
-void CreateNodeArray(TGeom& geom, DataStructure& dataStructure, const std::string& sharedListName, usize numElements, TGetNumPerElement getNumPerElement, TSetNodeArray setNodeArray)
+static void CreateNodeArray(TGeom& geom, DataStructure& dataStructure, const std::string& sharedListName, usize numElements, TGetNumPerElement getNumPerElement, TSetNodeArray setNodeArray)
 {
-  auto arr = CreateNodeArray<TNode>(geom, dataStructure, sharedListName, numElements, getNumPerElement(geom));
-  std::iota(arr->begin(), arr->end(), static_cast<TNode>(0));
-  setNodeArray(geom, *arr);
+  auto arrPtr = CreateNodeArray<TNode>(geom, dataStructure, sharedListName, numElements, getNumPerElement(geom));
+  std::iota(arrPtr->begin(), arrPtr->end(), static_cast<TNode>(0));
+  setNodeArray(geom, *arrPtr);
 }
 
 template <typename TGeom, typename TNode, typename TGetNumPerElement, typename TGetNodeArray, typename TSetNodeArray, typename TGetAttrMatrix, typename TSetAttrMatrix>
-void InitializeNodeGeometry(TGeom& geom, DataStructure& dataStructure, DataInitOption initOption, const std::string& attrMatrixName, const std::string& sharedListName, usize numElements,
-                            TGetNumPerElement getNumPerElement, TGetNodeArray getNodeArray, TSetNodeArray setNodeArray, TGetAttrMatrix getAttrMatrix, TSetAttrMatrix setAttrMatrix)
+static void InitializeNodeGeometry(TGeom& geom, DataStructure& dataStructure, DataInitOption initOption, const std::string& attrMatrixName, const std::string& sharedListName, usize numElements,
+                                   TGetNumPerElement getNumPerElement, TGetNodeArray getNodeArray, TSetNodeArray setNodeArray, TGetAttrMatrix getAttrMatrix, TSetAttrMatrix setAttrMatrix)
 {
   if(initOption == DataInitOption::None)
   {
@@ -196,30 +196,30 @@ void InitializeNodeGeometry(TGeom& geom, DataStructure& dataStructure, DataInitO
 
   if(initOption == DataInitOption::ElementsAndNoData || initOption == DataInitOption::ElementsAndData)
   {
-    auto* attrMatrix = getAttrMatrix(geom);
-    if(attrMatrix == nullptr)
+    auto* attrMatrixPtr = getAttrMatrix(geom);
+    if(attrMatrixPtr == nullptr)
     {
       CreateNodeAttributeMatrix(geom, dataStructure, attrMatrixName, numElements, setAttrMatrix);
-      attrMatrix = getAttrMatrix(geom);
+      attrMatrixPtr = getAttrMatrix(geom);
     }
     if(initOption == DataInitOption::ElementsAndData)
     {
-      CreateDataArrays(*attrMatrix, dataStructure);
+      CreateDataArrays(*attrMatrixPtr, dataStructure);
     }
   }
 }
 
-void InitializeNode0DGeometry(INodeGeometry0D& geom, DataStructure& dataStructure, DataInitOption vertexDataInitOption)
+static void InitializeNode0DGeometry(INodeGeometry0D& geom, DataStructure& dataStructure, DataInitOption vertexDataInitOption)
 {
   usize numOfVertexComps = 3;
   InitializeNodeGeometry<INodeGeometry0D, float32>(
       geom, dataStructure, vertexDataInitOption, INodeGeometry0D::k_VertexAttributeMatrixName, INodeGeometry0D::k_SharedVertexListName, geom.getNumberOfVertices(),
-      [numOfVertexComps](const INodeGeometry0D& g) { return numOfVertexComps; }, [](INodeGeometry0D& g) { return g.getVertices(); },
-      [](INodeGeometry0D& g, const Float32Array& da) { g.setVertices(da); }, [](INodeGeometry0D& g) { return g.getVertexAttributeMatrix(); },
+      [numOfVertexComps](const INodeGeometry0D& /*g*/) { return numOfVertexComps; }, [](INodeGeometry0D& g) { return g.getVertices(); },
+      [](INodeGeometry0D& g, const Float32ArrayType& da) { g.setVertices(da); }, [](INodeGeometry0D& g) { return g.getVertexAttributeMatrix(); },
       [](INodeGeometry0D& g, AttributeMatrix& m) { g.setVertexAttributeMatrix(m); });
 }
 
-void InitializeNode1DGeometry(INodeGeometry1D& geom, DataStructure& dataStructure, DataInitOption vertexDataInitOption, DataInitOption edgeDataInitOption)
+static void InitializeNode1DGeometry(INodeGeometry1D& geom, DataStructure& dataStructure, DataInitOption vertexDataInitOption, DataInitOption edgeDataInitOption)
 {
   InitializeNode0DGeometry(geom, dataStructure, vertexDataInitOption);
 
@@ -227,11 +227,11 @@ void InitializeNode1DGeometry(INodeGeometry1D& geom, DataStructure& dataStructur
   InitializeNodeGeometry<INodeGeometry1D, uint64>(
       geom, dataStructure, edgeDataInitOption, INodeGeometry1D::k_EdgeAttributeMatrixName, INodeGeometry1D::k_SharedEdgeListName, numOfEdges,
       [](const INodeGeometry1D& g) { return g.getNumberOfVerticesPerEdge(); }, [](INodeGeometry1D& g) { return g.getEdges(); },
-      [](INodeGeometry1D& g, const IGeometry::SharedEdgeList& da) { g.setEdgeList(da); }, [](INodeGeometry1D& g) { return g.getEdgeAttributeMatrix(); },
+      [](INodeGeometry1D& g, const IGeometry::SharedEdgeListType& da) { g.setEdgeList(da); }, [](INodeGeometry1D& g) { return g.getEdgeAttributeMatrix(); },
       [](INodeGeometry1D& g, AttributeMatrix& m) { g.setEdgeAttributeMatrix(m); });
 }
 
-void InitializeNode2DGeometry(INodeGeometry2D& geom, DataStructure& dataStructure, DataInitOption vertexDataInitOption, DataInitOption edgeDataInitOption, DataInitOption faceDataInitOption)
+static void InitializeNode2DGeometry(INodeGeometry2D& geom, DataStructure& dataStructure, DataInitOption vertexDataInitOption, DataInitOption edgeDataInitOption, DataInitOption faceDataInitOption)
 {
   InitializeNode1DGeometry(geom, dataStructure, vertexDataInitOption, edgeDataInitOption);
 
@@ -239,12 +239,12 @@ void InitializeNode2DGeometry(INodeGeometry2D& geom, DataStructure& dataStructur
   InitializeNodeGeometry<INodeGeometry2D, uint64>(
       geom, dataStructure, faceDataInitOption, INodeGeometry2D::k_FaceAttributeMatrixName, INodeGeometry2D::k_SharedFacesListName, numOfFaces,
       [](const INodeGeometry2D& g) { return g.getNumberOfVerticesPerFace(); }, [](INodeGeometry2D& g) { return g.getFaces(); },
-      [](INodeGeometry2D& g, const IGeometry::SharedFaceList& da) { g.setFaceList(da); }, [](INodeGeometry2D& g) { return g.getFaceAttributeMatrix(); },
+      [](INodeGeometry2D& g, const IGeometry::SharedFaceListType& da) { g.setFaceList(da); }, [](INodeGeometry2D& g) { return g.getFaceAttributeMatrix(); },
       [](INodeGeometry2D& g, AttributeMatrix& m) { g.setFaceAttributeMatrix(m); });
 }
 
-void InitializeNode3DGeometry(INodeGeometry3D& geom, DataStructure& dataStructure, DataInitOption vertexDataInitOption, DataInitOption edgeDataInitOption, DataInitOption faceDataInitOption,
-                              DataInitOption polyDataInitOption)
+static void InitializeNode3DGeometry(INodeGeometry3D& geom, DataStructure& dataStructure, DataInitOption vertexDataInitOption, DataInitOption edgeDataInitOption, DataInitOption faceDataInitOption,
+                                     DataInitOption polyDataInitOption)
 {
   InitializeNode2DGeometry(geom, dataStructure, vertexDataInitOption, edgeDataInitOption, faceDataInitOption);
 
@@ -252,7 +252,7 @@ void InitializeNode3DGeometry(INodeGeometry3D& geom, DataStructure& dataStructur
   InitializeNodeGeometry<INodeGeometry3D, uint64>(
       geom, dataStructure, polyDataInitOption, INodeGeometry3D::k_PolyhedronDataName, INodeGeometry3D::k_SharedPolyhedronListName, numElements,
       [](const INodeGeometry3D& g) { return g.getNumberOfVerticesPerCell(); }, [](INodeGeometry3D& g) { return g.getPolyhedra(); },
-      [](INodeGeometry3D& g, const IGeometry::SharedFaceList& da) { g.setPolyhedraList(da); }, [](INodeGeometry3D& g) { return g.getPolyhedraAttributeMatrix(); },
+      [](INodeGeometry3D& g, const IGeometry::SharedFaceListType& da) { g.setPolyhedraList(da); }, [](INodeGeometry3D& g) { return g.getPolyhedraAttributeMatrix(); },
       [](INodeGeometry3D& g, AttributeMatrix& m) { g.setPolyhedraAttributeMatrix(m); });
 }
 
@@ -294,31 +294,31 @@ struct ValidateNeighborListsImpl
   }
 };
 
-void ValidateStringArraysImpl(const DataStructure& dataStructure, const DataPath& inputArrayPath1, const DataPath& inputArrayPath2, const DataPath& combinedArrayPath)
+static void ValidateStringArraysImpl(const DataStructure& dataStructure, const DataPath& inputArrayPath1, const DataPath& inputArrayPath2, const DataPath& combinedArrayPath)
 {
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(inputArrayPath1));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(inputArrayPath2));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(combinedArrayPath));
 
-  auto& inputStringArray1 = dataStructure.getDataRefAs<StringArray>(inputArrayPath1);
-  auto& inputStringArray2 = dataStructure.getDataRefAs<StringArray>(inputArrayPath2);
-  auto& combinedStringArray = dataStructure.getDataRefAs<StringArray>(combinedArrayPath);
+  const auto& inputStringArray1 = dataStructure.getDataRefAs<StringArray>(inputArrayPath1);
+  const auto& inputStringArray2 = dataStructure.getDataRefAs<StringArray>(inputArrayPath2);
+  const auto& combinedStringArray = dataStructure.getDataRefAs<StringArray>(combinedArrayPath);
 
   REQUIRE(combinedStringArray.getNumberOfTuples() == inputStringArray1.getNumberOfTuples() + inputStringArray2.getNumberOfTuples());
   REQUIRE(std::equal(inputStringArray1.begin(), inputStringArray1.end(), combinedStringArray.begin()));
   REQUIRE(std::equal(inputStringArray2.begin(), inputStringArray2.end(), combinedStringArray.begin() + inputStringArray1.size()));
 }
 
-void ValidateArrays(const DataStructure& dataStructure, const DataPath& inputArrayPath1, const DataPath& inputArrayPath2, const DataPath& combinedArrayPath)
+static void ValidateArrays(const DataStructure& dataStructure, const DataPath& inputArrayPath1, const DataPath& inputArrayPath2, const DataPath& combinedArrayPath)
 {
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IArray>(inputArrayPath1));
-  auto& array1 = dataStructure.getDataRefAs<IArray>(inputArrayPath1);
+  const auto& array1 = dataStructure.getDataRefAs<IArray>(inputArrayPath1);
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IArray>(inputArrayPath2));
-  auto& array2 = dataStructure.getDataRefAs<IArray>(inputArrayPath2);
+  const auto& array2 = dataStructure.getDataRefAs<IArray>(inputArrayPath2);
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IArray>(combinedArrayPath));
-  auto& combinedArray = dataStructure.getDataRefAs<IArray>(combinedArrayPath);
+  const auto& combinedArray = dataStructure.getDataRefAs<IArray>(combinedArrayPath);
 
   REQUIRE(combinedArray.getArrayType() == array1.getArrayType());
   REQUIRE(combinedArray.getArrayType() == array2.getArrayType());
@@ -327,9 +327,9 @@ void ValidateArrays(const DataStructure& dataStructure, const DataPath& inputArr
   switch(combinedArrayType)
   {
   case IArray::ArrayType::DataArray: {
-    auto& dataArray1 = dataStructure.getDataRefAs<IDataArray>(inputArrayPath1);
-    auto& dataArray2 = dataStructure.getDataRefAs<IDataArray>(inputArrayPath2);
-    auto& combinedDataArray = dataStructure.getDataRefAs<IDataArray>(combinedArrayPath);
+    const auto& dataArray1 = dataStructure.getDataRefAs<IDataArray>(inputArrayPath1);
+    const auto& dataArray2 = dataStructure.getDataRefAs<IDataArray>(inputArrayPath2);
+    const auto& combinedDataArray = dataStructure.getDataRefAs<IDataArray>(combinedArrayPath);
     REQUIRE(combinedDataArray.getDataType() == dataArray1.getDataType());
     REQUIRE(combinedDataArray.getDataType() == dataArray2.getDataType());
     ExecuteDataFunction(ValidateDataArraysImpl{}, combinedDataArray.getDataType(), dataStructure, inputArrayPath1, inputArrayPath2, combinedArrayPath);
@@ -340,9 +340,9 @@ void ValidateArrays(const DataStructure& dataStructure, const DataPath& inputArr
     break;
   }
   case IArray::ArrayType::NeighborListArray: {
-    auto& nl1 = dataStructure.getDataRefAs<INeighborList>(inputArrayPath1);
-    auto& nl2 = dataStructure.getDataRefAs<INeighborList>(inputArrayPath2);
-    auto& combinedNL = dataStructure.getDataRefAs<INeighborList>(combinedArrayPath);
+    const auto& nl1 = dataStructure.getDataRefAs<INeighborList>(inputArrayPath1);
+    const auto& nl2 = dataStructure.getDataRefAs<INeighborList>(inputArrayPath2);
+    const auto& combinedNL = dataStructure.getDataRefAs<INeighborList>(combinedArrayPath);
     REQUIRE(combinedNL.getDataType() == nl1.getDataType());
     REQUIRE(combinedNL.getDataType() == nl2.getDataType());
     ExecuteNeighborFunction(ValidateNeighborListsImpl{}, combinedNL.getDataType(), dataStructure, inputArrayPath1, inputArrayPath2, combinedArrayPath);
@@ -360,7 +360,7 @@ void ValidateArrays(const DataStructure& dataStructure, const DataPath& inputArr
 }
 
 template <typename T>
-void ValidateElementsArray(const DataArray<T>* elementsArray1Ptr, const DataArray<T>* elementsArray2Ptr, const DataArray<T>* combinedElementsArrayPtr, uint64 offset = 0)
+static void ValidateElementsArray(const DataArray<T>* elementsArray1Ptr, const DataArray<T>* elementsArray2Ptr, const DataArray<T>* combinedElementsArrayPtr, uint64 offset = 0)
 {
   bool allArraysMissing = (elementsArray1Ptr == nullptr && elementsArray2Ptr == nullptr && combinedElementsArrayPtr == nullptr);
   bool allArraysExist = (elementsArray1Ptr != nullptr && elementsArray2Ptr != nullptr && combinedElementsArrayPtr != nullptr);
@@ -382,7 +382,7 @@ void ValidateElementsArray(const DataArray<T>* elementsArray1Ptr, const DataArra
   }
 }
 
-void ValidateAttributeMatrixArrays(const DataStructure& dataStructure, const AttributeMatrix* attrMatrix1, const AttributeMatrix* attrMatrix2, const AttributeMatrix* combinedAttrMatrix)
+static void ValidateAttributeMatrixArrays(const DataStructure& dataStructure, const AttributeMatrix* attrMatrix1, const AttributeMatrix* attrMatrix2, const AttributeMatrix* combinedAttrMatrix)
 {
   bool allMatricesMissing = (attrMatrix1 == nullptr && attrMatrix2 == nullptr && combinedAttrMatrix == nullptr);
   if(allMatricesMissing)
@@ -412,7 +412,7 @@ void ValidateAttributeMatrixArrays(const DataStructure& dataStructure, const Att
 }
 
 template <typename NodeGeom>
-void CombineNodeBasedGeometriesImpl(const DataPath& inputGeom1Path, const DataPath& inputGeom2Path, const DataPath& outputGeomPath, DataStructure& dataStructure)
+static void CombineNodeBasedGeometriesImpl(const DataPath& inputGeom1Path, const DataPath& inputGeom2Path, const DataPath& outputGeomPath, DataStructure& dataStructure)
 {
   CombineNodeBasedGeometriesFilter filter;
   Arguments args;
@@ -429,60 +429,60 @@ void CombineNodeBasedGeometriesImpl(const DataPath& inputGeom1Path, const DataPa
   auto& inputGeom2 = dataStructure.getDataRefAs<NodeGeom>(inputGeom2Path);
   auto& combinedGeom = dataStructure.getDataRefAs<NodeGeom>(outputGeomPath);
 
-  auto* inputVertices1 = inputGeom1.getVertices();
-  REQUIRE(inputVertices1 != nullptr);
+  auto* inputVertices1Ptr = inputGeom1.getVertices();
+  REQUIRE(inputVertices1Ptr != nullptr);
 
   if constexpr(std::is_base_of_v<INodeGeometry0D, NodeGeom>)
   {
-    auto* inputVertices2 = inputGeom2.getVertices();
-    auto* combinedVertices = combinedGeom.getVertices();
-    ValidateElementsArray(inputVertices1, inputVertices2, combinedVertices);
+    auto* inputVertices2Ptr = inputGeom2.getVertices();
+    auto* combinedVerticesPtr = combinedGeom.getVertices();
+    ValidateElementsArray(inputVertices1Ptr, inputVertices2Ptr, combinedVerticesPtr);
 
-    auto* vertexAM1 = inputGeom1.getVertexAttributeMatrix();
-    auto* vertexAM2 = inputGeom2.getVertexAttributeMatrix();
-    auto* combinedVertexAM = combinedGeom.getVertexAttributeMatrix();
-    ValidateAttributeMatrixArrays(dataStructure, vertexAM1, vertexAM2, combinedVertexAM);
+    auto* vertexAM1Ptr = inputGeom1.getVertexAttributeMatrix();
+    auto* vertexAM2Ptr = inputGeom2.getVertexAttributeMatrix();
+    auto* combinedVertexAmPtr = combinedGeom.getVertexAttributeMatrix();
+    ValidateAttributeMatrixArrays(dataStructure, vertexAM1Ptr, vertexAM2Ptr, combinedVertexAmPtr);
   }
   if constexpr(std::is_base_of_v<INodeGeometry1D, NodeGeom>)
   {
-    auto* inputEdges1 = inputGeom1.getEdges();
-    auto* inputEdges2 = inputGeom2.getEdges();
-    auto* combinedEdges = combinedGeom.getEdges();
-    ValidateElementsArray(inputEdges1, inputEdges2, combinedEdges, inputVertices1->getNumberOfTuples());
+    auto* inputEdges1Ptr = inputGeom1.getEdges();
+    auto* inputEdges2Ptr = inputGeom2.getEdges();
+    auto* combinedEdgesPtr = combinedGeom.getEdges();
+    ValidateElementsArray(inputEdges1Ptr, inputEdges2Ptr, combinedEdgesPtr, inputVertices1Ptr->getNumberOfTuples());
 
-    auto* edgesAM1 = inputGeom1.getEdgeAttributeMatrix();
-    auto* edgesAM2 = inputGeom2.getEdgeAttributeMatrix();
-    auto* combinedEdgesAM = combinedGeom.getEdgeAttributeMatrix();
-    ValidateAttributeMatrixArrays(dataStructure, edgesAM1, edgesAM2, combinedEdgesAM);
+    auto* edgesAM1Ptr = inputGeom1.getEdgeAttributeMatrix();
+    auto* edgesAM2Ptr = inputGeom2.getEdgeAttributeMatrix();
+    auto* combinedEdgesAmPtr = combinedGeom.getEdgeAttributeMatrix();
+    ValidateAttributeMatrixArrays(dataStructure, edgesAM1Ptr, edgesAM2Ptr, combinedEdgesAmPtr);
   }
   if constexpr(std::is_base_of_v<INodeGeometry2D, NodeGeom>)
   {
-    auto* inputFaces1 = inputGeom1.getFaces();
-    auto* inputFaces2 = inputGeom2.getFaces();
-    auto* combinedFaces = combinedGeom.getFaces();
-    ValidateElementsArray(inputFaces1, inputFaces2, combinedFaces, inputVertices1->getNumberOfTuples());
+    auto* inputFaces1Ptr = inputGeom1.getFaces();
+    auto* inputFaces2Ptr = inputGeom2.getFaces();
+    auto* combinedFacesPtr = combinedGeom.getFaces();
+    ValidateElementsArray(inputFaces1Ptr, inputFaces2Ptr, combinedFacesPtr, inputVertices1Ptr->getNumberOfTuples());
 
-    auto* facesAM1 = inputGeom1.getFaceAttributeMatrix();
-    auto* facesAM2 = inputGeom2.getFaceAttributeMatrix();
-    auto* combinedFacesAM = combinedGeom.getFaceAttributeMatrix();
-    ValidateAttributeMatrixArrays(dataStructure, facesAM1, facesAM2, combinedFacesAM);
+    auto* facesAM1Ptr = inputGeom1.getFaceAttributeMatrix();
+    auto* facesAM2Ptr = inputGeom2.getFaceAttributeMatrix();
+    auto* combinedFacesAmPtr = combinedGeom.getFaceAttributeMatrix();
+    ValidateAttributeMatrixArrays(dataStructure, facesAM1Ptr, facesAM2Ptr, combinedFacesAmPtr);
   }
   if constexpr(std::is_base_of_v<INodeGeometry3D, NodeGeom>)
   {
-    auto* inputPolyhedra1 = inputGeom1.getPolyhedra();
-    auto* inputPolyhedra2 = inputGeom2.getPolyhedra();
-    auto* combinedPolyhedra = combinedGeom.getPolyhedra();
-    ValidateElementsArray(inputPolyhedra1, inputPolyhedra2, combinedPolyhedra, inputVertices1->getNumberOfTuples());
+    auto* inputPolyhedra1Ptr = inputGeom1.getPolyhedra();
+    auto* inputPolyhedra2Ptr = inputGeom2.getPolyhedra();
+    auto* combinedPolyhedraPtr = combinedGeom.getPolyhedra();
+    ValidateElementsArray(inputPolyhedra1Ptr, inputPolyhedra2Ptr, combinedPolyhedraPtr, inputVertices1Ptr->getNumberOfTuples());
 
-    auto* polyAM1 = inputGeom1.getPolyhedraAttributeMatrix();
-    auto* polyAM2 = inputGeom2.getPolyhedraAttributeMatrix();
-    auto* combinedPolyAM = combinedGeom.getPolyhedraAttributeMatrix();
-    ValidateAttributeMatrixArrays(dataStructure, polyAM1, polyAM2, combinedPolyAM);
+    auto* polyAM1Ptr = inputGeom1.getPolyhedraAttributeMatrix();
+    auto* polyAM2Ptr = inputGeom2.getPolyhedraAttributeMatrix();
+    auto* combinedPolyAmPtr = combinedGeom.getPolyhedraAttributeMatrix();
+    ValidateAttributeMatrixArrays(dataStructure, polyAM1Ptr, polyAM2Ptr, combinedPolyAmPtr);
   }
 }
 
 template <typename NodeGeom>
-void InitializeNodeBasedGeometries(DataStructure& dataStructure)
+static void InitializeNodeBasedGeometries(DataStructure& dataStructure)
 {
   // DO NOT test DataInitOption::None and DataInitOption::ElementsOnly for Vertex and Polyhedra because a vertex array & attr matrix will
   // be automatically created for any geometry, and a polyhedra array and attribute matrix will be automatically created for 3D geometries.
@@ -543,23 +543,23 @@ void InitializeNodeBasedGeometries(DataStructure& dataStructure)
 }
 
 template <typename NodeGeom>
-void LoadAndExecute0DNodeGeometriesTest(const fs::path& inputFilePath)
+static void LoadAndExecute0DNodeGeometriesTest(const fs::path& inputFilePath)
 {
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFilePath);
   InitializeNodeBasedGeometries<NodeGeom>(dataStructure);
 
   // Test two 0D node-based geometries
   CombineNodeBasedGeometriesImpl<NodeGeom>(k_InputGeometry1Path, k_InputGeometry2Path, k_OutputGeometryPath4, dataStructure);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 
   SUCCEED("Test completed successfully.");
 }
 
 template <typename NodeGeom>
-void LoadAndExecute1DNodeGeometriesTest(const fs::path& inputFilePath)
+static void LoadAndExecute1DNodeGeometriesTest(const fs::path& inputFilePath)
 {
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFilePath);
   InitializeNodeBasedGeometries<NodeGeom>(dataStructure);
 
   SECTION("Shared Vertex")
@@ -573,15 +573,15 @@ void LoadAndExecute1DNodeGeometriesTest(const fs::path& inputFilePath)
     CombineNodeBasedGeometriesImpl<NodeGeom>(k_InputGeometry2Path, k_InputGeometry3Path, k_OutputGeometryPath4, dataStructure);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 
   SUCCEED("Test completed successfully.");
 }
 
 template <typename NodeGeom>
-void LoadAndExecute2DNodeGeometriesTest(const fs::path& inputFilePath)
+static void LoadAndExecute2DNodeGeometriesTest(const fs::path& inputFilePath)
 {
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFilePath);
   InitializeNodeBasedGeometries<NodeGeom>(dataStructure);
 
   SECTION("Shared Edge")
@@ -600,15 +600,15 @@ void LoadAndExecute2DNodeGeometriesTest(const fs::path& inputFilePath)
     CombineNodeBasedGeometriesImpl<NodeGeom>(k_InputGeometry3Path, k_InputGeometry4Path, k_OutputGeometryPath4, dataStructure);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 
   SUCCEED("Test completed successfully.");
 }
 
 template <typename NodeGeom>
-void LoadAndExecute3DNodeGeometriesTest(const fs::path& inputFilePath)
+static void LoadAndExecute3DNodeGeometriesTest(const fs::path& inputFilePath)
 {
-  DataStructure dataStructure = UnitTest::LoadDataStructure(inputFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(inputFilePath);
   InitializeNodeBasedGeometries<NodeGeom>(dataStructure);
 
   SECTION("Shared Face")
@@ -632,49 +632,49 @@ void LoadAndExecute3DNodeGeometriesTest(const fs::path& inputFilePath)
     CombineNodeBasedGeometriesImpl<NodeGeom>(k_InputGeometry4Path, k_InputGeometry5Path, k_OutputGeometryPath4, dataStructure);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 
   SUCCEED("Test completed successfully.");
 }
 
 TEST_CASE("Combine Node Geometries: Vertex", "[SimplnxCore][CombineNodeBasedGeometries]")
 {
-  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_vertex_geometries.dream3d");
+  static const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_vertex_geometries.dream3d");
   auto inputFilePath = fs::path(fmt::format("{}/combine_node_based_geometries/combine_vertex_geometries.dream3d", unit_test::k_TestFilesDir));
   LoadAndExecute0DNodeGeometriesTest<VertexGeom>(inputFilePath);
 }
 
 TEST_CASE("Combine Node Geometries: Edge", "[SimplnxCore][CombineNodeBasedGeometries]")
 {
-  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_edge_geometries.dream3d");
+  static const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_edge_geometries.dream3d");
   auto inputFilePath = fs::path(fmt::format("{}/combine_node_based_geometries/combine_edge_geometries.dream3d", unit_test::k_TestFilesDir));
   LoadAndExecute1DNodeGeometriesTest<EdgeGeom>(inputFilePath);
 }
 
 TEST_CASE("Combine Node Geometries: Triangle", "[SimplnxCore][CombineNodeBasedGeometries]")
 {
-  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_triangle_geometries.dream3d");
+  static const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_triangle_geometries.dream3d");
   auto inputFilePath = fs::path(fmt::format("{}/combine_node_based_geometries/combine_triangle_geometries.dream3d", unit_test::k_TestFilesDir));
   LoadAndExecute2DNodeGeometriesTest<TriangleGeom>(inputFilePath);
 }
 
 TEST_CASE("Combine Node Geometries: Quad", "[SimplnxCore][CombineNodeBasedGeometries]")
 {
-  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_quad_geometries.dream3d");
+  static const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_quad_geometries.dream3d");
   auto inputFilePath = fs::path(fmt::format("{}/combine_node_based_geometries/combine_quad_geometries.dream3d", unit_test::k_TestFilesDir));
   LoadAndExecute2DNodeGeometriesTest<QuadGeom>(inputFilePath);
 }
 
 TEST_CASE("Combine Node Geometries: Tetrahedral", "[SimplnxCore][CombineNodeBasedGeometries]")
 {
-  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_tetrahedral_geometries.dream3d");
+  static const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_tetrahedral_geometries.dream3d");
   auto inputFilePath = fs::path(fmt::format("{}/combine_node_based_geometries/combine_tetrahedral_geometries.dream3d", unit_test::k_TestFilesDir));
   LoadAndExecute3DNodeGeometriesTest<TetrahedralGeom>(inputFilePath);
 }
 
 TEST_CASE("Combine Node Geometries: Hexahedral", "[SimplnxCore][CombineNodeBasedGeometries]")
 {
-  static const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_hexahedral_geometries.dream3d");
+  static const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "combine_node_based_geometries.tar.gz", "combine_hexahedral_geometries.dream3d");
 
   auto inputFilePath = std::filesystem::path(fmt::format("{}/combine_node_based_geometries/combine_hexahedral_geometries.dream3d", unit_test::k_TestFilesDir));
   LoadAndExecute3DNodeGeometriesTest<HexahedralGeom>(inputFilePath);
@@ -705,13 +705,13 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
   }
   SECTION("Differing Geometries")
   {
-    auto geom1 = VertexGeom::Create(dataStructure, k_Geometry1Name);
-    auto vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, 10, 3);
-    geom1->setVertices(*vertices);
+    auto* geom1Ptr = VertexGeom::Create(dataStructure, k_Geometry1Name);
+    auto* verticesPtr = CreateNodeArray<float32>(*geom1Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, 10, 3);
+    geom1Ptr->setVertices(*verticesPtr);
 
-    auto geom2 = EdgeGeom::Create(dataStructure, k_Geometry2Name);
-    vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, 10, 3);
-    geom2->setVertices(*vertices);
+    auto* geom2Ptr = EdgeGeom::Create(dataStructure, k_Geometry2Name);
+    verticesPtr = CreateNodeArray<float32>(*geom2Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, 10, 3);
+    geom2Ptr->setVertices(*verticesPtr);
 
     inputPaths = std::vector<DataPath>{k_InputGeometry1Path, k_InputGeometry2Path};
     outputPath = k_OutputGeometryPath1;
@@ -747,59 +747,59 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
     {
       SECTION("1D Geometry")
       {
-        auto geom1 = EdgeGeom::Create(dataStructure, k_Geometry1Name);
-        auto geom2 = EdgeGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1Ptr = EdgeGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2Ptr = EdgeGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerEdge(), 3);
-        geom1->setVertices(*vertices);
-        vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerEdge(), 3);
-        geom2->setVertices(*vertices);
+        auto* verticesPtr = CreateNodeArray<float32>(*geom1Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1Ptr->getNumberOfVerticesPerEdge(), 3);
+        geom1Ptr->setVertices(*verticesPtr);
+        verticesPtr = CreateNodeArray<float32>(*geom2Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2Ptr->getNumberOfVerticesPerEdge(), 3);
+        geom2Ptr->setVertices(*verticesPtr);
 
-        auto edges = CreateNodeArray<uint64>(*geom1, dataStructure, INodeGeometry1D::k_SharedEdgeListName, 1, geom1->getNumberOfVerticesPerEdge());
-        geom1->setEdgeList(*edges);
+        auto* edgesPtr = CreateNodeArray<uint64>(*geom1Ptr, dataStructure, INodeGeometry1D::k_SharedEdgeListName, 1, geom1Ptr->getNumberOfVerticesPerEdge());
+        geom1Ptr->setEdgeList(*edgesPtr);
       }
       SECTION("2D Geometry")
       {
-        auto geom1 = TriangleGeom::Create(dataStructure, k_Geometry1Name);
-        auto geom2 = TriangleGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1Ptr = TriangleGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2Ptr = TriangleGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
-        geom1->setVertices(*vertices);
-        vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerFace(), 3);
-        geom2->setVertices(*vertices);
+        auto* verticesPtr = CreateNodeArray<float32>(*geom1Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1Ptr->getNumberOfVerticesPerFace(), 3);
+        geom1Ptr->setVertices(*verticesPtr);
+        verticesPtr = CreateNodeArray<float32>(*geom2Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2Ptr->getNumberOfVerticesPerFace(), 3);
+        geom2Ptr->setVertices(*verticesPtr);
 
-        auto faces = CreateNodeArray<uint64>(*geom1, dataStructure, INodeGeometry2D::k_SharedFacesListName, 1, geom1->getNumberOfVerticesPerFace());
-        geom1->setFaceList(*faces);
+        auto* facesPtr = CreateNodeArray<uint64>(*geom1Ptr, dataStructure, INodeGeometry2D::k_SharedFacesListName, 1, geom1Ptr->getNumberOfVerticesPerFace());
+        geom1Ptr->setFaceList(*facesPtr);
       }
 
       SECTION("3D Geometry")
       {
-        auto geom1 = HexahedralGeom::Create(dataStructure, k_Geometry1Name);
-        auto geom2 = HexahedralGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1Ptr = HexahedralGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2Ptr = HexahedralGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerCell(), 3);
-        geom1->setVertices(*vertices);
-        vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerCell(), 3);
-        geom2->setVertices(*vertices);
+        auto* verticesPtr = CreateNodeArray<float32>(*geom1Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1Ptr->getNumberOfVerticesPerCell(), 3);
+        geom1Ptr->setVertices(*verticesPtr);
+        verticesPtr = CreateNodeArray<float32>(*geom2Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2Ptr->getNumberOfVerticesPerCell(), 3);
+        geom2Ptr->setVertices(*verticesPtr);
 
-        auto polyhedra = CreateNodeArray<uint64>(*geom1, dataStructure, INodeGeometry3D::k_SharedPolyhedronListName, 1, geom1->getNumberOfVerticesPerCell());
-        geom1->setPolyhedraList(*polyhedra);
+        auto* polyhedraPtr = CreateNodeArray<uint64>(*geom1Ptr, dataStructure, INodeGeometry3D::k_SharedPolyhedronListName, 1, geom1Ptr->getNumberOfVerticesPerCell());
+        geom1Ptr->setPolyhedraList(*polyhedraPtr);
       }
 
       errorCode = CombineNodeBasedGeometries::ErrorCodes::InconsistentGeometryElements;
     }
     SECTION("Vertex Attribute Matrix")
     {
-      auto geom1 = TetrahedralGeom::Create(dataStructure, k_Geometry1Name);
-      auto geom2 = TetrahedralGeom::Create(dataStructure, k_Geometry2Name);
+      auto* geom1Ptr = TetrahedralGeom::Create(dataStructure, k_Geometry1Name);
+      auto* geom2Ptr = TetrahedralGeom::Create(dataStructure, k_Geometry2Name);
 
-      auto vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerCell(), 3);
-      geom1->setVertices(*vertices);
-      vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerCell(), 3);
-      geom2->setVertices(*vertices);
+      auto* verticesPtr = CreateNodeArray<float32>(*geom1Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1Ptr->getNumberOfVerticesPerCell(), 3);
+      geom1Ptr->setVertices(*verticesPtr);
+      verticesPtr = CreateNodeArray<float32>(*geom2Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2Ptr->getNumberOfVerticesPerCell(), 3);
+      geom2Ptr->setVertices(*verticesPtr);
 
-      auto vertexAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1->getNumberOfVerticesPerCell());
-      geom1->setVertexAttributeMatrix(*vertexAttrMatrix);
+      auto* vertexAttrMatrixPtr = CreateNodeAttributeMatrix(*geom1Ptr, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1Ptr->getNumberOfVerticesPerCell());
+      geom1Ptr->setVertexAttributeMatrix(*vertexAttrMatrixPtr);
 
       errorCode = CombineNodeBasedGeometries::ErrorCodes::InconsistentGeometryElements;
     }
@@ -807,87 +807,87 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
     {
       SECTION("Data Array Missing")
       {
-        auto geom1 = EdgeGeom::Create(dataStructure, k_Geometry1Name);
-        auto geom2 = EdgeGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1Ptr = EdgeGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2Ptr = EdgeGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerEdge(), 3);
-        geom1->setVertices(*vertices);
-        vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerEdge(), 3);
-        geom2->setVertices(*vertices);
+        auto* verticesPtr = CreateNodeArray<float32>(*geom1Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1Ptr->getNumberOfVerticesPerEdge(), 3);
+        geom1Ptr->setVertices(*verticesPtr);
+        verticesPtr = CreateNodeArray<float32>(*geom2Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2Ptr->getNumberOfVerticesPerEdge(), 3);
+        geom2Ptr->setVertices(*verticesPtr);
 
-        auto vertexAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1->getNumberOfVerticesPerEdge());
-        geom1->setVertexAttributeMatrix(*vertexAttrMatrix);
+        auto* vertexAttrMatrixPtr = CreateNodeAttributeMatrix(*geom1Ptr, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1Ptr->getNumberOfVerticesPerEdge());
+        geom1Ptr->setVertexAttributeMatrix(*vertexAttrMatrixPtr);
 
-        vertexAttrMatrix = CreateNodeAttributeMatrix(*geom2, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom2->getNumberOfVerticesPerEdge());
-        geom2->setVertexAttributeMatrix(*vertexAttrMatrix);
+        vertexAttrMatrixPtr = CreateNodeAttributeMatrix(*geom2Ptr, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom2Ptr->getNumberOfVerticesPerEdge());
+        geom2Ptr->setVertexAttributeMatrix(*vertexAttrMatrixPtr);
 
-        AddDataArray<uint8, 2>(*vertexAttrMatrix, dataStructure);
+        AddDataArray<uint8, 2>(*vertexAttrMatrixPtr, dataStructure);
 
         errorCode = CombineNodeBasedGeometries::ErrorCodes::InconsistentGeometryElements;
       }
       SECTION("Mismatching Data Types")
       {
-        auto geom1 = QuadGeom::Create(dataStructure, k_Geometry1Name);
-        auto geom2 = QuadGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1Ptr = QuadGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2Ptr = QuadGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
-        geom1->setVertices(*vertices);
-        vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerFace(), 3);
-        geom2->setVertices(*vertices);
+        auto* verticesPtr = CreateNodeArray<float32>(*geom1Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1Ptr->getNumberOfVerticesPerFace(), 3);
+        geom1Ptr->setVertices(*verticesPtr);
+        verticesPtr = CreateNodeArray<float32>(*geom2Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2Ptr->getNumberOfVerticesPerFace(), 3);
+        geom2Ptr->setVertices(*verticesPtr);
 
-        auto vertexAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1->getNumberOfVerticesPerFace());
-        geom1->setVertexAttributeMatrix(*vertexAttrMatrix);
+        auto* vertexAttrMatrixPtr = CreateNodeAttributeMatrix(*geom1Ptr, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1Ptr->getNumberOfVerticesPerFace());
+        geom1Ptr->setVertexAttributeMatrix(*vertexAttrMatrixPtr);
 
-        CreateDataArray<uint8, 2>(*vertexAttrMatrix, dataStructure, "TestArray");
+        CreateDataArray<uint8, 2>(*vertexAttrMatrixPtr, dataStructure, "TestArray");
 
-        vertexAttrMatrix = CreateNodeAttributeMatrix(*geom2, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom2->getNumberOfVerticesPerFace());
-        geom2->setVertexAttributeMatrix(*vertexAttrMatrix);
+        vertexAttrMatrixPtr = CreateNodeAttributeMatrix(*geom2Ptr, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom2Ptr->getNumberOfVerticesPerFace());
+        geom2Ptr->setVertexAttributeMatrix(*vertexAttrMatrixPtr);
 
-        CreateDataArray<uint16, 2>(*vertexAttrMatrix, dataStructure, "TestArray");
+        CreateDataArray<uint16, 2>(*vertexAttrMatrixPtr, dataStructure, "TestArray");
 
         errorCode = CombineNodeBasedGeometries::ErrorCodes::InconsistentGeometryElementDataTypes;
       }
       SECTION("Mismatching Array Types")
       {
-        auto geom1 = TriangleGeom::Create(dataStructure, k_Geometry1Name);
-        auto geom2 = TriangleGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1Ptr = TriangleGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2Ptr = TriangleGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
-        geom1->setVertices(*vertices);
-        vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerFace(), 3);
-        geom2->setVertices(*vertices);
+        auto* verticesPtr = CreateNodeArray<float32>(*geom1Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1Ptr->getNumberOfVerticesPerFace(), 3);
+        geom1Ptr->setVertices(*verticesPtr);
+        verticesPtr = CreateNodeArray<float32>(*geom2Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2Ptr->getNumberOfVerticesPerFace(), 3);
+        geom2Ptr->setVertices(*verticesPtr);
 
-        auto vertexAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1->getNumberOfVerticesPerFace());
-        geom1->setVertexAttributeMatrix(*vertexAttrMatrix);
+        auto* vertexAttrMatrixPtr = CreateNodeAttributeMatrix(*geom1Ptr, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1Ptr->getNumberOfVerticesPerFace());
+        geom1Ptr->setVertexAttributeMatrix(*vertexAttrMatrixPtr);
 
-        CreateDataArray<uint8, 2>(*vertexAttrMatrix, dataStructure, "TestArray");
+        CreateDataArray<uint8, 2>(*vertexAttrMatrixPtr, dataStructure, "TestArray");
 
-        vertexAttrMatrix = CreateNodeAttributeMatrix(*geom2, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom2->getNumberOfVerticesPerFace());
-        geom2->setVertexAttributeMatrix(*vertexAttrMatrix);
+        vertexAttrMatrixPtr = CreateNodeAttributeMatrix(*geom2Ptr, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom2Ptr->getNumberOfVerticesPerFace());
+        geom2Ptr->setVertexAttributeMatrix(*vertexAttrMatrixPtr);
 
-        CreateStringArray(*vertexAttrMatrix, dataStructure, "TestArray");
+        CreateStringArray(*vertexAttrMatrixPtr, dataStructure, "TestArray");
 
         errorCode = CombineNodeBasedGeometries::ErrorCodes::InconsistentGeometryElementArrayTypes;
       }
       SECTION("Mismatching Component Dimensions")
       {
-        auto geom1 = TriangleGeom::Create(dataStructure, k_Geometry1Name);
-        auto geom2 = TriangleGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1Ptr = TriangleGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2Ptr = TriangleGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
-        geom1->setVertices(*vertices);
-        vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerFace(), 3);
-        geom2->setVertices(*vertices);
+        auto* verticesPtr = CreateNodeArray<float32>(*geom1Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1Ptr->getNumberOfVerticesPerFace(), 3);
+        geom1Ptr->setVertices(*verticesPtr);
+        verticesPtr = CreateNodeArray<float32>(*geom2Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2Ptr->getNumberOfVerticesPerFace(), 3);
+        geom2Ptr->setVertices(*verticesPtr);
 
-        auto vertexAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1->getNumberOfVerticesPerFace());
-        geom1->setVertexAttributeMatrix(*vertexAttrMatrix);
+        auto* vertexAttrMatrixPtr = CreateNodeAttributeMatrix(*geom1Ptr, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom1Ptr->getNumberOfVerticesPerFace());
+        geom1Ptr->setVertexAttributeMatrix(*vertexAttrMatrixPtr);
 
-        CreateDataArray<int32>(*vertexAttrMatrix, dataStructure, "TestArray", {2, 3});
+        CreateDataArray<int32>(*vertexAttrMatrixPtr, dataStructure, "TestArray", {2, 3});
 
-        vertexAttrMatrix = CreateNodeAttributeMatrix(*geom2, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom2->getNumberOfVerticesPerFace());
-        geom2->setVertexAttributeMatrix(*vertexAttrMatrix);
+        vertexAttrMatrixPtr = CreateNodeAttributeMatrix(*geom2Ptr, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, geom2Ptr->getNumberOfVerticesPerFace());
+        geom2Ptr->setVertexAttributeMatrix(*vertexAttrMatrixPtr);
 
-        CreateDataArray<int32>(*vertexAttrMatrix, dataStructure, "TestArray", {4, 5});
+        CreateDataArray<int32>(*vertexAttrMatrixPtr, dataStructure, "TestArray", {4, 5});
 
         errorCode = CombineNodeBasedGeometries::ErrorCodes::InconsistentGeometryElementCompDims;
       }
@@ -896,103 +896,103 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
     {
       SECTION("Data Array Missing")
       {
-        auto geom1 = EdgeGeom::Create(dataStructure, k_Geometry1Name);
-        auto geom2 = EdgeGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1Ptr = EdgeGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2Ptr = EdgeGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerEdge(), 3);
-        geom1->setVertices(*vertices);
-        vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerEdge(), 3);
-        geom2->setVertices(*vertices);
+        auto* verticesPtr = CreateNodeArray<float32>(*geom1Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1Ptr->getNumberOfVerticesPerEdge(), 3);
+        geom1Ptr->setVertices(*verticesPtr);
+        verticesPtr = CreateNodeArray<float32>(*geom2Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2Ptr->getNumberOfVerticesPerEdge(), 3);
+        geom2Ptr->setVertices(*verticesPtr);
 
-        auto cellAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
-        geom1->setEdgeAttributeMatrix(*cellAttrMatrix);
+        auto* cellAttrMatrixPtr = CreateNodeAttributeMatrix(*geom1Ptr, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
+        geom1Ptr->setEdgeAttributeMatrix(*cellAttrMatrixPtr);
 
-        cellAttrMatrix = CreateNodeAttributeMatrix(*geom2, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
-        geom2->setEdgeAttributeMatrix(*cellAttrMatrix);
+        cellAttrMatrixPtr = CreateNodeAttributeMatrix(*geom2Ptr, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
+        geom2Ptr->setEdgeAttributeMatrix(*cellAttrMatrixPtr);
 
-        AddDataArray<uint8, 2>(*cellAttrMatrix, dataStructure);
+        AddDataArray<uint8, 2>(*cellAttrMatrixPtr, dataStructure);
 
         errorCode = CombineNodeBasedGeometries::ErrorCodes::InconsistentGeometryElements;
       }
       SECTION("Mismatching Data Types")
       {
-        auto geom1 = QuadGeom::Create(dataStructure, k_Geometry1Name);
-        auto geom2 = QuadGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1Ptr = QuadGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2Ptr = QuadGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
-        geom1->setVertices(*vertices);
-        vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerFace(), 3);
-        geom2->setVertices(*vertices);
+        auto* verticesPtr = CreateNodeArray<float32>(*geom1Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1Ptr->getNumberOfVerticesPerFace(), 3);
+        geom1Ptr->setVertices(*verticesPtr);
+        verticesPtr = CreateNodeArray<float32>(*geom2Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2Ptr->getNumberOfVerticesPerFace(), 3);
+        geom2Ptr->setVertices(*verticesPtr);
 
-        auto cellAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
-        geom1->setFaceAttributeMatrix(*cellAttrMatrix);
+        auto* cellAttrMatrixPtr = CreateNodeAttributeMatrix(*geom1Ptr, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
+        geom1Ptr->setFaceAttributeMatrix(*cellAttrMatrixPtr);
 
-        CreateDataArray<uint8, 2>(*cellAttrMatrix, dataStructure, "TestArray");
+        CreateDataArray<uint8, 2>(*cellAttrMatrixPtr, dataStructure, "TestArray");
 
-        cellAttrMatrix = CreateNodeAttributeMatrix(*geom2, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
-        geom2->setFaceAttributeMatrix(*cellAttrMatrix);
+        cellAttrMatrixPtr = CreateNodeAttributeMatrix(*geom2Ptr, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
+        geom2Ptr->setFaceAttributeMatrix(*cellAttrMatrixPtr);
 
-        CreateDataArray<uint16, 2>(*cellAttrMatrix, dataStructure, "TestArray");
+        CreateDataArray<uint16, 2>(*cellAttrMatrixPtr, dataStructure, "TestArray");
 
         errorCode = CombineNodeBasedGeometries::ErrorCodes::InconsistentGeometryElementDataTypes;
       }
       SECTION("Mismatching Array Types")
       {
-        auto geom1 = TriangleGeom::Create(dataStructure, k_Geometry1Name);
-        auto geom2 = TriangleGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1Ptr = TriangleGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2Ptr = TriangleGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
-        geom1->setVertices(*vertices);
-        vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerFace(), 3);
-        geom2->setVertices(*vertices);
+        auto* verticesPtr = CreateNodeArray<float32>(*geom1Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1Ptr->getNumberOfVerticesPerFace(), 3);
+        geom1Ptr->setVertices(*verticesPtr);
+        verticesPtr = CreateNodeArray<float32>(*geom2Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2Ptr->getNumberOfVerticesPerFace(), 3);
+        geom2Ptr->setVertices(*verticesPtr);
 
-        auto cellAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
-        geom1->setFaceAttributeMatrix(*cellAttrMatrix);
+        auto* cellAttrMatrixPtr = CreateNodeAttributeMatrix(*geom1Ptr, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
+        geom1Ptr->setFaceAttributeMatrix(*cellAttrMatrixPtr);
 
-        CreateDataArray<uint8, 2>(*cellAttrMatrix, dataStructure, "TestArray");
+        CreateDataArray<uint8, 2>(*cellAttrMatrixPtr, dataStructure, "TestArray");
 
-        cellAttrMatrix = CreateNodeAttributeMatrix(*geom2, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
-        geom2->setFaceAttributeMatrix(*cellAttrMatrix);
+        cellAttrMatrixPtr = CreateNodeAttributeMatrix(*geom2Ptr, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
+        geom2Ptr->setFaceAttributeMatrix(*cellAttrMatrixPtr);
 
-        CreateStringArray(*cellAttrMatrix, dataStructure, "TestArray");
+        CreateStringArray(*cellAttrMatrixPtr, dataStructure, "TestArray");
 
         errorCode = CombineNodeBasedGeometries::ErrorCodes::InconsistentGeometryElementArrayTypes;
       }
       SECTION("Mismatching Component Dimensions")
       {
-        auto geom1 = TriangleGeom::Create(dataStructure, k_Geometry1Name);
-        auto geom2 = TriangleGeom::Create(dataStructure, k_Geometry2Name);
+        auto* geom1Ptr = TriangleGeom::Create(dataStructure, k_Geometry1Name);
+        auto* geom2Ptr = TriangleGeom::Create(dataStructure, k_Geometry2Name);
 
-        auto vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerFace(), 3);
-        geom1->setVertices(*vertices);
-        vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerFace(), 3);
-        geom2->setVertices(*vertices);
+        auto* verticesPtr = CreateNodeArray<float32>(*geom1Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1Ptr->getNumberOfVerticesPerFace(), 3);
+        geom1Ptr->setVertices(*verticesPtr);
+        verticesPtr = CreateNodeArray<float32>(*geom2Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2Ptr->getNumberOfVerticesPerFace(), 3);
+        geom2Ptr->setVertices(*verticesPtr);
 
-        auto cellAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
-        geom1->setFaceAttributeMatrix(*cellAttrMatrix);
+        auto* cellAttrMatrixPtr = CreateNodeAttributeMatrix(*geom1Ptr, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
+        geom1Ptr->setFaceAttributeMatrix(*cellAttrMatrixPtr);
 
-        CreateDataArray<int32>(*cellAttrMatrix, dataStructure, "TestArray", {2, 3});
+        CreateDataArray<int32>(*cellAttrMatrixPtr, dataStructure, "TestArray", {2, 3});
 
-        cellAttrMatrix = CreateNodeAttributeMatrix(*geom2, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
-        geom2->setFaceAttributeMatrix(*cellAttrMatrix);
+        cellAttrMatrixPtr = CreateNodeAttributeMatrix(*geom2Ptr, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
+        geom2Ptr->setFaceAttributeMatrix(*cellAttrMatrixPtr);
 
-        CreateDataArray<int32>(*cellAttrMatrix, dataStructure, "TestArray", {4, 5});
+        CreateDataArray<int32>(*cellAttrMatrixPtr, dataStructure, "TestArray", {4, 5});
 
         errorCode = CombineNodeBasedGeometries::ErrorCodes::InconsistentGeometryElementCompDims;
       }
     }
     SECTION("Cell Attribute Matrix")
     {
-      auto geom1 = HexahedralGeom::Create(dataStructure, k_Geometry1Name);
-      auto geom2 = HexahedralGeom::Create(dataStructure, k_Geometry2Name);
+      auto* geom1Ptr = HexahedralGeom::Create(dataStructure, k_Geometry1Name);
+      auto* geom2Ptr = HexahedralGeom::Create(dataStructure, k_Geometry2Name);
 
-      auto vertices = CreateNodeArray<float32>(*geom1, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1->getNumberOfVerticesPerCell(), 3);
-      geom1->setVertices(*vertices);
-      vertices = CreateNodeArray<float32>(*geom2, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2->getNumberOfVerticesPerCell(), 3);
-      geom2->setVertices(*vertices);
+      auto* verticesPtr = CreateNodeArray<float32>(*geom1Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom1Ptr->getNumberOfVerticesPerCell(), 3);
+      geom1Ptr->setVertices(*verticesPtr);
+      verticesPtr = CreateNodeArray<float32>(*geom2Ptr, dataStructure, INodeGeometry0D::k_SharedVertexListName, geom2Ptr->getNumberOfVerticesPerCell(), 3);
+      geom2Ptr->setVertices(*verticesPtr);
 
-      auto vertexAttrMatrix = CreateNodeAttributeMatrix(*geom1, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
-      geom1->setPolyhedraAttributeMatrix(*vertexAttrMatrix);
+      auto* vertexAttrMatrixPtr = CreateNodeAttributeMatrix(*geom1Ptr, dataStructure, INodeGeometry0D::k_VertexAttributeMatrixName, 1);
+      geom1Ptr->setPolyhedraAttributeMatrix(*vertexAttrMatrixPtr);
 
       errorCode = CombineNodeBasedGeometries::ErrorCodes::InconsistentGeometryElements;
     }
@@ -1011,7 +1011,7 @@ TEST_CASE("Combine Node Geometries: Error Conditions", "[SimplnxCore][CombineNod
   REQUIRE(result.result.errors().size() == 1);
   REQUIRE(result.result.errors()[0].code == to_underlying(errorCode));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::Combine Node Geometries: Missing Required Lists", "[SimplnxCore][CombineNodeBasedGeometries]")
@@ -1022,31 +1022,31 @@ TEST_CASE("SimplnxCore::Combine Node Geometries: Missing Required Lists", "[Simp
   DataStructure dataStructure;
   for(const auto& name : {k_Geometry1Name, k_Geometry2Name})
   {
-    INodeGeometry0D* geom = nullptr;
+    INodeGeometry0D* geomPtr = nullptr;
     switch(geometryType)
     {
     case IGeometry::Type::Edge:
-      geom = EdgeGeom::Create(dataStructure, name);
+      geomPtr = EdgeGeom::Create(dataStructure, name);
       break;
     case IGeometry::Type::Triangle:
-      geom = TriangleGeom::Create(dataStructure, name);
+      geomPtr = TriangleGeom::Create(dataStructure, name);
       break;
     case IGeometry::Type::Quad:
-      geom = QuadGeom::Create(dataStructure, name);
+      geomPtr = QuadGeom::Create(dataStructure, name);
       break;
     case IGeometry::Type::Tetrahedral:
-      geom = TetrahedralGeom::Create(dataStructure, name);
+      geomPtr = TetrahedralGeom::Create(dataStructure, name);
       break;
     case IGeometry::Type::Hexahedral:
-      geom = HexahedralGeom::Create(dataStructure, name);
+      geomPtr = HexahedralGeom::Create(dataStructure, name);
       break;
     default:
       FAIL("Unexpected geometry type");
     }
-    REQUIRE(geom != nullptr);
-    auto* vertices = CreateNodeArray<float32>(*geom, dataStructure, INodeGeometry0D::k_SharedVertexListName, 1, 3);
-    REQUIRE(vertices != nullptr);
-    geom->setVertices(*vertices);
+    REQUIRE(geomPtr != nullptr);
+    auto* verticesPtr = CreateNodeArray<float32>(*geomPtr, dataStructure, INodeGeometry0D::k_SharedVertexListName, 1, 3);
+    REQUIRE(verticesPtr != nullptr);
+    geomPtr->setVertices(*verticesPtr);
   }
   const int32 expectedCode = to_underlying(CombineNodeBasedGeometries::ErrorCodes::NodeGeometryHasNoElements);
   CombineNodeBasedGeometriesFilter filter;
@@ -1055,13 +1055,13 @@ TEST_CASE("SimplnxCore::Combine Node Geometries: Missing Required Lists", "[Simp
   args.insertOrAssign(CombineNodeBasedGeometriesFilter::k_OutputGeometryPath_Key, k_OutputGeometryPath1);
   auto preflight = filter.preflight(dataStructure, args);
   // CHECK (not REQUIRE) so that execute also runs; execute must return the same error and not crash.
-  CHECK(preflight.outputActions.invalid());
-  if(preflight.outputActions.invalid())
+  CHECK(preflight.output_actions.invalid());
+  if(preflight.output_actions.invalid())
   {
-    CHECK((preflight.outputActions.errors().size() == 1 && preflight.outputActions.errors()[0].code == expectedCode));
-    if(!preflight.outputActions.errors().empty())
+    CHECK((preflight.output_actions.errors().size() == 1 && preflight.output_actions.errors()[0].code == expectedCode));
+    if(!preflight.output_actions.errors().empty())
     {
-      const auto& message = preflight.outputActions.errors()[0].message;
+      const auto& message = preflight.output_actions.errors()[0].message;
       CHECK(message.find(k_InputGeometry1Path.toString()) != std::string::npos);
       CHECK(message.find(k_InputGeometry2Path.toString()) != std::string::npos);
       CHECK(message.find("has an element list (the array that defines its elements, usually '") != std::string::npos);
@@ -1071,5 +1071,5 @@ TEST_CASE("SimplnxCore::Combine Node Geometries: Missing Required Lists", "[Simp
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(result.result);
   REQUIRE(result.result.errors()[0].code == expectedCode);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

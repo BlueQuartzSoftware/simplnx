@@ -12,7 +12,7 @@
 #include "simplnx/Filter/IFilter.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
-namespace nx::core::GeometryUtilities
+namespace nx::core::geometry_utilities
 {
 /**
  * @brief Identifies overflow in one padded extent.
@@ -49,7 +49,7 @@ SIMPLNX_EXPORT Result<> ValidatePositiveFiniteVector(nonstd::span<const float32>
  * @pre Active padding values are nonnegative.
  * @return Padded dimensions, or an extent or tuple-product overflow error.
  */
-SIMPLNX_EXPORT Result<SizeVec3> ComputePaddedDimensions(const SizeVec3& dims, const std::array<std::array<int32, 2>, 3>& padding, const std::array<bool, 3>& active);
+SIMPLNX_EXPORT Result<SizeVec3Type> ComputePaddedDimensions(const SizeVec3Type& dims, const std::array<std::array<int32, 2>, 3>& padding, const std::array<bool, 3>& active);
 
 /**
  * @brief The FindUniqueIdsImpl class implements a threaded algorithm that determines the set of
@@ -58,16 +58,16 @@ SIMPLNX_EXPORT Result<SizeVec3> ComputePaddedDimensions(const SizeVec3& dims, co
 class SIMPLNX_EXPORT FindUniqueIdsImpl
 {
 public:
-  using VertexStore = nx::core::AbstractDataStore<nx::core::IGeometry::SharedVertexList::value_type>;
-  FindUniqueIdsImpl(VertexStore& vertexStore, const std::vector<std::vector<size_t>>& nodesInBin, nx::core::Int64AbstractDataStore& uniqueIds);
+  using VertexStoreType = nx::core::AbstractDataStore<nx::core::IGeometry::SharedVertexListType::value_type>;
+  FindUniqueIdsImpl(VertexStoreType& vertexStore, const std::vector<std::vector<size_t>>& nodesInBin, nx::core::Int64AbstractDataStoreType& uniqueIds);
 
   void convert(size_t start, size_t end) const;
   void operator()(const Range& range) const;
 
 private:
-  const VertexStore& m_VertexStore;
+  const VertexStoreType& m_VertexStore;
   const std::vector<std::vector<size_t>>& m_NodesInBin;
-  nx::core::Int64AbstractDataStore& m_UniqueIds;
+  nx::core::Int64AbstractDataStoreType& m_UniqueIds;
 };
 
 /**
@@ -75,7 +75,7 @@ private:
  * @param geometry Supplies the input vertices.
  * @return Padded bounds, or an invalid box when the input space is unknown.
  */
-SIMPLNX_EXPORT BoundingBox3Df GetPaddedNodePartitionBounds(const INodeGeometry0D& geometry);
+SIMPLNX_EXPORT BoundingBox3DfType GetPaddedNodePartitionBounds(const INodeGeometry0D& geometry);
 
 /**
  * @brief Calculates the X,Y,Z partition length for a given geometry if the geometry were partitioned into equal numberOfPartitionsPerAxis partitions.
@@ -83,7 +83,7 @@ SIMPLNX_EXPORT BoundingBox3Df GetPaddedNodePartitionBounds(const INodeGeometry0D
  * @param numberOfPartitionsPerAxis The number of partitions in each axis
  * @return Partition lengths or a geometry validation error.
  */
-SIMPLNX_EXPORT Result<FloatVec3> CalculatePartitionLengthsByPartitionCount(const INodeGeometry0D& geometry, const SizeVec3& numberOfPartitionsPerAxis);
+SIMPLNX_EXPORT Result<FloatVec3Type> CalculatePartitionLengthsByPartitionCount(const INodeGeometry0D& geometry, const SizeVec3Type& numberOfPartitionsPerAxis);
 
 /**
  * @brief Calculates the X,Y,Z partition length for a given Image geometry if the geometry were partitioned into equal numberOfPartitionsPerAxis partitions.
@@ -91,7 +91,7 @@ SIMPLNX_EXPORT Result<FloatVec3> CalculatePartitionLengthsByPartitionCount(const
  * @param numberOfPartitionsPerAxis The number of partitions in each axis
  * @return Partition lengths or a geometry validation error.
  */
-SIMPLNX_EXPORT Result<FloatVec3> CalculatePartitionLengthsByPartitionCount(const ImageGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis);
+SIMPLNX_EXPORT Result<FloatVec3Type> CalculatePartitionLengthsByPartitionCount(const ImageGeom& geometry, const SizeVec3Type& numberOfPartitionsPerAxis);
 
 /**
  * @brief Calculates the X,Y,Z partition length for a given RectGrid geometry if the geometry were partitioned into equal numberOfPartitionsPerAxis partitions.
@@ -99,14 +99,14 @@ SIMPLNX_EXPORT Result<FloatVec3> CalculatePartitionLengthsByPartitionCount(const
  * @param numberOfPartitionsPerAxis The number of partitions in each axis
  * @return Partition lengths or a geometry validation error.
  */
-SIMPLNX_EXPORT Result<FloatVec3> CalculatePartitionLengthsByPartitionCount(const RectGridGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis);
+SIMPLNX_EXPORT Result<FloatVec3Type> CalculatePartitionLengthsByPartitionCount(const RectGridGeom& geometry, const SizeVec3Type& numberOfPartitionsPerAxis);
 
 /**
  * @brief Calculates the X,Y,Z partition scheme origin for a given node-based geometry using the geometry's bounding box.
  * @param geometry The geometry whose bounding box origin will be calculated
  * @return Partition origin or a geometry validation error.
  */
-SIMPLNX_EXPORT Result<FloatVec3> CalculateNodeBasedPartitionSchemeOrigin(const INodeGeometry0D& geometry);
+SIMPLNX_EXPORT Result<FloatVec3Type> CalculateNodeBasedPartitionSchemeOrigin(const INodeGeometry0D& geometry);
 
 /**
  * @brief Calculates the X,Y,Z partition length if the given bounding box were partitioned into equal numberOfPartitionsPerAxis partitions.
@@ -114,7 +114,7 @@ SIMPLNX_EXPORT Result<FloatVec3> CalculateNodeBasedPartitionSchemeOrigin(const I
  * @param numberOfPartitionsPerAxis The number of partitions in each axis
  * @return Partition lengths or a bounding-box validation error.
  */
-SIMPLNX_EXPORT Result<FloatVec3> CalculatePartitionLengthsOfBoundingBox(const BoundingBox3Df& boundingBox, const SizeVec3& numberOfPartitionsPerAxis);
+SIMPLNX_EXPORT Result<FloatVec3Type> CalculatePartitionLengthsOfBoundingBox(const BoundingBox3DfType& boundingBox, const SizeVec3Type& numberOfPartitionsPerAxis);
 
 /**
  * @brief This function will find the volume of a tetrahedron
@@ -124,15 +124,13 @@ SIMPLNX_EXPORT Result<FloatVec3> CalculatePartitionLengthsOfBoundingBox(const Bo
  * @return
  */
 template <typename T>
-T ComputeTetrahedronVolume(const std::array<nx::core::Point3Df, 3>& verts, const std::array<T, 3>& v4)
+T ComputeTetrahedronVolume(const std::array<nx::core::FloatVec3Type, 3>& verts, const std::array<T, 3>& v4)
 {
-  using Point3DType = Point3D<T>;
-
   // Create the 4 Vertices of the tetrahedron
-  const Point3DType& a = verts[0];
-  const Point3DType& b = verts[1];
-  const Point3DType& c = verts[2];
-  const Point3DType& d = v4;
+  const Vec3<T>& a = verts[0];
+  const Vec3<T>& b = verts[1];
+  const Vec3<T>& c = verts[2];
+  const Vec3<T>& d = v4;
 
   // The volume of the tetrahedron can be calculated through V= 1/6 |M| (where M is the volume matrix)
   // v1 = b-a, v2 = c-a, v3 = d-a
@@ -162,36 +160,37 @@ T ComputeTetrahedronVolume(const std::array<nx::core::Point3Df, 3>& verts, const
  *
  * The function updates connectivity before it resizes associated AttributeMatrix objects.
  */
-template <class GeometryType = INodeGeometry1D, class = std::enable_if_t<std::is_base_of<INodeGeometry1D, GeometryType>::value>>
+template <class GeometryType = INodeGeometry1D>
 Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scaleFactor = std::nullopt)
+requires std::is_base_of<INodeGeometry1D, GeometryType>::value
 {
   usize numXBins = 100;
   usize numYBins = 100;
   usize numZBins = 100;
 
-  using SharedVertList = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+  using SharedVertListType = AbstractDataStore<IGeometry::SharedVertexListType::value_type>;
 
-  SharedVertList& vertices = geom.getVertices()->getDataStoreRef();
+  SharedVertListType& vertices = geom.getVertices()->getDataStoreRef();
 
-  INodeGeometry1D::MeshIndexArrayType* cells = nullptr;
-  if constexpr(std::is_base_of<INodeGeometry3D, GeometryType>::value)
+  INodeGeometry1D::MeshIndexArrayType* cellsPtr = nullptr;
+  if constexpr(std::is_base_of_v<INodeGeometry3D, GeometryType>)
   {
-    cells = geom.getPolyhedra();
+    cellsPtr = geom.getPolyhedra();
   }
-  else if constexpr(std::is_base_of<INodeGeometry2D, GeometryType>::value)
+  else if constexpr(std::is_base_of_v<INodeGeometry2D, GeometryType>)
   {
-    cells = geom.getFaces();
+    cellsPtr = geom.getFaces();
   }
-  else if constexpr(std::is_base_of<INodeGeometry1D, GeometryType>::value)
+  else if constexpr(std::is_base_of_v<INodeGeometry1D, GeometryType>)
   {
-    cells = geom.getEdges();
+    cellsPtr = geom.getEdges();
   }
 
-  if(nullptr == cells)
+  if(nullptr == cellsPtr)
   {
     return MakeErrorResult(-56800, "EliminateDuplicateNodes Error: Geometry Type was not 1D, 2D or 3D? Did you pass in a vertex geometry?");
   }
-  AbstractDataStore<INodeGeometry1D::MeshIndexArrayType::value_type>& cellsRef = cells->getDataStoreRef();
+  AbstractDataStore<INodeGeometry1D::MeshIndexArrayType::value_type>& cellsRef = cellsPtr->getDataStoreRef();
 
   IGeometry::MeshIndexType nNodesAll = geom.getNumberOfVertices();
   size_t nNodes = 0;
@@ -201,8 +200,8 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
   }
 
   auto boundingBox = geom.getBoundingBox();
-  auto minPoint = boundingBox.getMinPoint();
-  auto maxPoint = boundingBox.getMaxPoint();
+  const auto& minPoint = boundingBox.getMinPoint();
+  const auto& maxPoint = boundingBox.getMaxPoint();
   float32 stepX = (maxPoint.getX() - minPoint.getX()) / numXBins;
   float32 stepY = (maxPoint.getY() - minPoint.getY()) / numYBins;
   float32 stepZ = (maxPoint.getZ() - minPoint.getZ()) / numZBins;
@@ -210,7 +209,9 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
   std::vector<std::vector<usize>> nodesInBin(numXBins * numYBins * numZBins);
 
   // The spatial bins reduce the number of node comparisons.
-  usize xBin = 0, yBin = 0, zBin = 0;
+  usize xBin = 0;
+  usize yBin = 0;
+  usize zBin = 0;
   for(size_t i = 0; i < nNodes; i++)
   {
     if(stepX != 0.0)
@@ -242,7 +243,7 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
   }
 
   // Create array to hold unique node numbers
-  Int64DataStore uniqueIds(ShapeType{nNodes}, ShapeType{1}, {});
+  Int64DataStoreType uniqueIds(ShapeType{nNodes}, ShapeType{1}, {});
   for(IGeometry::MeshIndexType i = 0; i < nNodesAll; i++)
   {
     uniqueIds[i] = static_cast<int64>(i);
@@ -251,8 +252,8 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
   // Parallel algorithm to find duplicate nodes
   ParallelDataAlgorithm dataAlg;
   dataAlg.setParallelizationEnabled(true);
-  dataAlg.setRange(0ULL, static_cast<usize>(numXBins * numYBins * numZBins));
-  dataAlg.execute(GeometryUtilities::FindUniqueIdsImpl(vertices, nodesInBin, uniqueIds));
+  dataAlg.setRange(0ULL, (numXBins * numYBins * numZBins));
+  dataAlg.execute(geometry_utilities::FindUniqueIdsImpl(vertices, nodesInBin, uniqueIds));
 
   // renumber the unique nodes
   int64 uniqueCount = 0;
@@ -289,19 +290,19 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
   }
 
   // Update the triangle nodes to reflect the unique ids
-  IGeometry::MeshIndexType nCells;
+  IGeometry::MeshIndexType nCells = 0;
   usize nVerticesPerCell = 0;
-  if constexpr(std::is_base_of<INodeGeometry3D, GeometryType>::value)
+  if constexpr(std::is_base_of_v<INodeGeometry3D, GeometryType>)
   {
     nCells = geom.getNumberOfPolyhedra();
     nVerticesPerCell = geom.getNumberOfVerticesPerCell();
   }
-  else if constexpr(std::is_base_of<INodeGeometry2D, GeometryType>::value)
+  else if constexpr(std::is_base_of_v<INodeGeometry2D, GeometryType>)
   {
     nCells = geom.getNumberOfFaces();
     nVerticesPerCell = geom.getNumberOfVerticesPerFace();
   }
-  else if constexpr(std::is_base_of<INodeGeometry1D, GeometryType>::value)
+  else if constexpr(std::is_base_of_v<INodeGeometry1D, GeometryType>)
   {
     nCells = geom.getNumberOfEdges();
     nVerticesPerCell = geom.getNumberOfVerticesPerEdge();
@@ -321,7 +322,7 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
     }
   }
 
-  if constexpr(std::is_base_of<INodeGeometry3D, GeometryType>::value)
+  if constexpr(std::is_base_of_v<INodeGeometry3D, GeometryType>)
   {
     auto resizeResult = geom.getPolyhedraAttributeMatrix()->resizeTuples({geom.getNumberOfPolyhedra()});
     if(resizeResult.invalid())
@@ -329,7 +330,7 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
       return resizeResult;
     }
   }
-  else if constexpr(std::is_base_of<INodeGeometry2D, GeometryType>::value)
+  else if constexpr(std::is_base_of_v<INodeGeometry2D, GeometryType>)
   {
     auto resizeResult = geom.getFaceAttributeMatrix()->resizeTuples({geom.getNumberOfFaces()});
     if(resizeResult.invalid())
@@ -337,7 +338,7 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
       return resizeResult;
     }
   }
-  else if constexpr(std::is_base_of<INodeGeometry1D, GeometryType>::value)
+  else if constexpr(std::is_base_of_v<INodeGeometry1D, GeometryType>)
   {
     auto resizeResult = geom.getEdgeAttributeMatrix()->resizeTuples({geom.getNumberOfEdges()});
     if(resizeResult.invalid())
@@ -362,7 +363,7 @@ Result<> EliminateDuplicateNodes(GeometryType& geom, std::optional<float32> scal
  * @param shouldCancel
  * @return
  */
-SIMPLNX_EXPORT Result<> ComputeTriangleAreas(const nx::core::TriangleGeom* triangleGeom, Float64AbstractDataStore& faceAreas, const std::atomic_bool& shouldCancel);
+SIMPLNX_EXPORT Result<> ComputeTriangleAreas(const nx::core::TriangleGeom* triangleGeom, Float64AbstractDataStoreType& faceAreas, const std::atomic_bool& shouldCancel);
 
 /**
  * @brief This will compute, in parallel, the normal of each triangle in a triangle geometry
@@ -371,7 +372,7 @@ SIMPLNX_EXPORT Result<> ComputeTriangleAreas(const nx::core::TriangleGeom* trian
  * @param shouldCancel
  * @return
  */
-SIMPLNX_EXPORT Result<> ComputeTriangleNormals(const nx::core::TriangleGeom* triangleGeom, Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel);
+SIMPLNX_EXPORT Result<> ComputeTriangleNormals(const nx::core::TriangleGeom* triangleGeom, Float64AbstractDataStoreType& normals, const std::atomic_bool& shouldCancel);
 
 /**
  * @brief Determines the Z bounds and slice count for a triangle mesh.
@@ -393,18 +394,19 @@ SIMPLNX_EXPORT Result<> ComputeTriangleNormals(const nx::core::TriangleGeom* tri
  * @pre sliceResolution must be finite and greater than zero. The computed slice count must fit in usize.
  * @return Zero if numTris is zero or maxDim is not greater than or equal to minDim; otherwise, the slice count.
  */
-SIMPLNX_EXPORT usize determineBoundsAndNumSlices(float32& minDim, float32& maxDim, usize numTris, AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>& tris,
-                                                 AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>& triVerts, uint64 sliceRange, float32 zStart, float32 zEnd, float32 sliceResolution);
+SIMPLNX_EXPORT usize DetermineBoundsAndNumSlices(float32& minDim, float32& maxDim, usize numTris, AbstractDataStore<INodeGeometry2D::SharedFaceListType::value_type>& tris,
+                                                 AbstractDataStore<INodeGeometry0D::SharedVertexListType::value_type>& triVerts, uint64 sliceRange, float32 zStart, float32 zEnd,
+                                                 float32 sliceResolution);
 
 /**
  * @brief This is the information that is generated by the function and needs to be returned.
  */
 struct SliceTriangleReturnType
 {
-  std::vector<float32> SliceVerts;
-  std::vector<int32> SliceIds;
-  std::vector<int32> RegionIds;
-  usize NumberOfSlices;
+  std::vector<float32> slice_verts;
+  std::vector<int32> slice_ids;
+  std::vector<int32> region_ids;
+  usize number_of_slices;
 };
 
 /**
@@ -432,4 +434,4 @@ struct SliceTriangleReturnType
 SIMPLNX_EXPORT SliceTriangleReturnType SliceTriangleGeometry(nx::core::TriangleGeom& triangleGeom, const std::atomic_bool& shouldCancel, uint64 sliceRange, float32 zStart, float32 zEnd,
                                                              float32 sliceSpacing, AbstractDataStore<int32>* triRegionIdPtr);
 
-} // namespace nx::core::GeometryUtilities
+} // namespace nx::core::geometry_utilities

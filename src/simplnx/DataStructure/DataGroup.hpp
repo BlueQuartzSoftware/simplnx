@@ -14,7 +14,7 @@ namespace nx::core
 class SIMPLNX_EXPORT DataGroup : public BaseGroup
 {
 public:
-  static constexpr StringLiteral k_TypeName = "DataGroup";
+  static constexpr StringLiteralType k_TypeName = "DataGroup";
 
   /**
    * @brief Attempts to construct and insert a DataGroup into the DataStructure.
@@ -63,7 +63,7 @@ public:
    * @brief Constructs a DataGroup and moves values from the specified target.
    * @param other The DataGroup to move from
    */
-  DataGroup(DataGroup&& other);
+  DataGroup(DataGroup&& other) noexcept;
 
   ~DataGroup() override;
 

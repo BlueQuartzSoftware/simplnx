@@ -16,7 +16,7 @@
 #include <utility>
 #include <vector>
 
-namespace StatisticsCalculations
+namespace statistics_calculations
 {
 /**
  * @enum HistogramBinPolicy
@@ -80,7 +80,7 @@ auto CalculateBin(T value, T minimum, nx::core::float32 increment)
 
 // -----------------------------------------------------------------------------
 template <template <typename, typename...> class C, typename T, typename... Ts>
-T findMin(const C<T, Ts...>& source)
+T FindMin(const C<T, Ts...>& source)
 {
   if(source.empty())
   {
@@ -91,7 +91,7 @@ T findMin(const C<T, Ts...>& source)
 
 // -----------------------------------------------------------------------------
 template <template <typename, typename...> class C, typename T, typename... Ts>
-T findMax(const C<T, Ts...>& source)
+T FindMax(const C<T, Ts...>& source)
 {
   if(source.empty())
   {
@@ -115,7 +115,7 @@ std::pair<T, T> FindMinMax(const C<T, Ts...>& source)
 
 // -----------------------------------------------------------------------------
 template <class Container>
-auto computeSum(const Container& source)
+auto ComputeSum(const Container& source)
 {
   using T = typename Container::value_type;
   if constexpr(std::is_integral_v<T>)
@@ -137,20 +137,20 @@ auto computeSum(const Container& source)
 
 // -----------------------------------------------------------------------------
 template <template <typename, typename...> class C, typename T, typename... Ts>
-float findMean(const C<T, Ts...>& source)
+float FindMean(const C<T, Ts...>& source)
 {
   if(source.empty())
   {
     return 0.0f;
   }
-  float sum = static_cast<float>(computeSum(source));
+  float sum = static_cast<float>(ComputeSum(source));
 
   return sum / static_cast<float>(source.size());
 }
 
 // -----------------------------------------------------------------------------
 template <template <typename, typename...> class C, typename... Ts>
-bool findMean(const C<bool, Ts...>& source)
+bool FindMean(const C<bool, Ts...>& source)
 {
   if(source.empty())
   {
@@ -168,13 +168,13 @@ std::pair<float, float> FindSumMean(const C<T, Ts...>& source)
   {
     return {0.0f, 0.0f};
   }
-  float sum = static_cast<float>(computeSum(source));
+  float sum = static_cast<float>(ComputeSum(source));
   return {sum, sum / static_cast<float>(source.size())};
 }
 
 // -----------------------------------------------------------------------------
 template <template <typename, typename...> class C, typename T, typename... Ts>
-float findMedian(const C<T, Ts...>& source)
+float FindMedian(const C<T, Ts...>& source)
 {
   // Need a copy, not a reference, since we will be sorting the input array
   std::vector<T> tmpList{std::cbegin(source), std::cend(source)};
@@ -200,7 +200,7 @@ float findMedian(const C<T, Ts...>& source)
 
 // -----------------------------------------------------------------------------
 template <class Container, typename T>
-std::vector<T> computeMode(const Container& source)
+std::vector<T> ComputeMode(const Container& source)
 {
   std::map<T, uint64_t> modalMap;
   for(const auto val : source)
@@ -227,14 +227,14 @@ std::vector<T> computeMode(const Container& source)
 
 // -----------------------------------------------------------------------------
 template <template <typename, typename...> class C, typename T, typename... Ts>
-std::vector<T> findModes(const C<T, Ts...>& source)
+std::vector<T> FindModes(const C<T, Ts...>& source)
 {
   if(source.empty())
   {
     return {};
   }
 
-  return computeMode<C<T, Ts...>, T>(source);
+  return ComputeMode<C<T, Ts...>, T>(source);
 }
 
 // -----------------------------------------------------------------------------
@@ -282,19 +282,19 @@ float FindStdDeviation(const C<T, Ts...>& source, const std::pair<float, float> 
 
 // -----------------------------------------------------------------------------
 template <template <typename, typename...> class C, typename T, typename... Ts>
-double findSummation(const C<T, Ts...>& source)
+double FindSummation(const C<T, Ts...>& source)
 {
   if(source.empty())
   {
     return 0.0f;
   }
-  float sum = static_cast<float>(computeSum(source));
+  float sum = static_cast<float>(ComputeSum(source));
   return sum;
 }
 
 // -----------------------------------------------------------------------------
 template <template <typename, typename...> class C, typename T, typename... Ts>
-size_t findNumUniqueValues(const C<T, Ts...>& source)
+size_t FindNumUniqueValues(const C<T, Ts...>& source)
 {
   if(source.empty())
   {
@@ -306,7 +306,7 @@ size_t findNumUniqueValues(const C<T, Ts...>& source)
 
 // -----------------------------------------------------------------------------
 template <template <typename, typename...> class C, typename T, typename... Ts>
-std::pair<T, T> findHistogramRange(const C<T, Ts...>& source, T histmin, T histmax, bool histfullrange)
+std::pair<T, T> FindHistogramRange(const C<T, Ts...>& source, T histmin, T histmax, bool histfullrange)
 {
   if(histfullrange)
   {
@@ -332,7 +332,7 @@ std::pair<T, T> findHistogramRange(const C<T, Ts...>& source, T histmin, T histm
  * checks and degenerate-width output policy. Duplicate modes can select the same pair.
  */
 template <HistogramBinPolicy Policy = HistogramBinPolicy::Raw, typename T>
-std::optional<std::pair<T, T>> findModalBinRange(T mode, T histMin, nx::core::float32 increment, nx::core::int32 numBins, nonstd::span<const T> binRanges)
+std::optional<std::pair<T, T>> FindModalBinRange(T mode, T histMin, nx::core::float32 increment, nx::core::int32 numBins, nonstd::span<const T> binRanges)
 {
   using nx::core::usize;
   assert(binRanges.size() >= usize{2} * static_cast<usize>(numBins));
@@ -348,4 +348,4 @@ std::optional<std::pair<T, T>> findModalBinRange(T mode, T histMin, nx::core::fl
   }
   return std::nullopt;
 }
-} // namespace StatisticsCalculations
+} // namespace statistics_calculations

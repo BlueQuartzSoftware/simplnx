@@ -24,10 +24,10 @@ public:
   WriteVtkStructuredPointsFilter& operator=(WriteVtkStructuredPointsFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_OutputFile_Key = "output_file";
-  static constexpr StringLiteral k_WriteBinaryFile_Key = "write_binary_file";
-  static constexpr StringLiteral k_ImageGeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
+  static constexpr StringLiteralType k_OutputFile_Key = "output_file";
+  static constexpr StringLiteralType k_WriteBinaryFile_Key = "write_binary_file";
+  static constexpr StringLiteralType k_ImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_SelectedDataArrayPaths_Key = "input_data_array_paths";
 
   /**
    * @brief Returns the name of the filter.
@@ -77,7 +77,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

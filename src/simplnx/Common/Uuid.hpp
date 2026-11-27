@@ -19,7 +19,7 @@ namespace nx::core
 {
 namespace detail
 {
-inline constexpr std::byte Hex2Byte(char ch) noexcept
+constexpr std::byte Hex2Byte(char ch) noexcept
 {
   if(ch >= '0' && ch <= '9')
   {
@@ -39,19 +39,19 @@ inline constexpr std::byte Hex2Byte(char ch) noexcept
   return std::byte{0};
 }
 
-inline constexpr std::byte Hex2Byte(char first, char second) noexcept
+constexpr std::byte Hex2Byte(char first, char second) noexcept
 {
   std::byte result = Hex2Byte(first) << 4;
   result |= Hex2Byte(second);
   return result;
 }
 
-inline constexpr bool IsHex(char ch) noexcept
+constexpr bool IsHex(char ch) noexcept
 {
   return (ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F');
 }
 
-inline constexpr usize String2Bytes(std::string_view string, usize offset, usize size, std::array<std::byte, 16>& uuid, usize uuidOffset) noexcept
+constexpr usize String2Bytes(std::string_view string, usize offset, usize size, std::array<std::byte, 16>& uuid, usize uuidOffset) noexcept
 {
   for(usize i = 0; i < size; i++)
   {
@@ -80,7 +80,7 @@ inline constexpr usize String2Bytes(std::string_view string, usize offset, usize
  */
 struct SIMPLNX_EXPORT Uuid
 {
-  static inline constexpr usize k_Size = 16;
+  static constexpr usize k_Size = 16;
 
   /**
    * @brief Parses a uuid string into a Uuid.
@@ -88,7 +88,7 @@ struct SIMPLNX_EXPORT Uuid
    * Must have both braces or none. Must have all dashes or none.
    * @return Parsed uuid if successful. Otherwise, empty optional.
    */
-  static inline constexpr std::optional<Uuid> FromString(std::string_view string)
+  static constexpr std::optional<Uuid> FromString(std::string_view string)
   {
     if(string.empty())
     {
@@ -169,7 +169,7 @@ struct SIMPLNX_EXPORT Uuid
     return uuid;
   }
 
-  static inline Uuid GenerateV4()
+  static Uuid GenerateV4()
   {
     static thread_local std::random_device rd;
     static thread_local std::mt19937 gen(rd());
@@ -177,7 +177,7 @@ struct SIMPLNX_EXPORT Uuid
     static thread_local std::uniform_int_distribution<> dis2(8, 11);
 
     std::stringstream ss;
-    int i;
+    int i = 0;
     ss << std::hex;
     for(i = 0; i < 8; i++)
     {
@@ -207,50 +207,50 @@ struct SIMPLNX_EXPORT Uuid
     return FromString(ss.str()).value();
   }
 
-  inline constexpr uint32 time_low() const noexcept
+  constexpr uint32 timeLow() const noexcept
   {
-    return bit_cast_int<uint32, endian::big>(data.data());
+    return BitCastInt<uint32, endian::big>(data.data());
   }
 
-  inline constexpr uint16 time_mid() const noexcept
+  constexpr uint16 timeMid() const noexcept
   {
-    return bit_cast_int<uint16, endian::big>(data.data() + 4);
+    return BitCastInt<uint16, endian::big>(data.data() + 4);
   }
 
-  inline constexpr uint16 time_hi_version() const noexcept
+  constexpr uint16 timeHiVersion() const noexcept
   {
-    return bit_cast_int<uint16, endian::big>(data.data() + 6);
+    return BitCastInt<uint16, endian::big>(data.data() + 6);
   }
 
-  inline constexpr uint16 clock_seq_hi_and_res_clock_seq_low() const noexcept
+  constexpr uint16 clockSeqHiAndResClockSeqLow() const noexcept
   {
-    return bit_cast_int<uint16, endian::big>(data.data() + 8);
+    return BitCastInt<uint16, endian::big>(data.data() + 8);
   }
 
-  inline constexpr uint8 clock_seq_hi_variant() const noexcept
+  constexpr uint8 clockSeqHiVariant() const noexcept
   {
-    return bit_cast_int<uint8, endian::big>(data.data() + 8);
+    return BitCastInt<uint8, endian::big>(data.data() + 8);
   }
 
-  inline constexpr uint8 clock_seq_low() const noexcept
+  constexpr uint8 clockSeqLow() const noexcept
   {
-    return bit_cast_int<uint8, endian::big>(data.data() + 9);
+    return BitCastInt<uint8, endian::big>(data.data() + 9);
   }
 
-  inline constexpr uint64 node() const noexcept
+  constexpr uint64 node() const noexcept
   {
-    return bit_cast_int<uint64, endian::big, 6>(data.data() + 10);
+    return BitCastInt<uint64, endian::big, 6>(data.data() + 10);
   }
 
-  inline std::string str() const
+  std::string str() const
   {
-    return fmt::format("{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:012x}", time_low(), time_mid(), time_hi_version(), clock_seq_hi_variant(), clock_seq_low(), node());
+    return fmt::format("{:08x}-{:04x}-{:04x}-{:02x}{:02x}-{:012x}", timeLow(), timeMid(), timeHiVersion(), clockSeqHiVariant(), clockSeqLow(), node());
   }
 
   std::array<std::byte, k_Size> data;
 };
 
-inline constexpr bool operator==(const Uuid& lhs, const Uuid& rhs) noexcept
+constexpr bool operator==(const Uuid& lhs, const Uuid& rhs) noexcept
 {
   for(usize i = 0; i < Uuid::k_Size; i++)
   {
@@ -262,12 +262,12 @@ inline constexpr bool operator==(const Uuid& lhs, const Uuid& rhs) noexcept
   return true;
 }
 
-inline constexpr bool operator!=(const Uuid& lhs, const Uuid& rhs) noexcept
+constexpr bool operator!=(const Uuid& lhs, const Uuid& rhs) noexcept
 {
   return !(lhs == rhs);
 }
 
-inline constexpr bool operator<(const Uuid& lhs, const Uuid& rhs) noexcept
+constexpr bool operator<(const Uuid& lhs, const Uuid& rhs) noexcept
 {
   for(usize i = 0; i < Uuid::k_Size; i++)
   {
@@ -283,17 +283,17 @@ inline constexpr bool operator<(const Uuid& lhs, const Uuid& rhs) noexcept
   return false;
 }
 
-inline constexpr bool operator>(const Uuid& lhs, const Uuid& rhs) noexcept
+constexpr bool operator>(const Uuid& lhs, const Uuid& rhs) noexcept
 {
   return rhs < lhs;
 }
 
-inline constexpr bool operator<=(const Uuid& lhs, const Uuid& rhs) noexcept
+constexpr bool operator<=(const Uuid& lhs, const Uuid& rhs) noexcept
 {
   return !(rhs < lhs);
 }
 
-inline constexpr bool operator>=(const Uuid& lhs, const Uuid& rhs) noexcept
+constexpr bool operator>=(const Uuid& lhs, const Uuid& rhs) noexcept
 {
   return !(lhs < rhs);
 }
@@ -306,8 +306,8 @@ struct hash<::nx::core::Uuid>
 {
   std::size_t operator()(const ::nx::core::Uuid& value) const noexcept
   {
-    std::uint64_t v1 = ::nx::core::bit_cast_ptr<std::uint64_t>(value.data.data());
-    std::uint64_t v2 = ::nx::core::bit_cast_ptr<std::uint64_t>(value.data.data() + sizeof(v1));
+    std::uint64_t v1 = ::nx::core::BitCastPtr<std::uint64_t>(value.data.data());
+    std::uint64_t v2 = ::nx::core::BitCastPtr<std::uint64_t>(value.data.data() + sizeof(v1));
     return v1 ^ v2;
   }
 };

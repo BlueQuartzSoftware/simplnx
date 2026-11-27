@@ -19,8 +19,8 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -49,7 +49,7 @@ const DataPath k_MirroredYInconsistentArraysExemplarDCPath({"MirroredYInconsiste
 const DataPath k_MirroredZInconsistentArraysExemplarDCPath({"MirroredZInconsistentArrays"});
 const DataPath k_SmallIN100Path({k_SmallIN100});
 
-void cropGeometry(DataStructure& dataStructure, const DataPath& selectedPath, const DataPath& createdPath, const std::vector<uint64>& minVoxel, const std::vector<uint64>& maxVoxel)
+void CropGeometry(DataStructure& dataStructure, const DataPath& selectedPath, const DataPath& createdPath, const std::vector<uint64>& minVoxel, const std::vector<uint64>& maxVoxel)
 {
   CropImageGeometryFilter filter;
   Arguments args;
@@ -68,7 +68,7 @@ void cropGeometry(DataStructure& dataStructure, const DataPath& selectedPath, co
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 }
 
-void addArray(DataStructure& dataStructure, const DataPath& dataArrayPath, NumericType numericType, uint64 compCount, const std::string& initValue)
+void AddArray(DataStructure& dataStructure, const DataPath& dataArrayPath, NumericType numericType, uint64 compCount, const std::string& initValue)
 {
   CreateDataArrayFilter filter;
   Arguments args;
@@ -83,7 +83,7 @@ void addArray(DataStructure& dataStructure, const DataPath& dataArrayPath, Numer
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 }
 
-void removeArray(DataStructure& dataStructure, const DataPath& dataArrayPath)
+void RemoveArray(DataStructure& dataStructure, const DataPath& dataArrayPath)
 {
   DeleteDataFilter filter;
   Arguments args;
@@ -94,7 +94,7 @@ void removeArray(DataStructure& dataStructure, const DataPath& dataArrayPath)
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 }
 
-void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std::vector<uint64>& minBottomVoxel, const std::vector<uint64>& maxBottomVoxel, const std::vector<uint64>& minMiddleVoxel,
+void CreateNeighborListsAndStringArrays(DataStructure& dataStructure, const std::vector<uint64>& minBottomVoxel, const std::vector<uint64>& maxBottomVoxel, const std::vector<uint64>& minMiddleVoxel,
                                         const std::vector<uint64>& maxMiddleVoxel, const std::vector<uint64>& minTopVoxel, const std::vector<uint64>& maxTopVoxel, const DataPath& bottomPath,
                                         const DataPath& middlePath, const DataPath& topPath)
 {
@@ -103,16 +103,16 @@ void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
   const usize numTuples = cellDataAM.getNumberOfTuples();
 
   std::vector<std::string> stringArrayValues(numTuples);
-  auto* neighborList = NeighborList<float32>::Create(dataStructure, "NeighborList", cellDataAM.getShape(), cellDataAM.getId());
+  auto* neighborListPtr = NeighborList<float32>::Create(dataStructure, "NeighborList", cellDataAM.getShape(), cellDataAM.getId());
   for(usize i = 0; i < numTuples; ++i)
   {
     const float32 factor = static_cast<float32>(i) * 0.001;
     std::vector<float32> list = {factor * 117, factor * 875, factor * 1035, factor * 3905, factor * 4214};
-    neighborList->setList(i, std::make_shared<std::vector<float32>>(list));
-    stringArrayValues[i] = "String_" + StringUtilities::number(factor);
+    neighborListPtr->setList(i, std::make_shared<std::vector<float32>>(list));
+    stringArrayValues[i] = "String_" + string_utilities::Number(factor);
   }
 
-  const auto* stringArray = StringArray::CreateWithValues(dataStructure, "StringArray", cellDataAM.getShape(), stringArrayValues, cellDataAM.getId());
+  const auto* stringArrayPtr = StringArray::CreateWithValues(dataStructure, "StringArray", cellDataAM.getShape(), stringArrayValues, cellDataAM.getId());
 
   const auto& croppedTopAM = dataStructure.getDataRefAs<AttributeMatrix>(topPath.createChildPath(k_CellData));
   const auto& croppedMiddleAM = dataStructure.getDataRefAs<AttributeMatrix>(middlePath.createChildPath(k_CellData));
@@ -125,7 +125,7 @@ void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
   usize xCount = maxTopVoxel[0] - minBottomVoxel[0] + 1;
   usize yCount = maxTopVoxel[1] - minBottomVoxel[1] + 1;
 
-  auto* neighborListBottom = NeighborList<float32>::Create(dataStructure, "NeighborList", croppedBottomAM.getShape(), croppedBottomAM.getId());
+  auto* neighborListBottomPtr = NeighborList<float32>::Create(dataStructure, "NeighborList", croppedBottomAM.getShape(), croppedBottomAM.getId());
   std::vector<std::string> stringValuesBottom(numTuplesBottom);
   usize i = 0;
   for(usize z = minBottomVoxel[2]; z <= maxBottomVoxel[2]; ++z)
@@ -135,9 +135,9 @@ void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
       for(usize x = minBottomVoxel[0]; x <= maxBottomVoxel[0]; ++x)
       {
         usize srcIdx = (z * yCount + y) * xCount + x;
-        std::vector<float32> list = neighborList->copyOfList(srcIdx);
-        neighborListBottom->setList(i, std::make_shared<std::vector<float32>>(list));
-        std::string strVal = stringArray->at(srcIdx);
+        std::vector<float32> list = neighborListPtr->copyOfList(srcIdx);
+        neighborListBottomPtr->setList(i, std::make_shared<std::vector<float32>>(list));
+        std::string strVal = stringArrayPtr->at(srcIdx);
         stringValuesBottom[i] = strVal;
         i++;
       }
@@ -145,7 +145,7 @@ void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
   }
   StringArray::CreateWithValues(dataStructure, "StringArray", croppedBottomAM.getShape(), stringValuesBottom, croppedBottomAM.getId());
 
-  auto* neighborListMiddle = NeighborList<float32>::Create(dataStructure, "NeighborList", croppedMiddleAM.getShape(), croppedMiddleAM.getId());
+  auto* neighborListMiddlePtr = NeighborList<float32>::Create(dataStructure, "NeighborList", croppedMiddleAM.getShape(), croppedMiddleAM.getId());
   std::vector<std::string> stringValuesMiddle(numTuplesMiddle);
   i = 0;
   for(usize z = minMiddleVoxel[2]; z <= maxMiddleVoxel[2]; ++z)
@@ -155,9 +155,9 @@ void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
       for(usize x = minMiddleVoxel[0]; x <= maxMiddleVoxel[0]; ++x)
       {
         usize srcIdx = (z * yCount + y) * xCount + x;
-        std::vector<float32> list = neighborList->copyOfList(srcIdx);
-        neighborListMiddle->setList(i, std::make_shared<std::vector<float32>>(list));
-        std::string strVal = stringArray->at(srcIdx);
+        std::vector<float32> list = neighborListPtr->copyOfList(srcIdx);
+        neighborListMiddlePtr->setList(i, std::make_shared<std::vector<float32>>(list));
+        std::string strVal = stringArrayPtr->at(srcIdx);
         stringValuesMiddle[i] = strVal;
         i++;
       }
@@ -165,7 +165,7 @@ void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
   }
   StringArray::CreateWithValues(dataStructure, "StringArray", croppedMiddleAM.getShape(), stringValuesMiddle, croppedMiddleAM.getId());
 
-  auto* neighborListTop = NeighborList<float32>::Create(dataStructure, "NeighborList", croppedTopAM.getShape(), croppedTopAM.getId());
+  auto* neighborListTopPtr = NeighborList<float32>::Create(dataStructure, "NeighborList", croppedTopAM.getShape(), croppedTopAM.getId());
   std::vector<std::string> stringValueTop(numTuplesTop);
   i = 0;
   for(usize z = minTopVoxel[2]; z <= maxTopVoxel[2]; ++z)
@@ -175,9 +175,9 @@ void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
       for(usize x = minTopVoxel[0]; x <= maxTopVoxel[0]; ++x)
       {
         usize srcIdx = (z * yCount + y) * xCount + x;
-        std::vector<float32> list = neighborList->copyOfList(srcIdx);
-        neighborListTop->setList(i, std::make_shared<std::vector<float32>>(list));
-        std::string strVal = stringArray->at(srcIdx);
+        std::vector<float32> list = neighborListPtr->copyOfList(srcIdx);
+        neighborListTopPtr->setList(i, std::make_shared<std::vector<float32>>(list));
+        std::string strVal = stringArrayPtr->at(srcIdx);
         stringValueTop[i] = strVal;
         i++;
       }
@@ -186,7 +186,7 @@ void createNeighborListsAndStringArrays(DataStructure& dataStructure, const std:
   StringArray::CreateWithValues(dataStructure, "StringArray", croppedTopAM.getShape(), stringValueTop, croppedTopAM.getId());
 }
 
-void appendGeometries(DataStructure& dataStructure, const DataPath& destinationPath, const std::vector<DataPath>& inputPaths, uint64 appendDimension, std::optional<const DataPath> newGeometryPathOpt,
+void AppendGeometries(DataStructure& dataStructure, const DataPath& destinationPath, const std::vector<DataPath>& inputPaths, uint64 appendDimension, std::optional<const DataPath> newGeometryPathOpt,
                       bool mirror)
 {
   AppendImageGeometryFilter filter;
@@ -206,14 +206,14 @@ void appendGeometries(DataStructure& dataStructure, const DataPath& destinationP
   }
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
   if(newGeometryPathOpt.has_value())
   {
-    auto newGeometryPath = newGeometryPathOpt.value();
+    const auto& newGeometryPath = newGeometryPathOpt.value();
     // rename the cell data attribute matrix for easier comparison with exemplar data
     RenameDataObjectFilter renameFilter;
     Arguments renameArgs;
@@ -230,9 +230,9 @@ static usize num = 1;
 
 TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution", "[SimplnxCore][AppendImageGeometryFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100_dream3d_v3.tar.gz", "Small_IN100.dream3d");
   // Read in starting/exemplar image geometry
   const auto exemplarFilePath = fs::path(fmt::format("{}/Small_IN100.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = LoadDataStructure(exemplarFilePath);
@@ -278,40 +278,40 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution", "[Si
     SECTION(fmt::format("{}", dimensionStr))
     {
       // Crop bottom third
-      cropGeometry(dataStructure, k_SmallerDataContainerPath, bottomPath, minBottom, maxBottom);
+      CropGeometry(dataStructure, k_SmallerDataContainerPath, bottomPath, minBottom, maxBottom);
 
       // Crop middle third
-      cropGeometry(dataStructure, k_SmallerDataContainerPath, middlePath, minMiddle, maxMiddle);
+      CropGeometry(dataStructure, k_SmallerDataContainerPath, middlePath, minMiddle, maxMiddle);
 
       // Crop top third
-      cropGeometry(dataStructure, k_SmallerDataContainerPath, topPath, minTop, maxTop);
+      CropGeometry(dataStructure, k_SmallerDataContainerPath, topPath, minTop, maxTop);
 
       // Create neighbor lists and string arrays
-      createNeighborListsAndStringArrays(dataStructure, minBottom, maxBottom, minMiddle, maxMiddle, minTop, maxTop, bottomPath, middlePath, topPath);
+      CreateNeighborListsAndStringArrays(dataStructure, minBottom, maxBottom, minMiddle, maxMiddle, minTop, maxTop, bottomPath, middlePath, topPath);
 
       if(testMissingArrays)
       {
         // Remove arrays
-        removeArray(dataStructure, topPath.createChildPath(k_CellData).createChildPath(k_Confidence_Index));
-        removeArray(dataStructure, topPath.createChildPath(k_CellData).createChildPath(k_Phases));
+        RemoveArray(dataStructure, topPath.createChildPath(k_CellData).createChildPath(k_ConfidenceIndexWithSpaces));
+        RemoveArray(dataStructure, topPath.createChildPath(k_CellData).createChildPath(k_Phases));
       }
 
       if(testExtraArrays)
       {
         // Add array
-        addArray(dataStructure, topPath.createChildPath(k_CellData).createChildPath("Foo"), NumericType::float32, 1, "5");
+        AddArray(dataStructure, topPath.createChildPath(k_CellData).createChildPath("Foo"), NumericType::float32, 1, "5");
       }
 
       DataPath appendedCellDataPath;
       SECTION("Append Geometry")
       {
-        appendGeometries(dataStructure, bottomPath, std::vector<DataPath>{middlePath, topPath}, appendDimension, {}, mirror);
+        AppendGeometries(dataStructure, bottomPath, std::vector<DataPath>{middlePath, topPath}, appendDimension, {}, mirror);
         appendedCellDataPath = bottomPath.createChildPath(k_CellData);
       }
 
       SECTION("New Geometry")
       {
-        appendGeometries(dataStructure, bottomPath, std::vector<DataPath>{middlePath, topPath}, appendDimension, k_AppendedGeometryPath, mirror);
+        AppendGeometries(dataStructure, bottomPath, std::vector<DataPath>{middlePath, topPath}, appendDimension, k_AppendedGeometryPath, mirror);
         appendedCellDataPath = k_AppendedGeometryPath.createChildPath(k_CellData);
       }
 
@@ -322,14 +322,14 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution", "[Si
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure, SmallIn100::k_TupleCheckIgnoredPaths);
+  unit_test::CheckArraysInheritTupleDims(dataStructure, small_in100::k_TupleCheckIgnoredPaths);
 }
 
 TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Invalid Filter Execution", "[SimplnxCore][AppendImageGeometryFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar.tar.gz", "ResampleImageGeom_Exemplar.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "ResampleImageGeom_Exemplar.tar.gz", "ResampleImageGeom_Exemplar.dream3d");
 
   // Read in test image geometries
   auto geomFilePath = fs::path(fmt::format("{}/ResampleImageGeom_Exemplar.dream3d", unit_test::k_TestFilesDir));
@@ -398,19 +398,19 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Invalid Filter Execution", "[
   }
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result)
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::AppendImageGeometryFilter: SIMPL Backwards Compatibility", "[SimplnxCore][AppendImageGeometryFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -423,22 +423,22 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: SIMPL Backwards Compatibility
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<AppendImageGeometryFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<AppendImageGeometryFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       // Complex type (SingleToMultiDataPathSelectionFilterParameterConverter) - verified by successful pipeline loading
       CHECK(args.value<DataPath>(AppendImageGeometryFilter::k_DestinationGeometry_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<bool>(AppendImageGeometryFilter::k_CheckResolution_Key) == true);
@@ -448,28 +448,28 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: SIMPL Backwards Compatibility
 
 TEST_CASE("SimplnxCore::AppendImageGeometryFilter: In-place X overlap", "[SimplnxCore][AppendImageGeometryFilter][L05]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   for(const auto& name : {"Destination", "Input"})
   {
     const usize width = std::string(name) == "Destination" ? 2 : 1;
-    auto* geom = ImageGeom::Create(dataStructure, name);
-    REQUIRE(geom != nullptr);
-    geom->setDimensions({width, 2, 1});
-    REQUIRE(geom->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-    auto* cellData = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 2, width}, geom->getId());
-    REQUIRE(cellData != nullptr);
-    geom->setCellData(*cellData);
-    auto* values = Int32Array::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{1, 2, width}, ShapeType{1}, 0), cellData->getId());
-    REQUIRE(values != nullptr);
+    auto* geomPtr = ImageGeom::Create(dataStructure, name);
+    REQUIRE(geomPtr != nullptr);
+    geomPtr->setDimensions({width, 2, 1});
+    REQUIRE(geomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
+    auto* cellDataPtr = AttributeMatrix::Create(dataStructure, "Cell Data", ShapeType{1, 2, width}, geomPtr->getId());
+    REQUIRE(cellDataPtr != nullptr);
+    geomPtr->setCellData(*cellDataPtr);
+    auto* valuesPtr = Int32ArrayType::Create(dataStructure, "Values", std::make_shared<DataStore<int32>>(ShapeType{1, 2, width}, ShapeType{1}, 0), cellDataPtr->getId());
+    REQUIRE(valuesPtr != nullptr);
     const std::vector<int32> initial = width == 2 ? std::vector<int32>{1, 2, 3, 4} : std::vector<int32>{5, 6};
-    std::copy(initial.begin(), initial.end(), values->begin());
+    std::copy(initial.begin(), initial.end(), valuesPtr->begin());
   }
 
-  appendGeometries(dataStructure, DataPath({"Destination"}), {DataPath({"Input"})}, 0, std::nullopt, false);
+  AppendGeometries(dataStructure, DataPath({"Destination"}), {DataPath({"Input"})}, 0, std::nullopt, false);
   const DataPath valuesPath({"Destination", "Cell Data", "Values"});
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(valuesPath));
-  const auto& values = dataStructure.getDataRefAs<Int32Array>(valuesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(valuesPath));
+  const auto& values = dataStructure.getDataRefAs<Int32ArrayType>(valuesPath);
   // X is fastest: append 5 to row {1, 2} and 6 to row {3, 4}.
   const std::vector<int32> expected = {1, 2, 5, 3, 4, 6};
   REQUIRE(values.getSize() == expected.size());
@@ -478,5 +478,5 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: In-place X overlap", "[Simpln
     CAPTURE(i);
     CHECK(values[i] == expected[i]);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

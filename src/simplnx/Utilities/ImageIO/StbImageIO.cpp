@@ -38,29 +38,29 @@ Result<ImageMetadata> StbImageIO::readMetadata(const std::filesystem::path& file
   int result = stbi_info(pathStr.c_str(), &width, &height, &comp);
   if(result == 0)
   {
-    const char* reason = stbi_failure_reason();
-    return MakeErrorResult<ImageMetadata>(k_ErrorInfoFailed, fmt::format("Failed to read image info from '{}': {}", pathStr, reason != nullptr ? reason : "unknown error"));
+    const char* reasonPtr = stbi_failure_reason();
+    return MakeErrorResult<ImageMetadata>(k_ErrorInfoFailed, fmt::format("Failed to read image info from '{}': {}", pathStr, reasonPtr != nullptr ? reasonPtr : "unknown error"));
   }
 
   ImageMetadata metadata;
   metadata.width = static_cast<usize>(width);
   metadata.height = static_cast<usize>(height);
-  metadata.numComponents = static_cast<usize>(comp);
+  metadata.num_components = static_cast<usize>(comp);
 
   if(stbi_is_hdr(pathStr.c_str()) != 0)
   {
-    metadata.dataType = DataType::float32;
+    metadata.data_type = DataType::float32;
   }
   else if(stbi_is_16_bit(pathStr.c_str()) != 0)
   {
-    metadata.dataType = DataType::uint16;
+    metadata.data_type = DataType::uint16;
   }
   else
   {
-    metadata.dataType = DataType::uint8;
+    metadata.data_type = DataType::uint8;
   }
 
-  metadata.numPages = 1;
+  metadata.num_pages = 1;
   // stb does not expose origin or spacing metadata.
   metadata.origin = std::nullopt;
   metadata.spacing = std::nullopt;
@@ -84,20 +84,20 @@ Result<> StbImageIO::readPixelData(const std::filesystem::path& filePath, std::s
   }
   const ImageMetadata& metadata = metaResult.value();
 
-  usize bpe = GetDataTypeSize(metadata.dataType);
-  usize expectedSize = metadata.width * metadata.height * metadata.numComponents * bpe;
+  usize bpe = GetDataTypeSize(metadata.data_type);
+  usize expectedSize = metadata.width * metadata.height * metadata.num_components * bpe;
 
   if(buffer.size() != expectedSize)
   {
     return MakeErrorResult(k_ErrorBufferSizeMismatch, fmt::format("Buffer size {} does not match expected size {} for image '{}'", buffer.size(), expectedSize, filePath.string()));
   }
 
-  const usize rowBytes = metadata.width * metadata.numComponents * bpe;
+  const usize rowBytes = metadata.width * metadata.num_components * bpe;
   return readPixelDataRows(
       filePath,
       [&](usize row, usize columnOffset, usize pixelCount, std::span<const uint8> pixels) -> Result<> {
-        const usize byteOffset = row * rowBytes + columnOffset * metadata.numComponents * bpe;
-        const usize byteCount = pixelCount * metadata.numComponents * bpe;
+        const usize byteOffset = row * rowBytes + columnOffset * metadata.num_components * bpe;
+        const usize byteCount = pixelCount * metadata.num_components * bpe;
         std::memcpy(buffer.data() + byteOffset, pixels.data(), byteCount);
         return {};
       },
@@ -105,7 +105,7 @@ Result<> StbImageIO::readPixelData(const std::filesystem::path& filePath, std::s
 }
 
 // -----------------------------------------------------------------------------
-Result<> StbImageIO::readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& callback, usize pageIndex) const
+Result<> StbImageIO::readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallbackType& callback, usize pageIndex) const
 {
   // PNG/JPEG/BMP are single-image formats; only page 0 exists.
   if(pageIndex != 0)
@@ -124,73 +124,73 @@ Result<> StbImageIO::readPixelDataRows(const std::filesystem::path& filePath, co
   int width = 0;
   int height = 0;
   int comp = 0;
-  void* decodedData = nullptr;
+  void* decodedDataPtr = nullptr;
 
-  if(metadata.dataType == DataType::float32)
+  if(metadata.data_type == DataType::float32)
   {
-    decodedData = stbi_loadf(pathStr.c_str(), &width, &height, &comp, 0);
+    decodedDataPtr = stbi_loadf(pathStr.c_str(), &width, &height, &comp, 0);
   }
-  else if(metadata.dataType == DataType::uint16)
+  else if(metadata.data_type == DataType::uint16)
   {
-    decodedData = stbi_load_16(pathStr.c_str(), &width, &height, &comp, 0);
+    decodedDataPtr = stbi_load_16(pathStr.c_str(), &width, &height, &comp, 0);
   }
   else
   {
-    decodedData = stbi_load(pathStr.c_str(), &width, &height, &comp, 0);
+    decodedDataPtr = stbi_load(pathStr.c_str(), &width, &height, &comp, 0);
   }
 
-  if(decodedData == nullptr)
+  if(decodedDataPtr == nullptr)
   {
-    const char* reason = stbi_failure_reason();
-    return MakeErrorResult(k_ErrorLoadFailed, fmt::format("Failed to load image '{}': {}", pathStr, reason != nullptr ? reason : "unknown error"));
+    const char* reasonPtr = stbi_failure_reason();
+    return MakeErrorResult(k_ErrorLoadFailed, fmt::format("Failed to load image '{}': {}", pathStr, reasonPtr != nullptr ? reasonPtr : "unknown error"));
   }
 
-  const usize bytesPerElement = GetDataTypeSize(metadata.dataType);
-  const usize rowBytes = metadata.width * metadata.numComponents * bytesPerElement;
-  const auto* bytes = static_cast<const uint8*>(decodedData);
+  const usize bytesPerElement = GetDataTypeSize(metadata.data_type);
+  const usize rowBytes = metadata.width * metadata.num_components * bytesPerElement;
+  const auto* bytesPtr = static_cast<const uint8*>(decodedDataPtr);
   Result<> result;
   for(usize row = 0; row < metadata.height; ++row)
   {
-    result = callback(row, 0, metadata.width, std::span<const uint8>(bytes + row * rowBytes, rowBytes));
+    result = callback(row, 0, metadata.width, std::span<const uint8>(bytesPtr + row * rowBytes, rowBytes));
     if(result.invalid())
     {
       break;
     }
   }
-  stbi_image_free(decodedData);
+  stbi_image_free(decodedDataPtr);
   return result;
 }
 
 Result<> StbImageIO::writePixelData(const std::filesystem::path& filePath, std::span<const uint8> buffer, const ImageMetadata& metadata) const
 {
-  if(metadata.dataType != DataType::uint8)
+  if(metadata.data_type != DataType::uint8)
   {
     return MakeErrorResult(k_ErrorUnsupportedDataType, fmt::format("stb_image_write only supports uint8 pixel data for writing. Got unsupported data type for '{}'.", filePath.string()));
   }
 
   std::string pathStr = filePath.string();
-  const std::string ext = nx::core::StringUtilities::toLower(filePath.extension().string());
+  const std::string ext = nx::core::string_utilities::ToLower(filePath.extension().string());
 
   int w = static_cast<int>(metadata.width);
   int h = static_cast<int>(metadata.height);
-  int comp = static_cast<int>(metadata.numComponents);
-  const void* data = buffer.data();
+  int comp = static_cast<int>(metadata.num_components);
+  const void* dataPtr = buffer.data();
 
   int result = 0;
 
   if(ext == ".png")
   {
     int strideBytes = w * comp;
-    result = stbi_write_png(pathStr.c_str(), w, h, comp, data, strideBytes);
+    result = stbi_write_png(pathStr.c_str(), w, h, comp, dataPtr, strideBytes);
   }
   else if(ext == ".bmp")
   {
-    result = stbi_write_bmp(pathStr.c_str(), w, h, comp, data);
+    result = stbi_write_bmp(pathStr.c_str(), w, h, comp, dataPtr);
   }
   else if(ext == ".jpg" || ext == ".jpeg")
   {
     constexpr int k_JpegQuality = 95;
-    result = stbi_write_jpg(pathStr.c_str(), w, h, comp, data, k_JpegQuality);
+    result = stbi_write_jpg(pathStr.c_str(), w, h, comp, dataPtr, k_JpegQuality);
   }
   else
   {

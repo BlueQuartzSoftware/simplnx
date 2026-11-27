@@ -33,9 +33,9 @@ SIMPLNX_EXPORT void AppendCopyDataObjectAction(const DataStructure& dataStructur
  */
 struct FeatureRenumbering
 {
-  std::vector<size_t> newNames; ///< Maps each old feature ID to its compacted ID.
-  std::vector<size_t> keepList; ///< Lists active nonzero feature IDs in ascending order.
-  bool anyRemoved = false;      ///< True when at least one nonzero feature is inactive.
+  std::vector<size_t> new_names; ///< Maps each old feature ID to its compacted ID.
+  std::vector<size_t> keep_list; ///< Lists active nonzero feature IDs in ascending order.
+  bool any_removed = false;      ///< True when at least one nonzero feature is inactive.
 };
 
 /**
@@ -75,7 +75,7 @@ SIMPLNX_EXPORT FeatureRenumbering ComputeFeatureRenumbering(const std::vector<bo
  * call to distinguish a cancelled run from a completed one.
  */
 [[nodiscard]] SIMPLNX_EXPORT Result<> RemoveInactiveObjects(DataStructure& dataStructure, const DataPath& featureDataGroupPath, const std::vector<bool>& activeObjects,
-                                                            Int32AbstractDataStore& cellFeatureIds, size_t currentFeatureCount, const IFilter::MessageHandler& messageHandler,
+                                                            Int32AbstractDataStoreType& cellFeatureIds, size_t currentFeatureCount, const IFilter::MessageHandler& messageHandler,
                                                             const std::atomic_bool& shouldCancel, bool cellFeatureIdsRenumbered = false);
 
 /**
@@ -137,7 +137,7 @@ std::optional<std::vector<DataPath>> GetAllChildDataPathsOfType(const DataStruct
     {
       bool ignore = false;
       DataPath childPath = parentGroup.createChildPath(childName);
-      const DataObject* dataObject = dataStructure.getData(childPath);
+      const DataObject* dataObjectPtr = dataStructure.getData(childPath);
       for(const auto& ignoredPath : ignoredDataPaths)
       {
         if(childPath == ignoredPath)
@@ -146,7 +146,7 @@ std::optional<std::vector<DataPath>> GetAllChildDataPathsOfType(const DataStruct
           break;
         }
       }
-      if(!ignore && dynamic_cast<const TargetObjectT*>(dataObject) != nullptr)
+      if(!ignore && dynamic_cast<const TargetObjectT*>(dataObjectPtr) != nullptr)
       {
         childDataObjects.push_back(childPath);
       }

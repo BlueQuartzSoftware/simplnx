@@ -40,7 +40,7 @@
 #include <stdexcept>
 #include <utility>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 #if SIMPLNX_BUILD_TESTS
 namespace
@@ -64,7 +64,7 @@ thread_local uint64 LegacyThreadOutstanding = 0;
  * @param record Supplies the unique charged observation.
  * @param event Selects destruction or cache transfer.
  */
-void releaseLegacyRecord(testing_detail::LegacyPayloadRecordForTesting& record, CodecIoEventForTesting event) noexcept
+void ReleaseLegacyRecord(testing_detail::LegacyPayloadRecordForTesting& record, CodecIoEventForTesting event) noexcept
 {
   if(record.charged)
   {
@@ -78,24 +78,27 @@ void releaseLegacyRecord(testing_detail::LegacyPayloadRecordForTesting& record, 
 /**
  * @brief Invalidates the observation when one worker leaves a pending return.
  */
-void settleStrandedLegacyReceipt() noexcept
+void SettleStrandedLegacyReceipt() noexcept
 {
   if(PendingLegacyPayload.charged)
   {
     LegacyIntegrityFailures.fetch_add(1, std::memory_order_relaxed);
-    releaseLegacyRecord(PendingLegacyPayload, CodecIoEventForTesting::LegacyReleased);
+    ReleaseLegacyRecord(PendingLegacyPayload, CodecIoEventForTesting::LegacyReleased);
   }
 }
 } // namespace
 
 CodecOwnershipStateForTesting GetCodecOwnershipStateForTesting() noexcept
 {
-  return {LegacyOutstanding.load(std::memory_order_relaxed), LegacyTasks.load(std::memory_order_relaxed), LegacyIntegrityFailures.load(std::memory_order_relaxed),
-          LegacyUnobservedReturns.load(std::memory_order_relaxed), LegacyErrorAggregations.load(std::memory_order_relaxed)};
+  return {.outstanding_buffers = LegacyOutstanding.load(std::memory_order_relaxed),
+          .active_tasks = LegacyTasks.load(std::memory_order_relaxed),
+          .integrity_failures = LegacyIntegrityFailures.load(std::memory_order_relaxed),
+          .unobserved_returns = LegacyUnobservedReturns.load(std::memory_order_relaxed),
+          .error_aggregations = LegacyErrorAggregations.load(std::memory_order_relaxed)};
 }
 
 BoundedReadTaskScopeForTesting::BoundedReadTaskScopeForTesting() noexcept
-: m_Active(CodecIoObserver.callback != nullptr || CodecIoObserver.boundedFault != nullptr)
+: m_Active(CodecIoObserver.callback != nullptr || CodecIoObserver.bounded_fault != nullptr)
 {
   if(m_Active)
   {
@@ -113,7 +116,7 @@ BoundedReadTaskScopeForTesting::~BoundedReadTaskScopeForTesting() noexcept
 
 bool InjectCodecFaultForTesting(const std::filesystem::path& file, std::string_view dataset, BoundedFaultPointForTesting point) noexcept
 {
-  return CodecIoObserver.boundedFault != nullptr && CodecIoObserver.boundedFault(CodecIoObserver.context, file, dataset, point);
+  return CodecIoObserver.bounded_fault != nullptr && CodecIoObserver.bounded_fault(CodecIoObserver.context, file, dataset, point);
 }
 
 LegacyPayloadTicketForTesting::~LegacyPayloadTicketForTesting() noexcept
@@ -137,7 +140,7 @@ void LegacyPayloadTicketForTesting::acquire(const std::filesystem::path& file, s
     LegacyIntegrityFailures.fetch_add(1, std::memory_order_relaxed);
     return;
   }
-  m_Record = {&file, dataset, bytes.data(), bytes.capacity(), kind, true};
+  m_Record = {.file = &file, .dataset = dataset, .data = bytes.data(), .capacity = bytes.capacity(), .kind = kind, .charged = true};
   LegacyOutstanding.fetch_add(1, std::memory_order_relaxed);
   ++LegacyThreadOutstanding;
   ObserveCodecIoForTesting(file, dataset, CodecIoEventForTesting::LegacyAcquired, bytes.capacity(), static_cast<uint64>(kind));
@@ -160,7 +163,7 @@ void LegacyPayloadTicketForTesting::consumeReturn(const std::vector<std::byte>& 
   }
   if(PendingLegacyPayload.data != bytes.data() || PendingLegacyPayload.capacity != bytes.capacity())
   {
-    settleStrandedLegacyReceipt();
+    SettleStrandedLegacyReceipt();
     return;
   }
   m_Record = std::exchange(PendingLegacyPayload, {});
@@ -170,7 +173,7 @@ void LegacyPayloadTicketForTesting::replaceDestroyedFromReturn(const std::vector
 {
   auto old = std::exchange(m_Record, {});
   consumeReturn(bytes, allowUnobserved);
-  releaseLegacyRecord(old, CodecIoEventForTesting::LegacyReleased);
+  ReleaseLegacyRecord(old, CodecIoEventForTesting::LegacyReleased);
 }
 
 void LegacyPayloadTicketForTesting::forwardReturn() noexcept
@@ -194,12 +197,12 @@ void LegacyPayloadTicketForTesting::forwardReturn() noexcept
 
 void LegacyPayloadTicketForTesting::releaseDestroyed() noexcept
 {
-  releaseLegacyRecord(m_Record, CodecIoEventForTesting::LegacyReleased);
+  ReleaseLegacyRecord(m_Record, CodecIoEventForTesting::LegacyReleased);
 }
 
 void LegacyPayloadTicketForTesting::transferToCache() noexcept
 {
-  releaseLegacyRecord(m_Record, CodecIoEventForTesting::LegacyTransferred);
+  ReleaseLegacyRecord(m_Record, CodecIoEventForTesting::LegacyTransferred);
 }
 
 bool LegacyPayloadTicketForTesting::matches(const std::vector<std::byte>& bytes) const noexcept
@@ -219,7 +222,7 @@ LegacyPayloadTaskScopeForTesting::LegacyPayloadTaskScopeForTesting() noexcept
 {
   if(m_Active)
   {
-    settleStrandedLegacyReceipt();
+    SettleStrandedLegacyReceipt();
     m_ThreadOutstandingAtEntry = LegacyThreadOutstanding;
     LegacyTasks.fetch_add(1, std::memory_order_relaxed);
   }
@@ -229,7 +232,7 @@ LegacyPayloadTaskScopeForTesting::~LegacyPayloadTaskScopeForTesting() noexcept
 {
   if(m_Active)
   {
-    settleStrandedLegacyReceipt();
+    SettleStrandedLegacyReceipt();
     if(LegacyThreadOutstanding != m_ThreadOutstandingAtEntry || LegacyAdmissionTicket != m_AdmissionAtEntry)
     {
       LegacyIntegrityFailures.fetch_add(1, std::memory_order_relaxed);
@@ -239,7 +242,7 @@ LegacyPayloadTaskScopeForTesting::~LegacyPayloadTaskScopeForTesting() noexcept
   }
 }
 
-void LegacyPayloadTaskScopeForTesting::observeExceptionAggregation() noexcept
+void LegacyPayloadTaskScopeForTesting::observeExceptionAggregation() const noexcept
 {
   if(m_Active)
   {
@@ -329,15 +332,15 @@ constexpr usize k_MaxPreparedBatchChunks = 64;
  *
  * allocated is false when HDF5 has no stored chunk address or the query fails.
  */
-ParallelChunkCodec::ChunkInfo peekChunkInfoAtOffsetUnlocked(hid_t datasetId, const hsize_t* offset)
+ParallelChunkCodec::ChunkInfo PeekChunkInfoAtOffsetUnlocked(hid_t datasetId, const hsize_t* offset)
 {
   ParallelChunkCodec::ChunkInfo info;
   haddr_t address = HADDR_UNDEF;
   hsize_t storedSize = 0;
-  const herr_t status = H5Dget_chunk_info_by_coord(datasetId, offset, &info.filterMask, &address, &storedSize);
+  const herr_t status = H5Dget_chunk_info_by_coord(datasetId, offset, &info.filter_mask, &address, &storedSize);
   info.allocated = (status >= 0 && address != HADDR_UNDEF && storedSize != 0);
-  info.storedAddress = static_cast<uint64>(address);
-  info.storedSize = static_cast<uint64>(storedSize);
+  info.stored_address = static_cast<uint64>(address);
+  info.stored_size = static_cast<uint64>(storedSize);
   return info;
 }
 
@@ -349,7 +352,7 @@ ParallelChunkCodec::ChunkInfo peekChunkInfoAtOffsetUnlocked(hid_t datasetId, con
  * @return Allocation and raw-storage metadata for bounds.
  * @pre Support::ApiLock() is held by the caller.
  */
-ParallelChunkCodec::ChunkInfo peekChunkInfoUnlocked(hid_t datasetId, const Extent& bounds, usize componentRank)
+ParallelChunkCodec::ChunkInfo PeekChunkInfoUnlocked(hid_t datasetId, const Extent& bounds, usize componentRank)
 {
   const usize tupleDims = bounds.min.size();
   const usize fullRank = tupleDims + componentRank;
@@ -359,7 +362,7 @@ ParallelChunkCodec::ChunkInfo peekChunkInfoUnlocked(hid_t datasetId, const Exten
     offset[d] = static_cast<hsize_t>(bounds.min[d]);
   }
 
-  return peekChunkInfoAtOffsetUnlocked(datasetId, offset.data());
+  return PeekChunkInfoAtOffsetUnlocked(datasetId, offset.data());
 }
 
 /**
@@ -369,13 +372,13 @@ ParallelChunkCodec::ChunkInfo peekChunkInfoUnlocked(hid_t datasetId, const Exten
  * @param componentRank Number of trailing component dimensions.
  * @return Allocation and raw-storage metadata for bounds.
  */
-ParallelChunkCodec::ChunkInfo peekChunkInfo(hid_t datasetId, const Extent& bounds, usize componentRank)
+ParallelChunkCodec::ChunkInfo PeekChunkInfo(hid_t datasetId, const Extent& bounds, usize componentRank)
 {
   const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
-  return peekChunkInfoUnlocked(datasetId, bounds, componentRank);
+  return PeekChunkInfoUnlocked(datasetId, bounds, componentRank);
 }
 
-usize product(const std::vector<uint64>& shape)
+usize Product(const std::vector<uint64>& shape)
 {
   return std::accumulate(shape.begin(), shape.end(), usize{1}, std::multiplies<usize>());
 }
@@ -389,7 +392,7 @@ usize product(const std::vector<uint64>& shape)
  * Concurrent workers retain only the first message. A null destination ignores
  * diagnostics.
  */
-void recordFirstError(std::string* firstErrorOut, std::mutex& errorMutex, std::string message)
+void RecordFirstError(std::string* firstErrorOut, std::mutex& errorMutex, std::string message)
 {
   if(firstErrorOut == nullptr)
   {
@@ -410,7 +413,7 @@ void recordFirstError(std::string* firstErrorOut, std::mutex& errorMutex, std::s
  *
  * The probe avoids full-chunk compression for clearly incompressible data.
  */
-bool isLikelyIncompressible(nonstd::span<const std::byte> nominalBytes, int32 deflateLevel)
+bool IsLikelyIncompressible(nonstd::span<const std::byte> nominalBytes, int32 deflateLevel)
 {
   if(nominalBytes.size() <= k_IncompressibilityProbeBytes)
   {
@@ -448,11 +451,11 @@ ParallelChunkCodec::ParallelChunkCodec(std::filesystem::path filePath, std::stri
 #if SIMPLNX_BUILD_TESTS
   const MetadataIdentityForTesting metadataIdentity(m_FilePath, m_DatasetPath);
 #endif
-  m_NumComponents = product(m_ComponentShape);
-  m_NominalChunkElements = product(m_ChunkShape) * m_NumComponents;
-  m_NumChunks = getNumberOfChunks(m_TupleShape, m_ChunkShape);
+  m_NumComponents = Product(m_ComponentShape);
+  m_NominalChunkElements = Product(m_ChunkShape) * m_NumComponents;
+  m_NumChunks = GetNumberOfChunks(m_TupleShape, m_ChunkShape);
   // Probe once for single-deflate eligibility and capture the write deflate level.
-  m_Eligible = probeSingleDeflateEligibility(m_DatasetId, m_ElementSize, memoryTypeId, &m_DeflateLevel);
+  m_Eligible = ProbeSingleDeflateEligibility(m_DatasetId, m_ElementSize, memoryTypeId, &m_DeflateLevel);
   // This independent tag does not change ordinary eligibility or decoder policy.
   {
     const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
@@ -478,19 +481,19 @@ ParallelChunkCodec::ParallelChunkCodec(std::filesystem::path filePath, std::stri
 ParallelChunkCodec::~ParallelChunkCodec()
 {
 #ifndef _WIN32
-  if(detail::isValidFileHandle(m_ReadFileHandle))
+  if(detail::IsValidFileHandle(m_ReadFileHandle))
   {
-    detail::closeFileHandle(m_ReadFileHandle);
+    detail::CloseFileHandle(m_ReadFileHandle);
   }
 #endif
 }
 
 #ifndef _WIN32
-detail::FileHandle ParallelChunkCodec::getPositionalReadHandle() const
+detail::FileHandleType ParallelChunkCodec::getPositionalReadHandle() const
 {
   std::call_once(m_ReadHandleOpenOnce, [this]() {
-    m_ReadFileHandle = detail::openFileForRead(m_FilePath.string());
-    if(!detail::isValidFileHandle(m_ReadFileHandle))
+    m_ReadFileHandle = detail::OpenFileForRead(m_FilePath.string());
+    if(!detail::IsValidFileHandle(m_ReadFileHandle))
     {
       throw std::runtime_error(fmt::format("ParallelChunkCodec: failed to open '{}'", m_FilePath.string()));
     }
@@ -506,10 +509,10 @@ bool ParallelChunkCodec::isEligible() const
 
 std::vector<std::byte> ParallelChunkCodec::inflateChunk(uint64 flatChunkIndex) const
 {
-  const Extent bounds = getChunkBounds(flatChunkIndex, m_TupleShape, m_ChunkShape);
+  const Extent bounds = GetChunkBounds(flatChunkIndex, m_TupleShape, m_ChunkShape);
 
   // Reuse one metadata snapshot so this read performs one HDF5 chunk query.
-  const ChunkInfo info = peekChunkInfo(m_DatasetId, bounds, m_ComponentShape.size());
+  const ChunkInfo info = PeekChunkInfo(m_DatasetId, bounds, m_ComponentShape.size());
 #if SIMPLNX_BUILD_TESTS
   ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::ChunkRecordQuery, 1, 0);
 #endif
@@ -525,7 +528,7 @@ std::vector<ParallelChunkCodec::ChunkInfo> ParallelChunkCodec::getChunkInfos(non
 {
   std::vector<ChunkInfo> chunkInfos;
   chunkInfos.reserve(flatChunkIndices.size());
-  const std::vector<uint64> chunksPerDimension = getChunksPerDimension(m_TupleShape, m_ChunkShape);
+  const std::vector<uint64> chunksPerDimension = GetChunksPerDimension(m_TupleShape, m_ChunkShape);
   std::vector<hsize_t> offset(m_TupleShape.size() + m_ComponentShape.size(), 0);
   const std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
   for(uint64 flatChunkIndex : flatChunkIndices)
@@ -538,7 +541,7 @@ std::vector<ParallelChunkCodec::ChunkInfo> ParallelChunkCodec::getChunkInfos(non
       remaining /= chunksPerDimension[dimension];
       offset[dimension] = static_cast<hsize_t>(chunkCoordinate * m_ChunkShape[dimension]);
     }
-    chunkInfos.push_back(peekChunkInfoAtOffsetUnlocked(m_DatasetId, offset.data()));
+    chunkInfos.push_back(PeekChunkInfoAtOffsetUnlocked(m_DatasetId, offset.data()));
 #if SIMPLNX_BUILD_TESTS
     ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::ChunkRecordQuery, 1, 0);
 #endif
@@ -552,8 +555,8 @@ std::vector<std::byte> ParallelChunkCodec::inflateChunk(uint64 flatChunkIndex, c
   {
     throw UnallocatedChunkError(fmt::format("ParallelChunkCodec: chunk {} not allocated (sparse / fill-value region) in '{}:{}'", flatChunkIndex, m_FilePath.string(), m_DatasetPath));
   }
-  const Extent bounds = getChunkBounds(flatChunkIndex, m_TupleShape, m_ChunkShape);
-  return inflateChunkFromInfo(flatChunkIndex, bounds, chunkInfo.storedAddress, chunkInfo.storedSize, chunkInfo.filterMask);
+  const Extent bounds = GetChunkBounds(flatChunkIndex, m_TupleShape, m_ChunkShape);
+  return inflateChunkFromInfo(flatChunkIndex, bounds, chunkInfo.stored_address, chunkInfo.stored_size, chunkInfo.filter_mask);
 }
 
 std::vector<std::byte> ParallelChunkCodec::inflateChunkFromInfo(uint64 flatChunkIndex, const Extent& bounds, uint64 storedAddress, uint64 storedSize, uint32 filterMask) const
@@ -610,11 +613,11 @@ std::vector<std::byte> ParallelChunkCodec::inflateChunkFromInfo(uint64 flatChunk
   // POSIX workers reuse one positional descriptor. Recovery flushes only after
   // a short read from a recently extended file.
   auto readStoredBytes = [&]() -> std::ptrdiff_t {
-    const nx::core::detail::FileHandle rawHandle = getPositionalReadHandle();
+    const nx::core::detail::FileHandleType rawHandle = getPositionalReadHandle();
 #if SIMPLNX_BUILD_TESTS
     ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredReadAttempt, storedSize, 0);
 #endif
-    const auto result = nx::core::detail::positionalRead(rawHandle, stored.data(), static_cast<std::size_t>(storedSize), static_cast<uint64_t>(storedAddress));
+    const auto result = nx::core::detail::PositionalRead(rawHandle, stored.data(), static_cast<std::size_t>(storedSize), static_cast<uint64_t>(storedAddress));
 #if SIMPLNX_BUILD_TESTS
     if(result == static_cast<std::ptrdiff_t>(storedSize))
     {
@@ -726,7 +729,7 @@ std::vector<std::byte> ParallelChunkCodec::inflateChunkFromInfo(uint64 flatChunk
     return nominal;
   }
 
-  const usize clampedTuples = product(clampedTupleDims);
+  const usize clampedTuples = Product(clampedTupleDims);
   const usize compBytes = m_NumComponents * m_ElementSize;
 #if SIMPLNX_BUILD_TESTS
   LegacyPayloadTicketForTesting clampedObservation;
@@ -737,8 +740,8 @@ std::vector<std::byte> ParallelChunkCodec::inflateChunkFromInfo(uint64 flatChunk
 #endif
   for(usize flatClamped = 0; flatClamped < clampedTuples; ++flatClamped)
   {
-    const std::vector<uint64> nd = flatToNd(static_cast<uint64>(flatClamped), clampedTupleDims);
-    const usize nominalTupleFlat = static_cast<usize>(ndToFlat(nd, m_ChunkShape));
+    const std::vector<uint64> nd = FlatToNd(static_cast<uint64>(flatClamped), clampedTupleDims);
+    const usize nominalTupleFlat = static_cast<usize>(NdToFlat(nd, m_ChunkShape));
     std::memcpy(clamped.data() + flatClamped * compBytes, nominal.data() + nominalTupleFlat * compBytes, compBytes);
   }
 #if SIMPLNX_BUILD_TESTS
@@ -759,7 +762,7 @@ void ParallelChunkCodec::inflateChunksIntoSpan(nonstd::span<std::byte> out, nons
   const usize compBytes = m_NumComponents * m_ElementSize;
 
   // Validate once before workers scatter without per-write bounds checks.
-  const usize requiredBytes = product(m_TupleShape) * compBytes;
+  const usize requiredBytes = Product(m_TupleShape) * compBytes;
   if(out.size() < requiredBytes)
   {
     throw std::runtime_error(fmt::format("ParallelChunkCodec: output span too small for '{}:{}' ({} < {} bytes)", m_FilePath.string(), m_DatasetPath, out.size(), requiredBytes));
@@ -802,7 +805,7 @@ void ParallelChunkCodec::inflateChunksIntoSpan(nonstd::span<std::byte> out, nons
     }
     for(usize runIdx = 0; runIdx < numRuns; ++runIdx)
     {
-      const usize globalFlat = static_cast<usize>(ndToFlat(globalCoords, m_TupleShape));
+      const usize globalFlat = static_cast<usize>(NdToFlat(globalCoords, m_TupleShape));
       std::memcpy(out.data() + globalFlat * compBytes, clamped.data() + runIdx * runBytes, runBytes);
 
       // Advance the outer coordinates in row-major order, last dimension fastest.
@@ -828,7 +831,7 @@ void ParallelChunkCodec::inflateChunksIntoSpan(nonstd::span<std::byte> out, nons
     {
       clampedTupleDims[d] = bounds.max[d] - bounds.min[d] + 1;
     }
-    const usize clampedTuples = product(clampedTupleDims);
+    const usize clampedTuples = Product(clampedTupleDims);
     std::vector<std::byte> clamped(clampedTuples * compBytes);
 
     const usize fullRank = tupleDims + m_ComponentShape.size();
@@ -874,30 +877,30 @@ void ParallelChunkCodec::inflateChunksIntoSpan(nonstd::span<std::byte> out, nons
         H5Sclose(fileSpace);
       }
       // Report the first failed HDF5 call for a useful fallback-read diagnostic.
-      const char* failedCall = nullptr;
+      const char* failedCallPtr = nullptr;
       if(fileSpace < 0)
       {
-        failedCall = "H5Dget_space";
+        failedCallPtr = "H5Dget_space";
       }
       else if(memSpace < 0)
       {
-        failedCall = "H5Screate_simple";
+        failedCallPtr = "H5Screate_simple";
       }
       else if(dtype < 0)
       {
-        failedCall = "H5Dget_type";
+        failedCallPtr = "H5Dget_type";
       }
       else if(selStatus < 0)
       {
-        failedCall = "H5Sselect_hyperslab";
+        failedCallPtr = "H5Sselect_hyperslab";
       }
       else if(readStatus < 0)
       {
-        failedCall = "H5Dread";
+        failedCallPtr = "H5Dread";
       }
-      if(failedCall != nullptr)
+      if(failedCallPtr != nullptr)
       {
-        throw std::runtime_error(fmt::format("ParallelChunkCodec: serial fill-value read failed at {} on chunk {} of '{}:{}'", failedCall, flatChunkIndex, m_FilePath.string(), m_DatasetPath));
+        throw std::runtime_error(fmt::format("ParallelChunkCodec: serial fill-value read failed at {} on chunk {} of '{}:{}'", failedCallPtr, flatChunkIndex, m_FilePath.string(), m_DatasetPath));
       }
     }
     return clamped;
@@ -906,21 +909,21 @@ void ParallelChunkCodec::inflateChunksIntoSpan(nonstd::span<std::byte> out, nons
   // One metadata probe selects raw inflation or the fill-aware H5Dread fallback.
   // A false allocation state can represent sparse data or a metadata-query failure.
   auto loader = [&](uint64 idx) -> std::vector<std::byte> {
-    const Extent bounds = getChunkBounds(idx, m_TupleShape, m_ChunkShape);
-    const ChunkInfo info = peekChunkInfo(m_DatasetId, bounds, m_ComponentShape.size());
+    const Extent bounds = GetChunkBounds(idx, m_TupleShape, m_ChunkShape);
+    const ChunkInfo info = PeekChunkInfo(m_DatasetId, bounds, m_ComponentShape.size());
 #if SIMPLNX_BUILD_TESTS
     ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::ChunkRecordQuery, 1, 0);
 #endif
     if(info.allocated)
     {
-      return inflateChunkFromInfo(idx, bounds, info.storedAddress, info.storedSize, info.filterMask);
+      return inflateChunkFromInfo(idx, bounds, info.stored_address, info.stored_size, info.filter_mask);
     }
     return serialFillRead(idx, bounds);
   };
 
   // Distinct chunk indices give tasks disjoint scatter regions without an output lock.
   auto sink = [&](usize localIndex, std::vector<std::byte>&& bytes) {
-    const Extent bounds = getChunkBounds(flatChunkIndices[localIndex], m_TupleShape, m_ChunkShape);
+    const Extent bounds = GetChunkBounds(flatChunkIndices[localIndex], m_TupleShape, m_ChunkShape);
     scatter(bounds, bytes);
   };
 
@@ -931,7 +934,7 @@ void ParallelChunkCodec::inflateChunksIntoSpan(nonstd::span<std::byte> out, nons
 std::vector<std::byte> ParallelChunkCodec::gatherChunkBytes(uint64 flatChunkIndex, nonstd::span<const std::byte> source, uint64 sourceStartTuple) const
 {
   const usize tupleDims = m_TupleShape.size();
-  const Extent bounds = getChunkBounds(flatChunkIndex, m_TupleShape, m_ChunkShape);
+  const Extent bounds = GetChunkBounds(flatChunkIndex, m_TupleShape, m_ChunkShape);
 
   std::vector<uint64> clampedTupleDims(tupleDims);
   for(usize d = 0; d < tupleDims; ++d)
@@ -972,8 +975,8 @@ std::vector<std::byte> ParallelChunkCodec::gatherChunkBytes(uint64 flatChunkInde
   }
   for(uint64 runIdx = 0; runIdx < numRuns; ++runIdx)
   {
-    const usize srcOffset = static_cast<usize>(ndToFlat(globalNd, m_TupleShape) - sourceStartTuple) * compBytes;
-    const usize dstOffset = static_cast<usize>(ndToFlat(localNd, m_ChunkShape)) * compBytes;
+    const usize srcOffset = static_cast<usize>(NdToFlat(globalNd, m_TupleShape) - sourceStartTuple) * compBytes;
+    const usize dstOffset = static_cast<usize>(NdToFlat(localNd, m_ChunkShape)) * compBytes;
     std::memcpy(nominal.data() + dstOffset, source.data() + srcOffset, runBytes);
 
     // Advance the outer coordinates in row-major order, last dimension fastest.
@@ -998,7 +1001,7 @@ std::vector<std::byte> ParallelChunkCodec::compressChunkBytesImpl(uint64 flatChu
   // Compression stays off the HDF5 lock. Reject chunks that exceed zlib lengths.
   if(nominalBytes.size() > static_cast<usize>(std::numeric_limits<uLong>::max()))
   {
-    recordFirstError(firstErrorOut, errorMutex,
+    RecordFirstError(firstErrorOut, errorMutex,
                      fmt::format("ParallelChunkCodec: nominal chunk {} size {} exceeds zlib's {}-byte limit in '{}:{}'", flatChunkIndex, nominalBytes.size(), std::numeric_limits<uLong>::max(),
                                  m_FilePath.string(), m_DatasetPath));
     return {};
@@ -1010,7 +1013,7 @@ std::vector<std::byte> ParallelChunkCodec::compressChunkBytesImpl(uint64 flatChu
   const int zret = compress2(reinterpret_cast<Bytef*>(compressed.get()), &destLen, reinterpret_cast<const Bytef*>(nominalBytes.data()), srcLen, m_DeflateLevel);
   if(zret != Z_OK)
   {
-    recordFirstError(firstErrorOut, errorMutex,
+    RecordFirstError(firstErrorOut, errorMutex,
                      fmt::format("ParallelChunkCodec: zlib compress2 failed (ret={}, level={}) on chunk {} of '{}:{}'", zret, m_DeflateLevel, flatChunkIndex, m_FilePath.string(), m_DatasetPath));
     return {};
   }
@@ -1020,9 +1023,9 @@ std::vector<std::byte> ParallelChunkCodec::compressChunkBytesImpl(uint64 flatChu
 ParallelChunkCodec::PreparedChunkBytes ParallelChunkCodec::prepareChunkBytesImpl(uint64 flatChunkIndex, nonstd::span<const std::byte> nominalBytes, std::string* firstErrorOut,
                                                                                  std::mutex& errorMutex) const
 {
-  if(isLikelyIncompressible(nominalBytes, m_DeflateLevel))
+  if(IsLikelyIncompressible(nominalBytes, m_DeflateLevel))
   {
-    return {{}, 0x1U};
+    return {.filtered_bytes = {}, .filter_mask = 0x1U};
   }
 
   std::vector<std::byte> compressed = compressChunkBytesImpl(flatChunkIndex, nominalBytes, firstErrorOut, errorMutex);
@@ -1032,9 +1035,9 @@ ParallelChunkCodec::PreparedChunkBytes ParallelChunkCodec::prepareChunkBytesImpl
   }
   if(compressed.size() >= nominalBytes.size())
   {
-    return {{}, 0x1U};
+    return {.filtered_bytes = {}, .filter_mask = 0x1U};
   }
-  return {std::move(compressed), 0};
+  return {.filtered_bytes = std::move(compressed), .filter_mask = 0};
 }
 
 bool ParallelChunkCodec::writeCompressedChunkImpl(uint64 flatChunkIndex, nonstd::span<const std::byte> storedBytes, uint32 filterMask, std::string* firstErrorOut, std::mutex& errorMutex) const
@@ -1042,7 +1045,7 @@ bool ParallelChunkCodec::writeCompressedChunkImpl(uint64 flatChunkIndex, nonstd:
   // Full-rank chunk origin appends component zeros because components remain whole.
   const usize tupleDims = m_TupleShape.size();
   const usize fullRank = tupleDims + m_ComponentShape.size();
-  const Extent bounds = getChunkBounds(flatChunkIndex, m_TupleShape, m_ChunkShape);
+  const Extent bounds = GetChunkBounds(flatChunkIndex, m_TupleShape, m_ChunkShape);
   std::vector<hsize_t> offset(fullRank, 0);
   for(usize d = 0; d < tupleDims; ++d)
   {
@@ -1060,7 +1063,7 @@ bool ParallelChunkCodec::writeCompressedChunkImpl(uint64 flatChunkIndex, nonstd:
       return true;
     }
   }
-  recordFirstError(firstErrorOut, errorMutex,
+  RecordFirstError(firstErrorOut, errorMutex,
                    fmt::format("ParallelChunkCodec: H5Dwrite_chunk failed ({} stored bytes, filter mask {}) on chunk {} of '{}:{}'", storedBytes.size(), filterMask, flatChunkIndex,
                                m_FilePath.string(), m_DatasetPath));
   return false;
@@ -1069,12 +1072,12 @@ bool ParallelChunkCodec::writeCompressedChunkImpl(uint64 flatChunkIndex, nonstd:
 bool ParallelChunkCodec::writeNominalChunkImpl(uint64 flatChunkIndex, nonstd::span<const std::byte> nominalBytes, std::string* firstErrorOut, std::mutex& errorMutex) const
 {
   const PreparedChunkBytes prepared = prepareChunkBytesImpl(flatChunkIndex, nominalBytes, firstErrorOut, errorMutex);
-  if(prepared.filterMask == 0 && prepared.filteredBytes.empty())
+  if(prepared.filter_mask == 0 && prepared.filtered_bytes.empty())
   {
     return false;
   }
-  const nonstd::span<const std::byte> storedBytes = prepared.filterMask == 0 ? nonstd::span<const std::byte>(prepared.filteredBytes.data(), prepared.filteredBytes.size()) : nominalBytes;
-  return writeCompressedChunkImpl(flatChunkIndex, storedBytes, prepared.filterMask, firstErrorOut, errorMutex);
+  const nonstd::span<const std::byte> storedBytes = prepared.filter_mask == 0 ? nonstd::span<const std::byte>(prepared.filtered_bytes.data(), prepared.filtered_bytes.size()) : nominalBytes;
+  return writeCompressedChunkImpl(flatChunkIndex, storedBytes, prepared.filter_mask, firstErrorOut, errorMutex);
 }
 
 std::vector<std::byte> ParallelChunkCodec::compressNominalChunk(uint64 flatChunkIndex, nonstd::span<const std::byte> nominalBytes, std::string* errorOut) const
@@ -1108,7 +1111,7 @@ bool ParallelChunkCodec::writeNominalChunk(uint64 flatChunkIndex, nonstd::span<c
   std::mutex errorMutex;
   if(!m_Eligible || flatChunkIndex >= m_NumChunks || nominalBytes.size() != m_NominalChunkElements * m_ElementSize)
   {
-    recordFirstError(errorOut, errorMutex,
+    RecordFirstError(errorOut, errorMutex,
                      fmt::format("ParallelChunkCodec: invalid nominal-chunk write for chunk {} of '{}:{}' (eligible={}, bytes={}, expected={}, chunks={})", flatChunkIndex, m_FilePath.string(),
                                  m_DatasetPath, m_Eligible, nominalBytes.size(), m_NominalChunkElements * m_ElementSize, m_NumChunks));
     return false;
@@ -1125,7 +1128,7 @@ bool ParallelChunkCodec::writeRepeatedNominalChunk(nonstd::span<const std::byte>
   std::mutex errorMutex;
   if(!m_Eligible || nominalBytes.size() != m_NominalChunkElements * m_ElementSize)
   {
-    recordFirstError(errorOut, errorMutex,
+    RecordFirstError(errorOut, errorMutex,
                      fmt::format("ParallelChunkCodec: invalid repeated nominal-chunk write for '{}:{}' (eligible={}, bytes={}, expected={})", m_FilePath.string(), m_DatasetPath, m_Eligible,
                                  nominalBytes.size(), m_NominalChunkElements * m_ElementSize));
     return false;
@@ -1138,16 +1141,16 @@ bool ParallelChunkCodec::writeRepeatedNominalChunk(nonstd::span<const std::byte>
   {
     if(flatChunkIndex >= m_NumChunks)
     {
-      recordFirstError(errorOut, errorMutex,
+      RecordFirstError(errorOut, errorMutex,
                        fmt::format("ParallelChunkCodec: repeated nominal-chunk index {} is out of range ({} chunks) for '{}:{}'", flatChunkIndex, m_NumChunks, m_FilePath.string(), m_DatasetPath));
       return false;
     }
-    const Extent bounds = getChunkBounds(flatChunkIndex, m_TupleShape, m_ChunkShape);
+    const Extent bounds = GetChunkBounds(flatChunkIndex, m_TupleShape, m_ChunkShape);
     for(usize dimension = 0; dimension < m_ChunkShape.size(); ++dimension)
     {
       if(bounds.max[dimension] - bounds.min[dimension] + 1 != m_ChunkShape[dimension])
       {
-        recordFirstError(errorOut, errorMutex,
+        RecordFirstError(errorOut, errorMutex,
                          fmt::format("ParallelChunkCodec: repeated nominal-chunk index {} is clamped in dimension {} for '{}:{}'", flatChunkIndex, dimension, m_FilePath.string(), m_DatasetPath));
         return false;
       }
@@ -1155,14 +1158,14 @@ bool ParallelChunkCodec::writeRepeatedNominalChunk(nonstd::span<const std::byte>
   }
 
   const PreparedChunkBytes prepared = prepareChunkBytesImpl(flatChunkIndices.front(), nominalBytes, errorOut, errorMutex);
-  if(prepared.filterMask == 0 && prepared.filteredBytes.empty())
+  if(prepared.filter_mask == 0 && prepared.filtered_bytes.empty())
   {
     return false;
   }
-  const nonstd::span<const std::byte> storedBytes = prepared.filterMask == 0 ? nonstd::span<const std::byte>(prepared.filteredBytes.data(), prepared.filteredBytes.size()) : nominalBytes;
+  const nonstd::span<const std::byte> storedBytes = prepared.filter_mask == 0 ? nonstd::span<const std::byte>(prepared.filtered_bytes.data(), prepared.filtered_bytes.size()) : nominalBytes;
   for(uint64 flatChunkIndex : flatChunkIndices)
   {
-    if(!writeCompressedChunkImpl(flatChunkIndex, storedBytes, prepared.filterMask, errorOut, errorMutex))
+    if(!writeCompressedChunkImpl(flatChunkIndex, storedBytes, prepared.filter_mask, errorOut, errorMutex))
     {
       return false;
     }
@@ -1179,7 +1182,7 @@ bool ParallelChunkCodec::deflateSpanIntoChunks(nonstd::span<const std::byte> sou
   }
   if(!m_Eligible)
   {
-    recordFirstError(firstErrorOut, errorMutex, fmt::format("ParallelChunkCodec: dataset '{}:{}' is not eligible for the parallel deflate write path", m_FilePath.string(), m_DatasetPath));
+    RecordFirstError(firstErrorOut, errorMutex, fmt::format("ParallelChunkCodec: dataset '{}:{}' is not eligible for the parallel deflate write path", m_FilePath.string(), m_DatasetPath));
     return false;
   }
   const usize chunkCount = flatChunkIndices.size();
@@ -1189,18 +1192,18 @@ bool ParallelChunkCodec::deflateSpanIntoChunks(nonstd::span<const std::byte> sou
   }
 
   // Source must contain whole tuples within the dataset range.
-  const uint64 totalTuples = static_cast<uint64>(product(m_TupleShape));
+  const uint64 totalTuples = static_cast<uint64>(Product(m_TupleShape));
   const usize compBytes = m_NumComponents * m_ElementSize;
   if(source.size() % compBytes != 0)
   {
-    recordFirstError(firstErrorOut, errorMutex,
+    RecordFirstError(firstErrorOut, errorMutex,
                      fmt::format("ParallelChunkCodec: source is {} bytes, not a whole number of {}-byte tuples, for '{}:{}'", source.size(), compBytes, m_FilePath.string(), m_DatasetPath));
     return false;
   }
   const uint64 sourceTupleCount = static_cast<uint64>(source.size() / compBytes);
   if(sourceStartTuple + sourceTupleCount > totalTuples)
   {
-    recordFirstError(firstErrorOut, errorMutex,
+    RecordFirstError(firstErrorOut, errorMutex,
                      fmt::format("ParallelChunkCodec: source tuple range [{}, {}) exceeds the {} tuples of '{}:{}'", sourceStartTuple, sourceStartTuple + sourceTupleCount, totalTuples,
                                  m_FilePath.string(), m_DatasetPath));
     return false;
@@ -1211,15 +1214,15 @@ bool ParallelChunkCodec::deflateSpanIntoChunks(nonstd::span<const std::byte> sou
   {
     if(idx >= m_NumChunks)
     {
-      recordFirstError(firstErrorOut, errorMutex, fmt::format("ParallelChunkCodec: flat chunk index {} is out of range ({} chunks) for '{}:{}'", idx, m_NumChunks, m_FilePath.string(), m_DatasetPath));
+      RecordFirstError(firstErrorOut, errorMutex, fmt::format("ParallelChunkCodec: flat chunk index {} is out of range ({} chunks) for '{}:{}'", idx, m_NumChunks, m_FilePath.string(), m_DatasetPath));
       return false;
     }
-    const Extent bounds = getChunkBounds(idx, m_TupleShape, m_ChunkShape);
-    const uint64 firstTuple = ndToFlat(bounds.min, m_TupleShape);
-    const uint64 lastTuple = ndToFlat(bounds.max, m_TupleShape);
+    const Extent bounds = GetChunkBounds(idx, m_TupleShape, m_ChunkShape);
+    const uint64 firstTuple = NdToFlat(bounds.min, m_TupleShape);
+    const uint64 lastTuple = NdToFlat(bounds.max, m_TupleShape);
     if(firstTuple < sourceStartTuple || lastTuple >= sourceStartTuple + sourceTupleCount)
     {
-      recordFirstError(firstErrorOut, errorMutex,
+      RecordFirstError(firstErrorOut, errorMutex,
                        fmt::format("ParallelChunkCodec: chunk {} of '{}:{}' covers flat tuples [{}, {}] but the source spans only [{}, {})", idx, m_FilePath.string(), m_DatasetPath, firstTuple,
                                    lastTuple, sourceStartTuple, sourceStartTuple + sourceTupleCount));
       return false;
@@ -1228,18 +1231,18 @@ bool ParallelChunkCodec::deflateSpanIntoChunks(nonstd::span<const std::byte> sou
 
   struct PendingChunkWrite
   {
-    std::vector<std::byte> ownedBytes;
-    const std::byte* borrowedData = nullptr;
-    usize borrowedSize = 0;
-    uint32 filterMask = 0;
+    std::vector<std::byte> owned_bytes;
+    const std::byte* borrowed_data = nullptr;
+    usize borrowed_size = 0;
+    uint32 filter_mask = 0;
 
     nonstd::span<const std::byte> storedBytes() const
     {
-      if(!ownedBytes.empty())
+      if(!owned_bytes.empty())
       {
-        return {ownedBytes.data(), ownedBytes.size()};
+        return {owned_bytes.data(), owned_bytes.size()};
       }
-      return {borrowedData, borrowedSize};
+      return {borrowed_data, borrowed_size};
     }
   };
 
@@ -1289,7 +1292,7 @@ bool ParallelChunkCodec::deflateSpanIntoChunks(nonstd::span<const std::byte> sou
       const uint64 idx = flatChunkIndices[sourceIndex];
       try
       {
-        const Extent bounds = getChunkBounds(idx, m_TupleShape, m_ChunkShape);
+        const Extent bounds = GetChunkBounds(idx, m_TupleShape, m_ChunkShape);
         usize chunkTuples = 1;
         bool isFullNominalChunk = true;
         for(usize dimension = 0; dimension < m_TupleShape.size(); ++dimension)
@@ -1298,8 +1301,8 @@ bool ParallelChunkCodec::deflateSpanIntoChunks(nonstd::span<const std::byte> sou
           chunkTuples *= clampedDimension;
           isFullNominalChunk = isFullNominalChunk && clampedDimension == m_ChunkShape[dimension];
         }
-        const uint64 firstTuple = ndToFlat(bounds.min, m_TupleShape);
-        const uint64 lastTuple = ndToFlat(bounds.max, m_TupleShape);
+        const uint64 firstTuple = NdToFlat(bounds.min, m_TupleShape);
+        const uint64 lastTuple = NdToFlat(bounds.max, m_TupleShape);
         const bool isContiguousSourceRun = lastTuple - firstTuple + 1 == chunkTuples;
 
         std::vector<std::byte> gathered;
@@ -1317,31 +1320,31 @@ bool ParallelChunkCodec::deflateSpanIntoChunks(nonstd::span<const std::byte> sou
         }
 
         PreparedChunkBytes prepared = prepareChunkBytesImpl(idx, nominal, firstErrorOut, errorMutex);
-        if(prepared.filterMask == 0 && prepared.filteredBytes.empty())
+        if(prepared.filter_mask == 0 && prepared.filtered_bytes.empty())
         {
           failed.store(true, std::memory_order_relaxed);
           return;
         }
 
         PendingChunkWrite& pending = pendingWrites[batchIndex];
-        pending.filterMask = prepared.filterMask;
-        if(prepared.filterMask == 0)
+        pending.filter_mask = prepared.filter_mask;
+        if(prepared.filter_mask == 0)
         {
-          pending.ownedBytes = std::move(prepared.filteredBytes);
+          pending.owned_bytes = std::move(prepared.filtered_bytes);
         }
         else if(!gathered.empty())
         {
-          pending.ownedBytes = std::move(gathered);
+          pending.owned_bytes = std::move(gathered);
         }
         else
         {
-          pending.borrowedData = nominal.data();
-          pending.borrowedSize = nominal.size();
+          pending.borrowed_data = nominal.data();
+          pending.borrowed_size = nominal.size();
         }
       } catch(...)
       {
         // Worker failures become a false result with the first diagnostic retained.
-        recordFirstError(firstErrorOut, errorMutex, fmt::format("ParallelChunkCodec: exception while gathering/compressing chunk {} of '{}:{}'", idx, m_FilePath.string(), m_DatasetPath));
+        RecordFirstError(firstErrorOut, errorMutex, fmt::format("ParallelChunkCodec: exception while gathering/compressing chunk {} of '{}:{}'", idx, m_FilePath.string(), m_DatasetPath));
         failed.store(true, std::memory_order_relaxed);
       }
     };
@@ -1360,7 +1363,7 @@ bool ParallelChunkCodec::deflateSpanIntoChunks(nonstd::span<const std::byte> sou
         return false;
       }
       const PendingChunkWrite& pending = pendingWrites[batchIndex];
-      if(!writeCompressedChunkImpl(flatChunkIndices[batchStart + batchIndex], pending.storedBytes(), pending.filterMask, firstErrorOut, errorMutex))
+      if(!writeCompressedChunkImpl(flatChunkIndices[batchStart + batchIndex], pending.storedBytes(), pending.filter_mask, firstErrorOut, errorMutex))
       {
         failed.store(true, std::memory_order_relaxed);
         return false;
@@ -1384,10 +1387,10 @@ bool ParallelChunkCodec::deflateSpanIntoChunks(nonstd::span<const std::byte> sou
     // construction: the two threads never touch the same buffer at the same time.
     std::vector<PendingChunkWrite> bufferA;
     std::vector<PendingChunkWrite> bufferB;
-    std::vector<PendingChunkWrite>* current = &bufferA;
-    std::vector<PendingChunkWrite>* next = &bufferB;
+    std::vector<PendingChunkWrite>* currentPtr = &bufferA;
+    std::vector<PendingChunkWrite>* nextPtr = &bufferB;
 
-    prepareBatch(0, std::min(maxBatchChunks, chunkCount), *current);
+    prepareBatch(0, std::min(maxBatchChunks, chunkCount), *currentPtr);
 
     tbb::task_group group;
     for(usize batchStart = 0; batchStart < chunkCount; batchStart += maxBatchChunks)
@@ -1401,10 +1404,10 @@ bool ParallelChunkCodec::deflateSpanIntoChunks(nonstd::span<const std::byte> sou
       if(nextStart < chunkCount && !failed.load(std::memory_order_relaxed))
       {
         const usize nextCount = std::min(maxBatchChunks, chunkCount - nextStart);
-        group.run([&prepareBatch, nextStart, nextCount, next]() { prepareBatch(nextStart, nextCount, *next); });
+        group.run([&prepareBatch, nextStart, nextCount, nextPtr]() { prepareBatch(nextStart, nextCount, *nextPtr); });
       }
 
-      const bool committed = !failed.load(std::memory_order_relaxed) && commitBatch(batchStart, batchChunkCount, *current);
+      const bool committed = !failed.load(std::memory_order_relaxed) && commitBatch(batchStart, batchChunkCount, *currentPtr);
 
       // Drain the sibling prepare task before swapping buffers or returning.
       group.wait();
@@ -1414,7 +1417,7 @@ bool ParallelChunkCodec::deflateSpanIntoChunks(nonstd::span<const std::byte> sou
         return false;
       }
 
-      std::swap(current, next);
+      std::swap(currentPtr, nextPtr);
     }
 
     return true;
@@ -1441,19 +1444,19 @@ bool ParallelChunkCodec::deflateSpanIntoChunks(nonstd::span<const std::byte> sou
   return true;
 }
 
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5
 
 #if SIMPLNX_BUILD_TESTS
-namespace nx::core::BoundedRead
+namespace nx::core::bounded_read
 {
-WarningCollection MakeSuccessWarningsForTesting(const std::filesystem::path* file, std::string_view dataset)
+WarningCollectionType MakeSuccessWarningsForTesting(const std::filesystem::path* file, std::string_view dataset)
 {
   const std::filesystem::path residentIdentity;
-  if(HDF5::InjectCodecFaultForTesting(file != nullptr ? *file : residentIdentity, dataset, HDF5::BoundedFaultPointForTesting::SuccessResultConstruction))
+  if(hdf5::InjectCodecFaultForTesting(file != nullptr ? *file : residentIdentity, dataset, hdf5::BoundedFaultPointForTesting::SuccessResultConstruction))
   {
     throw std::bad_alloc{};
   }
-  return WarningCollection{};
+  return WarningCollectionType{};
 }
-} // namespace nx::core::BoundedRead
+} // namespace nx::core::bounded_read
 #endif

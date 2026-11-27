@@ -33,22 +33,22 @@ Result<> RotateEulerRefFrame::operator()()
     return {};
   }
 
-  auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->eulerAngleDataPath);
+  auto& eulerAngles = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->euler_angle_data_path);
   auto& eulerStore = eulerAngles.getDataStoreRef();
   const usize totalTuples = eulerAngles.getNumberOfTuples();
   m_Throttle.reset(totalTuples, "Rotating Euler reference frame");
 
-  FloatVec3 axis = {m_InputValues->rotationAxis[0], m_InputValues->rotationAxis[1], m_InputValues->rotationAxis[2]};
+  FloatVec3Type axis = {m_InputValues->rotation_axis[0], m_InputValues->rotation_axis[1], m_InputValues->rotation_axis[2]};
   const float32 axisMagnitude = std::sqrt(axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);
   if(axisMagnitude < std::numeric_limits<float32>::epsilon())
   {
     return MakeErrorResult(-67050, "The rotation axis has zero length; a rotation axis must be a non-zero vector.");
   }
   axis = axis.normalize();
-  const float32 angle = m_InputValues->rotationAxis[3];
+  const float32 angle = m_InputValues->rotation_axis[3];
 
-  ebsdlib::OrientationMatrixDType omRot = ebsdlib::AxisAngleDType(axis[0], axis[1], axis[2], angle * nx::core::numbers::pi / 180.0).toOrientationMatrix();
-  OrientationUtilities::Matrix3dR rotMat = omRot.toEigenGMatrix();
+  ebsdlib::OrientationMatrixDType omRot = ebsdlib::AxisAngleDType(axis[0], axis[1], axis[2], angle * nx::core::numbers::k_Pi / 180.0).toOrientationMatrix();
+  orientation_utilities::Matrix3dRType rotMat = omRot.toEigenGMatrix();
 
   // Reuse one bounded page for the in-place read-modify-write traversal.
   constexpr usize k_ChunkTuples = 65536;
@@ -70,7 +70,7 @@ Result<> RotateEulerRefFrame::operator()()
     {
       ebsdlib::OrientationMatrixDType om = ebsdlib::EulerDType(buf[i * 3], buf[i * 3 + 1], buf[i * 3 + 2]).toOrientationMatrix();
       // Normalize columns to remove numerical drift before matrix-to-Euler conversion.
-      OrientationUtilities::Matrix3dR gNew = (om * rotMat).colwise().normalized();
+      orientation_utilities::Matrix3dRType gNew = (om * rotMat).colwise().normalized();
       ebsdlib::EulerDType eu = ebsdlib::OrientationMatrixDType(gNew.data()).toEuler();
       buf[i * 3] = eu[0];
       buf[i * 3 + 1] = eu[1];
@@ -94,6 +94,6 @@ bool RotateEulerRefFrame::shouldCancel() const
 
 void RotateEulerRefFrame::sendThreadSafeProgressMessage(usize counter)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_Throttle.incrementPercent(counter);
 }

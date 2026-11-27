@@ -19,8 +19,8 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
@@ -44,9 +44,9 @@ const DataPath k_ComputedVertexDataPath = DataPath({"Computed Vertex Geometry"})
 const std::string k_SharedVertexListName = "Shared Vertex List";
 const std::string k_VertexAttrMatName = "Vertex Data";
 
-std::vector<std::string> k_CopyMoveArrayNames = {"Confidence Index", "EulerAngles", "Image Quality", "Mask", "Mask (IQ)", "Phases"};
+std::vector<std::string> KCopyMoveArrayNames = {"Confidence Index", "EulerAngles", "Image Quality", "Mask", "Mask (IQ)", "Phases"};
 
-namespace ExtractVertexGeometryTest
+namespace extract_vertex_geometry_test
 {
 // -----------------------------------------------------------------------------
 DataStructure CreateDataStructure()
@@ -54,58 +54,58 @@ DataStructure CreateDataStructure()
   DataStructure dataStructure;
 
   // Create an ImageGeometry
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_ImageGeometryName);
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_ImageGeometryName);
   std::vector<usize> dims = {10ULL, 20ULL, 30ULL};
   usize cellCount = std::accumulate(dims.begin(), dims.end(), static_cast<usize>(1), std::multiplies<usize>());
-  imageGeom->setDimensions(dims);
+  imageGeomPtr->setDimensions(dims);
 
   // Create wrong geometry
   TriangleGeom::Create(dataStructure, k_WrongGeometryName);
 
   // Create the Cell AttributeMatrix
   auto cellAttrMatrixDims = std::vector<usize>(dims.rbegin(), dims.rend());
-  AttributeMatrix* cellAttrMat = AttributeMatrix::Create(dataStructure, k_CellAttrMatName, cellAttrMatrixDims, imageGeom->getId());
+  AttributeMatrix* cellAttrMatPtr = AttributeMatrix::Create(dataStructure, k_CellAttrMatName, cellAttrMatrixDims, imageGeomPtr->getId());
 
   // Generate a "mask"
-  BoolArray* maskData = BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_MaskArrayName, cellAttrMatrixDims, {1}, cellAttrMat->getId());
-  maskData->fill(true);
-  (*maskData)[1] = false;
-  (*maskData)[4] = false;
-  (*maskData)[9] = false;
-  (*maskData)[13] = false;
-  (*maskData)[14] = false;
+  BoolArrayType* maskDataPtr = BoolArrayType::CreateWithStore<BoolDataStoreType>(dataStructure, k_MaskArrayName, cellAttrMatrixDims, {1}, cellAttrMatPtr->getId());
+  maskDataPtr->fill(true);
+  (*maskDataPtr)[1] = false;
+  (*maskDataPtr)[4] = false;
+  (*maskDataPtr)[9] = false;
+  (*maskDataPtr)[13] = false;
+  (*maskDataPtr)[14] = false;
 
-  AttributeMatrix* cellAttrMat2 = AttributeMatrix::Create(dataStructure, k_CellAttrMat2Name, cellAttrMatrixDims, imageGeom->getId());
+  AttributeMatrix* cellAttrMat2Ptr = AttributeMatrix::Create(dataStructure, k_CellAttrMat2Name, cellAttrMatrixDims, imageGeomPtr->getId());
 
   // Create a cell attribute array
-  Float32Array* f32Data = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_FloatArrayName, cellAttrMatrixDims, {1}, cellAttrMat->getId());
-  f32Data->fill(45.243f);
+  Float32ArrayType* f32DataPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, k_FloatArrayName, cellAttrMatrixDims, {1}, cellAttrMatPtr->getId());
+  f32DataPtr->fill(45.243f);
 
-  Float32Array* f32Data2 = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_FloatArrayName, cellAttrMatrixDims, {1}, cellAttrMat2->getId());
-  f32Data2->fill(45.243f);
+  Float32ArrayType* f32Data2Ptr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, k_FloatArrayName, cellAttrMatrixDims, {1}, cellAttrMat2Ptr->getId());
+  f32Data2Ptr->fill(45.243f);
 
-  AttributeMatrix* wrongTuplesAttrMatrix = AttributeMatrix::Create(dataStructure, k_WrongAttrMatName, {3}, imageGeom->getId());
+  AttributeMatrix* wrongTuplesAttrMatrixPtr = AttributeMatrix::Create(dataStructure, k_WrongAttrMatName, {3}, imageGeomPtr->getId());
 
-  Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_FloatArrayName, {3}, {1}, wrongTuplesAttrMatrix->getId());
+  Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, k_FloatArrayName, {3}, {1}, wrongTuplesAttrMatrixPtr->getId());
 
-  BoolArray::CreateWithStore<BoolDataStore>(dataStructure, k_MaskArrayName, {3}, {1}, wrongTuplesAttrMatrix->getId());
+  BoolArrayType::CreateWithStore<BoolDataStoreType>(dataStructure, k_MaskArrayName, {3}, {1}, wrongTuplesAttrMatrixPtr->getId());
 
-  Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_FloatArrayName, {cellCount}, {1});
+  Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, k_FloatArrayName, {cellCount}, {1});
 
-  Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_FloatArrayName, {cellCount}, {1}, imageGeom->getId());
+  Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, k_FloatArrayName, {cellCount}, {1}, imageGeomPtr->getId());
 
   return dataStructure;
 }
-} // namespace ExtractVertexGeometryTest
+} // namespace extract_vertex_geometry_test
 } // namespace
 
 TEST_CASE("SimplnxCore::ExtractVertexGeometry: Data Array With Wrong Tuple Count", "[SimplnxCore][ExtractVertexGeometry]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
-  DataStructure dataStructure = ExtractVertexGeometryTest::CreateDataStructure();
+  DataStructure dataStructure = extract_vertex_geometry_test::CreateDataStructure();
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -116,20 +116,20 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Data Array With Wrong Tuple Count
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -2006);
+  REQUIRE(preflightResult.output_actions.invalid());
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -2006);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractVertexGeometry: Mask Array With Wrong Tuple Count", "[SimplnxCore][ExtractVertexGeometry]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
-  DataStructure dataStructure = ExtractVertexGeometryTest::CreateDataStructure();
+  DataStructure dataStructure = extract_vertex_geometry_test::CreateDataStructure();
   Arguments args;
 
   // Create default Parameters for the filter.
@@ -142,28 +142,28 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Mask Array With Wrong Tuple Count
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -651);
+  REQUIRE(preflightResult.output_actions.invalid());
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -651);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays", "[SimplnxCore][ExtractVertexGeometry]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   //  Read Exemplar DREAM3D File Filter
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "extract_vertex_geometry.tar.gz", "extract_vertex_geometry");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "extract_vertex_geometry.tar.gz", "extract_vertex_geometry");
   auto baseDataFilePath = fs::path(fmt::format("{}/extract_vertex_geometry/extract_vertex_geometry.dream3d", unit_test::k_TestFilesDir));
 
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
   Arguments args;
 
   MultiArraySelectionParameter::ValueType arrayPaths;
-  for(const auto& name : k_CopyMoveArrayNames)
+  for(const auto& name : KCopyMoveArrayNames)
   {
     arrayPaths.push_back(k_InputAttrMatPath.createChildPath(name));
   }
@@ -180,7 +180,7 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays", "[Simplnx
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -193,33 +193,33 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays", "[Simplnx
 
   {
     DataPath exemplarAttrMat = DataPath({"Exemplar_Copy", "Vertex Data"});
-    UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAttrMat, dataStructure, k_ComputedVertexDataPath.createChildPath(k_VertexAttrMatName), true);
+    unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAttrMat, dataStructure, k_ComputedVertexDataPath.createChildPath(k_VertexAttrMatName), true);
   }
 
   {
     DataPath computedAttrMat = k_InputImageGeometryPath.createChildPath("Cell Data");
     DataPath exemplarAttrMat = DataPath({"ImageGeometry_Copy_Input", "Cell Data"});
-    UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAttrMat, dataStructure, computedAttrMat, true);
+    unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAttrMat, dataStructure, computedAttrMat, true);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays with mask", "[SimplnxCore][ExtractVertexGeometry]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   //  Read Exemplar DREAM3D File Filter
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "extract_vertex_geometry.tar.gz", "extract_vertex_geometry");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "extract_vertex_geometry.tar.gz", "extract_vertex_geometry");
   auto baseDataFilePath = fs::path(fmt::format("{}/extract_vertex_geometry/extract_vertex_geometry.dream3d", unit_test::k_TestFilesDir));
 
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
   Arguments args;
 
   MultiArraySelectionParameter::ValueType arrayPaths;
-  for(const auto& name : k_CopyMoveArrayNames)
+  for(const auto& name : KCopyMoveArrayNames)
   {
     arrayPaths.push_back(k_InputAttrMatPath.createChildPath(name));
   }
@@ -236,7 +236,7 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays with mask",
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -249,33 +249,33 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Copy cell data arrays with mask",
 
   {
     DataPath exemplarAttrMat = DataPath({"Exemplar_Copy_Mask", "Vertex Data"});
-    UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAttrMat, dataStructure, k_ComputedVertexDataPath.createChildPath(k_VertexAttrMatName), true);
+    unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAttrMat, dataStructure, k_ComputedVertexDataPath.createChildPath(k_VertexAttrMatName), true);
   }
 
   {
     DataPath computedAttrMat = k_InputImageGeometryPath.createChildPath("Cell Data");
     DataPath exemplarAttrMat = DataPath({"ImageGeometry_Copy_Mask_Input", "Cell Data"});
-    UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAttrMat, dataStructure, computedAttrMat, true);
+    unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAttrMat, dataStructure, computedAttrMat, true);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays", "[SimplnxCore][ExtractVertexGeometry]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   //  Read Exemplar DREAM3D File Filter
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "extract_vertex_geometry.tar.gz", "extract_vertex_geometry");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "extract_vertex_geometry.tar.gz", "extract_vertex_geometry");
   auto baseDataFilePath = fs::path(fmt::format("{}/extract_vertex_geometry/extract_vertex_geometry.dream3d", unit_test::k_TestFilesDir));
 
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
   Arguments args;
 
   MultiArraySelectionParameter::ValueType arrayPaths;
-  for(const auto& name : k_CopyMoveArrayNames)
+  for(const auto& name : KCopyMoveArrayNames)
   {
     arrayPaths.push_back(k_InputAttrMatPath.createChildPath(name));
   }
@@ -292,7 +292,7 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays", "[Simplnx
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -305,33 +305,33 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays", "[Simplnx
 
   {
     DataPath exemplarAttrMat = DataPath({"Exemplar_Move", "Vertex Data"});
-    UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAttrMat, dataStructure, k_ComputedVertexDataPath.createChildPath(k_VertexAttrMatName), true);
+    unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAttrMat, dataStructure, k_ComputedVertexDataPath.createChildPath(k_VertexAttrMatName), true);
   }
 
   {
     DataPath computedAttrMat = k_InputImageGeometryPath.createChildPath("Cell Data");
     DataPath exemplarAttrMat = DataPath({"ImageGeometry_Move_Input", "Cell Data"});
-    UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAttrMat, dataStructure, computedAttrMat, true);
+    unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAttrMat, dataStructure, computedAttrMat, true);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays with mask", "[SimplnxCore][ExtractVertexGeometry]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   //  Read Exemplar DREAM3D File Filter
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "extract_vertex_geometry.tar.gz", "extract_vertex_geometry");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "extract_vertex_geometry.tar.gz", "extract_vertex_geometry");
   auto baseDataFilePath = fs::path(fmt::format("{}/extract_vertex_geometry/extract_vertex_geometry.dream3d", unit_test::k_TestFilesDir));
 
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   ExtractVertexGeometryFilter filter;
   Arguments args;
 
   MultiArraySelectionParameter::ValueType arrayPaths;
-  for(const auto& name : k_CopyMoveArrayNames)
+  for(const auto& name : KCopyMoveArrayNames)
   {
     arrayPaths.push_back(k_InputAttrMatPath.createChildPath(name));
   }
@@ -348,7 +348,7 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays with mask",
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -361,23 +361,23 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometry: Move cell data arrays with mask",
 
   {
     DataPath exemplarAttrMat = DataPath({"Exemplar_Move_Mask", "Vertex Data"});
-    UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAttrMat, dataStructure, k_ComputedVertexDataPath.createChildPath(k_VertexAttrMatName), true);
+    unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAttrMat, dataStructure, k_ComputedVertexDataPath.createChildPath(k_VertexAttrMatName), true);
   }
 
   {
     DataPath computedAttrMat = k_InputImageGeometryPath.createChildPath("Cell Data");
     DataPath exemplarAttrMat = DataPath({"ImageGeometry_Move_Mask_Input", "Cell Data"});
-    UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAttrMat, dataStructure, computedAttrMat, true);
+    unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAttrMat, dataStructure, computedAttrMat, true);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractVertexGeometryFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ExtractVertexGeometryFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -390,22 +390,22 @@ TEST_CASE("SimplnxCore::ExtractVertexGeometryFilter: SIMPL Backwards Compatibili
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ExtractVertexGeometryFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ExtractVertexGeometryFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       if(label == "SIMPL 6.5 (UUID)")
       {
         CHECK(args.value<bool>(ExtractVertexGeometryFilter::k_UseMask_Key) == true);

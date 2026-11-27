@@ -85,23 +85,23 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Uniform Phases", "[Si
   // cellPhases  = [1, 1, 2, 2, 2, 1, 1]
   // Expected: featurePhases = [0, 1, 2, 1]; 0 warnings.
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   // Construction
   {
-    auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{7});
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{7});
     AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{4});
 
-    auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
-    auto* cellPhases = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
+    auto* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
+    auto* cellPhasesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
 
     const std::array<int32, 7> fids = {1, 1, 2, 2, 2, 3, 3};
     const std::array<int32, 7> cphases = {1, 1, 2, 2, 2, 1, 1};
     for(usize i = 0; i < 7; i++)
     {
-      (*featureIds)[i] = fids[i];
-      (*cellPhases)[i] = cphases[i];
+      (*featureIdsPtr)[i] = fids[i];
+      (*cellPhasesPtr)[i] = cphases[i];
     }
   }
 
@@ -115,7 +115,7 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Uniform Phases", "[Si
     args.insert(ComputeFeaturePhasesFilter::k_FeaturePhasesArrayName_Key, std::make_any<std::string>(k_PhasesName));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -123,8 +123,8 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Uniform Phases", "[Si
   }
 
   // Validation
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeaturePhasesPath));
-  const auto& featurePhases = dataStructure.getDataRefAs<Int32Array>(k_FeaturePhasesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeaturePhasesPath));
+  const auto& featurePhases = dataStructure.getDataRefAs<Int32ArrayType>(k_FeaturePhasesPath);
   REQUIRE(featurePhases.getNumberOfTuples() == 4);
 
   const std::array<int32, 4> expected = {0, 1, 2, 1};
@@ -133,7 +133,7 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Uniform Phases", "[Si
     REQUIRE(featurePhases[i] == expected[i]);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // Case 2: empty feature in cells - ignore feature 0
@@ -143,23 +143,23 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Feature 0 Skip", "[Si
   // cellPhases  = [2, 2, 1, 1, 2, 2]
   // Expected featurePhases = [0, 1, 2]; 0 warnings.
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   // Construction
   {
-    auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{6});
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{6});
     AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{3});
 
-    auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
-    auto* cellPhases = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
+    auto* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
+    auto* cellPhasesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
 
     const std::array<int32, 6> fids = {0, 0, 1, 1, 2, 2};
     const std::array<int32, 6> cphases = {2, 2, 1, 1, 2, 2};
     for(usize i = 0; i < 6; i++)
     {
-      (*featureIds)[i] = fids[i];
-      (*cellPhases)[i] = cphases[i];
+      (*featureIdsPtr)[i] = fids[i];
+      (*cellPhasesPtr)[i] = cphases[i];
     }
   }
 
@@ -173,7 +173,7 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Feature 0 Skip", "[Si
     args.insert(ComputeFeaturePhasesFilter::k_FeaturePhasesArrayName_Key, std::make_any<std::string>(k_PhasesName));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -181,15 +181,15 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Feature 0 Skip", "[Si
   }
 
   // Validation
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeaturePhasesPath));
-  const auto& featurePhases = dataStructure.getDataRefAs<Int32Array>(k_FeaturePhasesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeaturePhasesPath));
+  const auto& featurePhases = dataStructure.getDataRefAs<Int32ArrayType>(k_FeaturePhasesPath);
   REQUIRE(featurePhases.getNumberOfTuples() == 3);
 
   REQUIRE(featurePhases[0] == 0); // Must be zero since it is ignored
   REQUIRE(featurePhases[1] == 1);
   REQUIRE(featurePhases[2] == 2);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // Case 3: 2 cells, mixed phase warning
@@ -199,21 +199,21 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Mixed Phase Warning",
   // cellPhases  = [1, 2]  — last-cell-wins: featurePhases[1] == 2
   // Expected: 1 warning (-500), feature 1
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   // Construction
   {
-    auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{2});
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{2});
     AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{2});
 
-    auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
-    auto* cellPhases = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
+    auto* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
+    auto* cellPhasesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
 
-    (*featureIds)[0] = 1;
-    (*featureIds)[1] = 1;
-    (*cellPhases)[0] = 1;
-    (*cellPhases)[1] = 2;
+    (*featureIdsPtr)[0] = 1;
+    (*featureIdsPtr)[1] = 1;
+    (*cellPhasesPtr)[0] = 1;
+    (*cellPhasesPtr)[1] = 2;
   }
 
   // Execution
@@ -225,7 +225,7 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Mixed Phase Warning",
   args.insert(ComputeFeaturePhasesFilter::k_FeaturePhasesArrayName_Key, std::make_any<std::string>(k_PhasesName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -239,11 +239,11 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Mixed Phase Warning",
   REQUIRE(ExtractWarningFeatureIds(warnMsg) == std::vector<int32>{1});
 
   // Tie-break - Last in. featurePhases[1] == 2
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeaturePhasesPath));
-  const auto& featurePhases = dataStructure.getDataRefAs<Int32Array>(k_FeaturePhasesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeaturePhasesPath));
+  const auto& featurePhases = dataStructure.getDataRefAs<Int32ArrayType>(k_FeaturePhasesPath);
   REQUIRE(featurePhases[1] == 2);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // Case 4: Exceed Max Printable Mixed Features
@@ -255,25 +255,25 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Truncated Mixed Featu
   static constexpr usize k_NumFeatures = k_MaxListedFeatures + 1;
   static constexpr usize k_NumCells = k_NumFeatures * 2;
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   // Construction
   {
-    auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{k_NumCells});
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{k_NumCells});
     AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{k_NumFeatures + 1});
 
-    auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
-    auto* cellPhases = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
+    auto* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
+    auto* cellPhasesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
 
     // Each feature f (1..16) gets cells at indices (f-1)*2 and (f-1)*2+1 with phases 1 and 2.
     for(usize feature = 1; feature <= k_NumFeatures; feature++)
     {
       const usize base = (feature - 1) * 2;
-      (*featureIds)[base] = static_cast<int32>(feature);
-      (*featureIds)[base + 1] = static_cast<int32>(feature);
-      (*cellPhases)[base] = 1;
-      (*cellPhases)[base + 1] = 2;
+      (*featureIdsPtr)[base] = static_cast<int32>(feature);
+      (*featureIdsPtr)[base + 1] = static_cast<int32>(feature);
+      (*cellPhasesPtr)[base] = 1;
+      (*cellPhasesPtr)[base + 1] = 2;
     }
   }
 
@@ -286,7 +286,7 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Truncated Mixed Featu
   args.insert(ComputeFeaturePhasesFilter::k_FeaturePhasesArrayName_Key, std::make_any<std::string>(k_PhasesName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -305,7 +305,7 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Truncated Mixed Featu
   }
   REQUIRE(warnMsg.find("and 1 more") != std::string::npos);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // Case 5: featureId out of bounds
@@ -315,21 +315,21 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Invalid: FeatureId Out Of Bo
   // cellPhases  = [1, 1]
   // Expected: error code -5351
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   // Construction
   {
-    auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{2});
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{2});
     AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{3});
 
-    auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
-    auto* cellPhases = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
+    auto* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
+    auto* cellPhasesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
 
-    (*featureIds)[0] = 1;
-    (*featureIds)[1] = 5;
-    (*cellPhases)[0] = 1;
-    (*cellPhases)[1] = 1;
+    (*featureIdsPtr)[0] = 1;
+    (*featureIdsPtr)[1] = 5;
+    (*cellPhasesPtr)[0] = 1;
+    (*cellPhasesPtr)[1] = 1;
   }
 
   // Execution
@@ -341,7 +341,7 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Invalid: FeatureId Out Of Bo
   args.insert(ComputeFeaturePhasesFilter::k_FeaturePhasesArrayName_Key, std::make_any<std::string>(k_PhasesName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
 
@@ -349,7 +349,7 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Invalid: FeatureId Out Of Bo
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().front().code == -5351);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // Case 6: Different Input Array Sizes
@@ -357,44 +357,44 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Invalid: Cell Array Size Mis
 {
   // Expected: error code -61860
 
-  const std::string k_CellFeatIdsAMName = "FeatureIdsAM";
-  const DataPath k_CellFeatIdsAMPath({k_CellFeatIdsAMName});
-  const std::string k_CellPhasesAMName = "CellPhasesAM";
-  const DataPath k_CellPhasesAMPath({k_CellPhasesAMName});
+  const std::string kCellFeatIdsAmName = "FeatureIdsAM";
+  const DataPath kCellFeatIdsAmPath({kCellFeatIdsAmName});
+  const std::string kCellPhasesAmName = "CellPhasesAM";
+  const DataPath kCellPhasesAmPath({kCellPhasesAmName});
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   // Construction
   {
-    auto* cellFeatIdsAM = AttributeMatrix::Create(dataStructure, k_CellFeatIdsAMName, ShapeType{4});
-    auto* cellPhasesAM = AttributeMatrix::Create(dataStructure, k_CellPhasesAMName, ShapeType{5});
+    auto* cellFeatIdsAmPtr = AttributeMatrix::Create(dataStructure, kCellFeatIdsAmName, ShapeType{4});
+    auto* cellPhasesAmPtr = AttributeMatrix::Create(dataStructure, kCellPhasesAmName, ShapeType{5});
     AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{3});
 
-    auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellFeatIdsAM->getShape(), ShapeType{1}, cellFeatIdsAM->getId());
-    Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellPhasesAM->getShape(), ShapeType{1}, cellPhasesAM->getId());
+    auto* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellFeatIdsAmPtr->getShape(), ShapeType{1}, cellFeatIdsAmPtr->getId());
+    Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellPhasesAmPtr->getShape(), ShapeType{1}, cellPhasesAmPtr->getId());
 
-    (*featureIds)[0] = 1;
-    (*featureIds)[1] = 1;
-    (*featureIds)[2] = 1;
-    (*featureIds)[3] = 1;
+    (*featureIdsPtr)[0] = 1;
+    (*featureIdsPtr)[1] = 1;
+    (*featureIdsPtr)[2] = 1;
+    (*featureIdsPtr)[3] = 1;
   }
 
   // Execution
   ComputeFeaturePhasesFilter filter;
   Arguments args;
-  args.insert(ComputeFeaturePhasesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(k_CellPhasesAMPath.createChildPath(k_CellPhasesName)));
-  args.insert(ComputeFeaturePhasesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(k_CellFeatIdsAMPath.createChildPath(k_FeatureIdsName)));
+  args.insert(ComputeFeaturePhasesFilter::k_CellPhasesArrayPath_Key, std::make_any<DataPath>(kCellPhasesAmPath.createChildPath(k_CellPhasesName)));
+  args.insert(ComputeFeaturePhasesFilter::k_CellFeatureIdsArrayPath_Key, std::make_any<DataPath>(kCellFeatIdsAmPath.createChildPath(k_FeatureIdsName)));
   args.insert(ComputeFeaturePhasesFilter::k_CellFeaturesAttributeMatrixPath_Key, std::make_any<DataPath>(k_FeatureAMPath));
   args.insert(ComputeFeaturePhasesFilter::k_FeaturePhasesArrayName_Key, std::make_any<std::string>(k_PhasesName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
 
   // Validation
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().front().code == -61860);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().front().code == -61860);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // Case 7: Negative Cell Phase
@@ -404,21 +404,21 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Invalid: Negative Cell Phase
   // cellPhases  = [1, -1]
   // Expected:  error code -61861
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   // Construction
   {
-    auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{2});
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{2});
     AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{2});
 
-    auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
-    auto* cellPhases = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
+    auto* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
+    auto* cellPhasesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
 
-    (*featureIds)[0] = 1;
-    (*featureIds)[1] = 1;
-    (*cellPhases)[0] = 1;
-    (*cellPhases)[1] = -1;
+    (*featureIdsPtr)[0] = 1;
+    (*featureIdsPtr)[1] = 1;
+    (*cellPhasesPtr)[0] = 1;
+    (*cellPhasesPtr)[1] = -1;
   }
 
   // Execution
@@ -430,7 +430,7 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Invalid: Negative Cell Phase
   args.insert(ComputeFeaturePhasesFilter::k_FeaturePhasesArrayName_Key, std::make_any<std::string>(k_PhasesName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
 
@@ -438,7 +438,7 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Invalid: Negative Cell Phase
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().front().code == -61861);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // Case 8: Negative featureId value
@@ -448,21 +448,21 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Invalid: Negative FeatureId"
   // cellPhases  = [1, 1]
   // Expected: error code -5355
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   // Construction
   {
-    auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{2});
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{2});
     AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{3});
 
-    auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
-    auto* cellPhases = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
+    auto* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
+    auto* cellPhasesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
 
-    (*featureIds)[0] = -1;
-    (*featureIds)[1] = 1;
-    (*cellPhases)[0] = 1;
-    (*cellPhases)[1] = 1;
+    (*featureIdsPtr)[0] = -1;
+    (*featureIdsPtr)[1] = 1;
+    (*cellPhasesPtr)[0] = 1;
+    (*cellPhasesPtr)[1] = 1;
   }
 
   // Execution
@@ -474,7 +474,7 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Invalid: Negative FeatureId"
   args.insert(ComputeFeaturePhasesFilter::k_FeaturePhasesArrayName_Key, std::make_any<std::string>(k_PhasesName));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
 
@@ -482,7 +482,7 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Invalid: Negative FeatureId"
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().front().code == -5355);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // Case 9: Gap feature - a feature index with no cells stays zero initialized
@@ -493,23 +493,23 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Gap Feature Stays Zer
   // Expected: featurePhases = [0, 1, 0, 2, 0]; 0 warnings. Documents the zero-init contract that
   // deviation D1 relies on: any feature index never written by the loop reads back as 0.
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   // Construction
   {
-    auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{4});
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{4});
     AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{5});
 
-    auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
-    auto* cellPhases = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
+    auto* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
+    auto* cellPhasesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
 
     const std::array<int32, 4> fids = {1, 1, 3, 3};
     const std::array<int32, 4> cphases = {1, 1, 2, 2};
     for(usize i = 0; i < 4; i++)
     {
-      (*featureIds)[i] = fids[i];
-      (*cellPhases)[i] = cphases[i];
+      (*featureIdsPtr)[i] = fids[i];
+      (*cellPhasesPtr)[i] = cphases[i];
     }
   }
 
@@ -523,7 +523,7 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Gap Feature Stays Zer
     args.insert(ComputeFeaturePhasesFilter::k_FeaturePhasesArrayName_Key, std::make_any<std::string>(k_PhasesName));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -531,8 +531,8 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Gap Feature Stays Zer
   }
 
   // Validation
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeaturePhasesPath));
-  const auto& featurePhases = dataStructure.getDataRefAs<Int32Array>(k_FeaturePhasesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeaturePhasesPath));
+  const auto& featurePhases = dataStructure.getDataRefAs<Int32ArrayType>(k_FeaturePhasesPath);
   REQUIRE(featurePhases.getNumberOfTuples() == 5);
 
   const std::array<int32, 5> expected = {0, 1, 0, 2, 0};
@@ -541,7 +541,7 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Gap Feature Stays Zer
     REQUIRE(featurePhases[i] == expected[i]);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // Case 10: Negative cell phase on a background cell is skipped, not an error
@@ -552,23 +552,23 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Negative Cell Phase O
   // Expected: featurePhases = [0, 2]; 0 warnings, no error. The -61861 negative phase guard runs
   // after the `featureId == 0` skip, so a negative phase on a background cell is never inspected.
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   // Construction
   {
-    auto* cellAM = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{3});
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellAMName, ShapeType{3});
     AttributeMatrix::Create(dataStructure, k_FeatureAMName, ShapeType{2});
 
-    auto* featureIds = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
-    auto* cellPhases = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellAM->getShape(), ShapeType{1}, cellAM->getId());
+    auto* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_FeatureIdsName, cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
+    auto* cellPhasesPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, k_CellPhasesName, cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
 
     const std::array<int32, 3> fids = {0, 1, 1};
     const std::array<int32, 3> cphases = {-5, 2, 2};
     for(usize i = 0; i < 3; i++)
     {
-      (*featureIds)[i] = fids[i];
-      (*cellPhases)[i] = cphases[i];
+      (*featureIdsPtr)[i] = fids[i];
+      (*cellPhasesPtr)[i] = cphases[i];
     }
   }
 
@@ -582,7 +582,7 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Negative Cell Phase O
     args.insert(ComputeFeaturePhasesFilter::k_FeaturePhasesArrayName_Key, std::make_any<std::string>(k_PhasesName));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -590,21 +590,21 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: Valid: Negative Cell Phase O
   }
 
   // Validation
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(k_FeaturePhasesPath));
-  const auto& featurePhases = dataStructure.getDataRefAs<Int32Array>(k_FeaturePhasesPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(k_FeaturePhasesPath));
+  const auto& featurePhases = dataStructure.getDataRefAs<Int32ArrayType>(k_FeaturePhasesPath);
   REQUIRE(featurePhases.getNumberOfTuples() == 2);
 
   REQUIRE(featurePhases[0] == 0); // Background feature never written
   REQUIRE(featurePhases[1] == 2);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ComputeFeaturePhasesFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -617,22 +617,22 @@ TEST_CASE("SimplnxCore::ComputeFeaturePhasesFilter: SIMPL Backwards Compatibilit
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ComputeFeaturePhasesFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ComputeFeaturePhasesFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(ComputeFeaturePhasesFilter::k_CellPhasesArrayPath_Key) == DataPath({"DataContainer", k_CellAMName, "TestArray"}));
       CHECK(args.value<DataPath>(ComputeFeaturePhasesFilter::k_CellFeatureIdsArrayPath_Key) == DataPath({"DataContainer", k_CellAMName, "TestArray"}));
       CHECK(args.value<DataPath>(ComputeFeaturePhasesFilter::k_CellFeaturesAttributeMatrixPath_Key) == DataPath({"DataContainer", "CellData"}));

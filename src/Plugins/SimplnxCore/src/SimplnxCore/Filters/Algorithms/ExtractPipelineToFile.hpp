@@ -21,8 +21,8 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ExtractPipelineToFileInputValues
 {
-  FileSystemPathParameter::ValueType InputFilePath;
-  FileSystemPathParameter::ValueType OutputFilePath;
+  FileSystemPathParameter::ValueType input_file_path;
+  FileSystemPathParameter::ValueType output_file_path;
 };
 
 /**
@@ -34,7 +34,7 @@ class SIMPLNXCORE_EXPORT ExtractPipelineToFile
 {
 public:
   ExtractPipelineToFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ExtractPipelineToFileInputValues* inputValues);
-  ~ExtractPipelineToFile() noexcept;
+  ~ExtractPipelineToFile() noexcept = default;
 
   ExtractPipelineToFile(const ExtractPipelineToFile&) = delete;
   ExtractPipelineToFile(ExtractPipelineToFile&&) noexcept = delete;

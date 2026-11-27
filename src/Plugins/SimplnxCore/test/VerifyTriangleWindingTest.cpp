@@ -37,8 +37,8 @@ using namespace nx::core;
 
 namespace
 {
-const DataPath k_TriangleGeomPath = DataPath({Constants::k_DataContainer});
-const DataPath k_FaceDataPath = k_TriangleGeomPath.createChildPath(Constants::k_Face_Data);
+const DataPath k_TriangleGeomPath = DataPath({constants::k_DataContainer});
+const DataPath k_FaceDataPath = k_TriangleGeomPath.createChildPath(constants::k_FaceDataWithSpaces);
 
 /**
  * @brief Creates four resident tuples without consulting storage preferences.
@@ -98,12 +98,12 @@ void CheckDisabledNormalsArray(const DataStructure& dataStructure, const DataPat
 
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Face Labels Execution", "[SimplnxCore][VerifyTriangleWindingFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "STL_Models.tar.gz", "STL_Models");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "STL_Models.tar.gz", "STL_Models");
 
   DataStructure dataStructure = {};
   {
@@ -116,14 +116,14 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Face Labels Execution
     args.insertOrAssign(ReadStlFileFilter::k_StlFilePath_Key, std::make_any<fs::path>(fs::path(inputFile)));
     args.insertOrAssign(ReadStlFileFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(k_TriangleGeomPath));
     args.insertOrAssign(ReadStlFileFilter::k_CreateFaceLabels_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ReadStlFileFilter::k_FaceLabelsName_Key, std::make_any<std::string>(Constants::k_FaceLabels));
-    args.insertOrAssign(ReadStlFileFilter::k_FaceNormalsName_Key, std::make_any<std::string>(Constants::k_FaceNormals));
-    args.insertOrAssign(ReadStlFileFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_Face_Data));
-    args.insertOrAssign(ReadStlFileFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_Vertex_Data));
+    args.insertOrAssign(ReadStlFileFilter::k_FaceLabelsName_Key, std::make_any<std::string>(constants::k_FaceLabels));
+    args.insertOrAssign(ReadStlFileFilter::k_FaceNormalsName_Key, std::make_any<std::string>(constants::k_FaceNormals));
+    args.insertOrAssign(ReadStlFileFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(constants::k_FaceDataWithSpaces));
+    args.insertOrAssign(ReadStlFileFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(constants::k_VertexDataWithSpaces));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -150,21 +150,21 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Face Labels Execution
 
     // Create default Parameters for the filter.
     args.insertOrAssign(LabelTriangleGeometryFilter::k_TriangleGeomPath_Key, std::make_any<DataPath>(::k_TriangleGeomPath));
-    args.insertOrAssign(LabelTriangleGeometryFilter::k_CreatedRegionIdsPath_Key, std::make_any<DataPath>(::k_FaceDataPath.createChildPath(Constants::k_FeatureIds)));
+    args.insertOrAssign(LabelTriangleGeometryFilter::k_CreatedRegionIdsPath_Key, std::make_any<DataPath>(::k_FaceDataPath.createChildPath(constants::k_FeatureIds)));
     args.insertOrAssign(LabelTriangleGeometryFilter::k_TriangleAttributeMatrixName_Key, std::make_any<std::string>("Region Data"));
     args.insertOrAssign(LabelTriangleGeometryFilter::k_NumTrianglesName_Key, std::make_any<std::string>("Num Triangles"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     // copy region ids into the surface labels
-    auto& faceLabels = dataStructure.getDataRefAs<Int32Array>(k_FaceDataPath.createChildPath(Constants::k_FaceLabels));
-    auto& regionIds = dataStructure.getDataRefAs<Int32Array>(k_FaceDataPath.createChildPath(Constants::k_FeatureIds));
+    auto& faceLabels = dataStructure.getDataRefAs<Int32ArrayType>(k_FaceDataPath.createChildPath(constants::k_FaceLabels));
+    auto& regionIds = dataStructure.getDataRefAs<Int32ArrayType>(k_FaceDataPath.createChildPath(constants::k_FeatureIds));
     for(usize i = 0; i < faceLabels.getNumberOfTuples(); i++)
     {
       faceLabels[(i * 2) + 0] = 0;
@@ -178,12 +178,12 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Face Labels Execution
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(VerifyTriangleWindingFilter::k_LabelsPath_Key, std::make_any<DataPath>(k_FaceDataPath.createChildPath(Constants::k_FaceLabels)));
+    args.insertOrAssign(VerifyTriangleWindingFilter::k_LabelsPath_Key, std::make_any<DataPath>(k_FaceDataPath.createChildPath(constants::k_FaceLabels)));
     args.insertOrAssign(VerifyTriangleWindingFilter::k_RepairNormals_Key, std::make_any<bool>(true));
-    args.insertOrAssign(VerifyTriangleWindingFilter::k_TriangleNormalsPath_Key, std::make_any<DataPath>(k_FaceDataPath.createChildPath(Constants::k_FaceNormals)));
+    args.insertOrAssign(VerifyTriangleWindingFilter::k_TriangleNormalsPath_Key, std::make_any<DataPath>(k_FaceDataPath.createChildPath(constants::k_FaceNormals)));
 
-    const DataPath labelsPath = k_FaceDataPath.createChildPath(Constants::k_FaceLabels);
-    const DataPath normalsPath = k_FaceDataPath.createChildPath(Constants::k_FaceNormals);
+    const DataPath labelsPath = k_FaceDataPath.createChildPath(constants::k_FaceLabels);
+    const DataPath normalsPath = k_FaceDataPath.createChildPath(constants::k_FaceNormals);
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
     const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
     REQUIRE(triangleGeom.getVertices() != nullptr);
@@ -197,7 +197,7 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Face Labels Execution
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    REQUIRE(preflightResult.output_actions.valid());
 
     // Execute the filter and check the result
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
@@ -226,35 +226,35 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Face Labels Execution
     args.insertOrAssign(ReadStlFileFilter::k_StlFilePath_Key, std::make_any<fs::path>(fs::path(inputFile)));
     args.insertOrAssign(ReadStlFileFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(k_TriangleGeomPath));
     args.insertOrAssign(ReadStlFileFilter::k_CreateFaceLabels_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ReadStlFileFilter::k_FaceLabelsName_Key, std::make_any<std::string>(Constants::k_FaceLabels));
-    args.insertOrAssign(ReadStlFileFilter::k_FaceNormalsName_Key, std::make_any<std::string>(Constants::k_FaceNormals));
-    args.insertOrAssign(ReadStlFileFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_Face_Data));
-    args.insertOrAssign(ReadStlFileFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_Vertex_Data));
+    args.insertOrAssign(ReadStlFileFilter::k_FaceLabelsName_Key, std::make_any<std::string>(constants::k_FaceLabels));
+    args.insertOrAssign(ReadStlFileFilter::k_FaceNormalsName_Key, std::make_any<std::string>(constants::k_FaceNormals));
+    args.insertOrAssign(ReadStlFileFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(constants::k_FaceDataWithSpaces));
+    args.insertOrAssign(ReadStlFileFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(constants::k_VertexDataWithSpaces));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(exemplarDataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(exemplarDataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  const DataPath normalsPath = k_FaceDataPath.createChildPath(Constants::k_FaceNormals);
+  const DataPath normalsPath = k_FaceDataPath.createChildPath(constants::k_FaceNormals);
 
-  UnitTest::CompareDataArrays<float64>(dataStructure.getDataRefAs<Float64Array>(normalsPath), exemplarDataStructure.getDataRefAs<Float64Array>(normalsPath));
+  unit_test::CompareDataArrays<float64>(dataStructure.getDataRefAs<Float64ArrayType>(normalsPath), exemplarDataStructure.getDataRefAs<Float64ArrayType>(normalsPath));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Region Ids Execution", "[SimplnxCore][VerifyTriangleWindingFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "STL_Models.tar.gz", "STL_Models");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "STL_Models.tar.gz", "STL_Models");
 
   DataStructure dataStructure = {};
   {
@@ -267,14 +267,14 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Region Ids Execution"
     args.insertOrAssign(ReadStlFileFilter::k_StlFilePath_Key, std::make_any<fs::path>(fs::path(inputFile)));
     args.insertOrAssign(ReadStlFileFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(k_TriangleGeomPath));
     args.insertOrAssign(ReadStlFileFilter::k_CreateFaceLabels_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ReadStlFileFilter::k_FaceLabelsName_Key, std::make_any<std::string>(Constants::k_FaceLabels));
-    args.insertOrAssign(ReadStlFileFilter::k_FaceNormalsName_Key, std::make_any<std::string>(Constants::k_FaceNormals));
-    args.insertOrAssign(ReadStlFileFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_Face_Data));
-    args.insertOrAssign(ReadStlFileFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_Vertex_Data));
+    args.insertOrAssign(ReadStlFileFilter::k_FaceLabelsName_Key, std::make_any<std::string>(constants::k_FaceLabels));
+    args.insertOrAssign(ReadStlFileFilter::k_FaceNormalsName_Key, std::make_any<std::string>(constants::k_FaceNormals));
+    args.insertOrAssign(ReadStlFileFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(constants::k_FaceDataWithSpaces));
+    args.insertOrAssign(ReadStlFileFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(constants::k_VertexDataWithSpaces));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -301,13 +301,13 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Region Ids Execution"
 
     // Create default Parameters for the filter.
     args.insertOrAssign(LabelTriangleGeometryFilter::k_TriangleGeomPath_Key, std::make_any<DataPath>(::k_TriangleGeomPath));
-    args.insertOrAssign(LabelTriangleGeometryFilter::k_CreatedRegionIdsPath_Key, std::make_any<DataPath>(::k_FaceDataPath.createChildPath(Constants::k_FeatureIds)));
+    args.insertOrAssign(LabelTriangleGeometryFilter::k_CreatedRegionIdsPath_Key, std::make_any<DataPath>(::k_FaceDataPath.createChildPath(constants::k_FeatureIds)));
     args.insertOrAssign(LabelTriangleGeometryFilter::k_TriangleAttributeMatrixName_Key, std::make_any<std::string>("Region Data"));
     args.insertOrAssign(LabelTriangleGeometryFilter::k_NumTrianglesName_Key, std::make_any<std::string>("Num Triangles"));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -320,12 +320,12 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Region Ids Execution"
     Arguments args;
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(VerifyTriangleWindingFilter::k_LabelsPath_Key, std::make_any<DataPath>(k_FaceDataPath.createChildPath(Constants::k_FeatureIds)));
+    args.insertOrAssign(VerifyTriangleWindingFilter::k_LabelsPath_Key, std::make_any<DataPath>(k_FaceDataPath.createChildPath(constants::k_FeatureIds)));
     args.insertOrAssign(VerifyTriangleWindingFilter::k_RepairNormals_Key, std::make_any<bool>(true));
-    args.insertOrAssign(VerifyTriangleWindingFilter::k_TriangleNormalsPath_Key, std::make_any<DataPath>(k_FaceDataPath.createChildPath(Constants::k_FaceNormals)));
+    args.insertOrAssign(VerifyTriangleWindingFilter::k_TriangleNormalsPath_Key, std::make_any<DataPath>(k_FaceDataPath.createChildPath(constants::k_FaceNormals)));
 
-    const DataPath labelsPath = k_FaceDataPath.createChildPath(Constants::k_FeatureIds);
-    const DataPath normalsPath = k_FaceDataPath.createChildPath(Constants::k_FaceNormals);
+    const DataPath labelsPath = k_FaceDataPath.createChildPath(constants::k_FeatureIds);
+    const DataPath normalsPath = k_FaceDataPath.createChildPath(constants::k_FaceNormals);
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath));
     const auto& triangleGeom = dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
     REQUIRE(triangleGeom.getVertices() != nullptr);
@@ -339,7 +339,7 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Region Ids Execution"
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    REQUIRE(preflightResult.output_actions.valid());
 
     // Execute the filter and check the result
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
@@ -368,30 +368,30 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Valid Region Ids Execution"
     args.insertOrAssign(ReadStlFileFilter::k_StlFilePath_Key, std::make_any<fs::path>(fs::path(inputFile)));
     args.insertOrAssign(ReadStlFileFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(k_TriangleGeomPath));
     args.insertOrAssign(ReadStlFileFilter::k_CreateFaceLabels_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ReadStlFileFilter::k_FaceLabelsName_Key, std::make_any<std::string>(Constants::k_FaceLabels));
-    args.insertOrAssign(ReadStlFileFilter::k_FaceNormalsName_Key, std::make_any<std::string>(Constants::k_FaceNormals));
-    args.insertOrAssign(ReadStlFileFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_Face_Data));
-    args.insertOrAssign(ReadStlFileFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_Vertex_Data));
+    args.insertOrAssign(ReadStlFileFilter::k_FaceLabelsName_Key, std::make_any<std::string>(constants::k_FaceLabels));
+    args.insertOrAssign(ReadStlFileFilter::k_FaceNormalsName_Key, std::make_any<std::string>(constants::k_FaceNormals));
+    args.insertOrAssign(ReadStlFileFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(constants::k_FaceDataWithSpaces));
+    args.insertOrAssign(ReadStlFileFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(constants::k_VertexDataWithSpaces));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(exemplarDataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(exemplarDataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  const DataPath normalsPath = k_FaceDataPath.createChildPath(Constants::k_FaceNormals);
+  const DataPath normalsPath = k_FaceDataPath.createChildPath(constants::k_FaceNormals);
 
-  UnitTest::CompareDataArrays<float64>(dataStructure.getDataRefAs<Float64Array>(normalsPath), exemplarDataStructure.getDataRefAs<Float64Array>(normalsPath));
+  unit_test::CompareDataArrays<float64>(dataStructure.getDataRefAs<Float64ArrayType>(normalsPath), exemplarDataStructure.getDataRefAs<Float64ArrayType>(normalsPath));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Duplicate Vertices Catch", "[SimplnxCore][VerifyTriangleWindingFilter]")
 {
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "STL_Models.tar.gz", "STL_Models");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "STL_Models.tar.gz", "STL_Models");
 
   DataStructure dataStructure = {};
   {
@@ -404,14 +404,14 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Duplicate Vertices Catch", 
     args.insertOrAssign(ReadStlFileFilter::k_StlFilePath_Key, std::make_any<fs::path>(fs::path(inputFile)));
     args.insertOrAssign(ReadStlFileFilter::k_CreatedTriangleGeometryPath_Key, std::make_any<DataPath>(k_TriangleGeomPath));
     args.insertOrAssign(ReadStlFileFilter::k_CreateFaceLabels_Key, std::make_any<bool>(true));
-    args.insertOrAssign(ReadStlFileFilter::k_FaceLabelsName_Key, std::make_any<std::string>(Constants::k_FaceLabels));
-    args.insertOrAssign(ReadStlFileFilter::k_FaceNormalsName_Key, std::make_any<std::string>(Constants::k_FaceNormals));
-    args.insertOrAssign(ReadStlFileFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_Face_Data));
-    args.insertOrAssign(ReadStlFileFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(Constants::k_Vertex_Data));
+    args.insertOrAssign(ReadStlFileFilter::k_FaceLabelsName_Key, std::make_any<std::string>(constants::k_FaceLabels));
+    args.insertOrAssign(ReadStlFileFilter::k_FaceNormalsName_Key, std::make_any<std::string>(constants::k_FaceNormals));
+    args.insertOrAssign(ReadStlFileFilter::k_FaceAttributeMatrixName_Key, std::make_any<std::string>(constants::k_FaceDataWithSpaces));
+    args.insertOrAssign(ReadStlFileFilter::k_VertexAttributeMatrixName_Key, std::make_any<std::string>(constants::k_VertexDataWithSpaces));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -420,13 +420,13 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Duplicate Vertices Catch", 
     auto& triGeom = dataStructure.getDataRefAs<TriangleGeom>(k_TriangleGeomPath);
     auto& vertexList = triGeom.getVerticesRef();
 
-    constexpr usize currentVert = 3;
-    constexpr usize prevVert = 0;
+    constexpr usize k_CurrentVert = 3;
+    constexpr usize k_PrevVert = 0;
 
     // Replace the vertex with a duplicate point. This test can invalidate faces.
-    vertexList[currentVert] = vertexList[prevVert];
-    vertexList[currentVert + 1] = vertexList[prevVert + 1];
-    vertexList[currentVert + 2] = vertexList[prevVert + 2];
+    vertexList[k_CurrentVert] = vertexList[k_PrevVert];
+    vertexList[k_CurrentVert + 1] = vertexList[k_PrevVert + 1];
+    vertexList[k_CurrentVert + 2] = vertexList[k_PrevVert + 2];
   }
 
   {
@@ -434,30 +434,30 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Duplicate Vertices Catch", 
     VerifyTriangleWindingFilter filter;
     Arguments args;
 
-    const DataPath faceDataPath = k_TriangleGeomPath.createChildPath(Constants::k_Face_Data);
+    const DataPath faceDataPath = k_TriangleGeomPath.createChildPath(constants::k_FaceDataWithSpaces);
 
     // Create default Parameters for the filter.
-    args.insertOrAssign(VerifyTriangleWindingFilter::k_LabelsPath_Key, std::make_any<DataPath>(faceDataPath.createChildPath(Constants::k_FaceLabels)));
+    args.insertOrAssign(VerifyTriangleWindingFilter::k_LabelsPath_Key, std::make_any<DataPath>(faceDataPath.createChildPath(constants::k_FaceLabels)));
     args.insertOrAssign(VerifyTriangleWindingFilter::k_RepairNormals_Key, std::make_any<bool>(true));
-    args.insertOrAssign(VerifyTriangleWindingFilter::k_TriangleNormalsPath_Key, std::make_any<DataPath>(faceDataPath.createChildPath(Constants::k_FaceNormals)));
+    args.insertOrAssign(VerifyTriangleWindingFilter::k_TriangleNormalsPath_Key, std::make_any<DataPath>(faceDataPath.createChildPath(constants::k_FaceNormals)));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: SIMPL Backwards Compatibility", "[SimplnxCore][VerifyTriangleWindingFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -469,22 +469,22 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: SIMPL Backwards Compatibili
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<VerifyTriangleWindingFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<VerifyTriangleWindingFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(VerifyTriangleWindingFilter::k_LabelsPath_Key) == DataPath({"DataContainer", "FaceData", "FaceLabels"}));
     }
   }
@@ -492,10 +492,10 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: SIMPL Backwards Compatibili
 
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: winding repair preserves disabled normals", "[SimplnxCore][VerifyTriangleWindingFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   const bool useFaceLabels = GENERATE(false, true);
   const bool hasNormals = GENERATE(false, true);
   DYNAMIC_SECTION("Face labels: " << useFaceLabels << ", existing normals: " << hasNormals)
@@ -509,13 +509,13 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: winding repair preserves di
     const DataPath normalsPath = faceDataPath.createChildPath("Normals");
     const usize idComponentCount = useFaceLabels ? 2 : 1;
     const std::vector<int32> expectedIds = useFaceLabels ? std::vector<int32>{0, 1, 0, 1, 0, 1, 0, 1} : std::vector<int32>{1, 1, 1, 1};
-    constexpr std::array<float32, 12> vertices = {0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1};
+    constexpr std::array<float32, 12> k_Vertices = {0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1};
     // Each expected edge has an opposite edge on its neighboring face. These faces enclose a unit tetrahedron with outward normals.
-    constexpr std::array<IGeometry::MeshIndexType, 12> expectedFaces = {0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3};
+    constexpr std::array<IGeometry::MeshIndexType, 12> k_ExpectedFaces = {0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3};
     // Faces 1 and 3 start reversed; face 0 retains the outward seed orientation.
-    constexpr std::array<IGeometry::MeshIndexType, 12> inputFaces = {0, 2, 1, 3, 1, 0, 0, 3, 2, 3, 2, 1};
-    constexpr std::array<float64, 12> sentinelNormals = {11, 12, 13, 21, 22, 23, 31, 32, 33, 41, 42, 43};
-    REQUIRE(inputFaces != expectedFaces);
+    constexpr std::array<IGeometry::MeshIndexType, 12> k_InputFaces = {0, 2, 1, 3, 1, 0, 0, 3, 2, 3, 2, 1};
+    constexpr std::array<float64, 12> k_SentinelNormals = {11, 12, 13, 21, 22, 23, 31, 32, 33, 41, 42, 43};
+    REQUIRE(k_InputFaces != k_ExpectedFaces);
 
     DataStructure dataStructure;
     auto* triangleGeomPtr = TriangleGeom::Create(dataStructure, geometryPath.getTargetName());
@@ -528,8 +528,8 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: winding repair preserves di
     triangleGeomPtr->setFaceAttributeMatrix(*faceDataPtr);
     triangleGeomPtr->setVertexAttributeMatrix(*vertexDataPtr);
 
-    auto* verticesPtr = CreateDisabledNormalsArray<float32>(dataStructure, verticesPath, 3, nonstd::span<const float32>(vertices.data(), vertices.size()));
-    auto* facesPtr = CreateDisabledNormalsArray<IGeometry::MeshIndexType>(dataStructure, facesPath, 3, nonstd::span<const IGeometry::MeshIndexType>(inputFaces.data(), inputFaces.size()));
+    auto* verticesPtr = CreateDisabledNormalsArray<float32>(dataStructure, verticesPath, 3, nonstd::span<const float32>(k_Vertices.data(), k_Vertices.size()));
+    auto* facesPtr = CreateDisabledNormalsArray<IGeometry::MeshIndexType>(dataStructure, facesPath, 3, nonstd::span<const IGeometry::MeshIndexType>(k_InputFaces.data(), k_InputFaces.size()));
     auto* idsPtr = CreateDisabledNormalsArray<int32>(dataStructure, idsPath, idComponentCount, nonstd::span<const int32>(expectedIds.data(), expectedIds.size()));
     triangleGeomPtr->setVertices(*verticesPtr);
     triangleGeomPtr->setFaceList(*facesPtr);
@@ -543,7 +543,7 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: winding repair preserves di
     const AbstractDataStore<float64>* normalsStorePtr = nullptr;
     if(hasNormals)
     {
-      auto* normalsPtr = CreateDisabledNormalsArray<float64>(dataStructure, normalsPath, 3, nonstd::span<const float64>(sentinelNormals.data(), sentinelNormals.size()));
+      auto* normalsPtr = CreateDisabledNormalsArray<float64>(dataStructure, normalsPath, 3, nonstd::span<const float64>(k_SentinelNormals.data(), k_SentinelNormals.size()));
       normalsId = normalsPtr->getId();
       normalsStorePtr = normalsPtr->getDataStore();
     }
@@ -560,12 +560,12 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: winding repair preserves di
       REQUIRE(dataStructure.getData(vertexDataPath) == vertexDataPtr);
       REQUIRE(geometry.getFaceAttributeMatrix()->getShape() == ShapeType{4});
       REQUIRE(geometry.getVertexAttributeMatrix()->getShape() == ShapeType{4});
-      CheckDisabledNormalsArray<float32>(dataStructure, verticesPath, verticesId, verticesStorePtr, 3, nonstd::span<const float32>(vertices.data(), vertices.size()));
+      CheckDisabledNormalsArray<float32>(dataStructure, verticesPath, verticesId, verticesStorePtr, 3, nonstd::span<const float32>(k_Vertices.data(), k_Vertices.size()));
       CheckDisabledNormalsArray<int32>(dataStructure, idsPath, idsId, idsStorePtr, idComponentCount, nonstd::span<const int32>(expectedIds.data(), expectedIds.size()));
       if(hasNormals)
       {
         REQUIRE(normalsId.has_value());
-        CheckDisabledNormalsArray<float64>(dataStructure, normalsPath, normalsId.value(), normalsStorePtr, 3, nonstd::span<const float64>(sentinelNormals.data(), sentinelNormals.size()));
+        CheckDisabledNormalsArray<float64>(dataStructure, normalsPath, normalsId.value(), normalsStorePtr, 3, nonstd::span<const float64>(k_SentinelNormals.data(), k_SentinelNormals.size()));
       }
       else
       {
@@ -573,7 +573,7 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: winding repair preserves di
       }
     };
     checkUnchangedInputs();
-    CheckDisabledNormalsArray<IGeometry::MeshIndexType>(dataStructure, facesPath, facesId, facesStorePtr, 3, nonstd::span<const IGeometry::MeshIndexType>(inputFaces.data(), inputFaces.size()));
+    CheckDisabledNormalsArray<IGeometry::MeshIndexType>(dataStructure, facesPath, facesId, facesStorePtr, 3, nonstd::span<const IGeometry::MeshIndexType>(k_InputFaces.data(), k_InputFaces.size()));
 
     VerifyTriangleWindingFilter filter;
     Arguments args;
@@ -581,7 +581,7 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: winding repair preserves di
     args.insertOrAssign(VerifyTriangleWindingFilter::k_RepairNormals_Key, std::make_any<bool>(false));
     args.insertOrAssign(VerifyTriangleWindingFilter::k_TriangleNormalsPath_Key, std::make_any<DataPath>(normalsPath));
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     scope.requireExpectedStore(*verticesPtr);
     scope.requireExpectedStore(*facesPtr);
     scope.requireExpectedStore(*idsPtr);
@@ -589,20 +589,21 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: winding repair preserves di
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
     checkUnchangedInputs();
-    CheckDisabledNormalsArray<IGeometry::MeshIndexType>(dataStructure, facesPath, facesId, facesStorePtr, 3, nonstd::span<const IGeometry::MeshIndexType>(expectedFaces.data(), expectedFaces.size()));
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    CheckDisabledNormalsArray<IGeometry::MeshIndexType>(dataStructure, facesPath, facesId, facesStorePtr, 3,
+                                                        nonstd::span<const IGeometry::MeshIndexType>(k_ExpectedFaces.data(), k_ExpectedFaces.size()));
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: resident late phase equivalence", "[SimplnxCore][VerifyTriangleWindingFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const usize idCase = GENERATE(usize{0}, usize{1}, usize{2}, usize{3});
   const bool reverseInput = GENERATE(false, true);
   const bool repairNormals = GENERATE(false, true);
   CAPTURE(scenario, idCase, reverseInput, repairNormals);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   const DataPath geometryPath({"LatePhaseTetrahedron"});
   const DataPath facesPath = geometryPath.createChildPath("Faces");
@@ -610,11 +611,11 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: resident late phase equival
   const DataPath faceDataPath = geometryPath.createChildPath("FaceData");
   const DataPath idsPath = faceDataPath.createChildPath("Ids");
   const DataPath normalsPath = faceDataPath.createChildPath("Normals");
-  constexpr std::array<float32, 12> vertices = {0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1};
-  constexpr std::array<IGeometry::MeshIndexType, 12> outwardFaces = {0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3};
-  constexpr std::array<float64, 12> sentinelNormals = {11, 12, 13, 21, 22, 23, 31, 32, 33, 41, 42, 43};
-  auto inputFaces = outwardFaces;
-  auto expectedFaces = outwardFaces;
+  constexpr std::array<float32, 12> k_Vertices = {0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1};
+  constexpr std::array<IGeometry::MeshIndexType, 12> k_OutwardFaces = {0, 2, 1, 0, 1, 3, 0, 3, 2, 1, 2, 3};
+  constexpr std::array<float64, 12> k_SentinelNormals = {11, 12, 13, 21, 22, 23, 31, 32, 33, 41, 42, 43};
+  auto inputFaces = k_OutwardFaces;
+  auto expectedFaces = k_OutwardFaces;
   for(usize face = 0; face < 4; ++face)
   {
     if(reverseInput)
@@ -650,29 +651,29 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: resident late phase equival
   }
 
   DataStructure dataStructure;
-  auto* geometry = TriangleGeom::Create(dataStructure, geometryPath.getTargetName());
-  REQUIRE(geometry != nullptr);
-  auto* faceData = AttributeMatrix::Create(dataStructure, faceDataPath.getTargetName(), {4}, geometry->getId());
-  REQUIRE(faceData != nullptr);
-  geometry->setFaceAttributeMatrix(*faceData);
-  auto* vertexArray = CreateDisabledNormalsArray<float32>(dataStructure, verticesPath, 3, {vertices.data(), vertices.size()});
-  auto* faceArray = CreateDisabledNormalsArray<IGeometry::MeshIndexType>(dataStructure, facesPath, 3, {inputFaces.data(), inputFaces.size()});
-  auto* idsArray = CreateDisabledNormalsArray<int32>(dataStructure, idsPath, idComponents, {ids.data(), ids.size()});
-  auto* normalsArray = CreateDisabledNormalsArray<float64>(dataStructure, normalsPath, 3, {sentinelNormals.data(), sentinelNormals.size()});
-  geometry->setVertices(*vertexArray);
-  geometry->setFaceList(*faceArray);
-  const auto vertexId = vertexArray->getId();
-  const auto faceId = faceArray->getId();
-  const auto idsId = idsArray->getId();
-  const auto normalsId = normalsArray->getId();
-  const auto* vertexStore = vertexArray->getDataStore();
-  const auto* faceStore = faceArray->getDataStore();
-  const auto* idsStore = idsArray->getDataStore();
-  const auto* normalsStore = normalsArray->getDataStore();
-  scope.requireExpectedStore(*vertexArray);
-  scope.requireExpectedStore(*faceArray);
-  scope.requireExpectedStore(*idsArray);
-  scope.requireExpectedStore(*normalsArray);
+  auto* geometryPtr = TriangleGeom::Create(dataStructure, geometryPath.getTargetName());
+  REQUIRE(geometryPtr != nullptr);
+  auto* faceDataPtr = AttributeMatrix::Create(dataStructure, faceDataPath.getTargetName(), {4}, geometryPtr->getId());
+  REQUIRE(faceDataPtr != nullptr);
+  geometryPtr->setFaceAttributeMatrix(*faceDataPtr);
+  auto* vertexArrayPtr = CreateDisabledNormalsArray<float32>(dataStructure, verticesPath, 3, {k_Vertices.data(), k_Vertices.size()});
+  auto* faceArrayPtr = CreateDisabledNormalsArray<IGeometry::MeshIndexType>(dataStructure, facesPath, 3, {inputFaces.data(), inputFaces.size()});
+  auto* idsArrayPtr = CreateDisabledNormalsArray<int32>(dataStructure, idsPath, idComponents, {ids.data(), ids.size()});
+  auto* normalsArrayPtr = CreateDisabledNormalsArray<float64>(dataStructure, normalsPath, 3, {k_SentinelNormals.data(), k_SentinelNormals.size()});
+  geometryPtr->setVertices(*vertexArrayPtr);
+  geometryPtr->setFaceList(*faceArrayPtr);
+  const auto vertexId = vertexArrayPtr->getId();
+  const auto faceId = faceArrayPtr->getId();
+  const auto idsId = idsArrayPtr->getId();
+  const auto normalsId = normalsArrayPtr->getId();
+  const auto* vertexStorePtr = vertexArrayPtr->getDataStore();
+  const auto* faceStorePtr = faceArrayPtr->getDataStore();
+  const auto* idsStorePtr = idsArrayPtr->getDataStore();
+  const auto* normalsStorePtr = normalsArrayPtr->getDataStore();
+  scope.requireExpectedStore(*vertexArrayPtr);
+  scope.requireExpectedStore(*faceArrayPtr);
+  scope.requireExpectedStore(*idsArrayPtr);
+  scope.requireExpectedStore(*normalsArrayPtr);
 
   VerifyTriangleWindingFilter filter;
   Arguments args;
@@ -680,19 +681,19 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: resident late phase equival
   args.insertOrAssign(VerifyTriangleWindingFilter::k_RepairNormals_Key, std::make_any<bool>(repairNormals));
   args.insertOrAssign(VerifyTriangleWindingFilter::k_TriangleNormalsPath_Key, std::make_any<DataPath>(normalsPath));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  CheckDisabledNormalsArray<float32>(dataStructure, verticesPath, vertexId, vertexStore, 3, {vertices.data(), vertices.size()});
-  CheckDisabledNormalsArray<IGeometry::MeshIndexType>(dataStructure, facesPath, faceId, faceStore, 3, {expectedFaces.data(), expectedFaces.size()});
-  CheckDisabledNormalsArray<int32>(dataStructure, idsPath, idsId, idsStore, idComponents, {ids.data(), ids.size()});
+  CheckDisabledNormalsArray<float32>(dataStructure, verticesPath, vertexId, vertexStorePtr, 3, {k_Vertices.data(), k_Vertices.size()});
+  CheckDisabledNormalsArray<IGeometry::MeshIndexType>(dataStructure, facesPath, faceId, faceStorePtr, 3, {expectedFaces.data(), expectedFaces.size()});
+  CheckDisabledNormalsArray<int32>(dataStructure, idsPath, idsId, idsStorePtr, idComponents, {ids.data(), ids.size()});
   if(repairNormals)
   {
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64Array>(normalsPath));
-    const auto& normals = dataStructure.getDataRefAs<Float64Array>(normalsPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float64ArrayType>(normalsPath));
+    const auto& normals = dataStructure.getDataRefAs<Float64ArrayType>(normalsPath);
     REQUIRE(normals.getId() == normalsId);
-    REQUIRE(normals.getDataStore() == normalsStore);
+    REQUIRE(normals.getDataStore() == normalsStorePtr);
     REQUIRE(normals.getTupleShape() == ShapeType{4});
     REQUIRE(normals.getComponentShape() == ShapeType{3});
     const float64 diagonal = 1.0 / std::sqrt(3.0);
@@ -713,19 +714,19 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: resident late phase equival
   }
   else
   {
-    CheckDisabledNormalsArray<float64>(dataStructure, normalsPath, normalsId, normalsStore, 3, {sentinelNormals.data(), sentinelNormals.size()});
+    CheckDisabledNormalsArray<float64>(dataStructure, normalsPath, normalsId, normalsStorePtr, 3, {k_SentinelNormals.data(), k_SentinelNormals.size()});
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: float32 volume accumulation order", "[SimplnxCore][VerifyTriangleWindingFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   const bool reordered = GENERATE(false, true);
   const usize blockCapacity = GENERATE(usize{1}, usize{3});
   CAPTURE(scenario, reordered, blockCapacity);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   const DataPath geometryPath({"VolumeOrderTriangles"});
   const DataPath facesPath = geometryPath.createChildPath("Faces");
@@ -733,9 +734,9 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: float32 volume accumulation
   const DataPath faceDataPath = geometryPath.createChildPath("FaceData");
   const DataPath idsPath = faceDataPath.createChildPath("Ids");
   const DataPath normalsPath = faceDataPath.createChildPath("UnusedNormals");
-  constexpr std::array<float32, 27> vertices = {0, 0, 1, 6, 0, 1, 0, 16777216, 1, 16, 0, 1, 22, 0, 1, 16, 1, 1, 32, 0, 1, 38, 0, 1, 32, 16777216, 1};
+  constexpr std::array<float32, 27> k_Vertices = {0, 0, 1, 6, 0, 1, 0, 16777216, 1, 16, 0, 1, 22, 0, 1, 16, 1, 1, 32, 0, 1, 38, 0, 1, 32, 16777216, 1};
   std::array<IGeometry::MeshIndexType, 9> inputFaces = {0, 2, 1, 3, 5, 4, 6, 7, 8};
-  constexpr std::array<int32, 3> ids = {1, 1, 1};
+  constexpr std::array<int32, 3> k_Ids = {1, 1, 1};
   if(reordered)
   {
     for(usize corner = 0; corner < 3; ++corner)
@@ -757,31 +758,31 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: float32 volume accumulation
   }
 
   DataStructure dataStructure;
-  auto* geometry = TriangleGeom::Create(dataStructure, geometryPath.getTargetName());
-  REQUIRE(geometry != nullptr);
-  auto* faceData = AttributeMatrix::Create(dataStructure, faceDataPath.getTargetName(), {3}, geometry->getId());
-  REQUIRE(faceData != nullptr);
-  geometry->setFaceAttributeMatrix(*faceData);
+  auto* geometryPtr = TriangleGeom::Create(dataStructure, geometryPath.getTargetName());
+  REQUIRE(geometryPtr != nullptr);
+  auto* faceDataPtr = AttributeMatrix::Create(dataStructure, faceDataPath.getTargetName(), {3}, geometryPtr->getId());
+  REQUIRE(faceDataPtr != nullptr);
+  geometryPtr->setFaceAttributeMatrix(*faceDataPtr);
   auto vertexStore = std::make_shared<DataStore<float32>>(ShapeType{9}, ShapeType{3}, 0.0f);
   auto faceStore = std::make_shared<DataStore<IGeometry::MeshIndexType>>(ShapeType{3}, ShapeType{3}, IGeometry::MeshIndexType{0});
   auto idsStore = std::make_shared<DataStore<int32>>(ShapeType{3}, ShapeType{1}, int32{0});
-  auto vertexWrite = vertexStore->copyFromBuffer(0, {vertices.data(), vertices.size()});
+  auto vertexWrite = vertexStore->copyFromBuffer(0, {k_Vertices.data(), k_Vertices.size()});
   auto faceWrite = faceStore->copyFromBuffer(0, {inputFaces.data(), inputFaces.size()});
-  auto idsWrite = idsStore->copyFromBuffer(0, {ids.data(), ids.size()});
+  auto idsWrite = idsStore->copyFromBuffer(0, {k_Ids.data(), k_Ids.size()});
   SIMPLNX_RESULT_REQUIRE_VALID(vertexWrite);
   SIMPLNX_RESULT_REQUIRE_VALID(faceWrite);
   SIMPLNX_RESULT_REQUIRE_VALID(idsWrite);
-  auto* vertexArray = Float32Array::Create(dataStructure, verticesPath.getTargetName(), vertexStore, geometry->getId());
-  auto* faceArray = TriangleGeom::SharedFaceList::Create(dataStructure, facesPath.getTargetName(), faceStore, geometry->getId());
-  auto* idsArray = Int32Array::Create(dataStructure, idsPath.getTargetName(), idsStore, faceData->getId());
-  REQUIRE(vertexArray != nullptr);
-  REQUIRE(faceArray != nullptr);
-  REQUIRE(idsArray != nullptr);
-  geometry->setVertices(*vertexArray);
-  geometry->setFaceList(*faceArray);
-  scope.requireExpectedStore(*vertexArray);
-  scope.requireExpectedStore(*faceArray);
-  scope.requireExpectedStore(*idsArray);
+  auto* vertexArrayPtr = Float32ArrayType::Create(dataStructure, verticesPath.getTargetName(), vertexStore, geometryPtr->getId());
+  auto* faceArrayPtr = TriangleGeom::SharedFaceListType::Create(dataStructure, facesPath.getTargetName(), faceStore, geometryPtr->getId());
+  auto* idsArrayPtr = Int32ArrayType::Create(dataStructure, idsPath.getTargetName(), idsStore, faceDataPtr->getId());
+  REQUIRE(vertexArrayPtr != nullptr);
+  REQUIRE(faceArrayPtr != nullptr);
+  REQUIRE(idsArrayPtr != nullptr);
+  geometryPtr->setVertices(*vertexArrayPtr);
+  geometryPtr->setFaceList(*faceArrayPtr);
+  scope.requireExpectedStore(*vertexArrayPtr);
+  scope.requireExpectedStore(*faceArrayPtr);
+  scope.requireExpectedStore(*idsArrayPtr);
 
   VerifyTriangleWindingFilter filter;
   Arguments args;
@@ -789,15 +790,15 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: float32 volume accumulation
   args.insertOrAssign(VerifyTriangleWindingFilter::k_RepairNormals_Key, std::make_any<bool>(false));
   args.insertOrAssign(VerifyTriangleWindingFilter::k_TriangleNormalsPath_Key, std::make_any<DataPath>(normalsPath));
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
-  auto& budget = CacheMemoryBudgetManager::instance();
+  auto& budget = CacheMemoryBudgetManager::Instance();
   const uint64 reservedBefore = budget.reservedWorkingMemoryBytes();
   {
     CacheMemoryBudgetManager::WorkingMemoryReservation occupied;
     const uint64 bytesPerTriangle = 3 * sizeof(IGeometry::MeshIndexType) + 3 * sizeof(usize) + 18 * sizeof(float32) + sizeof(int32);
     const uint64 targetGrant = blockCapacity * bytesPerTriangle;
-    if(scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore)
+    if(scenario == unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore)
     {
       REQUIRE(budget.maximumWorkingMemoryBytes() >= reservedBefore + targetGrant);
       const uint64 occupyBytes = budget.maximumWorkingMemoryBytes() - reservedBefore - targetGrant;
@@ -813,7 +814,7 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: float32 volume accumulation
     }};
     auto executeResult = scope.executeFilter(filter, dataStructure, args, nullptr, messageHandler);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
-    if(scenario == UnitTest::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore)
+    if(scenario == unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore)
     {
       CHECK(observedGrant == targetGrant);
     }
@@ -821,17 +822,17 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: float32 volume accumulation
   }
   CHECK(budget.reservedWorkingMemoryBytes() == reservedBefore);
   std::array<IGeometry::MeshIndexType, 9> actualFaces = {};
-  auto faceRead = faceArray->getDataStoreRef().copyIntoBuffer(0, {actualFaces.data(), actualFaces.size()});
+  auto faceRead = faceArrayPtr->getDataStoreRef().copyIntoBuffer(0, {actualFaces.data(), actualFaces.size()});
   SIMPLNX_RESULT_REQUIRE_VALID(faceRead);
   CHECK(actualFaces == expectedFaces);
   CHECK(dataStructure.getData(normalsPath) == nullptr);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 namespace
 {
 using MeshIndexType = IGeometry::MeshIndexType;
-using SupportListType = TriangleGeom::ElementDynamicList;
+using SupportListType = TriangleGeom::ElementDynamicListType;
 constexpr int32 k_InjectedFaceReadError = -56992;
 constexpr int32 k_InjectedFaceWriteError = -56993;
 const DataPath k_SupportGeometryPath({"SupportMesh"});
@@ -854,21 +855,21 @@ public:
   FailingFaceStore& operator=(const FailingFaceStore&) = delete;
   FailingFaceStore& operator=(FailingFaceStore&&) = delete;
 
-  usize FailingRead = 0;
-  bool RejectWrite = false;
-  mutable std::vector<std::pair<usize, usize>> Reads;
-  std::vector<std::pair<usize, usize>> Writes;
+  usize failing_read = 0;
+  bool reject_write = false;
+  mutable std::vector<std::pair<usize, usize>> reads;
+  std::vector<std::pair<usize, usize>> writes;
 
   Result<> copyIntoBuffer(usize start, nonstd::span<MeshIndexType> buffer) const override
   {
-    Reads.emplace_back(start, buffer.size());
-    return Reads.size() == FailingRead ? MakeErrorResult(k_InjectedFaceReadError, "Injected face read failure") : DataStore<MeshIndexType>::copyIntoBuffer(start, buffer);
+    reads.emplace_back(start, buffer.size());
+    return reads.size() == failing_read ? MakeErrorResult(k_InjectedFaceReadError, "Injected face read failure") : DataStore<MeshIndexType>::copyIntoBuffer(start, buffer);
   }
 
   Result<> copyFromBuffer(usize start, nonstd::span<const MeshIndexType> buffer) override
   {
-    Writes.emplace_back(start, buffer.size());
-    return RejectWrite ? MakeErrorResult(k_InjectedFaceWriteError, "Injected face write failure") : DataStore<MeshIndexType>::copyFromBuffer(start, buffer);
+    writes.emplace_back(start, buffer.size());
+    return reject_write ? MakeErrorResult(k_InjectedFaceWriteError, "Injected face write failure") : DataStore<MeshIndexType>::copyFromBuffer(start, buffer);
   }
 };
 
@@ -881,10 +882,10 @@ struct SupportSnapshot
   SupportSnapshot& operator=(const SupportSnapshot&) = default;
   SupportSnapshot& operator=(SupportSnapshot&&) noexcept = default;
 
-  std::optional<DataObject::IdType> Id;
-  std::optional<DataObject::IdType> Association;
-  const SupportListType* Object = nullptr;
-  std::vector<DataPath> Paths;
+  std::optional<DataObject::IdType> id;
+  std::optional<DataObject::IdType> association;
+  const SupportListType* object = nullptr;
+  std::vector<DataPath> paths;
 };
 
 DataPath SupportPath(bool neighbors)
@@ -902,12 +903,12 @@ SupportSnapshot SnapshotSupport(DataStructure& dataStructure, bool neighbors)
 {
   const auto& triGeom = GetSupportGeometry(dataStructure);
   SupportSnapshot snapshot;
-  snapshot.Association = neighbors ? triGeom.getElementNeighborsId() : triGeom.getElementContainingVertId();
-  snapshot.Object = dataStructure.getDataAs<SupportListType>(SupportPath(neighbors));
-  if(snapshot.Object != nullptr)
+  snapshot.association = neighbors ? triGeom.getElementNeighborsId() : triGeom.getElementContainingVertId();
+  snapshot.object = dataStructure.getDataAs<SupportListType>(SupportPath(neighbors));
+  if(snapshot.object != nullptr)
   {
-    snapshot.Id = snapshot.Object->getId();
-    snapshot.Paths = snapshot.Object->getDataPaths();
+    snapshot.id = snapshot.object->getId();
+    snapshot.paths = snapshot.object->getDataPaths();
   }
   return snapshot;
 }
@@ -915,13 +916,13 @@ SupportSnapshot SnapshotSupport(DataStructure& dataStructure, bool neighbors)
 void RequireSupport(DataStructure& dataStructure, bool neighbors, const SupportSnapshot& expected)
 {
   const auto actual = SnapshotSupport(dataStructure, neighbors);
-  CHECK(actual.Association == expected.Association);
-  REQUIRE(actual.Id == expected.Id);
-  CHECK(actual.Object == expected.Object);
-  CHECK(actual.Paths == expected.Paths);
-  if(expected.Id.has_value())
+  CHECK(actual.association == expected.association);
+  REQUIRE(actual.id == expected.id);
+  CHECK(actual.object == expected.object);
+  CHECK(actual.paths == expected.paths);
+  if(expected.id.has_value())
   {
-    CHECK(dataStructure.getData(expected.Id.value()) == expected.Object);
+    CHECK(dataStructure.getData(expected.id.value()) == expected.object);
   }
 }
 
@@ -934,6 +935,7 @@ void RequireSupportMemberships(DataStructure& dataStructure, bool neighbors)
   for(usize tupleIdx = 0; tupleIdx < expected.size(); ++tupleIdx)
   {
     std::vector<MeshIndexType> members;
+    members.reserve(supportPtr->getNumberOfElements(tupleIdx));
     for(usize memberIdx = 0; memberIdx < supportPtr->getNumberOfElements(tupleIdx); ++memberIdx)
     {
       members.push_back(supportPtr->getElementListPointer(tupleIdx)[memberIdx]);
@@ -946,7 +948,7 @@ void RequireSupportMemberships(DataStructure& dataStructure, bool neighbors)
 template <typename T>
 DataArray<T>& CreateMeshArray(DataStructure& dataStructure, const DataPath& path, usize tuples, usize components, DataObject::IdType parent)
 {
-  auto storePtr = DataStoreUtilities::CreateDataStore<T>(dataStructure, path, {tuples}, {components});
+  auto storePtr = data_store_utilities::CreateDataStore<T>(dataStructure, path, {tuples}, {components});
   REQUIRE(storePtr != nullptr);
   storePtr->fill(T{});
   auto* arrayPtr = DataArray<T>::Create(dataStructure, path.getTargetName(), std::move(storePtr), parent);
@@ -1013,14 +1015,14 @@ Arguments CreateSupportFixture(DataStructure& dataStructure, bool incidence, boo
 void ApplyWindingActions(DataStructure& dataStructure, const Arguments& args)
 {
   auto preflight = VerifyTriangleWindingFilter{}.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  const auto applied = preflight.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
+  const auto applied = preflight.output_actions.value().applyAll(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(applied);
 }
 
 Result<> RunVerifyTriangleWinding(DataStructure& dataStructure)
 {
-  VerifyTriangleWindingInputValues inputs{k_SupportGeometryPath, k_SupportLabelsPath, false, {}};
+  VerifyTriangleWindingInputValues inputs{.target_geometry_path = k_SupportGeometryPath, .labels_path = k_SupportLabelsPath, .repair_normals = false, .triangle_normals_path = {}};
   const std::atomic_bool cancelled = false;
   return VerifyTriangleWinding(dataStructure, {}, cancelled, &inputs)();
 }
@@ -1035,10 +1037,10 @@ std::shared_ptr<FailingFaceStore> ArmFaceTransferFailure(DataStructure& dataStru
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<MeshIndexType>>(k_SupportFacesPath));
   const auto replaced = dataStructure.getDataRefAs<DataArray<MeshIndexType>>(k_SupportFacesPath).setDataStore(storePtr);
   SIMPLNX_RESULT_REQUIRE_VALID(replaced);
-  storePtr->Reads.clear();
-  storePtr->Writes.clear();
-  storePtr->FailingRead = failingRead;
-  storePtr->RejectWrite = rejectWrite;
+  storePtr->reads.clear();
+  storePtr->writes.clear();
+  storePtr->failing_read = failingRead;
+  storePtr->reject_write = rejectWrite;
   return storePtr;
 }
 
@@ -1054,13 +1056,13 @@ void RequireSameMesh(const DataStructure& actual, const DataStructure& baseline)
 {
   REQUIRE_NOTHROW(actual.getDataRefAs<DataArray<MeshIndexType>>(k_SupportFacesPath));
   REQUIRE_NOTHROW(baseline.getDataRefAs<DataArray<MeshIndexType>>(k_SupportFacesPath));
-  UnitTest::CompareDataArrays<MeshIndexType>(actual.getDataRefAs<DataArray<MeshIndexType>>(k_SupportFacesPath), baseline.getDataRefAs<DataArray<MeshIndexType>>(k_SupportFacesPath));
-  REQUIRE_NOTHROW(actual.getDataRefAs<Int32Array>(k_SupportLabelsPath));
-  REQUIRE_NOTHROW(baseline.getDataRefAs<Int32Array>(k_SupportLabelsPath));
-  UnitTest::CompareDataArrays<int32>(actual.getDataRefAs<Int32Array>(k_SupportLabelsPath), baseline.getDataRefAs<Int32Array>(k_SupportLabelsPath));
-  REQUIRE_NOTHROW(actual.getDataRefAs<Float32Array>(k_SupportVerticesPath));
-  REQUIRE_NOTHROW(baseline.getDataRefAs<Float32Array>(k_SupportVerticesPath));
-  UnitTest::CompareDataArrays<float32>(actual.getDataRefAs<Float32Array>(k_SupportVerticesPath), baseline.getDataRefAs<Float32Array>(k_SupportVerticesPath));
+  unit_test::CompareDataArrays<MeshIndexType>(actual.getDataRefAs<DataArray<MeshIndexType>>(k_SupportFacesPath), baseline.getDataRefAs<DataArray<MeshIndexType>>(k_SupportFacesPath));
+  REQUIRE_NOTHROW(actual.getDataRefAs<Int32ArrayType>(k_SupportLabelsPath));
+  REQUIRE_NOTHROW(baseline.getDataRefAs<Int32ArrayType>(k_SupportLabelsPath));
+  unit_test::CompareDataArrays<int32>(actual.getDataRefAs<Int32ArrayType>(k_SupportLabelsPath), baseline.getDataRefAs<Int32ArrayType>(k_SupportLabelsPath));
+  REQUIRE_NOTHROW(actual.getDataRefAs<Float32ArrayType>(k_SupportVerticesPath));
+  REQUIRE_NOTHROW(baseline.getDataRefAs<Float32ArrayType>(k_SupportVerticesPath));
+  unit_test::CompareDataArrays<float32>(actual.getDataRefAs<Float32ArrayType>(k_SupportVerticesPath), baseline.getDataRefAs<Float32ArrayType>(k_SupportVerticesPath));
 }
 
 void RequireDiskBackedMesh(const DataStructure& dataStructure)
@@ -1097,19 +1099,19 @@ void CheckSupportSave(DataStructure& dataStructure, const DataStructure& baselin
   const auto incidenceLists = ReadSupportLists(dataStructure, false);
   const auto neighborLists = ReadSupportLists(dataStructure, true);
   const fs::path filePath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / fmt::format("VerifyTriangleWindingSupportSave-{}.dream3d", label);
-  const auto save = HDF5::DataStructureWriter::WriteFile(dataStructure, filePath);
+  const auto save = hdf5::DataStructureWriter::WriteFile(dataStructure, filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(save);
   RequireSupport(dataStructure, false, incidence);
   RequireSupport(dataStructure, true, neighbors);
   CHECK(ReadSupportLists(dataStructure, false) == incidenceLists);
   CHECK(ReadSupportLists(dataStructure, true) == neighborLists);
 
-  auto read = HDF5::DataStructureReader::ReadFile(filePath);
+  auto read = hdf5::DataStructureReader::ReadFile(filePath);
   SIMPLNX_RESULT_REQUIRE_VALID(read);
   RequireSameMesh(read.value(), baseline);
   RequireSupport(read.value(), false, {});
   RequireSupport(read.value(), true, {});
-  UnitTest::CheckArraysInheritTupleDims(read.value());
+  unit_test::CheckArraysInheritTupleDims(read.value());
   std::error_code removeError;
   fs::remove(filePath, removeError);
 }
@@ -1150,8 +1152,8 @@ void CheckSupportOwnership(bool incidence, bool neighbors, usize labelComponents
     RequireDiskBackedMesh(dataStructure);
   }
   CheckSupportSave(dataStructure, baseline, incidenceBefore, neighborsBefore, fmt::format("{}-{}-{}-{}", incidence, neighbors, labelComponents, ooc));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-  UnitTest::CheckArraysInheritTupleDims(baseline);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(baseline);
 }
 
 void CheckFailureCleanup(bool incidence, bool neighbors, usize failingRead, bool rejectWrite)
@@ -1177,10 +1179,10 @@ void CheckFailureCleanup(bool incidence, bool neighbors, usize failingRead, bool
   // Recalculation invalidates both IDs on incidence failure, and only the neighbor ID on neighbor failure.
   if(producerFailure)
   {
-    neighborsBefore.Association.reset();
+    neighborsBefore.association.reset();
     if(failingRead <= 2)
     {
-      incidenceBefore.Association.reset();
+      incidenceBefore.association.reset();
     }
   }
   RequireSupport(dataStructure, false, incidenceBefore);
@@ -1195,20 +1197,20 @@ void CheckFailureCleanup(bool incidence, bool neighbors, usize failingRead, bool
   }
   const std::vector<std::pair<usize, usize>> expectedReads(rejectWrite ? 4 : failingRead, {0, 12});
   const std::vector<std::pair<usize, usize>> expectedWrites = rejectWrite ? std::vector<std::pair<usize, usize>>{{0, 12}} : std::vector<std::pair<usize, usize>>{};
-  CHECK(storePtr->Reads == expectedReads);
-  CHECK(storePtr->Writes == expectedWrites);
-  CHECK(baselineStorePtr->Reads == expectedReads);
-  CHECK(baselineStorePtr->Writes == expectedWrites);
+  CHECK(storePtr->reads == expectedReads);
+  CHECK(storePtr->writes == expectedWrites);
+  CHECK(baselineStorePtr->reads == expectedReads);
+  CHECK(baselineStorePtr->writes == expectedWrites);
   RequireSameMesh(dataStructure, baseline);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-  UnitTest::CheckArraysInheritTupleDims(baseline);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(baseline);
 }
 } // namespace
 
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Supplied support ownership", "[SimplnxCore][VerifyTriangleWindingFilter]")
 {
   REQUIRE(Application::GetOrCreateInstance() != nullptr);
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
   const bool incidence = GENERATE(false, true);
   const bool neighbors = GENERATE(false, true);
   const usize labelComponents = GENERATE(1, 2);
@@ -1219,7 +1221,7 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Supplied support ownership"
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Producer failure cleanup", "[SimplnxCore][VerifyTriangleWindingFilter]")
 {
   REQUIRE(Application::GetOrCreateInstance() != nullptr);
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
   const bool incidence = GENERATE(false, true);
   const bool neighbors = GENERATE(false, true);
   const usize failingRead = GENERATE(1, 2, 3);
@@ -1230,7 +1232,7 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Producer failure cleanup", 
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Repair failure cleanup", "[SimplnxCore][VerifyTriangleWindingFilter]")
 {
   REQUIRE(Application::GetOrCreateInstance() != nullptr);
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
   const bool incidence = GENERATE(false, true);
   const bool neighbors = GENERATE(false, true);
   const bool rejectWrite = GENERATE(false, true);
@@ -1242,7 +1244,7 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Real store support ownershi
 {
   REQUIRE(Application::GetOrCreateInstance() != nullptr);
   REQUIRE(Application::GetOrCreateInstance()->getIOManager("HDF5-OOC") != nullptr);
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceOutOfCore, 1);
   const bool incidence = GENERATE(false, true);
   const bool neighbors = GENERATE(false, true);
   const usize labelComponents = GENERATE(1, 2);
@@ -1255,7 +1257,7 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Real store support ownershi
 TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Unassociated named child", "[SimplnxCore][VerifyTriangleWindingFilter]")
 {
   REQUIRE(Application::GetOrCreateInstance() != nullptr);
-  const UnitTest::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 1);
   const bool neighbors = GENERATE(false, true);
   CAPTURE(neighbors);
   DataStructure dataStructure;
@@ -1286,8 +1288,8 @@ TEST_CASE("SimplnxCore::VerifyTriangleWindingFilter: Unassociated named child", 
   const auto baselineResult = RunVerifyTriangleWinding(baseline);
   RequireError(baselineResult, -56321, "Unable to generate the connectivity list for SupportMesh geometry.");
   const std::vector<std::pair<usize, usize>> expectedReads(neighbors ? 3 : 1, {0, 12});
-  CHECK(storePtr->Reads == expectedReads);
+  CHECK(storePtr->reads == expectedReads);
   RequireSameMesh(dataStructure, baseline);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
-  UnitTest::CheckArraysInheritTupleDims(baseline);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(baseline);
 }

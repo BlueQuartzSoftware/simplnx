@@ -7,7 +7,7 @@ namespace nx::core
 {
 class INodeGeometry3D;
 
-namespace HDF5
+namespace hdf5
 {
 class SIMPLNX_EXPORT INodeGeom3dIO : public INodeGeom2dIO
 {
@@ -36,8 +36,8 @@ protected:
    * @param useEmptyDataStore = false
    * @return Result<>
    */
-  static Result<> ReadNodeGeom3dData(DataStructureReader& dataStructureReader, INodeGeometry3D& geometry, const group_reader_type& parentGroup, const std::string& geomName,
-                                     DataObject::IdType importId, const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false);
+  static Result<> ReadNodeGeom3dData(DataStructureReader& dataStructureReader, INodeGeometry3D& geometry, const GroupReaderType& parentGroup, const std::string& geomName, DataObject::IdType importId,
+                                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false);
 
   /**
    * @brief Attempts to write the INodeGeometry3D data to HDF5.
@@ -47,7 +47,7 @@ protected:
    * @param importable
    * @return Result<>
    */
-  static Result<> WriteNodeGeom3dData(DataStructureWriter& dataStructureWriter, const INodeGeometry3D& geometry, group_writer_type& parentGroup, bool importable);
+  static Result<> WriteNodeGeom3dData(DataStructureWriter& dataStructureWriter, const INodeGeometry3D& geometry, GroupWriterType& parentGroup, bool importable);
 
   /**
    * @brief Finishes importing 3D node geometry data after the geometry has been created.
@@ -56,7 +56,7 @@ protected:
    * @param dataStructureGroup The HDF5 group containing the geometry data
    * @return Result<> Result with any errors or warnings
    */
-  static Result<> FinishImportingNodeGeom3dData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup);
+  static Result<> FinishImportingNodeGeom3dData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& dataStructureGroup);
 };
-} // namespace HDF5
+} // namespace hdf5
 } // namespace nx::core

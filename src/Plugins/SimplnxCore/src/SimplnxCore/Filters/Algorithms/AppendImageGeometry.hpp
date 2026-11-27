@@ -17,14 +17,14 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT AppendImageGeometryInputValues
 {
-  std::vector<DataPath> InputGeometriesPaths;
-  DataPath DestinationGeometryPath;
-  DataPath NewGeometryPath;
-  std::string DefaultValue;
-  bool CheckResolution;
-  bool MirrorGeometry;
-  bool SaveAsNewGeometry;
-  CopyFromArray::Direction Direction;
+  std::vector<DataPath> input_geometries_paths;
+  DataPath destination_geometry_path;
+  DataPath new_geometry_path;
+  std::string default_value;
+  bool check_resolution{};
+  bool mirror_geometry{};
+  bool save_as_new_geometry{};
+  copy_from_array::Direction direction;
 };
 
 /**
@@ -52,7 +52,7 @@ public:
    * @pre All arguments outlive this executor.
    */
   AppendImageGeometry(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, AppendImageGeometryInputValues* inputValues);
-  ~AppendImageGeometry() noexcept;
+  ~AppendImageGeometry() noexcept = default;
 
   AppendImageGeometry(const AppendImageGeometry&) = delete;
   AppendImageGeometry(AppendImageGeometry&&) noexcept = delete;

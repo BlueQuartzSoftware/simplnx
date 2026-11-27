@@ -49,41 +49,41 @@ public:
   {
     return false;
   }
-  Result<uint64> read(uint64 recordOffset, uint64 requestedRecordCount, nonstd::span<std::byte> records, const std::atomic_bool&) const override
+  Result<uint64> read(uint64 recordOffset, uint64 requestedRecordCount, nonstd::span<std::byte> records, const std::atomic_bool& /*shouldCancel*/) const override
   {
-    ++readCalls;
-    if(failRead)
+    ++read_calls;
+    if(fail_read)
     {
       return MakeErrorResult<uint64>(-7680, "Injected sweep scratch read failure");
     }
-    const uint64 returnedRecords = shortRead && requestedRecordCount > 0 ? requestedRecordCount - 1 : requestedRecordCount;
+    const uint64 returnedRecords = short_read && requestedRecordCount > 0 ? requestedRecordCount - 1 : requestedRecordCount;
     std::memcpy(records.data(), m_Bytes.data() + static_cast<usize>(recordOffset * m_RecordSize), static_cast<usize>(returnedRecords * m_RecordSize));
     return {returnedRecords};
   }
-  Result<> write(uint64 recordOffset, uint64 recordCount, nonstd::span<const std::byte> records, const std::atomic_bool&) override
+  Result<> write(uint64 recordOffset, uint64 recordCount, nonstd::span<const std::byte> records, const std::atomic_bool& /*shouldCancel*/) override
   {
-    ++writeCalls;
-    if(failWrite)
+    ++write_calls;
+    if(fail_write)
     {
       return MakeErrorResult(-7681, "Injected sweep scratch write failure");
     }
     std::memcpy(m_Bytes.data() + static_cast<usize>(recordOffset * m_RecordSize), records.data(), static_cast<usize>(recordCount * m_RecordSize));
     return {};
   }
-  Result<> fill(uint64, uint64, nonstd::span<const std::byte>, const std::atomic_bool&) override
+  Result<> fill(uint64 /*recordOffset*/, uint64 /*recordCount*/, nonstd::span<const std::byte> /*record*/, const std::atomic_bool& /*shouldCancel*/) override
   {
     return MakeErrorResult(-7682, "Unexpected sweep scratch fill");
   }
-  Result<> resize(uint64, const std::atomic_bool&) override
+  Result<> resize(uint64 /*recordCount*/, const std::atomic_bool& /*shouldCancel*/) override
   {
     return MakeErrorResult(-7683, "Unexpected sweep scratch resize");
   }
 
-  mutable usize readCalls = 0;
-  usize writeCalls = 0;
-  bool failRead = false;
-  bool failWrite = false;
-  bool shortRead = false;
+  mutable usize read_calls = 0;
+  usize write_calls = 0;
+  bool fail_read = false;
+  bool fail_write = false;
+  bool short_read = false;
 
 private:
   uint64 m_RecordSize = 0;
@@ -307,7 +307,7 @@ std::vector<T> RunVincent(const std::vector<T>& marker, const std::vector<T>& ma
   DataStore<T> outStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, static_cast<T>(0));
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  const Result<> r = ReconstructVincent<T>{markerStore, maskStore, outStore, SizeVec3{dimX, dimY, dimZ}, op, fullyConnected, shouldCancel, messageHandler, {}, frontierCapacity}();
+  const Result<> r = ReconstructVincent<T>{markerStore, maskStore, outStore, SizeVec3Type{dimX, dimY, dimZ}, op, fullyConnected, shouldCancel, messageHandler, {}, frontierCapacity}();
   REQUIRE(r.valid());
   std::vector<T> out(marker.size());
   for(usize i = 0; i < out.size(); ++i)
@@ -326,7 +326,7 @@ std::vector<T> RunSweep(const std::vector<T>& marker, const std::vector<T>& mask
   DataStore<T> outStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, static_cast<T>(0));
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  const Result<> r = ReconstructSweep<T>{markerStore, maskStore, outStore, SizeVec3{dimX, dimY, dimZ}, op, fullyConnected, shouldCancel, messageHandler, maxSlabValues, maxSweepPairs}();
+  const Result<> r = ReconstructSweep<T>{markerStore, maskStore, outStore, SizeVec3Type{dimX, dimY, dimZ}, op, fullyConnected, shouldCancel, messageHandler, maxSlabValues, maxSweepPairs}();
   REQUIRE(r.valid());
   std::vector<T> out(marker.size());
   for(usize i = 0; i < out.size(); ++i)
@@ -472,19 +472,19 @@ TEST_CASE("NXImageProcessing::SweepTemporaryStore: performs typed bulk I/O and r
   std::array<float32, 6> read{};
   REQUIRE(store.copyIntoBuffer(3, nonstd::span<float32>(read.data(), read.size())).valid());
   REQUIRE(read == written);
-  REQUIRE(backendPtr->writeCalls == 2);
-  REQUIRE(backendPtr->readCalls == 2);
+  REQUIRE(backendPtr->write_calls == 2);
+  REQUIRE(backendPtr->read_calls == 2);
 
   REQUIRE(store.copyIntoBuffer(10, nonstd::span<float32>(read.data(), 3)).invalid());
-  REQUIRE(backendPtr->readCalls == 2);
+  REQUIRE(backendPtr->read_calls == 2);
 
-  backendPtr->failWrite = true;
+  backendPtr->fail_write = true;
   REQUIRE(store.copyFromBuffer(3, nonstd::span<const float32>(written.data(), written.size())).invalid());
-  backendPtr->failWrite = false;
-  backendPtr->failRead = true;
+  backendPtr->fail_write = false;
+  backendPtr->fail_read = true;
   REQUIRE(store.copyIntoBuffer(3, nonstd::span<float32>(read.data(), read.size())).invalid());
-  backendPtr->failRead = false;
-  backendPtr->shortRead = true;
+  backendPtr->fail_read = false;
+  backendPtr->short_read = true;
   REQUIRE(store.copyIntoBuffer(3, nonstd::span<float32>(read.data(), read.size())).invalid());
 }
 
@@ -497,10 +497,10 @@ TEST_CASE("NXImageProcessing::Sweep2DPlan: bounds full-width and overwide sweep 
     const auto result = CreateSweep2DPlan(/*dimX=*/7, /*dimY=*/11, /*maxBufferValues=*/30, /*fullWidthHaloRows=*/1, /*tiledRows=*/1);
     REQUIRE(result.valid());
     const auto& plan = result.value();
-    REQUIRE(plan.fullWidth);
-    REQUIRE(plan.coreRows == 3);
-    REQUIRE(plan.coreColumns == 7);
-    REQUIRE((plan.coreRows + 1) * 7 <= 30);
+    REQUIRE(plan.full_width);
+    REQUIRE(plan.core_rows == 3);
+    REQUIRE(plan.core_columns == 7);
+    REQUIRE((plan.core_rows + 1) * 7 <= 30);
   }
 
   SECTION("reconstruction overwide X tiles")
@@ -508,10 +508,10 @@ TEST_CASE("NXImageProcessing::Sweep2DPlan: bounds full-width and overwide sweep 
     const auto result = CreateSweep2DPlan(/*dimX=*/31, /*dimY=*/4, /*maxBufferValues=*/12, /*fullWidthHaloRows=*/1, /*tiledRows=*/1);
     REQUIRE(result.valid());
     const auto& plan = result.value();
-    REQUIRE_FALSE(plan.fullWidth);
-    REQUIRE(plan.coreRows == 1);
-    REQUIRE(plan.coreColumns == 10);
-    REQUIRE(plan.coreColumns + 2 <= 12);
+    REQUIRE_FALSE(plan.full_width);
+    REQUIRE(plan.core_rows == 1);
+    REQUIRE(plan.core_columns == 10);
+    REQUIRE(plan.core_columns + 2 <= 12);
   }
 
   SECTION("regional-extrema overwide X tiles reserve three halo rows")
@@ -519,10 +519,10 @@ TEST_CASE("NXImageProcessing::Sweep2DPlan: bounds full-width and overwide sweep 
     const auto result = CreateSweep2DPlan(/*dimX=*/31, /*dimY=*/4, /*maxBufferValues=*/18, /*fullWidthHaloRows=*/2, /*tiledRows=*/3);
     REQUIRE(result.valid());
     const auto& plan = result.value();
-    REQUIRE_FALSE(plan.fullWidth);
-    REQUIRE(plan.coreRows == 1);
-    REQUIRE(plan.coreColumns == 4);
-    REQUIRE(3 * (plan.coreColumns + 2) <= 18);
+    REQUIRE_FALSE(plan.full_width);
+    REQUIRE(plan.core_rows == 1);
+    REQUIRE(plan.core_columns == 4);
+    REQUIRE(3 * (plan.core_columns + 2) <= 18);
   }
 
   SECTION("insufficient tile budget is rejected")
@@ -536,115 +536,115 @@ TEST_CASE("NXImageProcessing::Sweep2DPlan: bounds full-width and overwide sweep 
 TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: total working-memory grants scale checked sweep plans without changing output",
           "[NXImageProcessing][MorphologicalReconstructionEngine][WorkingMemory]")
 {
-  constexpr usize dimX = 7;
-  constexpr usize dimY = 6;
-  constexpr usize dimZ = 7;
-  constexpr usize planeValues = dimX * dimY;
-  constexpr usize smallerTargetBytes = (2 * 2 * planeValues + planeValues) * sizeof(int16);
-  constexpr usize largerTargetBytes = (2 * 4 * planeValues + planeValues) * sizeof(int16);
+  constexpr usize k_DimX = 7;
+  constexpr usize k_DimY = 6;
+  constexpr usize k_DimZ = 7;
+  constexpr usize k_PlaneValues = k_DimX * k_DimY;
+  constexpr usize k_SmallerTargetBytes = (2 * 2 * k_PlaneValues + k_PlaneValues) * sizeof(int16);
+  constexpr usize k_LargerTargetBytes = (2 * 4 * k_PlaneValues + k_PlaneValues) * sizeof(int16);
 
-  auto smallerResult = ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3{dimX, dimY, dimZ}, smallerTargetBytes);
+  auto smallerResult = ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3Type{k_DimX, k_DimY, k_DimZ}, k_SmallerTargetBytes);
   REQUIRE(smallerResult.valid());
   const auto& smaller = smallerResult.value();
-  REQUIRE(smaller.maxSlabValues == 2 * planeValues);
-  REQUIRE(smaller.residentBytes <= smallerTargetBytes);
-  REQUIRE_FALSE(smaller.useResidentFullSweep);
+  REQUIRE(smaller.max_slab_values == 2 * k_PlaneValues);
+  REQUIRE(smaller.resident_bytes <= k_SmallerTargetBytes);
+  REQUIRE_FALSE(smaller.use_resident_full_sweep);
 
-  auto largerResult = ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3{dimX, dimY, dimZ}, largerTargetBytes);
+  auto largerResult = ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3Type{k_DimX, k_DimY, k_DimZ}, k_LargerTargetBytes);
   REQUIRE(largerResult.valid());
   const auto& larger = largerResult.value();
-  REQUIRE(larger.maxSlabValues == 4 * planeValues);
-  REQUIRE(larger.maxSlabValues > smaller.maxSlabValues);
-  REQUIRE(larger.residentBytes <= largerTargetBytes);
-  REQUIRE_FALSE(larger.useResidentFullSweep);
+  REQUIRE(larger.max_slab_values == 4 * k_PlaneValues);
+  REQUIRE(larger.max_slab_values > smaller.max_slab_values);
+  REQUIRE(larger.resident_bytes <= k_LargerTargetBytes);
+  REQUIRE_FALSE(larger.use_resident_full_sweep);
 
-  auto usefulResult = ImageProcessing::detail::CalculateReconstructionUsefulWorkingMemoryBytes<int16>(SizeVec3{dimX, dimY, dimZ});
+  auto usefulResult = ImageProcessing::detail::CalculateReconstructionUsefulWorkingMemoryBytes<int16>(SizeVec3Type{k_DimX, k_DimY, k_DimZ});
   REQUIRE(usefulResult.valid());
-  REQUIRE(usefulResult.value() == (2 * dimX * dimY * dimZ + planeValues) * sizeof(int16));
-  auto fullResult = ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3{dimX, dimY, dimZ}, usefulResult.value());
+  REQUIRE(usefulResult.value() == (2 * k_DimX * k_DimY * k_DimZ + k_PlaneValues) * sizeof(int16));
+  auto fullResult = ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3Type{k_DimX, k_DimY, k_DimZ}, usefulResult.value());
   REQUIRE(fullResult.valid());
-  REQUIRE(fullResult.value().maxSlabValues == dimX * dimY * dimZ);
-  REQUIRE(fullResult.value().residentBytes <= usefulResult.value());
-  REQUIRE(fullResult.value().useResidentFullSweep);
+  REQUIRE(fullResult.value().max_slab_values == k_DimX * k_DimY * k_DimZ);
+  REQUIRE(fullResult.value().resident_bytes <= usefulResult.value());
+  REQUIRE(fullResult.value().use_resident_full_sweep);
 
-  constexpr usize prefixDimX = 1024;
-  constexpr usize prefixDimY = 1024;
-  constexpr usize prefixDimZ = 256;
-  constexpr usize prefixPlaneValues = prefixDimX * prefixDimY;
-  auto prefixPlanResult = ImageProcessing::detail::CreateReconstructionPersistentPrefixPlan<int16>(SizeVec3{prefixDimX, prefixDimY, prefixDimZ}, /*maxSlabValues=*/127 * prefixPlaneValues);
+  constexpr usize k_PrefixDimX = 1024;
+  constexpr usize k_PrefixDimY = 1024;
+  constexpr usize k_PrefixDimZ = 256;
+  constexpr usize k_PrefixPlaneValues = k_PrefixDimX * k_PrefixDimY;
+  auto prefixPlanResult = ImageProcessing::detail::CreateReconstructionPersistentPrefixPlan<int16>(SizeVec3Type{k_PrefixDimX, k_PrefixDimY, k_PrefixDimZ}, /*maxSlabValues=*/127 * k_PrefixPlaneValues);
   REQUIRE(prefixPlanResult.valid());
-  REQUIRE(prefixPlanResult.value().residentPlanes == 252);
-  REQUIRE(prefixPlanResult.value().residentValues == 252 * prefixPlaneValues);
-  REQUIRE(prefixPlanResult.value().residentBytes == 255 * prefixPlaneValues * sizeof(int16));
-  REQUIRE(prefixPlanResult.value().residentBytes < 512ULL * 1024ULL * 1024ULL);
+  REQUIRE(prefixPlanResult.value().resident_planes == 252);
+  REQUIRE(prefixPlanResult.value().resident_values == 252 * k_PrefixPlaneValues);
+  REQUIRE(prefixPlanResult.value().resident_bytes == 255 * k_PrefixPlaneValues * sizeof(int16));
+  REQUIRE(prefixPlanResult.value().resident_bytes < 512ULL * 1024ULL * 1024ULL);
 
-  constexpr usize scaledPlaneValues = 7 * 6;
-  auto smallerPrefixResult = ImageProcessing::detail::CreateReconstructionPersistentPrefixPlan<int16>(SizeVec3{7, 6, 20}, /*maxSlabValues=*/3 * scaledPlaneValues);
-  auto largerPrefixResult = ImageProcessing::detail::CreateReconstructionPersistentPrefixPlan<int16>(SizeVec3{7, 6, 20}, /*maxSlabValues=*/6 * scaledPlaneValues);
+  constexpr usize k_ScaledPlaneValues = 7 * 6;
+  auto smallerPrefixResult = ImageProcessing::detail::CreateReconstructionPersistentPrefixPlan<int16>(SizeVec3Type{7, 6, 20}, /*maxSlabValues=*/3 * k_ScaledPlaneValues);
+  auto largerPrefixResult = ImageProcessing::detail::CreateReconstructionPersistentPrefixPlan<int16>(SizeVec3Type{7, 6, 20}, /*maxSlabValues=*/6 * k_ScaledPlaneValues);
   REQUIRE(smallerPrefixResult.valid());
   REQUIRE(largerPrefixResult.valid());
-  REQUIRE(smallerPrefixResult.value().residentPlanes == 4);
-  REQUIRE(largerPrefixResult.value().residentPlanes == 10);
-  REQUIRE(smallerPrefixResult.value().residentBytes == 7 * scaledPlaneValues * sizeof(int16));
-  REQUIRE(largerPrefixResult.value().residentBytes == 13 * scaledPlaneValues * sizeof(int16));
-  REQUIRE(largerPrefixResult.value().residentPlanes > smallerPrefixResult.value().residentPlanes);
+  REQUIRE(smallerPrefixResult.value().resident_planes == 4);
+  REQUIRE(largerPrefixResult.value().resident_planes == 10);
+  REQUIRE(smallerPrefixResult.value().resident_bytes == 7 * k_ScaledPlaneValues * sizeof(int16));
+  REQUIRE(largerPrefixResult.value().resident_bytes == 13 * k_ScaledPlaneValues * sizeof(int16));
+  REQUIRE(largerPrefixResult.value().resident_planes > smallerPrefixResult.value().resident_planes);
 
-  auto insufficientPrefixResult = ImageProcessing::detail::CreateReconstructionPersistentPrefixPlan<int16>(SizeVec3{7, 6, 20}, /*maxSlabValues=*/scaledPlaneValues);
+  auto insufficientPrefixResult = ImageProcessing::detail::CreateReconstructionPersistentPrefixPlan<int16>(SizeVec3Type{7, 6, 20}, /*maxSlabValues=*/k_ScaledPlaneValues);
   REQUIRE(insufficientPrefixResult.valid());
-  REQUIRE(insufficientPrefixResult.value().residentPlanes == 0);
+  REQUIRE(insufficientPrefixResult.value().resident_planes == 0);
 
-  auto minimumResult = ImageProcessing::detail::CalculateReconstructionMinimumWorkingMemoryBytes<int16>(SizeVec3{dimX, dimY, dimZ});
+  auto minimumResult = ImageProcessing::detail::CalculateReconstructionMinimumWorkingMemoryBytes<int16>(SizeVec3Type{k_DimX, k_DimY, k_DimZ});
   REQUIRE(minimumResult.valid());
-  REQUIRE(minimumResult.value() == 3 * planeValues * sizeof(int16));
+  REQUIRE(minimumResult.value() == 3 * k_PlaneValues * sizeof(int16));
 
-  const std::vector<int16> mask = MakeMask<int16>(dimX, dimY, dimZ);
-  const std::vector<int16> marker = SeedMarkerBelow<int16>(mask, dimX, dimY, dimZ);
-  const std::vector<int16> expected = ReconstructOracle<int16>(marker, mask, dimX, dimY, dimZ, ReconstructOp::Dilation, true);
-  REQUIRE(RunSweep<int16>(marker, mask, dimX, dimY, dimZ, ReconstructOp::Dilation, true, smaller.maxSlabValues) == expected);
-  REQUIRE(RunSweep<int16>(marker, mask, dimX, dimY, dimZ, ReconstructOp::Dilation, true, larger.maxSlabValues) == expected);
+  const std::vector<int16> mask = MakeMask<int16>(k_DimX, k_DimY, k_DimZ);
+  const std::vector<int16> marker = SeedMarkerBelow<int16>(mask, k_DimX, k_DimY, k_DimZ);
+  const std::vector<int16> expected = ReconstructOracle<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, ReconstructOp::Dilation, true);
+  REQUIRE(RunSweep<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, ReconstructOp::Dilation, true, smaller.max_slab_values) == expected);
+  REQUIRE(RunSweep<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, ReconstructOp::Dilation, true, larger.max_slab_values) == expected);
 
   constexpr usize k_2DDimX = 7;
   constexpr usize k_2DDimY = 9;
   constexpr usize k_2DValues = k_2DDimX * k_2DDimY;
   constexpr usize k_2DTargetBytes = (k_2DValues + 2 * 3 * k_2DDimX) * sizeof(int16);
-  const SizeVec3 k_2DDims{k_2DDimX, k_2DDimY, 1};
-  auto fixed2DResult = ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(k_2DDims, k_2DTargetBytes);
+  const SizeVec3Type k2DDims{k_2DDimX, k_2DDimY, 1};
+  auto fixed2DResult = ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(k2DDims, k_2DTargetBytes);
   REQUIRE(fixed2DResult.valid());
-  REQUIRE(fixed2DResult.value().fixedWorkValues == k_2DValues);
-  REQUIRE(fixed2DResult.value().fixedBufferValues >= 2 * k_2DDimX);
-  REQUIRE(fixed2DResult.value().residentBytes <= k_2DTargetBytes);
+  REQUIRE(fixed2DResult.value().fixed_work_values == k_2DValues);
+  REQUIRE(fixed2DResult.value().fixed_buffer_values >= 2 * k_2DDimX);
+  REQUIRE(fixed2DResult.value().resident_bytes <= k_2DTargetBytes);
 
   constexpr usize k_OverwideTargetBytes = 48;
-  auto overwideResult = ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3{31, 4, 1}, k_OverwideTargetBytes);
+  auto overwideResult = ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3Type{31, 4, 1}, k_OverwideTargetBytes);
   REQUIRE(overwideResult.valid());
   const auto& overwide = overwideResult.value();
-  REQUIRE(overwide.fixedWorkValues == 0);
-  auto overwideSweepResult = ImageProcessing::detail::CreateSweep2DPlan(/*dimX=*/31, /*dimY=*/4, overwide.maxSlabValues, /*fullWidthHaloRows=*/1, /*tiledRows=*/1);
+  REQUIRE(overwide.fixed_work_values == 0);
+  auto overwideSweepResult = ImageProcessing::detail::CreateSweep2DPlan(/*dimX=*/31, /*dimY=*/4, overwide.max_slab_values, /*fullWidthHaloRows=*/1, /*tiledRows=*/1);
   REQUIRE(overwideSweepResult.valid());
-  REQUIRE_FALSE(overwideSweepResult.value().fullWidth);
-  const usize actualTileBytes = (3 * overwideSweepResult.value().coreColumns + 2) * sizeof(int16);
+  REQUIRE_FALSE(overwideSweepResult.value().full_width);
+  const usize actualTileBytes = (3 * overwideSweepResult.value().core_columns + 2) * sizeof(int16);
   REQUIRE(actualTileBytes <= k_OverwideTargetBytes);
-  REQUIRE(overwide.residentBytes == actualTileBytes);
+  REQUIRE(overwide.resident_bytes == actualTileBytes);
 
-  REQUIRE(ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3{dimX, dimY, dimZ}, /*targetBytes=*/1).invalid());
+  REQUIRE(ImageProcessing::detail::CreateReconstructionWorkingMemoryPlan<int16>(SizeVec3Type{k_DimX, k_DimY, k_DimZ}, /*targetBytes=*/1).invalid());
 
   constexpr uint64 k_MiB = 1024ULL * 1024ULL;
-  auto& manager = CacheMemoryBudgetManager::instance();
+  auto& manager = CacheMemoryBudgetManager::Instance();
   const uint64 previousBudget = manager.budgetBytes();
   manager.clear();
   manager.setBudgetBytes(256 * k_MiB);
   {
     ScopedWorkingMemoryTuningOverride override(128 * k_MiB);
-    auto allocationResult = ImageProcessing::detail::ReserveReconstructionWorkingMemoryPlan<int16>(SizeVec3{512, 512, 128});
+    auto allocationResult = ImageProcessing::detail::ReserveReconstructionWorkingMemoryPlan<int16>(SizeVec3Type{512, 512, 128});
     REQUIRE(allocationResult.valid());
     REQUIRE(allocationResult.value().reservation.sizeBytes() == 64 * k_MiB);
-    REQUIRE(allocationResult.value().plan.residentBytes <= 64 * k_MiB);
+    REQUIRE(allocationResult.value().plan.resident_bytes <= 64 * k_MiB);
     REQUIRE(manager.reservedWorkingMemoryBytes() == 64 * k_MiB);
   }
   REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
 
   manager.setBudgetBytes(1024 * k_MiB);
-  const SizeVec3 suppliedMarkerDims{512, 512, 128};
+  const SizeVec3Type suppliedMarkerDims{512, 512, 128};
   auto suppliedUsefulResult = ImageProcessing::detail::CalculateReconstructionUsefulWorkingMemoryBytes<int16>(suppliedMarkerDims);
   REQUIRE(suppliedUsefulResult.valid());
   {
@@ -660,16 +660,16 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: total working-m
   REQUIRE(manager.reservedWorkingMemoryBytes() == 0);
   manager.setBudgetBytes(previousBudget);
 
-  const auto height3DPreference = ImageProcessing::detail::SelectReconstructionWorkingMemoryFraction(SizeVec3{7, 6, 5}, ReconstructionMarkerSource::MaskMinusHeight);
+  const auto height3DPreference = ImageProcessing::detail::SelectReconstructionWorkingMemoryFraction(SizeVec3Type{7, 6, 5}, ReconstructionMarkerSource::MaskMinusHeight);
   REQUIRE(height3DPreference.numerator == 1);
   REQUIRE(height3DPreference.denominator == 4);
-  const auto minimumBorder3DPreference = ImageProcessing::detail::SelectReconstructionWorkingMemoryFraction(SizeVec3{7, 6, 5}, ReconstructionMarkerSource::MaskWithMinimumInterior);
+  const auto minimumBorder3DPreference = ImageProcessing::detail::SelectReconstructionWorkingMemoryFraction(SizeVec3Type{7, 6, 5}, ReconstructionMarkerSource::MaskWithMinimumInterior);
   REQUIRE(minimumBorder3DPreference.numerator == 1);
   REQUIRE(minimumBorder3DPreference.denominator == 1);
-  const auto maximumBorder3DPreference = ImageProcessing::detail::SelectReconstructionWorkingMemoryFraction(SizeVec3{7, 6, 5}, ReconstructionMarkerSource::MaskWithMaximumInterior);
+  const auto maximumBorder3DPreference = ImageProcessing::detail::SelectReconstructionWorkingMemoryFraction(SizeVec3Type{7, 6, 5}, ReconstructionMarkerSource::MaskWithMaximumInterior);
   REQUIRE(maximumBorder3DPreference.numerator == 1);
   REQUIRE(maximumBorder3DPreference.denominator == 1);
-  const auto height2DPreference = ImageProcessing::detail::SelectReconstructionWorkingMemoryFraction(SizeVec3{7, 6, 1}, ReconstructionMarkerSource::MaskPlusHeight);
+  const auto height2DPreference = ImageProcessing::detail::SelectReconstructionWorkingMemoryFraction(SizeVec3Type{7, 6, 1}, ReconstructionMarkerSource::MaskPlusHeight);
   REQUIRE(height2DPreference.numerator == 1);
   REQUIRE(height2DPreference.denominator == 1);
 }
@@ -714,42 +714,42 @@ TEST_CASE("NXImageProcessing::BoundedReconstructionQueue: rejects overflow and r
 
 TEST_CASE("NXImageProcessing::ReconstructVincent: a bounded frontier uses the resident sweep fallback", "[NXImageProcessing][MorphologicalReconstructionEngine][WorkingMemory]")
 {
-  constexpr usize dimX = 7;
-  constexpr usize dimY = 6;
-  constexpr usize dimZ = 5;
-  const std::vector<int16> mask = MakeMask<int16>(dimX, dimY, dimZ);
+  constexpr usize k_DimX = 7;
+  constexpr usize k_DimY = 6;
+  constexpr usize k_DimZ = 5;
+  const std::vector<int16> mask = MakeMask<int16>(k_DimX, k_DimY, k_DimZ);
   for(const bool fullyConnected : {false, true})
   {
     for(const ReconstructOp op : {ReconstructOp::Dilation, ReconstructOp::Erosion})
     {
-      const std::vector<int16> marker = op == ReconstructOp::Dilation ? SeedMarkerBelow<int16>(mask, dimX, dimY, dimZ) : SeedMarkerAbove<int16>(mask, dimX, dimY, dimZ);
-      const std::vector<int16> expected = ReconstructOracle<int16>(marker, mask, dimX, dimY, dimZ, op, fullyConnected);
+      const std::vector<int16> marker = op == ReconstructOp::Dilation ? SeedMarkerBelow<int16>(mask, k_DimX, k_DimY, k_DimZ) : SeedMarkerAbove<int16>(mask, k_DimX, k_DimY, k_DimZ);
+      const std::vector<int16> expected = ReconstructOracle<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, op, fullyConnected);
       INFO("fullyConnected=" << fullyConnected << " op=" << static_cast<int>(op));
-      REQUIRE(RunVincent<int16>(marker, mask, dimX, dimY, dimZ, op, fullyConnected, /*frontierCapacity=*/1) == expected);
+      REQUIRE(RunVincent<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, op, fullyConnected, /*frontierCapacity=*/1) == expected);
     }
   }
 }
 
 TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: full-grant 3D sweeps keep adaptive state resident", "[NXImageProcessing][MorphologicalReconstructionEngine][WorkingMemory]")
 {
-  constexpr usize dimX = 4;
-  constexpr usize dimY = 5;
-  constexpr usize dimZ = 6;
-  constexpr usize volumeValues = dimX * dimY * dimZ;
-  const ShapeType tupleShape{dimZ, dimY, dimX};
+  constexpr usize k_DimX = 4;
+  constexpr usize k_DimY = 5;
+  constexpr usize k_DimZ = 6;
+  constexpr usize k_VolumeValues = k_DimX * k_DimY * k_DimZ;
+  const ShapeType tupleShape{k_DimZ, k_DimY, k_DimX};
   const ShapeType componentShape{1};
-  const std::vector<int16> mask = MakeMask<int16>(dimX, dimY, dimZ);
+  const std::vector<int16> mask = MakeMask<int16>(k_DimX, k_DimY, k_DimZ);
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
 
-  for(const usize frontierCapacity : {usize{1}, volumeValues})
+  for(const usize frontierCapacity : {usize{1}, k_VolumeValues})
   {
     for(const bool fullyConnected : {false, true})
     {
       for(const ReconstructOp op : {ReconstructOp::Dilation, ReconstructOp::Erosion})
       {
-        const std::vector<int16> marker = op == ReconstructOp::Dilation ? SeedMarkerBelow<int16>(mask, dimX, dimY, dimZ) : SeedMarkerAbove<int16>(mask, dimX, dimY, dimZ);
-        const std::vector<int16> expected = ReconstructOracle<int16>(marker, mask, dimX, dimY, dimZ, op, fullyConnected);
+        const std::vector<int16> marker = op == ReconstructOp::Dilation ? SeedMarkerBelow<int16>(mask, k_DimX, k_DimY, k_DimZ) : SeedMarkerAbove<int16>(mask, k_DimX, k_DimY, k_DimZ);
+        const std::vector<int16> expected = ReconstructOracle<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, op, fullyConnected);
 
         CountingDataStore<int16> markerStore(tupleShape, componentShape, int16{0});
         CountingDataStore<int16> maskStore(tupleShape, componentShape, int16{0});
@@ -758,11 +758,11 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: full-grant 3D s
         REQUIRE(maskStore.copyFromBuffer(0, nonstd::span<const int16>(mask.data(), mask.size())).valid());
 
         ReconstructSweep<int16, true> sweep{
-            markerStore, maskStore, outputStore,     SizeVec3{dimX, dimY, dimZ}, op, fullyConnected, shouldCancel, messageHandler, volumeValues, std::numeric_limits<usize>::max(), {}, 0,
+            markerStore, maskStore, outputStore,     SizeVec3Type{k_DimX, k_DimY, k_DimZ}, op, fullyConnected, shouldCancel, messageHandler, k_VolumeValues, std::numeric_limits<usize>::max(), {}, 0,
             0,           true,      frontierCapacity};
         REQUIRE(sweep().valid());
 
-        std::vector<int16> actual(volumeValues);
+        std::vector<int16> actual(k_VolumeValues);
         REQUIRE(outputStore.copyIntoBuffer(0, nonstd::span<int16>(actual.data(), actual.size())).valid());
         INFO("frontierCapacity=" << frontierCapacity << " fullyConnected=" << fullyConnected << " op=" << static_cast<int>(op));
         REQUIRE(actual == expected);
@@ -777,14 +777,14 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: full-grant 3D s
 
 TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: adaptive persistent prefix preserves exact streamed results", "[NXImageProcessing][MorphologicalReconstructionEngine][WorkingMemory]")
 {
-  constexpr usize dimX = 4;
-  constexpr usize dimY = 5;
-  constexpr usize dimZ = 6;
-  constexpr usize planeValues = dimX * dimY;
-  constexpr usize volumeValues = planeValues * dimZ;
-  const ShapeType tupleShape{dimZ, dimY, dimX};
+  constexpr usize k_DimX = 4;
+  constexpr usize k_DimY = 5;
+  constexpr usize k_DimZ = 6;
+  constexpr usize k_PlaneValues = k_DimX * k_DimY;
+  constexpr usize k_VolumeValues = k_PlaneValues * k_DimZ;
+  const ShapeType tupleShape{k_DimZ, k_DimY, k_DimX};
   const ShapeType componentShape{1};
-  const std::vector<int16> mask = MakeMask<int16>(dimX, dimY, dimZ);
+  const std::vector<int16> mask = MakeMask<int16>(k_DimX, k_DimY, k_DimZ);
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
 
@@ -796,29 +796,42 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: adaptive persis
       const int16 interiorValue = dilation ? std::numeric_limits<int16>::lowest() : std::numeric_limits<int16>::max();
       const ReconstructionMarkerSource source = dilation ? ReconstructionMarkerSource::MaskWithMinimumInterior : ReconstructionMarkerSource::MaskWithMaximumInterior;
       std::vector<int16> marker = mask;
-      for(usize z = 0; z < dimZ; ++z)
+      for(usize z = 0; z < k_DimZ; ++z)
       {
-        for(usize y = 0; y < dimY; ++y)
+        for(usize y = 0; y < k_DimY; ++y)
         {
-          for(usize x = 0; x < dimX; ++x)
+          for(usize x = 0; x < k_DimX; ++x)
           {
-            if(x > 0 && x + 1 < dimX && y > 0 && y + 1 < dimY && z > 0 && z + 1 < dimZ)
+            if(x > 0 && x + 1 < k_DimX && y > 0 && y + 1 < k_DimY && z > 0 && z + 1 < k_DimZ)
             {
-              marker[FlatIndex(x, y, z, dimX, dimY)] = interiorValue;
+              marker[FlatIndex(x, y, z, k_DimX, k_DimY)] = interiorValue;
             }
           }
         }
       }
-      const std::vector<int16> expected = ReconstructOracle<int16>(marker, mask, dimX, dimY, dimZ, op, fullyConnected);
+      const std::vector<int16> expected = ReconstructOracle<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, op, fullyConnected);
 
-      DataStore<int16> maskStore = MakeStore(mask, dimX, dimY, dimZ);
+      DataStore<int16> maskStore = MakeStore(mask, k_DimX, k_DimY, k_DimZ);
       DataStore<int16> outputStore(tupleShape, componentShape, int16{0});
-      const ReconstructionMarkerOptions options{source, 0.0};
-      ReconstructSweep<int16, true> sweep{
-          maskStore, maskStore, outputStore, SizeVec3{dimX, dimY, dimZ}, op, fullyConnected, shouldCancel, messageHandler, 3 * planeValues, std::numeric_limits<usize>::max(), options, 0, 0, false, 0};
+      const ReconstructionMarkerOptions options{.source = source, .height = 0.0};
+      ReconstructSweep<int16, true> sweep{maskStore,
+                                          maskStore,
+                                          outputStore,
+                                          SizeVec3Type{k_DimX, k_DimY, k_DimZ},
+                                          op,
+                                          fullyConnected,
+                                          shouldCancel,
+                                          messageHandler,
+                                          3 * k_PlaneValues,
+                                          std::numeric_limits<usize>::max(),
+                                          options,
+                                          0,
+                                          0,
+                                          false,
+                                          0};
       REQUIRE(sweep().valid());
 
-      std::vector<int16> actual(volumeValues);
+      std::vector<int16> actual(k_VolumeValues);
       REQUIRE(outputStore.copyIntoBuffer(0, nonstd::span<int16>(actual.data(), actual.size())).valid());
       INFO("fullyConnected=" << fullyConnected << " op=" << static_cast<int>(op));
       REQUIRE(actual == expected);
@@ -829,18 +842,18 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: adaptive persis
 TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: one sweep pair preserves intermediate scan order", "[NXImageProcessing][MorphologicalReconstructionEngine]")
 {
   auto checkLayout = [](usize dimZ, usize slabPlanes) {
-    constexpr usize dimX = 7;
-    constexpr usize dimY = 6;
-    const usize slabValueBudget = slabPlanes * dimX * dimY;
-    const std::vector<int16> mask = MakeMask<int16>(dimX, dimY, dimZ);
+    constexpr usize k_DimX = 7;
+    constexpr usize k_DimY = 6;
+    const usize slabValueBudget = slabPlanes * k_DimX * k_DimY;
+    const std::vector<int16> mask = MakeMask<int16>(k_DimX, k_DimY, dimZ);
     for(bool fullyConnected : {false, true})
     {
       for(ReconstructOp op : {ReconstructOp::Dilation, ReconstructOp::Erosion})
       {
-        const std::vector<int16> marker = (op == ReconstructOp::Dilation) ? SeedMarkerBelow<int16>(mask, dimX, dimY, dimZ) : SeedMarkerAbove<int16>(mask, dimX, dimY, dimZ);
-        const std::vector<int16> expected = ReconstructSweepPairOracle<int16>(marker, mask, dimX, dimY, dimZ, op, fullyConnected);
-        const std::vector<int16> fixpoint = ReconstructOracle<int16>(marker, mask, dimX, dimY, dimZ, op, fullyConnected);
-        const std::vector<int16> actual = RunSweep<int16>(marker, mask, dimX, dimY, dimZ, op, fullyConnected, slabValueBudget, 1);
+        const std::vector<int16> marker = (op == ReconstructOp::Dilation) ? SeedMarkerBelow<int16>(mask, k_DimX, k_DimY, dimZ) : SeedMarkerAbove<int16>(mask, k_DimX, k_DimY, dimZ);
+        const std::vector<int16> expected = ReconstructSweepPairOracle<int16>(marker, mask, k_DimX, k_DimY, dimZ, op, fullyConnected);
+        const std::vector<int16> fixpoint = ReconstructOracle<int16>(marker, mask, k_DimX, k_DimY, dimZ, op, fullyConnected);
+        const std::vector<int16> actual = RunSweep<int16>(marker, mask, k_DimX, k_DimY, dimZ, op, fullyConnected, slabValueBudget, 1);
         INFO("dimZ=" << dimZ << " slabPlanes=" << slabPlanes << " fullyConnected=" << fullyConnected << " op=" << static_cast<int>(op));
         REQUIRE(expected != fixpoint); // Proves this assertion observes an intermediate state, not just convergence.
         REQUIRE(actual == expected);
@@ -864,28 +877,28 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: one sweep pair 
 
 TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: bounded 2D row blocks and overwide tiles preserve exact scan semantics", "[NXImageProcessing][MorphologicalReconstructionEngine]")
 {
-  constexpr usize dimX = 7;
-  constexpr usize dimY = 9;
-  constexpr usize dimZ = 1;
-  constexpr usize fullWidthBudget = 3 * dimX; // two core rows plus one halo row
-  constexpr usize overwideBudget = 6;         // four core columns plus two X halos
-  const std::vector<int16> mask = MakeMask<int16>(dimX, dimY, dimZ);
+  constexpr usize k_DimX = 7;
+  constexpr usize k_DimY = 9;
+  constexpr usize k_DimZ = 1;
+  constexpr usize k_FullWidthBudget = 3 * k_DimX; // two core rows plus one halo row
+  constexpr usize k_OverwideBudget = 6;           // four core columns plus two X halos
+  const std::vector<int16> mask = MakeMask<int16>(k_DimX, k_DimY, k_DimZ);
 
   for(bool fullyConnected : {false, true})
   {
     for(ReconstructOp op : {ReconstructOp::Dilation, ReconstructOp::Erosion})
     {
-      const std::vector<int16> marker = (op == ReconstructOp::Dilation) ? SeedMarkerBelow<int16>(mask, dimX, dimY, dimZ) : SeedMarkerAbove<int16>(mask, dimX, dimY, dimZ);
-      const std::vector<int16> expected = ReconstructOracle<int16>(marker, mask, dimX, dimY, dimZ, op, fullyConnected);
-      const std::vector<int16> blocked = RunSweep<int16>(marker, mask, dimX, dimY, dimZ, op, fullyConnected, fullWidthBudget);
-      const std::vector<int16> tiled = RunSweep<int16>(marker, mask, dimX, dimY, dimZ, op, fullyConnected, overwideBudget);
+      const std::vector<int16> marker = (op == ReconstructOp::Dilation) ? SeedMarkerBelow<int16>(mask, k_DimX, k_DimY, k_DimZ) : SeedMarkerAbove<int16>(mask, k_DimX, k_DimY, k_DimZ);
+      const std::vector<int16> expected = ReconstructOracle<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, op, fullyConnected);
+      const std::vector<int16> blocked = RunSweep<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, op, fullyConnected, k_FullWidthBudget);
+      const std::vector<int16> tiled = RunSweep<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, op, fullyConnected, k_OverwideBudget);
       INFO("fullyConnected=" << fullyConnected << " op=" << static_cast<int>(op));
       REQUIRE(blocked == expected);
       REQUIRE(tiled == expected);
 
-      const std::vector<int16> onePairExpected = ReconstructSweepPairOracle<int16>(marker, mask, dimX, dimY, dimZ, op, fullyConnected);
-      REQUIRE(RunSweep<int16>(marker, mask, dimX, dimY, dimZ, op, fullyConnected, fullWidthBudget, 1) == onePairExpected);
-      REQUIRE(RunSweep<int16>(marker, mask, dimX, dimY, dimZ, op, fullyConnected, overwideBudget, 1) == onePairExpected);
+      const std::vector<int16> onePairExpected = ReconstructSweepPairOracle<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, op, fullyConnected);
+      REQUIRE(RunSweep<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, op, fullyConnected, k_FullWidthBudget, 1) == onePairExpected);
+      REQUIRE(RunSweep<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, op, fullyConnected, k_OverwideBudget, 1) == onePairExpected);
     }
   }
 }
@@ -900,25 +913,27 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: validates dimen
 
   SECTION("XY product overflow")
   {
-    const Result<> result = ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3{std::numeric_limits<usize>::max(), 2, 1}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
+    const Result<> result =
+        ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3Type{std::numeric_limits<usize>::max(), 2, 1}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8640);
   }
   SECTION("XYZ product overflow")
   {
-    const Result<> result = ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3{std::numeric_limits<usize>::max(), 1, 2}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
+    const Result<> result =
+        ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3Type{std::numeric_limits<usize>::max(), 1, 2}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8641);
   }
   SECTION("store size mismatch")
   {
-    const Result<> result = ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3{2, 2, 2}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
+    const Result<> result = ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3Type{2, 2, 2}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8642);
   }
   SECTION("zero dimension is an explicit no-op")
   {
-    const Result<> result = ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3{0, 2, 3}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
+    const Result<> result = ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3Type{0, 2, 3}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
     REQUIRE(result.valid());
     REQUIRE(outStore.getValue(0) == int8{42});
   }
@@ -928,20 +943,20 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: multi-slab shor
 {
   // Two planes per slab over seven planes forces 2 + 2 + 2 + 1 in both directions. The seeded markers require
   // propagation across every slab boundary, exercising both the carried boundary plane and the short tail.
-  constexpr usize dimX = 7;
-  constexpr usize dimY = 6;
-  constexpr usize dimZ = 7;
-  constexpr usize slabValueBudget = 2 * dimX * dimY;
-  const std::vector<int16> mask = MakeMask<int16>(dimX, dimY, dimZ);
+  constexpr usize k_DimX = 7;
+  constexpr usize k_DimY = 6;
+  constexpr usize k_DimZ = 7;
+  constexpr usize k_SlabValueBudget = 2 * k_DimX * k_DimY;
+  const std::vector<int16> mask = MakeMask<int16>(k_DimX, k_DimY, k_DimZ);
 
   for(bool fullyConnected : {false, true})
   {
     for(ReconstructOp op : {ReconstructOp::Dilation, ReconstructOp::Erosion})
     {
-      const std::vector<int16> marker = (op == ReconstructOp::Dilation) ? SeedMarkerBelow<int16>(mask, dimX, dimY, dimZ) : SeedMarkerAbove<int16>(mask, dimX, dimY, dimZ);
-      const std::vector<int16> oracle = ReconstructOracle<int16>(marker, mask, dimX, dimY, dimZ, op, fullyConnected);
-      const std::vector<int16> vincent = RunVincent<int16>(marker, mask, dimX, dimY, dimZ, op, fullyConnected);
-      const std::vector<int16> sweep = RunSweep<int16>(marker, mask, dimX, dimY, dimZ, op, fullyConnected, slabValueBudget);
+      const std::vector<int16> marker = (op == ReconstructOp::Dilation) ? SeedMarkerBelow<int16>(mask, k_DimX, k_DimY, k_DimZ) : SeedMarkerAbove<int16>(mask, k_DimX, k_DimY, k_DimZ);
+      const std::vector<int16> oracle = ReconstructOracle<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, op, fullyConnected);
+      const std::vector<int16> vincent = RunVincent<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, op, fullyConnected);
+      const std::vector<int16> sweep = RunSweep<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, op, fullyConnected, k_SlabValueBudget);
       INFO("fullyConnected=" << fullyConnected << " op=" << static_cast<int>(op));
       REQUIRE(sweep == oracle);
       REQUIRE(sweep == vincent);
@@ -972,14 +987,14 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: hand-computed d
   // 5x5x1 bright field (value 100) with a single dark hole (value 0) at the center, NOT touching the border.
   // Fillhole-style marker: max (100) in the interior, input on the border. Reconstruct-by-erosion fills the hole
   // to 100 (a dark minimum not connected to the border is removed).
-  constexpr usize D = 5;
-  std::vector<int32> mask(D * D, 100);
-  mask[FlatIndex(2, 2, 0, D, D)] = 0; // interior hole
+  constexpr usize k_D = 5;
+  std::vector<int32> mask(k_D * k_D, 100);
+  mask[FlatIndex(2, 2, 0, k_D, k_D)] = 0; // interior hole
 
-  std::vector<int32> marker(D * D, 100); // interior max
+  std::vector<int32> marker(k_D * k_D, 100); // interior max
   // border = input (all 100 here, so border stays 100).
-  const std::vector<int32> out = RunVincent<int32>(marker, mask, D, D, 1, ReconstructOp::Erosion, false);
-  const std::vector<int32> sweep = RunSweep<int32>(marker, mask, D, D, 1, ReconstructOp::Erosion, false);
+  const std::vector<int32> out = RunVincent<int32>(marker, mask, k_D, k_D, 1, ReconstructOp::Erosion, false);
+  const std::vector<int32> sweep = RunSweep<int32>(marker, mask, k_D, k_D, 1, ReconstructOp::Erosion, false);
   for(usize i = 0; i < mask.size(); ++i)
   {
     INFO("index=" << i);
@@ -992,18 +1007,18 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: hand-computed s
 {
   // 1D line (7x1x1), background 10, with a shallow bump (+3 -> 13) and a deep bump (+30 -> 40). HMaxima marker =
   // input - h with h = 5: bumps below h vanish (flattened to background), bumps >= h survive reduced by h.
-  constexpr usize D = 7;
-  std::vector<int32> mask(D, 10);
+  constexpr usize k_D = 7;
+  std::vector<int32> mask(k_D, 10);
   mask[2] = 13; // shallow (+3 < h)
   mask[5] = 40; // deep (+30 >= h)
   const double h = 5.0;
-  std::vector<int32> marker(D);
-  for(usize i = 0; i < D; ++i)
+  std::vector<int32> marker(k_D);
+  for(usize i = 0; i < k_D; ++i)
   {
     marker[i] = mask[i] - static_cast<int32>(h);
   }
-  const std::vector<int32> out = RunVincent<int32>(marker, mask, D, 1, 1, ReconstructOp::Dilation, false);
-  const std::vector<int32> sweep = RunSweep<int32>(marker, mask, D, 1, 1, ReconstructOp::Dilation, false);
+  const std::vector<int32> out = RunVincent<int32>(marker, mask, k_D, 1, 1, ReconstructOp::Dilation, false);
+  const std::vector<int32> sweep = RunSweep<int32>(marker, mask, k_D, 1, 1, ReconstructOp::Dilation, false);
   REQUIRE(out == sweep);
   // Shallow bump is suppressed to background level; deep bump survives but reduced by h.
   REQUIRE(out[2] == 10); // 13 was < h above background -> flattened
@@ -1013,28 +1028,36 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: hand-computed s
 
 TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: configured mask-derived height markers match provided markers", "[NXImageProcessing][MorphologicalReconstructionEngine]")
 {
-  constexpr usize dimX = 7;
-  constexpr usize dimY = 6;
-  constexpr usize dimZ = 3;
-  constexpr float64 height = 9.0;
-  const std::vector<int16> mask = MakeMask<int16>(dimX, dimY, dimZ);
+  constexpr usize k_DimX = 7;
+  constexpr usize k_DimY = 6;
+  constexpr usize k_DimZ = 3;
+  constexpr float64 k_Height = 9.0;
+  const std::vector<int16> mask = MakeMask<int16>(k_DimX, k_DimY, k_DimZ);
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
 
   for(const ReconstructOp op : {ReconstructOp::Dilation, ReconstructOp::Erosion})
   {
     const bool dilation = op == ReconstructOp::Dilation;
-    const std::vector<int16> marker = dilation ? MarkerBelow<int16>(mask, height) : MarkerAbove<int16>(mask, height);
-    const std::vector<int16> expected = ReconstructOracle(marker, mask, dimX, dimY, dimZ, op, /*fullyConnected=*/true);
-    const ReconstructionMarkerOptions options{dilation ? ReconstructionMarkerSource::MaskMinusHeight : ReconstructionMarkerSource::MaskPlusHeight, height};
+    const std::vector<int16> marker = dilation ? MarkerBelow<int16>(mask, k_Height) : MarkerAbove<int16>(mask, k_Height);
+    const std::vector<int16> expected = ReconstructOracle(marker, mask, k_DimX, k_DimY, k_DimZ, op, /*fullyConnected=*/true);
+    const ReconstructionMarkerOptions options{.source = dilation ? ReconstructionMarkerSource::MaskMinusHeight : ReconstructionMarkerSource::MaskPlusHeight, .height = k_Height};
 
-    DataStore<int16> maskStore = MakeStore(mask, dimX, dimY, dimZ);
-    DataStore<int16> vincentOutput(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, int16{0});
-    DataStore<int16> sweepOutput(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, int16{0});
-    ReconstructVincent<int16> vincent{maskStore, maskStore, vincentOutput, SizeVec3{dimX, dimY, dimZ}, op, true, shouldCancel, messageHandler, options};
-    ReconstructSweep<int16, true> sweep{
-        maskStore, maskStore, sweepOutput, SizeVec3{dimX, dimY, dimZ}, op, true, shouldCancel, messageHandler, ReconstructSweep<int16, true>::k_DefaultSlabValues, std::numeric_limits<usize>::max(),
-        options};
+    DataStore<int16> maskStore = MakeStore(mask, k_DimX, k_DimY, k_DimZ);
+    DataStore<int16> vincentOutput(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, int16{0});
+    DataStore<int16> sweepOutput(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, int16{0});
+    ReconstructVincent<int16> vincent{maskStore, maskStore, vincentOutput, SizeVec3Type{k_DimX, k_DimY, k_DimZ}, op, true, shouldCancel, messageHandler, options};
+    ReconstructSweep<int16, true> sweep{maskStore,
+                                        maskStore,
+                                        sweepOutput,
+                                        SizeVec3Type{k_DimX, k_DimY, k_DimZ},
+                                        op,
+                                        true,
+                                        shouldCancel,
+                                        messageHandler,
+                                        ReconstructSweep<int16, true>::k_DefaultSlabValues,
+                                        std::numeric_limits<usize>::max(),
+                                        options};
     REQUIRE(vincent().valid());
     REQUIRE(sweep().valid());
 
@@ -1048,12 +1071,12 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: configured mask
 
 TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: configured mask-derived border markers match provided markers", "[NXImageProcessing][MorphologicalReconstructionEngine]")
 {
-  constexpr usize dimX = 4;
-  constexpr usize dimY = 5;
-  constexpr usize dimZ = 6;
-  constexpr usize volumeValues = dimX * dimY * dimZ;
-  const SizeVec3 dims{dimX, dimY, dimZ};
-  const std::vector<int16> mask = MakeMask<int16>(dimX, dimY, dimZ);
+  constexpr usize k_DimX = 4;
+  constexpr usize k_DimY = 5;
+  constexpr usize k_DimZ = 6;
+  constexpr usize k_VolumeValues = k_DimX * k_DimY * k_DimZ;
+  const SizeVec3Type dims{k_DimX, k_DimY, k_DimZ};
+  const std::vector<int16> mask = MakeMask<int16>(k_DimX, k_DimY, k_DimZ);
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
 
@@ -1065,31 +1088,31 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: configured mask
       const int16 interiorValue = dilation ? std::numeric_limits<int16>::lowest() : std::numeric_limits<int16>::max();
       const ReconstructionMarkerSource source = dilation ? ReconstructionMarkerSource::MaskWithMinimumInterior : ReconstructionMarkerSource::MaskWithMaximumInterior;
       std::vector<int16> marker = mask;
-      for(usize z = 0; z < dimZ; ++z)
+      for(usize z = 0; z < k_DimZ; ++z)
       {
-        for(usize y = 0; y < dimY; ++y)
+        for(usize y = 0; y < k_DimY; ++y)
         {
-          for(usize x = 0; x < dimX; ++x)
+          for(usize x = 0; x < k_DimX; ++x)
           {
-            const bool border = x == 0 || x + 1 == dimX || y == 0 || y + 1 == dimY || z == 0 || z + 1 == dimZ;
+            const bool border = x == 0 || x + 1 == k_DimX || y == 0 || y + 1 == k_DimY || z == 0 || z + 1 == k_DimZ;
             if(!border)
             {
-              marker[FlatIndex(x, y, z, dimX, dimY)] = interiorValue;
+              marker[FlatIndex(x, y, z, k_DimX, k_DimY)] = interiorValue;
             }
           }
         }
       }
-      const std::vector<int16> expected = ReconstructOracle<int16>(marker, mask, dimX, dimY, dimZ, op, fullyConnected);
-      const ReconstructionMarkerOptions options{source, 0.0};
+      const std::vector<int16> expected = ReconstructOracle<int16>(marker, mask, k_DimX, k_DimY, k_DimZ, op, fullyConnected);
+      const ReconstructionMarkerOptions options{.source = source, .height = 0.0};
 
-      DataStore<int16> maskStore = MakeStore(mask, dimX, dimY, dimZ);
-      DataStore<int16> vincentOutput(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, int16{0});
-      CountingDataStore<int16> sweepMaskStore(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, int16{0});
-      DataStore<int16> sweepOutput(ShapeType{dimZ, dimY, dimX}, ShapeType{1}, int16{0});
+      DataStore<int16> maskStore = MakeStore(mask, k_DimX, k_DimY, k_DimZ);
+      DataStore<int16> vincentOutput(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, int16{0});
+      CountingDataStore<int16> sweepMaskStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, int16{0});
+      DataStore<int16> sweepOutput(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, int16{0});
       REQUIRE(sweepMaskStore.copyFromBuffer(0, nonstd::span<const int16>(mask.data(), mask.size())).valid());
       ReconstructVincent<int16> vincent{maskStore, maskStore, vincentOutput, dims, op, fullyConnected, shouldCancel, messageHandler, options};
       ReconstructSweep<int16, true> sweep{
-          sweepMaskStore, sweepMaskStore, sweepOutput, dims, op, fullyConnected, shouldCancel, messageHandler, volumeValues, std::numeric_limits<usize>::max(), options, 0, 0, true};
+          sweepMaskStore, sweepMaskStore, sweepOutput, dims, op, fullyConnected, shouldCancel, messageHandler, k_VolumeValues, std::numeric_limits<usize>::max(), options, 0, 0, true};
       REQUIRE(vincent().valid());
       REQUIRE(sweep().valid());
 

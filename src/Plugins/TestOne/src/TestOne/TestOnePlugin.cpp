@@ -11,7 +11,7 @@ constexpr AbstractPlugin::IdType k_ID = *Uuid::FromString("01ff618b-781f-4ac0-b9
 TestOnePlugin::TestOnePlugin()
 : AbstractPlugin(k_ID, "TestOne", "Test Plugin", "BlueQuartz Software")
 {
-  std::vector<::FilterCreationFunc> filterFuncs = ::GetPluginFilterList();
+  std::vector<::FilterCreationFuncType> filterFuncs = ::GetPluginFilterList();
   for(const auto& filterFunc : filterFuncs)
   {
     addFilter(filterFunc);

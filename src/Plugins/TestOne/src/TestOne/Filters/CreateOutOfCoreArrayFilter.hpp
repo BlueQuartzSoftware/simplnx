@@ -20,11 +20,11 @@ public:
   CreateOutOfCoreArray& operator=(CreateOutOfCoreArray&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_NumericType_Key = "numeric_type_index";
-  static constexpr StringLiteral k_NumComps_Key = "component_count";
-  static constexpr StringLiteral k_TupleDims_Key = "tuple_dimensions";
-  static constexpr StringLiteral k_DataPath_Key = "output_array_path";
-  static constexpr StringLiteral k_InitilizationValue_Key = "initialization_value_str";
+  static constexpr StringLiteralType k_NumericType_Key = "numeric_type_index";
+  static constexpr StringLiteralType k_NumComps_Key = "component_count";
+  static constexpr StringLiteralType k_TupleDims_Key = "tuple_dimensions";
+  static constexpr StringLiteralType k_DataPath_Key = "output_array_path";
+  static constexpr StringLiteralType k_InitilizationValue_Key = "initialization_value_str";
 
   /**
    * @brief
@@ -60,7 +60,7 @@ public:
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

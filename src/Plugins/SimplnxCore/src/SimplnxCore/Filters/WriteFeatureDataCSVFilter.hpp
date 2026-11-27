@@ -33,11 +33,11 @@ public:
   };
 
   // Parameter Keys
-  static constexpr StringLiteral k_FeatureDataFile_Key = "feature_data_file";
-  static constexpr StringLiteral k_WriteNeighborListData_Key = "write_neighborlist_data";
-  static constexpr StringLiteral k_WriteNumFeaturesLine_Key = "write_num_features_line";
-  static constexpr StringLiteral k_DelimiterChoiceInt_Key = "delimiter_index";
-  static constexpr StringLiteral k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
+  static constexpr StringLiteralType k_FeatureDataFile_Key = "feature_data_file";
+  static constexpr StringLiteralType k_WriteNeighborListData_Key = "write_neighborlist_data";
+  static constexpr StringLiteralType k_WriteNumFeaturesLine_Key = "write_num_features_line";
+  static constexpr StringLiteralType k_DelimiterChoiceInt_Key = "delimiter_index";
+  static constexpr StringLiteralType k_CellFeatureAttributeMatrixPath_Key = "cell_feature_attribute_matrix_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -94,7 +94,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

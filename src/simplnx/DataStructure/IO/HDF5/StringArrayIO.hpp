@@ -6,7 +6,7 @@ namespace nx::core
 {
 class StringArray;
 
-namespace HDF5
+namespace hdf5
 {
 /**
  * @brief The StringArrayIO class serves as a reader and writer between StringArrays and HDF5
@@ -38,7 +38,7 @@ public:
    * @param useEmptyDataStore = false
    * @return Result<>
    */
-  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& arrayName, DataObject::IdType importId,
+  Result<> readData(DataStructureReader& dataStructureReader, const GroupReaderType& parentGroup, const std::string& arrayName, DataObject::IdType importId,
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore) const override;
 
   /**
@@ -49,7 +49,7 @@ public:
    * @param importable
    * @return Result<>
    */
-  Result<> writeData(DataStructureWriter& dataStructureWriter, const data_type& stringArray, group_writer_type& parentGroup, bool importable) const;
+  static Result<> writeData(DataStructureWriter& dataStructureWriter, const data_type& stringArray, GroupWriterType& parentGroup, bool importable);
 
   /**
    * @brief Replaces the AbstractDataStore using data from the HDF5 dataset.
@@ -58,7 +58,7 @@ public:
    * @param dataStructureReader
    * @return Result<>
    */
-  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& parentGroupReader) const override;
+  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& parentGroupReader) const override;
 
   /**
    * @brief Attempts to write the DataObject to HDF5.
@@ -69,7 +69,7 @@ public:
    * @param parentWriter
    * @return Result<>
    */
-  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override;
+  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, GroupWriterType& parentWriter) const override;
 
   /**
    * @brief Returns the DataObject::Type for this IO class.
@@ -83,5 +83,5 @@ public:
    */
   std::string getTypeName() const override;
 };
-} // namespace HDF5
+} // namespace hdf5
 } // namespace nx::core

@@ -23,11 +23,11 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeSurfaceFeaturesInputValues
 {
-  AttributeMatrixSelectionParameter::ValueType FeatureAttributeMatrixPath;
-  ArraySelectionParameter::ValueType FeatureIdsPath;
-  GeometrySelectionParameter::ValueType InputImageGeometryPath;
-  BoolParameter::ValueType MarkFeature0Neighbors;
-  DataObjectNameParameter::ValueType SurfaceFeaturesArrayName;
+  AttributeMatrixSelectionParameter::ValueType feature_attribute_matrix_path;
+  ArraySelectionParameter::ValueType feature_ids_path;
+  GeometrySelectionParameter::ValueType input_image_geometry_path;
+  BoolParameter::ValueType mark_feature0_neighbors{};
+  DataObjectNameParameter::ValueType surface_features_array_name;
 };
 
 /**
@@ -54,7 +54,7 @@ public:
   /**
    * @brief Destroys the non-owning dispatcher.
    */
-  ~ComputeSurfaceFeatures() noexcept;
+  ~ComputeSurfaceFeatures() noexcept = default;
 
   ComputeSurfaceFeatures(const ComputeSurfaceFeatures&) = delete;
   ComputeSurfaceFeatures(ComputeSurfaceFeatures&&) noexcept = delete;

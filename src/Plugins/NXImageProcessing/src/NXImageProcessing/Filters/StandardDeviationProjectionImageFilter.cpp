@@ -51,12 +51,12 @@ Parameters StandardDeviationProjectionImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<UInt32Parameter>(k_ProjectionDimension_Key, "Projection Dimension", "The axis to project along: 0=X, 1=Y, 2=Z.", 0u));
+  params.insert(std::make_unique<UInt32ParameterType>(k_ProjectionDimension_Key, "Projection Dimension", "The axis to project along: 0=X, 1=Y, 2=Z.", 0u));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In-Place", "Performs the projection in-place for the given Image Geometry", true));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The image data that will be processed by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
 
@@ -77,14 +77,14 @@ IFilter::VersionType StandardDeviationProjectionImageFilter::parametersVersion()
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer StandardDeviationProjectionImageFilter::clone() const
+IFilter::UniquePointerType StandardDeviationProjectionImageFilter::clone() const
 {
   return std::make_unique<StandardDeviationProjectionImageFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult StandardDeviationProjectionImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult StandardDeviationProjectionImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                               const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -95,18 +95,18 @@ IFilter::PreflightResult StandardDeviationProjectionImageFilter::preflightImpl(c
 
   // The standard deviation is a real-valued statistic, so the legacy ITK filter emits a double (Float64)
   // output regardless of input type. The façade is therefore instantiated with the AllNumeric input policy
-  // (any scalar numeric input) and the AlwaysFloat64 OutTypeMap (Float64 output); the execute façade below
+  // (any scalar numeric input) and the AlwaysFloat64Type OutTypeMap (Float64 output); the execute façade below
   // MUST use the same pair, or the allocated and written output types disagree. The scalar
   // (single-component) and tuple-consistency checks are performed inside PreflightAxisProjection.
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightAxisProjection<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightAxisProjection<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64Type>(
       dataStructure, imageGeomPath, selectedInputArray, static_cast<usize>(projectionDimension), performInPlace, outputGeomName, outputArrayName);
 
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> StandardDeviationProjectionImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> StandardDeviationProjectionImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -121,7 +121,7 @@ Result<> StandardDeviationProjectionImageFilter::executeImpl(DataStructure& data
   const DataPath outputArrayPath = ImageProcessing::ProjectionOutputArrayPath(dataStructure, imageGeomPath, performInPlace, outputGeomName, outputArrayName);
 
   const ImageProcessing::StdDevReduce reduce{};
-  return ImageProcessing::ExecuteAxisProjectionImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath,
-                                                                                                                        static_cast<usize>(projectionDimension), reduce, shouldCancel, messageHandler);
+  return ImageProcessing::ExecuteAxisProjectionImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64Type>(
+      dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, static_cast<usize>(projectionDimension), reduce, shouldCancel, messageHandler);
 }
 } // namespace nx::core

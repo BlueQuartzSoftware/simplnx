@@ -120,15 +120,15 @@ void EvaluateDirectNode(const IArrayThreshold& node, const DataStructure& dataSt
     return;
   }
   output.assign(tupleCount, falseValue);
-  if(const auto* threshold = dynamic_cast<const ArrayThreshold*>(&node); threshold != nullptr)
+  if(const auto* thresholdPtr = dynamic_cast<const ArrayThreshold*>(&node); thresholdPtr != nullptr)
   {
-    const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(threshold->getArrayPath());
-    ExecuteDataFunction(DirectComparisonEvaluator<MaskT>{}, inputArray.getDataType(), *threshold, inputArray, output, trueValue, falseValue, shouldCancel);
+    const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(thresholdPtr->getArrayPath());
+    ExecuteDataFunction(DirectComparisonEvaluator<MaskT>{}, inputArray.getDataType(), *thresholdPtr, inputArray, output, trueValue, falseValue, shouldCancel);
   }
-  else if(const auto* thresholdSet = dynamic_cast<const ArrayThresholdSet*>(&node); thresholdSet != nullptr)
+  else if(const auto* thresholdSetPtr = dynamic_cast<const ArrayThresholdSet*>(&node); thresholdSetPtr != nullptr)
   {
     bool hasChild = false;
-    for(const auto& child : thresholdSet->getArrayThresholds())
+    for(const auto& child : thresholdSetPtr->getArrayThresholds())
     {
       if(shouldCancel)
       {
@@ -206,7 +206,7 @@ struct DirectEvaluator
 };
 } // namespace
 
-MultiThresholdObjectsDirect::MultiThresholdObjectsDirect(DataStructure& dataStructure, const IFilter::MessageHandler&, const std::atomic_bool& shouldCancel,
+MultiThresholdObjectsDirect::MultiThresholdObjectsDirect(DataStructure& dataStructure, const IFilter::MessageHandler& /*unused*/, const std::atomic_bool& shouldCancel,
                                                          const MultiThresholdObjectsInputValues* inputValues)
 : m_DataStructure(dataStructure)
 , m_InputValues(inputValues)
@@ -214,17 +214,15 @@ MultiThresholdObjectsDirect::MultiThresholdObjectsDirect(DataStructure& dataStru
 {
 }
 
-MultiThresholdObjectsDirect::~MultiThresholdObjectsDirect() noexcept = default;
-
 Result<> MultiThresholdObjectsDirect::operator()()
 {
-  auto thresholdsObject = m_InputValues->ArrayThresholdsObject;
-  auto maskArrayName = m_InputValues->OutputDataArrayName;
-  auto maskArrayType = m_InputValues->CreatedMaskType;
-  auto useCustomTrueValue = m_InputValues->UseCustomTrueValue;
-  auto useCustomFalseValue = m_InputValues->UseCustomFalseValue;
-  auto customTrueValue = m_InputValues->CustomTrueValue;
-  auto customFalseValue = m_InputValues->CustomFalseValue;
+  auto thresholdsObject = m_InputValues->array_thresholds_object;
+  auto maskArrayName = m_InputValues->output_data_array_name;
+  auto maskArrayType = m_InputValues->created_mask_type;
+  auto useCustomTrueValue = m_InputValues->use_custom_true_value;
+  auto useCustomFalseValue = m_InputValues->use_custom_false_value;
+  auto customTrueValue = m_InputValues->custom_true_value;
+  auto customFalseValue = m_InputValues->custom_false_value;
 
   float64 trueValue = useCustomTrueValue ? customTrueValue : 1.0;
   float64 falseValue = useCustomFalseValue ? customFalseValue : 0.0;

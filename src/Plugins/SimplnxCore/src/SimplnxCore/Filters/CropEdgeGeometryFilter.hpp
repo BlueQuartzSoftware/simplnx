@@ -21,20 +21,20 @@ public:
   CropEdgeGeometryFilter& operator=(CropEdgeGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_CropXDim_Key = "crop_x_dim";
-  static constexpr StringLiteral k_CropYDim_Key = "crop_y_dim";
-  static constexpr StringLiteral k_CropZDim_Key = "crop_z_dim";
-  static constexpr StringLiteral k_MinCoord_Key = "min_coord";
-  static constexpr StringLiteral k_MaxCoord_Key = "max_coord";
-  static constexpr StringLiteral k_SelectedEdgeGeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_CreatedEdgeGeometryPath_Key = "output_image_geometry_path";
-  static constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
-  static constexpr StringLiteral k_BoundaryIntersectionBehavior_Key = "boundary_intersection_behavior_index";
+  static constexpr StringLiteralType k_CropXDim_Key = "crop_x_dim";
+  static constexpr StringLiteralType k_CropYDim_Key = "crop_y_dim";
+  static constexpr StringLiteralType k_CropZDim_Key = "crop_z_dim";
+  static constexpr StringLiteralType k_MinCoord_Key = "min_coord";
+  static constexpr StringLiteralType k_MaxCoord_Key = "max_coord";
+  static constexpr StringLiteralType k_SelectedEdgeGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_CreatedEdgeGeometryPath_Key = "output_image_geometry_path";
+  static constexpr StringLiteralType k_RemoveOriginalGeometry_Key = "remove_original_geometry";
+  static constexpr StringLiteralType k_BoundaryIntersectionBehavior_Key = "boundary_intersection_behavior_index";
 
-  static constexpr StringLiteral k_ClearFeatureAttributeMatrix_Key = "clear_feature_attribute_matrix";
-  static constexpr StringLiteral k_RenumberFeatures_Key = "renumber_features";
-  static constexpr StringLiteral k_EdgeFeatureIdsPath_Key = "edge_feature_ids_path";
-  static constexpr StringLiteral k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
+  static constexpr StringLiteralType k_ClearFeatureAttributeMatrix_Key = "clear_feature_attribute_matrix";
+  static constexpr StringLiteralType k_RenumberFeatures_Key = "renumber_features";
+  static constexpr StringLiteralType k_EdgeFeatureIdsPath_Key = "edge_feature_ids_path";
+  static constexpr StringLiteralType k_FeatureAttributeMatrixPath_Key = "feature_attribute_matrix_path";
 
   /**
    * @brief
@@ -84,7 +84,7 @@ public:
    * @brief
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**
@@ -111,7 +111,7 @@ protected:
                        const ExecutionContext& executionContext) const override;
 
 private:
-  int32 m_InstanceId;
+  int32 m_InstanceId{};
 };
 } // namespace nx::core
 

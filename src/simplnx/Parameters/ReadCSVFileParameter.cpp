@@ -30,15 +30,17 @@
 
 #include "ReadCSVFileParameter.hpp"
 
+#include <utility>
+
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 namespace nx::core
 {
 // -----------------------------------------------------------------------------
-ReadCSVFileParameter::ReadCSVFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+ReadCSVFileParameter::ReadCSVFileParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -49,7 +51,7 @@ Uuid ReadCSVFileParameter::uuid() const
 }
 
 // -----------------------------------------------------------------------------
-IParameter::AcceptedTypes ReadCSVFileParameter::acceptedTypes() const
+IParameter::AcceptedTypesType ReadCSVFileParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -63,19 +65,19 @@ IParameter::VersionType ReadCSVFileParameter::getVersion() const
 // -----------------------------------------------------------------------------
 nlohmann::json ReadCSVFileParameter::toJsonImpl(const std::any& value) const
 {
-  const auto& ReadCSVData = GetAnyRef<ValueType>(value);
-  nlohmann::json json = ReadCSVData.writeJson();
+  const auto& readCsvData = GetAnyRef<ValueType>(value);
+  nlohmann::json json = readCsvData.writeJson();
   return json;
 }
 
 // -----------------------------------------------------------------------------
-Result<std::any> ReadCSVFileParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> ReadCSVFileParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
   return {ConvertResultTo<std::any>(ReadCSVData::ReadJson(json))};
 }
 
 // -----------------------------------------------------------------------------
-IParameter::UniquePointer ReadCSVFileParameter::clone() const
+IParameter::UniquePointerType ReadCSVFileParameter::clone() const
 {
   return std::make_unique<ReadCSVFileParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -90,8 +92,8 @@ std::any ReadCSVFileParameter::defaultValue() const
 std::any ReadCSVFileParameter::construct(const Arguments& args, const ExecutionContext& executionContext) const
 {
   auto value = args.value<ValueType>(name());
-  std::filesystem::path absolutePath = executionContext.getAbsolutePath(value.inputFilePath);
-  value.inputFilePath = absolutePath.string();
+  std::filesystem::path absolutePath = executionContext.getAbsolutePath(value.input_file_path);
+  value.input_file_path = absolutePath.string();
   return value;
 }
 
@@ -102,30 +104,30 @@ Result<> ReadCSVFileParameter::validate(const std::any& value) const
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 namespace
 {
-constexpr StringLiteral k_InputFilePathKey = "Wizard_InputFilePath";
-constexpr StringLiteral k_DataHeadersKey = "Wizard_DataHeaders";
-constexpr StringLiteral k_BeginIndexKey = "Wizard_BeginIndex";
-constexpr StringLiteral k_NumberOfLinesKey = "Wizard_NumberOfLines";
-constexpr StringLiteral k_DataTypesKey = "Wizard_DataTypes";
-constexpr StringLiteral k_DelimitersKey = "Wizard_Delimiters";
-constexpr StringLiteral k_HeaderLineKey = "Wizard_HeaderLine";
-constexpr StringLiteral k_HeaderIsCustomKey = "Wizard_HeaderIsCustom";
-constexpr StringLiteral k_HeaderUsesDefaultsKey = "Wizard_HeaderUseDefaults";
-constexpr StringLiteral k_TupleDimsKey = "Wizard_TupleDims";
+constexpr StringLiteralType k_InputFilePathKey = "Wizard_InputFilePath";
+constexpr StringLiteralType k_DataHeadersKey = "Wizard_DataHeaders";
+constexpr StringLiteralType k_BeginIndexKey = "Wizard_BeginIndex";
+constexpr StringLiteralType k_NumberOfLinesKey = "Wizard_NumberOfLines";
+constexpr StringLiteralType k_DataTypesKey = "Wizard_DataTypes";
+constexpr StringLiteralType k_DelimitersKey = "Wizard_Delimiters";
+constexpr StringLiteralType k_HeaderLineKey = "Wizard_HeaderLine";
+constexpr StringLiteralType k_HeaderIsCustomKey = "Wizard_HeaderIsCustom";
+constexpr StringLiteralType k_HeaderUsesDefaultsKey = "Wizard_HeaderUseDefaults";
+constexpr StringLiteralType k_TupleDimsKey = "Wizard_TupleDims";
 
 std::vector<CSVType> ConvertCSVTypeStrings(const std::vector<std::string>& dataTypes)
 {
   std::vector<CSVType> output;
 
-  for(usize i = 0; i < dataTypes.size(); i++)
+  for(const auto& dataType : dataTypes)
   {
     try
     {
-      output.push_back(nx::core::StringToCSVType(dataTypes[i]));
+      output.push_back(nx::core::StringToCSVType(dataType));
     } catch(const std::exception& e)
     {
       output.push_back(CSVType::int8);
@@ -141,10 +143,10 @@ std::vector<char> ConvertToChars(const std::string& string)
 }
 } // namespace
 
-Result<ReadASCIIWizardDataFilterParameterConverter::ValueType> ReadASCIIWizardDataFilterParameterConverter::convert(const nlohmann::json& json)
+Result<ReadASCIIWizardDataFilterParameterConverter::ValueType> ReadASCIIWizardDataFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   std::vector<std::string> dataTypeStrings = json[k_DataTypesKey].get<std::vector<std::string>>();
-  auto result = SIMPLConversion::ConvertDataTypeStrings(dataTypeStrings);
+  auto result = simpl_conversion::ConvertDataTypeStrings(dataTypeStrings);
   if(result.invalid())
   {
     return ConvertResultTo<ReadASCIIWizardDataFilterParameterConverter::ValueType>(ConvertResult(std::move(result)), {});
@@ -152,44 +154,44 @@ Result<ReadASCIIWizardDataFilterParameterConverter::ValueType> ReadASCIIWizardDa
   dataTypeStrings = result.value();
 
   ValueType value;
-  value.inputFilePath = json[k_InputFilePathKey].get<std::string>();
-  value.customHeaders = json[k_DataHeadersKey].get<std::vector<std::string>>();
+  value.input_file_path = json[k_InputFilePathKey].get<std::string>();
+  value.custom_headers = json[k_DataHeadersKey].get<std::vector<std::string>>();
   auto beginIndex = json[k_BeginIndexKey].get<int32>();
   if(beginIndex < 0)
   {
-    value.startImportRow = 0;
+    value.start_import_row = 0;
   }
   else
   {
-    value.startImportRow = json[k_BeginIndexKey].get<int32>();
+    value.start_import_row = json[k_BeginIndexKey].get<int32>();
   }
-  value.dataTypes = ConvertCSVTypeStrings(dataTypeStrings);
+  value.data_types = ConvertCSVTypeStrings(dataTypeStrings);
   value.delimiters = ConvertToChars(json[k_DelimitersKey].get<std::string>());
   int64 headersLineNum = json[k_HeaderLineKey].get<int64>();
   headersLineNum = headersLineNum < 0 ? 0 : headersLineNum;
-  value.headersLine = static_cast<usize>(headersLineNum);
-  value.tupleDims = json[k_TupleDimsKey].get<std::vector<usize>>();
+  value.headers_line = static_cast<usize>(headersLineNum);
+  value.tuple_dims = json[k_TupleDimsKey].get<std::vector<usize>>();
 
-  value.skippedArrayMask.resize(dataTypeStrings.size());
-  std::transform(dataTypeStrings.begin(), dataTypeStrings.end(), value.skippedArrayMask.begin(), [](auto const& s) { return s == "Skip"; });
+  value.skipped_array_mask.resize(dataTypeStrings.size());
+  std::transform(dataTypeStrings.begin(), dataTypeStrings.end(), value.skipped_array_mask.begin(), [](auto const& s) { return s == "Skip"; });
 
   bool headerIsCustom = json[k_HeaderIsCustomKey].get<bool>();
   // bool headerUsesDefaults = json[k_HeaderUsesDefaultsKey].get<bool>();
 
   if(headerIsCustom)
   {
-    value.headerMode = ValueType::HeaderMode::CUSTOM;
+    value.header_mode = ValueType::HeaderMode::CUSTOM;
   }
   else
   {
-    value.headerMode = ValueType::HeaderMode::LINE;
+    value.header_mode = ValueType::HeaderMode::LINE;
   }
 
   // DREAM.3D 6.x dropped every empty token whatever Wizard_ConsecutiveDelimiters was, and saved its column counts that way.
   // Collapse delimiters so converted pipelines read the same columns.
-  value.consecutiveDelimiters = true;
+  value.consecutive_delimiters = true;
 
   return {std::move(value)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

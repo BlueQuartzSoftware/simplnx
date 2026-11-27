@@ -42,7 +42,7 @@ public:
   /**
    * @brief Destroys the direct feature-neighbor algorithm.
    */
-  ~ComputeFeatureNeighborsDirect() noexcept;
+  ~ComputeFeatureNeighborsDirect() noexcept = default;
 
   ComputeFeatureNeighborsDirect(const ComputeFeatureNeighborsDirect&) = delete;
   ComputeFeatureNeighborsDirect(ComputeFeatureNeighborsDirect&&) noexcept = delete;

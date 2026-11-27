@@ -12,7 +12,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace nx::core::ColorTableUtilities
+namespace nx::core::color_table_utilities
 {
 
 /**
@@ -20,20 +20,20 @@ namespace nx::core::ColorTableUtilities
  */
 struct SIMPLNX_EXPORT ColorPreset
 {
-  std::string Name;
-  std::string ColorSpace;
-  std::string Source;
-  std::string License;
-  std::string Creator;
+  std::string name;
+  std::string color_space;
+  std::string source;
+  std::string license;
+  std::string creator;
 
-  std::vector<float32> NanColor;
-  std::vector<float32> RGBPoints;
-  std::vector<float32> IndexedColors;
+  std::vector<float32> nan_color;
+  std::vector<float32> rgb_points;
+  std::vector<float32> indexed_colors;
 
-  nlohmann::json Annotations;
-  bool DefaultMap = false;
+  nlohmann::json annotations;
+  bool default_map = false;
 
-  bool Invalid = true;
+  bool invalid = true;
 
   explicit ColorPreset(const nlohmann::json& a);
   ColorPreset();
@@ -169,4 +169,4 @@ SIMPLNX_EXPORT std::vector<float32> NormalizeBinPoints(const std::vector<float32
  */
 SIMPLNX_EXPORT std::array<uint8, 3> ComputeRgbFromControlPoints(float32 normalizedValue, const std::vector<float32>& binPoints, const std::vector<float32>& controlPoints, usize numControlColors);
 
-} // namespace nx::core::ColorTableUtilities
+} // namespace nx::core::color_table_utilities

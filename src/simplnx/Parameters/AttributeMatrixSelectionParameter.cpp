@@ -6,12 +6,13 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
-AttributeMatrixSelectionParameter::AttributeMatrixSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+AttributeMatrixSelectionParameter::AttributeMatrixSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -20,7 +21,7 @@ Uuid AttributeMatrixSelectionParameter::uuid() const
   return ParameterTraits<AttributeMatrixSelectionParameter>::uuid;
 }
 
-IParameter::AcceptedTypes AttributeMatrixSelectionParameter::acceptedTypes() const
+IParameter::AcceptedTypesType AttributeMatrixSelectionParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -38,25 +39,25 @@ nlohmann::json AttributeMatrixSelectionParameter::toJsonImpl(const std::any& val
   return json;
 }
 
-Result<std::any> AttributeMatrixSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> AttributeMatrixSelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'AttributeMatrixSelectionParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'AttributeMatrixSelectionParameter' JSON Error: ";
 
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}The JSON data entry for key '{}' is not a string.", prefix.view(), name()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString, fmt::format("{}The JSON data entry for key '{}' is not a string.", k_Prefix.view(), name()));
   }
 
   auto valueString = json.get<std::string>();
   auto path = DataPath::FromString(valueString);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath for key '{}'", prefix, valueString, name()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotValueType, fmt::format("{}Failed to parse '{}' as DataPath for key '{}'", k_Prefix, valueString, name()));
   }
   return {{std::move(*path)}};
 }
 
-IParameter::UniquePointer AttributeMatrixSelectionParameter::clone() const
+IParameter::UniquePointerType AttributeMatrixSelectionParameter::clone() const
 {
   return std::make_unique<AttributeMatrixSelectionParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -84,19 +85,19 @@ Result<> AttributeMatrixSelectionParameter::validatePath(const DataStructure& da
 
   if(value.empty())
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateEmptyValue, fmt::format("{}DataPath cannot be empty", prefix));
   }
 
-  const DataObject* dataObject = dataStructure.getData(value);
-  if(dataObject == nullptr)
+  const DataObject* dataObjectPtr = dataStructure.getData(value);
+  if(dataObjectPtr == nullptr)
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateDuplicateValue, fmt::format("{}Object does not exist at path '{}'", prefix, value.toString()));
   }
 
-  const AttributeMatrix* attrMatrix = dynamic_cast<const AttributeMatrix*>(dataObject);
-  if(attrMatrix == nullptr)
+  const AttributeMatrix* attrMatrixPtr = dynamic_cast<const AttributeMatrix*>(dataObjectPtr);
+  if(attrMatrixPtr == nullptr)
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_DuplicateValue, fmt::format("{}Object at path '{}' is *not* an AttributeMatrix", prefix, value.toString()));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateDuplicateValue, fmt::format("{}Object at path '{}' is *not* an AttributeMatrix", prefix, value.toString()));
   }
 
   return {};
@@ -105,13 +106,13 @@ Result<> AttributeMatrixSelectionParameter::validatePath(const DataStructure& da
 Result<std::any> AttributeMatrixSelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
-  DataObject* object = dataStructure.getData(path);
-  return {{object}};
+  DataObject* objectPtr = dataStructure.getData(path);
+  return {{objectPtr}};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
-Result<DataArrayCreationToAMFilterParameterConverter::ValueType> DataArrayCreationToAMFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataArrayCreationToAMFilterParameterConverter::ValueType> DataArrayCreationToAMFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   auto dataContainerNameResult = ReadDataContainerName(json, "DataArrayCreationFilterParameter");
   if(dataContainerNameResult.invalid())
@@ -130,7 +131,7 @@ Result<DataArrayCreationToAMFilterParameterConverter::ValueType> DataArrayCreati
   return {std::move(dataPath)};
 }
 
-Result<AttributeMatrixSelectionFilterParameterConverter::ValueType> AttributeMatrixSelectionFilterParameterConverter::convert(const nlohmann::json& json)
+Result<AttributeMatrixSelectionFilterParameterConverter::ValueType> AttributeMatrixSelectionFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   auto dataContainerNameResult = ReadDataContainerName(json, "AttributeMatrixSelectionFilterParameter");
   if(dataContainerNameResult.invalid())
@@ -148,5 +149,5 @@ Result<AttributeMatrixSelectionFilterParameterConverter::ValueType> AttributeMat
 
   return {std::move(dataPath)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

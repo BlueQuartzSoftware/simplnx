@@ -6,7 +6,7 @@
 #include <memory>
 #include <utility>
 
-namespace nx::core::UnitTest
+namespace nx::core::unit_test
 {
 /**
  * @brief Temporarily replaces the process-wide storage-format resolver.
@@ -16,9 +16,9 @@ namespace nx::core::UnitTest
  */
 [[nodiscard]] inline auto SetDefaultFormatResolverForScope(std::shared_ptr<const IDataStoreFormatResolver> resolver)
 {
-  auto previousResolver = DataStructure::getDefaultFormatResolver();
-  auto restoreResolver = MakeScopeGuard([savedResolver = std::move(previousResolver)]() noexcept { DataStructure::setDefaultFormatResolver(savedResolver); });
-  DataStructure::setDefaultFormatResolver(std::move(resolver));
+  auto previousResolver = DataStructure::GetDefaultFormatResolver();
+  auto restoreResolver = MakeScopeGuard([savedResolver = std::move(previousResolver)]() noexcept { DataStructure::SetDefaultFormatResolver(savedResolver); });
+  DataStructure::SetDefaultFormatResolver(std::move(resolver));
   return restoreResolver;
 }
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test

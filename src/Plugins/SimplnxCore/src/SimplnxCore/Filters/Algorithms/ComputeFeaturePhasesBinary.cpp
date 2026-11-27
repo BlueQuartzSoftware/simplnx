@@ -177,17 +177,15 @@ ComputeFeaturePhasesBinary::ComputeFeaturePhasesBinary(DataStructure& dataStruct
 {
 }
 
-ComputeFeaturePhasesBinary::~ComputeFeaturePhasesBinary() noexcept = default;
-
 Result<> ComputeFeaturePhasesBinary::operator()()
 {
-  const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->MaskArrayPath);
-  const DataPath featurePhasesPath = m_InputValues->CellFeatureAttributeMatrixPath.createChildPath(m_InputValues->FeaturePhasesArrayName);
+  const auto& maskArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->mask_array_path);
+  const DataPath featurePhasesPath = m_InputValues->cell_feature_attribute_matrix_path.createChildPath(m_InputValues->feature_phases_array_name);
   auto& featurePhasesArray = m_DataStructure.getDataRefAs<IDataArray>(featurePhasesPath);
 
   if(maskArray.getDataType() != DataType::boolean && maskArray.getDataType() != DataType::uint8)
   {
-    return MakeErrorResult(-53800, fmt::format("Mask array '{}' has data type '{}'. The mask must have a boolean or uint8 data type.", m_InputValues->MaskArrayPath.toString(),
+    return MakeErrorResult(-53800, fmt::format("Mask array '{}' has data type '{}'. The mask must have a boolean or uint8 data type.", m_InputValues->mask_array_path.toString(),
                                                DataTypeToString(maskArray.getDataType())));
   }
 
@@ -196,12 +194,12 @@ Result<> ComputeFeaturePhasesBinary::operator()()
     return {};
   }
 
-  if(m_DataStructure.getData(m_InputValues->MaskArrayPath.getParent()) == m_DataStructure.getData(m_InputValues->CellFeatureAttributeMatrixPath))
+  if(m_DataStructure.getData(m_InputValues->mask_array_path.getParent()) == m_DataStructure.getData(m_InputValues->cell_feature_attribute_matrix_path))
   {
     return ExecuteDataFunction(ConvertFeatureMaskFunctor{}, maskArray.getDataType(), maskArray, featurePhasesArray, m_ShouldCancel);
   }
 
-  const auto& featureIdsArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->FeatureIdsArrayPath);
-  return ExecuteDataFunction(ComputeFeaturePhasesBinaryFunctor{}, maskArray.getDataType(), featureIdsArray, maskArray, featurePhasesArray, m_InputValues->FeatureIdsArrayPath, featurePhasesPath,
+  const auto& featureIdsArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->feature_ids_array_path);
+  return ExecuteDataFunction(ComputeFeaturePhasesBinaryFunctor{}, maskArray.getDataType(), featureIdsArray, maskArray, featurePhasesArray, m_InputValues->feature_ids_array_path, featurePhasesPath,
                              m_ShouldCancel);
 }

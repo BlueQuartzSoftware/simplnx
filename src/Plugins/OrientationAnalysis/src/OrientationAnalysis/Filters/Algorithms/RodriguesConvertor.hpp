@@ -18,9 +18,9 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT RodriguesConvertorInputValues
 {
-  DataPath RodriguesDataArrayPath;
-  DataPath OutputDataArrayPath;
-  bool DeleteOriginalData;
+  DataPath rodrigues_data_array_path;
+  DataPath output_data_array_path;
+  bool delete_original_data{};
 };
 
 /**
@@ -46,7 +46,7 @@ public:
    * @pre All arguments outlive this executor.
    */
   RodriguesConvertor(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, RodriguesConvertorInputValues* inputValues);
-  ~RodriguesConvertor() noexcept;
+  ~RodriguesConvertor() noexcept = default;
 
   RodriguesConvertor(const RodriguesConvertor&) = delete;
   RodriguesConvertor(RodriguesConvertor&&) noexcept = delete;

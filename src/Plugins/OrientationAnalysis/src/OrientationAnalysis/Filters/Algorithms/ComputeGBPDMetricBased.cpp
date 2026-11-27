@@ -16,10 +16,11 @@
 #include <tbb/concurrent_vector.h>
 #endif
 
+#include <algorithm>
 #include <cmath>
 
 using namespace nx::core;
-using namespace nx::core::OrientationUtilities;
+using namespace nx::core::orientation_utilities;
 namespace fs = std::filesystem;
 using LaueOpsShPtrType = std::shared_ptr<ebsdlib::LaueOps>;
 using LaueOpsContainerType = std::vector<LaueOpsShPtrType>;
@@ -34,28 +35,28 @@ class TriAreaAndNormals
 {
 public:
   TriAreaAndNormals(float64 triArea, float64 n1x, float64 n1y, float64 n1z, float64 n2x, float64 n2y, float64 n2z)
-  : Area(triArea)
-  , NormalGrain1X(n1x)
-  , NormalGrain1Y(n1y)
-  , NormalGrain1Z(n1z)
-  , NormalGrain2X(n2x)
-  , NormalGrain2Y(n2y)
-  , NormalGrain2Z(n2z)
+  : area(triArea)
+  , normal_grain1_x(n1x)
+  , normal_grain1_y(n1y)
+  , normal_grain1_z(n1z)
+  , normal_grain2_x(n2x)
+  , normal_grain2_y(n2y)
+  , normal_grain2_z(n2z)
   {
   }
   TriAreaAndNormals() = default;
 
-  float64 Area = 0.0;
-  float64 NormalGrain1X = 0.0;
-  float64 NormalGrain1Y = 0.0;
-  float64 NormalGrain1Z = 0.0;
-  float64 NormalGrain2X = 0.0;
-  float64 NormalGrain2Y = 0.0;
-  float64 NormalGrain2Z = 0.0;
+  float64 area = 0.0;
+  float64 normal_grain1_x = 0.0;
+  float64 normal_grain1_y = 0.0;
+  float64 normal_grain1_z = 0.0;
+  float64 normal_grain2_x = 0.0;
+  float64 normal_grain2_y = 0.0;
+  float64 normal_grain2_z = 0.0;
 
   bool operator<(const TriAreaAndNormals& other) const
   {
-    return Area < other.Area;
+    return area < other.area;
   }
 };
 
@@ -69,14 +70,14 @@ public:
 class TrianglesSelector
 {
 public:
-  TrianglesSelector(bool excludeTripleLines, const IGeometry::SharedFaceList& triangles, const Int8Array& nodeTypes,
+  TrianglesSelector(bool excludeTripleLines, const IGeometry::SharedFaceListType& triangles, const Int8ArrayType& nodeTypes,
 #ifdef SIMPLNX_ENABLE_MULTICORE
                     tbb::concurrent_vector<TriAreaAndNormals>& selectedTriangles,
 #else
                     std::vector<TriAreaAndNormals>& selectedTriangles,
 #endif
-                    int32 phaseOfInterest, uint32 crystalStruct, const float32* eulerCache, const int32* phasesCache, const Int32Array& faceLabels, const Float64Array& faceNormals,
-                    const Float64Array& faceAreas)
+                    int32 phaseOfInterest, uint32 crystalStruct, const float32* eulerCache, const int32* phasesCache, const Int32ArrayType& faceLabels, const Float64ArrayType& faceNormals,
+                    const Float64ArrayType& faceAreas)
   : m_ExcludeTripleLines(excludeTripleLines)
   , m_Triangles(triangles)
   , m_NodeTypes(nodeTypes)
@@ -154,8 +155,8 @@ public:
 
 private:
   bool m_ExcludeTripleLines;
-  const IGeometry::SharedFaceList& m_Triangles;
-  const Int8Array& m_NodeTypes;
+  const IGeometry::SharedFaceListType& m_Triangles;
+  const Int8ArrayType& m_NodeTypes;
 #ifdef SIMPLNX_ENABLE_MULTICORE
   tbb::concurrent_vector<TriAreaAndNormals>& m_SelectedTriangles;
 #else
@@ -167,9 +168,9 @@ private:
   int32 m_NSym;
   const float32* m_EulerCache;
   const int32* m_PhasesCache;
-  const Int32Array& m_FaceLabels;
-  const Float64Array& m_FaceNormals;
-  const Float64Array& m_FaceAreas;
+  const Int32ArrayType& m_FaceLabels;
+  const Float64ArrayType& m_FaceNormals;
+  const Float64ArrayType& m_FaceAreas;
 };
 
 /**
@@ -212,12 +213,12 @@ public:
 
       for(const auto& selectedTriangle : m_SelectedTriangles)
       {
-        const Eigen::Vector3d normal1 = {selectedTriangle.NormalGrain1X, selectedTriangle.NormalGrain1Y, selectedTriangle.NormalGrain1Z};
-        const Eigen::Vector3d normal2 = {selectedTriangle.NormalGrain2X, selectedTriangle.NormalGrain2Y, selectedTriangle.NormalGrain2Z};
+        const Eigen::Vector3d normal1 = {selectedTriangle.normal_grain1_x, selectedTriangle.normal_grain1_y, selectedTriangle.normal_grain1_z};
+        const Eigen::Vector3d normal2 = {selectedTriangle.normal_grain2_x, selectedTriangle.normal_grain2_y, selectedTriangle.normal_grain2_z};
 
         for(int32 j = 0; j < m_NSym; j++)
         {
-          const Matrix3dR sym = m_OrientationOps[m_Crystal]->getMatSymOpD(j).toEigenMatrix(); //    EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpD(j));
+          const Matrix3dRType sym = m_OrientationOps[m_Crystal]->getMatSymOpD(j).toEigenMatrix(); //    EbsdLibMatrixToEigenMatrix(m_OrientationOps[m_Crystal]->getMatSymOpD(j));
 
           Eigen::Vector3d symNormal1 = sym * normal1;
           Eigen::Vector3d symNormal2 = sym * normal2;
@@ -236,14 +237,14 @@ public:
             if(gamma1 < m_LimitDist)
             {
               // Kahan summation reduces area-accumulation error.
-              const float64 y = selectedTriangle.Area - c;
+              const float64 y = selectedTriangle.area - c;
               const float64 t = m_DistributionValues[ptIdx] + y;
               c = (t - m_DistributionValues[ptIdx]) - y;
               m_DistributionValues[ptIdx] = t;
             }
             if(gamma2 < m_LimitDist)
             {
-              const float64 y = selectedTriangle.Area - c;
+              const float64 y = selectedTriangle.area - c;
               const float64 t = m_DistributionValues[ptIdx] + y;
               c = (t - m_DistributionValues[ptIdx]) - y;
               m_DistributionValues[ptIdx] = t;
@@ -293,8 +294,6 @@ ComputeGBPDMetricBased::ComputeGBPDMetricBased(DataStructure& dataStructure, con
 {
 }
 
-ComputeGBPDMetricBased::~ComputeGBPDMetricBased() noexcept = default;
-
 const std::atomic_bool& ComputeGBPDMetricBased::getCancel()
 {
   return m_ShouldCancel;
@@ -302,17 +301,17 @@ const std::atomic_bool& ComputeGBPDMetricBased::getCancel()
 
 Result<> ComputeGBPDMetricBased::operator()()
 {
-  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
-  auto& eulerAngles = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->FeatureEulerAnglesArrayPath);
-  auto& phases = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeaturePhasesArrayPath);
-  auto& faceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshFaceLabelsArrayPath);
-  auto& faceNormals = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->SurfaceMeshFaceNormalsArrayPath);
-  auto& faceAreas = m_DataStructure.getDataRefAs<Float64Array>(m_InputValues->SurfaceMeshFaceAreasArrayPath);
-  auto& featureFaceLabels = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->SurfaceMeshFeatureFaceLabelsArrayPath);
-  auto& nodeTypes = m_DataStructure.getDataRefAs<Int8Array>(m_InputValues->NodeTypesArrayPath);
+  auto& crystalStructures = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
+  auto& eulerAngles = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->feature_euler_angles_array_path);
+  auto& phases = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_phases_array_path);
+  auto& faceLabels = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->surface_mesh_face_labels_array_path);
+  auto& faceNormals = m_DataStructure.getDataRefAs<Float64ArrayType>(m_InputValues->surface_mesh_face_normals_array_path);
+  auto& faceAreas = m_DataStructure.getDataRefAs<Float64ArrayType>(m_InputValues->surface_mesh_face_areas_array_path);
+  auto& featureFaceLabels = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->surface_mesh_feature_face_labels_array_path);
+  auto& nodeTypes = m_DataStructure.getDataRefAs<Int8ArrayType>(m_InputValues->node_types_array_path);
 
-  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
-  const IGeometry::SharedFaceList& triangles = triangleGeom.getFacesRef();
+  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_geometry_path);
+  const IGeometry::SharedFaceListType& triangles = triangleGeom.getFacesRef();
 
   // Feature and ensemble caches prevent random per-triangle OOC access.
   const usize numEulerElements = eulerAngles.getSize();
@@ -336,29 +335,29 @@ Result<> ComputeGBPDMetricBased::operator()()
     return ConvertResult(std::move(ioResult));
   }
 
-  const float64 limitDist = m_InputValues->LimitDist * Constants::k_PiOver180D;
+  const float64 limitDist = m_InputValues->limit_dist * constants::k_PiOver180D;
 
-  if(crystalStructuresCache[m_InputValues->PhaseOfInterest] > 10)
+  if(crystalStructuresCache[m_InputValues->phase_of_interest] > 10)
   {
-    return MakeErrorResult(
-        -8325, fmt::format("Unsupported CrystalStructure value {} for phase index {}.", static_cast<uint32>(crystalStructuresCache[m_InputValues->PhaseOfInterest]), m_InputValues->PhaseOfInterest));
+    return MakeErrorResult(-8325, fmt::format("Unsupported CrystalStructure value {} for phase index {}.", static_cast<uint32>(crystalStructuresCache[m_InputValues->phase_of_interest]),
+                                              m_InputValues->phase_of_interest));
   }
 
   // GMT scripts require the _1 filename suffix.
-  fs::path distributionOutput = m_InputValues->DistOutputFile;
-  std::string distFName = m_InputValues->DistOutputFile.stem().string();
-  if(!distFName.empty() && !StringUtilities::ends_with(distFName, "_1"))
+  fs::path distributionOutput = m_InputValues->dist_output_file;
+  std::string distFName = m_InputValues->dist_output_file.stem().string();
+  if(!distFName.empty() && !string_utilities::EndsWith(distFName, "_1"))
   {
     distFName = distFName + "_1.dat";
-    distributionOutput = fs::path(m_InputValues->DistOutputFile.parent_path() / distFName);
+    distributionOutput = fs::path(m_InputValues->dist_output_file.parent_path() / distFName);
   }
 
-  fs::path errorOutput = m_InputValues->ErrOutputFile;
-  std::string errFName = m_InputValues->ErrOutputFile.stem().string();
-  if(!errFName.empty() && !StringUtilities::ends_with(errFName, "_1"))
+  fs::path errorOutput = m_InputValues->err_output_file;
+  std::string errFName = m_InputValues->err_output_file.stem().string();
+  if(!errFName.empty() && !string_utilities::EndsWith(errFName, "_1"))
   {
     errFName = errFName + "_1.dat";
-    errorOutput = fs::path(m_InputValues->ErrOutputFile.parent_path() / errFName);
+    errorOutput = fs::path(m_InputValues->err_output_file.parent_path() / errFName);
   }
 
   // Make sure any directory path is also available as the user may have just typed
@@ -388,7 +387,7 @@ Result<> ComputeGBPDMetricBased::operator()()
 
   // ------------------- before computing the distribution, we must find normalization factors -----
   std::vector<ebsdlib::LaueOps::Pointer> mOrientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
-  auto crystal = static_cast<int32>(crystalStructuresCache[m_InputValues->PhaseOfInterest]);
+  auto crystal = static_cast<int32>(crystalStructuresCache[m_InputValues->phase_of_interest]);
   const int32 nSym = mOrientationOps[crystal]->getNumSymOps();
   auto ballVolume = static_cast<float64>(nSym) * 2.0 * (1.0 - std::cos(limitDist));
 
@@ -396,7 +395,7 @@ Result<> ComputeGBPDMetricBased::operator()()
   m_MessageHandler.sendInfoMessage("Generating sampling points");
 
   // The golden-section spiral distributes points across the sphere.
-  const int numSamplePtsWholeSphere = 2 * m_InputValues->NumSamplPts;
+  const int numSamplePtsWholeSphere = 2 * m_InputValues->num_sampl_pts;
   std::vector<float64> samplePtsXHemisphere(0);
   std::vector<float64> samplePtsYHemisphere(0);
   std::vector<float64> samplePtsZHemisphere(0);
@@ -405,7 +404,7 @@ Result<> ComputeGBPDMetricBased::operator()()
   std::vector<float64> samplePtsZ(0);
 
   const float64 off = 2.0 / static_cast<float64>(numSamplePtsWholeSphere);
-  const float64 kConst1 = Constants::k_PiD * (3.0 - std::sqrt(5.0));
+  const float64 kConst1 = constants::k_PiD * (3.0 - std::sqrt(5.0));
   for(int32 ptIdxWholeSphere = 0; ptIdxWholeSphere < numSamplePtsWholeSphere; ptIdxWholeSphere++)
   {
     if(getCancel())
@@ -441,7 +440,7 @@ Result<> ComputeGBPDMetricBased::operator()()
 
     if(crystal == 0) // 6/mmm
     {
-      if(x < 0.0 || y < 0.0 || y > x * Constants::k_1OverRoot3D)
+      if(x < 0.0 || y < 0.0 || y > x * constants::k_1OverRoot3D)
       {
         continue;
       }
@@ -455,7 +454,7 @@ Result<> ComputeGBPDMetricBased::operator()()
     }
     if(crystal == 2 || crystal == 10) // 6/m || -3m
     {
-      if(x < 0.0 || y < 0.0 || y > x * Constants::k_Sqrt3D)
+      if(x < 0.0 || y < 0.0 || y > x * constants::k_Sqrt3D)
       {
         continue;
       }
@@ -491,7 +490,7 @@ Result<> ComputeGBPDMetricBased::operator()()
     }
     if(crystal == 9) // -3
     {
-      if(y < 0.0 || x < -y * Constants::k_1OverRoot3D)
+      if(y < 0.0 || x < -y * constants::k_1OverRoot3D)
       {
         continue;
       }
@@ -505,16 +504,16 @@ Result<> ComputeGBPDMetricBased::operator()()
   // Add points at the edges and vertices of a fundamental region
   if(crystal == 0) // 6/mmm
   {
-    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 0.0, 0.0, 90.0 * Constants::k_PiOver180D, limitDist);
-    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 30.0 * Constants::k_PiOver180D, 0.0, 90.0 * Constants::k_PiOver180D, limitDist);
-    AppendSamplePtsFixedZenith(samplePtsX, samplePtsY, samplePtsZ, 90.0 * Constants::k_PiOver180D, 0.0, 30.0 * Constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 0.0, 0.0, 90.0 * constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 30.0 * constants::k_PiOver180D, 0.0, 90.0 * constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedZenith(samplePtsX, samplePtsY, samplePtsZ, 90.0 * constants::k_PiOver180D, 0.0, 30.0 * constants::k_PiOver180D, limitDist);
   }
   if(crystal == 1) // m-3m
   {
-    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 0.0, 0.0, 45.0 * Constants::k_PiOver180D, limitDist);
-    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 45.0 * Constants::k_PiOver180D, 0.0, std::acos(Constants::k_1OverRoot3D), limitDist);
+    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 0.0, 0.0, 45.0 * constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 45.0 * constants::k_PiOver180D, 0.0, std::acos(constants::k_1OverRoot3D), limitDist);
 
-    for(float64 phi = 0; phi <= 45.0 * Constants::k_PiOver180D; phi += limitDist)
+    for(float64 phi = 0; phi <= 45.0 * constants::k_PiOver180D; phi += limitDist)
     {
       const float64 cosPhi = std::cos(phi);
       const float64 sinPhi = std::sin(phi);
@@ -524,20 +523,20 @@ Result<> ComputeGBPDMetricBased::operator()()
 
       samplePtsX.push_back(static_cast<float64>(sinAtan1OverCosPhi * cosPhi));
       samplePtsY.push_back(static_cast<float64>(sinAtan1OverCosPhi * sinPhi));
-      samplePtsZ.push_back(static_cast<float64>(cosAtan1OverCosPhi));
+      samplePtsZ.push_back(cosAtan1OverCosPhi);
     }
   }
   if(crystal == 2 || crystal == 10) // 6/m ||  -3m
   {
-    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 0.0, 0.0, 90.0 * Constants::k_PiOver180D, limitDist);
-    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 60.0 * Constants::k_PiOver180D, 0.0, 90.0 * Constants::k_PiOver180D, limitDist);
-    AppendSamplePtsFixedZenith(samplePtsX, samplePtsY, samplePtsZ, 90.0 * Constants::k_PiOver180D, 0.0, 60.0 * Constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 0.0, 0.0, 90.0 * constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 60.0 * constants::k_PiOver180D, 0.0, 90.0 * constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedZenith(samplePtsX, samplePtsY, samplePtsZ, 90.0 * constants::k_PiOver180D, 0.0, 60.0 * constants::k_PiOver180D, limitDist);
   }
   if(crystal == 3) // m-3
   {
-    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 0.0, 0.0, 45.0 * Constants::k_PiOver180D, limitDist);
-    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 90.0 * Constants::k_PiOver180D, 0.0, 45.0 * Constants::k_PiOver180D, limitDist);
-    for(float64 phi = 0; phi <= 45.0 * Constants::k_PiOver180D; phi += limitDist)
+    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 0.0, 0.0, 45.0 * constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 90.0 * constants::k_PiOver180D, 0.0, 45.0 * constants::k_PiOver180D, limitDist);
+    for(float64 phi = 0; phi <= 45.0 * constants::k_PiOver180D; phi += limitDist)
     {
       const float64 cosPhi = std::cos(phi);
       const float64 sinPhi = std::sin(phi);
@@ -547,39 +546,39 @@ Result<> ComputeGBPDMetricBased::operator()()
 
       samplePtsX.push_back(static_cast<float64>(sinAtan1OverCosPhi * cosPhi));
       samplePtsY.push_back(static_cast<float64>(sinAtan1OverCosPhi * sinPhi));
-      samplePtsZ.push_back(static_cast<float64>(cosAtan1OverCosPhi));
+      samplePtsZ.push_back(cosAtan1OverCosPhi);
 
       samplePtsX.push_back(static_cast<float64>(sinAtan1OverCosPhi * sinPhi));
       samplePtsY.push_back(static_cast<float64>(sinAtan1OverCosPhi * cosPhi));
-      samplePtsZ.push_back(static_cast<float64>(cosAtan1OverCosPhi));
+      samplePtsZ.push_back(cosAtan1OverCosPhi);
     }
   }
   if(crystal == 4) // -1
   {
-    AppendSamplePtsFixedZenith(samplePtsX, samplePtsY, samplePtsZ, 90.0 * Constants::k_PiOver180D, 0.0, 360.0 * Constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedZenith(samplePtsX, samplePtsY, samplePtsZ, 90.0 * constants::k_PiOver180D, 0.0, 360.0 * constants::k_PiOver180D, limitDist);
   }
   if(crystal == 5) // 2/m
   {
-    AppendSamplePtsFixedZenith(samplePtsX, samplePtsY, samplePtsZ, 90.0 * Constants::k_PiOver180D, 0.0, 180.0 * Constants::k_PiOver180D, limitDist);
-    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 0.0, -90.0 * Constants::k_PiOver180D, 90.0 * Constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedZenith(samplePtsX, samplePtsY, samplePtsZ, 90.0 * constants::k_PiOver180D, 0.0, 180.0 * constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 0.0, -90.0 * constants::k_PiOver180D, 90.0 * constants::k_PiOver180D, limitDist);
   }
   if(crystal == 6 || crystal == 7) // mmm || 4/m
   {
-    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 0.0, 0.0, 90.0 * Constants::k_PiOver180D, limitDist);
-    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 90.0 * Constants::k_PiOver180D, 0.0, 90.0 * Constants::k_PiOver180D, limitDist);
-    AppendSamplePtsFixedZenith(samplePtsX, samplePtsY, samplePtsZ, 90.0 * Constants::k_PiOver180D, 0.0, 90.0 * Constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 0.0, 0.0, 90.0 * constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 90.0 * constants::k_PiOver180D, 0.0, 90.0 * constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedZenith(samplePtsX, samplePtsY, samplePtsZ, 90.0 * constants::k_PiOver180D, 0.0, 90.0 * constants::k_PiOver180D, limitDist);
   }
   if(crystal == 8) // 4/mmm
   {
-    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 0.0, 0.0, 90.0 * Constants::k_PiOver180D, limitDist);
-    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 45.0 * Constants::k_PiOver180D, 0.0, 90.0 * Constants::k_PiOver180D, limitDist);
-    AppendSamplePtsFixedZenith(samplePtsX, samplePtsY, samplePtsZ, 90.0 * Constants::k_PiOver180D, 0.0, 45.0 * Constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 0.0, 0.0, 90.0 * constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 45.0 * constants::k_PiOver180D, 0.0, 90.0 * constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedZenith(samplePtsX, samplePtsY, samplePtsZ, 90.0 * constants::k_PiOver180D, 0.0, 45.0 * constants::k_PiOver180D, limitDist);
   }
   if(crystal == 9) // -3
   {
-    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 0.0, 0.0, 90.0 * Constants::k_PiOver180D, limitDist);
-    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 120.0 * Constants::k_PiOver180D, 0.0, 90.0 * Constants::k_PiOver180D, limitDist);
-    AppendSamplePtsFixedZenith(samplePtsX, samplePtsY, samplePtsZ, 90.0 * Constants::k_PiOver180D, 0.0, 120.0 * Constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 0.0, 0.0, 90.0 * constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedAzimuth(samplePtsX, samplePtsY, samplePtsZ, 120.0 * constants::k_PiOver180D, 0.0, 90.0 * constants::k_PiOver180D, limitDist);
+    AppendSamplePtsFixedZenith(samplePtsX, samplePtsY, samplePtsZ, 90.0 * constants::k_PiOver180D, 0.0, 120.0 * constants::k_PiOver180D, limitDist);
   }
 
   // Select phase-of-interest triangles and transform their normals.
@@ -592,10 +591,7 @@ Result<> ComputeGBPDMetricBased::operator()()
 #endif
 
   usize triChunkSize = 50000;
-  if(numMeshTriangles < triChunkSize)
-  {
-    triChunkSize = numMeshTriangles;
-  }
+  triChunkSize = std::min(numMeshTriangles, triChunkSize);
 
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
   m_MessageHandler.sendInfoMessage("Selecting Triangles for the Phase of Interest");
@@ -613,8 +609,8 @@ Result<> ComputeGBPDMetricBased::operator()()
 
     ParallelDataAlgorithm dataAlg;
     dataAlg.setRange(i, i + triChunkSize);
-    dataAlg.execute(gbpd_metric_based::TrianglesSelector(m_InputValues->ExcludeTripleLines, triangles, nodeTypes, selectedTriangles, m_InputValues->PhaseOfInterest,
-                                                         crystalStructuresCache[m_InputValues->PhaseOfInterest], eulerCache.data(), phasesCache.data(), faceLabels, faceNormals, faceAreas));
+    dataAlg.execute(gbpd_metric_based::TrianglesSelector(m_InputValues->exclude_triple_lines, triangles, nodeTypes, selectedTriangles, m_InputValues->phase_of_interest,
+                                                         crystalStructuresCache[m_InputValues->phase_of_interest], eulerCache.data(), phasesCache.data(), faceLabels, faceNormals, faceAreas));
     progressThrottle.updatePercent(i + triChunkSize);
   }
 
@@ -640,7 +636,7 @@ Result<> ComputeGBPDMetricBased::operator()()
     {
       continue;
     }
-    if(phasesCache[feature1] != m_InputValues->PhaseOfInterest || phasesCache[feature2] != m_InputValues->PhaseOfInterest)
+    if(phasesCache[feature1] != m_InputValues->phase_of_interest || phasesCache[feature2] != m_InputValues->phase_of_interest)
     {
       continue;
     }
@@ -652,17 +648,14 @@ Result<> ComputeGBPDMetricBased::operator()()
   float64 totalFaceArea = 0.0;
   for(const auto& selectedTri : selectedTriangles)
   {
-    totalFaceArea += selectedTri.Area;
+    totalFaceArea += selectedTri.area;
   }
 
   std::vector<float64> distributionValues(samplePtsX.size(), 0.0);
   std::vector<float64> errorValues(samplePtsX.size(), 0.0);
 
   usize pointsChunkSize = 20;
-  if(samplePtsX.size() < pointsChunkSize)
-  {
-    pointsChunkSize = samplePtsX.size();
-  }
+  pointsChunkSize = std::min(samplePtsX.size(), pointsChunkSize);
 
   m_MessageHandler.sendInfoMessage("Determining GBPD Values");
   progressThrottle.reset(samplePtsX.size(), "Determining GBPD Values");
@@ -692,7 +685,7 @@ Result<> ComputeGBPDMetricBased::operator()()
   for(usize ptIdx = 0; ptIdx < samplePtsX.size(); ptIdx++)
   {
     const Eigen::Vector3d point = {samplePtsX.at(ptIdx), samplePtsY.at(ptIdx), samplePtsZ.at(ptIdx)};
-    Matrix3dR sym;
+    Matrix3dRType sym;
     sym.fill(0.0);
 
     for(int32 j = 0; j < nSym; j++)
@@ -711,13 +704,13 @@ Result<> ComputeGBPDMetricBased::operator()()
       const float64 zenith = std::acos(symPoint[2]);
       const float64 azimuth = std::atan2(symPoint[1], symPoint[0]);
 
-      const float64 zenithDeg = Constants::k_180OverPiD * zenith;
-      const float64 azimuthDeg = Constants::k_180OverPiD * azimuth;
+      const float64 zenithDeg = constants::k_180OverPiD * zenith;
+      const float64 azimuthDeg = constants::k_180OverPiD * azimuth;
 
       outputString = fmt::format("{:.8E} {:.8E} {:.8E}\n", azimuthDeg, 90.0 - zenithDeg, distributionValues[ptIdx]);
       distributionOutStream << outputString;
 
-      if(!m_InputValues->SaveRelativeErr)
+      if(!m_InputValues->save_relative_err)
       {
         outputString = fmt::format("{:.8E} {:.8E} {:.8E}\n", azimuthDeg, 90.0 - zenithDeg, errorValues[ptIdx]);
         errorOutStream << outputString;

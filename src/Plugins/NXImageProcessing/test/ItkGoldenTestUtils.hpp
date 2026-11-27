@@ -4,6 +4,7 @@
 
 #include "NXImageProcessing/NXImageProcessing_test_dirs.hpp"
 
+#include "MD5/MD5.hpp"
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
@@ -15,7 +16,6 @@
 #include "simplnx/Parameters/CropGeometryParameter.hpp"
 #include "simplnx/Parameters/FileSystemPathParameter.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
-#include "simplnx/Utilities/MD5.hpp"
 #include "simplnx/Utilities/StringUtilities.hpp"
 
 #include "NXImageProcessing/Filters/ReadImageFilter.hpp"
@@ -79,9 +79,9 @@ inline Result<> ReadInputImage(DataStructure& dataStructure, const fs::path& fil
     args.insertOrAssign(ReadImageFilter::k_CellDataName_Key, std::make_any<std::string>(cellAmName));
     args.insertOrAssign(ReadImageFilter::k_ImageDataArrayPath_Key, std::make_any<std::string>(arrayName));
     auto preflight = filter.preflight(dataStructure, args);
-    if(preflight.outputActions.invalid())
+    if(preflight.output_actions.invalid())
     {
-      return ConvertResult(std::move(preflight.outputActions));
+      return ConvertResult(std::move(preflight.output_actions));
     }
     return filter.execute(dataStructure, args).result;
   }
@@ -101,9 +101,9 @@ inline Result<> ReadInputImage(DataStructure& dataStructure, const fs::path& fil
     args.insertOrAssign(ReadMhaFileFilter::k_SaveImageTransformation_Key, std::make_any<bool>(false));
     args.insertOrAssign(ReadMhaFileFilter::k_TransformationMatrixPath_Key, std::make_any<DataPath>(geomPath.createChildPath("TransformationMatrix")));
     auto preflight = filter.preflight(dataStructure, args);
-    if(preflight.outputActions.invalid())
+    if(preflight.output_actions.invalid())
     {
-      return ConvertResult(std::move(preflight.outputActions));
+      return ConvertResult(std::move(preflight.output_actions));
     }
     return filter.execute(dataStructure, args).result;
   }
@@ -121,9 +121,9 @@ inline Result<> ReadInputImage(DataStructure& dataStructure, const fs::path& fil
     args.insertOrAssign(ReadImageFilter::k_ChangeDataType_Key, std::make_any<bool>(false));
     args.insertOrAssign(ReadImageFilter::k_CroppingOptions_Key, std::make_any<CropGeometryParameter::ValueType>(CropGeometryParameter::ValueType{}));
     auto preflight = filter.preflight(dataStructure, args);
-    if(preflight.outputActions.invalid())
+    if(preflight.output_actions.invalid())
     {
-      return ConvertResult(std::move(preflight.outputActions));
+      return ConvertResult(std::move(preflight.output_actions));
     }
     return filter.execute(dataStructure, args).result;
   }
@@ -157,42 +157,42 @@ Result<> CompareScalarTyped(const IDataArray& outputArray, const IDataArray& bas
 // Scalar-only mirror of ITKTestBase::CompareImages (same checks + error codes). @p outputGeom owns @p outputData.
 inline Result<> CompareImages(DataStructure& dataStructure, const DataPath& baselineGeom, const DataPath& baselineData, const DataPath& outputGeom, const DataPath& outputData, float64 tolerance)
 {
-  const auto* baselineImageGeom = dataStructure.getDataAs<ImageGeom>(baselineGeom);
-  if(baselineImageGeom == nullptr)
+  const auto* baselineImageGeomPtr = dataStructure.getDataAs<ImageGeom>(baselineGeom);
+  if(baselineImageGeomPtr == nullptr)
   {
     return MakeErrorResult(-10, "Could not get ImageGeometry for Baseline");
   }
-  const auto* baselineDataArray = dataStructure.getDataAs<IDataArray>(baselineData);
-  if(baselineDataArray == nullptr)
+  const auto* baselineDataArrayPtr = dataStructure.getDataAs<IDataArray>(baselineData);
+  if(baselineDataArrayPtr == nullptr)
   {
     return MakeErrorResult(-11, "Could not get DataArray for Baseline");
   }
-  const auto* outputImageGeom = dataStructure.getDataAs<ImageGeom>(outputGeom);
-  if(outputImageGeom == nullptr)
+  const auto* outputImageGeomPtr = dataStructure.getDataAs<ImageGeom>(outputGeom);
+  if(outputImageGeomPtr == nullptr)
   {
     return MakeErrorResult(-12, "Could not get ImageGeometry for Output");
   }
-  const auto* outputDataArray = dataStructure.getDataAs<IDataArray>(outputData);
-  if(outputDataArray == nullptr)
+  const auto* outputDataArrayPtr = dataStructure.getDataAs<IDataArray>(outputData);
+  if(outputDataArrayPtr == nullptr)
   {
     return MakeErrorResult(-13, "Could not get DataArray for Output");
   }
-  const DataType baselineType = baselineDataArray->getDataType();
-  const DataType outputType = outputDataArray->getDataType();
+  const DataType baselineType = baselineDataArrayPtr->getDataType();
+  const DataType outputType = outputDataArrayPtr->getDataType();
   if(baselineType != outputType)
   {
     return MakeErrorResult(-14, fmt::format("DataTypes do not match. Output: {} Baseline: {}", fmt::underlying(outputType), fmt::underlying(baselineType)));
   }
-  if(baselineImageGeom->getDimensions() != outputImageGeom->getDimensions())
+  if(baselineImageGeomPtr->getDimensions() != outputImageGeomPtr->getDimensions())
   {
-    return MakeErrorResult(-15, fmt::format("Image Dimensions do not match. Output: {} Baseline: {}", StringUtilities::formatDimensions3D(outputImageGeom->getDimensions()),
-                                            StringUtilities::formatDimensions3D(baselineImageGeom->getDimensions())));
+    return MakeErrorResult(-15, fmt::format("Image Dimensions do not match. Output: {} Baseline: {}", string_utilities::FormatDimensions3D(outputImageGeomPtr->getDimensions()),
+                                            string_utilities::FormatDimensions3D(baselineImageGeomPtr->getDimensions())));
   }
-  if(baselineDataArray->getIDataStoreRef().getTupleShape() != outputDataArray->getIDataStoreRef().getTupleShape())
+  if(baselineDataArrayPtr->getIDataStoreRef().getTupleShape() != outputDataArrayPtr->getIDataStoreRef().getTupleShape())
   {
     return MakeErrorResult(-16, "Tuple Shape does not match between Output and Baseline");
   }
-  if(baselineDataArray->getIDataStoreRef().getComponentShape() != outputDataArray->getIDataStoreRef().getComponentShape())
+  if(baselineDataArrayPtr->getIDataStoreRef().getComponentShape() != outputDataArrayPtr->getIDataStoreRef().getComponentShape())
   {
     return MakeErrorResult(-18, "Component Shape does not match between Output and Baseline");
   }
@@ -200,25 +200,25 @@ inline Result<> CompareImages(DataStructure& dataStructure, const DataPath& base
   switch(outputType)
   {
   case DataType::float32:
-    return detail::CompareScalarTyped<float32>(*outputDataArray, *baselineDataArray, tolerance);
+    return detail::CompareScalarTyped<float32>(*outputDataArrayPtr, *baselineDataArrayPtr, tolerance);
   case DataType::float64:
-    return detail::CompareScalarTyped<float64>(*outputDataArray, *baselineDataArray, tolerance);
+    return detail::CompareScalarTyped<float64>(*outputDataArrayPtr, *baselineDataArrayPtr, tolerance);
   case DataType::int8:
-    return detail::CompareScalarTyped<int8>(*outputDataArray, *baselineDataArray, tolerance);
+    return detail::CompareScalarTyped<int8>(*outputDataArrayPtr, *baselineDataArrayPtr, tolerance);
   case DataType::uint8:
-    return detail::CompareScalarTyped<uint8>(*outputDataArray, *baselineDataArray, tolerance);
+    return detail::CompareScalarTyped<uint8>(*outputDataArrayPtr, *baselineDataArrayPtr, tolerance);
   case DataType::int16:
-    return detail::CompareScalarTyped<int16>(*outputDataArray, *baselineDataArray, tolerance);
+    return detail::CompareScalarTyped<int16>(*outputDataArrayPtr, *baselineDataArrayPtr, tolerance);
   case DataType::uint16:
-    return detail::CompareScalarTyped<uint16>(*outputDataArray, *baselineDataArray, tolerance);
+    return detail::CompareScalarTyped<uint16>(*outputDataArrayPtr, *baselineDataArrayPtr, tolerance);
   case DataType::int32:
-    return detail::CompareScalarTyped<int32>(*outputDataArray, *baselineDataArray, tolerance);
+    return detail::CompareScalarTyped<int32>(*outputDataArrayPtr, *baselineDataArrayPtr, tolerance);
   case DataType::uint32:
-    return detail::CompareScalarTyped<uint32>(*outputDataArray, *baselineDataArray, tolerance);
+    return detail::CompareScalarTyped<uint32>(*outputDataArrayPtr, *baselineDataArrayPtr, tolerance);
   case DataType::int64:
-    return detail::CompareScalarTyped<int64>(*outputDataArray, *baselineDataArray, tolerance);
+    return detail::CompareScalarTyped<int64>(*outputDataArrayPtr, *baselineDataArrayPtr, tolerance);
   case DataType::uint64:
-    return detail::CompareScalarTyped<uint64>(*outputDataArray, *baselineDataArray, tolerance);
+    return detail::CompareScalarTyped<uint64>(*outputDataArrayPtr, *baselineDataArrayPtr, tolerance);
   default:
     return MakeErrorResult(-100, "Unsupported data type for image comparison (boolean not supported).");
   }
@@ -235,8 +235,8 @@ std::string Md5Typed(const IDataArray& array)
   MD5 md5;
   if(typed.getIDataStoreRef().getStoreType() != IDataStore::StoreType::OutOfCore)
   {
-    const T* ptr = typed.template getIDataStoreRefAs<DataStore<T>>().data();
-    md5.update(reinterpret_cast<const uint8*>(ptr), n * sizeof(T));
+    const T* ptrPtr = typed.template getIDataStoreRefAs<DataStore<T>>().data();
+    md5.update(reinterpret_cast<const uint8*>(ptrPtr), n * sizeof(T));
   }
   else
   {

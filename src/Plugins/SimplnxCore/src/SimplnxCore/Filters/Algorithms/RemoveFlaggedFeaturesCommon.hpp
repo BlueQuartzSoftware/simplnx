@@ -72,23 +72,23 @@ protected:
                                 const ExecutionContext& executionContext) const override
   {
     auto result = CropImageGeometryFilter::preflightImpl(dataStructure, args, messageHandler, shouldCancel, executionContext);
-    if(result.outputActions.invalid())
+    if(result.output_actions.invalid())
     {
       return result;
     }
     OutputActions copies;
-    for(auto& action : result.outputActions.value().actions)
+    for(auto& action : result.output_actions.value().actions)
     {
-      if(const auto* copy = dynamic_cast<const CopyDataObjectAction*>(action.get()); copy != nullptr)
+      if(const auto* copyPtr = dynamic_cast<const CopyDataObjectAction*>(action.get()); copyPtr != nullptr)
       {
-        AppendCopyDataObjectAction(dataStructure, copies, copy->path(), copy->newPath(), m_ExcludedPath);
+        AppendCopyDataObjectAction(dataStructure, copies, copyPtr->path(), copyPtr->newPath(), m_ExcludedPath);
       }
       else
       {
         copies.actions.push_back(std::move(action));
       }
     }
-    result.outputActions.value().actions = std::move(copies.actions);
+    result.output_actions.value().actions = std::move(copies.actions);
     return result;
   }
 
@@ -111,14 +111,14 @@ public:
    * @param taskResult Receives the delegated preflight or execute failure.
    */
   RunCropImageGeometryImpl(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const DataPath& imageGeometryPath, const std::vector<uint64>& minVoxelVector,
-                           const std::vector<uint64>& maxVoxelVector, const DataPath& createdImgGeomPath, const std::string& featureAttributeMatrixName, CopyFromArray::ParallelTaskResult& taskResult)
+                           const std::vector<uint64>& maxVoxelVector, const DataPath& createdImgGeomPath, std::string featureAttributeMatrixName, copy_from_array::ParallelTaskResult& taskResult)
   : m_DataStructure(dataStructure)
   , m_ShouldCancel(shouldCancel)
   , m_ImageGeometryPath(imageGeometryPath)
   , m_MinVoxelVector(minVoxelVector)
   , m_MaxVoxelVector(maxVoxelVector)
   , m_CreatedImgGeomPath(createdImgGeomPath)
-  , m_FeatureAttributeMatrixName(featureAttributeMatrixName)
+  , m_FeatureAttributeMatrixName(std::move(featureAttributeMatrixName))
   , m_TaskResult(taskResult)
   {
   }
@@ -156,10 +156,10 @@ public:
         fmt::format("voxels [{}, {}, {}] to [{}, {}, {}]", m_MinVoxelVector[0], m_MinVoxelVector[1], m_MinVoxelVector[2], m_MaxVoxelVector[0], m_MaxVoxelVector[1], m_MaxVoxelVector[2]);
 
     auto preflightResult = filter.preflight(m_DataStructure, args);
-    if(preflightResult.outputActions.invalid())
+    if(preflightResult.output_actions.invalid())
     {
       m_TaskResult.store(MakeErrorResult(-53903, fmt::format("Preflight of the crop that extracts feature geometry '{}' ({}) from '{}' failed: {}", m_CreatedImgGeomPath.toString(), boundsText,
-                                                             m_ImageGeometryPath.toString(), FirstRemoveFlaggedFeaturesErrorMessage(preflightResult.outputActions.errors()))));
+                                                             m_ImageGeometryPath.toString(), FirstRemoveFlaggedFeaturesErrorMessage(preflightResult.output_actions.errors()))));
       return;
     }
 
@@ -185,7 +185,7 @@ private:
   const std::vector<uint64>& m_MaxVoxelVector;
   const DataPath& m_CreatedImgGeomPath;
   const std::string m_FeatureAttributeMatrixName;
-  CopyFromArray::ParallelTaskResult& m_TaskResult;
+  copy_from_array::ParallelTaskResult& m_TaskResult;
 };
 
 } // namespace nx::core

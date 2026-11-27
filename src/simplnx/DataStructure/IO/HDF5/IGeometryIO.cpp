@@ -4,12 +4,12 @@
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 #include "simplnx/DataStructure/IO/Generic/IOConstants.hpp"
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 IGeometryIO::IGeometryIO() = default;
 IGeometryIO::~IGeometryIO() noexcept = default;
 
-Result<> IGeometryIO::ReadGeometryData(DataStructureReader& dataStructureReader, IGeometry& geometry, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
+Result<> IGeometryIO::ReadGeometryData(DataStructureReader& dataStructureReader, IGeometry& geometry, const GroupReaderType& parentGroup, const std::string& objectName, DataObject::IdType importId,
                                        const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore)
 {
   auto groupReader = parentGroup.openGroup(objectName);
@@ -20,15 +20,15 @@ Result<> IGeometryIO::ReadGeometryData(DataStructureReader& dataStructureReader,
     return result;
   }
 
-  geometry.setElementSizesId(ReadDataId(groupReader, IOConstants::k_ElementSizesTag));
+  geometry.setElementSizesId(ReadDataId(groupReader, io_constants::k_ElementSizesTag));
 
   return result;
 }
 
-Result<> IGeometryIO::FinishImportingGeomData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& dataStructureGroup)
+Result<> IGeometryIO::FinishImportingGeomData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& /*dataStructureGroup*/)
 {
-  auto* geom = dataStructure.getDataAs<IGeometry>(dataPath);
-  if(geom == nullptr)
+  auto* geomPtr = dataStructure.getDataAs<IGeometry>(dataPath);
+  if(geomPtr == nullptr)
   {
     return MakeErrorResult(-50590, fmt::format("Failed to finish importing IGeometry at path '{}'. Data not found or of incorrect type.", dataPath.toString()));
   }
@@ -36,11 +36,11 @@ Result<> IGeometryIO::FinishImportingGeomData(DataStructure& dataStructure, cons
   return {};
 }
 
-Result<> IGeometryIO::WriteGeometryData(DataStructureWriter& dataStructureWriter, const IGeometry& geometry, group_writer_type& parentGroup, bool importable)
+Result<> IGeometryIO::WriteGeometryData(DataStructureWriter& dataStructureWriter, const IGeometry& geometry, GroupWriterType& parentGroup, bool importable)
 {
   auto groupWriter = parentGroup.createGroup(geometry.getName());
 
-  Result<> result = WriteDataId(groupWriter, geometry.getElementSizesId(), IOConstants::k_ElementSizesTag);
+  Result<> result = WriteDataId(groupWriter, geometry.getElementSizesId(), io_constants::k_ElementSizesTag);
   if(result.invalid())
   {
     return result;
@@ -49,4 +49,4 @@ Result<> IGeometryIO::WriteGeometryData(DataStructureWriter& dataStructureWriter
   return BaseGroupIO::WriteBaseGroupData(dataStructureWriter, geometry, parentGroup, importable);
 }
 
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

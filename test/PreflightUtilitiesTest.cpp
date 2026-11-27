@@ -17,13 +17,13 @@ using namespace nx::core;
 TEST_CASE("simplnx::AppendUnchangedAttributeMatricesWarning: reports source paths and excludes aliases by ID", "[simplnx][FilterUtilities]")
 {
   DataStructure dataStructure;
-  const auto* source = DataGroup::Create(dataStructure, "Source");
-  REQUIRE(source != nullptr);
-  const auto* nested = DataGroup::Create(dataStructure, "Nested", source->getId());
-  REQUIRE(nested != nullptr);
-  const auto* selected = AttributeMatrix::Create(dataStructure, "Selected Features", {3}, source->getId());
-  REQUIRE(selected != nullptr);
-  REQUIRE(dataStructure.setAdditionalParent(selected->getId(), nested->getId()));
+  const auto* sourcePtr = DataGroup::Create(dataStructure, "Source");
+  REQUIRE(sourcePtr != nullptr);
+  const auto* nestedPtr = DataGroup::Create(dataStructure, "Nested", sourcePtr->getId());
+  REQUIRE(nestedPtr != nullptr);
+  const auto* selectedPtr = AttributeMatrix::Create(dataStructure, "Selected Features", {3}, sourcePtr->getId());
+  REQUIRE(selectedPtr != nullptr);
+  REQUIRE(dataStructure.setAdditionalParent(selectedPtr->getId(), nestedPtr->getId()));
 
   const DataPath selectedPath({"Source", "Selected Features"});
   const DataPath nestedPath({"Source", "Nested"});
@@ -31,8 +31,8 @@ TEST_CASE("simplnx::AppendUnchangedAttributeMatricesWarning: reports source path
 
   SECTION("Copied matrices appear in path order")
   {
-    REQUIRE(AttributeMatrix::Create(dataStructure, "Other Features", {2}, nested->getId()) != nullptr);
-    REQUIRE(AttributeMatrix::Create(dataStructure, "Ensemble", {2}, source->getId()) != nullptr);
+    REQUIRE(AttributeMatrix::Create(dataStructure, "Other Features", {2}, nestedPtr->getId()) != nullptr);
+    REQUIRE(AttributeMatrix::Create(dataStructure, "Ensemble", {2}, sourcePtr->getId()) != nullptr);
     AppendUnchangedAttributeMatricesWarning(dataStructure, {selectedPath, nestedPath, DataPath({"Source", "Ensemble"})}, {selectedPath}, "cropped geometry", result);
     REQUIRE(result.warnings().size() == 1);
     CHECK(result.warnings().front().code == -4041);
@@ -56,16 +56,16 @@ TEST_CASE("simplnx::PreflightColorToGrayScale: rejects inputs with fewer than th
   const usize components = GENERATE(usize{1}, usize{2});
   CAPTURE(components);
   DataStructure dataStructure;
-  REQUIRE(UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Input", {2}, {components}) != nullptr);
+  REQUIRE(UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, "Input", {2}, {components}) != nullptr);
   ConvertColorToGrayScaleInputValues inputValues{};
-  inputValues.ConversionAlgorithm = to_underlying(algorithm);
-  inputValues.ColorWeights = {0.25F, 0.5F, 0.25F};
-  inputValues.InputDataArrayPaths = {DataPath({"Input"})};
-  inputValues.OutputArrayPrefix = "Gray";
+  inputValues.conversion_algorithm = to_underlying(algorithm);
+  inputValues.color_weights = {0.25F, 0.5F, 0.25F};
+  inputValues.input_data_array_paths = {DataPath({"Input"})};
+  inputValues.output_array_prefix = "Gray";
   auto result = PreflightColorToGrayScale(dataStructure, inputValues);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors().front().code == -10710);
-  REQUIRE(result.outputActions.errors().front().message.find("Input") != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().front().code == -10710);
+  REQUIRE(result.output_actions.errors().front().message.find("Input") != std::string::npos);
 }
 
 TEST_CASE("simplnx::PreflightColorToGrayScale: rejects channels outside the component range", "[simplnx][PreflightColorToGrayScale]")
@@ -75,16 +75,16 @@ TEST_CASE("simplnx::PreflightColorToGrayScale: rejects channels outside the comp
   const int32 channel = negative ? -1 : static_cast<int32>(components);
   CAPTURE(components, channel);
   DataStructure dataStructure;
-  REQUIRE(UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Input", {2}, {components}) != nullptr);
+  REQUIRE(UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, "Input", {2}, {components}) != nullptr);
   ConvertColorToGrayScaleInputValues inputValues{};
-  inputValues.ConversionAlgorithm = to_underlying(ConvertColorToGrayScale::ConversionType::SingleChannel);
-  inputValues.ColorChannel = channel;
-  inputValues.InputDataArrayPaths = {DataPath({"Input"})};
-  inputValues.OutputArrayPrefix = "Gray";
+  inputValues.conversion_algorithm = to_underlying(ConvertColorToGrayScale::ConversionType::SingleChannel);
+  inputValues.color_channel = channel;
+  inputValues.input_data_array_paths = {DataPath({"Input"})};
+  inputValues.output_array_prefix = "Gray";
   auto result = PreflightColorToGrayScale(dataStructure, inputValues);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors().front().code == -10711);
-  REQUIRE(result.outputActions.errors().front().message.find(fmt::format("Select a channel from 0 to {}.", components - 1)) != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().front().code == -10711);
+  REQUIRE(result.output_actions.errors().front().message.find(fmt::format("Select a channel from 0 to {}.", components - 1)) != std::string::npos);
 }
 
 TEST_CASE("simplnx::PreflightGeometryTransformation: rejects node matrices without sixteen elements", "[simplnx][PreflightGeometryTransformation]")
@@ -93,29 +93,29 @@ TEST_CASE("simplnx::PreflightGeometryTransformation: rejects node matrices witho
   CAPTURE(elements);
   DataStructure dataStructure;
   REQUIRE(TriangleGeom::Create(dataStructure, "Geometry") != nullptr);
-  REQUIRE(Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Matrix", {elements}, {1}) != nullptr);
+  REQUIRE(Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "Matrix", {elements}, {1}) != nullptr);
   ApplyTransformationToGeometryInputValues inputValues{};
-  inputValues.SelectedGeometryPath = DataPath({"Geometry"});
-  inputValues.TransformationSelection = detail::k_PrecomputedTransformationMatrixIdx;
-  inputValues.ComputedTransformationMatrix = DataPath({"Matrix"});
+  inputValues.selected_geometry_path = DataPath({"Geometry"});
+  inputValues.transformation_selection = detail::k_PrecomputedTransformationMatrixIdx;
+  inputValues.computed_transformation_matrix = DataPath({"Matrix"});
   auto result = PreflightGeometryTransformation(dataStructure, inputValues);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors().front().code == -82019);
-  REQUIRE(result.outputActions.errors().front().message.find("Matrix") != std::string::npos);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().front().code == -82019);
+  REQUIRE(result.output_actions.errors().front().message.find("Matrix") != std::string::npos);
 }
 
 TEST_CASE("simplnx::PreflightColorToGrayScale: rejects arrays with no components", "[simplnx][PreflightColorToGrayScale]")
 {
   DataStructure dataStructure;
-  REQUIRE(UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Input", {2}, {0}) != nullptr);
+  REQUIRE(UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, "Input", {2}, {0}) != nullptr);
   ConvertColorToGrayScaleInputValues inputValues{};
-  inputValues.ConversionAlgorithm = to_underlying(ConvertColorToGrayScale::ConversionType::SingleChannel);
-  inputValues.ColorChannel = 0;
-  inputValues.InputDataArrayPaths = {DataPath({"Input"})};
+  inputValues.conversion_algorithm = to_underlying(ConvertColorToGrayScale::ConversionType::SingleChannel);
+  inputValues.color_channel = 0;
+  inputValues.input_data_array_paths = {DataPath({"Input"})};
   auto result = PreflightColorToGrayScale(dataStructure, inputValues);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors().front().code == -10711);
-  const auto& message = result.outputActions.errors().front().message;
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().front().code == -10711);
+  const auto& message = result.output_actions.errors().front().message;
   REQUIRE(message.find("Input") != std::string::npos);
   REQUIRE(message.find("has no components") != std::string::npos);
   REQUIRE(message.find("Select an array with at least one component.") != std::string::npos);

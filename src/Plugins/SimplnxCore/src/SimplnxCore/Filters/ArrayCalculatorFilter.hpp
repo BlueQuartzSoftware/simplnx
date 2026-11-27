@@ -24,9 +24,9 @@ public:
   ArrayCalculatorFilter& operator=(ArrayCalculatorFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_CalculatorParameter_Key = "calculator_parameter";
-  static constexpr StringLiteral k_ScalarType_Key = "scalar_type_index";
-  static constexpr StringLiteral k_CalculatedArray_Key = "calculated_array_path";
+  static constexpr StringLiteralType k_CalculatorParameter_Key = "calculator_parameter";
+  static constexpr StringLiteralType k_ScalarType_Key = "scalar_type_index";
+  static constexpr StringLiteralType k_CalculatedArray_Key = "calculated_array_path";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -83,7 +83,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

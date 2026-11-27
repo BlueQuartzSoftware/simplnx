@@ -1,5 +1,7 @@
 #include "CreateArrayAction.hpp"
 
+#include <utility>
+
 #include "simplnx/Utilities/ArrayCreationUtilities.hpp"
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
@@ -29,7 +31,7 @@ struct CreateArrayFunctor
   Result<> operator()(DataStructure& dataStructure, const std::vector<usize>& tDims, const std::vector<usize>& cDims, const DataPath& path, IDataAction::Mode mode, const std::string& dataFormat,
                       std::string fillValue, const std::optional<ShapeType>& chunkShapeHint, DataStoreInitializationMode initializationMode)
   {
-    return ArrayCreationUtilities::CreateArray<T>(dataStructure, tDims, cDims, path, mode, dataFormat, fillValue, chunkShapeHint, initializationMode);
+    return array_creation_utilities::CreateArray<T>(dataStructure, tDims, cDims, path, mode, dataFormat, std::move(fillValue), chunkShapeHint, initializationMode);
   }
 };
 } // namespace
@@ -60,7 +62,7 @@ Result<> CreateArrayAction::apply(DataStructure& dataStructure, Mode mode) const
   return ExecuteDataFunction(::CreateArrayFunctor{}, m_Type, dataStructure, m_Dims, m_CDims, getCreatedPath(), mode, m_DataFormat, m_FillValue, m_ChunkShapeHint, m_InitializationMode);
 }
 
-IDataAction::UniquePointer CreateArrayAction::clone() const
+IDataAction::UniquePointerType CreateArrayAction::clone() const
 {
   return std::make_unique<CreateArrayAction>(m_Type, m_Dims, m_CDims, getCreatedPath(), m_DataFormat, m_FillValue, m_ChunkShapeHint, m_InitializationMode);
 }

@@ -92,7 +92,7 @@ Parameters CreateDataArrayAdvancedFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Initialization Options"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(
       k_InitType_Key, "Initialization Type", "Method for determining the what values of the data in the array should be initialized to", static_cast<ChoicesParameter::ValueType>(0),
-      ChoicesParameter::Choices{"Fill Value", "Incremental", "Random", "Random With Range"})); // Choice order matches InitializeType values.
+      ChoicesParameter::ChoicesType{"Fill Value", "Incremental", "Random", "Random With Range"})); // Choice order matches InitializeType values.
 
   params.insert(std::make_unique<StringParameter>(k_InitValue_Key, "Fill Values [Seperated with ;]",
                                                   "Specify values for each component. Ex: A 3-component array would be 6;8;12 and every tuple would have these same component values", "1;1;1"));
@@ -101,7 +101,7 @@ Parameters CreateDataArrayAdvancedFilter::parameters() const
       k_StartingFillValue_Key, "Starting Value [Seperated with ;]",
       "The value to start incrementing from. Ex: 6;8;12 would increment a 3-component array starting at 6 for the first component, 8 for the 2nd, and 12 for the 3rd.", "0;1;2"));
   params.insert(std::make_unique<ChoicesParameter>(k_StepOperation_Key, "Step Operation", "The type of step operation to perform", static_cast<ChoicesParameter::ValueType>(0),
-                                                   ChoicesParameter::Choices{"Addition", "Subtraction"}));
+                                                   ChoicesParameter::ChoicesType{"Addition", "Subtraction"}));
   params.insert(std::make_unique<StringParameter>(k_StepValue_Key, "Step Value [Seperated with ;]", "The number to add/subtract the fill value by", "1;1;1"));
 
   params.insert(std::make_unique<BoolParameter>(k_UseSeed_Key, "Use Seed for Random Generation", "When true, the Seed Value will be used to seed the generator", false));
@@ -143,14 +143,14 @@ IFilter::VersionType CreateDataArrayAdvancedFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CreateDataArrayAdvancedFilter::clone() const
+IFilter::UniquePointerType CreateDataArrayAdvancedFilter::clone() const
 {
   return std::make_unique<CreateDataArrayAdvancedFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                      const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto useDims = filterArgs.value<bool>(k_AdvancedOptions_Key);
   auto numericType = filterArgs.value<NumericType>(k_NumericType_Key);
@@ -170,7 +170,7 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   auto componentDimensions = ConvertDimensions(compDimsData.at(0), "Component", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::PositiveWhole, -78605);
   if(componentDimensions.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(componentDimensions))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(componentDimensions))};
   }
   ShapeType compDims = std::move(componentDimensions.value());
   // Conversion has already checked the product.
@@ -178,14 +178,14 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   const usize previewCapacity = std::min(std::vector<float64>().max_size(), std::vector<std::string>().max_size());
   if(numComponents > previewCapacity)
   {
-    return MakePreflightErrorResult(DimensionConversion::k_ComponentCapacity, fmt::format("Component count {} for array '{}' exceeds preview storage capacity {}. Use fewer components.", numComponents,
-                                                                                          dataArrayPath.toString(), previewCapacity));
+    return MakePreflightErrorResult(dimension_conversion::k_ComponentCapacity, fmt::format("Component count {} for array '{}' exceeds preview storage capacity {}. Use fewer components.",
+                                                                                           numComponents, dataArrayPath.toString(), previewCapacity));
   }
 
   ShapeType tupleDims = {};
 
-  auto* parentAM = dataStructure.getDataAs<AttributeMatrix>(dataArrayPath.getParent());
-  if(parentAM == nullptr)
+  const auto* parentAmPtr = dataStructure.getDataAs<AttributeMatrix>(dataArrayPath.getParent());
+  if(parentAmPtr == nullptr)
   {
     if(!useDims)
     {
@@ -193,31 +193,30 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
           -78602, fmt::format("The DataArray to be created '{}'is not within an AttributeMatrix, so the dimensions cannot be determined implicitly. Check Set Tuple Dimensions to set the dimensions",
                               dataArrayPath.toString()));
     }
-    else
+
+    auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::PositiveWhole, -78603);
+    if(dimensions.invalid())
     {
-      auto dimensions = ConvertDimensions(tableData.at(0), "Tuple", ZeroDimensionPolicy::Reject, LegacyDimensionCheck::PositiveWhole, -78603);
-      if(dimensions.invalid())
-      {
-        return {ConvertInvalidResult<OutputActions>(std::move(dimensions))};
-      }
-      tupleDims = std::move(dimensions.value());
+      return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(dimensions))};
     }
+    tupleDims = std::move(dimensions.value());
   }
   else
   {
-    tupleDims = parentAM->getShape();
+    tupleDims = parentAmPtr->getShape();
     if(useDims)
     {
       resultOutputActions.warnings().push_back(
-          Warning{-78604, "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
-                          "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
+          Warning{.code = -78604,
+                  .message = "You checked Set Tuple Dimensions, but selected a DataPath that has an Attribute Matrix as the parent. The Attribute Matrix tuples will override your "
+                             "custom dimensions. It is recommended to uncheck Set Tuple Dimensions for the sake of clarity."});
     }
   }
 
   auto tupleCount = ComputeDimensionProduct(tupleDims, "Tuple");
   if(tupleCount.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(tupleCount))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(tupleCount))};
   }
   const usize numTuples = tupleCount.value();
 
@@ -238,9 +237,9 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   {
   case InitializeType::FillValue: {
     auto result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, arrayDataType, numComponents, filterArgs.value<std::string>(k_InitValue_Key), 1);
-    if(result.outputActions.invalid())
+    if(result.output_actions.invalid())
     {
-      return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
+      return {.output_actions = MergeResults(result.output_actions, std::move(resultOutputActions)), .output_values = std::move(preflightUpdatedValues)};
     }
 
     CreateFillPreflightVals(initFillValue, numComponents, preflightUpdatedValues);
@@ -249,15 +248,15 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   }
   case InitializeType::Incremental: {
     auto result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, arrayDataType, numComponents, filterArgs.value<std::string>(k_StartingFillValue_Key), 1);
-    if(result.outputActions.invalid())
+    if(result.output_actions.invalid())
     {
-      return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
+      return {.output_actions = MergeResults(result.output_actions, std::move(resultOutputActions)), .output_values = std::move(preflightUpdatedValues)};
     }
 
     result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, arrayDataType, numComponents, filterArgs.value<std::string>(k_StepValue_Key), 1);
-    if(result.outputActions.invalid())
+    if(result.output_actions.invalid())
     {
-      return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
+      return {.output_actions = MergeResults(result.output_actions, std::move(resultOutputActions)), .output_values = std::move(preflightUpdatedValues)};
     }
 
     CreateIncrementalPreflightVals(initIncFillValue, stepOperation, stepValue, numTuples, numComponents, preflightUpdatedValues);
@@ -266,21 +265,21 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   }
   case InitializeType::RangedRandom: {
     auto result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, arrayDataType, numComponents, filterArgs.value<std::string>(k_InitStartRange_Key), 1);
-    if(result.outputActions.invalid())
+    if(result.output_actions.invalid())
     {
-      return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
+      return {.output_actions = MergeResults(result.output_actions, std::move(resultOutputActions)), .output_values = std::move(preflightUpdatedValues)};
     }
 
     result = ExecuteDataFunction(::ValidateMultiInputFunctor{}, arrayDataType, numComponents, filterArgs.value<std::string>(k_InitEndRange_Key), 1);
-    if(result.outputActions.invalid())
+    if(result.output_actions.invalid())
     {
-      return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
+      return {.output_actions = MergeResults(result.output_actions, std::move(resultOutputActions)), .output_values = std::move(preflightUpdatedValues)};
     }
 
     result = ExecuteDataFunction(::ValidateRangeOrderFunctor{}, arrayDataType, numComponents, initStartRange, initEndRange);
-    if(result.outputActions.invalid())
+    if(result.output_actions.invalid())
     {
-      return {MergeResults(result.outputActions, std::move(resultOutputActions)), std::move(preflightUpdatedValues)};
+      return {.output_actions = MergeResults(result.output_actions, std::move(resultOutputActions)), .output_values = std::move(preflightUpdatedValues)};
     }
 
     [[fallthrough]];
@@ -295,12 +294,12 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   }
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateDataArrayAdvancedFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> CreateDataArrayAdvancedFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto path = filterArgs.value<DataPath>(k_DataPath_Key);
   auto initType = static_cast<InitializeType>(filterArgs.value<uint64>(k_InitType_Key));
@@ -314,33 +313,33 @@ Result<> CreateDataArrayAdvancedFilter::executeImpl(DataStructure& dataStructure
   if(initType == InitializeType::Random || initType == InitializeType::RangedRandom)
   {
     // The stored seed makes random initialization reproducible.
-    dataStructure.getDataRefAs<UInt64Array>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
+    dataStructure.getDataRefAs<UInt64ArrayType>(DataPath({filterArgs.value<std::string>(k_SeedArrayName_Key)}))[0] = seed;
   }
 
   InitializeDataInputValues inputValues;
-  inputValues.InputArrayPath = filterArgs.value<DataPath>(k_DataPath_Key);
-  inputValues.initType = initType;
-  inputValues.stepType = static_cast<StepType>(filterArgs.value<uint64>(k_StepOperation_Key));
-  inputValues.stringValues = StringUtilities::split(StringUtilities::trimmed(filterArgs.value<std::string>(k_InitValue_Key)), k_DelimiterChar);
-  inputValues.startValues = StringUtilities::split(StringUtilities::trimmed(filterArgs.value<std::string>(k_StartingFillValue_Key)), k_DelimiterChar);
-  inputValues.stepValues = StringUtilities::split(StringUtilities::trimmed(filterArgs.value<std::string>(k_StepValue_Key)), k_DelimiterChar);
+  inputValues.input_array_path = filterArgs.value<DataPath>(k_DataPath_Key);
+  inputValues.init_type = initType;
+  inputValues.step_type = static_cast<StepType>(filterArgs.value<uint64>(k_StepOperation_Key));
+  inputValues.string_values = string_utilities::Split(string_utilities::Trimmed(filterArgs.value<std::string>(k_InitValue_Key)), k_DelimiterChar);
+  inputValues.start_values = string_utilities::Split(string_utilities::Trimmed(filterArgs.value<std::string>(k_StartingFillValue_Key)), k_DelimiterChar);
+  inputValues.step_values = string_utilities::Split(string_utilities::Trimmed(filterArgs.value<std::string>(k_StepValue_Key)), k_DelimiterChar);
   inputValues.seed = seed;
-  inputValues.randBegin = StringUtilities::split(StringUtilities::trimmed(filterArgs.value<std::string>(k_InitStartRange_Key)), k_DelimiterChar);
-  inputValues.randEnd = StringUtilities::split(StringUtilities::trimmed(filterArgs.value<std::string>(k_InitEndRange_Key)), k_DelimiterChar);
-  inputValues.standardizeSeed = filterArgs.value<bool>(k_StandardizeSeed_Key);
+  inputValues.rand_begin = string_utilities::Split(string_utilities::Trimmed(filterArgs.value<std::string>(k_InitStartRange_Key)), k_DelimiterChar);
+  inputValues.rand_end = string_utilities::Split(string_utilities::Trimmed(filterArgs.value<std::string>(k_InitEndRange_Key)), k_DelimiterChar);
+  inputValues.standardize_seed = filterArgs.value<bool>(k_StandardizeSeed_Key);
 
   return InitializeData(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
-constexpr StringLiteral k_NumberOfComponentsKey = "NumberOfComponents";
-constexpr StringLiteral k_InitializationValueKey = "InitializationValue";
-constexpr StringLiteral k_NewArrayKey = "NewArray";
-} // namespace SIMPL
+constexpr StringLiteralType k_ScalarTypeKey = "ScalarType";
+constexpr StringLiteralType k_NumberOfComponentsKey = "NumberOfComponents";
+constexpr StringLiteralType k_InitializationValueKey = "InitializationValue";
+constexpr StringLiteralType k_NewArrayKey = "NewArray";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CreateDataArrayAdvancedFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -351,11 +350,11 @@ Result<Arguments> CreateDataArrayAdvancedFilter::FromSIMPLJson(const nlohmann::j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ScalarTypeParameterToNumericTypeConverter>(args, json, SIMPL::k_ScalarTypeKey, k_NumericType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ScalarTypeParameterToNumericTypeConverter>(args, json, simpl::k_ScalarTypeKey, k_NumericType_Key));
   // The legacy initialization settings do not map directly to these advanced
   // options. The importer keeps the NX defaults and converts only the fill value.
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_InitializationValueKey, k_InitValue_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArrayCreationFilterParameterConverter>(args, json, SIMPL::k_NewArrayKey, k_DataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_InitializationValueKey, k_InitValue_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_NewArrayKey, k_DataPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

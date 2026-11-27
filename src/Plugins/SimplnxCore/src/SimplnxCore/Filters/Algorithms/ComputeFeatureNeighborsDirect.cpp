@@ -44,9 +44,9 @@ struct ComputeFeatureNeighborsFunctor
    * return can preserve partial BoundaryCells output.
    */
   template <detail::ImageDimensionality ImageDimensionStateT>
-  Result<> operator()(BoolAbstractDataStore* surfaceFeatures, Int8AbstractDataStore* boundaryCells, Float32NeighborList& sharedSurfaceAreaList, Int32NeighborList& neighborsList,
-                      Int32AbstractDataStore& numNeighbors, const Int32AbstractDataStore& featureIds, usize totalFeatures, const std::array<int64, 3>& dims, const std::array<float64, 3> spacing,
-                      ThrottledMessageHandler& progressThrottle, const std::atomic_bool& shouldCancel) const
+  Result<> operator()(BoolAbstractDataStoreType* surfaceFeatures, Int8AbstractDataStoreType* boundaryCells, Float32NeighborListType& sharedSurfaceAreaList, Int32NeighborListType& neighborsList,
+                      Int32AbstractDataStoreType& numNeighbors, const Int32AbstractDataStoreType& featureIds, usize totalFeatures, const std::array<int64, 3>& dims,
+                      const std::array<float64, 3> spacing, ThrottledMessageHandler& progressThrottle, const std::atomic_bool& shouldCancel) const
   {
     constexpr FaceNeighborType k_NeighborCount = VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount;
 
@@ -65,13 +65,13 @@ struct ComputeFeatureNeighborsFunctor
         return MakeErrorResult(-789621, "Process Boundary Cells selected, but the supplied Boundary Cells Array invalid.");
       }
     }
-    const std::array<int64, k_NeighborCount> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets<ImageDimensionStateT>(dims);
+    const std::array<int64, k_NeighborCount> neighborVoxelIndexOffsets = InitializeFaceNeighborOffsets<ImageDimensionStateT>(dims);
 
-    const std::array<float64, k_NeighborCount> precomputedFaceAreas = computeFaceSurfaceAreas<ImageDimensionStateT>(spacing);
+    const std::array<float64, k_NeighborCount> precomputedFaceAreas = ComputeFaceSurfaceAreas<ImageDimensionStateT>(spacing);
     std::vector<std::map<usize, float64>> neighborSurfaceAreas(totalFeatures);
 
     // Boundary cells validate only faces that exist before the 3D interior sweep.
-    constexpr std::array<FaceNeighborType, k_NeighborCount> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx<ImageDimensionStateT>();
+    constexpr std::array<FaceNeighborType, k_NeighborCount> k_FaceNeighborInternalIdx = InitializeFaceNeighborInternalIdx<ImageDimensionStateT>();
 
     // Process corner cells.
     {
@@ -87,8 +87,8 @@ struct ComputeFeatureNeighborsFunctor
             surfaceFeatures->setValue(feature, true);
           }
 
-          std::array<bool, k_NeighborCount> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimensionStateT>(xIndex, yIndex, zIndex, dims);
-          for(const auto faceIndex : faceNeighborInternalIdx)
+          std::array<bool, k_NeighborCount> isValidFaceNeighbor = ComputeValidFaceNeighbors<ImageDimensionStateT>(xIndex, yIndex, zIndex, dims);
+          for(const auto faceIndex : k_FaceNeighborInternalIdx)
           {
             if(!isValidFaceNeighbor[faceIndex])
             {
@@ -111,11 +111,11 @@ struct ComputeFeatureNeighborsFunctor
         }
       };
 
-      ImageDimensionalUtilities::ProcessCorners<ImageDimensionStateT>(processCornerCell, dims);
+      image_dimensional_utilities::ProcessCorners<ImageDimensionStateT>(processCornerCell, dims);
     }
 
     // Process edge cells.
-    if constexpr(!std::is_same_v<ImageDimensionStateT, SingleVoxelImage>)
+    if constexpr(!std::is_same_v<ImageDimensionStateT, SingleVoxelImageType>)
     {
       const auto processEdgeCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex) -> void {
         int8 numDiffNeighbors = 0;
@@ -129,8 +129,8 @@ struct ComputeFeatureNeighborsFunctor
             surfaceFeatures->setValue(feature, true);
           }
 
-          std::array<bool, k_NeighborCount> isValidFaceNeighbor = computeValidFaceNeighbors<ImageDimensionStateT>(xIndex, yIndex, zIndex, dims);
-          for(const auto faceIndex : faceNeighborInternalIdx)
+          std::array<bool, k_NeighborCount> isValidFaceNeighbor = ComputeValidFaceNeighbors<ImageDimensionStateT>(xIndex, yIndex, zIndex, dims);
+          for(const auto faceIndex : k_FaceNeighborInternalIdx)
           {
             if(!isValidFaceNeighbor[faceIndex])
             {
@@ -153,11 +153,11 @@ struct ComputeFeatureNeighborsFunctor
         }
       };
 
-      ImageDimensionalUtilities::ProcessEdges<ImageDimensionStateT>(processEdgeCell, dims);
+      image_dimensional_utilities::ProcessEdges<ImageDimensionStateT>(processEdgeCell, dims);
     }
 
     // Process non-degenerate face cells.
-    if constexpr(!ImageDimensionStateT::Is1DImageDimsState() && !std::is_same_v<ImageDimensionStateT, SingleVoxelImage>)
+    if constexpr(!ImageDimensionStateT::Is1DImageDimsState() && !std::is_same_v<ImageDimensionStateT, SingleVoxelImageType>)
     {
       const auto processFaceCell = [&](const int64 zIndex, const int64 yIndex, const int64 xIndex, const std::vector<FaceNeighborType>& validFaces) -> void {
         int8 numDiffNeighbors = 0;
@@ -166,7 +166,7 @@ struct ComputeFeatureNeighborsFunctor
         const int32 feature = featureIds.getValue(voxelIndex);
         if(feature > 0)
         {
-          if constexpr(ProcessSurfaceFeaturesV && std::is_same_v<ImageDimensionStateT, Image3D>)
+          if constexpr(ProcessSurfaceFeaturesV && std::is_same_v<ImageDimensionStateT, Image3DType>)
           {
             surfaceFeatures->setValue(feature, true);
           }
@@ -189,11 +189,11 @@ struct ComputeFeatureNeighborsFunctor
         }
       };
 
-      ImageDimensionalUtilities::ProcessFaces<ImageDimensionStateT>(processFaceCell, dims);
+      image_dimensional_utilities::ProcessFaces<ImageDimensionStateT>(processFaceCell, dims);
     }
 
     // The 3D interior has six valid face neighbors and needs no validity checks.
-    if constexpr(std::is_same_v<ImageDimensionStateT, Image3D>)
+    if constexpr(std::is_same_v<ImageDimensionStateT, Image3DType>)
     {
       const usize totalPoints = featureIds.getNumberOfTuples();
 
@@ -217,7 +217,7 @@ struct ComputeFeatureNeighborsFunctor
             int32 feature = featureIds.getValue(voxelIndex);
             if(feature > 0)
             {
-              for(const auto faceIndex : faceNeighborInternalIdx)
+              for(const auto faceIndex : k_FaceNeighborInternalIdx)
               {
                 const int64 neighborPoint = voxelIndex + neighborVoxelIndexOffsets[faceIndex];
 
@@ -282,41 +282,41 @@ Result<> ProcessVoxels(const FunctorT& functor, const ImageGeom& imageGeom, Args
   // A unit dimension selects lower-dimensional ImageGeom behavior.
   if(emptyDimCount == 0)
   {
-    return functor.template operator()<Image3D>(std::forward<ArgsT>(args)...);
+    return functor.template operator()<Image3DType>(std::forward<ArgsT>(args)...);
   }
   if(emptyDimCount == 1)
   {
     if(zDimEmpty)
     {
-      return functor.template operator()<EmptyZImage2D>(std::forward<ArgsT>(args)...);
+      return functor.template operator()<EmptyZImage2DType>(std::forward<ArgsT>(args)...);
     }
     if(yDimEmpty)
     {
-      return functor.template operator()<EmptyYImage2D>(std::forward<ArgsT>(args)...);
+      return functor.template operator()<EmptyYImage2DType>(std::forward<ArgsT>(args)...);
     }
     if(xDimEmpty)
     {
-      return functor.template operator()<EmptyXImage2D>(std::forward<ArgsT>(args)...);
+      return functor.template operator()<EmptyXImage2DType>(std::forward<ArgsT>(args)...);
     }
   }
   if(emptyDimCount == 2)
   {
     if(xDimEmpty && yDimEmpty)
     {
-      return functor.template operator()<ZImage1D>(std::forward<ArgsT>(args)...);
+      return functor.template operator()<ZImage1DType>(std::forward<ArgsT>(args)...);
     }
     if(xDimEmpty && zDimEmpty)
     {
-      return functor.template operator()<YImage1D>(std::forward<ArgsT>(args)...);
+      return functor.template operator()<YImage1DType>(std::forward<ArgsT>(args)...);
     }
     if(yDimEmpty && zDimEmpty)
     {
-      return functor.template operator()<XImage1D>(std::forward<ArgsT>(args)...);
+      return functor.template operator()<XImage1DType>(std::forward<ArgsT>(args)...);
     }
   }
   if(emptyDimCount == 3)
   {
-    return functor.template operator()<SingleVoxelImage>(std::forward<ArgsT>(args)...);
+    return functor.template operator()<SingleVoxelImageType>(std::forward<ArgsT>(args)...);
   }
 
   return {};
@@ -332,18 +332,16 @@ ComputeFeatureNeighborsDirect::ComputeFeatureNeighborsDirect(DataStructure& data
 {
 }
 
-ComputeFeatureNeighborsDirect::~ComputeFeatureNeighborsDirect() noexcept = default;
-
 Result<> ComputeFeatureNeighborsDirect::operator()()
 {
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;
   ThrottledMessageHandler progressThrottle(messageHandler);
 
-  auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath)->getDataStoreRef();
-  auto& numNeighbors = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NumberOfNeighborsPath)->getDataStoreRef();
+  auto& featureIds = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_path)->getDataStoreRef();
+  auto& numNeighbors = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->number_of_neighbors_path)->getDataStoreRef();
 
-  auto& neighborsList = m_DataStructure.getDataRefAs<Int32NeighborList>(m_InputValues->NeighborListPath);
-  auto& sharedSurfaceAreaList = m_DataStructure.getDataRefAs<Float32NeighborList>(m_InputValues->SharedSurfaceAreaListPath);
+  auto& neighborsList = m_DataStructure.getDataRefAs<Int32NeighborListType>(m_InputValues->neighbor_list_path);
+  auto& sharedSurfaceAreaList = m_DataStructure.getDataRefAs<Float32NeighborListType>(m_InputValues->shared_surface_area_list_path);
 
   usize totalFeatures = numNeighbors.getNumberOfTuples();
 
@@ -352,40 +350,40 @@ Result<> ComputeFeatureNeighborsDirect::operator()()
   if(static_cast<usize>(maxFeatureId) >= totalFeatures)
   {
     std::stringstream out;
-    out << "Data Array " << m_InputValues->FeatureIdsPath.getTargetName() << " has a maximum value of " << maxFeatureId << " which is greater than the "
-        << " number of features from array " << m_InputValues->NumberOfNeighborsPath.getTargetName() << " which has " << totalFeatures << ". Did you select the "
+    out << "Data Array " << m_InputValues->feature_ids_path.getTargetName() << " has a maximum value of " << maxFeatureId << " which is greater than the "
+        << " number of features from array " << m_InputValues->number_of_neighbors_path.getTargetName() << " which has " << totalFeatures << ". Did you select the "
         << " incorrect array for the 'FeatureIds' array?";
     return MakeErrorResult(-24500, out.str());
   }
 
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->InputImageGeometryPath);
-  SizeVec3 uDims = imageGeom.getDimensions();
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->input_image_geometry_path);
+  SizeVec3Type uDims = imageGeom.getDimensions();
 
   std::array<int64, 3> dims = {static_cast<int64>(uDims[0]), static_cast<int64>(uDims[1]), static_cast<int64>(uDims[2])};
 
-  FloatVec3 spacing32 = imageGeom.getSpacing();
+  FloatVec3Type spacing32 = imageGeom.getSpacing();
 
   std::array<float64, 3> spacing64 = {static_cast<float64>(spacing32[0]), static_cast<float64>(spacing32[1]), static_cast<float64>(spacing32[2])};
 
-  if(m_InputValues->StoreSurfaceFeatures && m_InputValues->StoreBoundaryCells)
+  if(m_InputValues->store_surface_features && m_InputValues->store_boundary_cells)
   {
     // Preflight initializes surface flags to false. This path marks only geometry-face features.
-    auto* surfaceFeatures = m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore();
-    auto* boundaryCells = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore();
-    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, true>{}, imageGeom, surfaceFeatures, boundaryCells, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
-                         spacing64, progressThrottle, m_ShouldCancel);
+    auto* surfaceFeaturesPtr = m_DataStructure.getDataAs<BoolArrayType>(m_InputValues->surface_features_path)->getDataStore();
+    auto* boundaryCellsPtr = m_DataStructure.getDataAs<Int8ArrayType>(m_InputValues->boundary_cells_path)->getDataStore();
+    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, true>{}, imageGeom, surfaceFeaturesPtr, boundaryCellsPtr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures,
+                         dims, spacing64, progressThrottle, m_ShouldCancel);
   }
-  if(m_InputValues->StoreSurfaceFeatures)
+  if(m_InputValues->store_surface_features)
   {
     // Preflight initializes surface flags to false. This path marks only geometry-face features.
-    auto* surfaceFeatures = m_DataStructure.getDataAs<BoolArray>(m_InputValues->SurfaceFeaturesPath)->getDataStore();
-    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, false>{}, imageGeom, surfaceFeatures, nullptr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
+    auto* surfaceFeaturesPtr = m_DataStructure.getDataAs<BoolArrayType>(m_InputValues->surface_features_path)->getDataStore();
+    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<true, false>{}, imageGeom, surfaceFeaturesPtr, nullptr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
                          spacing64, progressThrottle, m_ShouldCancel);
   }
-  if(m_InputValues->StoreBoundaryCells)
+  if(m_InputValues->store_boundary_cells)
   {
-    auto* boundaryCells = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsPath)->getDataStore();
-    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<false, true>{}, imageGeom, nullptr, boundaryCells, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
+    auto* boundaryCellsPtr = m_DataStructure.getDataAs<Int8ArrayType>(m_InputValues->boundary_cells_path)->getDataStore();
+    return ProcessVoxels(::ComputeFeatureNeighborsFunctor<false, true>{}, imageGeom, nullptr, boundaryCellsPtr, sharedSurfaceAreaList, neighborsList, numNeighbors, featureIds, totalFeatures, dims,
                          spacing64, progressThrottle, m_ShouldCancel);
   }
 

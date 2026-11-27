@@ -58,8 +58,8 @@ inline std::vector<T> MakeHolePattern(usize dimX, usize dimY, usize dimZ, T fiel
 {
   std::vector<T> v(dimX * dimY * dimZ, field);
   const int64 nX = static_cast<int64>(dimX);
-  const int64 nY = static_cast<int64>(dimY);
-  const int64 nZ = static_cast<int64>(dimZ);
+  const int64 ny = static_cast<int64>(dimY);
+  const int64 nz = static_cast<int64>(dimZ);
 
   // Paint the inclusive, clamped box [x0,x1] x [y0,y1] x [z0,z1] with value.
   auto paintBox = [&](int64 x0, int64 x1, int64 y0, int64 y1, int64 z0, int64 z1, T value) {
@@ -67,8 +67,8 @@ inline std::vector<T> MakeHolePattern(usize dimX, usize dimY, usize dimZ, T fiel
     y0 = std::max<int64>(0, y0);
     z0 = std::max<int64>(0, z0);
     x1 = std::min<int64>(nX - 1, x1);
-    y1 = std::min<int64>(nY - 1, y1);
-    z1 = std::min<int64>(nZ - 1, z1);
+    y1 = std::min<int64>(ny - 1, y1);
+    z1 = std::min<int64>(nz - 1, z1);
     for(int64 z = z0; z <= z1; ++z)
     {
       for(int64 y = y0; y <= y1; ++y)
@@ -90,11 +90,11 @@ inline std::vector<T> MakeHolePattern(usize dimX, usize dimY, usize dimZ, T fiel
     const int64 cx = static_cast<int64>(c[0] * static_cast<double>(dimX));
     const int64 cy = static_cast<int64>(c[1] * static_cast<double>(dimY));
     const int64 cz = (dimZ == 1) ? 0 : static_cast<int64>(c[2] * static_cast<double>(dimZ));
-    if(cx - 1 < 1 || cx + 1 > nX - 2 || cy - 1 < 1 || cy + 1 > nY - 2)
+    if(cx - 1 < 1 || cx + 1 > nX - 2 || cy - 1 < 1 || cy + 1 > ny - 2)
     {
       continue;
     }
-    if(dimZ > 1 && (cz - 1 < 1 || cz + 1 > nZ - 2))
+    if(dimZ > 1 && (cz - 1 < 1 || cz + 1 > nz - 2))
     {
       continue;
     }
@@ -103,8 +103,8 @@ inline std::vector<T> MakeHolePattern(usize dimX, usize dimY, usize dimZ, T fiel
 
   // One dark region anchored at the (0,0,0) corner so it touches the border (never filled).
   const int64 bx = std::min<int64>(nX, 3) - 1;
-  const int64 by = std::min<int64>(nY, 3) - 1;
-  const int64 bz = (dimZ == 1) ? 0 : (std::min<int64>(nZ, 3) - 1);
+  const int64 by = std::min<int64>(ny, 3) - 1;
+  const int64 bz = (dimZ == 1) ? 0 : (std::min<int64>(nz, 3) - 1);
   paintBox(0, bx, 0, by, 0, bz, hole);
 
   return v;
@@ -167,22 +167,22 @@ inline std::vector<T> MakePlateauPattern(usize dimX, usize dimY, usize dimZ)
  *        Returns the input array path.
  */
 template <class T>
-inline DataPath BuildImageFromPattern(DataStructure& ds, usize dimX, usize dimY, usize dimZ, const std::vector<T>& pattern)
+inline DataPath BuildImageFromPattern(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ, const std::vector<T>& pattern)
 {
   REQUIRE(pattern.size() == dimX * dimY * dimZ);
   const ShapeType cellShape = {dimZ, dimY, dimX};
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<T>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
 
   constexpr usize k_ChunkValues = 65536;
   for(usize start = 0; start < pattern.size(); start += k_ChunkValues)
@@ -199,9 +199,9 @@ inline DataPath BuildImageFromPattern(DataStructure& ds, usize dimX, usize dimY,
  *        input array path.
  */
 template <class T>
-inline DataPath BuildHoleImage(DataStructure& ds, usize dimX, usize dimY, usize dimZ, T field, T hole)
+inline DataPath BuildHoleImage(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ, T field, T hole)
 {
-  return BuildImageFromPattern<T>(ds, dimX, dimY, dimZ, MakeHolePattern<T>(dimX, dimY, dimZ, field, hole));
+  return BuildImageFromPattern<T>(dataStructure, dimX, dimY, dimZ, MakeHolePattern<T>(dimX, dimY, dimZ, field, hole));
 }
 
 /**
@@ -223,9 +223,9 @@ inline std::vector<T> MakePeakPattern(usize dimX, usize dimY, usize dimZ, T fiel
  *        dark background, @p peak the bright blobs. Returns the input array path.
  */
 template <class T>
-inline DataPath BuildPeakImage(DataStructure& ds, usize dimX, usize dimY, usize dimZ, T field, T peak)
+inline DataPath BuildPeakImage(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ, T field, T peak)
 {
-  return BuildImageFromPattern<T>(ds, dimX, dimY, dimZ, MakePeakPattern<T>(dimX, dimY, dimZ, field, peak));
+  return BuildImageFromPattern<T>(dataStructure, dimX, dimY, dimZ, MakePeakPattern<T>(dimX, dimY, dimZ, field, peak));
 }
 
 //------------------------------------------------------------------------------
@@ -234,25 +234,25 @@ inline DataPath BuildPeakImage(DataStructure& ds, usize dimX, usize dimY, usize 
  *        filter exposes some subset of {FullyConnected, Height}: fillhole -> FullyConnected only; HMaxima ->
  *        Height only; HMinima -> both. The injected setter lets one runner drive all three filters.
  */
-using ReconParamSetter = std::function<void(Arguments&, bool fullyConnected, float64 height)>;
+using ReconParamSetterType = std::function<void(Arguments&, bool fullyConnected, float64 height)>;
 
 /// Parameter setter for a filter with a FullyConnected flag only (GrayscaleFillhole). Ignores height.
 template <class NewFilterT>
-inline ReconParamSetter FullyConnectedParamSetter()
+inline ReconParamSetterType FullyConnectedParamSetter()
 {
   return [](Arguments& args, bool fullyConnected, float64 /*height*/) { args.insertOrAssign(NewFilterT::k_FullyConnected_Key, std::make_any<bool>(fullyConnected)); };
 }
 
 /// Parameter setter for a filter with a Height value only (HMaxima). Ignores fullyConnected.
 template <class NewFilterT>
-inline ReconParamSetter HeightParamSetter()
+inline ReconParamSetterType HeightParamSetter()
 {
   return [](Arguments& args, bool /*fullyConnected*/, float64 height) { args.insertOrAssign(NewFilterT::k_Height_Key, std::make_any<float64>(height)); };
 }
 
 /// Parameter setter for a filter with both a Height value and a FullyConnected flag (HMinima).
 template <class NewFilterT>
-inline ReconParamSetter HeightAndFullyConnectedParamSetter()
+inline ReconParamSetterType HeightAndFullyConnectedParamSetter()
 {
   return [](Arguments& args, bool fullyConnected, float64 height) {
     args.insertOrAssign(NewFilterT::k_Height_Key, std::make_any<float64>(height));
@@ -264,7 +264,7 @@ inline ReconParamSetter HeightAndFullyConnectedParamSetter()
 /// type + radius + preserveIntensities, and takes FullyConnected from the grid config (height is unused). The
 /// stored any types match exactly what the filter reads (ChoicesParameter::ValueType, std::vector<uint32>, bool).
 template <class NewFilterT>
-inline ReconParamSetter SEReconParamSetter(ChoicesParameter::ValueType kernelType, std::vector<uint32> kernelRadius, bool preserveIntensities)
+inline ReconParamSetterType SEReconParamSetter(ChoicesParameter::ValueType kernelType, const std::vector<uint32>& kernelRadius, bool preserveIntensities)
 {
   return [kernelType, kernelRadius, preserveIntensities](Arguments& args, bool fullyConnected, float64 /*height*/) {
     args.insertOrAssign(NewFilterT::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(kernelType));
@@ -277,7 +277,7 @@ inline ReconParamSetter SEReconParamSetter(ChoicesParameter::ValueType kernelTyp
 /// Parameter setter for the binary reconstruction filters (BinaryOpeningByReconstruction): captures the kernel type
 /// + radius + foreground + background, and takes FullyConnected from the grid config (height unused).
 template <class NewFilterT>
-inline ReconParamSetter BinaryReconParamSetter(ChoicesParameter::ValueType kernelType, std::vector<uint32> kernelRadius, float64 foreground, float64 background)
+inline ReconParamSetterType BinaryReconParamSetter(ChoicesParameter::ValueType kernelType, const std::vector<uint32>& kernelRadius, float64 foreground, float64 background)
 {
   return [kernelType, kernelRadius, foreground, background](Arguments& args, bool fullyConnected, float64 /*height*/) {
     args.insertOrAssign(NewFilterT::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(kernelType));
@@ -294,7 +294,7 @@ inline ReconParamSetter BinaryReconParamSetter(ChoicesParameter::ValueType kerne
  *        @p outputName is the created output array's name.
  */
 template <class NewFilterT>
-inline void RunReconstructionFilter(IFilter& filter, DataStructure& ds, const DataPath& inputPath, const ReconParamSetter& setParams, bool fullyConnected, float64 height,
+inline void RunReconstructionFilter(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, const ReconParamSetterType& setParams, bool fullyConnected, float64 height,
                                     const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
@@ -303,9 +303,9 @@ inline void RunReconstructionFilter(IFilter& filter, DataStructure& ds, const Da
   args.insertOrAssign(NewFilterT::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(NewFilterT::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
   setParams(args, fullyConnected, height);
-  auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
@@ -417,8 +417,8 @@ inline void RequireExact(const IDataArray& left, const IDataArray& right)
 // an embedded md5 of OUR output (md5-validity-first, plan Sec.4), or a stored baseline compared via CompareImages at
 // the case's tolerance. Each case is pinned ForceInCore.
 
-using ExtraParamSetter = std::function<void(Arguments&)>;
-inline ExtraParamSetter NoExtraParams()
+using ExtraParamSetterType = std::function<void(Arguments&)>;
+inline ExtraParamSetterType NoExtraParams()
 {
   return [](Arguments&) {};
 }
@@ -428,10 +428,10 @@ inline ExtraParamSetter NoExtraParams()
 // against the committed hash. @p setExtraParams sets the case's op-specific params (Height / kernel / foreground /
 // etc.); it defaults to none for the parameter-free filters.
 template <class FilterT>
-inline void RunReconstructionMd5ItkGolden(const std::string& inputFile, const std::string& committedMd5, const ExtraParamSetter& setExtraParams = NoExtraParams())
+inline void RunReconstructionMd5ItkGolden(const std::string& inputFile, const std::string& committedMd5, const ExtraParamSetterType& setExtraParams = NoExtraParams())
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath cellData = geom.createChildPath("CellData");
@@ -439,8 +439,8 @@ inline void RunReconstructionMd5ItkGolden(const std::string& inputFile, const st
   const DataPath output = cellData.createChildPath("Output");
 
   // --- read input through OUR reader ---
-  DataStructure ds;
-  const Result<> readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath(inputFile), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const Result<> readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath(inputFile), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
 
   // --- run OUR filter with the case's parameters ---
@@ -450,17 +450,17 @@ inline void RunReconstructionMd5ItkGolden(const std::string& inputFile, const st
   args.insertOrAssign(FilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   setExtraParams(args);
   FilterT filter;
-  const auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // --- (A) DURABLE golden: md5-validity-first (plan Sec.4) -- our output's md5 must equal the committed hash. ---
-  const std::string ourMd5 = ip_golden::ComputeMd5Hash(ds, output);
+  const std::string ourMd5 = ip_golden::ComputeMd5Hash(dataStructure, output);
   INFO(fmt::format("{} md5: ours='{}' committed='{}'", inputFile, ourMd5, committedMd5));
   REQUIRE(ourMd5 == committedMd5);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 //------------------------------------------------------------------------------
@@ -468,11 +468,11 @@ inline void RunReconstructionMd5ItkGolden(const std::string& inputFile, const st
 // via CompareImages @ @p tolerance. All five distance filters emit a fixed float32 output on an integer
 // (2th_cthead1.png) input.
 template <class FilterT>
-inline void RunDistanceMapItkGoldenBaseline(const std::string& inputFile, const std::string& baselineFile, float64 tolerance, const ExtraParamSetter& setExtraParams = NoExtraParams(),
-                                            UnitTest::AlgorithmTestScope* scope = nullptr)
+inline void RunDistanceMapItkGoldenBaseline(const std::string& inputFile, const std::string& baselineFile, float64 tolerance, const ExtraParamSetterType& setExtraParams = NoExtraParams(),
+                                            unit_test::AlgorithmTestScope* scope = nullptr)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath cellData = geom.createChildPath("CellData");
@@ -480,12 +480,12 @@ inline void RunDistanceMapItkGoldenBaseline(const std::string& inputFile, const 
   const DataPath output = cellData.createChildPath("Output");
 
   // --- read input through OUR reader ---
-  DataStructure ds;
-  const Result<> readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath(inputFile), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const Result<> readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath(inputFile), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
   if(scope != nullptr)
   {
-    scope->requireExpectedStore(ds.getDataRefAs<IDataArray>(input));
+    scope->requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(input));
   }
 
   // --- run OUR filter with the case's parameters ---
@@ -495,19 +495,19 @@ inline void RunDistanceMapItkGoldenBaseline(const std::string& inputFile, const 
   args.insertOrAssign(FilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   setExtraParams(args);
   FilterT filter;
-  const auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = scope == nullptr ? filter.execute(ds, args) : scope->executeFilter(filter, ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  const auto executeResult = scope == nullptr ? filter.execute(dataStructure, args) : scope->executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // --- (A) DURABLE baseline golden: stored baseline compared at the case's tolerance. ---
   const DataPath baselineGeom({"Baseline Geometry"});
   const DataPath baselineData = baselineGeom.createChildPath("CellData").createChildPath("Baseline");
-  const Result<> readBaseline = ip_golden::ReadInputImage(ds, ip_golden::BaselinePath(baselineFile), baselineGeom, "CellData", "Baseline");
+  const Result<> readBaseline = ip_golden::ReadInputImage(dataStructure, ip_golden::BaselinePath(baselineFile), baselineGeom, "CellData", "Baseline");
   SIMPLNX_RESULT_REQUIRE_VALID(readBaseline);
-  const Result<> compareResult = ip_golden::CompareImages(ds, baselineGeom, baselineData, geom, output, tolerance);
+  const Result<> compareResult = ip_golden::CompareImages(dataStructure, baselineGeom, baselineData, geom, output, tolerance);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace recon_test

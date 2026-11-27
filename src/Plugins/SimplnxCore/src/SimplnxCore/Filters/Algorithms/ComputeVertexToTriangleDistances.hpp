@@ -17,12 +17,12 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ComputeVertexToTriangleDistancesInputValues
 {
-  DataPath VertexDataContainer;
-  DataPath TriangleDataContainer;
-  DataPath TriangleNormalsArrayPath;
-  DataPath DistancesArrayPath;
-  DataPath ClosestTriangleIdArrayPath;
-  DataPath TriBoundsDataPath;
+  DataPath vertex_data_container;
+  DataPath triangle_data_container;
+  DataPath triangle_normals_array_path;
+  DataPath distances_array_path;
+  DataPath closest_triangle_id_array_path;
+  DataPath tri_bounds_data_path;
 };
 
 /**
@@ -55,7 +55,7 @@ private:
   const ComputeVertexToTriangleDistancesInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-  mutable std::mutex m_ProgressMessage_Mutex;
+  mutable std::mutex m_ProgressMessageMutex;
   ThrottledMessageHandler m_Throttle;
 };
 

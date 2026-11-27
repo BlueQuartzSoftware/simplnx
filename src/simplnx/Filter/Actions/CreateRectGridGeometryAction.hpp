@@ -25,10 +25,10 @@ public:
 
   using SpacingType = std::vector<float>;
 
-  CreateRectGridGeometryAction(const DataPath& path, usize xBoundsDim, usize yBoundsDim, usize zBoundsDim, const std::string& cellAttributeMatrixName, const std::string& xBoundsName,
-                               const std::string& yBoundsName, const std::string& zBoundsName);
+  CreateRectGridGeometryAction(const DataPath& path, usize xBoundsDim, usize yBoundsDim, usize zBoundsDim, std::string cellAttributeMatrixName, std::string xBoundsName, std::string yBoundsName,
+                               std::string zBoundsName);
 
-  CreateRectGridGeometryAction(const DataPath& path, const DataPath& inputXBoundsPath, const DataPath& inputYBoundsPath, const DataPath& inputZBoundsPath, const std::string& cellAttributeMatrixName,
+  CreateRectGridGeometryAction(const DataPath& path, const DataPath& inputXBoundsPath, const DataPath& inputYBoundsPath, const DataPath& inputZBoundsPath, std::string cellAttributeMatrixName,
                                const ArrayHandlingType& arrayType);
 
   ~CreateRectGridGeometryAction() noexcept override;
@@ -50,7 +50,7 @@ public:
    */
   Result<> apply(DataStructure& dataStructure, Mode mode) const override;
 
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   DataPath path() const;
 
@@ -82,6 +82,6 @@ private:
   DataPath m_InputZBounds;
   ArrayHandlingType m_ArrayHandlingType = ArrayHandlingType::Create;
 
-  Float32Array* createBoundArray(DataStructure& dataStructure, Mode mode, const std::string& arrayName, usize numTuples, std::vector<Error>& errors) const;
+  Float32ArrayType* createBoundArray(DataStructure& dataStructure, Mode mode, const std::string& arrayName, usize numTuples, std::vector<Error>& errors) const;
 };
 } // namespace nx::core

@@ -56,19 +56,19 @@
  * '\r'(0x0d)carriage return (CR)
  */
 
-namespace nx::core::StringUtilities
+namespace nx::core::string_utilities
 {
 namespace detail
 {
 template <bool ProcessEmptyV, class InputIt, class ForwardIt, typename TokenT>
-void tokenize(InputIt first, InputIt last, ForwardIt s_first, ForwardIt s_last, std::vector<TokenT>& tokens)
+void Tokenize(InputIt first, InputIt last, ForwardIt s_first, ForwardIt s_last, std::vector<TokenT>& tokens)
 {
   while(true)
   {
-    const auto pos = std::find_first_of(first, last, s_first, s_last);
-    if(first != pos)
+    const auto posPtr = std::find_first_of(first, last, s_first, s_last);
+    if(first != posPtr)
     {
-      tokens.emplace_back(std::string{first, pos});
+      tokens.emplace_back(std::string{first, posPtr});
     }
     else
     {
@@ -77,63 +77,63 @@ void tokenize(InputIt first, InputIt last, ForwardIt s_first, ForwardIt s_last, 
         tokens.emplace_back("");
       }
     }
-    if(pos == last)
+    if(posPtr == last)
     {
       break;
     }
-    first = std::next(pos);
+    first = std::next(posPtr);
   }
 }
 
 template <bool ConsecutiveAsEmptyV, bool EmptyInitialV, bool EmptyFinalV>
 struct SplitTypeOptions
 {
-  static inline constexpr bool AllowConsecutiveAsEmpty = ConsecutiveAsEmptyV;
-  static inline constexpr bool AllowEmptyInital = EmptyInitialV;
-  static inline constexpr bool AllowEmptyFinal = EmptyFinalV;
+  static constexpr bool k_AllowConsecutiveAsEmpty = ConsecutiveAsEmptyV;
+  static constexpr bool k_AllowEmptyInital = EmptyInitialV;
+  static constexpr bool k_AllowEmptyFinal = EmptyFinalV;
 };
 
-using SplitIgnoreEmpty = SplitTypeOptions<false, false, false>;
-using SplitAllowAll = SplitTypeOptions<true, true, true>;
-using SplitNoStripIgnoreConsecutive = SplitTypeOptions<false, true, true>;
-using SplitOnlyConsecutive = SplitTypeOptions<true, false, false>;
-using SplitAllowEmptyLeftAnalyze = SplitTypeOptions<true, true, false>;
-using SplitAllowEmptyRightAnalyze = SplitTypeOptions<true, false, true>;
+using SplitIgnoreEmptyType = SplitTypeOptions<false, false, false>;
+using SplitAllowAllType = SplitTypeOptions<true, true, true>;
+using SplitNoStripIgnoreConsecutiveType = SplitTypeOptions<false, true, true>;
+using SplitOnlyConsecutiveType = SplitTypeOptions<true, false, false>;
+using SplitAllowEmptyLeftAnalyzeType = SplitTypeOptions<true, true, false>;
+using SplitAllowEmptyRightAnalyzeType = SplitTypeOptions<true, false, true>;
 
-template <class SplitTypeOptionsV = SplitIgnoreEmpty>
-inline std::vector<std::string> optimized_split(std::string_view str, nonstd::span<const char> delimiters)
+template <class SplitTypeOptionsV = SplitIgnoreEmptyType>
+inline std::vector<std::string> OptimizedSplit(std::string_view str, nonstd::span<const char> delimiters)
 {
   if(str.empty())
   {
     return {};
   }
-  auto endPos = str.end();
-  auto startPos = str.begin();
+  auto endPosPtr = str.end();
+  auto startPosPtr = str.begin();
 
   std::vector<std::string> tokens;
   tokens.reserve(str.size() / 2);
 
-  if constexpr(SplitTypeOptionsV::AllowEmptyInital)
+  if constexpr(SplitTypeOptionsV::k_AllowEmptyInital)
   {
     if(std::find(delimiters.begin(), delimiters.end(), str[0]) != delimiters.end())
     {
       tokens.emplace_back("");
-      startPos++;
+      startPosPtr++;
     }
   }
 
-  if constexpr(!SplitTypeOptionsV::AllowEmptyFinal)
+  if constexpr(!SplitTypeOptionsV::k_AllowEmptyFinal)
   {
     if(std::find(delimiters.begin(), delimiters.end(), str[str.size() - 1]) != delimiters.end())
     {
-      endPos--;
+      endPosPtr--;
     }
   }
 
-  if constexpr(!SplitTypeOptionsV::AllowConsecutiveAsEmpty)
+  if constexpr(!SplitTypeOptionsV::k_AllowConsecutiveAsEmpty)
   {
-    tokenize<false>(startPos, endPos, delimiters.begin(), delimiters.end(), tokens);
-    if constexpr(SplitTypeOptionsV::AllowEmptyFinal)
+    Tokenize<false>(startPosPtr, endPosPtr, delimiters.begin(), delimiters.end(), tokens);
+    if constexpr(SplitTypeOptionsV::k_AllowEmptyFinal)
     {
       if(std::find(delimiters.begin(), delimiters.end(), str[str.size() - 1]) != delimiters.end())
       {
@@ -143,14 +143,14 @@ inline std::vector<std::string> optimized_split(std::string_view str, nonstd::sp
   }
   else
   {
-    if constexpr(!SplitTypeOptionsV::AllowEmptyInital)
+    if constexpr(!SplitTypeOptionsV::k_AllowEmptyInital)
     {
       if(std::find(delimiters.begin(), delimiters.end(), str[0]) != delimiters.end())
       {
-        startPos++;
+        startPosPtr++;
       }
     }
-    tokenize<true>(startPos, endPos, delimiters.begin(), delimiters.end(), tokens);
+    Tokenize<true>(startPosPtr, endPosPtr, delimiters.begin(), delimiters.end(), tokens);
   }
 
   tokens.shrink_to_fit();
@@ -165,7 +165,7 @@ inline std::vector<std::string> optimized_split(std::string_view str, nonstd::sp
 }
 } // namespace detail
 
-inline constexpr StringLiteral k_Whitespaces = " \t\f\v\n\r";
+inline constexpr StringLiteralType k_Whitespaces = " \t\f\v\n\r";
 
 /**
  * @brief Replace characters in a string. If 'from' is empty, the origin string is returned.
@@ -174,7 +174,7 @@ inline constexpr StringLiteral k_Whitespaces = " \t\f\v\n\r";
  * @param to The characters to be used as the replacement
  * @return The modified string
  */
-inline std::string replace(std::string inputString, std::string_view from, std::string_view to)
+inline std::string Replace(std::string inputString, std::string_view from, std::string_view to)
 {
   usize startPos = 0;
   if(from.empty())
@@ -189,7 +189,7 @@ inline std::string replace(std::string inputString, std::string_view from, std::
   return inputString;
 }
 
-inline std::string ltrim(std::string_view str)
+inline std::string Ltrim(std::string_view str)
 {
   if(str.empty())
   {
@@ -205,7 +205,7 @@ inline std::string ltrim(std::string_view str)
   return std::string(str.substr(front));
 }
 
-inline std::string rtrim(std::string_view str)
+inline std::string Rtrim(std::string_view str)
 {
   if(str.empty())
   {
@@ -221,7 +221,7 @@ inline std::string rtrim(std::string_view str)
   return std::string(str.substr(0, back + 1));
 }
 
-inline std::string trimmed(std::string_view str)
+inline std::string Trimmed(std::string_view str)
 {
   if(str.empty())
   {
@@ -246,7 +246,7 @@ inline std::string trimmed(std::string_view str)
  * @param startingStr The starting string to check the input string for.
  * @return True or False if the given string starts with the given startingStr
  */
-inline bool starts_with(std::string_view value, std::string_view startingStr)
+inline bool StartsWith(std::string_view value, std::string_view startingStr)
 {
   if(startingStr.size() > value.size())
   {
@@ -262,7 +262,7 @@ inline bool starts_with(std::string_view value, std::string_view startingStr)
  * @param ending The ending to check the input string for.
  * @return True or False if the given string ends with the given ending
  */
-inline bool ends_with(std::string_view value, std::string_view ending)
+inline bool EndsWith(std::string_view value, std::string_view ending)
 {
   if(ending.size() > value.size())
   {
@@ -281,66 +281,64 @@ enum SplitType : uint8
   AllowEmptyRightAnalyze
 };
 
-inline std::vector<std::string> specific_split(std::string_view str, nonstd::span<const char> delimiters, SplitType splitType)
+inline std::vector<std::string> SpecificSplit(std::string_view str, nonstd::span<const char> delimiters, SplitType splitType)
 {
   switch(splitType)
   {
   case IgnoreEmpty:
-    return detail::optimized_split<detail::SplitIgnoreEmpty>(str, delimiters);
+    return detail::OptimizedSplit<detail::SplitIgnoreEmptyType>(str, delimiters);
   case AllowAll:
-    return detail::optimized_split<detail::SplitAllowAll>(str, delimiters);
+    return detail::OptimizedSplit<detail::SplitAllowAllType>(str, delimiters);
   case NoStripIgnoreConsecutive:
-    return detail::optimized_split<detail::SplitNoStripIgnoreConsecutive>(str, delimiters);
+    return detail::OptimizedSplit<detail::SplitNoStripIgnoreConsecutiveType>(str, delimiters);
   case OnlyConsecutive:
-    return detail::optimized_split<detail::SplitOnlyConsecutive>(str, delimiters);
+    return detail::OptimizedSplit<detail::SplitOnlyConsecutiveType>(str, delimiters);
   case AllowEmptyLeftAnalyze:
-    return detail::optimized_split<detail::SplitAllowEmptyLeftAnalyze>(str, delimiters);
+    return detail::OptimizedSplit<detail::SplitAllowEmptyLeftAnalyzeType>(str, delimiters);
   case AllowEmptyRightAnalyze:
-    return detail::optimized_split<detail::SplitAllowEmptyRightAnalyze>(str, delimiters);
+    return detail::OptimizedSplit<detail::SplitAllowEmptyRightAnalyzeType>(str, delimiters);
   }
 
   return {};
 }
 
-inline std::vector<std::string> split(std::string_view str, nonstd::span<const char> delimiters, bool keepEmptyTokens)
+inline std::vector<std::string> Split(std::string_view str, nonstd::span<const char> delimiters, bool keepEmptyTokens)
 {
   if(keepEmptyTokens)
   {
     // Split Allow All was selected to match QString's base split functionality
-    return detail::optimized_split<detail::SplitAllowAll>(str, delimiters);
+    return detail::OptimizedSplit<detail::SplitAllowAllType>(str, delimiters);
   }
-  else
-  {
-    return detail::optimized_split<detail::SplitIgnoreEmpty>(str, delimiters);
-  }
+
+  return detail::OptimizedSplit<detail::SplitIgnoreEmptyType>(str, delimiters);
 }
 
-inline std::vector<std::string> split(std::string_view str, char delim)
+inline std::vector<std::string> Split(std::string_view str, char delim)
 {
   std::array<char, 1> delimiters = {delim};
-  return detail::optimized_split<detail::SplitIgnoreEmpty>(str, delimiters);
+  return detail::OptimizedSplit<detail::SplitIgnoreEmptyType>(str, delimiters);
 }
 
-inline std::string join(nonstd::span<std::string_view> vec, std::string_view delim)
+inline std::string Join(nonstd::span<std::string_view> vec, std::string_view delim)
 {
   return fmt::format("{}", fmt::join(vec, delim));
 }
 
-inline bool contains(std::string_view str, std::string_view val)
+inline bool Contains(std::string_view str, std::string_view val)
 {
   return str.find(val) != std::string::npos;
 }
 
-inline bool contains(std::string_view str, char val)
+inline bool Contains(std::string_view str, char val)
 {
   return str.find(val) != std::string::npos;
 }
 
-inline std::string chop(std::string_view str, usize numElements)
+inline std::string Chop(std::string_view str, usize numElements)
 {
   return std::string(str.substr(0, str.size() - numElements));
 }
-inline std::string chop(std::string_view str, std::string_view chopFrom)
+inline std::string Chop(std::string_view str, std::string_view chopFrom)
 {
   if(str.empty())
   {
@@ -356,13 +354,13 @@ inline std::string chop(std::string_view str, std::string_view chopFrom)
   return std::string(str.substr(0, back + 1));
 }
 
-inline std::string chopr(std::string_view str, usize numElements)
+inline std::string Chopr(std::string_view str, usize numElements)
 {
   return std::string(str.substr(numElements, str.size() - numElements));
 }
 
 template <typename T>
-inline std::string number(T arg)
+inline std::string Number(T arg)
 {
   std::stringstream ss;
   if constexpr(std::is_floating_point_v<T>)
@@ -373,13 +371,13 @@ inline std::string number(T arg)
   return ss.str();
 }
 
-inline std::string simplified(std::string_view text)
+inline std::string Simplified(std::string_view text)
 {
   if(text.empty())
   {
     return "";
   }
-  std::string out = trimmed(text);
+  std::string out = Trimmed(text);
   std::string finalString;
   for(char c : out)
   {
@@ -401,7 +399,7 @@ inline std::string simplified(std::string_view text)
  * @param c
  * @return char
  */
-inline char toUpper(char c)
+inline char ToUpper(char c)
 {
   return static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
 }
@@ -412,7 +410,7 @@ inline char toUpper(char c)
  * @param c
  * @return char
  */
-inline char toLower(char c)
+inline char ToLower(char c)
 {
   return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
 }
@@ -423,11 +421,11 @@ inline char toLower(char c)
  * @param input
  * @return std::string
  */
-inline std::string toUpper(std::string input)
+inline std::string ToUpper(std::string input)
 {
   for(char& c : input)
   {
-    c = toUpper(c);
+    c = ToUpper(c);
   }
   return input;
 }
@@ -438,11 +436,11 @@ inline std::string toUpper(std::string input)
  * @param input
  * @return std::string
  */
-inline std::string toLower(std::string input)
+inline std::string ToLower(std::string input)
 {
   for(char& c : input)
   {
-    c = toLower(c);
+    c = ToLower(c);
   }
   return input;
 }
@@ -561,7 +559,7 @@ inline std::string GenerateIndexString(int32 index, int32 maxIndex)
  * @return Formatted string, e.g., "Z=64, Y=256, X=128"
  */
 template <typename ContainerT>
-inline std::string formatDimensions(const ContainerT& dims, bool reverseDims = false)
+inline std::string FormatDimensions(const ContainerT& dims, bool reverseDims = false)
 {
   constexpr std::string_view k_KnownLabels = "NMTZYX";
   const usize numDims = dims.size();
@@ -621,14 +619,14 @@ inline std::string formatDimensions(const ContainerT& dims, bool reverseDims = f
  * @return Formatted string, e.g., "Z=64, Y=256, X=128"
  */
 template <typename ContainerT>
-inline std::string formatDimensions3D(const ContainerT& dims, bool reverseDims = false)
+inline std::string FormatDimensions3D(const ContainerT& dims, bool reverseDims = false)
 {
   if(dims.size() != 3)
   {
     return fmt::format("Expected 3 dimensions but got {}", dims.size());
   }
   // ImageGeom::getDimensions() returns XYZ — reverse to ZYX for slowest-to-fastest display
-  return formatDimensions(dims, !reverseDims);
+  return FormatDimensions(dims, !reverseDims);
 }
 
 /**
@@ -642,14 +640,14 @@ inline std::string formatDimensions3D(const ContainerT& dims, bool reverseDims =
  * @return Formatted string, e.g., "Z=64, Y=256, X=128"
  */
 template <typename ContainerT>
-inline std::string formatTupleShape3D(const ContainerT& shape, bool reverseDims = false)
+inline std::string FormatTupleShape3D(const ContainerT& shape, bool reverseDims = false)
 {
   if(shape.size() != 3)
   {
     return fmt::format("Expected 3 dimensions but got {}", shape.size());
   }
   // getTupleShape() returns ZYX — already slowest-to-fastest, no reversal needed by default
-  return formatDimensions(shape, reverseDims);
+  return FormatDimensions(shape, reverseDims);
 }
 
-} // namespace nx::core::StringUtilities
+} // namespace nx::core::string_utilities

@@ -41,7 +41,7 @@ public:
   /**
    * @brief Destroys the direct KAM executor.
    */
-  ~ComputeKernelAvgMisorientationsDirect() noexcept;
+  ~ComputeKernelAvgMisorientationsDirect() noexcept = default;
 
   ComputeKernelAvgMisorientationsDirect(const ComputeKernelAvgMisorientationsDirect&) = delete;
   ComputeKernelAvgMisorientationsDirect(ComputeKernelAvgMisorientationsDirect&&) noexcept = delete;

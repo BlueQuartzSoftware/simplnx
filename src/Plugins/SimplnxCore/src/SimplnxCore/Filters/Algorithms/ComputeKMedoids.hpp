@@ -16,14 +16,14 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT KMedoidsInputValues
 {
-  uint64 InitClusters;
-  ClusterUtilities::DistanceMetric DistanceMetric;
-  bool UseMask = false;
-  DataPath ClusteringArrayPath;
-  DataPath MaskArrayPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath MedoidsArrayPath;
-  uint64 Seed;
+  uint64 init_clusters{};
+  cluster_utilities::DistanceMetric distance_metric;
+  bool use_mask = false;
+  DataPath clustering_array_path;
+  DataPath mask_array_path;
+  DataPath feature_ids_array_path;
+  DataPath medoids_array_path;
+  uint64 seed{};
 };
 
 /**
@@ -47,7 +47,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   ComputeKMedoids(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, KMedoidsInputValues* inputValues);
-  ~ComputeKMedoids() noexcept;
+  ~ComputeKMedoids() noexcept = default;
 
   ComputeKMedoids(const ComputeKMedoids&) = delete;
   ComputeKMedoids(ComputeKMedoids&&) noexcept = delete;

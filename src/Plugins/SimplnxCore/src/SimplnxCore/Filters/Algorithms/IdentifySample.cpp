@@ -18,11 +18,10 @@ IdentifySample::IdentifySample(DataStructure& dataStructure, const IFilter::Mess
 }
 
 // -----------------------------------------------------------------------------
-IdentifySample::~IdentifySample() noexcept = default;
 
 Result<> IdentifySample::operator()()
 {
-  auto* maskArray = m_DataStructure.getDataAs<IDataArray>(m_InputValues->MaskArrayPath);
+  auto* maskArrayPtr = m_DataStructure.getDataAs<IDataArray>(m_InputValues->mask_array_path);
 
-  return DispatchAlgorithm<IdentifySampleBFS, IdentifySampleCCL>({maskArray}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
+  return DispatchAlgorithm<IdentifySampleBFS, IdentifySampleCCL>({maskArrayPtr}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

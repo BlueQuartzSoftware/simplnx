@@ -1,5 +1,7 @@
 #include "RegularGridSampleSurfaceMesh.hpp"
 
+#include <cmath>
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/TriangleGeom.hpp"
@@ -13,6 +15,7 @@
 #include <limits>
 #include <memory>
 #include <type_traits>
+#include <utility>
 
 using namespace nx::core;
 
@@ -26,7 +29,7 @@ struct SliceEdge
 {
   float32 x1, y1;
   float32 x2, y2;
-  usize faceIndex;
+  usize face_index;
 };
 
 /**
@@ -36,7 +39,7 @@ struct SliceEdge
 struct ScanlineIntersection
 {
   float32 x;
-  usize faceIndex;
+  usize face_index;
 };
 
 /**
@@ -45,8 +48,8 @@ struct ScanlineIntersection
  */
 struct TriangleZRange
 {
-  float32 zMin = 0.0f;
-  float32 zMax = 0.0f;
+  float32 z_min = 0.0f;
+  float32 z_max = 0.0f;
 };
 
 /**
@@ -61,7 +64,7 @@ struct TriangleZRange
  *
  * The half-open vertex classification prevents duplicate crossings at shared vertices.
  */
-bool sliceTriangleAtZ(const std::array<Point3Df, 3>& verts, float32 zPlane, float32& outX1, float32& outY1, float32& outX2, float32& outY2)
+bool SliceTriangleAtZ(const std::array<FloatVec3Type, 3>& verts, float32 zPlane, float32& outX1, float32& outY1, float32& outX2, float32& outY2)
 {
   // Vertices on the plane belong to the upper half-space.
   std::array<bool, 3> above = {verts[0][2] >= zPlane, verts[1][2] >= zPlane, verts[2][2] >= zPlane};
@@ -135,17 +138,17 @@ public:
    * @param triZRanges Provides triangle Z bounds.
    * @param taskResult Stores the first output-store error.
    */
-  ZSliceWorker(RegularGridSampleSurfaceMesh* algorithm, usize zSlice, usize xDim, usize yDim, usize numTriangles, usize numFaceLabelComps, FloatVec3 origin, FloatVec3 spacing,
+  ZSliceWorker(RegularGridSampleSurfaceMesh* algorithm, usize zSlice, usize xDim, usize yDim, usize numTriangles, usize numFaceLabelComps, FloatVec3Type origin, FloatVec3Type spacing,
                const IGeometry::MeshIndexType* facesBuffer, const float32* verticesBuffer, const T* faceLabelsBuffer, const std::vector<TriangleZRange>& triZRanges,
-               CopyFromArray::ParallelTaskResult& taskResult)
+               copy_from_array::ParallelTaskResult& taskResult)
   : m_Algorithm(algorithm)
   , m_ZSlice(zSlice)
   , m_XDim(xDim)
   , m_YDim(yDim)
   , m_NumTriangles(numTriangles)
   , m_NumFaceLabelComps(numFaceLabelComps)
-  , m_Origin(origin)
-  , m_Spacing(spacing)
+  , m_Origin(std::move(origin))
+  , m_Spacing(std::move(spacing))
   , m_FacesBuffer(facesBuffer)
   , m_VerticesBuffer(verticesBuffer)
   , m_FaceLabelsBuffer(faceLabelsBuffer)
@@ -174,7 +177,7 @@ public:
     for(usize t = 0; t < m_NumTriangles; t++)
     {
       const auto& zRange = m_TriZRanges[t];
-      if(zRange.zMax < zCoord || zRange.zMin > zCoord)
+      if(zRange.z_max < zCoord || zRange.z_min > zCoord)
       {
         continue;
       }
@@ -182,12 +185,15 @@ public:
       usize v0Idx = m_FacesBuffer[t * 3];
       usize v1Idx = m_FacesBuffer[t * 3 + 1];
       usize v2Idx = m_FacesBuffer[t * 3 + 2];
-      std::array<Point3Df, 3> verts = {Point3Df{m_VerticesBuffer[v0Idx * 3], m_VerticesBuffer[v0Idx * 3 + 1], m_VerticesBuffer[v0Idx * 3 + 2]},
-                                       Point3Df{m_VerticesBuffer[v1Idx * 3], m_VerticesBuffer[v1Idx * 3 + 1], m_VerticesBuffer[v1Idx * 3 + 2]},
-                                       Point3Df{m_VerticesBuffer[v2Idx * 3], m_VerticesBuffer[v2Idx * 3 + 1], m_VerticesBuffer[v2Idx * 3 + 2]}};
+      std::array<FloatVec3Type, 3> verts = {FloatVec3Type{m_VerticesBuffer[v0Idx * 3], m_VerticesBuffer[v0Idx * 3 + 1], m_VerticesBuffer[v0Idx * 3 + 2]},
+                                            FloatVec3Type{m_VerticesBuffer[v1Idx * 3], m_VerticesBuffer[v1Idx * 3 + 1], m_VerticesBuffer[v1Idx * 3 + 2]},
+                                            FloatVec3Type{m_VerticesBuffer[v2Idx * 3], m_VerticesBuffer[v2Idx * 3 + 1], m_VerticesBuffer[v2Idx * 3 + 2]}};
 
-      float32 ex1, ey1, ex2, ey2;
-      if(sliceTriangleAtZ(verts, zCoord, ex1, ey1, ex2, ey2))
+      float32 ex1 = NAN;
+      float32 ey1 = NAN;
+      float32 ex2 = NAN;
+      float32 ey2 = NAN;
+      if(SliceTriangleAtZ(verts, zCoord, ex1, ey1, ex2, ey2))
       {
         edges.push_back({ex1, ey1, ex2, ey2, t});
       }
@@ -204,7 +210,8 @@ public:
       intersections.clear();
       for(const auto& edge : edges)
       {
-        float32 eYMin, eYMax;
+        float32 eYMin = NAN;
+        float32 eYMax = NAN;
         if(edge.y1 < edge.y2)
         {
           eYMin = edge.y1;
@@ -230,7 +237,7 @@ public:
 
         float32 t = (yCoord - edge.y1) / dy;
         float32 xIntersect = edge.x1 + t * (edge.x2 - edge.x1);
-        intersections.push_back({xIntersect, edge.faceIndex});
+        intersections.push_back({xIntersect, edge.face_index});
       }
 
       std::sort(intersections.begin(), intersections.end(), [](const ScanlineIntersection& a, const ScanlineIntersection& b) { return a.x < b.x; });
@@ -247,8 +254,9 @@ public:
 
         while(nextIsect < intersections.size() && intersections[nextIsect].x <= xCoord)
         {
-          usize faceIdx = intersections[nextIsect].faceIndex;
-          T label0, label1;
+          usize faceIdx = intersections[nextIsect].face_index;
+          T label0;
+          T label1;
           if(m_NumFaceLabelComps == 2)
           {
             label0 = m_FaceLabelsBuffer[faceIdx * 2];
@@ -338,13 +346,13 @@ private:
   usize m_YDim;
   usize m_NumTriangles;
   usize m_NumFaceLabelComps;
-  FloatVec3 m_Origin;
-  FloatVec3 m_Spacing;
+  FloatVec3Type m_Origin;
+  FloatVec3Type m_Spacing;
   const IGeometry::MeshIndexType* m_FacesBuffer;
   const float32* m_VerticesBuffer;
   const T* m_FaceLabelsBuffer;
   const std::vector<TriangleZRange>& m_TriZRanges;
-  CopyFromArray::ParallelTaskResult& m_TaskResult;
+  copy_from_array::ParallelTaskResult& m_TaskResult;
 };
 
 /**
@@ -371,9 +379,9 @@ struct ZSliceFunctor
   Result<> operator()(RegularGridSampleSurfaceMesh* algorithm, DataStructure& dataStructure, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
                       const ImageGeom& imageGeom, const TriangleGeom& triangleGeom, const DataPath& faceLabelsArrayPath, DataType outputType)
   {
-    SizeVec3 dims = imageGeom.getDimensions();
-    FloatVec3 origin = imageGeom.getOrigin();
-    FloatVec3 spacing = imageGeom.getSpacing();
+    SizeVec3Type dims = imageGeom.getDimensions();
+    FloatVec3Type origin = imageGeom.getOrigin();
+    FloatVec3Type spacing = imageGeom.getSpacing();
 
     usize xDim = dims[0];
     usize yDim = dims[1];
@@ -455,7 +463,7 @@ struct ZSliceFunctor
     }
 
     // Precompute Z bounds so each worker rejects nonintersecting triangles quickly.
-    messageHandler.sendMessage({IFilter::Message::Type::Info, "Preprocessing triangle data..."});
+    messageHandler.sendMessage({.type = IFilter::Message::Type::Info, .message = "Preprocessing triangle data..."});
 
     std::vector<TriangleZRange> triZRanges(numTriangles);
     for(usize t = 0; t < numTriangles; t++)
@@ -468,8 +476,8 @@ struct ZSliceFunctor
       float32 z1 = verticesBuffer[v1Idx * 3 + 2];
       float32 z2 = verticesBuffer[v2Idx * 3 + 2];
 
-      triZRanges[t].zMin = std::min({z0, z1, z2});
-      triZRanges[t].zMax = std::max({z0, z1, z2});
+      triZRanges[t].z_min = std::min({z0, z1, z2});
+      triZRanges[t].z_max = std::max({z0, z1, z2});
     }
 
     if(shouldCancel)
@@ -478,10 +486,10 @@ struct ZSliceFunctor
     }
 
     // Schedule Z slices while the borrowed mesh buffers remain alive.
-    messageHandler.sendMessage({IFilter::Message::Type::Info, fmt::format("Sampling surface mesh using scanline rasterization ({} Z-slices)...", zDim)});
+    messageHandler.sendMessage({.type = IFilter::Message::Type::Info, .message = fmt::format("Sampling surface mesh using scanline rasterization ({} Z-slices)...", zDim)});
 
     // Declared before the task runner so the runner's destructor joins every worker while this holder is still alive.
-    CopyFromArray::ParallelTaskResult taskResult;
+    copy_from_array::ParallelTaskResult taskResult;
     ParallelTaskAlgorithm taskAlgorithm;
     for(usize z = 0; z < zDim; z++)
     {
@@ -509,17 +517,15 @@ RegularGridSampleSurfaceMesh::RegularGridSampleSurfaceMesh(DataStructure& dataSt
 {
 }
 
-RegularGridSampleSurfaceMesh::~RegularGridSampleSurfaceMesh() noexcept = default;
-
 Result<> RegularGridSampleSurfaceMesh::operator()()
 {
-  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryOutputPath);
+  const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_geometry_path);
+  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_output_path);
 
-  SizeVec3 dims = imageGeom.getDimensions();
+  SizeVec3Type dims = imageGeom.getDimensions();
   m_CellsPerSlice = dims[0] * dims[1];
 
-  return ExecuteDataFunctionIntType(ZSliceFunctor{}, m_DataStructure.getDataAsUnsafe<IDataArray>(m_InputValues->SurfaceMeshFaceLabelsArrayPath)->getDataType(), this, m_DataStructure, m_ShouldCancel,
-                                    m_MessageHandler, imageGeom, triangleGeom, m_InputValues->SurfaceMeshFaceLabelsArrayPath,
-                                    m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->FeatureIdsArrayPath).getDataType());
+  return ExecuteDataFunctionIntType(ZSliceFunctor{}, m_DataStructure.getDataAsUnsafe<IDataArray>(m_InputValues->surface_mesh_face_labels_array_path)->getDataType(), this, m_DataStructure,
+                                    m_ShouldCancel, m_MessageHandler, imageGeom, triangleGeom, m_InputValues->surface_mesh_face_labels_array_path,
+                                    m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->feature_ids_array_path).getDataType());
 }

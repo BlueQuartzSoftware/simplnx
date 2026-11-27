@@ -14,22 +14,22 @@ IGeometry::IGeometry(DataStructure& dataStructure, std::string name, IdType impo
 {
 }
 
-const Float32Array* IGeometry::getElementSizes() const
+const Float32ArrayType* IGeometry::getElementSizes() const
 {
   const DataStructure* dataStructurePtr = getDataStructure();
   if(nullptr == dataStructurePtr)
   {
     return nullptr;
   }
-  return dataStructurePtr->getDataAs<Float32Array>(m_ElementSizesId);
+  return dataStructurePtr->getDataAs<Float32ArrayType>(m_ElementSizesId);
 }
 
-DataObject::OptionalId IGeometry::getElementSizesId() const
+DataObject::OptionalIdType IGeometry::getElementSizesId() const
 {
   return m_ElementSizesId;
 }
 
-void IGeometry::setElementSizesId(const OptionalId& sizesId)
+void IGeometry::setElementSizesId(const OptionalIdType& sizesId)
 {
   m_ElementSizesId = sizesId;
 }
@@ -218,7 +218,7 @@ std::optional<IGeometry::IdType> IGeometry::deepCopyOwnedChild(const DataPath& c
 
 void IGeometry::copyMembersInto(IGeometry& copy, const DataPath& copyPath)
 {
-  copy.m_ElementSizesId = adoptCopiedChild<Float32Array>(copyPath, k_VoxelSizes);
+  copy.m_ElementSizesId = adoptCopiedChild<Float32ArrayType>(copyPath, k_VoxelSizes);
 }
 
 void IGeometry::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType, DataObject::IdType>& updatedIdsMap)

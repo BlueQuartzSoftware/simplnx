@@ -18,7 +18,7 @@ public:
   /**
    * @brief Defines the scalar store used for node coordinates.
    */
-  using VertexStore = PartitionGeometry::VertexStore;
+  using VertexStoreType = PartitionGeometry::VertexStoreType;
 
   /**
    * @brief Creates a scanline geometry partitioner.
@@ -32,7 +32,7 @@ public:
   /**
    * @brief Destroys the non-owning partitioner.
    */
-  ~PartitionGeometryScanline() noexcept;
+  ~PartitionGeometryScanline() noexcept = default;
 
   PartitionGeometryScanline(const PartitionGeometryScanline&) = delete;
   PartitionGeometryScanline(PartitionGeometryScanline&&) noexcept = delete;
@@ -63,7 +63,7 @@ private:
    * @param outOfBoundsValue Supplies IDs for coordinates outside the grid.
    * @return First output error, or success after completion or cancellation.
    */
-  Result<> partitionCellBasedGeometry(const IGridGeometry& inputGeometry, Int32AbstractDataStore& partitionIdsStore, const ImageGeom& psImageGeom, int outOfBoundsValue);
+  Result<> partitionCellBasedGeometry(const IGridGeometry& inputGeometry, Int32AbstractDataStoreType& partitionIdsStore, const ImageGeom& psImageGeom, int outOfBoundsValue);
 
   /**
    * @brief Partitions buffered node coordinates and an optional mask.
@@ -74,8 +74,8 @@ private:
    * @param maskArrayOpt Selects vertices when present.
    * @return First input or output error, or success after cancellation.
    */
-  Result<> partitionNodeBasedGeometry(const VertexStore& vertexListStore, Int32AbstractDataStore& partitionIdsStore, const ImageGeom& psImageGeom, int outOfBoundsValue,
-                                      const std::optional<const BoolArray>& maskArrayOpt);
+  Result<> partitionNodeBasedGeometry(const VertexStoreType& vertexListStore, Int32AbstractDataStoreType& partitionIdsStore, const ImageGeom& psImageGeom, int outOfBoundsValue,
+                                      const std::optional<const BoolArrayType>& maskArrayOpt);
 };
 
 } // namespace nx::core

@@ -46,7 +46,7 @@ DataObject::DataObject(const DataObject& rhs)
 {
 }
 
-DataObject::DataObject(DataObject&& rhs)
+DataObject::DataObject(DataObject&& rhs) noexcept
 : m_DataStructure(rhs.m_DataStructure)
 , m_ParentList(std::move(rhs.m_ParentList))
 , m_Id(rhs.m_Id)
@@ -125,7 +125,7 @@ void DataObject::checkUpdatedIdsImpl(const std::unordered_map<DataObject::IdType
 {
 }
 
-bool DataObject::AttemptToAddObject(DataStructure& dataStructure, const std::shared_ptr<DataObject>& data, const OptionalId& parentId)
+bool DataObject::AttemptToAddObject(DataStructure& dataStructure, const std::shared_ptr<DataObject>& data, const OptionalIdType& parentId)
 {
   return dataStructure.finishAddingObject(data, parentId);
 }
@@ -198,7 +198,7 @@ bool DataObject::canRename(const std::string& name) const
     const auto* baseGroupPtr = dataStructPtr->getDataAs<BaseGroup>(parentId);
     if(baseGroupPtr == nullptr)
     {
-      std::cout << "DataObject::canRename(name=" << name << ") cannot get baseGroup from parentId = " << parentId << std::endl;
+      std::cout << "DataObject::canRename(name=" << name << ") cannot get baseGroup from parentId = " << parentId << '\n';
     }
     return baseGroupPtr != nullptr && baseGroupPtr->contains(name);
   });
@@ -255,39 +255,39 @@ bool DataObject::hasParent(const DataPath& parentPath) const
 
 std::set<std::string> DataObject::StringListFromDataObjectType(const std::set<Type>& dataObjectTypes)
 {
-  static const std::map<Type, std::string> k_TypeToStringMap = {{Type::DataObject, "DataObject"},
-                                                                {Type::DynamicListArray, "DynamicListArray"},
-                                                                {Type::ScalarData, "ScalarData"},
-                                                                {Type::BaseGroup, "BaseGroup"},
-                                                                {Type::AbstractMontage, "AbstractMontage"},
-                                                                {Type::DataGroup, "DataGroup"},
-                                                                {Type::AttributeMatrix, "AttributeMatrix"},
-                                                                {Type::IDataArray, "IDataArray"},
-                                                                {Type::DataArray, "DataArray"},
-                                                                {Type::IGeometry, "IGeometry"},
-                                                                {Type::IGridGeometry, "IGridGeometry"},
-                                                                {Type::RectGridGeom, "RectGridGeom"},
-                                                                {Type::ImageGeom, "ImageGeom"},
-                                                                {Type::INodeGeometry0D, "INodeGeometry0D"},
-                                                                {Type::VertexGeom, "VertexGeom"},
-                                                                {Type::INodeGeometry1D, "INodeGeometry1D"},
-                                                                {Type::EdgeGeom, "EdgeGeom"},
-                                                                {Type::INodeGeometry2D, "INodeGeometry2D"},
-                                                                {Type::QuadGeom, "QuadGeom"},
-                                                                {Type::TriangleGeom, "TriangleGeom"},
-                                                                {Type::INodeGeometry3D, "INodeGeometry3D"},
-                                                                {Type::HexahedralGeom, "HexahedralGeom"},
-                                                                {Type::TetrahedralGeom, "TetrahedralGeom"},
-                                                                {Type::INeighborList, "INeighborList"},
-                                                                {Type::NeighborList, "NeighborList"},
-                                                                {Type::StringArray, "StringArray"},
-                                                                {Type::Unknown, "Unknown"},
-                                                                {Type::Any, "Any"}};
+  static const std::map<Type, std::string> kTypeToStringMap = {{Type::DataObject, "DataObject"},
+                                                               {Type::DynamicListArray, "DynamicListArray"},
+                                                               {Type::ScalarData, "ScalarData"},
+                                                               {Type::BaseGroup, "BaseGroup"},
+                                                               {Type::AbstractMontage, "AbstractMontage"},
+                                                               {Type::DataGroup, "DataGroup"},
+                                                               {Type::AttributeMatrix, "AttributeMatrix"},
+                                                               {Type::IDataArray, "IDataArray"},
+                                                               {Type::DataArray, "DataArray"},
+                                                               {Type::IGeometry, "IGeometry"},
+                                                               {Type::IGridGeometry, "IGridGeometry"},
+                                                               {Type::RectGridGeom, "RectGridGeom"},
+                                                               {Type::ImageGeom, "ImageGeom"},
+                                                               {Type::INodeGeometry0D, "INodeGeometry0D"},
+                                                               {Type::VertexGeom, "VertexGeom"},
+                                                               {Type::INodeGeometry1D, "INodeGeometry1D"},
+                                                               {Type::EdgeGeom, "EdgeGeom"},
+                                                               {Type::INodeGeometry2D, "INodeGeometry2D"},
+                                                               {Type::QuadGeom, "QuadGeom"},
+                                                               {Type::TriangleGeom, "TriangleGeom"},
+                                                               {Type::INodeGeometry3D, "INodeGeometry3D"},
+                                                               {Type::HexahedralGeom, "HexahedralGeom"},
+                                                               {Type::TetrahedralGeom, "TetrahedralGeom"},
+                                                               {Type::INeighborList, "INeighborList"},
+                                                               {Type::NeighborList, "NeighborList"},
+                                                               {Type::StringArray, "StringArray"},
+                                                               {Type::Unknown, "Unknown"},
+                                                               {Type::Any, "Any"}};
 
   std::set<std::string> stringValues;
   for(auto objType : dataObjectTypes)
   {
-    stringValues.insert(k_TypeToStringMap.at(objType));
+    stringValues.insert(kTypeToStringMap.at(objType));
   }
   return stringValues;
 }
@@ -327,13 +327,13 @@ std::vector<DataPath> DataObject::getDataPaths() const
   std::vector<DataPath> paths;
   for(const auto& parentId : m_ParentList)
   {
-    auto parent = getDataStructure()->getData(parentId);
-    if(parent == nullptr)
+    const auto* parentPtr = getDataStructure()->getData(parentId);
+    if(parentPtr == nullptr)
     {
       continue;
     }
 
-    auto parentPaths = parent->getDataPaths();
+    auto parentPaths = parentPtr->getDataPaths();
     for(auto& dataPath : parentPaths)
     {
       paths.push_back(dataPath.createChildPath(m_Name));

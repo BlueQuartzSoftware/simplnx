@@ -29,52 +29,52 @@ constexpr float64 k_FontFraction = 0.45;         // font size relative to band h
 // rescale to nm/pm.
 std::optional<int32> MetricExponent(IGeometry::LengthUnit unit)
 {
-  using LengthUnit = IGeometry::LengthUnit;
+  using LengthUnitType = IGeometry::LengthUnit;
   switch(unit)
   {
-  case LengthUnit::Yoctometer:
+  case LengthUnitType::Yoctometer:
     return -24;
-  case LengthUnit::Zeptometer:
+  case LengthUnitType::Zeptometer:
     return -21;
-  case LengthUnit::Attometer:
+  case LengthUnitType::Attometer:
     return -18;
-  case LengthUnit::Femtometer:
+  case LengthUnitType::Femtometer:
     return -15;
-  case LengthUnit::Picometer:
+  case LengthUnitType::Picometer:
     return -12;
-  case LengthUnit::Nanometer:
+  case LengthUnitType::Nanometer:
     return -9;
-  case LengthUnit::Micrometer:
+  case LengthUnitType::Micrometer:
     return -6;
-  case LengthUnit::Millimeter:
+  case LengthUnitType::Millimeter:
     return -3;
-  case LengthUnit::Centimeter:
+  case LengthUnitType::Centimeter:
     return -2;
-  case LengthUnit::Decimeter:
+  case LengthUnitType::Decimeter:
     return -1;
-  case LengthUnit::Meter:
+  case LengthUnitType::Meter:
     return 0;
-  case LengthUnit::Decameter:
+  case LengthUnitType::Decameter:
     return 1;
-  case LengthUnit::Hectometer:
+  case LengthUnitType::Hectometer:
     return 2;
-  case LengthUnit::Kilometer:
+  case LengthUnitType::Kilometer:
     return 3;
-  case LengthUnit::Megameter:
+  case LengthUnitType::Megameter:
     return 6;
-  case LengthUnit::Gigameter:
+  case LengthUnitType::Gigameter:
     return 9;
-  case LengthUnit::Terameter:
+  case LengthUnitType::Terameter:
     return 12;
-  case LengthUnit::Petameter:
+  case LengthUnitType::Petameter:
     return 15;
-  case LengthUnit::Exameter:
+  case LengthUnitType::Exameter:
     return 18;
-  case LengthUnit::Zettameter:
+  case LengthUnitType::Zettameter:
     return 21;
-  case LengthUnit::Yottameter:
+  case LengthUnitType::Yottameter:
     return 24;
-  case LengthUnit::Angstrom:
+  case LengthUnitType::Angstrom:
     return -10;
   default:
     return std::nullopt;
@@ -101,7 +101,7 @@ constexpr std::array<std::pair<int32, const char*>, 17> k_EngineeringPrefixes = 
                                                                                   {24, "Ym"}}};
 } // namespace
 
-namespace nx::core::ScaleBarRenderer
+namespace nx::core::scale_bar_renderer
 {
 //------------------------------------------------------------------------------
 float64 ComputeNiceBarLength(usize imageWidthPixels, float64 unitsPerPixel)
@@ -148,16 +148,16 @@ std::string FormatLengthLabel(float64 lengthInUnits, IGeometry::LengthUnit unit)
   engineeringExponent = std::clamp(engineeringExponent, -24, 24);
   const float64 mantissa = meters / std::pow(10.0, static_cast<float64>(engineeringExponent));
 
-  const char* symbol = "m";
+  const char* symbolPtr = "m";
   for(const auto& [exponent, prefixSymbol] : k_EngineeringPrefixes)
   {
     if(exponent == engineeringExponent)
     {
-      symbol = prefixSymbol;
+      symbolPtr = prefixSymbol;
       break;
     }
   }
-  return fmt::format("{:g} {}", mantissa, symbol);
+  return fmt::format("{:g} {}", mantissa, symbolPtr);
 }
 
 //------------------------------------------------------------------------------
@@ -218,4 +218,4 @@ std::vector<uint8> RenderScaleBarBandRgb(usize imageWidthPixels, usize imageHeig
   }
   return rgb;
 }
-} // namespace nx::core::ScaleBarRenderer
+} // namespace nx::core::scale_bar_renderer

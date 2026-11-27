@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 
-namespace nx::core::UnitTest
+namespace nx::core::unit_test
 {
 class PreferencesSentinel;
 
@@ -122,15 +122,15 @@ public:
   decltype(auto) execute(CallableT&& callable)
   {
     ExecutionStateGuard executionState(m_Scenario);
-    using ResultT = std::invoke_result_t<CallableT&&>;
-    if constexpr(std::is_void_v<ResultT>)
+    using ResultTType = std::invoke_result_t<CallableT&&>;
+    if constexpr(std::is_void_v<ResultTType>)
     {
       std::invoke(std::forward<CallableT>(callable));
       requireExpectedScenario();
     }
     else
     {
-      ResultT result = std::invoke(std::forward<CallableT>(callable));
+      ResultTType result = std::invoke(std::forward<CallableT>(callable));
       requireExpectedScenario();
       return result;
     }
@@ -188,4 +188,4 @@ private:
   AlgorithmTestScenario m_Scenario;
   std::unique_ptr<PreferencesSentinel> m_PreferencesSentinel;
 };
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test

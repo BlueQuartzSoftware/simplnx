@@ -47,29 +47,29 @@ class SIMPLNX_EXPORT ReadHDF5DatasetParameter : public ValueParameter
 public:
   struct SIMPLNX_EXPORT DatasetImportInfo
   {
-    std::string dataSetPath;
-    std::string componentDimensions;
-    std::string tupleDimensions;
+    std::string data_set_path;
+    std::string component_dimensions;
+    std::string tuple_dimensions;
 
-    static inline constexpr StringLiteral k_DatasetPath_Key = "dataset_path";
-    static inline constexpr StringLiteral k_ComponentDimensions_Key = "component_dimensions";
-    static inline constexpr StringLiteral k_TupleDimensions_Key = "tuple_dimensions";
+    static constexpr StringLiteralType k_DatasetPath_Key = "dataset_path";
+    static constexpr StringLiteralType k_ComponentDimensions_Key = "component_dimensions";
+    static constexpr StringLiteralType k_TupleDimensions_Key = "tuple_dimensions";
 
     static Result<DatasetImportInfo> ReadJson(const nlohmann::json& json);
 
     nlohmann::json writeJson() const;
   };
 
-  using InputFile = std::string;
+  using InputFileType = std::string;
   struct ValueType
   {
     std::optional<DataPath> parent;
-    InputFile inputFile;
+    InputFileType input_file;
     std::list<DatasetImportInfo> datasets;
   };
 
   ReadHDF5DatasetParameter() = delete;
-  ReadHDF5DatasetParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  ReadHDF5DatasetParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~ReadHDF5DatasetParameter() override = default;
 
   ReadHDF5DatasetParameter(const ReadHDF5DatasetParameter&) = delete;
@@ -88,13 +88,13 @@ public:
    * @brief Returns a list of accpeted input types.
    * @return AcceptedTypes
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief Creates a copy of the parameter.
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the user defined default value.
@@ -147,16 +147,16 @@ private:
   ValueType m_DefaultValue = {};
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT ImportHDF5DatasetFilterParameterConverter
 {
   using ParameterType = ReadHDF5DatasetParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3);
+  static Result<ValueType> Convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::ReadHDF5DatasetParameter, "32e83e13-ee4c-494e-8bab-4e699df74a5a");

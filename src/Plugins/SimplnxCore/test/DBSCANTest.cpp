@@ -54,17 +54,17 @@ const std::string k_VariedArrayName = "varied";
 const DataPath k_VariedArrayPath = DataPath({k_VariedArrayName});
 
 const DataPath k_AnisoGeomPath = DataPath({"AnisoGeometry"});
-const DataPath k_AnsioClusterArrayPath = k_AnisoGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath("Aniso Cluster Ids");
+const DataPath k_AnsioClusterArrayPath = k_AnisoGeomPath.createChildPath(constants::k_VertexDataWithSpaces).createChildPath("Aniso Cluster Ids");
 const DataPath k_BlobsGeomPath = DataPath({"BlobsGeometry"});
-const DataPath k_BlobsClusterArrayPath = k_BlobsGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath("Blobs Cluster Ids");
+const DataPath k_BlobsClusterArrayPath = k_BlobsGeomPath.createChildPath(constants::k_VertexDataWithSpaces).createChildPath("Blobs Cluster Ids");
 const DataPath k_CirclesGeomPath = DataPath({"CirclesGeometry"});
-const DataPath k_CirclesClusterArrayPath = k_CirclesGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath("Circles Cluster Ids");
+const DataPath k_CirclesClusterArrayPath = k_CirclesGeomPath.createChildPath(constants::k_VertexDataWithSpaces).createChildPath("Circles Cluster Ids");
 const DataPath k_MoonsGeomPath = DataPath({"MoonsGeometry"});
-const DataPath k_MoonsClusterArrayPath = k_MoonsGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath("Moons Cluster Ids");
+const DataPath k_MoonsClusterArrayPath = k_MoonsGeomPath.createChildPath(constants::k_VertexDataWithSpaces).createChildPath("Moons Cluster Ids");
 const DataPath k_NoStructureGeomPath = DataPath({"NoStructureGeometry"});
-const DataPath k_NoStructureClusterArrayPath = k_NoStructureGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath("No Structure Cluster Ids");
+const DataPath k_NoStructureClusterArrayPath = k_NoStructureGeomPath.createChildPath(constants::k_VertexDataWithSpaces).createChildPath("No Structure Cluster Ids");
 const DataPath k_VariedGeomPath = DataPath({"VariedGeometry"});
-const DataPath k_VariedClusterArrayPath = k_VariedGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath("Varied Cluster Ids");
+const DataPath k_VariedClusterArrayPath = k_VariedGeomPath.createChildPath(constants::k_VertexDataWithSpaces).createChildPath("Varied Cluster Ids");
 
 const std::string k_IdsPostFix = " Ids";
 const std::string k_AMPostFix = " AM";
@@ -73,8 +73,8 @@ const fs::path k_2DTestFile(fmt::format("{}/dbscan_test/7_0_2d_dbscan_test_data.
 
 void CheckClusterInvariants(const DataStructure& dataStructure, const DataPath& idsPath, const DataPath& amPath)
 {
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(idsPath));
-  const auto& ids = dataStructure.getDataRefAs<Int32Array>(idsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(idsPath));
+  const auto& ids = dataStructure.getDataRefAs<Int32ArrayType>(idsPath);
 
   // Invariant 1: all IDs non-negative (0 = noise, >=1 = cluster label)
   for(int32 id : ids)
@@ -102,8 +102,8 @@ void CheckClusterInvariants(const DataStructure& dataStructure, const DataPath& 
 
 void LDFTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minPtsVal, const DataPath& exemplarClusterIds)
 {
-  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "dbscan_test.tar.gz", "dbscan_test");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(k_2DTestFile);
+  const unit_test::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "dbscan_test.tar.gz", "dbscan_test");
+  DataStructure dataStructure = unit_test::LoadDataStructure(k_2DTestFile);
 
   const std::string generatedIdsName = targetPath.getTargetName() + k_IdsPostFix;
   const auto generatedIdsPath = DataPath{{generatedIdsName}};
@@ -123,7 +123,7 @@ void LDFTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minPtsV
     args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(generatedAMPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -131,25 +131,25 @@ void LDFTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minPtsV
 
   // The optional output supports manual inspection.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_LDF_2d_{}_test.dream3d", unit_test::k_BinaryTestOutputDir, targetPath.getTargetName())));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_LDF_2d_{}_test.dream3d", unit_test::k_BinaryTestOutputDir, targetPath.getTargetName())));
 #endif
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(generatedIdsPath));
-  const auto& generatedIds = dataStructure.getDataRefAs<Int32Array>(generatedIdsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(generatedIdsPath));
+  const auto& generatedIds = dataStructure.getDataRefAs<Int32ArrayType>(generatedIdsPath);
   const int32 maxVal = *std::max_element(generatedIds.begin(), generatedIds.end()) + 1;
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(generatedAMPath));
   REQUIRE(maxVal == dataStructure.getDataRefAs<AttributeMatrix>(generatedAMPath).getNumberOfTuples());
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
-  UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<Int32Array>(generatedIdsPath), dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(exemplarClusterIds));
+  unit_test::CompareDataArrays<int32>(dataStructure.getDataRefAs<Int32ArrayType>(generatedIdsPath), dataStructure.getDataRefAs<Int32ArrayType>(exemplarClusterIds));
 
   ::CheckClusterInvariants(dataStructure, generatedIdsPath, generatedAMPath);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
-std::vector<usize> BinPoints(const Int32Array& dataArray)
+std::vector<usize> BinPoints(const Int32ArrayType& dataArray)
 {
   const int32 maxVal = *std::max_element(dataArray.begin(), dataArray.end());
   std::vector<usize> bins(maxVal + 1, 0);
@@ -166,8 +166,8 @@ void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minP
 {
   REQUIRE((randomType == to_underlying(DBSCAN::ParseOrder::Random) || randomType == to_underlying(DBSCAN::ParseOrder::SeededRandom)));
 
-  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "dbscan_test.tar.gz", "dbscan_test");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(k_2DTestFile);
+  const unit_test::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "dbscan_test.tar.gz", "dbscan_test");
+  DataStructure dataStructure = unit_test::LoadDataStructure(k_2DTestFile);
 
   const std::string generatedIdsName = targetPath.getTargetName() + k_IdsPostFix;
   const auto generatedIdsPath = DataPath{{generatedIdsName}};
@@ -191,7 +191,7 @@ void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minP
     args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(generatedAMPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -199,13 +199,13 @@ void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minP
 
   // The optional output supports manual inspection.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_Random_2d_{}_test.dream3d", unit_test::k_BinaryTestOutputDir, targetPath.getTargetName())));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_Random_2d_{}_test.dream3d", unit_test::k_BinaryTestOutputDir, targetPath.getTargetName())));
 #endif
 
   // ParseOrder::Random draws a time-based seed inside the filter, so the shuffle differs on every
   // run. Report the seed the run actually used; without it a failure below is not reproducible.
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt64Array>(DataPath{{"seed_array"}}));
-  const uint64 usedSeed = dataStructure.getDataRefAs<UInt64Array>(DataPath{{"seed_array"}})[0];
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt64ArrayType>(DataPath{{"seed_array"}}));
+  const uint64 usedSeed = dataStructure.getDataRefAs<UInt64ArrayType>(DataPath{{"seed_array"}})[0];
   INFO(fmt::format("Parse order {} ran with seed {}", randomType, usedSeed));
   if(randomType == to_underlying(DBSCAN::ParseOrder::SeededRandom))
   {
@@ -213,8 +213,8 @@ void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minP
     REQUIRE(usedSeed == seed);
   }
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(generatedIdsPath));
-  const auto& generatedIds = dataStructure.getDataRefAs<Int32Array>(generatedIdsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(generatedIdsPath));
+  const auto& generatedIds = dataStructure.getDataRefAs<Int32ArrayType>(generatedIdsPath);
   std::vector<usize> generatedBins = ::BinPoints(generatedIds);
   REQUIRE_FALSE(generatedBins.empty());
 
@@ -226,8 +226,8 @@ void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minP
   // may differ from the exemplar across runs. Only structural invariants are checked for that case.
   if(randomType == to_underlying(DBSCAN::ParseOrder::SeededRandom))
   {
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
-    const auto& exemplarIds = dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(exemplarClusterIds));
+    const auto& exemplarIds = dataStructure.getDataRefAs<Int32ArrayType>(exemplarClusterIds);
     std::vector<usize> exemplarBins = ::BinPoints(exemplarIds);
     REQUIRE_FALSE(exemplarBins.empty());
 
@@ -259,7 +259,7 @@ void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minP
 
   ::CheckClusterInvariants(dataStructure, generatedIdsPath, generatedAMPath);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 /**
@@ -294,7 +294,7 @@ public:
  * its managers in name order, and "HDF5" sorts before the out-of-core manager
  * "HDF5-OOC", so these providers answer in both in-core and out-of-core builds.
  */
-class DBSCANShapeGuardHDF5Manager : public HDF5::DataIOManager
+class DBSCANShapeGuardHDF5Manager : public hdf5::DataIOManager
 {
 public:
   static constexpr int32 k_ProviderReachedCode = -54199;
@@ -304,7 +304,7 @@ public:
     return true;
   }
 
-  Result<std::unique_ptr<IExternalSort>> createExternalSort(const ExternalSortConfig&) const override
+  Result<std::unique_ptr<IExternalSort>> createExternalSort(const ExternalSortConfig& /*config*/) const override
   {
     return MakeErrorResult<std::unique_ptr<IExternalSort>>(k_ProviderReachedCode, "DBSCAN shape-guard test: execution reached external-sort creation.");
   }
@@ -314,7 +314,7 @@ public:
     return true;
   }
 
-  Result<std::unique_ptr<ITemporaryRecordStore>> createTemporaryRecordStore(const TemporaryRecordStoreConfig&) const override
+  Result<std::unique_ptr<ITemporaryRecordStore>> createTemporaryRecordStore(const TemporaryRecordStoreConfig& /*config*/) const override
   {
     return MakeErrorResult<std::unique_ptr<ITemporaryRecordStore>>(k_ProviderReachedCode, "DBSCAN shape-guard test: execution reached temporary record-store creation.");
   }
@@ -343,7 +343,7 @@ public:
     // Registering under a new name would add a manager that nothing can remove.
     if(m_Original != nullptr)
     {
-      m_Replaced = m_Collection.addIOManager(std::move(replacement)).valid();
+      m_Replaced = m_Collection.addIOManager(replacement).valid();
     }
   }
 
@@ -395,30 +395,30 @@ Result<> RunDirectOutOfCoreScanline(usize pointComponents, std::optional<std::pa
   {
     pointStore->setValue(index, static_cast<float32>(index) * 0.25F);
   }
-  auto* points = Float32Array::Create(dataStructure, pointsPath.getTargetName(), pointStore);
-  REQUIRE(points != nullptr);
+  auto* pointsPtr = Float32ArrayType::Create(dataStructure, pointsPath.getTargetName(), pointStore);
+  REQUIRE(pointsPtr != nullptr);
   // The external implementation runs only for out-of-core arrays.
-  REQUIRE(IsOutOfCore(*points));
-  auto* ids = Int32Array::CreateWithStore<DataStore<int32>>(dataStructure, idsPath.getTargetName(), ShapeType{k_PointTuples}, ShapeType{1});
-  REQUIRE(ids != nullptr);
+  REQUIRE(IsOutOfCore(*pointsPtr));
+  auto* idsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, idsPath.getTargetName(), ShapeType{k_PointTuples}, ShapeType{1});
+  REQUIRE(idsPtr != nullptr);
   if(maskShape.has_value())
   {
-    auto* mask = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, maskPath.getTargetName(), ShapeType{maskShape->first}, ShapeType{maskShape->second});
-    REQUIRE(mask != nullptr);
-    mask->fill(1);
+    auto* maskPtr = UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, maskPath.getTargetName(), ShapeType{maskShape->first}, ShapeType{maskShape->second});
+    REQUIRE(maskPtr != nullptr);
+    maskPtr->fill(1);
   }
 
   DBSCANInputValues inputValues;
-  inputValues.ClusteringArrayPath = pointsPath;
-  inputValues.MaskArrayPath = maskPath;
-  inputValues.UseMask = maskShape.has_value();
-  inputValues.FeatureIdsArrayPath = idsPath;
-  inputValues.Epsilon = 1.0F;
-  inputValues.MinPoints = 2;
-  inputValues.DistanceMetric = ClusterUtilities::DistanceMetric::Euclidean;
-  inputValues.FeatureAM = DataPath({"Features"});
-  inputValues.ParseOrder = to_underlying(DBSCAN::ParseOrder::LowDensityFirst);
-  inputValues.Seed = 5489;
+  inputValues.clustering_array_path = pointsPath;
+  inputValues.mask_array_path = maskPath;
+  inputValues.use_mask = maskShape.has_value();
+  inputValues.feature_ids_array_path = idsPath;
+  inputValues.epsilon = 1.0F;
+  inputValues.min_points = 2;
+  inputValues.distance_metric = cluster_utilities::DistanceMetric::Euclidean;
+  inputValues.feature_am = DataPath({"Features"});
+  inputValues.parse_order = to_underlying(DBSCAN::ParseOrder::LowDensityFirst);
+  inputValues.seed = 5489;
 
   const std::atomic_bool shouldCancel = false;
   DBSCANScanline algorithm(dataStructure, IFilter::MessageHandler{}, shouldCancel, &inputValues);
@@ -428,9 +428,9 @@ Result<> RunDirectOutOfCoreScanline(usize pointComponents, std::optional<std::pa
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Aniso", "[SimplnxCore][DBSCAN]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   float32 epsVal = 0.15f;
   int32 minPtsVal = 4;
   // The exemplars were generated with LDF
@@ -441,9 +441,9 @@ TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Aniso", "[SimplnxCore][DBSCAN]")
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Blobs", "[SimplnxCore][DBSCAN]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   float32 epsVal = 0.3f;
   int32 minPtsVal = 3;
   // The exemplars were generated with LDF
@@ -454,9 +454,9 @@ TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Blobs", "[SimplnxCore][DBSCAN]")
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Noisy Circles", "[SimplnxCore][DBSCAN]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   float32 epsVal = 0.3f;
   int32 minPtsVal = 3;
   // The exemplars were generated with LDF
@@ -467,9 +467,9 @@ TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Noisy Circles", "[SimplnxCore][DBSCAN]"
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Noisy Moons", "[SimplnxCore][DBSCAN]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   float32 epsVal = 0.3f;
   int32 minPtsVal = 3;
   // The exemplars were generated with LDF
@@ -480,9 +480,9 @@ TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Noisy Moons", "[SimplnxCore][DBSCAN]")
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: No Structure", "[SimplnxCore][DBSCAN]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   float32 epsVal = 0.3f;
   int32 minPtsVal = 3;
   // The exemplars were generated with LDF
@@ -493,9 +493,9 @@ TEST_CASE("SimplnxCore::DBSCAN: 2D Test: No Structure", "[SimplnxCore][DBSCAN]")
 
 TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Varied", "[SimplnxCore][DBSCAN]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   float32 epsVal = 0.18f;
   int32 minPtsVal = 3;
   // The exemplars were generated with LDF
@@ -506,12 +506,12 @@ TEST_CASE("SimplnxCore::DBSCAN: 2D Test: Varied", "[SimplnxCore][DBSCAN]")
 
 TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCAN]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "dbscan_test.tar.gz", "dbscan_test");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/dbscan_test/7_0_3d_dbscan_test_data.dream3d", unit_test::k_TestFilesDir)));
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "dbscan_test.tar.gz", "dbscan_test");
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/dbscan_test/7_0_3d_dbscan_test_data.dream3d", unit_test::k_TestFilesDir)));
 
   const auto vertexGeom = DataPath{{"Reduced Vertex Geom"}};
   const DataPath targetPath = vertexGeom.createChildPath("Shared Vertex List");
@@ -535,7 +535,7 @@ TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCA
     args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(generatedAMPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -543,27 +543,27 @@ TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCA
 
   // The optional output supports manual inspection.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_LDF_3d_test.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_LDF_3d_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(generatedIdsPath));
-  const auto& generatedIds = dataStructure.getDataRefAs<Int32Array>(generatedIdsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(generatedIdsPath));
+  const auto& generatedIds = dataStructure.getDataRefAs<Int32ArrayType>(generatedIdsPath);
   int32 maxVal = *std::max_element(generatedIds.begin(), generatedIds.end()) + 1;
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(generatedAMPath));
   REQUIRE(maxVal == dataStructure.getDataRefAs<AttributeMatrix>(generatedAMPath).getNumberOfTuples());
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
-  UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<Int32Array>(generatedIdsPath), dataStructure.getDataRefAs<Int32Array>(exemplarClusterIds));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(exemplarClusterIds));
+  unit_test::CompareDataArrays<int32>(dataStructure.getDataRefAs<Int32ArrayType>(generatedIdsPath), dataStructure.getDataRefAs<Int32ArrayType>(exemplarClusterIds));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F1 - No Clusters Warning", "[SimplnxCore][DBSCAN]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Class 1 oracle: 4 points at unit-square corners, epsilon=0.1, minPoints=5.
   // Cell side = 0.1/sqrt(2) ~= 0.0707 -> each point occupies its own 1-point cell -> no core grids -> warning -85640.
@@ -574,9 +574,9 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F1 - No Clusters Warning", "[
   const DataPath clusterIdsPath{{"cluster_ids"}};
   const DataPath featureAMPath{{"cluster_am"}};
 
-  auto* pointsArr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "points", {4}, {2});
-  REQUIRE(pointsArr != nullptr);
-  auto& pointsRef = pointsArr->getDataStoreRef();
+  auto* pointsArrPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "points", {4}, {2});
+  REQUIRE(pointsArrPtr != nullptr);
+  auto& pointsRef = pointsArrPtr->getDataStoreRef();
   pointsRef[0] = 0.0f;
   pointsRef[1] = 0.0f; // P0 = (0, 0)
   pointsRef[2] = 1.0f;
@@ -599,7 +599,7 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F1 - No Clusters Warning", "[
     args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(featureAMPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     // No core grids -> warning, not error
@@ -608,8 +608,8 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F1 - No Clusters Warning", "[
     REQUIRE(executeResult.result.warnings()[0].code == -85640);
   }
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(clusterIdsPath));
-  const auto& clusterIds = dataStructure.getDataRefAs<Int32Array>(clusterIdsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(clusterIdsPath));
+  const auto& clusterIds = dataStructure.getDataRefAs<Int32ArrayType>(clusterIdsPath);
   for(int32 id : clusterIds)
   {
     REQUIRE(id == 0);
@@ -619,14 +619,14 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F1 - No Clusters Warning", "[
 
   ::CheckClusterInvariants(dataStructure, clusterIdsPath, featureAMPath);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F2 - Mask Exclusion", "[SimplnxCore][DBSCAN]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Class 1 oracle: 3 points, P2 masked out.
   // epsilon=1.0, minPoints=2 -> cell side = 1.0/sqrt(2) ~= 0.707.
@@ -640,9 +640,9 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F2 - Mask Exclusion", "[Simpl
   const DataPath clusterIdsPath{{"cluster_ids"}};
   const DataPath featureAMPath{{"cluster_am"}};
 
-  auto* pointsArr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "points", {3}, {2});
-  REQUIRE(pointsArr != nullptr);
-  auto& pointsRef = pointsArr->getDataStoreRef();
+  auto* pointsArrPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "points", {3}, {2});
+  REQUIRE(pointsArrPtr != nullptr);
+  auto& pointsRef = pointsArrPtr->getDataStoreRef();
   pointsRef[0] = 0.0f;
   pointsRef[1] = 0.0f; // P0 = (0.0, 0.0) included
   pointsRef[2] = 0.1f;
@@ -650,9 +650,9 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F2 - Mask Exclusion", "[Simpl
   pointsRef[4] = 0.0f;
   pointsRef[5] = 0.1f; // P2 = (0.0, 0.1) masked out
 
-  auto* maskArr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "mask", {3}, {1});
-  REQUIRE(maskArr != nullptr);
-  auto& maskRef = maskArr->getDataStoreRef();
+  auto* maskArrPtr = UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, "mask", {3}, {1});
+  REQUIRE(maskArrPtr != nullptr);
+  auto& maskRef = maskArrPtr->getDataStoreRef();
   maskRef[0] = 1; // P0 included
   maskRef[1] = 1; // P1 included
   maskRef[2] = 0; // P2 excluded
@@ -671,14 +671,14 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F2 - Mask Exclusion", "[Simpl
     args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(featureAMPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(clusterIdsPath));
-  const auto& clusterIds = dataStructure.getDataRefAs<Int32Array>(clusterIdsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(clusterIdsPath));
+  const auto& clusterIds = dataStructure.getDataRefAs<Int32ArrayType>(clusterIdsPath);
   REQUIRE(clusterIds[0] == 1); // P0 -> Cluster 1
   REQUIRE(clusterIds[1] == 1); // P1 -> Cluster 1
   REQUIRE(clusterIds[2] == 0); // P2 masked -> noise
@@ -687,14 +687,14 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F2 - Mask Exclusion", "[Simpl
 
   ::CheckClusterInvariants(dataStructure, clusterIdsPath, featureAMPath);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F3 - All Points Masked", "[SimplnxCore][DBSCAN]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   // Class 1 oracle: same 3 points as F2, but every point is masked off.
   // With no active point there are no grid bounds to derive, so no grid cell can be occupied and no
@@ -708,9 +708,9 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F3 - All Points Masked", "[Si
   const DataPath clusterIdsPath{{"cluster_ids"}};
   const DataPath featureAMPath{{"cluster_am"}};
 
-  auto* pointsArr = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "points", {3}, {2});
-  REQUIRE(pointsArr != nullptr);
-  auto& pointsRef = pointsArr->getDataStoreRef();
+  auto* pointsArrPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "points", {3}, {2});
+  REQUIRE(pointsArrPtr != nullptr);
+  auto& pointsRef = pointsArrPtr->getDataStoreRef();
   pointsRef[0] = 0.0f;
   pointsRef[1] = 0.0f; // P0 = (0.0, 0.0)
   pointsRef[2] = 0.1f;
@@ -718,9 +718,9 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F3 - All Points Masked", "[Si
   pointsRef[4] = 0.0f;
   pointsRef[5] = 0.1f; // P2 = (0.0, 0.1)
 
-  auto* maskArr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "mask", {3}, {1});
-  REQUIRE(maskArr != nullptr);
-  auto& maskRef = maskArr->getDataStoreRef();
+  auto* maskArrPtr = UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, "mask", {3}, {1});
+  REQUIRE(maskArrPtr != nullptr);
+  auto& maskRef = maskArrPtr->getDataStoreRef();
   maskRef[0] = 0;
   maskRef[1] = 0;
   maskRef[2] = 0;
@@ -739,7 +739,7 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F3 - All Points Masked", "[Si
     args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(featureAMPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     // Nothing to cluster -> warning, not error and not a crash
@@ -748,8 +748,8 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F3 - All Points Masked", "[Si
     REQUIRE(executeResult.result.warnings()[0].code == -85640);
   }
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(clusterIdsPath));
-  const auto& clusterIds = dataStructure.getDataRefAs<Int32Array>(clusterIdsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(clusterIdsPath));
+  const auto& clusterIds = dataStructure.getDataRefAs<Int32ArrayType>(clusterIdsPath);
   for(int32 id : clusterIds)
   {
     REQUIRE(id == 0);
@@ -759,14 +759,14 @@ TEST_CASE("SimplnxCore::DBSCAN: Analytical Fixture F3 - All Points Masked", "[Si
 
   ::CheckClusterInvariants(dataStructure, clusterIdsPath, featureAMPath);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: genuine HDF5 65536-batch tail oracle", "[SimplnxCore][DBSCAN][.OocStoreContract]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
   constexpr usize k_BatchTuples = 65536;
   constexpr usize k_PointTuples = k_BatchTuples + 2;
   DataStructure dataStructure;
@@ -774,17 +774,17 @@ TEST_CASE("SimplnxCore::DBSCAN: genuine HDF5 65536-batch tail oracle", "[Simplnx
   const DataPath maskPath({"Boundary Mask"});
   const DataPath idsPath({"Boundary ClusterIds"});
   const DataPath featurePath({"Boundary Clusters"});
-  auto pointStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, pointsPath, {k_PointTuples}, {2});
-  auto maskStore = DataStoreUtilities::CreateDataStore<uint8>(dataStructure, maskPath, {k_PointTuples}, {1});
-  auto* points = Float32Array::Create(dataStructure, pointsPath.getTargetName(), pointStore);
-  auto* mask = UInt8Array::Create(dataStructure, maskPath.getTargetName(), maskStore);
-  REQUIRE(points != nullptr);
-  REQUIRE(mask != nullptr);
-  points->fill(100.0F);
-  mask->fill(0);
-  (*points)[0] = 0.0F;
-  (*points)[1] = 0.0F;
-  (*mask)[0] = 1;
+  auto pointStore = data_store_utilities::CreateDataStore<float32>(dataStructure, pointsPath, {k_PointTuples}, {2});
+  auto maskStore = data_store_utilities::CreateDataStore<uint8>(dataStructure, maskPath, {k_PointTuples}, {1});
+  auto* pointsPtr = Float32ArrayType::Create(dataStructure, pointsPath.getTargetName(), pointStore);
+  auto* maskPtr = UInt8ArrayType::Create(dataStructure, maskPath.getTargetName(), maskStore);
+  REQUIRE(pointsPtr != nullptr);
+  REQUIRE(maskPtr != nullptr);
+  pointsPtr->fill(100.0F);
+  maskPtr->fill(0);
+  (*pointsPtr)[0] = 0.0F;
+  (*pointsPtr)[1] = 0.0F;
+  (*maskPtr)[0] = 1;
 
   // Four nearby points form two adjacent core grids with epsilon=1 and
   // minPoints=2. They form one cluster; the distant origin point is noise.
@@ -792,9 +792,9 @@ TEST_CASE("SimplnxCore::DBSCAN: genuine HDF5 65536-batch tail oracle", "[Simplnx
   for(usize witnessIdx = 0; witnessIdx < xValues.size(); witnessIdx++)
   {
     const usize pointIdx = k_BatchTuples - 2 + witnessIdx;
-    (*points)[pointIdx * 2] = xValues[witnessIdx];
-    (*points)[pointIdx * 2 + 1] = 10.0F;
-    (*mask)[pointIdx] = 1;
+    (*pointsPtr)[pointIdx * 2] = xValues[witnessIdx];
+    (*pointsPtr)[pointIdx * 2 + 1] = 10.0F;
+    (*maskPtr)[pointIdx] = 1;
   }
   REQUIRE(pointStore->getDataFormat() == "HDF5-OOC");
   REQUIRE(maskStore->getDataFormat() == "HDF5-OOC");
@@ -813,12 +813,12 @@ TEST_CASE("SimplnxCore::DBSCAN: genuine HDF5 65536-batch tail oracle", "[Simplnx
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   const auto after = GetAlgorithmPathExecutionCounts();
-  REQUIRE(after.OutOfCoreOnOutOfCoreStore == before.OutOfCoreOnOutOfCoreStore + 1);
-  REQUIRE(after.InCore == before.InCore);
+  REQUIRE(after.out_of_core_on_out_of_core_store == before.out_of_core_on_out_of_core_store + 1);
+  REQUIRE(after.in_core == before.in_core);
   REQUIRE(executeResult.result.warnings().empty());
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(idsPath));
-  const auto& ids = dataStructure.getDataRefAs<Int32Array>(idsPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(idsPath));
+  const auto& ids = dataStructure.getDataRefAs<Int32ArrayType>(idsPath);
   REQUIRE(ids.getDataStoreRef().getDataFormat() == "HDF5-OOC");
   std::vector<int32> actual(k_PointTuples);
   auto readResult = ids.getDataStoreRef().copyIntoBuffer(0, nonstd::span<int32>(actual.data(), actual.size()));
@@ -830,15 +830,15 @@ TEST_CASE("SimplnxCore::DBSCAN: genuine HDF5 65536-batch tail oracle", "[Simplnx
   }
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(featurePath));
   REQUIRE(dataStructure.getDataRefAs<AttributeMatrix>(featurePath).getNumberOfTuples() == 2);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::DBSCANFilter: No-mask preflight does not create a cell-sized temporary mask", "[SimplnxCore][DBSCANFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
-  auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Points", ShapeType{4}, ShapeType{2});
-  REQUIRE(points != nullptr);
+  auto* pointsPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "Points", ShapeType{4}, ShapeType{2});
+  REQUIRE(pointsPtr != nullptr);
 
   DBSCANFilter filter;
   Arguments args = filter.getDefaultArguments();
@@ -851,18 +851,18 @@ TEST_CASE("SimplnxCore::DBSCANFilter: No-mask preflight does not create a cell-s
   args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"Features"})));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  CHECK(preflightResult.outputActions.value().actions.size() == 2);
-  CHECK(preflightResult.outputActions.value().deferredActions.empty());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  CHECK(preflightResult.output_actions.value().actions.size() == 2);
+  CHECK(preflightResult.output_actions.value().deferred_actions.empty());
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: Reject multi-component mask in preflight", "[SimplnxCore][DBSCAN][ComponentShape]")
 {
   DataStructure dataStructure;
-  auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Points", ShapeType{4}, ShapeType{2});
-  REQUIRE(points != nullptr);
-  auto* mask = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", ShapeType{4}, ShapeType{2});
-  REQUIRE(mask != nullptr);
+  auto* pointsPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "Points", ShapeType{4}, ShapeType{2});
+  REQUIRE(pointsPtr != nullptr);
+  auto* maskPtr = UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", ShapeType{4}, ShapeType{2});
+  REQUIRE(maskPtr != nullptr);
 
   DBSCANFilter filter;
   Arguments args = filter.getDefaultArguments();
@@ -871,22 +871,22 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject multi-component mask in preflight", "[Sim
   args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"Features"})));
   args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(false));
   auto unmaskedResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(unmaskedResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(unmaskedResult.output_actions);
 
   args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(true));
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -208);
+  REQUIRE(preflightResult.output_actions.invalid());
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -208);
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: Reject short mask in preflight", "[SimplnxCore][DBSCAN][ComponentShape]")
 {
   DataStructure dataStructure;
-  auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Points", ShapeType{4}, ShapeType{2});
-  REQUIRE(points != nullptr);
-  auto* mask = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", ShapeType{3}, ShapeType{1});
-  REQUIRE(mask != nullptr);
+  auto* pointsPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "Points", ShapeType{4}, ShapeType{2});
+  REQUIRE(pointsPtr != nullptr);
+  auto* maskPtr = UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, "Mask", ShapeType{3}, ShapeType{1});
+  REQUIRE(maskPtr != nullptr);
 
   DBSCANFilter filter;
   Arguments args = filter.getDefaultArguments();
@@ -895,14 +895,14 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject short mask in preflight", "[SimplnxCore][
   args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"Features"})));
   args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(false));
   auto unmaskedResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(unmaskedResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(unmaskedResult.output_actions);
 
   args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(true));
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -7587);
-  const auto& message = preflightResult.outputActions.errors()[0].message;
+  REQUIRE(preflightResult.output_actions.invalid());
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -7587);
+  const auto& message = preflightResult.output_actions.errors()[0].message;
   REQUIRE_THAT(message, Catch::Matchers::Contains("DataArray 'Points' has 4 tuples"));
   REQUIRE_THAT(message, Catch::Matchers::Contains("DataArray 'Mask' has 3 tuples"));
 }
@@ -910,10 +910,10 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject short mask in preflight", "[SimplnxCore][
 TEST_CASE("SimplnxCore::DBSCAN: Reject short StringArray mask in preflight", "[SimplnxCore][DBSCAN][ComponentShape]")
 {
   DataStructure dataStructure;
-  auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Points", ShapeType{4}, ShapeType{2});
-  REQUIRE(points != nullptr);
-  auto* mask = StringArray::CreateWithValues(dataStructure, "Mask", ShapeType{3}, {"1", "1", "1"});
-  REQUIRE(mask != nullptr);
+  auto* pointsPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "Points", ShapeType{4}, ShapeType{2});
+  REQUIRE(pointsPtr != nullptr);
+  auto* maskPtr = StringArray::CreateWithValues(dataStructure, "Mask", ShapeType{3}, {"1", "1", "1"});
+  REQUIRE(maskPtr != nullptr);
 
   DBSCANFilter filter;
   Arguments args = filter.getDefaultArguments();
@@ -922,17 +922,17 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject short StringArray mask in preflight", "[S
   args.insertOrAssign(DBSCANFilter::k_FeatureAMPath_Key, std::make_any<DataPath>(DataPath({"Features"})));
   args.insertOrAssign(DBSCANFilter::k_UseMask_Key, std::make_any<bool>(true));
   auto preflightResult = filter.preflight(dataStructure, args);
-  REQUIRE(preflightResult.outputActions.invalid());
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -7587);
-  const auto& message = preflightResult.outputActions.errors()[0].message;
+  REQUIRE(preflightResult.output_actions.invalid());
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -7587);
+  const auto& message = preflightResult.output_actions.errors()[0].message;
   REQUIRE_THAT(message, Catch::Matchers::Contains("DataArray 'Points' has 4 tuples"));
   REQUIRE_THAT(message, Catch::Matchers::Contains("DataArray 'Mask' has 3 tuples"));
 }
 
 TEST_CASE("SimplnxCore::DBSCANScanline: Direct out-of-core call rejects invalid input shapes", "[SimplnxCore][DBSCAN][ComponentShape]")
 {
-  DataIOCollection& collection = DataStoreUtilities::GetIOCollection();
+  DataIOCollection& collection = data_store_utilities::GetIOCollection();
   const std::shared_ptr<IDataIOManager> builtInHDF5Manager = collection.getManager("HDF5");
   REQUIRE(builtInHDF5Manager != nullptr);
   const bool hadExternalSort = collection.hasExternalSortCapability();
@@ -997,8 +997,8 @@ TEST_CASE("SimplnxCore::DBSCANScanline: Direct out-of-core call rejects invalid 
 TEST_CASE("SimplnxCore::DBSCANFilter: SIMPL Backwards Compatibility", "[SimplnxCore][DBSCANFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -1011,22 +1011,22 @@ TEST_CASE("SimplnxCore::DBSCANFilter: SIMPL Backwards Compatibility", "[SimplnxC
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<DBSCANFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<DBSCANFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       // Successful pipeline loading verifies the AMPathBuilderFilterParameterConverter value.
       CHECK(args.value<float32>(DBSCANFilter::k_Epsilon_Key) == 2.5f);
       CHECK(args.value<int32>(DBSCANFilter::k_MinPoints_Key) == 5);
@@ -1042,9 +1042,9 @@ TEST_CASE("SimplnxCore::DBSCANFilter: SIMPL Backwards Compatibility", "[SimplnxC
 TEST_CASE("SimplnxCore::DBSCAN: Reject invalid parameters in preflight", "[SimplnxCore][DBSCAN]")
 {
   DataStructure dataStructure;
-  auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "points", {4}, {2});
-  REQUIRE(points != nullptr);
-  points->fill(0.0f);
+  auto* pointsPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "points", {4}, {2});
+  REQUIRE(pointsPtr != nullptr);
+  pointsPtr->fill(0.0f);
 
   DBSCANFilter filter;
   Arguments args;
@@ -1061,9 +1061,9 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject invalid parameters in preflight", "[Simpl
     CAPTURE(epsilon);
     args.insertOrAssign(DBSCANFilter::k_Epsilon_Key, std::make_any<float32>(epsilon));
     auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    REQUIRE(result.outputActions.errors()[0].code == -7584);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    REQUIRE(result.output_actions.errors()[0].code == -7584);
   }
   SECTION("Minimum Points must be positive")
   {
@@ -1071,11 +1071,11 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject invalid parameters in preflight", "[Simpl
     CAPTURE(minPoints);
     args.insertOrAssign(DBSCANFilter::k_MinPoints_Key, std::make_any<int32>(minPoints));
     auto result = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().size() == 1);
-    REQUIRE(result.outputActions.errors()[0].code == -7585);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().size() == 1);
+    REQUIRE(result.output_actions.errors()[0].code == -7585);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 namespace
@@ -1086,19 +1086,19 @@ namespace
  * @param dimensions Number of coordinate components (2 or 3).
  * @return The array.
  */
-Float32Array& CreateCornerPoints(DataStructure& dataStructure, usize dimensions)
+Float32ArrayType& CreateCornerPoints(DataStructure& dataStructure, usize dimensions)
 {
   const usize pointCount = usize{1} << dimensions;
-  auto* points = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "points", {pointCount}, {dimensions});
-  REQUIRE(points != nullptr);
+  auto* pointsPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "points", {pointCount}, {dimensions});
+  REQUIRE(pointsPtr != nullptr);
   for(usize pointIdx = 0; pointIdx < pointCount; pointIdx++)
   {
     for(usize axis = 0; axis < dimensions; axis++)
     {
-      (*points)[pointIdx * dimensions + axis] = ((pointIdx >> axis) & 1) != 0 ? 1000.0F : 0.0F;
+      (*pointsPtr)[pointIdx * dimensions + axis] = ((pointIdx >> axis) & 1) != 0 ? 1000.0F : 0.0F;
     }
   }
-  return *points;
+  return *pointsPtr;
 }
 
 /**
@@ -1127,7 +1127,7 @@ Arguments CreateCornerPointsArgs(float32 epsilon, const std::optional<DataPath>&
 
 TEST_CASE("SimplnxCore::DBSCAN: Reject a search grid too large to index", "[SimplnxCore][DBSCAN]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   const usize dimensions = GENERATE(usize{2}, usize{3});
   CAPTURE(dimensions);
@@ -1171,9 +1171,9 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject a search grid too large to index", "[Simp
     epsilon = std::numeric_limits<float32>::max();
     expectedText = "exceed the 32-bit floating-point range. Rescale the coordinates and Epsilon to smaller values.";
   }
-  const int32 expectedCode = limit == GridLimit::CellCount || limit == GridLimit::ByteCount ? DBSCANCommon::k_GridCellCountTooLargeError : DBSCANCommon::k_GridAxisTooLargeError;
+  const int32 expectedCode = limit == GridLimit::CellCount || limit == GridLimit::ByteCount ? dbscan_common::k_GridCellCountTooLargeError : dbscan_common::k_GridAxisTooLargeError;
 
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
   CreateCornerPoints(dataStructure, dimensions);
   DBSCANFilter filter;
@@ -1183,21 +1183,21 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject a search grid too large to index", "[Simp
   REQUIRE(executeResult.result.errors()[0].code == expectedCode);
   REQUIRE_THAT(executeResult.result.errors()[0].message, Catch::Matchers::Contains("'points'"));
   REQUIRE_THAT(executeResult.result.errors()[0].message, Catch::Matchers::Contains(expectedText));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: Reject a non-finite unmasked coordinate", "[SimplnxCore][DBSCAN]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   const usize dimensions = GENERATE(usize{2}, usize{3});
   CAPTURE(dimensions);
   const float32 badValue = GENERATE(std::numeric_limits<float32>::quiet_NaN(), std::numeric_limits<float32>::infinity());
   CAPTURE(badValue);
 
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
-  Float32Array& points = CreateCornerPoints(dataStructure, dimensions);
+  Float32ArrayType& points = CreateCornerPoints(dataStructure, dimensions);
   const usize pointCount = points.getNumberOfTuples();
   DBSCANFilter filter;
   // The corners are 1000 apart, so Epsilon 100 keeps each one its own cluster
@@ -1212,7 +1212,7 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject a non-finite unmasked coordinate", "[Simp
     auto executeResult = scope.executeFilter(filter, dataStructure, CreateCornerPointsArgs(k_Epsilon, std::nullopt));
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors().size() == 1);
-    REQUIRE(executeResult.result.errors()[0].code == DBSCANCommon::k_NonFiniteCoordinateError);
+    REQUIRE(executeResult.result.errors()[0].code == dbscan_common::k_NonFiniteCoordinateError);
     REQUIRE_THAT(executeResult.result.errors()[0].message, Catch::Matchers::Contains("Tuple 2 of the clustering array 'points'"));
     REQUIRE_THAT(executeResult.result.errors()[0].message, Catch::Matchers::Contains("on the Y axis"));
   }
@@ -1222,20 +1222,20 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject a non-finite unmasked coordinate", "[Simp
     auto executeResult = scope.executeFilter(filter, dataStructure, CreateCornerPointsArgs(k_Epsilon, std::nullopt));
     SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
     REQUIRE(executeResult.result.errors().size() == 1);
-    REQUIRE(executeResult.result.errors()[0].code == DBSCANCommon::k_NonFiniteCoordinateError);
+    REQUIRE(executeResult.result.errors()[0].code == dbscan_common::k_NonFiniteCoordinateError);
     REQUIRE_THAT(executeResult.result.errors()[0].message, Catch::Matchers::Contains("Tuple 0 of the clustering array 'points'"));
   }
   SECTION("A masked value is ignored")
   {
     points[2 * dimensions + 1] = badValue;
-    auto* mask = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "mask", {pointCount}, {1});
-    REQUIRE(mask != nullptr);
-    mask->fill(1);
-    (*mask)[2] = 0;
+    auto* maskPtr = UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, "mask", {pointCount}, {1});
+    REQUIRE(maskPtr != nullptr);
+    maskPtr->fill(1);
+    (*maskPtr)[2] = 0;
     auto executeResult = scope.executeFilter(filter, dataStructure, CreateCornerPointsArgs(k_Epsilon, DataPath({"mask"})));
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
     // Each remaining corner is its own one-point cluster; the masked tuple keeps Feature Id 0.
-    const auto& clusterIds = dataStructure.getDataRefAs<Int32Array>(DataPath({"cluster_ids"}));
+    const auto& clusterIds = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"cluster_ids"}));
     REQUIRE(clusterIds[2] == 0);
     for(usize pointIdx = 0; pointIdx < pointCount; pointIdx++)
     {
@@ -1245,13 +1245,13 @@ TEST_CASE("SimplnxCore::DBSCAN: Reject a non-finite unmasked coordinate", "[Simp
       }
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::DBSCAN: genuine HDF5 search grid and coordinate checks", "[SimplnxCore][DBSCAN][.OocStoreContract]")
 {
   REQUIRE(Application::Instance()->getIOManager("HDF5-OOC") != nullptr);
-  const UnitTest::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
+  const unit_test::PreferencesSentinel preferencesSentinel(DataStorageMode::ForceOutOfCore, 1);
   // Axis: with Epsilon 1e-30, the X axis from 0 to 1000 spans about 1e33 grid cells.
   // NaN: the second point has a NaN X coordinate, which the bounds scan would otherwise ignore.
   const bool axisTooLarge = GENERATE(true, false);
@@ -1260,14 +1260,14 @@ TEST_CASE("SimplnxCore::DBSCAN: genuine HDF5 search grid and coordinate checks",
   const DataPath pointsPath({"Wide Points"});
   const DataPath idsPath({"Wide ClusterIds"});
   const DataPath featurePath({"Wide Clusters"});
-  auto pointStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, pointsPath, {2}, {2});
-  auto* points = Float32Array::Create(dataStructure, pointsPath.getTargetName(), pointStore);
-  REQUIRE(points != nullptr);
+  auto pointStore = data_store_utilities::CreateDataStore<float32>(dataStructure, pointsPath, {2}, {2});
+  auto* pointsPtr = Float32ArrayType::Create(dataStructure, pointsPath.getTargetName(), pointStore);
+  REQUIRE(pointsPtr != nullptr);
   REQUIRE(pointStore->getDataFormat() == "HDF5-OOC");
-  (*points)[0] = 0.0F;
-  (*points)[1] = 0.0F;
-  (*points)[2] = axisTooLarge ? 1000.0F : std::numeric_limits<float32>::quiet_NaN();
-  (*points)[3] = 0.0F;
+  (*pointsPtr)[0] = 0.0F;
+  (*pointsPtr)[1] = 0.0F;
+  (*pointsPtr)[2] = axisTooLarge ? 1000.0F : std::numeric_limits<float32>::quiet_NaN();
+  (*pointsPtr)[3] = 0.0F;
 
   DBSCANFilter filter;
   auto args = filter.getDefaultArguments();
@@ -1281,11 +1281,11 @@ TEST_CASE("SimplnxCore::DBSCAN: genuine HDF5 search grid and coordinate checks",
   const auto before = GetAlgorithmPathExecutionCounts();
   auto executeResult = filter.execute(dataStructure, args);
   const auto after = GetAlgorithmPathExecutionCounts();
-  REQUIRE(after.OutOfCoreOnOutOfCoreStore == before.OutOfCoreOnOutOfCoreStore + 1);
-  REQUIRE(after.InCore == before.InCore);
+  REQUIRE(after.out_of_core_on_out_of_core_store == before.out_of_core_on_out_of_core_store + 1);
+  REQUIRE(after.in_core == before.in_core);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().size() == 1);
-  REQUIRE(executeResult.result.errors()[0].code == (axisTooLarge ? DBSCANCommon::k_GridAxisTooLargeError : DBSCANCommon::k_NonFiniteCoordinateError));
+  REQUIRE(executeResult.result.errors()[0].code == (axisTooLarge ? dbscan_common::k_GridAxisTooLargeError : dbscan_common::k_NonFiniteCoordinateError));
   REQUIRE_THAT(executeResult.result.errors()[0].message, Catch::Matchers::Contains("'Wide Points'"));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -7,7 +7,7 @@
 #include <string_view>
 
 #if SIMPLNX_BUILD_TESTS
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 /**
  * @struct CodecOwnershipCountersForTesting
@@ -17,10 +17,10 @@ struct CodecOwnershipCountersForTesting
 {
   std::atomic<uint64> live{0};
   std::atomic<uint64> peak{0};
-  std::atomic<uint64> nominalAcquired{0};
-  std::atomic<uint64> edgeAcquired{0};
+  std::atomic<uint64> nominal_acquired{0};
+  std::atomic<uint64> edge_acquired{0};
   std::atomic<uint64> transfers{0};
-  std::atomic<bool> invalidRelease{false};
+  std::atomic<bool> invalid_release{false};
 
   /**
    * @brief Records one event without allocation, locks or storage reentry.
@@ -40,11 +40,11 @@ struct CodecOwnershipCountersForTesting
     {
       if(category == static_cast<uint64>(LegacyPayloadKindForTesting::Nominal))
       {
-        self.nominalAcquired.fetch_add(1, std::memory_order_relaxed);
+        self.nominal_acquired.fetch_add(1, std::memory_order_relaxed);
       }
       else if(category == static_cast<uint64>(LegacyPayloadKindForTesting::Edge))
       {
-        self.edgeAcquired.fetch_add(1, std::memory_order_relaxed);
+        self.edge_acquired.fetch_add(1, std::memory_order_relaxed);
       }
     }
     if(event == CodecIoEventForTesting::LegacyTransferred)
@@ -66,7 +66,7 @@ struct CodecOwnershipCountersForTesting
       {
         if(bytes > current)
         {
-          self.invalidRelease.store(true, std::memory_order_relaxed);
+          self.invalid_release.store(true, std::memory_order_relaxed);
           break;
         }
         if(self.live.compare_exchange_weak(current, current - bytes, std::memory_order_relaxed))
@@ -77,5 +77,5 @@ struct CodecOwnershipCountersForTesting
     }
   }
 };
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5
 #endif

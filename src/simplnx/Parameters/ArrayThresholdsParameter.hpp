@@ -14,10 +14,10 @@ class SIMPLNX_EXPORT ArrayThresholdsParameter : public MutableDataParameter
 {
 public:
   using ValueType = ArrayThresholdSet;
-  using AllowedComponentShapes = std::vector<ShapeType>;
+  using AllowedComponentShapesType = std::vector<ShapeType>;
 
   ArrayThresholdsParameter() = delete;
-  ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, AllowedComponentShapes requiredComps = {});
+  ArrayThresholdsParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedComponentShapesType requiredComps = {});
   ~ArrayThresholdsParameter() override = default;
 
   ArrayThresholdsParameter(const ArrayThresholdsParameter&) = delete;
@@ -36,13 +36,13 @@ public:
    * @brief
    * @return AcceptedTypes
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -68,7 +68,7 @@ public:
    * @brief Returns the required number of components. If return value is empty, then no component requirements.
    * @return
    */
-  AllowedComponentShapes requiredComponentShapes() const;
+  AllowedComponentShapesType requiredComponentShapes() const;
 
   /**
    * @brief
@@ -115,18 +115,18 @@ protected:
   Result<> validatePaths(const DataStructure& dataStructure, const ValueType& value) const;
 
 private:
-  ValueType m_DefaultValue = {};
-  AllowedComponentShapes m_RequiredComponentShapes = {};
+  ValueType m_DefaultValue;
+  AllowedComponentShapesType m_RequiredComponentShapes;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT ComparisonSelectionFilterParameterConverter
 {
   using ParameterType = ArrayThresholdsParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT ComparisonSelectionAdvancedFilterParameterConverter
@@ -134,9 +134,9 @@ struct SIMPLNX_EXPORT ComparisonSelectionAdvancedFilterParameterConverter
   using ParameterType = ArrayThresholdsParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::ArrayThresholdsParameter, "e93251bc-cdad-44c2-9332-58fe26aedfbe");

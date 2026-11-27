@@ -55,7 +55,7 @@ Parameters MorphologicalWatershedFromMarkersImageFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputImageDataPath_Key, "Input Cell Data", "The grayscale image data that will be flooded by this filter.", DataPath{},
                                                           nx::core::ImageProcessing::GetScalarNumericTypes()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MarkerImageDataPath_Key, "Marker Cell Data",
@@ -72,12 +72,12 @@ IFilter::VersionType MorphologicalWatershedFromMarkersImageFilter::parametersVer
 {
   return 1;
 }
-IFilter::UniquePointer MorphologicalWatershedFromMarkersImageFilter::clone() const
+IFilter::UniquePointerType MorphologicalWatershedFromMarkersImageFilter::clone() const
 {
   return std::make_unique<MorphologicalWatershedFromMarkersImageFilter>();
 }
-IFilter::PreflightResult MorphologicalWatershedFromMarkersImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                                     const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult MorphologicalWatershedFromMarkersImageFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                                     const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);
@@ -91,19 +91,20 @@ IFilter::PreflightResult MorphologicalWatershedFromMarkersImageFilter::preflight
   // integer element type) with the same number of tuples as the grayscale input (they share the image grid).
   const auto& markerArray = dataStructure.getDataRefAs<IDataArray>(markerArrayPath);
   const DataType markerType = markerArray.getDataType();
-  if(nx::core::ImageProcessing::GetIntegerScalarTypes().count(markerType) == 0)
+  if(!nx::core::ImageProcessing::GetIntegerScalarTypes().contains(markerType))
   {
-    return {MakeErrorResult<OutputActions>(-8600, fmt::format("Marker array '{}' must be an integer scalar type, but is '{}'.", markerArrayPath.toString(), DataTypeToString(markerType)))};
+    return {.output_actions =
+                MakeErrorResult<OutputActions>(-8600, fmt::format("Marker array '{}' must be an integer scalar type, but is '{}'.", markerArrayPath.toString(), DataTypeToString(markerType)))};
   }
   if(markerArray.getNumberOfComponents() != 1)
   {
-    return {MakeErrorResult<OutputActions>(
-        -8601, fmt::format("Marker array '{}' must be single-component (scalar), but has {} components.", markerArrayPath.toString(), markerArray.getNumberOfComponents()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(
+                -8601, fmt::format("Marker array '{}' must be single-component (scalar), but has {} components.", markerArrayPath.toString(), markerArray.getNumberOfComponents()))};
   }
   if(markerArray.getNumberOfTuples() != inputArray.getNumberOfTuples())
   {
-    return {MakeErrorResult<OutputActions>(-8602,
-                                           fmt::format("Marker array tuple count ({}) does not match input array tuple count ({}).", markerArray.getNumberOfTuples(), inputArray.getNumberOfTuples()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(
+                -8602, fmt::format("Marker array tuple count ({}) does not match input array tuple count ({}).", markerArray.getNumberOfTuples(), inputArray.getNumberOfTuples()))};
   }
 
   // Validate the grayscale input (allowed type, single-component, tuple==geom cells) via the shared preflight, but
@@ -113,7 +114,7 @@ IFilter::PreflightResult MorphologicalWatershedFromMarkersImageFilter::preflight
       ImageProcessing::PreflightImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   if(grayscaleValidation.invalid())
   {
-    return {std::move(grayscaleValidation)};
+    return {.output_actions = std::move(grayscaleValidation)};
   }
 
   // Resident watershed retains the exact RAM flood and its available-memory guard. OOC watershed uses bounded
@@ -123,11 +124,11 @@ IFilter::PreflightResult MorphologicalWatershedFromMarkersImageFilter::preflight
   Result<OutputActions> memoryCheck;
   if(inputIsOutOfCore)
   {
-    if(!DataStoreUtilities::GetIOCollection().hasTemporaryRecordStoreCapability())
+    if(!data_store_utilities::GetIOCollection().hasTemporaryRecordStoreCapability())
     {
-      return {MakeErrorResult<OutputActions>(
-          -79047, fmt::format("Morphological watershed from markers input '{}' is planned out-of-core, but no temporary-record storage provider is registered for the external flood.",
-                              selectedInputArray.toString()))};
+      return {.output_actions = MakeErrorResult<OutputActions>(
+                  -79047, fmt::format("Morphological watershed from markers input '{}' is planned out-of-core, but no temporary-record storage provider is registered for the external flood.",
+                                      selectedInputArray.toString()))};
     }
   }
   else
@@ -137,7 +138,7 @@ IFilter::PreflightResult MorphologicalWatershedFromMarkersImageFilter::preflight
   }
   if(memoryCheck.invalid())
   {
-    return {std::move(memoryCheck)};
+    return {.output_actions = std::move(memoryCheck)};
   }
 
   // Create the output of the MARKER's type, inheriting the grayscale input's tuple/component shape + data format
@@ -152,10 +153,10 @@ IFilter::PreflightResult MorphologicalWatershedFromMarkersImageFilter::preflight
   {
     result.warnings().push_back(std::move(warning));
   }
-  return {std::move(result)};
+  return {.output_actions = std::move(result)};
 }
-Result<> MorphologicalWatershedFromMarkersImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                                   const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> MorphologicalWatershedFromMarkersImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/,
+                                                                   const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto imageGeomPath = filterArgs.value<DataPath>(k_InputImageGeomPath_Key);
   auto selectedInputArray = filterArgs.value<DataPath>(k_InputImageDataPath_Key);

@@ -27,7 +27,7 @@ using namespace H5Support;
 namespace
 {
 
-std::string s_OutputFilePath;
+std::string SOutputFilePath;
 
 const herr_t k_GroupDoesNotExist = -5;
 const herr_t k_DatasetDoesNotExist = -10;
@@ -35,7 +35,7 @@ const herr_t k_DatasetDoesNotExist = -10;
 herr_t ValidateGroupPath(const char* groupPath)
 {
   UNSCOPED_INFO(fmt::format("Validating Group: /{}", groupPath));
-  hid_t outFileId = H5Utilities::openFile(s_OutputFilePath, true);
+  hid_t outFileId = H5Utilities::openFile(SOutputFilePath, true);
   H5ScopedFileSentinel scopedFileSentinel(outFileId, true);
 
   return (H5Utilities::objectExists(outFileId, groupPath) ? 1 : k_GroupDoesNotExist);
@@ -45,7 +45,7 @@ herr_t ValidateDataset(hid_t exemplarFileId, const char* datasetPath)
 {
   UNSCOPED_INFO(fmt::format("Validating Dataset: /{}", datasetPath));
 
-  hid_t outFileId = H5Utilities::openFile(s_OutputFilePath, true);
+  hid_t outFileId = H5Utilities::openFile(SOutputFilePath, true);
   H5ScopedFileSentinel scopedFileSentinel(outFileId, true);
 
   if(!H5Utilities::objectExists(outFileId, datasetPath))
@@ -55,7 +55,7 @@ herr_t ValidateDataset(hid_t exemplarFileId, const char* datasetPath)
 
   std::vector<hsize_t> dims;
   H5T_class_t classType;
-  size_t sizeType;
+  size_t sizeType = 0;
   herr_t err = H5Lite::getDatasetInfo(exemplarFileId, datasetPath, dims, classType, sizeType);
   size_t totalElements = std::accumulate(dims.cbegin(), dims.cend(), static_cast<size_t>(1), std::multiplies<>());
 
@@ -135,9 +135,9 @@ herr_t ValidateDataset(hid_t exemplarFileId, const char* datasetPath)
   Operator function for H5Ovisit.  This function prints the
   name and type of the object passed to it.
  ************************************************************/
-herr_t VisitorFunction(hid_t locId, const char* name, const H5O_info_t* info, void* operatorData)
+herr_t VisitorFunction(hid_t locId, const char* name, const H5O_info_t* info, void* /*operatorData*/)
 {
-  herr_t status;
+  herr_t status = 0;
 
   switch(info->type)
   {
@@ -185,32 +185,40 @@ int TraverseFile(const std::string& fileName)
 
 const std::string k_ExemplarFilePath = fmt::format("{}/6_5_h5ebsd_exemplar/6_5_h5ebsd_exemplar.h5ebsd", unit_test::k_TestFilesDir);
 
-const auto k_HighToLow = static_cast<ChoicesParameter::ValueType>(nx::core::FilePathGenerator::Ordering::HighToLow);
+const auto k_HighToLow = static_cast<ChoicesParameter::ValueType>(nx::core::file_path_generator::Ordering::HighToLow);
 const int32 k_StartIndex = 1;
 const int32 k_EndIndex = 2;
 const int32 k_IncrementIndex = 1;
 const uint32 k_PaddingDigits = 1;
-const GeneratedFileListParameter::Ordering k_Ordering = GeneratedFileListParameter::Ordering::LowToHigh;
+const GeneratedFileListParameter::OrderingType k_Ordering = GeneratedFileListParameter::OrderingType::LowToHigh;
 const std::string k_InputPath = fmt::format("{}/Small_IN100", unit_test::k_TestFilesDir);
 const std::string k_FilePrefix = "Slice_";
 const std::string k_FileSuffix;
 const std::string k_FileExtension = ".ang";
-GeneratedFileListParameter::ValueType k_FileListInfo = {k_StartIndex, k_EndIndex, k_IncrementIndex, k_PaddingDigits, k_Ordering, k_InputPath, k_FilePrefix, k_FileSuffix, k_FileExtension};
+GeneratedFileListParameter::ValueType KFileListInfo = {.start_index = k_StartIndex,
+                                                       .end_index = k_EndIndex,
+                                                       .increment_index = k_IncrementIndex,
+                                                       .padding_digits = k_PaddingDigits,
+                                                       .ordering = k_Ordering,
+                                                       .input_path = k_InputPath,
+                                                       .file_prefix = k_FilePrefix,
+                                                       .file_suffix = k_FileSuffix,
+                                                       .file_extension = k_FileExtension};
 
 } // namespace
 
 TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd", "[OrientationAnalysis][EbsdToH5Ebsd]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100.tar.gz", "Small_IN100");
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "6_5_h5ebsd_exemplar.tar.gz", "6_5_h5ebsd_exemplar");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100.tar.gz", "Small_IN100");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "6_5_h5ebsd_exemplar.tar.gz", "6_5_h5ebsd_exemplar");
 
   fs::path inputPath(k_InputPath);
   REQUIRE(fs::exists(inputPath));
 
   // Set the global variable, so we have access to it later
-  s_OutputFilePath = fmt::format("{}/ebsd_to_h5ebsd_test.h5ebsd", unit_test::k_BinaryTestOutputDir);
+  SOutputFilePath = fmt::format("{}/ebsd_to_h5ebsd_test.h5ebsd", unit_test::k_BinaryTestOutputDir);
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
   EbsdToH5EbsdFilter filter;
@@ -219,15 +227,15 @@ TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd", "[OrientationAnalysis][EbsdToH5Eb
 
   // Create default Parameters for the filter.
   // Create default Parameters for the filter.
-  args.insertOrAssign(EbsdToH5EbsdFilter::k_ZSpacing_Key, std::make_any<Float32Parameter::ValueType>(0.25F));
+  args.insertOrAssign(EbsdToH5EbsdFilter::k_ZSpacing_Key, std::make_any<Float32ParameterType::ValueType>(0.25F));
   args.insertOrAssign(EbsdToH5EbsdFilter::k_StackingOrder_Key, std::make_any<ChoicesParameter::ValueType>(k_HighToLow));
-  args.insertOrAssign(EbsdToH5EbsdFilter::k_ReferenceFrame_Key, std::make_any<ChoicesParameter::ValueType>(nx::core::EbsdToH5EbsdInputConstants::k_Edax));
-  args.insertOrAssign(EbsdToH5EbsdFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(s_OutputFilePath)));
-  args.insertOrAssign(EbsdToH5EbsdFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
+  args.insertOrAssign(EbsdToH5EbsdFilter::k_ReferenceFrame_Key, std::make_any<ChoicesParameter::ValueType>(nx::core::ebsd_to_h5_ebsd_input_constants::k_Edax));
+  args.insertOrAssign(EbsdToH5EbsdFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(SOutputFilePath)));
+  args.insertOrAssign(EbsdToH5EbsdFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(KFileListInfo));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -235,14 +243,14 @@ TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd", "[OrientationAnalysis][EbsdToH5Eb
 
   ::TraverseFile(k_ExemplarFilePath);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd: Cancellation before publication preserves the destination", "[OrientationAnalysis][EbsdToH5Ebsd]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100.tar.gz", "Small_IN100");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "Small_IN100.tar.gz", "Small_IN100");
   const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ebsd_to_h5ebsd_cancellation.h5ebsd";
   const std::string sentinel = "existing h5ebsd bytes";
 
@@ -263,13 +271,13 @@ TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd: Cancellation before publication pr
       EbsdToH5EbsdFilter filter;
       DataStructure dataStructure;
       Arguments args;
-      args.insertOrAssign(EbsdToH5EbsdFilter::k_ZSpacing_Key, std::make_any<Float32Parameter::ValueType>(0.25F));
+      args.insertOrAssign(EbsdToH5EbsdFilter::k_ZSpacing_Key, std::make_any<Float32ParameterType::ValueType>(0.25F));
       args.insertOrAssign(EbsdToH5EbsdFilter::k_StackingOrder_Key, std::make_any<ChoicesParameter::ValueType>(k_HighToLow));
-      args.insertOrAssign(EbsdToH5EbsdFilter::k_ReferenceFrame_Key, std::make_any<ChoicesParameter::ValueType>(nx::core::EbsdToH5EbsdInputConstants::k_Edax));
+      args.insertOrAssign(EbsdToH5EbsdFilter::k_ReferenceFrame_Key, std::make_any<ChoicesParameter::ValueType>(nx::core::ebsd_to_h5_ebsd_input_constants::k_Edax));
       args.insertOrAssign(EbsdToH5EbsdFilter::k_OutputPath_Key, std::make_any<FileSystemPathParameter::ValueType>(outputPath));
-      args.insertOrAssign(EbsdToH5EbsdFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(k_FileListInfo));
+      args.insertOrAssign(EbsdToH5EbsdFilter::k_InputFileListInfo_Key, std::make_any<GeneratedFileListParameter::ValueType>(KFileListInfo));
 
-      auto preflightResult2 = filter.preflight(dataStructure, args).outputActions;
+      auto preflightResult2 = filter.preflight(dataStructure, args).output_actions;
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult2);
       std::atomic_bool shouldCancel = false;
       bool sawSaveCheckpoint = false;
@@ -300,7 +308,7 @@ TEST_CASE("OrientationAnalysis::EbsdToH5Ebsd: Cancellation before publication pr
         REQUIRE_FALSE(fs::exists(outputPath));
       }
 
-      UnitTest::CheckArraysInheritTupleDims(dataStructure);
+      unit_test::CheckArraysInheritTupleDims(dataStructure);
     }
   }
 }

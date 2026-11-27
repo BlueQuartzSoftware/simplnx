@@ -83,10 +83,10 @@ Result<> NeighborOrientationCorrelation::operator()()
 {
   const std::vector<ebsdlib::LaueOps::Pointer> orientationOps = ebsdlib::LaueOps::GetAllOrientationOps();
 
-  auto& confidenceIndexArrayRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->ConfidenceIndexArrayPath);
-  auto& cellPhasesArrayRef = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->CellPhasesArrayPath);
-  auto& quatsArrayRef = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->QuatsArrayPath);
-  const auto& crystalStructuresArrayRef = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->CrystalStructuresArrayPath);
+  auto& confidenceIndexArrayRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->confidence_index_array_path);
+  auto& cellPhasesArrayRef = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->cell_phases_array_path);
+  auto& quatsArrayRef = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->quats_array_path);
+  const auto& crystalStructuresArrayRef = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->crystal_structures_array_path);
 
   // Cache ensemble-level arrays locally to avoid per-element virtual dispatch in hot loops
   const auto& crystalStructuresStoreRef = crystalStructuresArrayRef.getDataStoreRef();
@@ -103,10 +103,10 @@ Result<> NeighborOrientationCorrelation::operator()()
 
   const usize totalVoxels = confidenceIndexArrayRef.getNumberOfTuples();
 
-  float32 misorientationToleranceR = m_InputValues->MisorientationTolerance * numbers::pi_v<float32> / 180.0f;
+  float32 misorientationToleranceR = m_InputValues->misorientation_tolerance * numbers::k_PiV<float32> / 180.0f;
 
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeomPath);
-  SizeVec3 udims = imageGeom.getDimensions();
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geom_path);
+  SizeVec3Type udims = imageGeom.getDimensions();
 
   std::array<int64, 3> dims = {
       static_cast<int64>(udims[0]),
@@ -114,8 +114,8 @@ Result<> NeighborOrientationCorrelation::operator()()
       static_cast<int64>(udims[2]),
   };
 
-  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
-  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3DType>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = InitializeFaceNeighborOffsets(dims);
 
   std::array<int32, k_NumFaceNeighbors> neighborSimCount = {};
   const int32 startLevel = 6;
@@ -161,12 +161,12 @@ Result<> NeighborOrientationCorrelation::operator()()
   // Per-slice best neighbor marks (replaces O(totalPoints) bestNeighbor array)
   std::vector<int64> sliceBestNeighbor(sliceSize, -1);
   const usize dimZ = static_cast<usize>(dims[2]);
-  const std::vector<std::shared_ptr<IArray>> voxelArrays = GenerateTransferArrayList(m_DataStructure, m_InputValues->ConfidenceIndexArrayPath, m_InputValues->IgnoredDataArrayPaths);
+  const std::vector<std::shared_ptr<IArray>> voxelArrays = GenerateTransferArrayList(m_DataStructure, m_InputValues->confidence_index_array_path, m_InputValues->ignored_data_array_paths);
 
-  for(int32 currentLevel = startLevel; currentLevel > m_InputValues->Level; currentLevel--)
+  for(int32 currentLevel = startLevel; currentLevel > m_InputValues->level; currentLevel--)
   {
     usize processedVoxels = 0;
-    const std::string progressLabel = fmt::format("Processing Level {}/{}", (startLevel - currentLevel) + 1, startLevel - m_InputValues->Level);
+    const std::string progressLabel = fmt::format("Processing Level {}/{}", (startLevel - currentLevel) + 1, startLevel - m_InputValues->level);
     progressThrottle.reset(totalVoxels, progressLabel);
 
     // Initialize rolling window: load z=0 into slot 1, z=1 into slot 2
@@ -229,16 +229,16 @@ Result<> NeighborOrientationCorrelation::operator()()
             progressThrottle.updatePercent(processedVoxels);
           }
 
-          if(ciSlice[inSlice] < m_InputValues->MinConfidence)
+          if(ciSlice[inSlice] < m_InputValues->min_confidence)
           {
-            const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+            const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = ComputeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
 
             // Local slots map the six face neighbors to three Z-slice buffers.
             constexpr std::array<usize, k_NumFaceNeighbors> k_NeighborSlot = {0, 1, 1, 1, 1, 2};
             const std::array<int64, k_NumFaceNeighbors> neighborBufX = {xIdx, xIdx, xIdx - 1, xIdx + 1, xIdx, xIdx};
             const std::array<int64, k_NumFaceNeighbors> neighborBufY = {yIdx, yIdx - 1, yIdx, yIdx, yIdx + 1, yIdx};
 
-            std::array<ebsdlib::QuatD, k_NumFaceNeighbors> nQuats;
+            std::array<ebsdlib::QuatD, k_NumFaceNeighbors> nQuats{};
             std::array<int32, k_NumFaceNeighbors> nPhases = {};
 
             for(usize f = 0; f < k_NumFaceNeighbors; f++)
@@ -279,15 +279,15 @@ Result<> NeighborOrientationCorrelation::operator()()
                         -580096,
                         fmt::format(
                             "Cell Phases array '{}' has value {} at neighbor voxel index {}, but Crystal Structures array '{}' contains {} tuples. Valid positive Phase indices are in [1, {}).",
-                            m_InputValues->CellPhasesArrayPath.toString(), currentPhaseIdx, voxelIndex + neighborVoxelIndexOffsets[faceIndexK], m_InputValues->CrystalStructuresArrayPath.toString(),
-                            numCrystalStructures, numCrystalStructures));
+                            m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, voxelIndex + neighborVoxelIndexOffsets[faceIndexK],
+                            m_InputValues->crystal_structures_array_path.toString(), numCrystalStructures, numCrystalStructures));
                   }
                   const uint32 currentLaueIndex = crystalStructuresCache[currentPhaseIdx];
                   if(currentLaueIndex >= orientationOps.size())
                   {
                     return MakeErrorResult(-580097,
                                            fmt::format("Crystal Structures array '{}' has value {} at Phase index {}, but only {} Laue operations are available. Valid Laue indices are in [0, {}).",
-                                                       m_InputValues->CrystalStructuresArrayPath.toString(), currentLaueIndex, currentPhaseIdx, orientationOps.size(), orientationOps.size()));
+                                                       m_InputValues->crystal_structures_array_path.toString(), currentLaueIndex, currentPhaseIdx, orientationOps.size(), orientationOps.size()));
                   }
                   ebsdlib::AxisAngleDType axisAngle = orientationOps[currentLaueIndex]->calculateMisorientation(nQuats[faceIndexK], nQuats[faceIndexJ]);
                   if(axisAngle[3] < misorientationToleranceR)

@@ -22,16 +22,16 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT InitializeImageGeomCellDataInputValues
 {
-  MultiArraySelectionParameter::ValueType CellArrays;
-  VectorFloat64Parameter::ValueType InitRange;
-  ChoicesParameter::ValueType InitTypeIndex;
-  Float64Parameter::ValueType InitValue;
-  GeometrySelectionParameter::ValueType InputImageGeometryPath;
-  VectorUInt64Parameter::ValueType MaxPoint;
-  VectorUInt64Parameter::ValueType MinPoint;
-  DataObjectNameParameter::ValueType SeedArrayName;
-  UInt64Parameter::ValueType SeedValue;
-  BoolParameter::ValueType UseSeed;
+  MultiArraySelectionParameter::ValueType cell_arrays;
+  VectorFloat64ParameterType::ValueType init_range;
+  ChoicesParameter::ValueType init_type_index{};
+  Float64ParameterType::ValueType init_value{};
+  GeometrySelectionParameter::ValueType input_image_geometry_path;
+  VectorUInt64ParameterType::ValueType max_point;
+  VectorUInt64ParameterType::ValueType min_point;
+  DataObjectNameParameter::ValueType seed_array_name;
+  UInt64ParameterType::ValueType seed_value{};
+  BoolParameter::ValueType use_seed{};
 };
 
 /**
@@ -69,7 +69,7 @@ public:
   /**
    * @brief Destroys the ImageGeom subvolume generator.
    */
-  ~InitializeImageGeomCellData() noexcept;
+  ~InitializeImageGeomCellData() noexcept = default;
 
   InitializeImageGeomCellData(const InitializeImageGeomCellData&) = delete;
   InitializeImageGeomCellData(InitializeImageGeomCellData&&) noexcept = delete;

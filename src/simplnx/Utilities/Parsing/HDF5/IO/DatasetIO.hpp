@@ -27,7 +27,7 @@
  * @namespace nx::core::HDF5
  * @brief Provides locked HDF5 object wrappers and data transfers.
  */
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 class GroupIO;
 /**
@@ -38,11 +38,11 @@ class GroupIO;
  */
 struct SIMPLNX_EXPORT ChunkedDataInfo
 {
-  hid_t dataType = 0;
-  hid_t datasetId = 0;
-  hid_t dataspaceId = 0;
-  hid_t transferProp = 0;
-  hid_t chunkProp = 0;
+  hid_t data_type = 0;
+  hid_t dataset_id = 0;
+  hid_t dataspace_id = 0;
+  hid_t transfer_prop = 0;
+  hid_t chunk_prop = 0;
 };
 
 /**
@@ -281,7 +281,7 @@ public:
    * @param datasetInfo Provides handles to close.
    * @return First HDF5 close error, or success.
    */
-  nx::core::Result<> closeChunkedDataset(const ChunkedDataInfo& datasetInfo) const;
+  static nx::core::Result<> CloseChunkedDataset(const ChunkedDataInfo& datasetInfo);
 
   /**
    * @brief Reads one chunk selection through open chunk handles.
@@ -666,7 +666,7 @@ extern template nx::core::Result<> DatasetIO::readIntoSpan<uint64_t>(nonstd::spa
 extern template nx::core::Result<> DatasetIO::readIntoSpan<float>(nonstd::span<float>) const;
 extern template nx::core::Result<> DatasetIO::readIntoSpan<double>(nonstd::span<double>) const;
 template <>
-SIMPLNX_EXPORT nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>) const;
+SIMPLNX_EXPORT nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool> /*data*/) const;
 
 extern template nx::core::Result<> DatasetIO::readIntoSpan<int8_t>(nonstd::span<int8_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 extern template nx::core::Result<> DatasetIO::readIntoSpan<int16_t>(nonstd::span<int16_t>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
@@ -679,7 +679,8 @@ extern template nx::core::Result<> DatasetIO::readIntoSpan<uint64_t>(nonstd::spa
 extern template nx::core::Result<> DatasetIO::readIntoSpan<float>(nonstd::span<float>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 extern template nx::core::Result<> DatasetIO::readIntoSpan<double>(nonstd::span<double>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
 template <>
-SIMPLNX_EXPORT nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool>, const std::optional<std::vector<uint64>>&, const std::optional<std::vector<uint64>>&) const;
+SIMPLNX_EXPORT nx::core::Result<> DatasetIO::readIntoSpan<bool>(nonstd::span<bool> /*data*/, const std::optional<std::vector<uint64>>& /*start*/,
+                                                                const std::optional<std::vector<uint64>>& /*count*/) const;
 
 #if 0
 extern template nx::core::Result<> DatasetIO::readChunkIntoSpan<bool>(nonstd::span<bool>, nonstd::span<const usize>, nonstd::span<const usize>) const;
@@ -755,4 +756,4 @@ extern template nx::core::Result<> DatasetIO::writeChunk<char>(const ChunkedData
 #ifdef _WIN32
 extern template nx::core::Result<> DatasetIO::writeChunk<bool>(const ChunkedDataInfo&, const DimsType&, nonstd::span<const bool>, const DimsType&, const DimsType&, nonstd::span<const usize>);
 #endif
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

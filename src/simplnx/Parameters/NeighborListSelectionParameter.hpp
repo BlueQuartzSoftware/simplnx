@@ -15,10 +15,10 @@ class SIMPLNX_EXPORT NeighborListSelectionParameter : public MutableDataParamete
 {
 public:
   using ValueType = DataPath;
-  using AllowedTypes = std::set<DataType>;
+  using AllowedTypeSetType = std::set<DataType>;
 
   NeighborListSelectionParameter() = delete;
-  NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue, const AllowedTypes& allowedTypes);
+  NeighborListSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, const AllowedTypeSetType& allowedTypes);
   ~NeighborListSelectionParameter() override = default;
 
   NeighborListSelectionParameter(const NeighborListSelectionParameter&) = delete;
@@ -37,13 +37,13 @@ public:
    * @brief Returns a list of accpeted input types.
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief Creates a copy of the parameter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief Returns the user defined default value.
@@ -69,7 +69,7 @@ public:
    * @brief Returns the set of allowed DataArray types. An empty set means all are allowed.
    * @return
    */
-  AllowedTypes allowedTypes() const;
+  AllowedTypeSetType allowedTypes() const;
 
   /**
    * @brief Validates the given value against the given DataStructure. Returns warnings/errors.
@@ -112,8 +112,8 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
-  AllowedTypes m_AllowedTypes = {};
+  ValueType m_DefaultValue;
+  AllowedTypeSetType m_AllowedTypes;
 };
 
 } // namespace nx::core

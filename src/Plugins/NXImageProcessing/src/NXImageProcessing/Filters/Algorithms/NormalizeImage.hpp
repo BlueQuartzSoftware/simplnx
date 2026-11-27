@@ -12,8 +12,8 @@ namespace nx::core
  */
 struct NXIMAGEPROCESSING_EXPORT NormalizeImageInputValues
 {
-  DataPath InputArrayPath;
-  DataPath OutputArrayPath;
+  DataPath input_array_path;
+  DataPath output_array_path;
 };
 
 /**
@@ -32,7 +32,7 @@ public:
    * @pre All referenced arguments outlive this executor.
    */
   NormalizeImage(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const NormalizeImageInputValues* inputValues);
-  ~NormalizeImage() noexcept;
+  ~NormalizeImage() noexcept = default;
   NormalizeImage(const NormalizeImage&) = delete;
   NormalizeImage(NormalizeImage&&) noexcept = delete;
   NormalizeImage& operator=(const NormalizeImage&) = delete;

@@ -85,12 +85,12 @@ Parameters ExtractTripleLinesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Required Input Triangle Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_TriangleGeometryPath_Key, "Triangle Geometry", "The surface mesh from which to extract the triple lines", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Triangle}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Triangle}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsArrayPath_Key, "Face Labels", "The Array specifying which Features are on either side of each Face in the Triangle Geometry",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesArrayPath_Key, "Node Types",
                                                           "The array specifies the type of each node in the source Triangle Geometry and is copied onto the created vertices.", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int8}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Triple Line Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedTripleLineGeometryPath_Key, "Created Triple Line Geometry", "The name of the created Triple Line Edge Geometry",
@@ -116,14 +116,14 @@ IFilter::VersionType ExtractTripleLinesFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ExtractTripleLinesFilter::clone() const
+IFilter::UniquePointerType ExtractTripleLinesFilter::clone() const
 {
   return std::make_unique<ExtractTripleLinesFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExtractTripleLinesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                 const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ExtractTripleLinesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                 const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pTriangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
   auto pFaceLabelsArrayPath = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
@@ -146,23 +146,25 @@ IFilter::PreflightResult ExtractTripleLinesFilter::preflightImpl(const DataStruc
   // past the end of one of them, so check here where the user still gets an actionable message.
   if(faceLabels.getNumberOfTuples() != triangleGeom.getNumberOfFaces())
   {
-    return {MakeErrorResult<OutputActions>(-57402, fmt::format("Face Labels array '{}' has {} tuples but Triangle Geometry '{}' has {} faces. They must match.", pFaceLabelsArrayPath.toString(),
-                                                               faceLabels.getNumberOfTuples(), pTriangleGeometryPath.toString(), triangleGeom.getNumberOfFaces()))};
+    return {.output_actions =
+                MakeErrorResult<OutputActions>(-57402, fmt::format("Face Labels array '{}' has {} tuples but Triangle Geometry '{}' has {} faces. They must match.", pFaceLabelsArrayPath.toString(),
+                                                                   faceLabels.getNumberOfTuples(), pTriangleGeometryPath.toString(), triangleGeom.getNumberOfFaces()))};
   }
   if(copyNodeTypes)
   {
     const auto& nodeTypes = dataStructure.getDataRefAs<IDataArray>(pNodeTypesArrayPath);
     if(nodeTypes.getNumberOfTuples() != triangleGeom.getNumberOfVertices())
     {
-      return {MakeErrorResult<OutputActions>(-57403, fmt::format("Node Types array '{}' has {} tuples but Triangle Geometry '{}' has {} vertices. They must match.", pNodeTypesArrayPath.toString(),
-                                                                 nodeTypes.getNumberOfTuples(), pTriangleGeometryPath.toString(), triangleGeom.getNumberOfVertices()))};
+      return {.output_actions =
+                  MakeErrorResult<OutputActions>(-57403, fmt::format("Node Types array '{}' has {} tuples but Triangle Geometry '{}' has {} vertices. They must match.", pNodeTypesArrayPath.toString(),
+                                                                     nodeTypes.getNumberOfTuples(), pTriangleGeometryPath.toString(), triangleGeom.getNumberOfVertices()))};
     }
   }
 
   // Edge and vertex counts depend on the mesh scan. Create an empty geometry and resize it during execution.
   {
     auto createGeometryAction =
-        std::make_unique<CreateEdgeGeometryAction>(pTripleLineGeometryPath, 0, 0, pVertexDataName, pEdgeDataName, EdgeGeom::k_SharedVertexListName, EdgeGeom::k_SharedEdgeListName);
+        std::make_unique<CreateEdgeGeometryActionType>(pTripleLineGeometryPath, 0, 0, pVertexDataName, pEdgeDataName, EdgeGeom::k_SharedVertexListName, EdgeGeom::k_SharedEdgeListName);
     resultOutputActions.value().appendAction(std::move(createGeometryAction));
   }
   {
@@ -177,28 +179,28 @@ IFilter::PreflightResult ExtractTripleLinesFilter::preflightImpl(const DataStruc
     resultOutputActions.value().appendAction(std::move(createNodeTypesAction));
   }
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ExtractTripleLinesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                               const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ExtractTripleLinesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                               const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto pTripleLineGeometryPath = filterArgs.value<DataPath>(k_CreatedTripleLineGeometryPath_Key);
   auto pVertexDataName = filterArgs.value<std::string>(k_VertexDataGroupName_Key);
   auto pEdgeDataName = filterArgs.value<std::string>(k_EdgeDataGroupName_Key);
 
   ExtractTripleLinesInputValues inputValues;
-  inputValues.TriangleGeometryPath = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
-  inputValues.FaceLabelsPath = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
-  inputValues.TripleLineGeometryPath = pTripleLineGeometryPath;
-  inputValues.NumFeaturesPath = pTripleLineGeometryPath.createChildPath(pEdgeDataName).createChildPath(filterArgs.value<std::string>(k_NumFeaturesArrayName_Key));
-  inputValues.IncludeExteriorLines = filterArgs.value<bool>(k_IncludeExteriorTripleLines_Key);
+  inputValues.triangle_geometry_path = filterArgs.value<DataPath>(k_TriangleGeometryPath_Key);
+  inputValues.face_labels_path = filterArgs.value<DataPath>(k_FaceLabelsArrayPath_Key);
+  inputValues.triple_line_geometry_path = pTripleLineGeometryPath;
+  inputValues.num_features_path = pTripleLineGeometryPath.createChildPath(pEdgeDataName).createChildPath(filterArgs.value<std::string>(k_NumFeaturesArrayName_Key));
+  inputValues.include_exterior_lines = filterArgs.value<bool>(k_IncludeExteriorTripleLines_Key);
   if(filterArgs.value<bool>(k_CopyNodeTypes_Key))
   {
-    inputValues.SourceNodeTypes = &dataStructure.getDataRefAs<Int8Array>(filterArgs.value<DataPath>(k_NodeTypesArrayPath_Key)).getDataStoreRef();
-    inputValues.DestinationNodeTypes =
-        &dataStructure.getDataRefAs<Int8Array>(pTripleLineGeometryPath.createChildPath(pVertexDataName).createChildPath(filterArgs.value<std::string>(k_NodeTypesArrayName_Key))).getDataStoreRef();
+    inputValues.source_node_types = &dataStructure.getDataRefAs<Int8ArrayType>(filterArgs.value<DataPath>(k_NodeTypesArrayPath_Key)).getDataStoreRef();
+    inputValues.destination_node_types =
+        &dataStructure.getDataRefAs<Int8ArrayType>(pTripleLineGeometryPath.createChildPath(pVertexDataName).createChildPath(filterArgs.value<std::string>(k_NodeTypesArrayName_Key))).getDataStoreRef();
   }
   return ExtractTripleLines(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

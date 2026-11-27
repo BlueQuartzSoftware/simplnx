@@ -80,14 +80,14 @@ IFilter::VersionType ConvertDataFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ConvertDataFilter::clone() const
+IFilter::UniquePointerType ConvertDataFilter::clone() const
 {
   return std::make_unique<ConvertDataFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ConvertDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                                          const ExecutionContext& executionContext) const
+IFilter::PreflightResult ConvertDataFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                          const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pScalarTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(k_ScalarType_Key);
   auto pInputArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_ArrayToConvertPath_Key);
@@ -116,25 +116,25 @@ IFilter::PreflightResult ConvertDataFilter::preflightImpl(const DataStructure& d
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ConvertDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ConvertDataFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                        const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ConvertDataInputValues inputValues;
   auto scalarTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(k_ScalarType_Key);
-  inputValues.ScalarType = StringToDataType(GetAllDataTypesAsStrings()[scalarTypeIndex]);
-  inputValues.SelectedArrayPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_ArrayToConvertPath_Key);
+  inputValues.scalar_type = StringToDataType(GetAllDataTypesAsStrings()[scalarTypeIndex]);
+  inputValues.selected_array_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_ArrayToConvertPath_Key);
   auto pConvertedArrayName = filterArgs.value<DataObjectNameParameter::ValueType>(k_ConvertedArrayName_Key);
   if(filterArgs.value<bool>(k_DeleteOriginal_Key))
   {
-    inputValues.OutputArrayName = inputValues.SelectedArrayPath.replaceName(k_TempName);
+    inputValues.output_array_name = inputValues.selected_array_path.replaceName(k_TempName);
   }
   else
   {
-    inputValues.OutputArrayName = inputValues.SelectedArrayPath.replaceName(pConvertedArrayName);
+    inputValues.output_array_name = inputValues.selected_array_path.replaceName(pConvertedArrayName);
   }
 
   return ConvertData(dataStructure, messageHandler, shouldCancel, &inputValues)();
@@ -142,20 +142,20 @@ Result<> ConvertDataFilter::executeImpl(DataStructure& dataStructure, const Argu
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_ScalarTypeKey = "ScalarType";
-constexpr StringLiteral k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
-constexpr StringLiteral k_OutputArrayNameKey = "OutputArrayName";
-} // namespace SIMPL
-namespace SIMPLConversionCustom
+constexpr StringLiteralType k_ScalarTypeKey = "ScalarType";
+constexpr StringLiteralType k_SelectedCellArrayPathKey = "SelectedCellArrayPath";
+constexpr StringLiteralType k_OutputArrayNameKey = "OutputArrayName";
+} // namespace simpl
+namespace simpl_conversion_custom
 {
 struct LinkedPathCreationFilterParameterConverter
 {
   using ParameterType = DataObjectNameParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json)
+  static Result<ValueType> Convert(const nlohmann::json& json)
   {
     if(!json.is_string())
     {
@@ -167,7 +167,7 @@ struct LinkedPathCreationFilterParameterConverter
     return {std::move(value)};
   }
 };
-} // namespace SIMPLConversionCustom
+} // namespace simpl_conversion_custom
 } // namespace
 
 Result<Arguments> ConvertDataFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -176,9 +176,9 @@ Result<Arguments> ConvertDataFilter::FromSIMPLJson(const nlohmann::json& json)
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_ScalarTypeKey, k_ScalarType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedCellArrayPathKey, k_ArrayToConvertPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversionCustom::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_OutputArrayNameKey, k_ConvertedArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_ScalarTypeKey, k_ScalarType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_ArrayToConvertPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion_custom::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_OutputArrayNameKey, k_ConvertedArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

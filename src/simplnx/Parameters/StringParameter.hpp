@@ -14,7 +14,7 @@ public:
   using ValueType = std::string;
 
   StringParameter() = delete;
-  StringParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  StringParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~StringParameter() override = default;
 
   StringParameter(const StringParameter&) = delete;
@@ -33,13 +33,13 @@ public:
    * @brief
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -82,10 +82,10 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
+  ValueType m_DefaultValue;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 template <typename T>
 struct NumberToStringFilterParameterConverter
@@ -100,7 +100,7 @@ struct NumberToStringFilterParameterConverter
    * an exponent, so integer consumers parse the integer prefix. A Float64 value that lies exactly halfway between two
    * Float32 values is written as its exact decimal value, so a Float32 consumer rounds it the same way.
    */
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 extern template struct NumberToStringFilterParameterConverter<int8>;
@@ -118,16 +118,16 @@ extern template struct NumberToStringFilterParameterConverter<uint64>;
 extern template struct NumberToStringFilterParameterConverter<float32>;
 extern template struct NumberToStringFilterParameterConverter<float64>;
 
-using DoubleToStringFilterParameterConverter = NumberToStringFilterParameterConverter<float64>;
+using DoubleToStringFilterParameterConverterType = NumberToStringFilterParameterConverter<float64>;
 
 struct SIMPLNX_EXPORT StringFilterParameterConverter
 {
   using ParameterType = StringParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::StringParameter, "5d6d1868-05f8-11ec-9a03-0242ac130003");

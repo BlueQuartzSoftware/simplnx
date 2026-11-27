@@ -15,7 +15,6 @@ ConcatenateDataArrays::ConcatenateDataArrays(DataStructure& dataStructure, const
 }
 
 // -----------------------------------------------------------------------------
-ConcatenateDataArrays::~ConcatenateDataArrays() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ConcatenateDataArrays::getCancel()
@@ -26,18 +25,18 @@ const std::atomic_bool& ConcatenateDataArrays::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ConcatenateDataArrays::operator()()
 {
-  const auto& outputDataArray = m_DataStructure.getDataRefAs<IArray>(m_InputValues->OutputArrayPath);
+  const auto& outputDataArray = m_DataStructure.getDataRefAs<IArray>(m_InputValues->output_array_path);
   std::string arrayTypeName = outputDataArray.getTypeName();
   switch(outputDataArray.getArrayType())
   {
   case IArray::ArrayType::DataArray: {
-    return ConcatenateArrays(m_DataStructure, m_InputValues->InputArrayPaths, m_InputValues->OutputArrayPath, m_MessageHandler, m_ShouldCancel);
+    return ConcatenateArrays(m_DataStructure, m_InputValues->input_array_paths, m_InputValues->output_array_path, m_MessageHandler, m_ShouldCancel);
   }
   case IArray::ArrayType::StringArray: {
-    return ConcatenateArraysImpl<StringArray>(m_DataStructure, m_InputValues->InputArrayPaths, m_InputValues->OutputArrayPath, m_MessageHandler, m_ShouldCancel);
+    return ConcatenateArraysImpl<StringArray>(m_DataStructure, m_InputValues->input_array_paths, m_InputValues->output_array_path, m_MessageHandler, m_ShouldCancel);
   }
   case IArray::ArrayType::NeighborListArray: {
-    return ConcatenateNeighborLists(m_DataStructure, m_InputValues->InputArrayPaths, m_InputValues->OutputArrayPath, m_MessageHandler, m_ShouldCancel);
+    return ConcatenateNeighborLists(m_DataStructure, m_InputValues->input_array_paths, m_InputValues->output_array_path, m_MessageHandler, m_ShouldCancel);
   }
   case IArray::ArrayType::Any: {
     return MakeErrorResult(to_underlying(ConcatenateDataArrays::ErrorCodes::InputArraysEqualAny),

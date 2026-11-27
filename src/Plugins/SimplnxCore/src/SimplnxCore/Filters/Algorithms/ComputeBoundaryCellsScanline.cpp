@@ -18,22 +18,20 @@ ComputeBoundaryCellsScanline::ComputeBoundaryCellsScanline(DataStructure& dataSt
 {
 }
 
-ComputeBoundaryCellsScanline::~ComputeBoundaryCellsScanline() noexcept = default;
-
 Result<> ComputeBoundaryCellsScanline::operator()()
 {
-  const auto& imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  const SizeVec3 udims = imageGeometry.getDimensions();
+  const auto& imageGeometry = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
+  const SizeVec3Type udims = imageGeometry.getDimensions();
   const int64 dimX = static_cast<int64>(udims[0]);
   const int64 dimY = static_cast<int64>(udims[1]);
   const int64 dimZ = static_cast<int64>(udims[2]);
 
-  auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
-  auto& boundaryCellsStore = m_DataStructure.getDataAs<Int8Array>(m_InputValues->BoundaryCellsArrayName)->getDataStoreRef();
+  auto& featureIdsStore = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path)->getDataStoreRef();
+  auto& boundaryCellsStore = m_DataStructure.getDataAs<Int8ArrayType>(m_InputValues->boundary_cells_array_name)->getDataStoreRef();
 
   // The lower bound excludes feature zero only when requested.
   int32 ignoreFeatureZeroVal = 0;
-  if(!m_InputValues->IgnoreFeatureZero)
+  if(!m_InputValues->ignore_feature_zero)
   {
     ignoreFeatureZeroVal = -1;
   }
@@ -81,7 +79,7 @@ Result<> ComputeBoundaryCellsScanline::operator()()
         {
           // Count volume faces only for axes with more than two cells.
           // Feature zero receives no volume-boundary contribution.
-          if(m_InputValues->IncludeVolumeBoundary)
+          if(m_InputValues->include_volume_boundary)
           {
             if(dimX > 2 && (xIdx == 0 || xIdx == dimX - 1))
             {

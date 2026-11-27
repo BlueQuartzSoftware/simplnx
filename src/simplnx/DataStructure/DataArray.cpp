@@ -21,7 +21,7 @@ std::string DataArray<T>::toString(usize tupleIndex, usize compIndex, const std:
 template <class T>
 bool DataArray<T>::setValueFromString(usize tupleIndex, usize compIndex, const std::string& value)
 {
-  Result<T> result = nx::core::StringInterpretationUtilities::Convert<T>(value);
+  Result<T> result = nx::core::string_interpretation_utilities::Convert<T>(value);
   if(result.invalid())
   {
     return false;

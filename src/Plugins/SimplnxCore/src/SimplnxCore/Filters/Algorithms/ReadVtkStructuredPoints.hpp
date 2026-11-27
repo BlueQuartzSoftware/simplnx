@@ -21,14 +21,14 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ReadVtkStructuredPointsInputValues
 {
-  FileSystemPathParameter::ValueType InputFile;
-  ImageIO::GeometryOverrides GeometryOverrides;
-  bool ReadPointData;
-  bool ReadCellData;
-  DataPath PointGeomPath;
-  DataPath ImageGeomPath;
-  std::string PointAttributeMatrixName;
-  std::string CellAttributeMatrixName;
+  FileSystemPathParameter::ValueType input_file;
+  image_io::GeometryOverrides geometry_overrides;
+  bool read_point_data{};
+  bool read_cell_data{};
+  DataPath point_geom_path;
+  DataPath image_geom_path;
+  std::string point_attribute_matrix_name;
+  std::string cell_attribute_matrix_name;
 };
 
 /**
@@ -232,8 +232,8 @@ private:
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
 
-  std::string m_Comment = {""};
-  std::string m_DatasetType = {""};
+  std::string m_Comment;
+  std::string m_DatasetType;
 
   bool m_FileIsBinary = {true};
 

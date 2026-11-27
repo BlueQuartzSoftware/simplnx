@@ -60,16 +60,16 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT PointSampleTriangleGeometryInputs
 {
-  int32 pNumberOfSamples;
-  bool pUseMask;
-  DataPath pTriangleGeometry;
-  DataPath pTriangleAreasArrayPath;
-  DataPath pMaskArrayPath;
-  MultiArraySelectionParameter::ValueType pSelectedDataArrayPaths;
-  DataPath pVertexGeometryPath;
-  DataPath pVertexGroupDataPath;
-  MultiArraySelectionParameter::ValueType pCreatedDataArrayPaths;
-  uint64 Seed;
+  int32 p_number_of_samples{};
+  bool p_use_mask{};
+  DataPath p_triangle_geometry;
+  DataPath p_triangle_areas_array_path;
+  DataPath p_mask_array_path;
+  MultiArraySelectionParameter::ValueType p_selected_data_array_paths;
+  DataPath p_vertex_geometry_path;
+  DataPath p_vertex_group_data_path;
+  MultiArraySelectionParameter::ValueType p_created_data_array_paths;
+  uint64 seed{};
 };
 
 /**
@@ -80,7 +80,7 @@ class SIMPLNXCORE_EXPORT PointSampleTriangleGeometry
 
 public:
   PointSampleTriangleGeometry(DataStructure& dataStructure, PointSampleTriangleGeometryInputs* inputValues, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler);
-  ~PointSampleTriangleGeometry() noexcept;
+  ~PointSampleTriangleGeometry() noexcept = default;
 
   PointSampleTriangleGeometry(const PointSampleTriangleGeometry&) = delete;
   PointSampleTriangleGeometry(PointSampleTriangleGeometry&&) noexcept = delete;
@@ -97,12 +97,12 @@ private:
   bool* m_Mask = nullptr;
 
   int m_SamplesNumberType = {0};
-  DataPath m_TriangleGeometry = {SIMPL::Defaults::TriangleDataContainerName, "", ""};
-  std::string m_VertexGeometry = {SIMPL::Defaults::VertexDataContainerName};
-  std::string m_VertexAttributeMatrixName = {SIMPL::Defaults::VertexAttributeMatrixName};
+  DataPath m_TriangleGeometry = {simpl::Defaults::TriangleDataContainerName, "", ""};
+  std::string m_VertexGeometry = {simpl::Defaults::VertexDataContainerName};
+  std::string m_VertexAttributeMatrixName = {simpl::Defaults::VertexAttributeMatrixName};
   int m_NumberOfSamples = {100000};
   DataPath m_ParentGeometry = {"", "", ""};
-  DataPath m_TriangleAreasArrayPath = {SIMPL::Defaults::TriangleDataContainerName, SIMPL::Defaults::FaceAttributeMatrixName, SIMPL::FaceData::SurfaceMeshFaceAreas};
+  DataPath m_TriangleAreasArrayPath = {simpl::Defaults::TriangleDataContainerName, simpl::Defaults::FaceAttributeMatrixName, simpl::FaceData::SurfaceMeshFaceAreas};
   bool m_UseMask = {false};
   DataPath m_MaskArrayPath = {"", "", ""};
   std::vector<DataPath> m_SelectedDataPaths = {};

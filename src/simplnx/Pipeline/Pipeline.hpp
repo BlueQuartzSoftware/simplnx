@@ -25,16 +25,16 @@ class FilterList;
 class SIMPLNX_EXPORT Pipeline : public AbstractPipelineNode, protected PipelineNodeObserver
 {
   using node_type = std::shared_ptr<AbstractPipelineNode>;
-  using collection_type = std::vector<node_type>;
+  using CollectionType = std::vector<node_type>;
 
 public:
   using index_type = uint64;
-  using iterator = collection_type::iterator;
-  using const_iterator = collection_type::const_iterator;
+  using iterator = CollectionType::iterator;
+  using const_iterator = CollectionType::const_iterator;
 
-  static constexpr StringLiteral k_Extension = ".d3dpipeline";
-  static constexpr StringLiteral k_SIMPLExtension = ".json";
-  static constexpr StringLiteral k_SIMPLPipelineBuilderKey = "PipelineBuilder";
+  static constexpr StringLiteralType k_Extension = ".d3dpipeline";
+  static constexpr StringLiteralType k_SIMPLExtension = ".json";
+  static constexpr StringLiteralType k_SIMPLPipelineBuilderKey = "PipelineBuilder";
 
   /**
    * @brief Constructs a Pipeline from json.
@@ -103,7 +103,7 @@ public:
    * @param name
    * @param filterList
    */
-  Pipeline(ExecutionContext executionContext, const std::string& name = "Untitled Pipeline", FilterList* filterList = nullptr);
+  Pipeline(ExecutionContext executionContext, std::string name = "Untitled Pipeline", FilterList* filterList = nullptr);
 
   /**
    * @brief Constructs a pipeline with the specified name. If no name is
@@ -192,7 +192,7 @@ public:
    * @param allowRenaming = false
    * @return bool
    */
-  bool preflight(DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming = false) override;
+  bool preflight(DataStructure& dataStructure, RenamedPathsType& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming = false) override;
 
   /**
    * @brief Executes the pipeline segment using the provided DataStructure.
@@ -226,7 +226,7 @@ public:
    * @param renamedPaths
    * @return bool
    */
-  bool preflightFrom(index_type index, DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel = false, bool allowRenaming = false);
+  bool preflightFrom(index_type index, DataStructure& dataStructure, RenamedPathsType& renamedPaths, const std::atomic_bool& shouldCancel = false, bool allowRenaming = false);
 
   /**
    * @brief Preflights the pipeline segment from a target position using the
@@ -237,7 +237,7 @@ public:
    * @param index
    * @return bool
    */
-  bool preflightFrom(index_type index, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel = false);
+  bool preflightFrom(index_type index, RenamedPathsType& renamedPaths, const std::atomic_bool& shouldCancel = false);
 
   /**
    * @brief Preflights the pipeline segment from a target position using the
@@ -352,7 +352,7 @@ public:
    * @param args = {}
    * @return bool
    */
-  bool insertAt(index_type index, IFilter::UniquePointer&& filter, const Arguments& args = {});
+  bool insertAt(index_type index, IFilter::UniquePointerType&& filter, const Arguments& args = {});
 
   /**
    * @brief Inserts a filter using the provided FilterHandle and Arguments at
@@ -480,7 +480,7 @@ public:
    * @param args = {}
    * @return bool
    */
-  bool push_front(IFilter::UniquePointer&& filter, const Arguments& args = {});
+  bool push_front(IFilter::UniquePointerType&& filter, const Arguments& args = {});
 
   /**
    * @brief Inserts the specified pipeline node at the end of the pipeline.
@@ -510,7 +510,7 @@ public:
    * @param args = {}
    * @return bool
    */
-  bool push_back(IFilter::UniquePointer&& filter, const Arguments& args = {});
+  bool push_back(IFilter::UniquePointerType&& filter, const Arguments& args = {});
 
   /**
    * @brief Returns an iterator to the pipeline node. Returns an iterator to
@@ -679,7 +679,7 @@ private:
   ////////////
   // Variables
   std::string m_Name;
-  collection_type m_Collection;
+  CollectionType m_Collection;
   FilterList* m_FilterList = nullptr;
   uint64 m_MemoryRequired = 0;
   ExecutionContext m_ExecutionContext;

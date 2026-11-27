@@ -23,7 +23,6 @@ ReadVolumeGraphicsFile::ReadVolumeGraphicsFile(DataStructure& dataStructure, con
 }
 
 // -----------------------------------------------------------------------------
-ReadVolumeGraphicsFile::~ReadVolumeGraphicsFile() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& ReadVolumeGraphicsFile::getCancel()
@@ -34,11 +33,11 @@ const std::atomic_bool& ReadVolumeGraphicsFile::getCancel()
 // -----------------------------------------------------------------------------
 Result<> ReadVolumeGraphicsFile::operator()()
 {
-  const DataPath densityArrayPath = m_InputValues->ImageGeometryPath.createChildPath(m_InputValues->CellAttributeMatrixName).createChildPath(m_InputValues->DensityArrayName);
-  auto* densityArray = m_DataStructure.getDataAs<Float32Array>(densityArrayPath);
-  auto& density = m_DataStructure.getDataAs<Float32Array>(densityArrayPath)->getDataStoreRef();
+  const DataPath densityArrayPath = m_InputValues->image_geometry_path.createChildPath(m_InputValues->cell_attribute_matrix_name).createChildPath(m_InputValues->density_array_name);
+  auto* densityArrayPtr = m_DataStructure.getDataAs<Float32ArrayType>(densityArrayPath);
+  auto& density = m_DataStructure.getDataAs<Float32ArrayType>(densityArrayPath)->getDataStoreRef();
 
-  auto filesize = static_cast<usize>(fs::file_size(m_InputValues->VGDataFile));
+  auto filesize = static_cast<usize>(fs::file_size(m_InputValues->vg_data_file));
   const usize allocatedBytes = density.getSize() * sizeof(float32);
 
   if(filesize < allocatedBytes)
@@ -52,7 +51,7 @@ Result<> ReadVolumeGraphicsFile::operator()()
   }
   m_MessageHandler.sendInfoMessage("Reading data from .vol file");
   m_MessageHandler.sendProgressCount("Reading volume files", 0, 1);
-  auto importResult = ImportFromBinaryFile(m_InputValues->VGDataFile, *densityArray);
+  auto importResult = ImportFromBinaryFile(m_InputValues->vg_data_file, *densityArrayPtr);
   if(importResult.valid())
   {
     m_MessageHandler.sendProgressCount("Reading volume files", 1, 1);

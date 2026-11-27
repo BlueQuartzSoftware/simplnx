@@ -24,12 +24,12 @@ public:
   ConditionalSetValueFilter& operator=(ConditionalSetValueFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_UseConditional_Key = "use_conditional";
-  static constexpr StringLiteral k_RemoveValue_Key = "remove_value";
-  static constexpr StringLiteral k_ReplaceValue_Key = "replace_value";
-  static constexpr StringLiteral k_ConditionalArrayPath_Key = "conditional_array_path";
-  static constexpr StringLiteral k_SelectedArrayPath_Key = "selected_array_path";
-  static constexpr StringLiteral k_InvertMask_Key = "invert_mask";
+  static constexpr StringLiteralType k_UseConditional_Key = "use_conditional";
+  static constexpr StringLiteralType k_RemoveValue_Key = "remove_value";
+  static constexpr StringLiteralType k_ReplaceValue_Key = "replace_value";
+  static constexpr StringLiteralType k_ConditionalArrayPath_Key = "conditional_array_path";
+  static constexpr StringLiteralType k_SelectedArrayPath_Key = "selected_array_path";
+  static constexpr StringLiteralType k_InvertMask_Key = "invert_mask";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -86,7 +86,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

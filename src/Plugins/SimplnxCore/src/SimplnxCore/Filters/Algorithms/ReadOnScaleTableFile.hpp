@@ -19,14 +19,14 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT OnScaleTableFileHeader
 {
-  FileSystemPathParameter::ValueType InputFile;
-  std::filesystem::file_time_type TimeStamp;
-  std::array<usize, 3> BoundsCounts = {2, 2, 2};
-  std::array<bool, 3> BoundsPresent = {false, false, false};
-  std::array<float32, 3> FirstBounds = {0.0F, 0.0F, 0.0F};
-  std::array<float32, 3> LastBounds = {0.0F, 0.0F, 0.0F};
-  usize NameCount = 0;
-  usize MaterialCount = 0;
+  FileSystemPathParameter::ValueType input_file;
+  std::filesystem::file_time_type time_stamp;
+  std::array<usize, 3> bounds_counts = {2, 2, 2};
+  std::array<bool, 3> bounds_present = {false, false, false};
+  std::array<float32, 3> first_bounds = {0.0F, 0.0F, 0.0F};
+  std::array<float32, 3> last_bounds = {0.0F, 0.0F, 0.0F};
+  usize name_count = 0;
+  usize material_count = 0;
 };
 
 /**
@@ -35,14 +35,14 @@ struct SIMPLNXCORE_EXPORT OnScaleTableFileHeader
  */
 struct SIMPLNXCORE_EXPORT ReadOnScaleTableFileInputValues
 {
-  FileSystemPathParameter::ValueType InputFile;
-  VectorFloat32Parameter::ValueType FallbackOrigin;
-  VectorFloat32Parameter::ValueType FallbackSpacing;
-  DataPath RectGridGeometryPath;
-  DataPath FeatureIdsArrayPath;
-  DataPath PhaseAttributeMatrixPath;
-  DataPath MaterialNamesArrayPath;
-  OnScaleTableFileHeader Header;
+  FileSystemPathParameter::ValueType input_file;
+  VectorFloat32ParameterType::ValueType fallback_origin;
+  VectorFloat32ParameterType::ValueType fallback_spacing;
+  DataPath rect_grid_geometry_path;
+  DataPath feature_ids_array_path;
+  DataPath phase_attribute_matrix_path;
+  DataPath material_names_array_path;
+  OnScaleTableFileHeader header;
 };
 
 /**
@@ -61,7 +61,7 @@ public:
    */
   ReadOnScaleTableFile(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, ReadOnScaleTableFileInputValues* inputValues);
 
-  ~ReadOnScaleTableFile() noexcept;
+  ~ReadOnScaleTableFile() noexcept = default;
 
   ReadOnScaleTableFile(const ReadOnScaleTableFile&) = delete;
   ReadOnScaleTableFile(ReadOnScaleTableFile&&) noexcept = delete;

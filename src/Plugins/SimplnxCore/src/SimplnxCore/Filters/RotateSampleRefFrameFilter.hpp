@@ -25,16 +25,16 @@ public:
   RotateSampleRefFrameFilter& operator=(RotateSampleRefFrameFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_ClearFeatureAttributeMatrix_Key = "clear_feature_attribute_matrix";
-  static constexpr StringLiteral k_FeatureAttributeMatrix_Key = "cell_feature_attribute_matrix_path";
-  static constexpr StringLiteral k_RotationRepresentation_Key = "rotation_representation_index";
-  static constexpr StringLiteral k_RotationAxisAngle_Key = "rotation_axis_angle";
-  static constexpr StringLiteral k_RotationMatrix_Key = "rotation_matrix";
-  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
-  static constexpr StringLiteral k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
-  static constexpr StringLiteral k_RemoveOriginalGeometry_Key = "remove_original_geometry";
-  static constexpr StringLiteral k_KeepInputGeometryOrigin_Key = "keep_input_geometry_origin";
+  static constexpr StringLiteralType k_ClearFeatureAttributeMatrix_Key = "clear_feature_attribute_matrix";
+  static constexpr StringLiteralType k_FeatureAttributeMatrix_Key = "cell_feature_attribute_matrix_path";
+  static constexpr StringLiteralType k_RotationRepresentation_Key = "rotation_representation_index";
+  static constexpr StringLiteralType k_RotationAxisAngle_Key = "rotation_axis_angle";
+  static constexpr StringLiteralType k_RotationMatrix_Key = "rotation_matrix";
+  static constexpr StringLiteralType k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_CreatedImageGeometryPath_Key = "output_image_geometry_path";
+  static constexpr StringLiteralType k_RotateSliceBySlice_Key = "rotate_slice_by_slice";
+  static constexpr StringLiteralType k_RemoveOriginalGeometry_Key = "remove_original_geometry";
+  static constexpr StringLiteralType k_KeepInputGeometryOrigin_Key = "keep_input_geometry_origin";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -91,7 +91,7 @@ public:
    * @brief
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

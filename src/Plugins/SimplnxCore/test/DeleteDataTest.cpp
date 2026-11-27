@@ -16,17 +16,17 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
-namespace CreateImageGeometryUnitTest
+namespace create_image_geometry_unit_test
 {
 const fs::path k_DataDir = "test/data";
 const fs::path k_TestFile = "CreateImageGeometry_Test.dream3d";
-} // namespace CreateImageGeometryUnitTest
+} // namespace create_image_geometry_unit_test
 
 TEST_CASE("SimplnxCore::Delete Singular Data Array", "[SimplnxCore][DeleteDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
 
@@ -34,9 +34,9 @@ TEST_CASE("SimplnxCore::Delete Singular Data Array", "[SimplnxCore][DeleteDataFi
   std::vector<float32> imageSpacing = {0.10F, 2.0F, 33.0F};
   std::vector<float32> imageOrigin = {0.0F, 22.0F, 77.0F};
 
-  VectorUInt64Parameter::ValueType inputDims = {imageDims[0], imageDims[1], imageDims[2]};
+  VectorUInt64ParameterType::ValueType inputDims = {imageDims[0], imageDims[1], imageDims[2]};
 
-  DataStructure dataStructure = UnitTest::CreateAllPrimitiveTypes(imageDims);
+  DataStructure dataStructure = unit_test::CreateAllPrimitiveTypes(imageDims);
 
   DataPath selectedDataPath1({k_LevelZero, k_LevelOne, k_Int8DataSet});
   DataPath selectedDataPath2({k_LevelZero, k_LevelOne, k_Int16DataSet});
@@ -50,22 +50,22 @@ TEST_CASE("SimplnxCore::Delete Singular Data Array", "[SimplnxCore][DeleteDataFi
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  DataObject* removedDataArray = dataStructure.getData(selectedDataPath1);
-  REQUIRE(removedDataArray == nullptr);
+  DataObject* removedDataArrayPtr = dataStructure.getData(selectedDataPath1);
+  REQUIRE(removedDataArrayPtr == nullptr);
   REQUIRE(dataStructure.getData(selectedDataPath2) == nullptr);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][DeleteDataFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Instantiate the filter, a DataStructure object and an Arguments Object
 
@@ -73,9 +73,9 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
   std::vector<float32> imageSpacing = {0.10F, 2.0F, 33.0F};
   std::vector<float32> imageOrigin = {0.0F, 22.0F, 77.0F};
 
-  VectorUInt64Parameter::ValueType inputDims = {imageDims[0], imageDims[1], imageDims[2]};
+  VectorUInt64ParameterType::ValueType inputDims = {imageDims[0], imageDims[1], imageDims[2]};
 
-  DataStructure dataStructure = UnitTest::CreateAllPrimitiveTypes(imageDims);
+  DataStructure dataStructure = unit_test::CreateAllPrimitiveTypes(imageDims);
 
   DataPath selectedDataGroupPath({k_LevelZero, k_LevelOne});
 
@@ -88,16 +88,16 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  DataObject* removedDataArray = dataStructure.getData(selectedDataGroupPath);
-  REQUIRE(removedDataArray == nullptr);
+  DataObject* removedDataArrayPtr = dataStructure.getData(selectedDataGroupPath);
+  REQUIRE(removedDataArrayPtr == nullptr);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 /**This code is commented out due to the current state of dataStructure management for the
@@ -524,8 +524,8 @@ TEST_CASE("SimplnxCore::Delete Data Object (Node removal)", "[SimplnxCore][Delet
 TEST_CASE("SimplnxCore::DeleteDataFilter: SIMPL Backwards Compatibility", "[SimplnxCore][DeleteDataFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -538,22 +538,22 @@ TEST_CASE("SimplnxCore::DeleteDataFilter: SIMPL Backwards Compatibility", "[Simp
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<DeleteDataFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<DeleteDataFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       // Complex type (DataArraysToRemoveConverter) - verified by successful pipeline loading
     }
   }

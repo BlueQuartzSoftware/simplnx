@@ -17,9 +17,9 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT CombineAttributeArraysInputValues
 {
-  bool NormalizeData = {};
-  MultiArraySelectionParameter::ValueType SelectedDataArrayPaths;
-  DataPath StackedDataArrayPath;
+  bool normalize_data = {};
+  MultiArraySelectionParameter::ValueType selected_data_array_paths;
+  DataPath stacked_data_array_path;
 };
 
 /**
@@ -47,7 +47,7 @@ public:
    * @pre All arguments outlive this executor.
    */
   CombineAttributeArrays(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, CombineAttributeArraysInputValues* inputValues);
-  ~CombineAttributeArrays() noexcept;
+  ~CombineAttributeArrays() noexcept = default;
 
   CombineAttributeArrays(const CombineAttributeArrays&) = delete;
   CombineAttributeArrays(CombineAttributeArrays&&) noexcept = delete;

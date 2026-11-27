@@ -15,16 +15,16 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeArrayHistogramInputValues
 {
-  bool UserDefinedRange = false;
-  int32 NumberOfBins = 0;
-  float64 MinRange = 0.0;
-  float64 MaxRange = 0.0;
-  MultiArraySelectionParameter::ValueType SelectedArrayPaths = {};
-  MultiArraySelectionParameter::ValueType CreatedBinRangeDataPaths = {};
-  MultiArraySelectionParameter::ValueType CreatedHistogramCountsDataPaths = {};
-  MultiArraySelectionParameter::ValueType CreatedBinMostPopulatedDataPaths = {};
-  std::optional<MultiArraySelectionParameter::ValueType> CreatedBinModalRangesDataPaths;
-  std::optional<DataPath> MaskPath;
+  bool user_defined_range = false;
+  int32 number_of_bins = 0;
+  float64 min_range = 0.0;
+  float64 max_range = 0.0;
+  MultiArraySelectionParameter::ValueType selected_array_paths;
+  MultiArraySelectionParameter::ValueType created_bin_range_data_paths;
+  MultiArraySelectionParameter::ValueType created_histogram_counts_data_paths;
+  MultiArraySelectionParameter::ValueType created_bin_most_populated_data_paths;
+  std::optional<MultiArraySelectionParameter::ValueType> created_bin_modal_ranges_data_paths;
+  std::optional<DataPath> mask_path;
 };
 
 /**
@@ -54,7 +54,7 @@ public:
    * @pre All arguments outlive this executor.
    */
   ComputeArrayHistogram(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ComputeArrayHistogramInputValues* inputValues);
-  ~ComputeArrayHistogram() noexcept;
+  ~ComputeArrayHistogram() noexcept = default;
 
   ComputeArrayHistogram(const ComputeArrayHistogram&) = delete;
   ComputeArrayHistogram(ComputeArrayHistogram&&) noexcept = delete;

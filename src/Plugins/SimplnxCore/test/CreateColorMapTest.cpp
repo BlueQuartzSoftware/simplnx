@@ -78,13 +78,13 @@ const DataPath k_BenchmarkOutputPath({k_BenchmarkOutputName});
 
 std::map<std::string, nlohmann::json> ReadPresets()
 {
-  Result<nlohmann::json> result = ColorTableUtilities::LoadAllRGBPresets();
+  Result<nlohmann::json> result = color_table_utilities::LoadAllRGBPresets();
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
   std::map<std::string, nlohmann::json> presetsMap;
   for(const nlohmann::json& preset : result.value())
   {
-    if(ColorTableUtilities::IsValidPreset(preset))
+    if(color_table_utilities::IsValidPreset(preset))
     {
       presetsMap.insert({preset["Name"].get<std::string>(), preset});
     }
@@ -96,13 +96,13 @@ std::map<std::string, nlohmann::json> ReadPresets()
 
 TEST_CASE("SimplnxCore::CreateColorMapFilter: Valid filter execution")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "generate_color_table_test.tar.gz", "generate_color_table_test");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "generate_color_table_test.tar.gz", "generate_color_table_test");
 
   DataStructure dataStructure;
 
@@ -117,7 +117,7 @@ TEST_CASE("SimplnxCore::CreateColorMapFilter: Valid filter execution")
     args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericType>(NumericType::float32));
     args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(1));
     args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(37989)}}));
-    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath{{Constants::k_Confidence_Index.str()}}));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath{{constants::k_ConfidenceIndexWithSpaces.str()}}));
 
     IFilter::ExecuteResult executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -220,15 +220,15 @@ TEST_CASE("SimplnxCore::CreateColorMapFilter: Valid filter execution")
   }
 
   {
-    args.insertOrAssign(CreateColorMapFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(DataPath{{Constants::k_Confidence_Index.str()}}));
+    args.insertOrAssign(CreateColorMapFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(DataPath{{constants::k_ConfidenceIndexWithSpaces.str()}}));
     args.insertOrAssign(CreateColorMapFilter::k_RgbArrayPath_Key, std::make_any<std::string>("CI_RGB"));
 
     IFilter::ExecuteResult executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
     // Validate the generated colors.
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(DataPath{{"CI_RGB"}}));
-    const UInt8Array& resultArray = dataStructure.getDataRefAs<UInt8Array>(DataPath{{"CI_RGB"}});
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(DataPath{{"CI_RGB"}}));
+    const UInt8ArrayType& resultArray = dataStructure.getDataRefAs<UInt8ArrayType>(DataPath{{"CI_RGB"}});
     const AbstractDataStore<uint8>& resultStore = resultArray.getDataStoreRef();
 
     std::string buf;
@@ -237,7 +237,7 @@ TEST_CASE("SimplnxCore::CreateColorMapFilter: Valid filter execution")
     while(!inStream.eof())
     {
       std::getline(inStream, buf);
-      std::vector<std::string> list = StringUtilities::split(buf, ',');
+      std::vector<std::string> list = string_utilities::Split(buf, ',');
       for(int i = 0; i < list.size(); i++)
       {
         REQUIRE_NOTHROW(std::stoi(list[i]));
@@ -249,55 +249,55 @@ TEST_CASE("SimplnxCore::CreateColorMapFilter: Valid filter execution")
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ColorTableUtilities: RGB interpolation helpers", "[SimplnxCore][ColorTableUtilities]")
 {
   // Two-color black->white map. Flattened control points: {A, R, G, B} per color.
   const std::vector<float32> twoColor = {0.0F, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F, 1.0F};
-  const std::vector<float32> binPoints2 = ColorTableUtilities::NormalizeBinPoints(twoColor);
+  const std::vector<float32> binPoints2 = color_table_utilities::NormalizeBinPoints(twoColor);
   REQUIRE(binPoints2.size() == 2);
   REQUIRE(binPoints2[0] == Approx(0.0F));
   REQUIRE(binPoints2[1] == Approx(1.0F));
 
   // Midpoint of black->white: 0.5 * 255 == 127.5 -> truncates to 127.
-  const std::array<uint8, 3> mid = ColorTableUtilities::ComputeRgbFromControlPoints(0.5F, binPoints2, twoColor, 2);
+  const std::array<uint8, 3> mid = color_table_utilities::ComputeRgbFromControlPoints(0.5F, binPoints2, twoColor, 2);
   REQUIRE(mid[0] == 127);
   REQUIRE(mid[1] == 127);
   REQUIRE(mid[2] == 127);
 
   // Three-color map with non-[0,1] A-values -> normalized bin points {0, 0.5, 1}.
   const std::vector<float32> threeColor = {0.0F, 0.0F, 0.0F, 0.0F, 5.0F, 1.0F, 0.0F, 0.0F, 10.0F, 0.0F, 0.0F, 1.0F};
-  const std::vector<float32> binPoints3 = ColorTableUtilities::NormalizeBinPoints(threeColor);
+  const std::vector<float32> binPoints3 = color_table_utilities::NormalizeBinPoints(threeColor);
   REQUIRE(binPoints3[1] == Approx(0.5F));
-  const std::array<uint8, 3> pureRed = ColorTableUtilities::ComputeRgbFromControlPoints(0.5F, binPoints3, threeColor, 3);
+  const std::array<uint8, 3> pureRed = color_table_utilities::ComputeRgbFromControlPoints(0.5F, binPoints3, threeColor, 3);
   REQUIRE(pureRed[0] == 255);
   REQUIRE(pureRed[1] == 0);
   REQUIRE(pureRed[2] == 0);
 
   // min == max guard: normalized value is 0.0 regardless of value.
-  REQUIRE(ColorTableUtilities::NormalizeValue<int32>(5, 5, 5) == Approx(0.0F));
-  REQUIRE(ColorTableUtilities::NormalizeValue<float32>(2.0F, 0.0F, 4.0F) == Approx(0.5F));
+  REQUIRE(color_table_utilities::NormalizeValue<int32>(5, 5, 5) == Approx(0.0F));
+  REQUIRE(color_table_utilities::NormalizeValue<float32>(2.0F, 0.0F, 4.0F) == Approx(0.5F));
 
   // Negative-min normalization: differences must be handled without signed-integer overflow.
-  REQUIRE(ColorTableUtilities::NormalizeValue<int32>(-8, -8, 7) == Approx(0.0F));
-  REQUIRE(ColorTableUtilities::NormalizeValue<int32>(7, -8, 7) == Approx(1.0F));
-  REQUIRE(ColorTableUtilities::NormalizeValue<int32>(0, -8, 7) == Approx(8.0F / 15.0F));
+  REQUIRE(color_table_utilities::NormalizeValue<int32>(-8, -8, 7) == Approx(0.0F));
+  REQUIRE(color_table_utilities::NormalizeValue<int32>(7, -8, 7) == Approx(1.0F));
+  REQUIRE(color_table_utilities::NormalizeValue<int32>(0, -8, 7) == Approx(8.0F / 15.0F));
 
   // Full int64 range would overflow a signed subtraction; the hardened helper returns a finite value in [0, 1].
-  const float32 fullRange = ColorTableUtilities::NormalizeValue<int64>(0, std::numeric_limits<int64>::min(), std::numeric_limits<int64>::max());
+  const float32 fullRange = color_table_utilities::NormalizeValue<int64>(0, std::numeric_limits<int64>::min(), std::numeric_limits<int64>::max());
   REQUIRE(std::isfinite(fullRange));
   REQUIRE(fullRange >= 0.0F);
   REQUIRE(fullRange <= 1.0F);
   REQUIRE(fullRange == Approx(0.5F));
 
   // Non-finite guard: NaN inputs deterministically map to the first control color (0.0F).
-  REQUIRE(ColorTableUtilities::NormalizeValue<float32>(std::numeric_limits<float32>::quiet_NaN(), 0.0F, 1.0F) == 0.0F);
+  REQUIRE(color_table_utilities::NormalizeValue<float32>(std::numeric_limits<float32>::quiet_NaN(), 0.0F, 1.0F) == 0.0F);
 
   // Degenerate bin points: a single control color must not produce NaN from a 0/0 divide.
   const std::vector<float32> singleColor = {0.5F, 1.0F, 0.0F, 0.0F};
-  const std::vector<float32> binPoints1 = ColorTableUtilities::NormalizeBinPoints(singleColor);
+  const std::vector<float32> binPoints1 = color_table_utilities::NormalizeBinPoints(singleColor);
   REQUIRE(binPoints1.size() == 1);
   REQUIRE(binPoints1[0] == Approx(0.0F));
 }
@@ -305,8 +305,8 @@ TEST_CASE("SimplnxCore::ColorTableUtilities: RGB interpolation helpers", "[Simpl
 TEST_CASE("SimplnxCore::CreateColorMapFilter: SIMPL Backwards Compatibility", "[SimplnxCore][CreateColorMapFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -319,22 +319,22 @@ TEST_CASE("SimplnxCore::CreateColorMapFilter: SIMPL Backwards Compatibility", "[
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<CreateColorMapFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<CreateColorMapFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<std::string>(CreateColorMapFilter::k_SelectedPreset_Key) == "TestName");
       CHECK(args.value<DataPath>(CreateColorMapFilter::k_SelectedDataArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<std::string>(CreateColorMapFilter::k_RgbArrayPath_Key) == "TestName");

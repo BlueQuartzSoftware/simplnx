@@ -22,9 +22,9 @@ DataReparentedMessage::DataReparentedMessage(const DataReparentedMessage& other)
 
 DataReparentedMessage::DataReparentedMessage(DataReparentedMessage&& other) noexcept
 : AbstractDataStructureMessage(other)
-, m_TargetId(std::move(other.m_TargetId))
-, m_ParentId(std::move(other.m_ParentId))
-, m_ParentAdded(std::move(other.m_ParentAdded))
+, m_TargetId(other.m_TargetId)
+, m_ParentId(other.m_ParentId)
+, m_ParentAdded(other.m_ParentAdded)
 {
 }
 
@@ -32,7 +32,7 @@ DataReparentedMessage::~DataReparentedMessage() = default;
 
 AbstractDataStructureMessage::MessageType DataReparentedMessage::getMsgType() const
 {
-  return MsgType;
+  return k_MsgType;
 }
 
 DataObject::IdType DataReparentedMessage::getTargetId() const

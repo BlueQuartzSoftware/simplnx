@@ -25,10 +25,10 @@
 #include "simplnx/Utilities/InMemoryTemporaryRecordStore.hpp"
 #include "simplnx/Utilities/Meshing/TriangleUtilities.hpp"
 
+#include <algorithm>
 #include <fmt/format.h>
 #include <nonstd/span.hpp>
 
-#include <algorithm>
 #include <array>
 #include <cstring>
 #include <random>
@@ -42,8 +42,8 @@ namespace
 constexpr float64 k_RangeMin = 0.0;
 constexpr float64 k_RangeMax = 1.0;
 constexpr std::mt19937_64::result_type k_Seed = 3412341234123412;
-std::mt19937_64 generator(k_Seed);
-std::uniform_real_distribution<> distribution(k_RangeMin, k_RangeMax);
+std::mt19937_64 Generator(k_Seed);
+std::uniform_real_distribution<> Distribution(k_RangeMin, k_RangeMax);
 
 // Fixed batches bound resident node-record memory independently of mesh size.
 constexpr uint64 k_NodeRecordBatch = 4096;
@@ -60,8 +60,8 @@ struct QuickSurfaceNodeRecord
 {
   std::array<float32, 3> coordinates = {};
   std::array<int32, 4> owners = {}; // Holds up to four owner IDs because node types cap the count at four.
-  uint8 ownerCount = 0;
-  uint8 touchesExterior = 0;
+  uint8 owner_count = 0;
+  uint8 touches_exterior = 0;
   uint8 assigned = 0;
   uint8 reserved = 0; // Keeps the temporary record fixed-width.
 };
@@ -83,10 +83,10 @@ Result<std::unique_ptr<ITemporaryRecordStore>> CreateNodeRecordStore(uint64 node
     return MakeErrorResult<std::unique_ptr<ITemporaryRecordStore>>(-56346, "QuickSurfaceMesh cannot create node state for an empty mesh.");
   }
   TemporaryRecordStoreConfig config;
-  config.recordSize = sizeof(QuickSurfaceNodeRecord);
-  config.maxRecordsPerBatch = k_NodeRecordBatch;
-  config.initialRecordCount = nodeCount;
-  auto result = DataStoreUtilities::GetIOCollection().createTemporaryRecordStore(config);
+  config.record_size = sizeof(QuickSurfaceNodeRecord);
+  config.max_records_per_batch = k_NodeRecordBatch;
+  config.initial_record_count = nodeCount;
+  auto result = data_store_utilities::GetIOCollection().createTemporaryRecordStore(config);
   if(result.invalid() && allowInMemoryFallback)
   {
     auto fallback = InMemoryTemporaryRecordStore::Create(config);
@@ -185,7 +185,7 @@ public:
    *
    * The adapter captures cache errors for the caller to return after generation.
    */
-  void setCoordinates(uint64 nodeId, const Point3D<float64>& coordinates)
+  void setCoordinates(uint64 nodeId, const Vec3<float64>& coordinates)
   {
     if(m_ShouldCancel || m_Result.invalid())
     {
@@ -251,12 +251,12 @@ private:
     auto record = recordResult.value();
     if(owner == -1)
     {
-      record.touchesExterior = 1;
+      record.touches_exterior = 1;
     }
-    const auto ownerEnd = record.owners.cbegin() + record.ownerCount;
-    if(std::find(record.owners.cbegin(), ownerEnd, owner) == ownerEnd && record.ownerCount < record.owners.size())
+    const auto ownerEndPtr = record.owners.cbegin() + record.owner_count;
+    if(std::find(record.owners.cbegin(), ownerEndPtr, owner) == ownerEndPtr && record.owner_count < record.owners.size())
     {
-      record.owners[record.ownerCount++] = owner;
+      record.owners[record.owner_count++] = owner;
     }
     m_Result = m_Cache.write(nodeId, record, m_ShouldCancel);
   }
@@ -282,7 +282,7 @@ private:
 void FlipProblemVoxelCase1(int32* buf, QuickSurfaceMeshScanline::MeshIndexType v1, QuickSurfaceMeshScanline::MeshIndexType v2, QuickSurfaceMeshScanline::MeshIndexType v3,
                            QuickSurfaceMeshScanline::MeshIndexType v4, QuickSurfaceMeshScanline::MeshIndexType v5, QuickSurfaceMeshScanline::MeshIndexType v6)
 {
-  auto val = static_cast<float32>(distribution(generator));
+  auto val = static_cast<float32>(Distribution(Generator));
 
   if(val < 0.25f)
   {
@@ -316,7 +316,7 @@ void FlipProblemVoxelCase1(int32* buf, QuickSurfaceMeshScanline::MeshIndexType v
 void FlipProblemVoxelCase2(int32* buf, QuickSurfaceMeshScanline::MeshIndexType v1, QuickSurfaceMeshScanline::MeshIndexType v2, QuickSurfaceMeshScanline::MeshIndexType v3,
                            QuickSurfaceMeshScanline::MeshIndexType v4)
 {
-  auto val = static_cast<float32>(distribution(generator));
+  auto val = static_cast<float32>(Distribution(Generator));
 
   if(val < 0.125f)
   {
@@ -363,7 +363,7 @@ void FlipProblemVoxelCase2(int32* buf, QuickSurfaceMeshScanline::MeshIndexType v
  */
 void FlipProblemVoxelCase3(int32* buf, QuickSurfaceMeshScanline::MeshIndexType v1, QuickSurfaceMeshScanline::MeshIndexType v2, QuickSurfaceMeshScanline::MeshIndexType v3)
 {
-  auto val = static_cast<float32>(distribution(generator));
+  auto val = static_cast<float32>(Distribution(Generator));
 
   if(val < 0.5f)
   {
@@ -383,24 +383,22 @@ QuickSurfaceMeshScanline::QuickSurfaceMeshScanline(DataStructure& dataStructure,
 , m_ShouldCancel(shouldCancel)
 , m_MessageHandler(mesgHandler)
 {
-  generator.seed(k_Seed);
+  Generator.seed(k_Seed);
 }
-
-QuickSurfaceMeshScanline::~QuickSurfaceMeshScanline() noexcept = default;
 
 Result<> QuickSurfaceMeshScanline::operator()()
 {
-  const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getDataStoreRef();
-  Result<> sentinelCheck = MeshingUtilities::ValidateFeatureIdsAgainstSentinels(featureIdsStore, m_InputValues->FeatureIdsArrayPath, false, m_ShouldCancel, m_MessageHandler);
+  const auto& featureIdsStore = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getDataStoreRef();
+  Result<> sentinelCheck = meshing_utilities::ValidateFeatureIdsAgainstSentinels(featureIdsStore, m_InputValues->feature_ids_array_path, false, m_ShouldCancel, m_MessageHandler);
   if(sentinelCheck.invalid())
   {
     return sentinelCheck;
   }
 
-  auto& grid = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
-  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
+  auto& grid = m_DataStructure.getDataRefAs<IGridGeometry>(m_InputValues->grid_geom_data_path);
+  auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_geometry_path);
 
-  SizeVec3 udims = grid.getDimensions();
+  SizeVec3Type udims = grid.getDimensions();
 
   usize xP = udims[0];
   usize yP = udims[1];
@@ -412,7 +410,7 @@ Result<> QuickSurfaceMeshScanline::operator()()
   usize numFeatures = 0;
 
   // Correct diagonal ambiguities before the count pass determines exact output sizes.
-  if(m_InputValues->FixProblemVoxels)
+  if(m_InputValues->fix_problem_voxels)
   {
     auto correctionResult = correctProblemVoxels();
     if(correctionResult.invalid())
@@ -458,7 +456,7 @@ Result<> QuickSurfaceMeshScanline::operator()()
     return resizeResult;
   }
 
-  for(const auto& dataPath : m_InputValues->CreatedDataArrayPaths)
+  for(const auto& dataPath : m_InputValues->created_data_array_paths)
   {
     Result<> result = nx::core::ResizeAndReplaceDataArray(m_DataStructure, dataPath, tupleShape, nx::core::IDataAction::Mode::Execute);
     if(result.invalid())
@@ -467,9 +465,9 @@ Result<> QuickSurfaceMeshScanline::operator()()
     }
   }
 
-  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && triangleCount == 0)
+  if(m_InputValues->bounding_box_skin_mode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly && triangleCount == 0)
   {
-    return MeshingUtilities::MakeEmptyMeshWarning(m_InputValues->TriangleGeometryPath, featureIdsStore.getNumberOfTuples(), static_cast<usize>(nodeCount));
+    return meshing_utilities::MakeEmptyMeshWarning(m_InputValues->triangle_geometry_path, featureIdsStore.getNumberOfTuples(), static_cast<usize>(nodeCount));
   }
 
   auto generationResult = createNodesAndTriangles(nodeCount, triangleCount, numFeatures);
@@ -483,30 +481,30 @@ Result<> QuickSurfaceMeshScanline::operator()()
   }
 
   Result<> windingResult = {};
-  if(m_InputValues->RepairTriangleWinding)
+  if(m_InputValues->repair_triangle_winding)
   {
-    auto& ioCollection = DataStoreUtilities::GetIOCollection();
+    auto& ioCollection = data_store_utilities::GetIOCollection();
     // External sorting and temporary records repair winding without a mesh-sized resident adjacency structure.
     if(ioCollection.hasExternalSortCapability() && ioCollection.hasTemporaryRecordStoreCapability())
     {
-      windingResult = MeshingUtilities::RepairTriangleWindingExternal(triangleGeom.getFaces()->getDataStoreRef(),
-                                                                      m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
+      windingResult = meshing_utilities::RepairTriangleWindingExternal(
+          triangleGeom.getFaces()->getDataStoreRef(), m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->face_labels_data_path)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
     }
     else
     {
       const auto isOutOfCore = [](const IArray* array) { return array != nullptr && IsOutOfCore(*array); };
       bool hasOutOfCoreTarget =
-          isOutOfCore(m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath)) || isOutOfCore(m_DataStructure.getDataAs<IDataArray>(m_InputValues->NodeTypesDataPath)) ||
-          isOutOfCore(m_DataStructure.getDataAs<IDataArray>(m_InputValues->FaceLabelsDataPath)) || isOutOfCore(triangleGeom.getVertices()) || isOutOfCore(triangleGeom.getFaces());
+          isOutOfCore(m_DataStructure.getDataAs<IDataArray>(m_InputValues->feature_ids_array_path)) || isOutOfCore(m_DataStructure.getDataAs<IDataArray>(m_InputValues->node_types_data_path)) ||
+          isOutOfCore(m_DataStructure.getDataAs<IDataArray>(m_InputValues->face_labels_data_path)) || isOutOfCore(triangleGeom.getVertices()) || isOutOfCore(triangleGeom.getFaces());
       const auto inspectPaths = [this, &hasOutOfCoreTarget, &isOutOfCore](const std::vector<DataPath>& paths) {
         for(const auto& path : paths)
         {
           hasOutOfCoreTarget = hasOutOfCoreTarget || isOutOfCore(m_DataStructure.getDataAs<IDataArray>(path));
         }
       };
-      inspectPaths(m_InputValues->SelectedCellDataArrayPaths);
-      inspectPaths(m_InputValues->SelectedFeatureDataArrayPaths);
-      inspectPaths(m_InputValues->CreatedDataArrayPaths);
+      inspectPaths(m_InputValues->selected_cell_data_array_paths);
+      inspectPaths(m_InputValues->selected_feature_data_array_paths);
+      inspectPaths(m_InputValues->created_data_array_paths);
       if(hasOutOfCoreTarget)
       {
         return MakeErrorResult(
@@ -519,25 +517,25 @@ Result<> QuickSurfaceMeshScanline::operator()()
       {
         return MakeErrorResult(-56341, fmt::format("Unable to generate the connectivity list for {} geometry.", triangleGeom.getName()));
       }
-      const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicList>(optionalId.value());
-      windingResult = MeshingUtilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
-                                                              m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
+      const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicListType>(optionalId.value());
+      windingResult = meshing_utilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
+                                                               m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->face_labels_data_path)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
       m_DataStructure.removeData(triangleGeom.getElementContainingVertId().value());
       m_DataStructure.removeData(triangleGeom.getElementNeighborsId().value());
     }
   }
 
-  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && windingResult.valid())
+  if(m_InputValues->bounding_box_skin_mode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly && windingResult.valid())
   {
     if(triangleGeom.getNumberOfFaces() == 0)
     {
-      return MergeResults(std::move(windingResult),
-                          MeshingUtilities::MakeEmptyMeshWarning(m_InputValues->TriangleGeometryPath, m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath).getNumberOfTuples(),
-                                                                 triangleGeom.getNumberOfVertices()));
+      return MergeResults(std::move(windingResult), meshing_utilities::MakeEmptyMeshWarning(m_InputValues->triangle_geometry_path,
+                                                                                            m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getNumberOfTuples(),
+                                                                                            triangleGeom.getNumberOfVertices()));
     }
     if(suppressedFaceCount == 0)
     {
-      return MergeResults(std::move(windingResult), MeshingUtilities::MakeNoFacesPrunedWarning(m_InputValues->TriangleGeometryPath));
+      return MergeResults(std::move(windingResult), meshing_utilities::MakeNoFacesPrunedWarning(m_InputValues->triangle_geometry_path));
     }
   }
 
@@ -548,10 +546,10 @@ Result<> QuickSurfaceMeshScanline::correctProblemVoxels()
 {
   m_MessageHandler.sendMessage(IFilter::Message::Type::Info, "Correcting Problem Voxels");
 
-  auto* grid = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
-  auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
+  auto* gridPtr = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->grid_geom_data_path);
+  auto& featureIdsStore = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path)->getDataStoreRef();
 
-  SizeVec3 udims = grid->getDimensions();
+  SizeVec3Type udims = gridPtr->getDimensions();
 
   MeshIndexType xP = udims[0];
   MeshIndexType yP = udims[1];
@@ -616,7 +614,7 @@ Result<> QuickSurfaceMeshScanline::correctProblemVoxels()
           if(f1 == f8 && f1 != f2 && f1 != f3 && f1 != f4 && f1 != f5 && f1 != f6 && f1 != f7)
           {
             // FlipProblemVoxelCase1(featureIds, v1, v2, v3, v6, v7, v8)
-            auto val = static_cast<float32>(distribution(generator));
+            auto val = static_cast<float32>(Distribution(Generator));
             if(val < 0.25f)
             {
               sliceB[v4Local] = sliceB[v2Local];
@@ -642,7 +640,7 @@ Result<> QuickSurfaceMeshScanline::correctProblemVoxels()
           if(f2 == f7 && f2 != f1 && f2 != f3 && f2 != f4 && f2 != f5 && f2 != f6 && f2 != f8)
           {
             // FlipProblemVoxelCase1(featureIds, v2, v1, v4, v5, v8, v7)
-            auto val = static_cast<float32>(distribution(generator));
+            auto val = static_cast<float32>(Distribution(Generator));
             if(val < 0.25f)
             {
               sliceB[v3Local] = sliceB[v1Local];
@@ -668,7 +666,7 @@ Result<> QuickSurfaceMeshScanline::correctProblemVoxels()
           if(f3 == f6 && f3 != f1 && f3 != f2 && f3 != f4 && f3 != f5 && f3 != f7 && f3 != f8)
           {
             // FlipProblemVoxelCase1(featureIds, v3, v1, v4, v5, v8, v6)
-            auto val = static_cast<float32>(distribution(generator));
+            auto val = static_cast<float32>(Distribution(Generator));
             if(val < 0.25f)
             {
               sliceB[v2Local] = sliceB[v1Local];
@@ -694,7 +692,7 @@ Result<> QuickSurfaceMeshScanline::correctProblemVoxels()
           if(f4 == f5 && f4 != f1 && f4 != f2 && f4 != f3 && f4 != f6 && f4 != f7 && f4 != f8)
           {
             // FlipProblemVoxelCase1(featureIds, v4, v2, v3, v6, v7, v5)
-            auto val = static_cast<float32>(distribution(generator));
+            auto val = static_cast<float32>(Distribution(Generator));
             if(val < 0.25f)
             {
               sliceB[v1Local] = sliceB[v2Local];
@@ -721,7 +719,7 @@ Result<> QuickSurfaceMeshScanline::correctProblemVoxels()
           // Case 2 preserves the QuickSurfaceMeshDirect conditional sequence and marks each modified slice.
           auto doCase2 = [&](int32* bufX, MeshIndexType ix1, int32* bufY, MeshIndexType iy1, int32* bufZ, MeshIndexType iz1, int32* bufW, MeshIndexType iw1, bool& dirtyX, bool& dirtyY, bool& dirtyZ,
                              bool& dirtyW) {
-            auto val = static_cast<float32>(distribution(generator));
+            auto val = static_cast<float32>(Distribution(Generator));
             if(val < 0.125f)
             {
               bufX[ix1] = bufY[iy1];
@@ -829,7 +827,7 @@ Result<> QuickSurfaceMeshScanline::correctProblemVoxels()
           // Case 3 preserves the QuickSurfaceMeshDirect two-way choice and dirty-slice tracking.
           if(f2 == f3 && f2 == f4 && f2 == f5 && f2 == f6 && f2 == f7 && f2 != f1 && f2 != f8)
           {
-            auto val = static_cast<float32>(distribution(generator));
+            auto val = static_cast<float32>(Distribution(Generator));
             if(val < 0.5f)
             {
               sliceA[v1Local] = sliceA[v2Local];
@@ -844,7 +842,7 @@ Result<> QuickSurfaceMeshScanline::correctProblemVoxels()
           }
           if(f1 == f3 && f1 == f4 && f1 == f5 && f1 == f6 && f1 == f8 && f1 != f2 && f1 != f7)
           {
-            auto val = static_cast<float32>(distribution(generator));
+            auto val = static_cast<float32>(Distribution(Generator));
             if(val < 0.5f)
             {
               sliceA[v2Local] = sliceA[v1Local];
@@ -859,7 +857,7 @@ Result<> QuickSurfaceMeshScanline::correctProblemVoxels()
           }
           if(f1 == f2 && f1 == f4 && f1 == f5 && f1 == f7 && f1 == f8 && f1 != f3 && f1 != f6)
           {
-            auto val = static_cast<float32>(distribution(generator));
+            auto val = static_cast<float32>(Distribution(Generator));
             if(val < 0.5f)
             {
               sliceA[v3Local] = sliceA[v1Local];
@@ -874,7 +872,7 @@ Result<> QuickSurfaceMeshScanline::correctProblemVoxels()
           }
           if(f1 == f2 && f1 == f3 && f1 == f6 && f1 == f7 && f1 == f8 && f1 != f4 && f1 != f5)
           {
-            auto val = static_cast<float32>(distribution(generator));
+            auto val = static_cast<float32>(Distribution(Generator));
             if(val < 0.5f)
             {
               sliceA[v4Local] = sliceA[v1Local];
@@ -945,10 +943,10 @@ Result<> QuickSurfaceMeshScanline::correctProblemVoxels()
  */
 Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& nodeCount, MeshIndexType& triangleCount, usize& numFeatures, MeshIndexType& suppressedFaceCount)
 {
-  auto* grid = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
-  auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
+  auto* gridPtr = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->grid_geom_data_path);
+  auto& featureIdsStore = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path)->getDataStoreRef();
 
-  SizeVec3 udims = grid->getDimensions();
+  SizeVec3Type udims = gridPtr->getDimensions();
 
   MeshIndexType xP = udims[0];
   MeshIndexType yP = udims[1];
@@ -956,16 +954,16 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
 
   const MeshIndexType sliceSize = xP * yP;
   const MeshIndexType nodePlaneSize = (xP + 1) * (yP + 1);
-  constexpr auto kMax = std::numeric_limits<MeshIndexType>::max();
+  constexpr auto k_Max = std::numeric_limits<MeshIndexType>::max();
 
   // Two planes keep node IDs proportional to one slice. Later cells cannot reference a retired Z plane.
   // The sentinel marks a node that needs an output ID.
-  std::vector<MeshIndexType> nodePlane0(nodePlaneSize, kMax);
-  std::vector<MeshIndexType> nodePlane1(nodePlaneSize, kMax);
+  std::vector<MeshIndexType> nodePlane0(nodePlaneSize, k_Max);
+  std::vector<MeshIndexType> nodePlane1(nodePlaneSize, k_Max);
 
   // Count each dual-grid node once before mesh output uses its ID.
   auto countNode = [&](std::vector<MeshIndexType>& plane, MeshIndexType offset) {
-    if(plane[offset] == kMax)
+    if(plane[offset] == k_Max)
     {
       plane[offset] = nodeCount;
       nodeCount++;
@@ -1007,21 +1005,18 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
         MeshIndexType localIdx = j * xP + i;
         int32 curFeature = curSlice[localIdx];
 
-        if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && curFeature == 0)
+        if(m_InputValues->bounding_box_skin_mode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly && curFeature == 0)
         {
           suppressedFaceCount += static_cast<MeshIndexType>(i == 0) + static_cast<MeshIndexType>(i == xP - 1) + static_cast<MeshIndexType>(j == 0) + static_cast<MeshIndexType>(j == yP - 1) +
                                  static_cast<MeshIndexType>(k == 0) + static_cast<MeshIndexType>(k == zP - 1);
         }
 
         // Track max featureId for numFeatures
-        if(static_cast<usize>(curFeature) > numFeatures)
-        {
-          numFeatures = static_cast<usize>(curFeature);
-        }
+        numFeatures = std::max(static_cast<usize>(curFeature), numFeatures);
 
         // A dual-grid node at (ni, nj) has offset nj * (xP + 1) + ni.
 
-        if(i == 0 && !(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && curFeature == 0))
+        if(i == 0 && (m_InputValues->bounding_box_skin_mode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           countNode(nodePlane0, j * (xP + 1) + i);
           countNode(nodePlane0, (j + 1) * (xP + 1) + i);
@@ -1029,7 +1024,7 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
           countNode(nodePlane1, (j + 1) * (xP + 1) + i);
           triangleCount += 2;
         }
-        if(j == 0 && !(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && curFeature == 0))
+        if(j == 0 && (m_InputValues->bounding_box_skin_mode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           countNode(nodePlane0, j * (xP + 1) + i);
           countNode(nodePlane0, j * (xP + 1) + (i + 1));
@@ -1037,7 +1032,7 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
           countNode(nodePlane1, j * (xP + 1) + (i + 1));
           triangleCount += 2;
         }
-        if(k == 0 && !(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && curFeature == 0))
+        if(k == 0 && (m_InputValues->bounding_box_skin_mode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           countNode(nodePlane0, j * (xP + 1) + i);
           countNode(nodePlane0, j * (xP + 1) + (i + 1));
@@ -1045,7 +1040,7 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
           countNode(nodePlane0, (j + 1) * (xP + 1) + (i + 1));
           triangleCount += 2;
         }
-        if(i == (xP - 1) && !(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && curFeature == 0))
+        if(i == (xP - 1) && (m_InputValues->bounding_box_skin_mode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           countNode(nodePlane0, j * (xP + 1) + (i + 1));
           countNode(nodePlane0, (j + 1) * (xP + 1) + (i + 1));
@@ -1061,7 +1056,7 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
           countNode(nodePlane1, (j + 1) * (xP + 1) + (i + 1));
           triangleCount += 2;
         }
-        if(j == (yP - 1) && !(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && curFeature == 0))
+        if(j == (yP - 1) && (m_InputValues->bounding_box_skin_mode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           countNode(nodePlane0, (j + 1) * (xP + 1) + (i + 1));
           countNode(nodePlane0, (j + 1) * (xP + 1) + i);
@@ -1077,7 +1072,7 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
           countNode(nodePlane1, (j + 1) * (xP + 1) + i);
           triangleCount += 2;
         }
-        if(k == (zP - 1) && !(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && curFeature == 0))
+        if(k == (zP - 1) && (m_InputValues->bounding_box_skin_mode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           countNode(nodePlane1, j * (xP + 1) + (i + 1));
           countNode(nodePlane1, j * (xP + 1) + i);
@@ -1098,7 +1093,7 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
 
     // The next node plane becomes current. Reset the other plane for later nodes.
     std::swap(nodePlane0, nodePlane1);
-    std::fill(nodePlane1.begin(), nodePlane1.end(), kMax);
+    std::fill(nodePlane1.begin(), nodePlane1.end(), k_Max);
 
     // The next Feature ID slice becomes current.
     std::swap(curSlice, nextSlice);
@@ -1106,7 +1101,7 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
   return {};
 }
 
-Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCount, MeshIndexType triangleCount, usize numFeatures)
+Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCount, MeshIndexType triangleCount, usize /*numFeatures*/)
 {
   if(m_ShouldCancel)
   {
@@ -1114,11 +1109,11 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
   }
   m_MessageHandler.sendMessage(IFilter::Message::Type::Info, "Creating mesh");
 
-  auto& featureIdsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
+  auto& featureIdsStore = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path)->getDataStoreRef();
 
-  auto* grid = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->GridGeomDataPath);
+  auto* gridPtr = m_DataStructure.getDataAs<IGridGeometry>(m_InputValues->grid_geom_data_path);
 
-  SizeVec3 udims = grid->getDimensions();
+  SizeVec3Type udims = gridPtr->getDimensions();
 
   MeshIndexType xP = udims[0];
   MeshIndexType yP = udims[1];
@@ -1126,58 +1121,58 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
 
   const MeshIndexType sliceSize = xP * yP;
   const MeshIndexType nodePlaneSize = (xP + 1) * (yP + 1);
-  constexpr auto kMax = std::numeric_limits<MeshIndexType>::max();
+  constexpr auto k_Max = std::numeric_limits<MeshIndexType>::max();
 
-  auto* triangleGeom = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->TriangleGeometryPath);
+  auto* triangleGeomPtr = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->triangle_geometry_path);
 
   ShapeType tDims = {nodeCount};
-  Result<> resizeResult = triangleGeom->resizeVertexList(nodeCount);
+  Result<> resizeResult = triangleGeomPtr->resizeVertexList(nodeCount);
   if(resizeResult.invalid())
   {
     return resizeResult;
   }
-  resizeResult = triangleGeom->resizeFaceList(triangleCount);
+  resizeResult = triangleGeomPtr->resizeFaceList(triangleCount);
   if(resizeResult.invalid())
   {
     return resizeResult;
   }
-  resizeResult = triangleGeom->getFaceAttributeMatrix()->resizeTuples({triangleCount});
+  resizeResult = triangleGeomPtr->getFaceAttributeMatrix()->resizeTuples({triangleCount});
   if(resizeResult.invalid())
   {
     return resizeResult;
   }
-  resizeResult = triangleGeom->getVertexAttributeMatrix()->resizeTuples(tDims);
+  resizeResult = triangleGeomPtr->getVertexAttributeMatrix()->resizeTuples(tDims);
   if(resizeResult.invalid())
   {
     return resizeResult;
   }
 
-  auto& faceLabelsStore = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FaceLabelsDataPath)->getDataStoreRef();
+  auto& faceLabelsStore = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->face_labels_data_path)->getDataStoreRef();
 
-  auto& nodeTypesStore = m_DataStructure.getDataAs<Int8Array>(m_InputValues->NodeTypesDataPath)->getDataStoreRef();
+  auto& nodeTypesStore = m_DataStructure.getDataAs<Int8ArrayType>(m_InputValues->node_types_data_path)->getDataStoreRef();
   resizeResult = nodeTypesStore.resizeTuples({nodeCount});
   if(resizeResult.invalid())
   {
     return resizeResult;
   }
 
-  VertexStore& vertex = triangleGeom->getVertices()->getDataStoreRef();
-  TriStore& triangle = triangleGeom->getFaces()->getDataStoreRef();
+  VertexStoreType& vertex = triangleGeomPtr->getVertices()->getDataStoreRef();
+  TriStoreType& triangle = triangleGeomPtr->getFaces()->getDataStoreRef();
 
   // A disk-backed source or output disallows resident node-record fallback.
   const auto isOutOfCore = [](const IArray* array) { return array != nullptr && IsOutOfCore(*array); };
-  bool hasOutOfCoreTarget = isOutOfCore(m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath)) ||
-                            isOutOfCore(m_DataStructure.getDataAs<IDataArray>(m_InputValues->NodeTypesDataPath)) ||
-                            isOutOfCore(m_DataStructure.getDataAs<IDataArray>(m_InputValues->FaceLabelsDataPath)) || isOutOfCore(triangleGeom->getVertices()) || isOutOfCore(triangleGeom->getFaces());
+  bool hasOutOfCoreTarget =
+      isOutOfCore(m_DataStructure.getDataAs<IDataArray>(m_InputValues->feature_ids_array_path)) || isOutOfCore(m_DataStructure.getDataAs<IDataArray>(m_InputValues->node_types_data_path)) ||
+      isOutOfCore(m_DataStructure.getDataAs<IDataArray>(m_InputValues->face_labels_data_path)) || isOutOfCore(triangleGeomPtr->getVertices()) || isOutOfCore(triangleGeomPtr->getFaces());
   const auto inspectPaths = [this, &hasOutOfCoreTarget, &isOutOfCore](const std::vector<DataPath>& paths) {
     for(const auto& path : paths)
     {
       hasOutOfCoreTarget = hasOutOfCoreTarget || isOutOfCore(m_DataStructure.getDataAs<IDataArray>(path));
     }
   };
-  inspectPaths(m_InputValues->SelectedCellDataArrayPaths);
-  inspectPaths(m_InputValues->SelectedFeatureDataArrayPaths);
-  inspectPaths(m_InputValues->CreatedDataArrayPaths);
+  inspectPaths(m_InputValues->selected_cell_data_array_paths);
+  inspectPaths(m_InputValues->selected_feature_data_array_paths);
+  inspectPaths(m_InputValues->created_data_array_paths);
 
   // OOC targets retain mesh-sized owner state externally instead of materializing it in RAM.
   auto nodeRecordStoreResult = CreateNodeRecordStore(nodeCount, !hasOutOfCoreTarget, m_ShouldCancel);
@@ -1189,15 +1184,15 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
   ExternalNodeRecords ownerLists(*nodeRecordStore, m_ShouldCancel);
 
   std::vector<std::shared_ptr<AbstractTupleTransfer>> tupleTransferFunctions;
-  for(usize i = 0; i < m_InputValues->SelectedCellDataArrayPaths.size(); i++)
+  for(usize i = 0; i < m_InputValues->selected_cell_data_array_paths.size(); i++)
   {
-    ::AddTupleTransferInstance(m_DataStructure, m_InputValues->SelectedCellDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i], tupleTransferFunctions);
+    ::AddTupleTransferInstance(m_DataStructure, m_InputValues->selected_cell_data_array_paths[i], m_InputValues->created_data_array_paths[i], tupleTransferFunctions);
   }
 
-  for(usize i = 0; i < m_InputValues->SelectedFeatureDataArrayPaths.size(); i++)
+  for(usize i = 0; i < m_InputValues->selected_feature_data_array_paths.size(); i++)
   {
-    ::AddFeatureTupleTransferInstance(m_DataStructure, m_InputValues->SelectedFeatureDataArrayPaths[i], m_InputValues->CreatedDataArrayPaths[i + m_InputValues->SelectedCellDataArrayPaths.size()],
-                                      m_InputValues->FeatureIdsArrayPath, tupleTransferFunctions);
+    ::AddFeatureTupleTransferInstance(m_DataStructure, m_InputValues->selected_feature_data_array_paths[i],
+                                      m_InputValues->created_data_array_paths[i + m_InputValues->selected_cell_data_array_paths.size()], m_InputValues->feature_ids_array_path, tupleTransferFunctions);
   }
 
   // Two Feature ID slices cover the +Z neighbor check without per-element store reads.
@@ -1205,17 +1200,17 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
   auto nextSlice = std::make_unique<int32[]>(sliceSize);
 
   // Two node planes keep vertex IDs proportional to one Z slice.
-  std::vector<MeshIndexType> nodePlane0(nodePlaneSize, kMax);
-  std::vector<MeshIndexType> nodePlane1(nodePlaneSize, kMax);
+  std::vector<MeshIndexType> nodePlane0(nodePlaneSize, k_Max);
+  std::vector<MeshIndexType> nodePlane1(nodePlaneSize, k_Max);
 
   // Repeated face visits preserve QuickSurfaceMeshDirect last-write behavior. Bounded records hold owner state outside rolling planes.
   auto assignNode = [&](std::vector<MeshIndexType>& plane, MeshIndexType offset, MeshIndexType& assignedNodeCount, usize coordX, usize coordY, usize coordZ) {
-    if(plane[offset] == kMax)
+    if(plane[offset] == k_Max)
     {
       plane[offset] = assignedNodeCount;
       assignedNodeCount++;
     }
-    nx::core::Point3D<float64> tmpCoords = grid->getPlaneCoords(coordX, coordY, coordZ);
+    nx::core::Vec3<float64> tmpCoords = gridPtr->getPlaneCoords(coordX, coordY, coordZ);
     ownerLists.setCoordinates(plane[offset], tmpCoords);
   };
 
@@ -1263,7 +1258,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
 
         // A dual-grid node at (ni, nj) has offset nj * (xP + 1) + ni.
 
-        if(i == 0 && !(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && curFeature == 0))
+        if(i == 0 && (m_InputValues->bounding_box_skin_mode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           MeshIndexType n1Off = j * (xP + 1) + i;
           MeshIndexType n2Off = (j + 1) * (xP + 1) + i;
@@ -1304,7 +1299,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
           ownerLists[nid4].insert(curFeature);
           ownerLists[nid4].insert(-1);
         }
-        if(j == 0 && !(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && curFeature == 0))
+        if(j == 0 && (m_InputValues->bounding_box_skin_mode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           MeshIndexType n1Off = j * (xP + 1) + i;
           MeshIndexType n2Off = j * (xP + 1) + (i + 1);
@@ -1345,7 +1340,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
           ownerLists[nid4].insert(curFeature);
           ownerLists[nid4].insert(-1);
         }
-        if(k == 0 && !(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && curFeature == 0))
+        if(k == 0 && (m_InputValues->bounding_box_skin_mode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           MeshIndexType n1Off = j * (xP + 1) + i;
           MeshIndexType n2Off = j * (xP + 1) + (i + 1);
@@ -1386,7 +1381,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
           ownerLists[nid4].insert(curFeature);
           ownerLists[nid4].insert(-1);
         }
-        if(i == (xP - 1) && !(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && curFeature == 0))
+        if(i == (xP - 1) && (m_InputValues->bounding_box_skin_mode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           MeshIndexType n1Off = j * (xP + 1) + (i + 1);
           MeshIndexType n2Off = (j + 1) * (xP + 1) + (i + 1);
@@ -1493,7 +1488,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
           ownerLists[nid4].insert(curFeature);
           ownerLists[nid4].insert(neigh1Feature);
         }
-        if(j == (yP - 1) && !(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && curFeature == 0))
+        if(j == (yP - 1) && (m_InputValues->bounding_box_skin_mode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           MeshIndexType n1Off = (j + 1) * (xP + 1) + (i + 1);
           MeshIndexType n2Off = (j + 1) * (xP + 1) + i;
@@ -1600,7 +1595,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
           ownerLists[nid4].insert(curFeature);
           ownerLists[nid4].insert(neigh2Feature);
         }
-        if(k == (zP - 1) && !(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && curFeature == 0))
+        if(k == (zP - 1) && (m_InputValues->bounding_box_skin_mode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           MeshIndexType n1Off = j * (xP + 1) + (i + 1);
           MeshIndexType n2Off = j * (xP + 1) + i;
@@ -1744,7 +1739,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
 
     // The next node plane becomes current. Reset the other plane for later nodes.
     std::swap(nodePlane0, nodePlane1);
-    std::fill(nodePlane1.begin(), nodePlane1.end(), kMax);
+    std::fill(nodePlane1.begin(), nodePlane1.end(), k_Max);
 
     // The next Feature ID slice becomes current.
     std::swap(curSlice, nextSlice);
@@ -1758,7 +1753,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
 
   // Stream external node state in fixed contiguous batches. Fixed batches avoid a mesh-sized resident output buffer.
   auto recordBuffer = std::make_unique<QuickSurfaceNodeRecord[]>(k_NodeRecordBatch);
-  auto coordinateBuffer = std::make_unique<VertexStore::value_type[]>(k_NodeRecordBatch * 3);
+  auto coordinateBuffer = std::make_unique<VertexStoreType::value_type[]>(k_NodeRecordBatch * 3);
   auto nodeTypeBuffer = std::make_unique<int8[]>(k_NodeRecordBatch);
   for(uint64 recordOffset = 0; recordOffset < nodeCount; recordOffset += k_NodeRecordBatch)
   {
@@ -1788,9 +1783,9 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
       coordinateBuffer[local * 3] = record.coordinates[0];
       coordinateBuffer[local * 3 + 1] = record.coordinates[1];
       coordinateBuffer[local * 3 + 2] = record.coordinates[2];
-      nodeTypeBuffer[local] = static_cast<int8>(record.ownerCount + (record.touchesExterior != 0 ? 10 : 0));
+      nodeTypeBuffer[local] = static_cast<int8>(record.owner_count + (record.touches_exterior != 0 ? 10 : 0));
     }
-    auto vertexWriteResult = vertex.copyFromBuffer(static_cast<usize>(recordOffset) * 3, nonstd::span<const VertexStore::value_type>(coordinateBuffer.get(), static_cast<usize>(recordCount) * 3));
+    auto vertexWriteResult = vertex.copyFromBuffer(static_cast<usize>(recordOffset) * 3, nonstd::span<const VertexStoreType::value_type>(coordinateBuffer.get(), static_cast<usize>(recordCount) * 3));
     if(vertexWriteResult.invalid())
     {
       return vertexWriteResult;

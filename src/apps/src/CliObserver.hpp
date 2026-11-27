@@ -3,9 +3,7 @@
 #include "simplnx/Pipeline/Messaging/PipelineNodeObserver.hpp"
 #include "simplnx/Pipeline/Pipeline.hpp"
 
-namespace nx::core
-{
-namespace CLI
+namespace nx::core::cli
 {
 /**
  * @class PipelineObserver
@@ -25,12 +23,11 @@ protected:
    */
   void onNotify(AbstractPipelineNode* node, const std::shared_ptr<AbstractPipelineMessage>& msg) override;
 
-  void onCancelled() const;
+  static void OnCancelled();
 
-  void onFaultStateChanged(AbstractPipelineNode* node, FaultState state) const;
+  static void OnFaultStateChanged(AbstractPipelineNode* node, FaultState state);
 
 private:
   std::vector<nod::scoped_connection> m_SignalConnections;
 };
-} // namespace CLI
-} // namespace nx::core
+} // namespace nx::core::cli

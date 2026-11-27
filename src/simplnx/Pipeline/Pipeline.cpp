@@ -21,18 +21,19 @@
 #include <algorithm>
 #include <fstream>
 #include <stdexcept>
+#include <utility>
 
 using namespace nx::core;
 
 namespace
 {
-constexpr StringLiteral k_PipelineNameKey = "name";
-constexpr StringLiteral k_PipelineItemsKey = "pipeline";
-constexpr StringLiteral k_PipelineVersionKey = "version";
+constexpr StringLiteralType k_PipelineNameKey = "name";
+constexpr StringLiteralType k_PipelineItemsKey = "pipeline";
+constexpr StringLiteralType k_PipelineVersionKey = "version";
 constexpr uint64 k_PipelineVersion = 1;
 
-constexpr StringLiteral k_SIMPLPipelineNameKey = "Name";
-constexpr StringLiteral k_SIMPLNumFilterseKey = "Number_Filters";
+constexpr StringLiteralType k_SIMPLPipelineNameKey = "Name";
+constexpr StringLiteralType k_SIMPLNumFilterseKey = "Number_Filters";
 
 std::string GenerateSIMPLPipelineStringIndex(int32 index, int32 maxIndex)
 {
@@ -65,9 +66,8 @@ nlohmann::json CreatePipelineJson(std::string_view name, nlohmann::json filterAr
 }
 } // namespace
 
-Pipeline::Pipeline(ExecutionContext executionContext, const std::string& name, FilterList* filterList)
-: AbstractPipelineNode()
-, m_Name(name)
+Pipeline::Pipeline(ExecutionContext executionContext, std::string name, FilterList* filterList)
+: m_Name(std::move(name))
 , m_FilterList(filterList)
 , m_ExecutionContext(std::move(executionContext))
 {
@@ -79,8 +79,7 @@ Pipeline::Pipeline(const std::string& name, FilterList* filterList)
 }
 
 Pipeline::Pipeline(const Pipeline& other)
-: AbstractPipelineNode()
-, m_Name(other.m_Name)
+: m_Name(other.m_Name)
 , m_Collection(other.m_Collection)
 , m_FilterList(other.m_FilterList)
 , m_ExecutionContext(other.m_ExecutionContext)
@@ -90,10 +89,9 @@ Pipeline::Pipeline(const Pipeline& other)
 }
 
 Pipeline::Pipeline(Pipeline&& other) noexcept
-: AbstractPipelineNode()
-, m_Name(std::move(other.m_Name))
+: m_Name(std::move(other.m_Name))
 , m_Collection(std::move(other.m_Collection))
-, m_FilterList(std::move(other.m_FilterList))
+, m_FilterList(other.m_FilterList)
 , m_ExecutionContext(std::move(other.m_ExecutionContext))
 {
   setDisabled(other.isDisabled());
@@ -122,7 +120,7 @@ Pipeline& Pipeline::operator=(Pipeline&& rhs) noexcept
 {
   m_Name = std::move(rhs.m_Name);
   m_Collection = std::move(rhs.m_Collection);
-  m_FilterList = std::move(rhs.m_FilterList);
+  m_FilterList = rhs.m_FilterList;
   setDisabled(rhs.isDisabled());
   resetCollectionParent();
   return *this;
@@ -157,10 +155,8 @@ FilterList* Pipeline::getActiveFilterList() const
   {
     return getFilterList();
   }
-  else
-  {
-    return Application::Instance()->getFilterList();
-  }
+
+  return Application::Instance()->getFilterList();
 }
 
 AbstractPipelineNode::NodeType Pipeline::getType() const
@@ -191,7 +187,7 @@ bool Pipeline::preflight(DataStructure& dataStructure, const std::atomic_bool& s
 
 bool Pipeline::preflight(DataStructure& dataStructure, const std::atomic_bool& shouldCancel, bool allowRenaming)
 {
-  RenamedPaths renamedPaths;
+  RenamedPathsType renamedPaths;
   return preflight(dataStructure, renamedPaths, shouldCancel, allowRenaming);
 }
 
@@ -201,7 +197,7 @@ bool Pipeline::execute(const std::atomic_bool& shouldCancel)
   return execute(dataStructure, shouldCancel);
 }
 
-bool Pipeline::preflight(DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
+bool Pipeline::preflight(DataStructure& dataStructure, RenamedPathsType& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
 {
   m_MemoryRequired = 0;
   return preflightFrom(0, dataStructure, renamedPaths, shouldCancel, allowRenaming);
@@ -227,11 +223,11 @@ bool Pipeline::canPreflightFrom(index_type index) const
 
 bool Pipeline::preflightFrom(index_type index, DataStructure& dataStructure, const std::atomic_bool& shouldCancel, bool allowRenaming)
 {
-  RenamedPaths renamedPaths;
+  RenamedPathsType renamedPaths;
   return preflightFrom(index, dataStructure, renamedPaths, shouldCancel, allowRenaming);
 }
 
-bool Pipeline::preflightFrom(index_type index, DataStructure& dataStructure, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
+bool Pipeline::preflightFrom(index_type index, DataStructure& dataStructure, RenamedPathsType& renamedPaths, const std::atomic_bool& shouldCancel, bool allowRenaming)
 {
   if(!canPreflightFrom(index))
   {
@@ -244,13 +240,13 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& dataStructure, Ren
   bool returnValue = true;
   for(auto iter = begin() + index; iter != end(); iter++)
   {
-    auto* node = iter->get();
-    if(auto* filterNode = dynamic_cast<PipelineFilter*>(node); filterNode != nullptr && allowRenaming)
+    auto* nodePtr = iter->get();
+    if(auto* filterNodePtr = dynamic_cast<PipelineFilter*>(nodePtr); filterNodePtr != nullptr && allowRenaming)
     {
-      filterNode->renamePathArgs(renamedPaths);
+      filterNodePtr->renamePathArgs(renamedPaths);
     }
 
-    if(node->isDisabled())
+    if(nodePtr->isDisabled())
     {
       continue;
     }
@@ -260,8 +256,8 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& dataStructure, Ren
       break;
     }
     startObservingNode(iter->get());
-    PipelineFilter::RenamedPaths renamedPathsRef;
-    bool succeeded = node->preflight(dataStructure, renamedPathsRef, shouldCancel, allowRenaming);
+    PipelineFilter::RenamedPathsType renamedPathsRef;
+    bool succeeded = nodePtr->preflight(dataStructure, renamedPathsRef, shouldCancel, allowRenaming);
     stopObservingNode();
     m_MemoryRequired = std::max(m_MemoryRequired, dataStructure.memoryUsage());
 
@@ -270,8 +266,8 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& dataStructure, Ren
       renamedPaths.insert(renamedPaths.end(), renamedPathsRef.begin(), renamedPathsRef.end());
     }
 
-    setHasWarnings(node->hasWarnings());
-    setHasWarnings(node->hasWarnings());
+    setHasWarnings(nodePtr->hasWarnings());
+    setHasWarnings(nodePtr->hasWarnings());
     if(!succeeded)
     {
       setHasErrors(true);
@@ -284,25 +280,25 @@ bool Pipeline::preflightFrom(index_type index, DataStructure& dataStructure, Ren
   return returnValue;
 }
 
-bool Pipeline::preflightFrom(index_type index, const std::atomic_bool& shouldCancel)
+bool Pipeline::preflightFrom(index_type index, const std::atomic_bool& /*shouldCancel*/)
 {
-  RenamedPaths renamedPaths;
+  RenamedPathsType renamedPaths;
   return preflightFrom(index, renamedPaths);
 }
 
-bool Pipeline::preflightFrom(index_type index, RenamedPaths& renamedPaths, const std::atomic_bool& shouldCancel)
+bool Pipeline::preflightFrom(index_type index, RenamedPathsType& /*renamedPaths*/, const std::atomic_bool& shouldCancel)
 {
   if(index == 0)
   {
     return preflight(shouldCancel);
   }
-  else if(index >= size())
+  if(index >= size())
   {
     return false;
   }
 
-  auto node = at(index - 1);
-  DataStructure dataStructure = node->getPreflightStructure();
+  auto* nodePtr = at(index - 1);
+  DataStructure dataStructure = nodePtr->getPreflightStructure();
   return preflightFrom(index, dataStructure, shouldCancel);
 }
 
@@ -333,13 +329,13 @@ bool Pipeline::executeFrom(index_type index, DataStructure& dataStructure, const
   // Send notifications that all the filters in the pipeline are queued up
   for(auto iter = begin() + index; iter != end(); iter++)
   {
-    auto* filter = iter->get();
-    if(filter->isEnabled())
+    auto* filterPtr = iter->get();
+    if(filterPtr->isEnabled())
     {
-      const auto* filterNode = dynamic_cast<const AbstractPipelineFilter*>(filter);
-      const std::optional<int32> assignedIndex = filterNode == nullptr ? std::nullopt : filterNode->getAssignedIndex();
+      const auto* filterNodePtr = dynamic_cast<const AbstractPipelineFilter*>(filterPtr);
+      const std::optional<int32> assignedIndex = filterNodePtr == nullptr ? std::nullopt : filterNodePtr->getAssignedIndex();
       const int32 notificationIndex = assignedIndex.value_or(static_cast<int32>(currentIndex));
-      filter->sendFilterRunStateMessage(notificationIndex, RunState::Queued);
+      filterPtr->sendFilterRunStateMessage(notificationIndex, RunState::Queued);
       ++currentIndex;
     }
   }
@@ -348,15 +344,15 @@ bool Pipeline::executeFrom(index_type index, DataStructure& dataStructure, const
   // Loop over each filter and execute the filter.
   for(auto iter = begin() + index; iter != end(); iter++)
   {
-    auto* filter = iter->get();
-    if(filter->isDisabled())
+    auto* filterPtr = iter->get();
+    if(filterPtr->isDisabled())
     {
       continue;
     }
 
-    bool success = filter->execute(dataStructure, shouldCancel);
-    setHasWarnings(hasWarnings() || filter->hasWarnings());
-    if(filter->hasCompletionErrors())
+    bool success = filterPtr->execute(dataStructure, shouldCancel);
+    setHasWarnings(hasWarnings() || filterPtr->hasWarnings());
+    if(filterPtr->hasCompletionErrors())
     {
       setHasCompletionErrors(true);
       setHasErrors();
@@ -369,7 +365,7 @@ bool Pipeline::executeFrom(index_type index, DataStructure& dataStructure, const
       break;
     }
 
-    if(!success || filter->hasCompletionErrors())
+    if(!success || filterPtr->hasCompletionErrors())
     {
       setHasErrors();
       returnValue = false;
@@ -378,7 +374,7 @@ bool Pipeline::executeFrom(index_type index, DataStructure& dataStructure, const
   }
 
   // checkDataStructureSize(dataStructure);
-  ErrorCollection snapshotErrors;
+  ErrorCollectionType snapshotErrors;
   try
   {
     setDataStructure(dataStructure);
@@ -417,8 +413,8 @@ bool Pipeline::executeFrom(index_type index, const std::atomic_bool& shouldCance
     return false;
   }
 
-  auto* node = at(index - 1);
-  DataStructure dataStructure = node->getDataStructure();
+  auto* nodePtr = at(index - 1);
+  DataStructure dataStructure = nodePtr->getDataStructure();
   return executeFrom(index, dataStructure, shouldCancel);
 }
 
@@ -490,7 +486,7 @@ bool Pipeline::insertAt(index_type index, std::shared_ptr<AbstractPipelineNode> 
   return insertAt(begin() + index, std::move(node));
 }
 
-bool Pipeline::insertAt(index_type index, IFilter::UniquePointer&& filter, const Arguments& args)
+bool Pipeline::insertAt(index_type index, IFilter::UniquePointerType&& filter, const Arguments& args)
 {
   if(filter == nullptr)
   {
@@ -502,8 +498,8 @@ bool Pipeline::insertAt(index_type index, IFilter::UniquePointer&& filter, const
 
 bool Pipeline::insertAt(index_type index, const FilterHandle& handle, const Arguments& args)
 {
-  auto filterList = getActiveFilterList();
-  IFilter::UniquePointer filter = filterList->createFilter(handle);
+  auto* filterListPtr = getActiveFilterList();
+  IFilter::UniquePointerType filter = filterListPtr->createFilter(handle);
   return insertAt(index, std::move(filter), args);
 }
 
@@ -520,10 +516,10 @@ bool Pipeline::insertAt(iterator pos, std::shared_ptr<AbstractPipelineNode> node
     index = size();
   }
   // Get raw pointer before move
-  AbstractPipelineNode* ptr = node.get();
+  AbstractPipelineNode* ptrPtr = node.get();
   m_Collection.insert(pos, std::move(node));
-  ptr->setParentPipeline(this);
-  notify(std::make_shared<NodeAddedMessage>(this, ptr, index));
+  ptrPtr->setParentPipeline(this);
+  notify(std::make_shared<NodeAddedMessage>(this, ptrPtr, index));
   return true;
 }
 
@@ -541,8 +537,8 @@ bool Pipeline::remove(iterator iter)
   }
 
   index_type index = iter - begin();
-  auto node = iter->get();
-  node->setParentPipeline(nullptr);
+  auto* nodePtr = iter->get();
+  nodePtr->setParentPipeline(nullptr);
   m_Collection.erase(iter);
   notify(std::make_shared<NodeRemovedMessage>(this, index));
   return true;
@@ -556,8 +552,8 @@ bool Pipeline::remove(const_iterator iter)
   }
 
   index_type index = iter - begin();
-  auto node = iter->get();
-  node->setParentPipeline(nullptr);
+  auto* nodePtr = iter->get();
+  nodePtr->setParentPipeline(nullptr);
   m_Collection.erase(iter);
   notify(std::make_shared<NodeRemovedMessage>(this, index));
   return true;
@@ -615,14 +611,14 @@ bool Pipeline::contains(AbstractPipelineNode* node) const
 
 bool Pipeline::contains(IFilter* filter) const
 {
-  for(auto node : *this)
+  for(const auto& node : *this)
   {
-    auto filterNode = dynamic_cast<PipelineFilter*>(node.get());
-    if(filterNode == nullptr)
+    auto* filterNodePtr = dynamic_cast<PipelineFilter*>(node.get());
+    if(filterNodePtr == nullptr)
     {
       continue;
     }
-    if(filterNode->getFilter() == filter)
+    if(filterNodePtr->getFilter() == filter)
     {
       return true;
     }
@@ -701,7 +697,7 @@ bool Pipeline::push_front(const FilterHandle& handle, const Arguments& args)
   return push_front(PipelineFilter::Create(handle, args, getActiveFilterList()));
 }
 
-bool Pipeline::push_front(IFilter::UniquePointer&& filter, const Arguments& args)
+bool Pipeline::push_front(IFilter::UniquePointerType&& filter, const Arguments& args)
 {
   if(filter == nullptr)
   {
@@ -723,7 +719,7 @@ bool Pipeline::push_back(const FilterHandle& handle, const Arguments& args)
   return push_back(PipelineFilter::Create(handle, args, getActiveFilterList()));
 }
 
-bool Pipeline::push_back(IFilter::UniquePointer&& filter, const Arguments& args)
+bool Pipeline::push_back(IFilter::UniquePointerType&& filter, const Arguments& args)
 {
   if(filter == nullptr)
   {
@@ -759,7 +755,7 @@ std::unique_ptr<AbstractPipelineNode> Pipeline::deepCopy() const
 {
   auto pipelineCopy = std::make_unique<Pipeline>(getName(), m_FilterList);
   pipelineCopy->setDisabled(isDisabled());
-  for(auto childNode : *this)
+  for(const auto& childNode : *this)
   {
     pipelineCopy->push_back(childNode->deepCopy());
   }

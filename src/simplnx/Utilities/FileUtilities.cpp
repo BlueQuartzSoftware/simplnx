@@ -10,6 +10,7 @@
 #include <fstream>
 #include <string>
 #include <system_error>
+#include <utility>
 
 #ifdef _WIN32
 #include <io.h>
@@ -32,7 +33,7 @@ constexpr int k_CheckWritable = W_OK;
 constexpr int k_HasAccess = 0;
 }; // namespace
 
-namespace nx::core::FileUtilities
+namespace nx::core::file_utilities
 {
 std::string detail::PathForDiagnostic(const fs::path& path)
 {
@@ -49,19 +50,19 @@ std::string detail::PathForDiagnostic(const fs::path& path)
 
 int64 LinesInFile(const std::string& filepath)
 {
-  const usize BUFFER_SIZE = 16384;
+  const usize bufferSize = 16384;
   usize lines = 0;
 
-  FILE* fd = fopen(filepath.c_str(), "rb");
-  if(nullptr == fd)
+  FILE* fdPtr = fopen(filepath.c_str(), "rb");
+  if(nullptr == fdPtr)
   {
     return -1;
   }
 
   // Count a final line that has no newline terminator.
-  fseek(fd, -1, SEEK_END);
+  fseek(fdPtr, -1, SEEK_END);
   char last[1];
-  usize bytesRead = fread(last, 1, 1, fd);
+  usize bytesRead = fread(last, 1, 1, fdPtr);
   if(bytesRead != 1)
   {
     return -1;
@@ -70,34 +71,34 @@ int64 LinesInFile(const std::string& filepath)
   {
     lines++;
   }
-  rewind(fd);
+  rewind(fdPtr);
 
-  char buf[BUFFER_SIZE + 1];
+  char buf[bufferSize + 1];
   while(true)
   {
-    memset(buf, 0, BUFFER_SIZE + 1);
-    size_t bytes_read = fread(buf, 1, BUFFER_SIZE, fd);
+    memset(buf, 0, bufferSize + 1);
+    size_t bytes_read = fread(buf, 1, bufferSize, fdPtr);
     if(bytes_read == 0)
     {
       break;
     }
 
-    char* end = buf + bytes_read;
+    char* endPtr = buf + bytes_read;
     usize buflines = 0;
 
-    for(char* p = buf; p < end; p++)
+    for(char* pPtr = buf; pPtr < endPtr; pPtr++)
     {
-      buflines += *p == '\n';
+      buflines += static_cast<usize>(*pPtr == '\n');
     }
     lines += buflines;
   }
-  fclose(fd);
+  fclose(fdPtr);
   return lines;
 }
 
 Result<> ValidateCSVFile(const std::string& filePath)
 {
-  constexpr int64_t bufferSize = 2048;
+  constexpr int64_t k_BufferSize = 2048;
 
   auto absPath = std::filesystem::absolute(filePath);
 
@@ -129,8 +130,8 @@ Result<> ValidateCSVFile(const std::string& filePath)
     fileSize -= 3;
   }
 
-  usize actualSize = bufferSize;
-  if(fileSize <= bufferSize)
+  usize actualSize = k_BufferSize;
+  if(fileSize <= k_BufferSize)
   {
     actualSize = fileSize;
   }
@@ -214,7 +215,7 @@ Result<> ValidateDirectoryWritePermission(const std::filesystem::path& path, boo
     }
   }
 
-  constexpr int32 pathStatusError = -4092;
+  constexpr int32 k_PathStatusError = -4092;
   const auto rootPath = checkedPath.root_path();
   bool checkedPathExists = false;
 
@@ -226,8 +227,8 @@ Result<> ValidateDirectoryWritePermission(const std::filesystem::path& path, boo
     checkedPathExists = fs::exists(checkedPath, statusError);
     if(statusError)
     {
-      return MakeErrorResult(pathStatusError, fmt::format("Unable to inspect path '{}' while checking write permission for '{}'. Check directory access. Operating system error {}: {}",
-                                                          detail::PathForDiagnostic(checkedPath), detail::PathForDiagnostic(path), statusError.value(), statusError.message()));
+      return MakeErrorResult(k_PathStatusError, fmt::format("Unable to inspect path '{}' while checking write permission for '{}'. Check directory access. Operating system error {}: {}",
+                                                            detail::PathForDiagnostic(checkedPath), detail::PathForDiagnostic(path), statusError.value(), statusError.message()));
     }
     if(checkedPathExists || checkedPath == rootPath)
     {
@@ -256,18 +257,18 @@ Result<> ValidateDirectoryWritePermission(const std::filesystem::path& path, boo
 
 std::pair<bool, int32> IsUtf8(const std::filesystem::path& filePath)
 {
-  FILE* f = fopen(filePath.string().c_str(), "rb");
-  if(nullptr == f)
+  FILE* fPtr = fopen(filePath.string().c_str(), "rb");
+  if(nullptr == fPtr)
   {
     return {false, -1};
   }
   std::array<uint8, 3> buf = {0, 0, 0};
-  if(fread(buf.data(), 1, 3, f) != 3)
+  if(fread(buf.data(), 1, 3, fPtr) != 3)
   {
-    std::ignore = fclose(f);
+    std::ignore = fclose(fPtr);
     return {false, -1};
   }
-  std::ignore = fclose(f);
+  std::ignore = fclose(fPtr);
   if(buf[0] == 0xEF && buf[1] == 0xBB && buf[2] == 0xBF)
   {
     return {true, 0};
@@ -275,7 +276,7 @@ std::pair<bool, int32> IsUtf8(const std::filesystem::path& filePath)
   return {false, 0};
 }
 
-namespace CSV
+namespace csv
 {
 const int32 k_InconsistentCols = -104;
 const int32 k_InvalidArrayType = -106;
@@ -290,7 +291,7 @@ namespace
  * @param dataParsers Supplies parsers aligned with all CSV columns.
  * @return Merged result from every attempted flush.
  */
-Result<> FlushParsersImpl(const ParsersVector& dataParsers)
+Result<> FlushParsersImpl(const ParsersVectorType& dataParsers)
 {
   std::vector<Result<>> flushResults;
   flushResults.reserve(dataParsers.size());
@@ -315,9 +316,9 @@ Result<> FlushParsersImpl(const ParsersVector& dataParsers)
 }
 } // namespace
 
-AbstractDataParser::AbstractDataParser(IArray& array, const std::string& columnName, usize columnIndex)
+AbstractDataParser::AbstractDataParser(IArray& array, std::string columnName, usize columnIndex)
 : m_Array(array)
-, m_ColumnName(columnName)
+, m_ColumnName(std::move(columnName))
 , m_ColumnIndex(columnIndex)
 {
 }
@@ -337,10 +338,10 @@ const IArray& AbstractDataParser::array() const
   return m_Array;
 }
 
-Result<ParsersVector> CreateParsers(const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrays, const DataPath& parentPath, const std::vector<std::string>& headers,
-                                    DataStructure& dataStructure)
+Result<ParsersVectorType> CreateParsers(const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrays, const DataPath& parentPath, const std::vector<std::string>& headers,
+                                        DataStructure& dataStructure)
 {
-  ParsersVector dataParsers(dataTypes.size());
+  ParsersVectorType dataParsers(dataTypes.size());
 
   for(usize i = 0; i < dataTypes.size() && i < headers.size() && i < skippedArrays.size(); i++)
   {
@@ -359,85 +360,85 @@ Result<ParsersVector> CreateParsers(const std::vector<CSVType>& dataTypes, const
     switch(csvType)
     {
     case nx::core::CSVType::int8: {
-      auto& data = dataStructure.getDataRefAs<Int8Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Int8Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<Int8ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<Int8ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::uint8: {
-      auto& data = dataStructure.getDataRefAs<UInt8Array>(arrayPath);
-      dataParsers[i] = std::make_unique<UInt8Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<UInt8ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<UInt8ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::int16: {
-      auto& data = dataStructure.getDataRefAs<Int16Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Int16Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<Int16ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<Int16ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::uint16: {
-      auto& data = dataStructure.getDataRefAs<UInt16Array>(arrayPath);
-      dataParsers[i] = std::make_unique<UInt16Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<UInt16ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<UInt16ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::int32: {
-      auto& data = dataStructure.getDataRefAs<Int32Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Int32Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<Int32ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<Int32ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::uint32: {
-      auto& data = dataStructure.getDataRefAs<UInt32Array>(arrayPath);
-      dataParsers[i] = std::make_unique<UInt32Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<UInt32ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<UInt32ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::int64: {
-      auto& data = dataStructure.getDataRefAs<Int64Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Int64Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<Int64ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<Int64ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::uint64: {
-      auto& data = dataStructure.getDataRefAs<UInt64Array>(arrayPath);
-      dataParsers[i] = std::make_unique<UInt64Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<UInt64ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<UInt64ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::float32: {
-      auto& data = dataStructure.getDataRefAs<Float32Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Float32Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<Float32ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<Float32ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::float64: {
-      auto& data = dataStructure.getDataRefAs<Float64Array>(arrayPath);
-      dataParsers[i] = std::make_unique<Float64Parser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<Float64ArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<Float64ParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::boolean: {
-      auto& data = dataStructure.getDataRefAs<BoolArray>(arrayPath);
-      dataParsers[i] = std::make_unique<BoolParser>(data, name, i);
+      auto& data = dataStructure.getDataRefAs<BoolArrayType>(arrayPath);
+      dataParsers[i] = std::make_unique<BoolParserType>(data, name, i);
       break;
     }
     case nx::core::CSVType::string: {
       auto& data = dataStructure.getDataRefAs<StringArray>(arrayPath);
-      dataParsers[i] = std::make_unique<StringParser>(data, name, i);
+      dataParsers[i] = std::make_unique<StringParserType>(data, name, i);
       break;
     }
     default:
-      return {MakeErrorResult<ParsersVector>(k_InvalidArrayType, fmt::format("The data type that was chosen for column number {} is not a valid data array type.", std::to_string(i + 1)))};
+      return {MakeErrorResult<ParsersVectorType>(k_InvalidArrayType, fmt::format("The data type that was chosen for column number {} is not a valid data array type.", std::to_string(i + 1)))};
     }
   }
 
   return {std::move(dataParsers)};
 }
 
-Result<> FlushParsers(const ParsersVector& dataParsers)
+Result<> FlushParsers(const ParsersVectorType& dataParsers)
 {
   return FlushParsersImpl(dataParsers);
 }
 
-Result<> ParseLine(std::fstream& inStream, const ParsersVector& dataParsers, const std::vector<std::string>& headers, const std::vector<char>& delimiters, bool consecutiveDelimiters, usize lineNumber,
-                   usize beginIndex, bool& flushRequired)
+Result<> ParseLine(std::fstream& inStream, const ParsersVectorType& dataParsers, const std::vector<std::string>& headers, const std::vector<char>& delimiters, bool consecutiveDelimiters,
+                   usize lineNumber, usize beginIndex, bool& flushRequired)
 {
   std::string line;
   std::getline(inStream, line);
-  line = StringUtilities::replace(line, "\r", "");
-  std::vector<std::string> tokens = StringUtilities::split(line, delimiters, !consecutiveDelimiters);
+  line = string_utilities::Replace(line, "\r", "");
+  std::vector<std::string> tokens = string_utilities::Split(line, delimiters, !consecutiveDelimiters);
   if(tokens.empty())
   {
     // An empty interior row cannot provide one token for each configured column.
@@ -496,11 +497,11 @@ std::vector<std::string> RemoveIllegalCharacters(std::vector<std::string>& heade
   {
     // Filter-level callers include Python and nxrunner, which do not apply GUI name validation.
     // Normalize each header before it becomes a data-array name.
-    headerName = StringUtilities::replace(headerName, "&", "_");
-    headerName = StringUtilities::replace(headerName, ":", "_");
-    headerName = StringUtilities::replace(headerName, "/", "_");
-    headerName = StringUtilities::replace(headerName, "\\", "_");
-    headerName = StringUtilities::replace(headerName, "\"", "");
+    headerName = string_utilities::Replace(headerName, "&", "_");
+    headerName = string_utilities::Replace(headerName, ":", "_");
+    headerName = string_utilities::Replace(headerName, "/", "_");
+    headerName = string_utilities::Replace(headerName, "\\", "_");
+    headerName = string_utilities::Replace(headerName, "\"", "");
   }
   return headers;
 }
@@ -536,8 +537,8 @@ Result<std::vector<std::string>> ReadHeaders(const std::string& inputFilePath, u
 
   std::string headersLine;
   std::getline(in, headersLine);
-  auto headers = StringUtilities::split(headersLine, delimiters, !consecutiveDelimiters);
+  auto headers = string_utilities::Split(headersLine, delimiters, !consecutiveDelimiters);
   return {headers};
 }
-} // namespace CSV
-} // namespace nx::core::FileUtilities
+} // namespace csv
+} // namespace nx::core::file_utilities

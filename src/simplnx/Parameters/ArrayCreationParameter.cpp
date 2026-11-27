@@ -5,12 +5,13 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
-ArrayCreationParameter::ArrayCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+ArrayCreationParameter::ArrayCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : MutableDataParameter(name, humanName, helpText, Category::Created)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -19,7 +20,7 @@ Uuid ArrayCreationParameter::uuid() const
   return ParameterTraits<ArrayCreationParameter>::uuid;
 }
 
-IParameter::AcceptedTypes ArrayCreationParameter::acceptedTypes() const
+IParameter::AcceptedTypesType ArrayCreationParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -37,24 +38,24 @@ nlohmann::json ArrayCreationParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> ArrayCreationParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> ArrayCreationParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'ArrayCreationParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'ArrayCreationParameter' JSON Error: ";
 
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_String, fmt::format("{}JSON value for key '{}' is not a string", prefix.view(), name()));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotString, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix.view(), name()));
   }
   auto string = json.get<std::string>();
   std::optional<DataPath> path = DataPath::FromString(string);
   if(!path.has_value())
   {
-    return MakeErrorResult<std::any>(FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), string));
+    return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotValueType, fmt::format("{}Failed to parse '{}' as DataPath", k_Prefix.view(), string));
   }
   return {{std::move(*path)}};
 }
 
-IParameter::UniquePointer ArrayCreationParameter::clone() const
+IParameter::UniquePointerType ArrayCreationParameter::clone() const
 {
   return std::make_unique<ArrayCreationParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -82,12 +83,12 @@ Result<> ArrayCreationParameter::validatePath(const DataStructure& dataStructure
 
   if(value.empty())
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty", prefix));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateEmptyValue, fmt::format("{}DataPath cannot be empty", prefix));
   }
-  const DataObject* object = dataStructure.getData(value);
-  if(object != nullptr)
+  const DataObject* objectPtr = dataStructure.getData(value);
+  if(objectPtr != nullptr)
   {
-    return nx::core::MakeErrorResult(nx::core::FilterParameter::Constants::k_Validate_ExistingValue, fmt::format("{}Object exists at path '{}'", prefix, value.toString()));
+    return nx::core::MakeErrorResult(nx::core::filter_parameter::constants::k_ValidateExistingValue, fmt::format("{}Object exists at path '{}'", prefix, value.toString()));
   }
 
   return {};
@@ -96,13 +97,13 @@ Result<> ArrayCreationParameter::validatePath(const DataStructure& dataStructure
 Result<std::any> ArrayCreationParameter::resolve(DataStructure& dataStructure, const std::any& value) const
 {
   const auto& path = GetAnyRef<ValueType>(value);
-  DataObject* object = dataStructure.getData(path);
-  return {{object}};
+  DataObject* objectPtr = dataStructure.getData(path);
+  return {{objectPtr}};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
-Result<DataArrayCreationFilterParameterConverter::ValueType> DataArrayCreationFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataArrayCreationFilterParameterConverter::ValueType> DataArrayCreationFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   auto dataContainerNameResult = ReadDataContainerName(json, "DataArrayCreationFilterParameter");
   if(dataContainerNameResult.invalid())
@@ -126,5 +127,5 @@ Result<DataArrayCreationFilterParameterConverter::ValueType> DataArrayCreationFi
 
   return {std::move(dataPath)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

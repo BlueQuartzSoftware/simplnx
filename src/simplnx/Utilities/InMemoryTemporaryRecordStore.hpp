@@ -34,8 +34,8 @@ public:
    */
   static Result<std::unique_ptr<InMemoryTemporaryRecordStore>> Create(TemporaryRecordStoreConfig config)
   {
-    if(config.recordSize == 0 || config.maxRecordsPerBatch == 0 || config.initialRecordCount > std::numeric_limits<usize>::max() / config.recordSize ||
-       config.maxRecordsPerBatch > std::numeric_limits<usize>::max() / config.recordSize)
+    if(config.record_size == 0 || config.max_records_per_batch == 0 || config.initial_record_count > std::numeric_limits<usize>::max() / config.record_size ||
+       config.max_records_per_batch > std::numeric_limits<usize>::max() / config.record_size)
     {
       return MakeErrorResult<std::unique_ptr<InMemoryTemporaryRecordStore>>(-6045, "Invalid in-memory temporary record-store configuration");
     }
@@ -52,7 +52,7 @@ public:
   }
   uint64 recordSize() const override
   {
-    return m_Config.recordSize;
+    return m_Config.record_size;
   }
   uint64 recordCount() const override
   {
@@ -60,11 +60,11 @@ public:
   }
   uint64 maxRecordsPerBatch() const override
   {
-    return m_Config.maxRecordsPerBatch;
+    return m_Config.max_records_per_batch;
   }
   bool isReadOnly() const override
   {
-    return m_Config.readOnly;
+    return m_Config.read_only;
   }
   /**
    * @brief Reads a bounded record range into caller-owned storage.
@@ -77,12 +77,14 @@ public:
   Result<uint64> read(uint64 offset, uint64 count, nonstd::span<std::byte> bytes, const std::atomic_bool& cancel) const override
   {
     if(auto r = validate(offset, count, bytes.size(), false, cancel); r.invalid())
+    {
       return ConvertResultTo<uint64>(std::move(r), uint64{});
+    }
     if(count == 0)
     {
       return {0};
     }
-    std::memcpy(bytes.data(), m_Bytes.data() + offset * m_Config.recordSize, count * m_Config.recordSize);
+    std::memcpy(bytes.data(), m_Bytes.data() + offset * m_Config.record_size, count * m_Config.record_size);
     return {count};
   }
   /**
@@ -95,15 +97,19 @@ public:
    */
   Result<> write(uint64 offset, uint64 count, nonstd::span<const std::byte> bytes, const std::atomic_bool& cancel) override
   {
-    if(m_Config.readOnly)
+    if(m_Config.read_only)
+    {
       return MakeErrorResult(-6046, "Temporary record store is read-only");
+    }
     if(auto r = validate(offset, count, bytes.size(), true, cancel); r.invalid())
+    {
       return r;
+    }
     if(count == 0)
     {
       return {};
     }
-    std::memcpy(m_Bytes.data() + offset * m_Config.recordSize, bytes.data(), bytes.size());
+    std::memcpy(m_Bytes.data() + offset * m_Config.record_size, bytes.data(), bytes.size());
     return {};
   }
   /**
@@ -116,16 +122,22 @@ public:
    */
   Result<> fill(uint64 offset, uint64 count, nonstd::span<const std::byte> record, const std::atomic_bool& cancel) override
   {
-    if(record.size() != m_Config.recordSize)
+    if(record.size() != m_Config.record_size)
+    {
       return MakeErrorResult(-6047, "Temporary record fill width mismatch");
-    if(m_Config.readOnly)
+    }
+    if(m_Config.read_only)
     {
       return MakeErrorResult(-6046, "Temporary record store is read-only");
     }
-    if(auto r = validate(offset, count, count * m_Config.recordSize, true, cancel, false); r.invalid())
+    if(auto r = validate(offset, count, count * m_Config.record_size, true, cancel, false); r.invalid())
+    {
       return r;
+    }
     for(uint64 i = 0; i < count; i++)
-      std::memcpy(m_Bytes.data() + (offset + i) * m_Config.recordSize, record.data(), static_cast<usize>(m_Config.recordSize));
+    {
+      std::memcpy(m_Bytes.data() + (offset + i) * m_Config.record_size, record.data(), static_cast<usize>(m_Config.record_size));
+    }
     return {};
   }
   /**
@@ -136,13 +148,17 @@ public:
    */
   Result<> resize(uint64 count, const std::atomic_bool& cancel) override
   {
-    if(m_Config.readOnly)
+    if(m_Config.read_only)
+    {
       return MakeErrorResult(-6046, "Temporary record store is read-only");
-    if(cancel || count > std::numeric_limits<usize>::max() / m_Config.recordSize)
+    }
+    if(cancel || count > std::numeric_limits<usize>::max() / m_Config.record_size)
+    {
       return MakeErrorResult(-6048, "Temporary record resize failed");
+    }
     try
     {
-      m_Bytes.resize(static_cast<usize>(count * m_Config.recordSize));
+      m_Bytes.resize(static_cast<usize>(count * m_Config.record_size));
     } catch(const std::bad_alloc&)
     {
       return MakeErrorResult(-6048, "In-memory temporary record-store resize allocation failed");
@@ -161,8 +177,8 @@ private:
    */
   explicit InMemoryTemporaryRecordStore(TemporaryRecordStoreConfig config)
   : m_Config(config)
-  , m_Count(config.initialRecordCount)
-  , m_Bytes(static_cast<usize>(config.initialRecordCount * config.recordSize))
+  , m_Count(config.initial_record_count)
+  , m_Bytes(static_cast<usize>(config.initial_record_count * config.record_size))
   {
   }
   /**
@@ -177,9 +193,11 @@ private:
    */
   Result<> validate(uint64 offset, uint64 count, usize bytes, bool exact, const std::atomic_bool& cancel, bool enforceBatch = true) const
   {
-    if(cancel || (enforceBatch && count > m_Config.maxRecordsPerBatch) || offset > m_Count || count > m_Count - offset || count > std::numeric_limits<usize>::max() / m_Config.recordSize ||
-       (exact ? bytes != count * m_Config.recordSize : bytes < count * m_Config.recordSize))
+    if(cancel || (enforceBatch && count > m_Config.max_records_per_batch) || offset > m_Count || count > m_Count - offset || count > std::numeric_limits<usize>::max() / m_Config.record_size ||
+       (exact ? bytes != count * m_Config.record_size : bytes < count * m_Config.record_size))
+    {
       return MakeErrorResult(-6049, "Invalid temporary record-store request");
+    }
     return {};
   }
   TemporaryRecordStoreConfig m_Config;

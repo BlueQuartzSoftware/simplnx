@@ -23,12 +23,12 @@ public:
   ErrorWarningFilter& operator=(ErrorWarningFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_PreflightWarning_Key = "preflight_warning";
-  static constexpr StringLiteral k_PreflightError_Key = "preflight_error";
-  static constexpr StringLiteral k_PreflightException_Key = "preflight_exception";
-  static constexpr StringLiteral k_ExecuteWarning_Key = "execute_warning";
-  static constexpr StringLiteral k_ExecuteError_Key = "execute_error";
-  static constexpr StringLiteral k_ExecuteException_Key = "execute_exception";
+  static constexpr StringLiteralType k_PreflightWarning_Key = "preflight_warning";
+  static constexpr StringLiteralType k_PreflightError_Key = "preflight_error";
+  static constexpr StringLiteralType k_PreflightException_Key = "preflight_exception";
+  static constexpr StringLiteralType k_ExecuteWarning_Key = "execute_warning";
+  static constexpr StringLiteralType k_ExecuteError_Key = "execute_error";
+  static constexpr StringLiteralType k_ExecuteException_Key = "execute_exception";
 
   /**
    * @brief Returns the name of the filter.
@@ -78,7 +78,7 @@ public:
    * @brief Returns a unique_pointer to a copy of the filter.
    * @return nx::core::IFilter::UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   PreflightResult preflightImpl(const nx::core::DataStructure& data, const nx::core::Arguments& args, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,

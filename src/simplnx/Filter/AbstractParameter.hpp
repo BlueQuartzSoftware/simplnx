@@ -46,7 +46,7 @@ protected:
    * @param humanName The human-readable name
    * @param helpText The help text
    */
-  AbstractParameter(const std::string& name, const std::string& humanName, const std::string& helpText);
+  AbstractParameter(std::string name, std::string humanName, std::string helpText);
 
 private:
   std::string m_Name;

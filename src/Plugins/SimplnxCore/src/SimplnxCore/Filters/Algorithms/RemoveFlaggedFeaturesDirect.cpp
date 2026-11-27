@@ -32,7 +32,7 @@ constexpr usize k_MaxListedEmptyFeatures = 10;
 /**
  * @brief Validates every Feature ID before the algorithm modifies data.
  */
-Result<> ValidateFeatureIds(const Int32AbstractDataStore& featureIds, usize totalCells, usize totalFeatures, const DataPath& featureIdsPath, const DataPath& flaggedFeaturesPath,
+Result<> ValidateFeatureIds(const Int32AbstractDataStoreType& featureIds, usize totalCells, usize totalFeatures, const DataPath& featureIdsPath, const DataPath& flaggedFeaturesPath,
                             const std::atomic_bool& shouldCancel)
 {
   const usize totalPoints = featureIds.getNumberOfTuples();
@@ -73,12 +73,12 @@ Result<> ValidateFeatureIds(const Int32AbstractDataStore& featureIds, usize tota
  * @return True if any negative Feature ID remains unresolved; false after cancellation or none.
  * @pre Flat voxel indexes fit in int32.
  */
-bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds, std::vector<int32>& storageArray, usize& replacementCount, usize& unresolvedCount,
+bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStoreType& featureIds, std::vector<int32>& storageArray, usize& replacementCount, usize& unresolvedCount,
                        const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   ThrottledMessageHandler progressThrottle(messageHandler);
 
-  SizeVec3 uDims = imageGeom.getDimensions();
+  SizeVec3Type uDims = imageGeom.getDimensions();
 
   std::array<int64, 3> dims = {
       static_cast<int64>(uDims[0]),
@@ -86,9 +86,9 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
       static_cast<int64>(uDims[2]),
   };
 
-  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3D>::k_FaceNeighborCount;
-  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = initializeFaceNeighborOffsets(dims);
-  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> faceNeighborInternalIdx = initializeFaceNeighborInternalIdx();
+  constexpr FaceNeighborType k_NumFaceNeighbors = VoxelNeighbors<Image3DType>::k_FaceNeighborCount;
+  const std::array<int64, k_NumFaceNeighbors> neighborVoxelIndexOffsets = InitializeFaceNeighborOffsets(dims);
+  constexpr std::array<FaceNeighborType, k_NumFaceNeighbors> k_FaceNeighborInternalIdx = InitializeFaceNeighborInternalIdx();
 
   bool shouldLoop = false;
   replacementCount = 0;
@@ -96,8 +96,9 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
 
   auto progressIncrement = dims[2] / 100;
   usize progressCounter = 0;
-  int32 featureName;
-  int64 kStride, jStride;
+  int32 featureName = 0;
+  int64 kStride = 0;
+  int64 jStride = 0;
   for(int64 zIdx = 0; zIdx < dims[2]; zIdx++)
   {
     if(shouldCancel)
@@ -130,8 +131,8 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
         std::array<int32, k_NumFaceNeighbors> discoveredFeatures = {};
         usize discoveredFeatureCount = 0;
         // Check six face neighbors in the shared NeighborUtilities order.
-        const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = computeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
-        for(const auto& faceIndex : faceNeighborInternalIdx)
+        const std::array<bool, k_NumFaceNeighbors> isValidFaceNeighbor = ComputeValidFaceNeighbors(xIdx, yIdx, zIdx, dims);
+        for(const auto& faceIndex : k_FaceNeighborInternalIdx)
         {
           if(!isValidFaceNeighbor[faceIndex])
           {
@@ -194,7 +195,7 @@ bool IdentifyNeighbors(ImageGeom& imageGeom, Int32AbstractDataStore& featureIds,
  * @return Active-feature flags, or an empty vector if removal selects all features.
  * @pre Feature IDs are nonnegative and less than the feature-flag tuple count.
  */
-std::vector<bool> FlagFeatures(Int32AbstractDataStore& featureIds, std::unique_ptr<MaskCompareUtilities::MaskCompare>& flaggedFeatures, const bool fillRemovedFeatures)
+std::vector<bool> FlagFeatures(Int32AbstractDataStoreType& featureIds, std::unique_ptr<mask_compare_utilities::MaskCompare>& flaggedFeatures, const bool fillRemovedFeatures)
 {
   bool good = false;
   usize totalPoints = featureIds.getNumberOfTuples();
@@ -241,12 +242,13 @@ std::vector<bool> FlagFeatures(Int32AbstractDataStore& featureIds, std::unique_p
  * @param voxelArrays Receives source tuples for negative Feature IDs.
  * @param shouldCancel Stops before later destination cells when true.
  */
-usize FindVoxelArrays(const Int32AbstractDataStore& featureIds, const std::vector<int32>& neighbors, std::vector<std::shared_ptr<IDataArray>>& voxelArrays, const std::atomic_bool& shouldCancel)
+usize FindVoxelArrays(const Int32AbstractDataStoreType& featureIds, const std::vector<int32>& neighbors, std::vector<std::shared_ptr<IDataArray>>& voxelArrays, const std::atomic_bool& shouldCancel)
 {
   const usize totalPoints = featureIds.getNumberOfTuples();
   usize filledCellCount = 0;
 
-  int32 featureName, neighbor;
+  int32 featureName = 0;
+  int32 neighbor = 0;
   for(usize j = 0; j < totalPoints; j++)
   {
     if(shouldCancel)
@@ -289,23 +291,21 @@ RemoveFlaggedFeaturesDirect::RemoveFlaggedFeaturesDirect(DataStructure& dataStru
 {
 }
 
-RemoveFlaggedFeaturesDirect::~RemoveFlaggedFeaturesDirect() noexcept = default;
-
 Result<> RemoveFlaggedFeaturesDirect::operator()()
 {
-  auto& featureIds = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath)->getDataStoreRef();
-  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  auto function = static_cast<Functionality>(m_InputValues->ExtractFeatures);
+  auto& featureIds = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path)->getDataStoreRef();
+  auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
+  auto function = static_cast<Functionality>(m_InputValues->extract_features);
 
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> flaggedFeatures = nullptr;
+  std::unique_ptr<mask_compare_utilities::MaskCompare> flaggedFeatures = nullptr;
   try
   {
-    flaggedFeatures = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->FlaggedFeaturesArrayPath);
+    flaggedFeatures = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->flagged_features_array_path);
   } catch(const std::out_of_range& exception)
   {
     // Normal filter execution validates this path. Direct algorithm callers can
     // still supply a missing or unsupported mask.
-    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->FlaggedFeaturesArrayPath.toString());
+    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->flagged_features_array_path.toString());
     return MakeErrorResult(-53900, message);
   }
 
@@ -324,10 +324,10 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
     {
       return MakeErrorResult(-45433, fmt::format("The feature Attribute Matrix '{}' has {} tuple(s). Tuple 0 is unused, so at least 2 tuples are required for a feature to survive removal. No data "
                                                  "was modified.",
-                                                 m_InputValues->FlaggedFeaturesArrayPath.getParent().toString(), totalFeatures));
+                                                 m_InputValues->flagged_features_array_path.getParent().toString(), totalFeatures));
     }
     Result<> validationResult =
-        ValidateFeatureIds(featureIds, imageGeom.getNumberOfCells(), totalFeatures, m_InputValues->FeatureIdsArrayPath, m_InputValues->FlaggedFeaturesArrayPath, m_ShouldCancel);
+        ValidateFeatureIds(featureIds, imageGeom.getNumberOfCells(), totalFeatures, m_InputValues->feature_ids_array_path, m_InputValues->flagged_features_array_path, m_ShouldCancel);
     if(validationResult.invalid())
     {
       return validationResult;
@@ -341,21 +341,21 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
   // Extract and ExtractThenRemove create one cropped geometry per flagged feature.
   if(function != Functionality::Remove)
   {
-    m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Beginning Feature Extraction")});
+    m_MessageHandler.sendMessage(IFilter::ProgressMessageType{IFilter::Message::Type::Info, fmt::format("Beginning Feature Extraction")});
 
     {
       ComputeFeatureRectFilter filter;
       Arguments args;
 
-      args.insert(ComputeFeatureRectFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(m_InputValues->FeatureIdsArrayPath));
-      args.insert(ComputeFeatureRectFilter::k_FeatureDataAttributeMatrixPath_Key, std::make_any<DataPath>(m_InputValues->TempBoundsPath.getParent()));
-      args.insert(ComputeFeatureRectFilter::k_FeatureRectArrayName_Key, std::make_any<std::string>(m_InputValues->TempBoundsPath.getTargetName()));
+      args.insert(ComputeFeatureRectFilter::k_FeatureIdsArrayPath_Key, std::make_any<DataPath>(m_InputValues->feature_ids_array_path));
+      args.insert(ComputeFeatureRectFilter::k_FeatureDataAttributeMatrixPath_Key, std::make_any<DataPath>(m_InputValues->temp_bounds_path.getParent()));
+      args.insert(ComputeFeatureRectFilter::k_FeatureRectArrayName_Key, std::make_any<std::string>(m_InputValues->temp_bounds_path.getTargetName()));
 
       auto preflightResult = filter.preflight(m_DataStructure, args);
-      if(preflightResult.outputActions.invalid())
+      if(preflightResult.output_actions.invalid())
       {
-        return MakeErrorResult(-53901, fmt::format("Preflight of the feature bounding-box computation at '{}' for Feature IDs array '{}' failed: {}", m_InputValues->TempBoundsPath.toString(),
-                                                   m_InputValues->FeatureIdsArrayPath.toString(), FirstRemoveFlaggedFeaturesErrorMessage(preflightResult.outputActions.errors())));
+        return MakeErrorResult(-53901, fmt::format("Preflight of the feature bounding-box computation at '{}' for Feature IDs array '{}' failed: {}", m_InputValues->temp_bounds_path.toString(),
+                                                   m_InputValues->feature_ids_array_path.toString(), FirstRemoveFlaggedFeaturesErrorMessage(preflightResult.output_actions.errors())));
       }
 
       if(m_ShouldCancel)
@@ -366,16 +366,16 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
       auto executeResult = filter.execute(m_DataStructure, args);
       if(executeResult.result.invalid())
       {
-        m_DataStructure.removeData(m_InputValues->TempBoundsPath);
-        return MakeErrorResult(-53902, fmt::format("The feature bounding-box computation at '{}' for Feature IDs array '{}' failed: {}", m_InputValues->TempBoundsPath.toString(),
-                                                   m_InputValues->FeatureIdsArrayPath.toString(), FirstRemoveFlaggedFeaturesErrorMessage(executeResult.result.errors())));
+        m_DataStructure.removeData(m_InputValues->temp_bounds_path);
+        return MakeErrorResult(-53902, fmt::format("The feature bounding-box computation at '{}' for Feature IDs array '{}' failed: {}", m_InputValues->temp_bounds_path.toString(),
+                                                   m_InputValues->feature_ids_array_path.toString(), FirstRemoveFlaggedFeaturesErrorMessage(executeResult.result.errors())));
       }
     }
 
-    const auto& boundsStore = m_DataStructure.getDataRefAs<UInt32Array>(m_InputValues->TempBoundsPath).getDataStoreRef();
+    const auto& boundsStore = m_DataStructure.getDataRefAs<UInt32ArrayType>(m_InputValues->temp_bounds_path).getDataStoreRef();
     std::vector<uint32> bounds(boundsStore.getSize());
     Result<> boundsReadResult = boundsStore.copyIntoBuffer(0, nonstd::span<uint32>(bounds.data(), bounds.size()));
-    m_DataStructure.removeData(m_InputValues->TempBoundsPath);
+    m_DataStructure.removeData(m_InputValues->temp_bounds_path);
     if(boundsReadResult.invalid())
     {
       return MergeResults(std::move(result), std::move(boundsReadResult));
@@ -388,7 +388,7 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
 
     // Declared before the runner so the runner's destructor joins every task while the
     // holder is still alive.
-    CopyFromArray::ParallelTaskResult cropTaskResult;
+    copy_from_array::ParallelTaskResult cropTaskResult;
 
     ParallelTaskAlgorithm taskRunner;
     // Crop tasks mutate DataStructure and borrow loop-local bounds. Synchronous
@@ -424,10 +424,10 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
         continue;
       }
 
-      DataPath createdImgGeomPath({fmt::format(fmt::runtime("{}-{:0" + paddingWidth + "d}"), m_InputValues->CreatedImageGeometryPrefix, i)});
+      DataPath createdImgGeomPath({fmt::format(fmt::runtime("{}-{:0" + paddingWidth + "d}"), m_InputValues->created_image_geometry_prefix, i)});
 
-      taskRunner.execute(RunCropImageGeometryImpl(m_DataStructure, m_ShouldCancel, m_InputValues->ImageGeometryPath, minVoxels, maxVoxels, createdImgGeomPath,
-                                                  m_InputValues->TempBoundsPath.getParent().getTargetName(), cropTaskResult));
+      taskRunner.execute(RunCropImageGeometryImpl(m_DataStructure, m_ShouldCancel, m_InputValues->image_geometry_path, minVoxels, maxVoxels, createdImgGeomPath,
+                                                  m_InputValues->temp_bounds_path.getParent().getTargetName(), cropTaskResult));
 
       // Stop scheduling crops once one has failed, so the failure is reported instead of
       // being buried behind later work.
@@ -449,9 +449,10 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
       {
         listed += ", ...";
       }
-      result.warnings().push_back(Warning{k_EmptyFeatureSkippedWarning, fmt::format("{} flagged feature(s) own no cell in the Feature IDs array '{}' and were skipped; no geometry was created for "
-                                                                                    "them. Feature ID(s): {}",
-                                                                                    emptyFeatures.size(), m_InputValues->FeatureIdsArrayPath.toString(), listed)});
+      result.warnings().push_back(Warning{.code = k_EmptyFeatureSkippedWarning,
+                                          .message = fmt::format("{} flagged feature(s) own no cell in the Feature IDs array '{}' and were skipped; no geometry was created for "
+                                                                 "them. Feature ID(s): {}",
+                                                                 emptyFeatures.size(), m_InputValues->feature_ids_array_path.toString(), listed)});
     }
 
     Result<> cropResult = cropTaskResult.takeResult();
@@ -467,7 +468,7 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
 
     progressThrottle.updatePercent(featureEnd > 0 ? featureEnd - 1 : 0);
     progressThrottle.flush();
-    m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("All Features Successfully Extracted")});
+    m_MessageHandler.sendMessage(IFilter::ProgressMessageType{IFilter::Message::Type::Info, fmt::format("All Features Successfully Extracted")});
   }
 
   if(m_ShouldCancel)
@@ -478,15 +479,15 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
   // Remove and ExtractThenRemove modify the source feature data.
   if(function != Functionality::Extract)
   {
-    m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Beginning Feature Removal")});
+    m_MessageHandler.sendMessage(IFilter::ProgressMessageType{IFilter::Message::Type::Info, fmt::format("Beginning Feature Removal")});
 
     std::vector<int32> neighbors((featureIds.getNumberOfTuples() * featureIds.getNumberOfComponents()), -1);
-    std::vector<bool> activeObjects = FlagFeatures(featureIds, flaggedFeatures, m_InputValues->FillRemovedFeatures);
+    std::vector<bool> activeObjects = FlagFeatures(featureIds, flaggedFeatures, m_InputValues->fill_removed_features);
     if(activeObjects.empty())
     {
       const usize removableFeatureCount = flaggedFeatures->getNumberOfTuples() > 0 ? flaggedFeatures->getNumberOfTuples() - 1 : 0;
       Result<> allFlaggedResult = MakeErrorResult(-45433, fmt::format("All {} feature(s) in '{}' were flagged and would be removed. At least one feature that owns cells must remain.",
-                                                                      removableFeatureCount, m_InputValues->FlaggedFeaturesArrayPath.getParent().toString()));
+                                                                      removableFeatureCount, m_InputValues->flagged_features_array_path.getParent().toString()));
       return MergeResults(std::move(result), std::move(allFlaggedResult));
     }
 
@@ -495,29 +496,30 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
       return result;
     }
 
-    if(m_InputValues->FillRemovedFeatures)
+    if(m_InputValues->fill_removed_features)
     {
       std::vector<DataPath> ignoredPaths;
-      ignoredPaths.reserve(m_InputValues->IgnoredDataArrayPaths.size());
-      for(const DataPath& path : m_InputValues->IgnoredDataArrayPaths)
+      ignoredPaths.reserve(m_InputValues->ignored_data_array_paths.size());
+      for(const DataPath& path : m_InputValues->ignored_data_array_paths)
       {
-        if(path == m_InputValues->FeatureIdsArrayPath)
+        if(path == m_InputValues->feature_ids_array_path)
         {
-          result.warnings().push_back(Warning{k_FeatureIdsCannotBeIgnoredWarning, fmt::format("The Feature IDs array '{}' was listed among the arrays to ignore. It is the array being filled and "
-                                                                                              "cannot be ignored, so it was removed from the ignore list.",
-                                                                                              path.toString())});
+          result.warnings().push_back(Warning{.code = k_FeatureIdsCannotBeIgnoredWarning,
+                                              .message = fmt::format("The Feature IDs array '{}' was listed among the arrays to ignore. It is the array being filled and "
+                                                                     "cannot be ignored, so it was removed from the ignore list.",
+                                                                     path.toString())});
           continue;
         }
         ignoredPaths.push_back(path);
       }
-      std::vector<std::shared_ptr<IDataArray>> voxelArrays = GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, ignoredPaths);
+      std::vector<std::shared_ptr<IDataArray>> voxelArrays = GenerateDataArrayList(m_DataStructure, m_InputValues->feature_ids_array_path, ignoredPaths);
 
       bool shouldLoop = false;
       usize count = 0;
       do
       {
         count++;
-        m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Entering iteration number {}...", count)});
+        m_MessageHandler.sendMessage(IFilter::ProgressMessageType{IFilter::Message::Type::Info, fmt::format("Entering iteration number {}...", count)});
         std::fill(neighbors.begin(), neighbors.end(), -1);
         usize replacementCount = 0;
         usize unresolvedCount = 0;
@@ -528,7 +530,7 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
           return result;
         }
 
-        m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Filling {} bad voxels...", unresolvedCount)});
+        m_MessageHandler.sendMessage(IFilter::ProgressMessageType{IFilter::Message::Type::Info, fmt::format("Filling {} bad voxels...", unresolvedCount)});
         const usize filledCellCount = FindVoxelArrays(featureIds, neighbors, voxelArrays, m_ShouldCancel);
         if(filledCellCount == 0 && shouldLoop)
         {
@@ -536,7 +538,7 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
               k_NoFillProgressError,
               fmt::format("Fill iteration {} could not fill any of the {} remaining vacated cell(s) in the Feature IDs array '{}' because none has a non-negative face neighbor. Unflag a feature "
                           "that owns cells, or disable 'Fill-in Removed Features'. The Feature IDs array was modified: removed cells are set to -1.",
-                          count, unresolvedCount, m_InputValues->FeatureIdsArrayPath.toString()));
+                          count, unresolvedCount, m_InputValues->feature_ids_array_path.toString()));
           return MergeResults(std::move(result), std::move(noProgressResult));
         }
 
@@ -548,8 +550,8 @@ Result<> RemoveFlaggedFeaturesDirect::operator()()
       return result;
     }
 
-    m_MessageHandler.sendMessage(IFilter::ProgressMessage{IFilter::Message::Type::Info, fmt::format("Stripping excess inactive objects from model...")});
-    DataPath featureGroupPath = m_InputValues->FlaggedFeaturesArrayPath.getParent();
+    m_MessageHandler.sendMessage(IFilter::ProgressMessageType{IFilter::Message::Type::Info, fmt::format("Stripping excess inactive objects from model...")});
+    DataPath featureGroupPath = m_InputValues->flagged_features_array_path.getParent();
     Result<> removeResult = RemoveInactiveObjects(m_DataStructure, featureGroupPath, activeObjects, featureIds, flaggedFeatures->getNumberOfTuples(), m_MessageHandler, m_ShouldCancel);
     if(removeResult.invalid())
     {

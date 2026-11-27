@@ -17,7 +17,6 @@
 
 #include <filesystem>
 
-namespace fs = std::filesystem;
 using namespace nx::core;
 
 namespace nx::core
@@ -62,14 +61,14 @@ Parameters AlignSectionsListFilter::parameters() const
                                                    "This selection determines how the input array was produced, Relative refers to the case where the shifts were calculated relative to "
                                                    "the previous slice's new position, Cumulative refers to the case where the shifts are the direct change in position",
                                                    static_cast<ChoicesParameter::ValueType>(to_underlying(AlignSectionsInputType::RelativeShifts)),
-                                                   ChoicesParameter::Choices{"Relative", "Cumulative"}));
+                                                   ChoicesParameter::ChoicesType{"Relative", "Cumulative"}));
 
   params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry on which to perform the alignment",
-                                                             DataPath({"Data Container"}), GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             DataPath({"Data Container"}), GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ShiftsArrayPath_Key, "Shifts Array", "The array containing the relative or cumulative shifts for each slice",
-                                                          DataPath({"Data Container", "Alignment Shifts Data", "Shifts"}), ArraySelectionParameter::AllowedTypes{DataType::int64},
-                                                          ArraySelectionParameter::AllowedComponentShapes{{2}}));
+                                                          DataPath({"Data Container", "Alignment Shifts Data", "Shifts"}), ArraySelectionParameter::AllowedTypeSetType{DataType::int64},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{2}}));
 
   return params;
 }
@@ -89,14 +88,14 @@ IFilter::VersionType AlignSectionsListFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer AlignSectionsListFilter::clone() const
+IFilter::UniquePointerType AlignSectionsListFilter::clone() const
 {
   return std::make_unique<AlignSectionsListFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AlignSectionsListFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult AlignSectionsListFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pUseFileValue = filterArgs.value<ChoicesParameter::ValueType>(k_InputArrayType_Key);
   auto pSelectedImageGeometryPathValue = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedImageGeometryPath_Key);
@@ -113,39 +112,40 @@ IFilter::PreflightResult AlignSectionsListFilter::preflightImpl(const DataStruct
   if(imageGeom.getNumXCells() <= 1 || imageGeom.getNumYCells() <= 1 || imageGeom.getNumZCells() <= 1)
   {
     return MakePreflightErrorResult(
-        -8941, fmt::format("The Image Geometry is not 3D and cannot be run through this filter. The dimensions are ({})", StringUtilities::formatDimensions3D(imageGeom.getDimensions())));
+        -8941, fmt::format("The Image Geometry is not 3D and cannot be run through this filter. The dimensions are ({})", string_utilities::FormatDimensions3D(imageGeom.getDimensions())));
   }
 
-  if(!pUseFileValue)
+  if(pUseFileValue == 0u)
   {
-    const auto* shiftsArray = dataStructure.getDataAs<IDataArray>(pShiftsArrayPathValue);
-    if(shiftsArray == nullptr)
+    const auto* shiftsArrayPtr = dataStructure.getDataAs<IDataArray>(pShiftsArrayPathValue);
+    if(shiftsArrayPtr == nullptr)
     {
       return MakePreflightErrorResult(-8942, "Shifts array is not valid.");
     }
 
-    if(shiftsArray->getNumberOfTuples() != imageGeom.getNumZCells())
+    if(shiftsArrayPtr->getNumberOfTuples() != imageGeom.getNumZCells())
     {
-      return MakePreflightErrorResult(-8943, fmt::format("The size of shifts array ({}) does not align with Z Dimension of geometry ({})", shiftsArray->getNumberOfTuples(), imageGeom.getNumZCells()));
+      return MakePreflightErrorResult(-8943,
+                                      fmt::format("The size of shifts array ({}) does not align with Z Dimension of geometry ({})", shiftsArrayPtr->getNumberOfTuples(), imageGeom.getNumZCells()));
     }
   }
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, imageGeom.getCellDataPath(), {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, imageGeom.getCellDataPath(), {});
 
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> AlignSectionsListFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> AlignSectionsListFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                              const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   AlignSectionsListInputValues inputValues;
 
-  inputValues.AlignSectionsType = filterArgs.value<ChoicesParameter::ValueType>(k_InputArrayType_Key);
-  inputValues.ImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
-  inputValues.ShiftsArrayPath = filterArgs.value<DataPath>(k_ShiftsArrayPath_Key);
+  inputValues.align_sections_type = filterArgs.value<ChoicesParameter::ValueType>(k_InputArrayType_Key);
+  inputValues.image_geometry_path = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.shifts_array_path = filterArgs.value<DataPath>(k_ShiftsArrayPath_Key);
 
   return AlignSectionsList(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
@@ -153,10 +153,10 @@ Result<> AlignSectionsListFilter::executeImpl(DataStructure& dataStructure, cons
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
-} // namespace SIMPL
+constexpr StringLiteralType k_CellAttributeMatrixPathKey = "CellAttributeMatrixPath";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> AlignSectionsListFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -165,8 +165,8 @@ Result<Arguments> AlignSectionsListFilter::FromSIMPLJson(const nlohmann::json& j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_CellAttributeMatrixPathKey,
-                                                                                                                                      k_SelectedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey,
+                                                                                                                                        k_SelectedImageGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -15,29 +15,29 @@ using namespace nx::core;
 TEST_CASE("NXImageProcessing::GrayscaleDilateImageFilter: Computed-expected (Annulus + Box zero-radius)", "[NXImageProcessing][GrayscaleDilateImageFilter]")
 {
   using morph_test::KernelType;
-  auto build = [](DataStructure& ds, usize dx, usize dy, usize dz) { return morph_test::BuildMorphologyImage<float32>(ds, dx, dy, dz); };
+  auto build = [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return morph_test::BuildMorphologyImage<float32>(dataStructure, dx, dy, dz); };
   const auto setParams = morph_test::DefaultKernelParamSetter<GrayscaleDilateImageFilter>();
-  constexpr auto kDilate = ImageProcessing::MorphOp::Dilate;
+  constexpr auto k_Dilate = ImageProcessing::MorphOp::Dilate;
 
   SECTION("Annulus 3D r{1,1,1}")
   {
-    morph_test::RunMorphologyComputedExpected<GrayscaleDilateImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, kDilate, setParams);
+    morph_test::RunMorphologyComputedExpected<GrayscaleDilateImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {1, 1, 1}, k_Dilate, setParams);
   }
   SECTION("Annulus 3D r{2,2,2}")
   {
-    morph_test::RunMorphologyComputedExpected<GrayscaleDilateImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {2, 2, 2}, kDilate, setParams);
+    morph_test::RunMorphologyComputedExpected<GrayscaleDilateImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {2, 2, 2}, k_Dilate, setParams);
   }
   SECTION("Annulus 3D asymmetric r{3,1,2}")
   {
-    morph_test::RunMorphologyComputedExpected<GrayscaleDilateImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, kDilate, setParams);
+    morph_test::RunMorphologyComputedExpected<GrayscaleDilateImageFilter, float32>(build, 12, 12, 12, KernelType::Annulus, {3, 1, 2}, k_Dilate, setParams);
   }
   SECTION("Annulus 2D Z=1 r{2,2,0}")
   {
-    morph_test::RunMorphologyComputedExpected<GrayscaleDilateImageFilter, float32>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, kDilate, setParams);
+    morph_test::RunMorphologyComputedExpected<GrayscaleDilateImageFilter, float32>(build, 20, 16, 1, KernelType::Annulus, {2, 2, 0}, k_Dilate, setParams);
   }
   SECTION("Box 3D zero-radius r{2,1,0} (legacy anchor path broken)")
   {
-    morph_test::RunMorphologyComputedExpected<GrayscaleDilateImageFilter, float32>(build, 12, 12, 12, KernelType::Box, {2, 1, 0}, kDilate, setParams);
+    morph_test::RunMorphologyComputedExpected<GrayscaleDilateImageFilter, float32>(build, 12, 12, 12, KernelType::Box, {2, 1, 0}, k_Dilate, setParams);
   }
 }
 
@@ -48,7 +48,7 @@ TEST_CASE("NXImageProcessing::GrayscaleDilateImageFilter: Computed-expected (Ann
 TEST_CASE("NXImageProcessing::GrayscaleDilateImageFilter: Empty-SE passthrough (Annulus r{0,0,0})", "[NXImageProcessing][GrayscaleDilateImageFilter]")
 {
   morph_test::RunMorphologyEmptySEPassthrough<GrayscaleDilateImageFilter, float32>(
-      [](DataStructure& ds, usize dx, usize dy, usize dz) { return morph_test::BuildMorphologyImage<float32>(ds, dx, dy, dz); }, 12, 12, 12,
+      [](DataStructure& dataStructure, usize dx, usize dy, usize dz) { return morph_test::BuildMorphologyImage<float32>(dataStructure, dx, dy, dz); }, 12, 12, 12,
       morph_test::DefaultKernelParamSetter<GrayscaleDilateImageFilter>());
 }
 
@@ -63,20 +63,20 @@ TEST_CASE("NXImageProcessing::GrayscaleDilateImageFilter: Empty-SE passthrough (
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::GrayscaleDilateImageFilter: Ramp computed-expected (both algorithm paths)", "[NXImageProcessing][GrayscaleDilateImageFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // Test both algorithm paths on in-memory stores; controlled by CMake SIMPLNX_TEST_ALGORITHM_PATH.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
-  constexpr usize D = 32;
-  constexpr int64 rx = 2;
-  constexpr int64 ry = 1;
-  constexpr int64 rz = 1;
+  constexpr usize k_D = 32;
+  constexpr int64 k_Rx = 2;
+  constexpr int64 k_Ry = 1;
+  constexpr int64 k_Rz = 1;
 
-  DataStructure ds;
-  const DataPath inputPath = ip_test::BuildRampImage<float32>(ds, D, 0.0, 1.0);
-  scope.requireExpectedStore(ds.getDataRefAs<IDataArray>(inputPath));
+  DataStructure dataStructure;
+  const DataPath inputPath = ip_test::BuildRampImage<float32>(dataStructure, k_D, 0.0, 1.0);
+  scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(inputPath));
 
   GrayscaleDilateImageFilter filter;
   Arguments args;
@@ -85,28 +85,28 @@ TEST_CASE("NXImageProcessing::GrayscaleDilateImageFilter: Ramp computed-expected
   args.insertOrAssign(GrayscaleDilateImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   args.insertOrAssign(GrayscaleDilateImageFilter::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(morph_test::KernelType::Box)));
   args.insertOrAssign(GrayscaleDilateImageFilter::k_KernelRadius_Key,
-                      std::make_any<VectorUInt32Parameter::ValueType>(std::vector<uint32>{static_cast<uint32>(rx), static_cast<uint32>(ry), static_cast<uint32>(rz)}));
+                      std::make_any<VectorUInt32ParameterType::ValueType>(std::vector<uint32>{static_cast<uint32>(k_Rx), static_cast<uint32>(k_Ry), static_cast<uint32>(k_Rz)}));
 
-  auto executeResult = scope.executeFilter(filter, ds, args);
+  auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  auto& outArray = ds.getDataRefAs<DataArray<float32>>(outputPath);
+  auto& outArray = dataStructure.getDataRefAs<DataArray<float32>>(outputPath);
   scope.requireExpectedStore(outArray);
   const auto& outStore = outArray.getDataStoreRef();
-  const usize numSlots = D * D * D;
+  const usize numSlots = k_D * k_D * k_D;
   REQUIRE(outStore.getSize() == numSlots);
 
   // Dilate (max) over a Box neighborhood of a ramp (value == flat index): the max flat index in the clamped
   // box is at the +radius corner clamped to the image bounds.
   auto expectedForSlot = [&](usize s) -> float32 {
-    const int64 x = static_cast<int64>(s % D);
-    const int64 y = static_cast<int64>((s / D) % D);
-    const int64 z = static_cast<int64>(s / (D * D));
-    const int64 cx = std::min<int64>(x + rx, static_cast<int64>(D) - 1);
-    const int64 cy = std::min<int64>(y + ry, static_cast<int64>(D) - 1);
-    const int64 cz = std::min<int64>(z + rz, static_cast<int64>(D) - 1);
-    return static_cast<float32>(cz * static_cast<int64>(D) * static_cast<int64>(D) + cy * static_cast<int64>(D) + cx);
+    const int64 x = static_cast<int64>(s % k_D);
+    const int64 y = static_cast<int64>((s / k_D) % k_D);
+    const int64 z = static_cast<int64>(s / (k_D * k_D));
+    const int64 cx = std::min<int64>(x + k_Rx, static_cast<int64>(k_D) - 1);
+    const int64 cy = std::min<int64>(y + k_Ry, static_cast<int64>(k_D) - 1);
+    const int64 cz = std::min<int64>(z + k_Rz, static_cast<int64>(k_D) - 1);
+    return static_cast<float32>(cz * static_cast<int64>(k_D) * static_cast<int64>(k_D) + cy * static_cast<int64>(k_D) + cx);
   };
 
   // Stream the output in bounded chunks (avoids per-element OOC access and per-voxel Catch2 assertions).
@@ -138,7 +138,7 @@ TEST_CASE("NXImageProcessing::GrayscaleDilateImageFilter: Ramp computed-expected
     UNSCOPED_INFO("slot=" << badSlot << " got=" << badGot << " expected=" << badExp);
   }
   REQUIRE(allMatch);
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 // -----------------------------------------------------------------------------

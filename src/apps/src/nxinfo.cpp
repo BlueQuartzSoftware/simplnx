@@ -30,7 +30,7 @@ int main(int argc, char* argv[]) noexcept
     {
       arguments.emplace_back(argumentPtr);
     }
-    return nx::core::nxinfo::Run(arguments, {.Output = std::cout, .Error = std::cerr});
+    return nx::core::nxinfo::Run(arguments, {.output = std::cout, .error = std::cerr});
   } catch(const std::exception& error)
   {
     std::cerr << "Fatal error: nxinfo failed unexpectedly: " << error.what() << '\n';

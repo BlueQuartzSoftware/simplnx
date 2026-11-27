@@ -15,17 +15,17 @@ namespace nx::core
 
 struct NXIMAGEPROCESSING_EXPORT ReadVolumeGraphicsFileInputValues
 {
-  DataPath ImageGeometryPath;
-  std::string CellAttributeMatrixName;
-  std::string DensityArrayName;
-  fs::path VGDataFile;
+  DataPath image_geometry_path;
+  std::string cell_attribute_matrix_name;
+  std::string density_array_name;
+  fs::path vg_data_file;
 };
 
 class NXIMAGEPROCESSING_EXPORT ReadVolumeGraphicsFile
 {
 public:
   ReadVolumeGraphicsFile(DataStructure& dataStructure, const IFilter::MessageHandler& msgHandler, const std::atomic_bool& shouldCancel, ReadVolumeGraphicsFileInputValues* inputValues);
-  ~ReadVolumeGraphicsFile() noexcept;
+  ~ReadVolumeGraphicsFile() noexcept = default;
 
   ReadVolumeGraphicsFile(const ReadVolumeGraphicsFile&) = delete;
   ReadVolumeGraphicsFile(ReadVolumeGraphicsFile&&) noexcept = delete;

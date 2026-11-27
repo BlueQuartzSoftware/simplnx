@@ -24,19 +24,19 @@ public:
   EBSDSegmentFeaturesFilter& operator=(EBSDSegmentFeaturesFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
-  static constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static constexpr StringLiteral k_QuatsArrayPath_Key = "cell_quats_array_path";
-  static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static constexpr StringLiteral k_MaskArrayPath_Key = "cell_mask_array_path";
-  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static constexpr StringLiteral k_FeatureIdsArrayName_Key = "feature_ids_array_name";
-  static constexpr StringLiteral k_CellFeatureAttributeMatrixName_Key = "cell_feature_attribute_matrix_name";
-  static constexpr StringLiteral k_ActiveArrayName_Key = "active_array_name";
-  static constexpr StringLiteral k_RandomizeFeatureIds_Key = "randomize_features";
-  static constexpr StringLiteral k_IsPeriodic_Key = "is_periodic";
-  static constexpr StringLiteral k_NeighborScheme_Key = "neighbor_scheme_index";
+  static constexpr StringLiteralType k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_MisorientationTolerance_Key = "misorientation_tolerance";
+  static constexpr StringLiteralType k_UseMask_Key = "use_mask";
+  static constexpr StringLiteralType k_QuatsArrayPath_Key = "cell_quats_array_path";
+  static constexpr StringLiteralType k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static constexpr StringLiteralType k_MaskArrayPath_Key = "cell_mask_array_path";
+  static constexpr StringLiteralType k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteralType k_FeatureIdsArrayName_Key = "feature_ids_array_name";
+  static constexpr StringLiteralType k_CellFeatureAttributeMatrixName_Key = "cell_feature_attribute_matrix_name";
+  static constexpr StringLiteralType k_ActiveArrayName_Key = "active_array_name";
+  static constexpr StringLiteralType k_RandomizeFeatureIds_Key = "randomize_features";
+  static constexpr StringLiteralType k_IsPeriodic_Key = "is_periodic";
+  static constexpr StringLiteralType k_NeighborScheme_Key = "neighbor_scheme_index";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -93,7 +93,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

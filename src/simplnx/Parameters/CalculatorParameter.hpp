@@ -20,13 +20,13 @@ public:
 
   struct ValueType
   {
-    DataPath m_SelectedGroup;
-    std::string m_Equation = "";
-    AngleUnits m_Units = Radians;
+    DataPath m_selected_group;
+    std::string equation;
+    AngleUnits m_units = Radians;
   };
 
   CalculatorParameter() = delete;
-  CalculatorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  CalculatorParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~CalculatorParameter() override = default;
 
   CalculatorParameter(const CalculatorParameter&) = delete;
@@ -45,13 +45,13 @@ public:
    * @brief
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -97,16 +97,16 @@ private:
   ValueType m_DefaultValue = {};
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT CalculatorFilterParameterConverter
 {
   using ParameterType = CalculatorParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::CalculatorParameter, "ba2d4937-dbec-5536-8c5c-c0a406e80f77");

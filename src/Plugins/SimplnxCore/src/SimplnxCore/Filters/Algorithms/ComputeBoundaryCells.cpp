@@ -16,8 +16,6 @@ ComputeBoundaryCells::ComputeBoundaryCells(DataStructure& dataStructure, const I
 {
 }
 
-ComputeBoundaryCells::~ComputeBoundaryCells() noexcept = default;
-
 const std::atomic_bool& ComputeBoundaryCells::getCancel()
 {
   return m_ShouldCancel;
@@ -25,7 +23,7 @@ const std::atomic_bool& ComputeBoundaryCells::getCancel()
 
 Result<> ComputeBoundaryCells::operator()()
 {
-  auto* featureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
   // Dispatch intentionally observes only FeatureIds. The output is not a target.
-  return DispatchAlgorithm<ComputeBoundaryCellsDirect, ComputeBoundaryCellsScanline>({featureIdsArray}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
+  return DispatchAlgorithm<ComputeBoundaryCellsDirect, ComputeBoundaryCellsScanline>({featureIdsArrayPtr}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

@@ -36,19 +36,19 @@ Range3D::RangeType Range3D::getRange() const
 }
 
 // -----------------------------------------------------------------------------
-Range3D::DimensionRange Range3D::getXRange() const
+Range3D::DimensionRangeType Range3D::getXRange() const
 {
   return {{m_Range[0], m_Range[1]}};
 }
 
 // -----------------------------------------------------------------------------
-Range3D::DimensionRange Range3D::getYRange() const
+Range3D::DimensionRangeType Range3D::getYRange() const
 {
   return {{m_Range[2], m_Range[3]}};
 }
 
 // -----------------------------------------------------------------------------
-Range3D::DimensionRange Range3D::getZRange() const
+Range3D::DimensionRangeType Range3D::getZRange() const
 {
   return {{m_Range[4], m_Range[5]}};
 }

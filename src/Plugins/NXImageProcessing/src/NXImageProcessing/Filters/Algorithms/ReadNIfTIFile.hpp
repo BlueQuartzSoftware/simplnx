@@ -33,27 +33,27 @@ namespace nx::core
 struct NXIMAGEPROCESSING_EXPORT ReadNIfTIFileInputValues
 {
   /** @brief Path to the input `.nii` or `.nii.gz` file. */
-  std::filesystem::path InputFilePath;
+  std::filesystem::path input_file_path;
 
   /** @brief DataPath of the Image Geometry the filter's preflight
    *         created. The algorithm writes voxels into the
    *         `DataArray<T>` located at
    *         `ImageGeometryPath / CellAttributeMatrixName / ImageDataArrayName`. */
-  DataPath ImageGeometryPath;
+  DataPath image_geometry_path;
 
   /** @brief Name of the attribute matrix child of the Image Geometry
    *         that holds the voxel data array. */
-  std::string CellAttributeMatrixName;
+  std::string cell_attribute_matrix_name;
 
   /** @brief Name of the `DataArray<T>` the algorithm will fill with
    *         voxel values. */
-  std::string ImageDataArrayName;
+  std::string image_data_array_name;
 
   /** @brief When `true`, the NIfTI header's `sform`/`qform` transform
    *         drives the ImageGeom origin and spacing. When `false`,
    *         the reader uses `pixdim` plus a zero origin even if a
    *         transform is recorded. */
-  bool UseAffineIfPresent{true};
+  bool use_affine_if_present{true};
 
   /** @brief When `true` and the header declares a non-trivial scaling
    *         (finite `scl_slope != 0` and `(scl_slope != 1 or scl_inter != 0)`,
@@ -62,15 +62,15 @@ struct NXIMAGEPROCESSING_EXPORT ReadNIfTIFileInputValues
    *         to `float32` and `y = slope * x + inter` is applied on
    *         read. Scaling is always skipped for RGB24/RGBA32 per the
    *         NIfTI-1 specification. */
-  bool ApplyScalingTransform{true};
+  bool apply_scaling_transform{true};
 
   /** @brief Optional voxel-index or physical-coordinate sub-volume
    *         to retain. When set to anything other than
    *         `CropValues::TypeEnum::NoCropping`, only the selected
    *         region is stored in the output DataArray — the rest of
    *         the file is read and discarded on the fly. */
-  CropGeometryParameter::ValueType CroppingOptions;
-  ImageIO::GeometryOverrides GeometryOverrides;
+  CropGeometryParameter::ValueType cropping_options;
+  image_io::GeometryOverrides geometry_overrides;
 };
 
 /**
@@ -121,7 +121,7 @@ public:
    *                       Must outlive the call to `operator()`.
    */
   ReadNIfTIFile(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ReadNIfTIFileInputValues* inputValues);
-  ~ReadNIfTIFile() noexcept;
+  ~ReadNIfTIFile() noexcept = default;
 
   ReadNIfTIFile(const ReadNIfTIFile&) = delete;
   ReadNIfTIFile(ReadNIfTIFile&&) noexcept = delete;

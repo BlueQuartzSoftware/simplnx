@@ -202,7 +202,7 @@ ComputeNeighborhoods::~ComputeNeighborhoods() noexcept = default;
 // -----------------------------------------------------------------------------
 void ComputeNeighborhoods::sendThreadSafeProgressMessage(usize counter)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
   m_Throttle.incrementCount(counter);
 }
 
@@ -218,10 +218,10 @@ void ComputeNeighborhoods::updateNeighborHood(usize sourceIndex, usize destIndex
 Result<> ComputeNeighborhoods::operator()()
 {
   // m_ProgressCounter initialized to zero on filter creation
-  auto multiplesOfAverage = m_InputValues->MultiplesOfAverage;
-  const auto& centroids = m_DataStructure.getDataAs<Float32Array>(m_InputValues->CentroidsArrayPath)->getDataStoreRef();
+  auto multiplesOfAverage = m_InputValues->multiples_of_average;
+  const auto& centroids = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->centroids_array_path)->getDataStoreRef();
 
-  m_Neighborhoods = m_DataStructure.getDataAs<Int32Array>(m_InputValues->NeighborhoodsArrayName);
+  m_Neighborhoods = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->neighborhoods_array_name);
 
   const usize totalFeatures = centroids.getNumberOfTuples();
   if(totalFeatures == 0)
@@ -248,11 +248,11 @@ Result<> ComputeNeighborhoods::operator()()
   //     Equivalent Diameters array is not needed, so the bin grid is sized by the search radius itself.
   std::vector<float32> radii(totalFeatures, 0.0f);
   float32 binSize = 0.0f;
-  if(m_InputValues->SearchRadiusType == 0)
+  if(m_InputValues->search_radius_type == 0)
   {
     // Find the average equivalent spherical (ESD) diameter of ALL features (excluding the background feature 0);
     // used only to size the bin grid.
-    const auto& equivalentDiameters = m_DataStructure.getDataAs<Float32Array>(m_InputValues->EquivalentDiametersArrayPath)->getDataStoreRef();
+    const auto& equivalentDiameters = m_DataStructure.getDataAs<Float32ArrayType>(m_InputValues->equivalent_diameters_array_path)->getDataStoreRef();
     float32 avgDiameter = 0.0f;
     for(usize i = 1; i < totalFeatures; i++)
     {
@@ -273,14 +273,14 @@ Result<> ComputeNeighborhoods::operator()()
   else
   {
     // Feature 0 is the background/unassigned feature: it gets no search radius so it is never a search source.
-    const float32 searchRadius = m_InputValues->SearchRadius;
+    const float32 searchRadius = m_InputValues->search_radius;
     std::fill(radii.begin() + 1, radii.end(), searchRadius);
     binSize = searchRadius;
   }
 
   // Place each feature's centroid into a bin in the normalized 3D space (normalized by binSize)
   std::vector<int64> bins(3 * totalFeatures, 0);
-  FloatVec3 origin = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->InputImageGeometry)->getOrigin();
+  FloatVec3Type origin = m_DataStructure.getDataAs<ImageGeom>(m_InputValues->input_image_geometry)->getOrigin();
   for(usize i = 1; i < totalFeatures; i++)
   {
     const float32 x = centroids[3 * i];
@@ -300,13 +300,13 @@ Result<> ComputeNeighborhoods::operator()()
   // NeighborhoodList[0] stays empty.
   ParallelDataAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(Range(1, totalFeatures));
-  IParallelAlgorithm::AlgorithmStores algStores;
+  IParallelAlgorithm::AlgorithmStoresType algStores;
   algStores.push_back(&centroids);
   parallelAlgorithm.requireStoresInMemory(algStores);
   parallelAlgorithm.execute(ComputeNeighborhoodsImpl(this, centroids, bins, radii, binSize, m_ShouldCancel));
 
   // Output Variables
-  auto& outputNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->NeighborhoodListArrayName);
+  auto& outputNeighborList = m_DataStructure.getDataRefAs<NeighborList<int32>>(m_InputValues->neighborhood_list_array_name);
   // Set the vector for each list into the NeighborList Object. Feature 0 gets an explicit empty list so the
   // Neighborhoods[i] == NeighborhoodList[i].size() invariant holds at every index.
   for(usize i = 0; i < totalFeatures; i++)

@@ -33,19 +33,19 @@ namespace nx::core
 
 struct ORIENTATIONANALYSIS_EXPORT ComputeSchmidsInputValues
 {
-  VectorFloat32Parameter::ValueType LoadingDirection;
-  bool StoreAngleComponents;
-  bool OverrideSystem;
-  VectorFloat32Parameter::ValueType SlipPlane;
-  VectorFloat32Parameter::ValueType SlipDirection;
-  DataPath FeaturePhasesArrayPath;
-  DataPath AvgQuatsArrayPath;
-  DataPath CrystalStructuresArrayPath;
-  DataPath SchmidsArrayName;
-  DataPath SlipSystemsArrayName;
-  DataPath PolesArrayName;
-  DataPath PhisArrayName;
-  DataPath LambdasArrayName;
+  VectorFloat32ParameterType::ValueType loading_direction;
+  bool store_angle_components{};
+  bool override_system{};
+  VectorFloat32ParameterType::ValueType slip_plane;
+  VectorFloat32ParameterType::ValueType slip_direction;
+  DataPath feature_phases_array_path;
+  DataPath avg_quats_array_path;
+  DataPath crystal_structures_array_path;
+  DataPath schmids_array_name;
+  DataPath slip_systems_array_name;
+  DataPath poles_array_name;
+  DataPath phis_array_name;
+  DataPath lambdas_array_name;
 };
 
 /**
@@ -55,7 +55,7 @@ class ORIENTATIONANALYSIS_EXPORT ComputeSchmids
 {
 public:
   ComputeSchmids(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ComputeSchmidsInputValues* inputValues);
-  ~ComputeSchmids() noexcept;
+  ~ComputeSchmids() noexcept = default;
 
   ComputeSchmids(const ComputeSchmids&) = delete;
   ComputeSchmids(ComputeSchmids&&) noexcept = delete;

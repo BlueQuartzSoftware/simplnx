@@ -24,12 +24,12 @@ public:
   ExtractFeatureBoundaries2DFilter& operator=(ExtractFeatureBoundaries2DFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static inline constexpr StringLiteral k_InputImageGeometryPath_Key = "input_image_geometry_path";
-  static inline constexpr StringLiteral k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
-  static inline constexpr StringLiteral k_OutputEdgeGeometryPath_Key = "output_edge_geometry_path";
-  static inline constexpr StringLiteral k_ZValueChoice_Key = "z_value_choice_index";
-  static inline constexpr StringLiteral k_CustomZValue_Key = "custom_z_value";
-  static inline constexpr StringLiteral k_ExtractVirtualSampleEdges_Key = "extract_virtual_sample_edges";
+  static constexpr StringLiteralType k_InputImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_FeatureIdsArrayPath_Key = "feature_ids_array_path";
+  static constexpr StringLiteralType k_OutputEdgeGeometryPath_Key = "output_edge_geometry_path";
+  static constexpr StringLiteralType k_ZValueChoice_Key = "z_value_choice_index";
+  static constexpr StringLiteralType k_CustomZValue_Key = "custom_z_value";
+  static constexpr StringLiteralType k_ExtractVirtualSampleEdges_Key = "extract_virtual_sample_edges";
 
   /**
    * @brief Returns the name of the filter.
@@ -79,7 +79,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

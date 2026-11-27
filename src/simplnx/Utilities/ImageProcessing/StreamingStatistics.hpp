@@ -36,7 +36,7 @@ struct ArrayStatistics
   T min{};
   T max{};
   float64 sum = 0.0;
-  float64 sumOfSquares = 0.0;
+  float64 sum_of_squares = 0.0;
   float64 mean = 0.0;
   float64 variance = 0.0; // sample (N-1) variance, matching itk::StatisticsImageFilter
   float64 sigma = 0.0;
@@ -60,29 +60,29 @@ inline constexpr usize k_ArraySumBlocksPerWorker = 8;
 
 struct ExactIntegralSumBatchPlan
 {
-  usize batchValues = 0;
-  usize blockCapacity = 0;
-  usize residentBytes = 0;
+  usize batch_values = 0;
+  usize block_capacity = 0;
+  usize resident_bytes = 0;
 };
 
 struct ArraySumExecutionDetails
 {
-  bool usedExactIntegralParallel = false;
-  usize blockCapacity = 0;
-  usize residentBytes = 0;
+  bool used_exact_integral_parallel = false;
+  usize block_capacity = 0;
+  usize resident_bytes = 0;
 };
 
 struct ArrayMinMaxExecutionDetails
 {
-  bool usedFixedBlockParallel = false;
-  usize blockCapacity = 0;
-  usize residentBytes = 0;
+  bool used_fixed_block_parallel = false;
+  usize block_capacity = 0;
+  usize resident_bytes = 0;
 };
 
 template <class T>
 struct ArrayMinMaxBlock
 {
-  bool hasComparableValue = false;
+  bool has_comparable_value = false;
   T min{};
   T max{};
 };
@@ -91,9 +91,9 @@ template <class T>
 struct ArrayMinMaxBatchPlan
 {
   CacheMemoryBudgetManager::WorkingMemoryReservation reservation;
-  usize batchValues = 0;
-  usize blockCapacity = 0;
-  usize residentBytes = 0;
+  usize batch_values = 0;
+  usize block_capacity = 0;
+  usize resident_bytes = 0;
 };
 
 template <class T>
@@ -183,7 +183,7 @@ inline std::optional<ExactIntegralSumBatchPlan> CreateExactIntegralSumBatchPlan(
   {
     return std::nullopt;
   }
-  return ExactIntegralSumBatchPlan{.batchValues = batchValues, .blockCapacity = blockCapacity, .residentBytes = residentBytes};
+  return ExactIntegralSumBatchPlan{.batch_values = batchValues, .block_capacity = blockCapacity, .resident_bytes = residentBytes};
 }
 
 template <class T>
@@ -193,7 +193,7 @@ struct NormalizeStatisticsBlock
   T min{};
   T max{};
   float64 sum = 0.0;
-  float64 sumOfSquares = 0.0;
+  float64 sum_of_squares = 0.0;
 };
 
 template <class T>
@@ -221,9 +221,9 @@ public:
       m_SumCompensation = (nextSum - m_Block.sum) - sumValue;
       m_Block.sum = nextSum;
       const float64 squareValue = doubleValue * doubleValue - m_SquareCompensation;
-      const float64 nextSquareSum = m_Block.sumOfSquares + squareValue;
-      m_SquareCompensation = (nextSquareSum - m_Block.sumOfSquares) - squareValue;
-      m_Block.sumOfSquares = nextSquareSum;
+      const float64 nextSquareSum = m_Block.sum_of_squares + squareValue;
+      m_SquareCompensation = (nextSquareSum - m_Block.sum_of_squares) - squareValue;
+      m_Block.sum_of_squares = nextSquareSum;
     }
   }
 
@@ -267,10 +267,10 @@ void MergeNormalizeStatisticsBlock(ArrayStatistics<T>& stats, const NormalizeSta
   const float64 nextSum = stats.sum + sumValue;
   sumCompensation = (nextSum - stats.sum) - sumValue;
   stats.sum = nextSum;
-  const float64 squareValue = block.sumOfSquares - squareCompensation;
-  const float64 nextSquareSum = stats.sumOfSquares + squareValue;
-  squareCompensation = (nextSquareSum - stats.sumOfSquares) - squareValue;
-  stats.sumOfSquares = nextSquareSum;
+  const float64 squareValue = block.sum_of_squares - squareCompensation;
+  const float64 nextSquareSum = stats.sum_of_squares + squareValue;
+  squareCompensation = (nextSquareSum - stats.sum_of_squares) - squareValue;
+  stats.sum_of_squares = nextSquareSum;
   stats.count += block.count;
 }
 
@@ -283,14 +283,14 @@ void FinalizeNormalizeStatistics(ArrayStatistics<T>& stats)
   }
   const float64 count = static_cast<float64>(stats.count);
   stats.mean = stats.sum / count;
-  stats.variance = stats.count > 1 ? std::max(0.0, (stats.sumOfSquares - (stats.sum * stats.sum) / count) / (count - 1.0)) : 0.0;
+  stats.variance = stats.count > 1 ? std::max(0.0, (stats.sum_of_squares - (stats.sum * stats.sum) / count) / (count - 1.0)) : 0.0;
   stats.sigma = std::sqrt(stats.variance);
 }
 
 struct StreamingScanBufferPlan
 {
   CacheMemoryBudgetManager::WorkingMemoryReservation reservation;
-  usize batchValues = 0;
+  usize batch_values = 0;
 };
 
 template <class T>
@@ -329,8 +329,8 @@ Result<StreamingScanBufferPlan> CreateStreamingScanBufferPlan(const AbstractData
     return MakeErrorResult<StreamingScanBufferPlan>(-8790,
                                                     fmt::format("Streaming statistics received a {}-byte working-memory grant, but one {}-byte input value is required.", grantedBytes, sizeof(T)));
   }
-  plan.batchValues = grantedBytes / sizeof(T);
-  const usize actualBytes = plan.batchValues * sizeof(T);
+  plan.batch_values = grantedBytes / sizeof(T);
+  const usize actualBytes = plan.batch_values * sizeof(T);
   plan.reservation.shrinkTo(actualBytes);
   return {std::move(plan)};
 }
@@ -353,7 +353,7 @@ Result<ArrayMinMaxBatchPlan<T>> CreateArrayMinMaxBatchPlan(const AbstractDataSto
     return {ArrayMinMaxBatchPlan<T>{std::move(scanPlan.reservation), 0, 0, 0}};
   }
 
-  const usize fallbackBatchValues = std::min(total, scanPlan.batchValues);
+  const usize fallbackBatchValues = std::min(total, scanPlan.batch_values);
   const uint64 reservationBytes = scanPlan.reservation.sizeBytes();
   const usize availableBytes = reservationBytes == 0 ? fallbackBatchValues * sizeof(T) : static_cast<usize>(std::min<uint64>(reservationBytes, std::numeric_limits<usize>::max()));
   if(fallbackBatchValues == 0 || availableBytes < sizeof(T))
@@ -412,9 +412,9 @@ ArrayMinMaxBlock<T> ReduceArrayMinMaxBlock(nonstd::span<const T> values, const s
         continue;
       }
     }
-    if(!result.hasComparableValue)
+    if(!result.has_comparable_value)
     {
-      result.hasComparableValue = true;
+      result.has_comparable_value = true;
       result.min = value;
       result.max = value;
       continue;
@@ -434,7 +434,7 @@ ArrayMinMaxBlock<T> ReduceArrayMinMaxBlock(nonstd::span<const T> values, const s
 template <class T>
 void MergeArrayMinMaxBlock(ArrayMinMax<T>& result, const ArrayMinMaxBlock<T>& block)
 {
-  if(!block.hasComparableValue)
+  if(!block.has_comparable_value)
   {
     return;
   }
@@ -475,9 +475,9 @@ Result<ArrayMinMax<T>> ComputeArrayMinMax(const AbstractDataStore<T>& store, con
     return {result};
   }
 
-  if(const auto* inMemoryStore = dynamic_cast<const DataStore<T>*>(&store); store.getStoreType() == IDataStore::StoreType::InMemory && inMemoryStore != nullptr)
+  if(const auto* inMemoryStorePtr = dynamic_cast<const DataStore<T>*>(&store); store.getStoreType() == IDataStore::StoreType::InMemory && inMemoryStorePtr != nullptr)
   {
-    const nonstd::span<const T> values = inMemoryStore->createSpan();
+    const nonstd::span<const T> values = inMemoryStorePtr->createSpan();
     const T firstValue = values.front();
     std::pair<T, T> minMax{firstValue, firstValue};
 #ifdef SIMPLNX_ENABLE_MULTICORE
@@ -542,17 +542,17 @@ Result<ArrayMinMax<T>> ComputeArrayMinMax(const AbstractDataStore<T>& store, con
     return ConvertInvalidResult<ArrayMinMax<T>>(std::move(batchPlanResult));
   }
   auto batchPlan = std::move(batchPlanResult.value());
-  const usize chunkValues = std::min(batchPlan.batchValues, total);
+  const usize chunkValues = std::min(batchPlan.batch_values, total);
   auto buffer = std::make_unique_for_overwrite<T[]>(chunkValues);
   std::unique_ptr<detail::ArrayMinMaxBlock<T>[]> blocks;
-  if(batchPlan.blockCapacity > 0)
+  if(batchPlan.block_capacity > 0)
   {
-    blocks = std::make_unique_for_overwrite<detail::ArrayMinMaxBlock<T>[]>(batchPlan.blockCapacity);
+    blocks = std::make_unique_for_overwrite<detail::ArrayMinMaxBlock<T>[]>(batchPlan.block_capacity);
     if(executionDetails != nullptr)
     {
-      executionDetails->usedFixedBlockParallel = true;
-      executionDetails->blockCapacity = batchPlan.blockCapacity;
-      executionDetails->residentBytes = batchPlan.residentBytes;
+      executionDetails->used_fixed_block_parallel = true;
+      executionDetails->block_capacity = batchPlan.block_capacity;
+      executionDetails->resident_bytes = batchPlan.resident_bytes;
     }
   }
   T minValue{};
@@ -591,7 +591,7 @@ Result<ArrayMinMax<T>> ComputeArrayMinMax(const AbstractDataStore<T>& store, con
         leadingNaN = std::isnan(buffer[0]);
       }
     }
-    if(!leadingNaN && batchPlan.blockCapacity > 0 && reduceStart < count)
+    if(!leadingNaN && batchPlan.block_capacity > 0 && reduceStart < count)
     {
       const usize reduceValues = count - reduceStart;
       const usize blockCount = reduceValues / detail::k_ArrayMinMaxBlockValues + static_cast<usize>((reduceValues % detail::k_ArrayMinMaxBlockValues) != 0);
@@ -672,7 +672,7 @@ Result<ArrayStatistics<T>> ComputeArrayStatistics(const AbstractDataStore<T>& st
     return ConvertInvalidResult<ArrayStatistics<T>>(std::move(bufferPlanResult));
   }
   auto bufferPlan = std::move(bufferPlanResult.value());
-  const usize chunkValues = std::min(bufferPlan.batchValues, total);
+  const usize chunkValues = std::min(bufferPlan.batch_values, total);
   auto buffer = std::make_unique_for_overwrite<T[]>(chunkValues);
 
   float64 sum = 0.0;
@@ -745,7 +745,7 @@ Result<ArrayStatistics<T>> ComputeArrayStatistics(const AbstractDataStore<T>& st
   stats.min = minValue;
   stats.max = maxValue;
   stats.sum = sum;
-  stats.sumOfSquares = sumSq;
+  stats.sum_of_squares = sumSq;
   const float64 n = static_cast<float64>(total);
   stats.mean = sum / n;
   // Clamp to >= 0 before sqrt: the one-pass (SumSq - Sum^2/N) form can cancel a few ULPs NEGATIVE on a constant
@@ -775,7 +775,7 @@ Result<float64> ComputeArraySum(const AbstractDataStore<T>& store, const std::at
     return ConvertInvalidResult<float64>(std::move(scanPlanResult));
   }
   auto scanPlan = std::move(scanPlanResult.value());
-  const usize serialBatchValues = std::min(total, scanPlan.batchValues);
+  const usize serialBatchValues = std::min(total, scanPlan.batch_values);
 
   if constexpr(std::is_integral_v<T>)
   {
@@ -787,14 +787,14 @@ Result<float64> ComputeArraySum(const AbstractDataStore<T>& store, const std::at
       const auto exactPlan = detail::CreateExactIntegralSumBatchPlan(total, sizeof(T), availableBytes, workerCount);
       if(exactPlan.has_value())
       {
-        scanPlan.reservation.shrinkTo(exactPlan->residentBytes);
-        auto buffer = std::make_unique_for_overwrite<T[]>(exactPlan->batchValues);
-        auto blockSums = std::make_unique_for_overwrite<int64[]>(exactPlan->blockCapacity);
+        scanPlan.reservation.shrinkTo(exactPlan->resident_bytes);
+        auto buffer = std::make_unique_for_overwrite<T[]>(exactPlan->batch_values);
+        auto blockSums = std::make_unique_for_overwrite<int64[]>(exactPlan->block_capacity);
         if(executionDetails != nullptr)
         {
-          executionDetails->usedExactIntegralParallel = true;
-          executionDetails->blockCapacity = exactPlan->blockCapacity;
-          executionDetails->residentBytes = exactPlan->residentBytes;
+          executionDetails->used_exact_integral_parallel = true;
+          executionDetails->block_capacity = exactPlan->block_capacity;
+          executionDetails->resident_bytes = exactPlan->resident_bytes;
         }
 
         int64 exactSum = 0;
@@ -804,7 +804,7 @@ Result<float64> ComputeArraySum(const AbstractDataStore<T>& store, const std::at
           {
             return {static_cast<float64>(exactSum)};
           }
-          const usize count = std::min(exactPlan->batchValues, total - start);
+          const usize count = std::min(exactPlan->batch_values, total - start);
           if(Result<> result = store.copyIntoBuffer(start, nonstd::span<T>(buffer.get(), count)); result.invalid())
           {
             return {nonstd::make_unexpected(std::move(result.errors()))};
@@ -894,11 +894,11 @@ Result<ArrayStatistics<T>> ComputeNormalizeStatistics(const AbstractDataStore<T>
     return {stats};
   }
 #ifdef SIMPLNX_ENABLE_MULTICORE
-  if(const auto* inMemoryStore = dynamic_cast<const DataStore<T>*>(&store); store.getStoreType() == IDataStore::StoreType::InMemory && inMemoryStore != nullptr)
+  if(const auto* inMemoryStorePtr = dynamic_cast<const DataStore<T>*>(&store); store.getStoreType() == IDataStore::StoreType::InMemory && inMemoryStorePtr != nullptr)
   {
     const usize blockCount = total / detail::k_NormalizeStatisticsBlockValues + static_cast<usize>((total % detail::k_NormalizeStatisticsBlockValues) != 0);
     std::vector<detail::NormalizeStatisticsBlock<T>> blocks(blockCount);
-    const nonstd::span<const T> values = inMemoryStore->createSpan();
+    const nonstd::span<const T> values = inMemoryStorePtr->createSpan();
     auto reduceBlocks = [&](const Range& range) {
       for(usize blockIndex = range.min(); blockIndex < range.max(); ++blockIndex)
       {
@@ -935,7 +935,7 @@ Result<ArrayStatistics<T>> ComputeNormalizeStatistics(const AbstractDataStore<T>
     return ConvertInvalidResult<ArrayStatistics<T>>(std::move(planResult));
   }
   auto plan = std::move(planResult.value());
-  const usize transportValues = std::min(plan.batchValues, total);
+  const usize transportValues = std::min(plan.batch_values, total);
   if(detail::k_NormalizeStatisticsBlockValues > std::numeric_limits<usize>::max() / sizeof(T))
   {
     return MakeErrorResult<ArrayStatistics<T>>(-8791, fmt::format("Normalize statistics block size overflows: {} values at {} bytes each.", detail::k_NormalizeStatisticsBlockValues, sizeof(T)));

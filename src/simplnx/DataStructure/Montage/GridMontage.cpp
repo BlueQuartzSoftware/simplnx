@@ -22,7 +22,7 @@ GridMontage::GridMontage(const GridMontage& other)
 {
 }
 
-GridMontage::GridMontage(GridMontage&& other)
+GridMontage::GridMontage(GridMontage&& other) noexcept
 : AbstractMontage(std::move(other))
 {
 }
@@ -59,7 +59,7 @@ DataObject* GridMontage::shallowCopy()
   return new GridMontage(*this);
 }
 
-std::shared_ptr<DataObject> GridMontage::deepCopy(const DataPath& copyPath)
+std::shared_ptr<DataObject> GridMontage::deepCopy(const DataPath& /*copyPath*/)
 {
   throw std::runtime_error("GridMontage deepCopy has not been implemented.");
 }
@@ -79,7 +79,7 @@ usize GridMontage::getDepth() const
   return m_DepthCount;
 }
 
-SizeVec3 GridMontage::getGridSize() const
+SizeVec3Type GridMontage::getGridSize() const
 {
   return {m_ColumnCount, m_RowCount, m_DepthCount};
 }
@@ -97,9 +97,9 @@ void GridMontage::resizeTileDims(usize row, usize col, usize depth)
     {
       for(usize z = 0; z < m_DepthCount && depth != 0; z++)
       {
-        const SizeVec3 pos = {x, y, z};
+        const SizeVec3Type pos = {x, y, z};
         auto oldOffset = getOffsetFromTilePos(pos);
-        auto newOffset = getOffsetFromTilePos(pos, newDims);
+        auto newOffset = GetOffsetFromTilePos(pos, newDims);
 
         if(oldOffset >= oldCollection.size())
         {
@@ -120,25 +120,25 @@ GridTileIndex GridMontage::getTileIndex(usize col, usize row, usize depth) const
 {
   if(col >= m_ColumnCount)
   {
-    return GridTileIndex();
+    return {};
   }
   if(row >= m_RowCount)
   {
-    return GridTileIndex();
+    return {};
   }
   if(depth >= m_DepthCount)
   {
-    return GridTileIndex();
+    return {};
   }
-  return GridTileIndex(this, {col, row, depth});
+  return {this, {col, row, depth}};
 }
 
-GridTileIndex GridMontage::getTileIndex(const SizeVec3& pos) const
+GridTileIndex GridMontage::getTileIndex(const SizeVec3Type& pos) const
 {
   return getTileIndex(pos[0], pos[1], pos[2]);
 }
 
-std::optional<SizeVec3> GridMontage::getTilePosOfGeometry(const IGeometry* geom) const
+std::optional<SizeVec3Type> GridMontage::getTilePosOfGeometry(const IGeometry* geom) const
 {
   for(usize i = 0; i < getTileCount(); i++)
   {
@@ -162,31 +162,31 @@ std::shared_ptr<AbstractTileIndex> GridMontage::getTileIndex(IGeometry* geom) co
 
 IGeometry* GridMontage::getGeometry(const AbstractTileIndex* index)
 {
-  auto pos = dynamic_cast<const GridTileIndex*>(index);
-  if(!pos)
+  const auto* posPtr = dynamic_cast<const GridTileIndex*>(index);
+  if(posPtr == nullptr)
   {
     return nullptr;
   }
-  return getGeometry(pos->getTilePos());
+  return getGeometry(posPtr->getTilePos());
 }
 
 const IGeometry* GridMontage::getGeometry(const AbstractTileIndex* index) const
 {
-  auto pos = dynamic_cast<const GridTileIndex*>(index);
-  if(!pos)
+  const auto* posPtr = dynamic_cast<const GridTileIndex*>(index);
+  if(posPtr == nullptr)
   {
     return nullptr;
   }
-  return getGeometry(pos->getTilePos());
+  return getGeometry(posPtr->getTilePos());
 }
 
-IGeometry* GridMontage::getGeometry(const SizeVec3& position)
+IGeometry* GridMontage::getGeometry(const SizeVec3Type& position)
 {
   usize index = getOffsetFromTilePos(position);
   return getCollection()[index];
 }
 
-const IGeometry* GridMontage::getGeometry(const SizeVec3& position) const
+const IGeometry* GridMontage::getGeometry(const SizeVec3Type& position) const
 {
   usize index = getOffsetFromTilePos(position);
   return getCollection()[index];
@@ -194,15 +194,15 @@ const IGeometry* GridMontage::getGeometry(const SizeVec3& position) const
 
 void GridMontage::setGeometry(const AbstractTileIndex* index, IGeometry* geom)
 {
-  auto pos = dynamic_cast<const GridTileIndex*>(index);
-  if(!pos)
+  const auto* posPtr = dynamic_cast<const GridTileIndex*>(index);
+  if(posPtr == nullptr)
   {
     return;
   }
-  setGeometry(pos->getTilePos(), geom);
+  setGeometry(posPtr->getTilePos(), geom);
 }
 
-void GridMontage::setGeometry(const SizeVec3& position, IGeometry* geom)
+void GridMontage::setGeometry(const SizeVec3Type& position, IGeometry* geom)
 {
   CollectionType& collection = getCollection();
   usize index = getOffsetFromTilePos(position);
@@ -220,12 +220,12 @@ GridMontage::DimensionsType GridMontage::getDimensions() const
   return {m_ColumnCount, m_RowCount, m_DepthCount};
 }
 
-GridMontage::BoundsType GridMontage::getBounds() const
+GridMontage::BoundsType GridMontage::GetBounds()
 {
   throw std::runtime_error("Get Bounds not implemented");
 }
 
-SizeVec3 GridMontage::getTilePosFromOffset(usize offset) const
+SizeVec3Type GridMontage::getTilePosFromOffset(usize offset) const
 {
   const usize numRows = getRowCount();
   const usize numCols = getColumnCount();
@@ -243,12 +243,12 @@ usize GridMontage::getOffsetFromTileId(const TileIdType& tileId) const
   return getOffsetFromTilePos(tileId.getTilePos());
 }
 
-usize GridMontage::getOffsetFromTilePos(const SizeVec3& tilePos) const
+usize GridMontage::getOffsetFromTilePos(const SizeVec3Type& tilePos) const
 {
-  return getOffsetFromTilePos(tilePos, {getDimensions()});
+  return GetOffsetFromTilePos(tilePos, {getDimensions()});
 }
 
-usize GridMontage::getOffsetFromTilePos(const SizeVec3& tilePos, const DimensionsType& dims)
+usize GridMontage::GetOffsetFromTilePos(const SizeVec3Type& tilePos, const DimensionsType& dims)
 {
   const usize numCols = dims[0];
   const usize numRows = dims[1];

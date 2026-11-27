@@ -19,12 +19,12 @@ inline constexpr int32 k_UnsupportedScalarType = -1070;
  */
 struct SIMPLNXCORE_EXPORT ReadRawBinaryInputValues
 {
-  FileSystemPathParameter::ValueType inputFileValue;
-  NumericType scalarTypeValue;
-  ShapeType componentDimsValue;
-  ChoicesParameter::ValueType endianValue;
-  uint64 skipHeaderBytesValue;
-  DataPath createdAttributeArrayPathValue;
+  FileSystemPathParameter::ValueType input_file_value;
+  NumericType scalar_type_value;
+  ShapeType component_dims_value;
+  ChoicesParameter::ValueType endian_value{};
+  uint64 skip_header_bytes_value{};
+  DataPath created_attribute_array_path_value;
 };
 
 /**
@@ -48,7 +48,7 @@ public:
   /**
    * @brief Destroys the non-owning reader.
    */
-  ~ReadRawBinary() noexcept;
+  ~ReadRawBinary() noexcept = default;
 
   ReadRawBinary(const ReadRawBinary&) = delete;
   ReadRawBinary(ReadRawBinary&&) noexcept = delete;

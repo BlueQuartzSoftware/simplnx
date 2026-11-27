@@ -153,13 +153,13 @@ Result<ImageMetadata> MhaImageIO::readMetadata(const std::filesystem::path& file
                                         fmt::format("MHA input through the ImageIO backend is not supported for '{}'. Use the 'Read MHA/MetaImage File' filter.", filePath.string()));
 }
 
-Result<> MhaImageIO::readPixelData(const std::filesystem::path& filePath, std::span<uint8> buffer, usize pageIndex) const
+Result<> MhaImageIO::readPixelData(const std::filesystem::path& filePath, std::span<uint8> /*buffer*/, usize pageIndex) const
 {
   return MakeErrorResult(k_ErrorReadUnsupported,
                          fmt::format("MHA input through the ImageIO backend is not supported for '{}' at page index {}. Use the 'Read MHA/MetaImage File' filter.", filePath.string(), pageIndex));
 }
 
-Result<> MhaImageIO::readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallback& callback, usize pageIndex) const
+Result<> MhaImageIO::readPixelDataRows(const std::filesystem::path& filePath, const ReadRowCallbackType& /*callback*/, usize pageIndex) const
 {
   return MakeErrorResult(k_ErrorReadUnsupported,
                          fmt::format("MHA input through the ImageIO backend is not supported for '{}' at page index {}. Use the 'Read MHA/MetaImage File' filter.", filePath.string(), pageIndex));
@@ -167,26 +167,26 @@ Result<> MhaImageIO::readPixelDataRows(const std::filesystem::path& filePath, co
 
 Result<> MhaImageIO::writePixelData(const std::filesystem::path& filePath, std::span<const uint8> buffer, const ImageMetadata& metadata) const
 {
-  const std::optional<std::string_view> elementType = MetaElementType(metadata.dataType);
+  const std::optional<std::string_view> elementType = MetaElementType(metadata.data_type);
   if(!elementType.has_value())
   {
     return MakeErrorResult(k_ErrorUnsupportedDataType,
                            fmt::format("The MHA format cannot write '{}' pixel data to '{}'. Supported data types are int8, uint8, int16, uint16, int32, uint32, int64, uint64, float32, and float64.",
-                                       DataTypeToString(metadata.dataType).str(), filePath.string()));
+                                       DataTypeToString(metadata.data_type).str(), filePath.string()));
   }
 
-  if(!supportedWriteComponentCounts().contains(metadata.numComponents))
+  if(!supportedWriteComponentCounts().contains(metadata.num_components))
   {
     return MakeErrorResult(k_ErrorUnsupportedComponentCount, fmt::format("The MHA format cannot write {} components per pixel to '{}'. Supported component counts are 1, 2, 3, 4, 10, 11, and 36.",
-                                                                         metadata.numComponents, filePath.string()));
+                                                                         metadata.num_components, filePath.string()));
   }
 
-  const usize expectedSize = metadata.width * metadata.height * metadata.numComponents * GetDataTypeSize(metadata.dataType);
+  const usize expectedSize = metadata.width * metadata.height * metadata.num_components * GetDataTypeSize(metadata.data_type);
   if(buffer.size() != expectedSize)
   {
     return MakeErrorResult(k_ErrorBufferSizeMismatch,
                            fmt::format("The pixel buffer for MHA file '{}' contains {} bytes, but the {} x {} image with {} components of type '{}' requires {} bytes.", filePath.string(),
-                                       buffer.size(), metadata.width, metadata.height, metadata.numComponents, DataTypeToString(metadata.dataType).str(), expectedSize));
+                                       buffer.size(), metadata.width, metadata.height, metadata.num_components, DataTypeToString(metadata.data_type).str(), expectedSize));
   }
 
   std::ofstream output(filePath, std::ios::binary | std::ios::trunc);
@@ -195,8 +195,8 @@ Result<> MhaImageIO::writePixelData(const std::filesystem::path& filePath, std::
     return MakeErrorResult(k_ErrorOpenFailed, fmt::format("Could not open MHA file '{}' for writing. Check the output path and write permissions.", filePath.string()));
   }
 
-  const FloatVec3 origin = metadata.origin.value_or(FloatVec3{0.0f, 0.0f, 0.0f});
-  const FloatVec3 spacing = metadata.spacing.value_or(FloatVec3{1.0f, 1.0f, 1.0f});
+  const FloatVec3Type origin = metadata.origin.value_or(FloatVec3Type{0.0f, 0.0f, 0.0f});
+  const FloatVec3Type spacing = metadata.spacing.value_or(FloatVec3Type{1.0f, 1.0f, 1.0f});
   output << std::setprecision(std::numeric_limits<float32>::max_digits10);
   output << "ObjectType = Image\n";
   output << "NDims = 2\n";
@@ -208,7 +208,7 @@ Result<> MhaImageIO::writePixelData(const std::filesystem::path& filePath, std::
   output << "CenterOfRotation = 0 0\n";
   output << "ElementSpacing = " << spacing[0] << ' ' << spacing[1] << '\n';
   output << "DimSize = " << metadata.width << ' ' << metadata.height << '\n';
-  output << "ElementNumberOfChannels = " << metadata.numComponents << '\n';
+  output << "ElementNumberOfChannels = " << metadata.num_components << '\n';
   output << "ElementType = " << elementType.value() << '\n';
   output << "CompressedDataSize = ";
   const std::streampos compressedSizePosition = output.tellp();

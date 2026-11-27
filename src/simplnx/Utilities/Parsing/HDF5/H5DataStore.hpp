@@ -8,9 +8,7 @@
 #include <atomic>
 #include <limits>
 
-namespace nx::core::HDF5
-{
-namespace Support
+namespace nx::core::hdf5::Support
 {
 /**
  * @brief Reads an HDF5 dataset region directly into an in-memory DataStore.
@@ -28,7 +26,7 @@ namespace Support
  * does not provide cancellation.
  */
 template <typename T>
-Result<> FillDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetIO& datasetReader, const std::optional<std::vector<hsize_t>>& start = std::nullopt,
+Result<> FillDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, const nx::core::hdf5::DatasetIO& datasetReader, const std::optional<std::vector<hsize_t>>& start = std::nullopt,
                        const std::optional<std::vector<hsize_t>>& count = std::nullopt)
 {
   try
@@ -85,7 +83,7 @@ Result<> FillDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, c
  * DatasetIO serializes its HDF5 calls. Destination writes are sequential.
  */
 template <typename T>
-Result<> FillOocDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetIO& datasetReader, const std::optional<std::vector<hsize_t>>& start = std::nullopt,
+Result<> FillOocDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath, const nx::core::hdf5::DatasetIO& datasetReader, const std::optional<std::vector<hsize_t>>& start = std::nullopt,
                           const std::optional<std::vector<hsize_t>>& count = std::nullopt, const std::atomic_bool* shouldCancel = nullptr)
 {
   auto& absDataStore = dataArray.getDataStoreRef();
@@ -250,7 +248,7 @@ Result<> FillOocDataStore(DataArray<T>& dataArray, const DataPath& dataArrayPath
  * direct DataStore path, which requires DataStore<T> and ignores shouldCancel.
  */
 template <typename T>
-Result<> FillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPath, const nx::core::HDF5::DatasetIO& datasetReader, const std::optional<std::vector<hsize_t>>& start = std::nullopt,
+Result<> FillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPath, const nx::core::hdf5::DatasetIO& datasetReader, const std::optional<std::vector<hsize_t>>& start = std::nullopt,
                        const std::optional<std::vector<hsize_t>>& count = std::nullopt, const std::atomic_bool* shouldCancel = nullptr)
 {
   auto& dataArray = dataStructure.getDataRefAs<DataArray<T>>(dataArrayPath);
@@ -258,10 +256,7 @@ Result<> FillDataArray(DataStructure& dataStructure, const DataPath& dataArrayPa
   {
     return FillDataStore(dataArray, dataArrayPath, datasetReader, start, count);
   }
-  else
-  {
-    return FillOocDataStore(dataArray, dataArrayPath, datasetReader, start, count, shouldCancel);
-  }
+
+  return FillOocDataStore(dataArray, dataArrayPath, datasetReader, start, count, shouldCancel);
 }
-} // namespace Support
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5::Support

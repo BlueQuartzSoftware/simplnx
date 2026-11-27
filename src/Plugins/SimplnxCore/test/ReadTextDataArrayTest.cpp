@@ -26,29 +26,29 @@ namespace fs = std::filesystem;
 #include <limits>
 
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace
 {
-const std::vector<int> inputIntVector({1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
-const std::vector<int> inputHexVector({0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A});
-const std::vector<int> inputOctVector({001, 002, 003, 004, 005, 006, 007});
-const std::vector<double> inputDoubleVector({1.5, 2.2, 3.65, 4.34, 5.76, 6.534, 7.0, 8.342, 9.8723, 10.89});
-const std::vector<std::string> inputCharErrorVector({"sdstrg", "2.2", "3.65", "&(^$#", "5.76", "sjtyr", "7.0", "8.342", "&*^#F", "youikjhgf"});
-const std::vector<double> inputScientificNotation({0.15e1, 2.2e0, 3.65, 43.4e-1, 0.576e1, 653.4e-2, 7.0, 8.342, 9.8723, 10.89});
+const std::vector<int> k_InputIntVector({1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+const std::vector<int> k_InputHexVector({0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A});
+const std::vector<int> k_InputOctVector({001, 002, 003, 004, 005, 006, 007});
+const std::vector<double> k_InputDoubleVector({1.5, 2.2, 3.65, 4.34, 5.76, 6.534, 7.0, 8.342, 9.8723, 10.89});
+const std::vector<std::string> k_InputCharErrorVector({"sdstrg", "2.2", "3.65", "&(^$#", "5.76", "sjtyr", "7.0", "8.342", "&*^#F", "youikjhgf"});
+const std::vector<double> k_InputScientificNotation({0.15e1, 2.2e0, 3.65, 43.4e-1, 0.576e1, 653.4e-2, 7.0, 8.342, 9.8723, 10.89});
 
-const std::vector<double> outputDoubleVector({1.5, 2.2, 3.65, 4.34, 5.76, 6.534, 7.0, 8.342, 9.8723, 10.89});
-const std::vector<double> outputIntAsDoubleVector({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0});
+const std::vector<double> k_OutputDoubleVector({1.5, 2.2, 3.65, 4.34, 5.76, 6.534, 7.0, 8.342, 9.8723, 10.89});
+const std::vector<double> k_OutputIntAsDoubleVector({1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0});
 
 const std::string k_DataArrayName = "Array1";
 
-const usize xDim = 10;
-const usize yDim = 5;
-const usize zDim = 1;
+const usize k_XDim = 10;
+const usize k_YDim = 5;
+const usize k_ZDim = 1;
 } // namespace
 
 template <typename T>
-void writeInvalidFile(const std::string& filePath, std::vector<T> values, char delimiter)
+static void WriteInvalidFile(const std::string& filePath, std::vector<T> values, char delimiter)
 {
   std::ofstream data(filePath, std::ios::out /*| std::ios::trunc*/);
   // std::ofstream data(filePath, std::ios::binary);
@@ -67,13 +67,13 @@ void writeInvalidFile(const std::string& filePath, std::vector<T> values, char d
   }
 }
 
-void writeFile(const std::string& filePath, char delimiter)
+static void writeFile(const std::string& filePath, char delimiter)
 {
   std::ofstream outfile(filePath.c_str(), std::ios_base::binary);
   int32 index = 0;
-  for(usize y = 0; y < yDim; y++)
+  for(usize y = 0; y < k_YDim; y++)
   {
-    for(usize x = 0; x < xDim; x++)
+    for(usize x = 0; x < k_XDim; x++)
     {
       outfile << index++;
       // if(x < xDim - 1)
@@ -81,12 +81,12 @@ void writeFile(const std::string& filePath, char delimiter)
         outfile << delimiter;
       }
     }
-    outfile << std::endl;
+    outfile << '\n';
   }
 }
 
 template <typename T>
-void RunInvalidTest()
+static void RunInvalidTest()
 {
   const std::string inputFilePath = fmt::format("{}/TestFile1.txt", unit_test::k_BinaryTestOutputDir);
   ShapeType tupleDims = {10};
@@ -95,11 +95,11 @@ void RunInvalidTest()
 
   // Test Using Unexpected Input - Alphabetical Characters, Special Characters, etc.
   {
-    writeInvalidFile<std::string>(inputFilePath, inputCharErrorVector, delimiter);
+    WriteInvalidFile<std::string>(inputFilePath, k_InputCharErrorVector, delimiter);
 
     ReadTextDataArrayFilter filter;
     DataStructure dataStructure;
-    AttributeMatrix* am = AttributeMatrix::Create(dataStructure, k_GroupAName, tupleDims);
+    AttributeMatrix* amPtr = AttributeMatrix::Create(dataStructure, k_GroupAName, tupleDims);
     Arguments args;
     args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(fs::path(inputFilePath)));
     args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericType>(GetNumericType<T>()));
@@ -112,7 +112,7 @@ void RunInvalidTest()
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -123,16 +123,16 @@ void RunInvalidTest()
 
   // Max Overflow Test
   {
-    std::string maxValue = StringUtilities::number(std::numeric_limits<T>().max());
+    std::string maxValue = string_utilities::Number(std::numeric_limits<T>().max());
     maxValue = maxValue + '0';
     std::vector<std::string> inputMaxVector({maxValue});
-    writeInvalidFile<std::string>(inputFilePath, inputMaxVector, delimiter);
+    WriteInvalidFile<std::string>(inputFilePath, inputMaxVector, delimiter);
 
     tupleDims = {1};
 
     ReadTextDataArrayFilter filter;
     DataStructure dataStructure;
-    AttributeMatrix* am = AttributeMatrix::Create(dataStructure, k_GroupAName, tupleDims);
+    AttributeMatrix* amPtr = AttributeMatrix::Create(dataStructure, k_GroupAName, tupleDims);
     Arguments args;
     args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(fs::path(inputFilePath)));
     args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericType>(GetNumericType<T>()));
@@ -145,7 +145,7 @@ void RunInvalidTest()
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -172,17 +172,17 @@ void RunInvalidTest()
     {
       int64_t store = std::numeric_limits<T>().min();
       store = store - 1;
-      minValue = StringUtilities::number(store);
+      minValue = string_utilities::Number(store);
     }
 
     std::vector<std::string> inputMinVector({minValue});
-    writeInvalidFile<std::string>(inputFilePath, inputMinVector, delimiter);
+    WriteInvalidFile<std::string>(inputFilePath, inputMinVector, delimiter);
 
     tupleDims = {1};
 
     ReadTextDataArrayFilter filter;
     DataStructure dataStructure;
-    AttributeMatrix* am = AttributeMatrix::Create(dataStructure, k_GroupAName, tupleDims);
+    AttributeMatrix* amPtr = AttributeMatrix::Create(dataStructure, k_GroupAName, tupleDims);
     Arguments args;
     args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(fs::path(inputFilePath)));
     args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericType>(GetNumericType<T>()));
@@ -195,7 +195,7 @@ void RunInvalidTest()
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -204,16 +204,16 @@ void RunInvalidTest()
 }
 
 template <typename T>
-void RunTest(char sep, int delimiter)
+static void RunTest(char sep, int delimiter)
 {
   const std::string inputFilePath = fmt::format("{}/TestFile1.txt", unit_test::k_BinaryTestOutputDir);
   writeFile(inputFilePath, sep);
 
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageDataContainer");
-  const ShapeType tDims = {xDim, yDim, zDim};
-  imageGeom->setDimensions(tDims);
-  AttributeMatrix* attrMat = AttributeMatrix::Create(dataStructure, "AttributeMatrix", std::vector<usize>{zDim, yDim, xDim}, imageGeom->getId());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageDataContainer");
+  const ShapeType tDims = {k_XDim, k_YDim, k_ZDim};
+  imageGeomPtr->setDimensions(tDims);
+  AttributeMatrix* attrMatPtr = AttributeMatrix::Create(dataStructure, "AttributeMatrix", std::vector<usize>{k_ZDim, k_YDim, k_XDim}, imageGeomPtr->getId());
 
   DataPath createdAttributeArrayPath({"ImageDataContainer", "AttributeMatrix", "ImportedData"});
   NumericType scalarType = GetNumericType<T>();
@@ -233,7 +233,7 @@ void RunTest(char sep, int delimiter)
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execute the filter and check the result
   auto executeResult = filter.execute(dataStructure, args);
@@ -242,9 +242,9 @@ void RunTest(char sep, int delimiter)
   REQUIRE(dataStructure.getDataAs<DataArray<T>>(createdAttributeArrayPath) != nullptr);
   auto& createdArray = dataStructure.getDataRefAs<DataArray<T>>(createdAttributeArrayPath);
   usize index = 0;
-  for(usize y = 0; y < yDim; y++)
+  for(usize y = 0; y < k_YDim; y++)
   {
-    for(usize x = 0; x < xDim; x++)
+    for(usize x = 0; x < k_XDim; x++)
     {
       T value = static_cast<T>(index);
       REQUIRE(value == createdArray[index]);
@@ -252,12 +252,12 @@ void RunTest(char sep, int delimiter)
     }
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Valid filter execution", "[SimplnxCore][ReadTextDataArrayFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   RunTest<int8_t>(',', 0);
   RunTest<uint8_t>(',', 0);
@@ -317,7 +317,7 @@ TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Valid filter execution", "[Simp
 
 TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Invalid filter execution", "[SimplnxCore][ReadTextDataArrayFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Reading alphabetical/special characters, and min/max overflow
   RunInvalidTest<int8>();
@@ -338,7 +338,7 @@ TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Invalid filter execution", "[Si
   {
     ReadTextDataArrayFilter filter;
     DataStructure dataStructure;
-    DataGroup* dataGroup = DataGroup::Create(dataStructure, k_GroupAName);
+    DataGroup* dataGroupPtr = DataGroup::Create(dataStructure, k_GroupAName);
     Arguments args;
     args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(fs::path(inputFilePath)));
     args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericType>(NumericType::int32));
@@ -351,7 +351,7 @@ TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Invalid filter execution", "[Si
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -362,7 +362,7 @@ TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Invalid filter execution", "[Si
   {
     ReadTextDataArrayFilter filter;
     DataStructure dataStructure;
-    DataGroup* dataGroup = DataGroup::Create(dataStructure, k_GroupAName);
+    DataGroup* dataGroupPtr = DataGroup::Create(dataStructure, k_GroupAName);
     Arguments args;
     args.insertOrAssign(ReadTextDataArrayFilter::k_InputFile_Key, std::make_any<fs::path>(fs::path(inputFilePath)));
     args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericType>(NumericType::int32));
@@ -376,7 +376,7 @@ TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Invalid filter execution", "[Si
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions)
 
     // Execute the filter and check the result
     auto executeResult = filter.execute(dataStructure, args);
@@ -387,8 +387,8 @@ TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: Invalid filter execution", "[Si
 TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ReadTextDataArrayFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -401,22 +401,22 @@ TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: SIMPL Backwards Compatibility",
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ReadTextDataArrayFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ReadTextDataArrayFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<FileSystemPathParameter::ValueType>(ReadTextDataArrayFilter::k_InputFile_Key) == fs::path("/test/path/file.txt"));
       // Complex type (NumericTypeParameterConverter) - verified by successful pipeline loading
       CHECK(args.value<uint64>(ReadTextDataArrayFilter::k_NComp_Key) == 5);
@@ -430,7 +430,7 @@ TEST_CASE("SimplnxCore::ReadTextDataArrayFilter: SIMPL Backwards Compatibility",
 TEST_CASE("SimplnxCore::ReadTextDataArray: Dimension RED fractional", "[SimplnxCore][ReadTextDataArray][DimensionRed]")
 {
   ReadTextDataArrayFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   auto args = filter.getDefaultArguments();
   const fs::path input = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadTextDataArrayDimensions.txt";
   {
@@ -441,15 +441,15 @@ TEST_CASE("SimplnxCore::ReadTextDataArray: Dimension RED fractional", "[SimplnxC
   args.insertOrAssign(ReadTextDataArrayFilter::k_AdvancedOptions_Key, std::make_any<bool>(true));
   args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath({"Dimensions"})));
   args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1.5}}));
-  auto result = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors()[0].code == -79000);
+  auto result = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors()[0].code == -79000);
 }
 
 TEST_CASE("SimplnxCore::ReadTextDataArray: Dimension RED zero components", "[SimplnxCore][ReadTextDataArray][DimensionRed]")
 {
   ReadTextDataArrayFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   auto args = filter.getDefaultArguments();
   const fs::path input = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadTextDataArrayDimensions.txt";
   {
@@ -461,9 +461,9 @@ TEST_CASE("SimplnxCore::ReadTextDataArray: Dimension RED zero components", "[Sim
   args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath({"ZeroComponents"})));
   args.insertOrAssign(ReadTextDataArrayFilter::k_AdvancedOptions_Key, std::make_any<bool>(true));
   args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{1}}));
-  auto result = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors()[0].code == -79003);
+  auto result = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors()[0].code == -79003);
 }
 
 TEST_CASE("SimplnxCore::ReadTextDataArray: Dimension fixed-only tuples and inherited shapes", "[SimplnxCore][ReadTextDataArray]")
@@ -473,7 +473,7 @@ TEST_CASE("SimplnxCore::ReadTextDataArray: Dimension fixed-only tuples and inher
   {
     const float64 value = GENERATE(-1.0, std::numeric_limits<float64>::quiet_NaN(), std::numeric_limits<float64>::infinity(), std::ldexp(1.0, 64), 0.0, 1.5);
     CAPTURE(value);
-    DataStructure ds;
+    DataStructure dataStructure;
     auto args = filter.getDefaultArguments();
     const fs::path input = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadTextDataArrayDimensionsBoundary.txt";
     {
@@ -485,18 +485,18 @@ TEST_CASE("SimplnxCore::ReadTextDataArray: Dimension fixed-only tuples and inher
     args.insertOrAssign(ReadTextDataArrayFilter::k_AdvancedOptions_Key, std::make_any<bool>(true));
     args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath({"Dimensions"})));
     args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{value}}));
-    auto result = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors()[0].code == (value == 0 ? -78603 : -79000));
-    REQUIRE(result.outputActions.errors()[0].message.find("index 0") != std::string::npos);
-    REQUIRE(result.outputActions.errors()[0].message.find("finite whole numbers") != std::string::npos);
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors()[0].code == (value == 0 ? -78603 : -79000));
+    REQUIRE(result.output_actions.errors()[0].message.find("index 0") != std::string::npos);
+    REQUIRE(result.output_actions.errors()[0].message.find("finite whole numbers") != std::string::npos);
   }
   SECTION("Invalid ignored table, including an inherited empty matrix")
   {
     const usize count = GENERATE(usize{0}, usize{2});
     const bool useDimensions = GENERATE(false, true);
-    DataStructure ds;
-    REQUIRE(AttributeMatrix::Create(ds, "Parent", {count}) != nullptr);
+    DataStructure dataStructure;
+    REQUIRE(AttributeMatrix::Create(dataStructure, "Parent", {count}) != nullptr);
     auto args = filter.getDefaultArguments();
     const fs::path input = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadTextDataArrayDimensionsBoundary.txt";
     {
@@ -509,20 +509,20 @@ TEST_CASE("SimplnxCore::ReadTextDataArray: Dimension fixed-only tuples and inher
     args.insertOrAssign(ReadTextDataArrayFilter::k_AdvancedOptions_Key, std::make_any<bool>(useDimensions));
     args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(path));
     args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{-1}}));
-    auto result = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
-    auto applied = result.outputActions.value().applyAll(ds, IDataAction::Mode::Preflight);
+    auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
+    auto applied = result.output_actions.value().applyAll(dataStructure, IDataAction::Mode::Preflight);
     SIMPLNX_RESULT_REQUIRE_VALID(applied);
-    REQUIRE_NOTHROW(ds.getDataRefAs<IArray>(path));
-    REQUIRE(ds.getDataRefAs<IArray>(path).getTupleShape() == ShapeType{count});
-    UnitTest::CheckArraysInheritTupleDims(ds);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<IArray>(path));
+    REQUIRE(dataStructure.getDataRefAs<IArray>(path).getTupleShape() == ShapeType{count});
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::ReadTextDataArray: Dimension tuple product overflow", "[SimplnxCore][ReadTextDataArray]")
 {
   ReadTextDataArrayFilter filter;
-  DataStructure ds;
+  DataStructure dataStructure;
   auto args = filter.getDefaultArguments();
   const fs::path input = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "ReadTextDataArrayDimensionsBoundary.txt";
   {
@@ -533,8 +533,8 @@ TEST_CASE("SimplnxCore::ReadTextDataArray: Dimension tuple product overflow", "[
   args.insertOrAssign(ReadTextDataArrayFilter::k_AdvancedOptions_Key, std::make_any<bool>(true));
   args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath({"Overflow"})));
   args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableParameter::ValueType{{4294967296.0, 4294967296.0}}));
-  auto result = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors()[0].code == -79001);
-  REQUIRE(result.outputActions.errors()[0].message.find("product") != std::string::npos);
+  auto result = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors()[0].code == -79001);
+  REQUIRE(result.output_actions.errors()[0].message.find("product") != std::string::npos);
 }

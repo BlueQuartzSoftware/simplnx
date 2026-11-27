@@ -30,10 +30,10 @@ namespace detail
 {
 struct RegionalExtremaWorkingMemoryPlan
 {
-  usize maxSlabValues = 0;
-  usize fixedWorkValues = 0;
-  usize fixedBufferValues = 0;
-  usize residentBytes = 0;
+  usize max_slab_values = 0;
+  usize fixed_work_values = 0;
+  usize fixed_buffer_values = 0;
+  usize resident_bytes = 0;
 };
 
 struct RegionalExtremaWorkingMemoryAllocation
@@ -68,7 +68,7 @@ inline bool TryAddRegionalExtremaSize(usize left, usize right, usize& sum)
 }
 
 template <class T>
-Result<usize> CalculateRegionalExtremaUsefulWorkingMemoryBytes(const SizeVec3& dims)
+Result<usize> CalculateRegionalExtremaUsefulWorkingMemoryBytes(const SizeVec3Type& dims)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
@@ -84,7 +84,7 @@ Result<usize> CalculateRegionalExtremaUsefulWorkingMemoryBytes(const SizeVec3& d
   if(!TryMultiplyRegionalExtremaSize(dimX, dimY, planeValues) || !TryMultiplyRegionalExtremaSize(planeValues, dimZ, volumeValues) ||
      !TryMultiplyRegionalExtremaSize(volumeValues, sizeof(T), volumeBytes))
   {
-    return MakeErrorResult<usize>(-8664, fmt::format("Regional extrema dimensions ({}) overflow while sizing useful working memory.", StringUtilities::formatDimensions3D(dims)));
+    return MakeErrorResult<usize>(-8664, fmt::format("Regional extrema dimensions ({}) overflow while sizing useful working memory.", string_utilities::FormatDimensions3D(dims)));
   }
 
   if(dimZ == 1)
@@ -98,7 +98,7 @@ Result<usize> CalculateRegionalExtremaUsefulWorkingMemoryBytes(const SizeVec3& d
        !TryMultiplyRegionalExtremaSize(fullBufferValues, sizeof(T), fullBufferBytes) || !TryMultiplyRegionalExtremaSize(fullBufferBytes, usize{2}, bothBufferBytes) ||
        !TryAddRegionalExtremaSize(volumeBytes, bothBufferBytes, usefulBytes))
     {
-      return MakeErrorResult<usize>(-8664, fmt::format("Regional extrema dimensions ({}) overflow while sizing useful 2-D working memory.", StringUtilities::formatDimensions3D(dims)));
+      return MakeErrorResult<usize>(-8664, fmt::format("Regional extrema dimensions ({}) overflow while sizing useful 2-D working memory.", string_utilities::FormatDimensions3D(dims)));
     }
     return {usefulBytes};
   }
@@ -106,13 +106,13 @@ Result<usize> CalculateRegionalExtremaUsefulWorkingMemoryBytes(const SizeVec3& d
   usize usefulBytes = 0;
   if(!TryMultiplyRegionalExtremaSize(volumeBytes, usize{2}, usefulBytes))
   {
-    return MakeErrorResult<usize>(-8664, fmt::format("Regional extrema dimensions ({}) overflow while sizing useful 3-D working memory.", StringUtilities::formatDimensions3D(dims)));
+    return MakeErrorResult<usize>(-8664, fmt::format("Regional extrema dimensions ({}) overflow while sizing useful 3-D working memory.", string_utilities::FormatDimensions3D(dims)));
   }
   return {usefulBytes};
 }
 
 template <class T>
-Result<RegionalExtremaWorkingMemoryPlan> CreateRegionalExtremaWorkingMemoryPlan(const SizeVec3& dims, usize targetBytes)
+Result<RegionalExtremaWorkingMemoryPlan> CreateRegionalExtremaWorkingMemoryPlan(const SizeVec3Type& dims, usize targetBytes)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
@@ -136,7 +136,7 @@ Result<RegionalExtremaWorkingMemoryPlan> CreateRegionalExtremaWorkingMemoryPlan(
      !TryMultiplyRegionalExtremaSize(volumeValues, sizeof(T), volumeBytes))
   {
     return MakeErrorResult<RegionalExtremaWorkingMemoryPlan>(
-        -8664, fmt::format("Regional extrema dimensions ({}) overflow while creating a {}-byte working-memory plan.", StringUtilities::formatDimensions3D(dims), targetBytes));
+        -8664, fmt::format("Regional extrema dimensions ({}) overflow while creating a {}-byte working-memory plan.", string_utilities::FormatDimensions3D(dims), targetBytes));
   }
 
   RegionalExtremaWorkingMemoryPlan plan;
@@ -147,19 +147,19 @@ Result<RegionalExtremaWorkingMemoryPlan> CreateRegionalExtremaWorkingMemoryPlan(
     if(!TryMultiplyRegionalExtremaSize(dimX, usize{2}, haloValues) || !TryAddRegionalExtremaSize(volumeValues, haloValues, fullUsefulBufferValues))
     {
       return MakeErrorResult<RegionalExtremaWorkingMemoryPlan>(
-          -8664, fmt::format("Regional extrema dimensions ({}) overflow while sizing the 2-D full-width buffer.", StringUtilities::formatDimensions3D(dims)));
+          -8664, fmt::format("Regional extrema dimensions ({}) overflow while sizing the 2-D full-width buffer.", string_utilities::FormatDimensions3D(dims)));
     }
 
     if(targetBytes > volumeBytes)
     {
       const usize fixedBufferValues = std::min(fullUsefulBufferValues, ((targetBytes - volumeBytes) / 2) / sizeof(T));
       auto fixedPlanResult = CreateSweep2DPlan(dimX, dimY, fixedBufferValues, /*fullWidthHaloRows=*/2, /*tiledRows=*/3);
-      if(fixedPlanResult.valid() && fixedPlanResult.value().fullWidth)
+      if(fixedPlanResult.valid() && fixedPlanResult.value().full_width)
       {
-        plan.maxSlabValues = fixedBufferValues;
-        plan.fixedWorkValues = volumeValues;
-        plan.fixedBufferValues = fixedBufferValues;
-        plan.residentBytes = volumeBytes + 2 * fixedBufferValues * sizeof(T);
+        plan.max_slab_values = fixedBufferValues;
+        plan.fixed_work_values = volumeValues;
+        plan.fixed_buffer_values = fixedBufferValues;
+        plan.resident_bytes = volumeBytes + 2 * fixedBufferValues * sizeof(T);
         return {plan};
       }
     }
@@ -169,10 +169,10 @@ Result<RegionalExtremaWorkingMemoryPlan> CreateRegionalExtremaWorkingMemoryPlan(
     if(planResult.invalid())
     {
       return MakeErrorResult<RegionalExtremaWorkingMemoryPlan>(-8664, fmt::format("Regional extrema's {}-byte working-memory grant cannot hold one valid 2-D row block or tile for dimensions ({}).",
-                                                                                  targetBytes, StringUtilities::formatDimensions3D(dims)));
+                                                                                  targetBytes, string_utilities::FormatDimensions3D(dims)));
     }
-    plan.maxSlabValues = bufferValues;
-    plan.residentBytes = 2 * bufferValues * sizeof(T);
+    plan.max_slab_values = bufferValues;
+    plan.resident_bytes = 2 * bufferValues * sizeof(T);
     return {plan};
   }
 
@@ -183,7 +183,7 @@ Result<RegionalExtremaWorkingMemoryPlan> CreateRegionalExtremaWorkingMemoryPlan(
      !TryMultiplyRegionalExtremaSize(minimumBytes, usize{2}, minimumBytes) || targetBytes < minimumBytes)
   {
     return MakeErrorResult<RegionalExtremaWorkingMemoryPlan>(
-        -8664, fmt::format("Regional extrema's {}-byte working-memory grant cannot hold two checked halo slabs for dimensions ({}).", targetBytes, StringUtilities::formatDimensions3D(dims)));
+        -8664, fmt::format("Regional extrema's {}-byte working-memory grant cannot hold two checked halo slabs for dimensions ({}).", targetBytes, string_utilities::FormatDimensions3D(dims)));
   }
 
   const usize maximumPlanesPerBuffer = std::min(dimZ, (targetBytes / 2) / planeBytes);
@@ -191,13 +191,13 @@ Result<RegionalExtremaWorkingMemoryPlan> CreateRegionalExtremaWorkingMemoryPlan(
   const usize batchCount = 1 + (dimZ - 1) / maximumCorePlanes;
   const usize corePlanes = 1 + (dimZ - 1) / batchCount;
   const usize planesPerBuffer = corePlanes >= dimZ ? dimZ : std::min(dimZ, corePlanes + 2);
-  plan.maxSlabValues = planesPerBuffer * planeValues;
-  plan.residentBytes = 2 * plan.maxSlabValues * sizeof(T);
+  plan.max_slab_values = planesPerBuffer * planeValues;
+  plan.resident_bytes = 2 * plan.max_slab_values * sizeof(T);
   return {plan};
 }
 
 template <class T>
-Result<usize> CalculateRegionalExtremaMinimumWorkingMemoryBytes(const SizeVec3& dims)
+Result<usize> CalculateRegionalExtremaMinimumWorkingMemoryBytes(const SizeVec3Type& dims)
 {
   auto usefulResult = CalculateRegionalExtremaUsefulWorkingMemoryBytes<T>(dims);
   if(usefulResult.invalid() || usefulResult.value() == 0)
@@ -209,7 +209,7 @@ Result<usize> CalculateRegionalExtremaMinimumWorkingMemoryBytes(const SizeVec3& 
     usize minimumBytes = 0;
     if(!TryMultiplyRegionalExtremaSize(usize{18}, sizeof(T), minimumBytes))
     {
-      return MakeErrorResult<usize>(-8664, fmt::format("Regional extrema dimensions ({}) overflow while sizing the minimum 2-D working-memory plan.", StringUtilities::formatDimensions3D(dims)));
+      return MakeErrorResult<usize>(-8664, fmt::format("Regional extrema dimensions ({}) overflow while sizing the minimum 2-D working-memory plan.", string_utilities::FormatDimensions3D(dims)));
     }
     return {std::min(minimumBytes, usefulResult.value())};
   }
@@ -218,19 +218,19 @@ Result<usize> CalculateRegionalExtremaMinimumWorkingMemoryBytes(const SizeVec3& 
   usize planeBytes = 0;
   if(!TryMultiplyRegionalExtremaSize(dims[0], dims[1], planeValues) || !TryMultiplyRegionalExtremaSize(planeValues, sizeof(T), planeBytes))
   {
-    return MakeErrorResult<usize>(-8664, fmt::format("Regional extrema dimensions ({}) overflow while sizing the minimum working-memory plan.", StringUtilities::formatDimensions3D(dims)));
+    return MakeErrorResult<usize>(-8664, fmt::format("Regional extrema dimensions ({}) overflow while sizing the minimum working-memory plan.", string_utilities::FormatDimensions3D(dims)));
   }
   const usize minimumPlanes = std::min<usize>(dims[2], 3);
   usize minimumBytes = 0;
   if(!TryMultiplyRegionalExtremaSize(minimumPlanes, planeBytes, minimumBytes) || !TryMultiplyRegionalExtremaSize(minimumBytes, usize{2}, minimumBytes))
   {
-    return MakeErrorResult<usize>(-8664, fmt::format("Regional extrema dimensions ({}) overflow while sizing the minimum working-memory plan.", StringUtilities::formatDimensions3D(dims)));
+    return MakeErrorResult<usize>(-8664, fmt::format("Regional extrema dimensions ({}) overflow while sizing the minimum working-memory plan.", string_utilities::FormatDimensions3D(dims)));
   }
   return {std::min(minimumBytes, usefulResult.value())};
 }
 
 template <class T>
-Result<RegionalExtremaWorkingMemoryAllocation> ReserveRegionalExtremaWorkingMemoryPlan(const SizeVec3& dims, uint32 preferredNumerator = 0, uint32 preferredDenominator = 0)
+Result<RegionalExtremaWorkingMemoryAllocation> ReserveRegionalExtremaWorkingMemoryPlan(const SizeVec3Type& dims, uint32 preferredNumerator = 0, uint32 preferredDenominator = 0)
 {
   auto usefulResult = CalculateRegionalExtremaUsefulWorkingMemoryBytes<T>(dims);
   if(usefulResult.invalid())
@@ -257,7 +257,7 @@ Result<RegionalExtremaWorkingMemoryAllocation> ReserveRegionalExtremaWorkingMemo
   if(reservation.sizeBytes() == 0 || reservation.sizeBytes() > std::numeric_limits<usize>::max())
   {
     return MakeErrorResult<RegionalExtremaWorkingMemoryAllocation>(
-        -8664, fmt::format("Regional extrema could not reserve working memory for dimensions ({}). Useful bytes: {}; minimum bytes: {}; granted bytes: {}.", StringUtilities::formatDimensions3D(dims),
+        -8664, fmt::format("Regional extrema could not reserve working memory for dimensions ({}). Useful bytes: {}; minimum bytes: {}; granted bytes: {}.", string_utilities::FormatDimensions3D(dims),
                            usefulResult.value(), minimumResult.value(), reservation.sizeBytes()));
   }
   auto planResult = CreateRegionalExtremaWorkingMemoryPlan<T>(dims, static_cast<usize>(reservation.sizeBytes()));
@@ -265,7 +265,7 @@ Result<RegionalExtremaWorkingMemoryAllocation> ReserveRegionalExtremaWorkingMemo
   {
     return ConvertInvalidResult<RegionalExtremaWorkingMemoryAllocation>(std::move(planResult));
   }
-  reservation.shrinkTo(static_cast<uint64>(planResult.value().residentBytes));
+  reservation.shrinkTo(static_cast<uint64>(planResult.value().resident_bytes));
   return {RegionalExtremaWorkingMemoryAllocation{std::move(reservation), std::move(planResult.value())}};
 }
 } // namespace detail
@@ -284,11 +284,11 @@ template <class T>
 class RegionalExtremaFlood
 {
 public:
-  RegionalExtremaFlood(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, RegionalExtremaOp op, bool fullyConnected, const std::atomic_bool& shouldCancel,
+  RegionalExtremaFlood(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, SizeVec3Type dims, RegionalExtremaOp op, bool fullyConnected, const std::atomic_bool& shouldCancel,
                        const IFilter::MessageHandler& messageHandler)
   : m_In(inStore)
   , m_Out(outStore)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_Op(op)
   , m_FullyConnected(fullyConnected)
   , m_ShouldCancel(shouldCancel)
@@ -311,7 +311,7 @@ private:
 
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<T>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   RegionalExtremaOp m_Op;
   bool m_FullyConnected;
   const std::atomic_bool& m_ShouldCancel;
@@ -343,12 +343,12 @@ public:
   static constexpr usize k_DefaultFixed2DWorkValues = std::max<usize>(1, (36ULL * 1024ULL * 1024ULL) / sizeof(T));
   static constexpr usize k_DefaultFixed2DBufferValues = std::max<usize>(1, (14ULL * 1024ULL * 1024ULL) / sizeof(T));
 
-  RegionalExtremaSweep(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, RegionalExtremaOp op, bool fullyConnected, const std::atomic_bool& shouldCancel,
+  RegionalExtremaSweep(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, SizeVec3Type dims, RegionalExtremaOp op, bool fullyConnected, const std::atomic_bool& shouldCancel,
                        const IFilter::MessageHandler& messageHandler, usize maxSlabValues = k_DefaultSlabValues, usize fixed2DWorkValues = k_DefaultFixed2DWorkValues,
                        usize fixed2DBufferValues = k_DefaultFixed2DBufferValues)
   : m_In(inStore)
   , m_Out(outStore)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_Op(op)
   , m_FullyConnected(fullyConnected)
   , m_ShouldCancel(shouldCancel)
@@ -382,7 +382,7 @@ private:
 
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<T>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   RegionalExtremaOp m_Op;
   bool m_FullyConnected;
   const std::atomic_bool& m_ShouldCancel;
@@ -425,11 +425,11 @@ template <class T>
 class RegionalExtremaSweepWithWorkingMemory
 {
 public:
-  RegionalExtremaSweepWithWorkingMemory(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, RegionalExtremaOp op, bool fullyConnected,
+  RegionalExtremaSweepWithWorkingMemory(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, SizeVec3Type dims, RegionalExtremaOp op, bool fullyConnected,
                                         const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(inStore)
   , m_Out(outStore)
-  , m_Dims(dims)
+  , m_Dims(std::move(dims))
   , m_Op(op)
   , m_FullyConnected(fullyConnected)
   , m_ShouldCancel(shouldCancel)
@@ -446,13 +446,13 @@ public:
     }
     auto allocation = std::move(allocationResult.value());
     const auto& plan = allocation.plan;
-    return RegionalExtremaSweep<T>{m_In, m_Out, m_Dims, m_Op, m_FullyConnected, m_ShouldCancel, m_MessageHandler, plan.maxSlabValues, plan.fixedWorkValues, plan.fixedBufferValues}();
+    return RegionalExtremaSweep<T>{m_In, m_Out, m_Dims, m_Op, m_FullyConnected, m_ShouldCancel, m_MessageHandler, plan.max_slab_values, plan.fixed_work_values, plan.fixed_buffer_values}();
   }
 
 private:
   const AbstractDataStore<T>& m_In;
   AbstractDataStore<T>& m_Out;
-  SizeVec3 m_Dims;
+  SizeVec3Type m_Dims;
   RegionalExtremaOp m_Op;
   bool m_FullyConnected;
   const std::atomic_bool& m_ShouldCancel;
@@ -467,7 +467,7 @@ private:
  * @tparam T scalar type.
  */
 template <class T>
-Result<> ApplyValuedRegionalExtrema(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3& dims, RegionalExtremaOp op, bool fullyConnected, const IDataArray& inArray,
+Result<> ApplyValuedRegionalExtrema(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& outStore, const SizeVec3Type& dims, RegionalExtremaOp op, bool fullyConnected, const IDataArray& inArray,
                                     const IDataArray& outArray, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   return DispatchAlgorithm<RegionalExtremaFlood<T>, RegionalExtremaSweepWithWorkingMemory<T>>({&inArray, &outArray}, inStore, outStore, dims, op, fullyConnected, shouldCancel, messageHandler);

@@ -16,10 +16,8 @@ ComputeFeatureBounds::ComputeFeatureBounds(DataStructure& dataStructure, const I
 {
 }
 
-ComputeFeatureBounds::~ComputeFeatureBounds() noexcept = default;
-
 Result<> ComputeFeatureBounds::operator()()
 {
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
   return DispatchAlgorithm<ComputeFeatureBoundsDirect, ComputeFeatureBoundsScanline>({&featureIds}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

@@ -83,19 +83,19 @@ const std::atomic_bool& RemoveFlaggedTriangles::getCancel()
 Result<> RemoveFlaggedTriangles::operator()()
 {
   // Remove Triangles from reduced according to removeTrianglesIndex
-  const auto& originalTriangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->TriangleGeometry);
-  std::unique_ptr<MaskCompareUtilities::MaskCompare> maskCompare;
+  const auto& originalTriangle = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->triangle_geometry);
+  std::unique_ptr<mask_compare_utilities::MaskCompare> maskCompare;
   try
   {
-    maskCompare = MaskCompareUtilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->MaskArrayPath);
+    maskCompare = mask_compare_utilities::InstantiateMaskCompare(m_DataStructure, m_InputValues->mask_array_path);
   } catch(const std::out_of_range& exception)
   {
     // This really should NOT be happening as the path was verified during preflight BUT we may be calling this from
     // somewhere else that is NOT going through the normal nx::core::IFilter API of Preflight and Execute
-    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->MaskArrayPath.toString());
+    std::string message = fmt::format("Mask Array DataPath does not exist or is not of the correct type (Bool | UInt8) {}", m_InputValues->mask_array_path.toString());
     return MakeErrorResult(-54070, message);
   }
-  auto& reducedTriangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->ReducedTriangleGeometry);
+  auto& reducedTriangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->reduced_triangle_geometry);
 
   // Set up allocated masks
   usize size = originalTriangle.getNumberOfFaces();
@@ -160,7 +160,7 @@ Result<> RemoveFlaggedTriangles::operator()()
   }
 
   // load reduced Geometry Vertex list according to used vertices
-  Point3Df coords = {0.0f, 0.0f, 0.0f};
+  FloatVec3Type coords = {0.0f, 0.0f, 0.0f};
   for(usize i = 0; i < size; i++)
   {
     coords = originalTriangle.getVertexCoordinate(vertexListIndices[i]);
@@ -191,36 +191,36 @@ Result<> RemoveFlaggedTriangles::operator()()
   dataAlg.execute(PopulateReducedGeometryTrianglesImpl(originalTriangle, reducedTriangleGeom, newTrianglesIndexList, vertexListIndices));
 
   /** This section will copy any user defined Triangle Data Arrays from the old to the reduced Triangle geometry **/
-  if(m_InputValues->TriangleDataHandling == detail::k_CopySelectedTriangleArraysIdx)
+  if(m_InputValues->triangle_data_handling == detail::k_CopySelectedTriangleArraysIdx)
   {
-    TransferGeometryElementData::transferElementData(m_DataStructure, reducedTriangleGeom.getFaceAttributeMatrixRef(), m_InputValues->SelectedTriangleData, newTrianglesIndexList, m_ShouldCancel,
-                                                     m_MessageHandler);
+    transfer_geometry_element_data::TransferElementData(m_DataStructure, reducedTriangleGeom.getFaceAttributeMatrixRef(), m_InputValues->selected_triangle_data, newTrianglesIndexList, m_ShouldCancel,
+                                                        m_MessageHandler);
   }
-  else if(m_InputValues->TriangleDataHandling == detail::k_CopyAllTriangleArraysIdx)
+  else if(m_InputValues->triangle_data_handling == detail::k_CopyAllTriangleArraysIdx)
   {
     std::vector<DataPath> ignorePaths;
-    auto getChildrenResult = GetAllChildArrayDataPaths(m_DataStructure, m_InputValues->TriangleAttributeMatrixPath, ignorePaths);
+    auto getChildrenResult = GetAllChildArrayDataPaths(m_DataStructure, m_InputValues->triangle_attribute_matrix_path, ignorePaths);
     if(getChildrenResult.has_value())
     {
-      TransferGeometryElementData::transferElementData(m_DataStructure, reducedTriangleGeom.getFaceAttributeMatrixRef(), getChildrenResult.value(), newTrianglesIndexList, m_ShouldCancel,
-                                                       m_MessageHandler);
+      transfer_geometry_element_data::TransferElementData(m_DataStructure, reducedTriangleGeom.getFaceAttributeMatrixRef(), getChildrenResult.value(), newTrianglesIndexList, m_ShouldCancel,
+                                                          m_MessageHandler);
     }
   }
 
   /** This section will copy any user defined Vertex Data Arrays from the old to the reduced Vertex geometry **/
-  if(m_InputValues->VertexDataHandling == detail::k_CopySelectedVertexArraysIdx)
+  if(m_InputValues->vertex_data_handling == detail::k_CopySelectedVertexArraysIdx)
   {
-    TransferGeometryElementData::transferElementData(m_DataStructure, reducedTriangleGeom.getVertexAttributeMatrixRef(), m_InputValues->SelectedVertexData, vertexListIndices, m_ShouldCancel,
-                                                     m_MessageHandler);
+    transfer_geometry_element_data::TransferElementData(m_DataStructure, reducedTriangleGeom.getVertexAttributeMatrixRef(), m_InputValues->selected_vertex_data, vertexListIndices, m_ShouldCancel,
+                                                        m_MessageHandler);
   }
-  else if(m_InputValues->VertexDataHandling == detail::k_CopyAllVertexArraysIdx)
+  else if(m_InputValues->vertex_data_handling == detail::k_CopyAllVertexArraysIdx)
   {
     std::vector<DataPath> ignorePaths;
-    auto getChildrenResult = GetAllChildArrayDataPaths(m_DataStructure, m_InputValues->VertexAttributeMatrixPath, ignorePaths);
+    auto getChildrenResult = GetAllChildArrayDataPaths(m_DataStructure, m_InputValues->vertex_attribute_matrix_path, ignorePaths);
     if(getChildrenResult.has_value())
     {
-      TransferGeometryElementData::transferElementData(m_DataStructure, reducedTriangleGeom.getVertexAttributeMatrixRef(), getChildrenResult.value(), vertexListIndices, m_ShouldCancel,
-                                                       m_MessageHandler);
+      transfer_geometry_element_data::TransferElementData(m_DataStructure, reducedTriangleGeom.getVertexAttributeMatrixRef(), getChildrenResult.value(), vertexListIndices, m_ShouldCancel,
+                                                          m_MessageHandler);
     }
   }
 

@@ -29,17 +29,17 @@ inline constexpr usize k_RadiusOneStencil2DFixedPlaneBytes = 48ULL * 1024ULL * 1
 
 struct RadiusOneStencil2DPlan
 {
-  bool fullWidth = false;
-  bool fixedInput = false;
-  bool fixedOutput = false;
-  usize totalValues = 0;
-  usize coreRows = 0;
-  usize coreColumns = 0;
-  usize maximumInputRows = 0;
-  usize maximumInputColumns = 0;
-  usize inputBufferValues = 0;
-  usize outputBufferValues = 0;
-  usize residentBytes = 0;
+  bool full_width = false;
+  bool fixed_input = false;
+  bool fixed_output = false;
+  usize total_values = 0;
+  usize core_rows = 0;
+  usize core_columns = 0;
+  usize maximum_input_rows = 0;
+  usize maximum_input_columns = 0;
+  usize input_buffer_values = 0;
+  usize output_buffer_values = 0;
+  usize resident_bytes = 0;
 };
 
 inline bool TryMultiplyRadiusOneStencilSize(usize left, usize right, usize& product)
@@ -93,7 +93,7 @@ inline Result<RadiusOneStencil2DPlan> CreateRadiusOneStencil2DPlan(usize dimX, u
   }
 
   RadiusOneStencil2DPlan plan;
-  if(!TryMultiplyRadiusOneStencilSize(dimX, dimY, plan.totalValues))
+  if(!TryMultiplyRadiusOneStencilSize(dimX, dimY, plan.total_values))
   {
     return MakeErrorResult<RadiusOneStencil2DPlan>(-8600, fmt::format("Radius-one 2D stencil dimensions overflow the addressable value count. Dimensions: {} x {}.", dimX, dimY));
   }
@@ -102,10 +102,10 @@ inline Result<RadiusOneStencil2DPlan> CreateRadiusOneStencil2DPlan(usize dimX, u
   const usize fixedOutputCapacityValues = k_RadiusOneStencil2DFixedPlaneBytes / outputValueBytes;
   usize fixedOutputAllocationBytes = 0;
   usize fixedOutputBaseBytes = 0;
-  const bool fixedOutputLayoutValid = TryMultiplyRadiusOneStencilSize(plan.totalValues, outputValueBytes, fixedOutputPlaneBytes) &&
+  const bool fixedOutputLayoutValid = TryMultiplyRadiusOneStencilSize(plan.total_values, outputValueBytes, fixedOutputPlaneBytes) &&
                                       TryMultiplyRadiusOneStencilSize(fixedOutputCapacityValues, outputValueBytes, fixedOutputAllocationBytes) &&
                                       TryAddRadiusOneStencilSize(fixedOutputAllocationBytes, workerScratchBytes, fixedOutputBaseBytes);
-  if(fixedOutputLayoutValid && preferFixedOutput && targetBytes == k_RadiusOneStencil2DTargetBytes && plan.totalValues <= fixedOutputCapacityValues && fixedOutputBaseBytes < targetBytes)
+  if(fixedOutputLayoutValid && preferFixedOutput && targetBytes == k_RadiusOneStencil2DTargetBytes && plan.total_values <= fixedOutputCapacityValues && fixedOutputBaseBytes < targetBytes)
   {
     auto fullWidthInputFits = [&](usize coreRows) {
       usize inputValues = 0;
@@ -130,9 +130,9 @@ inline Result<RadiusOneStencil2DPlan> CreateRadiusOneStencil2DPlan(usize dimX, u
           upper = midpoint - 1;
         }
       }
-      plan.fullWidth = true;
-      plan.coreRows = lower;
-      plan.coreColumns = dimX;
+      plan.full_width = true;
+      plan.core_rows = lower;
+      plan.core_columns = dimX;
     }
     else
     {
@@ -160,21 +160,21 @@ inline Result<RadiusOneStencil2DPlan> CreateRadiusOneStencil2DPlan(usize dimX, u
             upper = midpoint - 1;
           }
         }
-        plan.fullWidth = false;
-        plan.coreRows = 1;
-        plan.coreColumns = lower;
+        plan.full_width = false;
+        plan.core_rows = 1;
+        plan.core_columns = lower;
       }
     }
 
-    if(plan.coreRows != 0)
+    if(plan.core_rows != 0)
     {
-      plan.fixedOutput = true;
-      plan.maximumInputRows = plan.fullWidth ? AddRadiusOneHalo(plan.coreRows, dimY) : std::min<usize>(3, dimY);
-      plan.maximumInputColumns = plan.fullWidth ? dimX : AddRadiusOneHalo(plan.coreColumns, dimX);
-      plan.outputBufferValues = fixedOutputCapacityValues;
+      plan.fixed_output = true;
+      plan.maximum_input_rows = plan.full_width ? AddRadiusOneHalo(plan.core_rows, dimY) : std::min<usize>(3, dimY);
+      plan.maximum_input_columns = plan.full_width ? dimX : AddRadiusOneHalo(plan.core_columns, dimX);
+      plan.output_buffer_values = fixedOutputCapacityValues;
       usize inputBytes = 0;
-      if(!TryMultiplyRadiusOneStencilSize(plan.maximumInputRows, plan.maximumInputColumns, plan.inputBufferValues) ||
-         !TryMultiplyRadiusOneStencilSize(plan.inputBufferValues, inputValueBytes, inputBytes) || !TryAddRadiusOneStencilSize(fixedOutputBaseBytes, inputBytes, plan.residentBytes))
+      if(!TryMultiplyRadiusOneStencilSize(plan.maximum_input_rows, plan.maximum_input_columns, plan.input_buffer_values) ||
+         !TryMultiplyRadiusOneStencilSize(plan.input_buffer_values, inputValueBytes, inputBytes) || !TryAddRadiusOneStencilSize(fixedOutputBaseBytes, inputBytes, plan.resident_bytes))
       {
         return MakeErrorResult<RadiusOneStencil2DPlan>(-8600, fmt::format("Radius-one 2D fixed-output buffer layout overflows for dimensions {} x {}.", dimX, dimY));
       }
@@ -192,21 +192,21 @@ inline Result<RadiusOneStencil2DPlan> CreateRadiusOneStencil2DPlan(usize dimX, u
   }
   const usize fixedOutputBytes = fixedNonOutputBytes <= targetBytes ? std::min(k_RadiusOneStencil2DFixedOutputBytes, targetBytes - fixedNonOutputBytes) : 0;
   const usize fixedInputOutputCapacityValues = fixedOutputBytes / outputValueBytes;
-  if(preferFixedInput && targetBytes == k_RadiusOneStencil2DTargetBytes && plan.totalValues <= fixedInputCapacityValues && dimX <= fixedInputOutputCapacityValues)
+  if(preferFixedInput && targetBytes == k_RadiusOneStencil2DTargetBytes && plan.total_values <= fixedInputCapacityValues && dimX <= fixedInputOutputCapacityValues)
   {
-    plan.fullWidth = true;
-    plan.fixedInput = true;
-    plan.coreRows = std::min(dimY, fixedInputOutputCapacityValues / dimX);
-    plan.coreColumns = dimX;
-    plan.maximumInputRows = dimY;
-    plan.maximumInputColumns = dimX;
-    plan.inputBufferValues = fixedInputCapacityValues;
-    if(!TryMultiplyRadiusOneStencilSize(plan.coreRows, dimX, plan.outputBufferValues))
+    plan.full_width = true;
+    plan.fixed_input = true;
+    plan.core_rows = std::min(dimY, fixedInputOutputCapacityValues / dimX);
+    plan.core_columns = dimX;
+    plan.maximum_input_rows = dimY;
+    plan.maximum_input_columns = dimX;
+    plan.input_buffer_values = fixedInputCapacityValues;
+    if(!TryMultiplyRadiusOneStencilSize(plan.core_rows, dimX, plan.output_buffer_values))
     {
       return MakeErrorResult<RadiusOneStencil2DPlan>(-8600, fmt::format("Radius-one 2D fixed-output layout overflows for dimensions {} x {}.", dimX, dimY));
     }
     usize outputBytes = 0;
-    if(!TryMultiplyRadiusOneStencilSize(plan.outputBufferValues, outputValueBytes, outputBytes) || !TryAddRadiusOneStencilSize(fixedNonOutputBytes, outputBytes, plan.residentBytes))
+    if(!TryMultiplyRadiusOneStencilSize(plan.output_buffer_values, outputValueBytes, outputBytes) || !TryAddRadiusOneStencilSize(fixedNonOutputBytes, outputBytes, plan.resident_bytes))
     {
       return MakeErrorResult<RadiusOneStencil2DPlan>(-8600, fmt::format("Radius-one 2D fixed-capacity byte layout overflows for dimensions {} x {}.", dimX, dimY));
     }
@@ -237,9 +237,9 @@ inline Result<RadiusOneStencil2DPlan> CreateRadiusOneStencil2DPlan(usize dimX, u
         upper = midpoint - 1;
       }
     }
-    plan.fullWidth = true;
-    plan.coreRows = lower;
-    plan.coreColumns = dimX;
+    plan.full_width = true;
+    plan.core_rows = lower;
+    plan.core_columns = dimX;
   }
   else
   {
@@ -273,17 +273,17 @@ inline Result<RadiusOneStencil2DPlan> CreateRadiusOneStencil2DPlan(usize dimX, u
         upper = midpoint - 1;
       }
     }
-    plan.fullWidth = false;
-    plan.coreRows = 1;
-    plan.coreColumns = lower;
+    plan.full_width = false;
+    plan.core_rows = 1;
+    plan.core_columns = lower;
   }
 
-  plan.maximumInputRows = plan.fullWidth ? AddRadiusOneHalo(plan.coreRows, dimY) : std::min<usize>(3, dimY);
-  plan.maximumInputColumns = plan.fullWidth ? dimX : AddRadiusOneHalo(plan.coreColumns, dimX);
+  plan.maximum_input_rows = plan.full_width ? AddRadiusOneHalo(plan.core_rows, dimY) : std::min<usize>(3, dimY);
+  plan.maximum_input_columns = plan.full_width ? dimX : AddRadiusOneHalo(plan.core_columns, dimX);
   usize bufferBytes = 0;
-  if(!TryComputeRadiusOneStencilLayout(plan.maximumInputRows, plan.maximumInputColumns, plan.coreRows, plan.coreColumns, inputValueBytes, outputValueBytes, plan.inputBufferValues,
-                                       plan.outputBufferValues, bufferBytes) ||
-     !TryAddRadiusOneStencilSize(bufferBytes, workerScratchBytes, plan.residentBytes))
+  if(!TryComputeRadiusOneStencilLayout(plan.maximum_input_rows, plan.maximum_input_columns, plan.core_rows, plan.core_columns, inputValueBytes, outputValueBytes, plan.input_buffer_values,
+                                       plan.output_buffer_values, bufferBytes) ||
+     !TryAddRadiusOneStencilSize(bufferBytes, workerScratchBytes, plan.resident_bytes))
   {
     return MakeErrorResult<RadiusOneStencil2DPlan>(-8600, fmt::format("Radius-one 2D stencil buffer layout overflows for dimensions {} x {}.", dimX, dimY));
   }
@@ -291,8 +291,8 @@ inline Result<RadiusOneStencil2DPlan> CreateRadiusOneStencil2DPlan(usize dimX, u
 }
 
 template <class InputT, class OutputT, class BodyFactory>
-Result<> ExecuteRadiusOneStencil2D(const AbstractDataStore<InputT>& inputStore, AbstractDataStore<OutputT>& outputStore, const SizeVec3& dims, const std::atomic_bool& shouldCancel, usize targetBytes,
-                                   usize workerScratchBytes, usize maximumWorkers, BodyFactory&& bodyFactory)
+Result<> ExecuteRadiusOneStencil2D(const AbstractDataStore<InputT>& inputStore, AbstractDataStore<OutputT>& outputStore, const SizeVec3Type& dims, const std::atomic_bool& shouldCancel,
+                                   usize targetBytes, usize workerScratchBytes, usize maximumWorkers, BodyFactory&& bodyFactory)
 {
   if(dims[2] != 1)
   {
@@ -306,26 +306,26 @@ Result<> ExecuteRadiusOneStencil2D(const AbstractDataStore<InputT>& inputStore, 
     return ConvertInvalidResult<void>(std::move(planResult));
   }
   const RadiusOneStencil2DPlan plan = planResult.value();
-  if(inputStore.getSize() != plan.totalValues)
+  if(inputStore.getSize() != plan.total_values)
   {
     return MakeErrorResult(
-        -8602, fmt::format("Radius-one 2D stencil input store size ({}) does not match the expected {} values for dimensions {} x {} x 1.", inputStore.getSize(), plan.totalValues, dims[0], dims[1]));
+        -8602, fmt::format("Radius-one 2D stencil input store size ({}) does not match the expected {} values for dimensions {} x {} x 1.", inputStore.getSize(), plan.total_values, dims[0], dims[1]));
   }
-  if(outputStore.getSize() != plan.totalValues)
+  if(outputStore.getSize() != plan.total_values)
   {
-    return MakeErrorResult(-8603, fmt::format("Radius-one 2D stencil output store size ({}) does not match the expected {} values for dimensions {} x {} x 1.", outputStore.getSize(), plan.totalValues,
-                                              dims[0], dims[1]));
+    return MakeErrorResult(-8603, fmt::format("Radius-one 2D stencil output store size ({}) does not match the expected {} values for dimensions {} x {} x 1.", outputStore.getSize(),
+                                              plan.total_values, dims[0], dims[1]));
   }
   if(shouldCancel)
   {
     return {};
   }
 
-  auto inputBuffer = std::make_unique<InputT[]>(plan.inputBufferValues);
-  auto outputBuffer = std::make_unique<OutputT[]>(plan.outputBufferValues);
-  if(plan.fixedInput)
+  auto inputBuffer = std::make_unique<InputT[]>(plan.input_buffer_values);
+  auto outputBuffer = std::make_unique<OutputT[]>(plan.output_buffer_values);
+  if(plan.fixed_input)
   {
-    if(Result<> result = inputStore.copyIntoBuffer(0, nonstd::span<InputT>(inputBuffer.get(), plan.totalValues)); result.invalid())
+    if(Result<> result = inputStore.copyIntoBuffer(0, nonstd::span<InputT>(inputBuffer.get(), plan.total_values)); result.invalid())
     {
       return result;
     }
@@ -333,8 +333,8 @@ Result<> ExecuteRadiusOneStencil2D(const AbstractDataStore<InputT>& inputStore, 
 
   const usize dimX = dims[0];
   const usize dimY = dims[1];
-  const usize yStep = plan.fullWidth ? plan.coreRows : 1;
-  const usize xStep = plan.fullWidth ? dimX : plan.coreColumns;
+  const usize yStep = plan.full_width ? plan.core_rows : 1;
+  const usize xStep = plan.full_width ? dimX : plan.core_columns;
   for(usize outputYBegin = 0; outputYBegin < dimY; outputYBegin += yStep)
   {
     const usize outputRows = std::min(yStep, dimY - outputYBegin);
@@ -347,14 +347,14 @@ Result<> ExecuteRadiusOneStencil2D(const AbstractDataStore<InputT>& inputStore, 
       const usize outputColumns = std::min(xStep, dimX - outputXBegin);
       const usize outputXEnd = outputXBegin + outputColumns;
       const usize outputYEnd = outputYBegin + outputRows;
-      const usize inputXBegin = plan.fixedInput ? 0 : (outputXBegin > 0 ? outputXBegin - 1 : 0);
-      const usize inputXEnd = plan.fixedInput ? dimX : outputXEnd + (outputXEnd < dimX ? 1 : 0);
-      const usize inputYBegin = plan.fixedInput ? 0 : (outputYBegin > 0 ? outputYBegin - 1 : 0);
-      const usize inputYEnd = plan.fixedInput ? dimY : outputYEnd + (outputYEnd < dimY ? 1 : 0);
+      const usize inputXBegin = plan.fixed_input ? 0 : (outputXBegin > 0 ? outputXBegin - 1 : 0);
+      const usize inputXEnd = plan.fixed_input ? dimX : outputXEnd + (outputXEnd < dimX ? 1 : 0);
+      const usize inputYBegin = plan.fixed_input ? 0 : (outputYBegin > 0 ? outputYBegin - 1 : 0);
+      const usize inputYEnd = plan.fixed_input ? dimY : outputYEnd + (outputYEnd < dimY ? 1 : 0);
       const usize inputWidth = inputXEnd - inputXBegin;
-      if(!plan.fixedInput)
+      if(!plan.fixed_input)
       {
-        if(plan.fullWidth)
+        if(plan.full_width)
         {
           const usize inputValues = (inputYEnd - inputYBegin) * dimX;
           if(Result<> result = inputStore.copyIntoBuffer(inputYBegin * dimX, nonstd::span<InputT>(inputBuffer.get(), inputValues)); result.invalid())
@@ -377,8 +377,8 @@ Result<> ExecuteRadiusOneStencil2D(const AbstractDataStore<InputT>& inputStore, 
       ParallelDataAlgorithm parallelAlgorithm;
       parallelAlgorithm.setRange(0, outputRows * outputColumns);
       const usize outputStart = outputYBegin * dimX + outputXBegin;
-      OutputT* blockOutput = plan.fixedOutput ? outputBuffer.get() + outputStart : outputBuffer.get();
-      const auto body = bodyFactory(inputBuffer.get(), blockOutput, inputXBegin, inputYBegin, inputWidth, outputXBegin, outputYBegin, outputColumns);
+      OutputT* blockOutputPtr = plan.fixed_output ? outputBuffer.get() + outputStart : outputBuffer.get();
+      const auto body = bodyFactory(inputBuffer.get(), blockOutputPtr, inputXBegin, inputYBegin, inputWidth, outputXBegin, outputYBegin, outputColumns);
 #ifdef SIMPLNX_ENABLE_MULTICORE
       if(maximumWorkers > 0)
       {
@@ -392,9 +392,9 @@ Result<> ExecuteRadiusOneStencil2D(const AbstractDataStore<InputT>& inputStore, 
         parallelAlgorithm.execute(body);
       }
 
-      if(!plan.fixedOutput)
+      if(!plan.fixed_output)
       {
-        const usize outputValues = plan.fullWidth ? outputRows * dimX : outputColumns;
+        const usize outputValues = plan.full_width ? outputRows * dimX : outputColumns;
         if(Result<> result = outputStore.copyFromBuffer(outputStart, nonstd::span<const OutputT>(outputBuffer.get(), outputValues)); result.invalid())
         {
           return result;
@@ -402,13 +402,13 @@ Result<> ExecuteRadiusOneStencil2D(const AbstractDataStore<InputT>& inputStore, 
       }
     }
   }
-  if(plan.fixedOutput)
+  if(plan.fixed_output)
   {
     if(shouldCancel)
     {
       return {};
     }
-    return outputStore.copyFromBuffer(0, nonstd::span<const OutputT>(outputBuffer.get(), plan.totalValues));
+    return outputStore.copyFromBuffer(0, nonstd::span<const OutputT>(outputBuffer.get(), plan.total_values));
   }
   return {};
 }

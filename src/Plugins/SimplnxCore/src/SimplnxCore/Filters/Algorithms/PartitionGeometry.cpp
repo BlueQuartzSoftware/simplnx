@@ -18,24 +18,22 @@ PartitionGeometry::PartitionGeometry(DataStructure& dataStructure, const IFilter
 {
 }
 
-PartitionGeometry::~PartitionGeometry() noexcept = default;
-
 Result<> PartitionGeometry::operator()()
 {
-  const DataPath partitionIdsPath = m_InputValues->InputGeomCellAMPath.createChildPath(m_InputValues->PartitionIdsArrayName);
-  const auto* partitionIdsArray = m_DataStructure.getDataAs<Int32Array>(partitionIdsPath);
+  const DataPath partitionIdsPath = m_InputValues->input_geom_cell_am_path.createChildPath(m_InputValues->partition_ids_array_name);
+  const auto* partitionIdsArrayPtr = m_DataStructure.getDataAs<Int32ArrayType>(partitionIdsPath);
 
-  const IDataArray* partitionGridFeatureIdsArray = nullptr;
-  const auto partitioningMode = static_cast<PartitionGeometryFilter::PartitioningMode>(m_InputValues->PartitioningMode);
+  const IDataArray* partitionGridFeatureIdsArrayPtr = nullptr;
+  const auto partitioningMode = static_cast<PartitionGeometryFilter::PartitioningMode>(m_InputValues->partitioning_mode);
   if(partitioningMode != PartitionGeometryFilter::PartitioningMode::ExistingPartitionGrid)
   {
     const DataPath partitionGridFeatureIdsPath =
-        m_InputValues->PartitionGridGeomPath.createChildPath(m_InputValues->PartitionGridCellAMName).createChildPath(m_InputValues->PartitionGridFeatureIDsArrayName);
-    partitionGridFeatureIdsArray = m_DataStructure.getDataAs<Int32Array>(partitionGridFeatureIdsPath);
+        m_InputValues->partition_grid_geom_path.createChildPath(m_InputValues->partition_grid_cell_am_name).createChildPath(m_InputValues->partition_grid_feature_i_ds_array_name);
+    partitionGridFeatureIdsArrayPtr = m_DataStructure.getDataAs<Int32ArrayType>(partitionGridFeatureIdsPath);
   }
 
-  const IDataArray* verticesArray = nullptr;
-  const IGeometry& geometry = m_DataStructure.getDataRefAs<IGeometry>(m_InputValues->InputGeometryToPartition);
+  const IDataArray* verticesArrayPtr = nullptr;
+  const IGeometry& geometry = m_DataStructure.getDataRefAs<IGeometry>(m_InputValues->input_geometry_to_partition);
   switch(geometry.getGeomType())
   {
   case IGeometry::Type::Vertex:
@@ -44,15 +42,15 @@ Result<> PartitionGeometry::operator()()
   case IGeometry::Type::Quad:
   case IGeometry::Type::Tetrahedral:
   case IGeometry::Type::Hexahedral: {
-    const auto& nodeGeom = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->InputGeometryToPartition);
-    verticesArray = nodeGeom.getVertices();
+    const auto& nodeGeom = m_DataStructure.getDataRefAs<INodeGeometry0D>(m_InputValues->input_geometry_to_partition);
+    verticesArrayPtr = nodeGeom.getVertices();
     break;
   }
   default:
     break;
   }
 
-  const IDataArray* maskArray = m_InputValues->UseVertexMask ? m_DataStructure.getDataAs<BoolArray>(m_InputValues->VertexMaskPath) : nullptr;
-  return DispatchAlgorithm<PartitionGeometryDirect, PartitionGeometryScanline>({partitionIdsArray, partitionGridFeatureIdsArray, verticesArray, maskArray}, m_DataStructure, m_MessageHandler,
-                                                                               m_ShouldCancel, m_InputValues);
+  const IDataArray* maskArrayPtr = m_InputValues->use_vertex_mask ? m_DataStructure.getDataAs<BoolArrayType>(m_InputValues->vertex_mask_path) : nullptr;
+  return DispatchAlgorithm<PartitionGeometryDirect, PartitionGeometryScanline>({partitionIdsArrayPtr, partitionGridFeatureIdsArrayPtr, verticesArrayPtr, maskArrayPtr}, m_DataStructure,
+                                                                               m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

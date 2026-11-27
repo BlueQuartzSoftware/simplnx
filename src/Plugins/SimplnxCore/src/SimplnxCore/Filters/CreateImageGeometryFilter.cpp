@@ -63,12 +63,12 @@ Parameters CreateImageGeometryFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_GeometryDataPath_Key, "Output Geometry Name", "The complete path to the Geometry being created", DataPath({"[Image Geometry]"})));
-  params.insert(std::make_unique<VectorUInt64Parameter>(k_Dimensions_Key, "Dimensions", "The number of cells in each of the X, Y, Z directions", std::vector<uint64_t>{20ULL, 60ULL, 200ULL},
-                                                        std::vector<std::string>{"X"s, "Y"s, "Z"s}));
+  params.insert(std::make_unique<VectorUInt64ParameterType>(k_Dimensions_Key, "Dimensions", "The number of cells in each of the X, Y, Z directions", std::vector<uint64_t>{20ULL, 60ULL, 200ULL},
+                                                            std::vector<std::string>{"X"s, "Y"s, "Z"s}));
   params.insert(
-      std::make_unique<VectorFloat32Parameter>(k_Origin_Key, "Origin", "The origin of each of the axes in X, Y, Z order", std::vector<float32>(3), std::vector<std::string>{"X"s, "Y"s, "Z"s}));
-  params.insert(
-      std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "The length scale of each voxel/pixel", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"X"s, "Y"s, "Z"s}));
+      std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Origin", "The origin of each of the axes in X, Y, Z order", std::vector<float32>(3), std::vector<std::string>{"X"s, "Y"s, "Z"s}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Spacing_Key, "Spacing", "The length scale of each voxel/pixel", std::vector<float32>{1.0F, 1.0F, 1.0F},
+                                                             std::vector<std::string>{"X"s, "Y"s, "Z"s}));
   params.insert(std::make_unique<DataObjectNameParameter>(k_CellDataName_Key, "Cell Data Name", "The name of the cell Attribute Matrix to be created", ImageGeom::k_CellAttributeMatrixName));
 
   return params;
@@ -81,14 +81,14 @@ IFilter::VersionType CreateImageGeometryFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer CreateImageGeometryFilter::clone() const
+IFilter::UniquePointerType CreateImageGeometryFilter::clone() const
 {
   return std::make_unique<CreateImageGeometryFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult CreateImageGeometryFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult CreateImageGeometryFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                  const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   /**
    * These are the values that were gathered from the UI or the pipeline file or
@@ -96,18 +96,18 @@ IFilter::PreflightResult CreateImageGeometryFilter::preflightImpl(const DataStru
    * do not need some of them remove them.
    */
   auto pImageGeometryPath = filterArgs.value<DataPath>(k_GeometryDataPath_Key);
-  auto pDimensionsValue = filterArgs.value<VectorUInt64Parameter::ValueType>(k_Dimensions_Key);
-  auto pOriginValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Origin_Key);
-  auto pSpacingValue = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
-  auto spacingValidation = GeometryUtilities::ValidatePositiveFiniteVector(pSpacingValue, "Spacing", k_SpacingDomain);
+  auto pDimensionsValue = filterArgs.value<VectorUInt64ParameterType::ValueType>(k_Dimensions_Key);
+  auto pOriginValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Origin_Key);
+  auto pSpacingValue = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Spacing_Key);
+  auto spacingValidation = geometry_utilities::ValidatePositiveFiniteVector(pSpacingValue, "Spacing", k_SpacingDomain);
   if(spacingValidation.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(spacingValidation))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(spacingValidation))};
   }
-  auto originValidation = GeometryUtilities::ValidateFiniteVector(pOriginValue, "Origin", k_OriginDomain);
+  auto originValidation = geometry_utilities::ValidateFiniteVector(pOriginValue, "Origin", k_OriginDomain);
   if(originValidation.invalid())
   {
-    return {ConvertInvalidResult<OutputActions>(std::move(originValidation))};
+    return {.output_actions = ConvertInvalidResult<OutputActions>(std::move(originValidation))};
   }
 
   auto cellDataName = filterArgs.value<DataObjectNameParameter::ValueType>(k_CellDataName_Key);
@@ -140,15 +140,15 @@ IFilter::PreflightResult CreateImageGeometryFilter::preflightImpl(const DataStru
   IFilter::PreflightResult preflightResult;
   // Assign/Move the resultOutputActions to the preflightResult object
 
-  std::vector<PreflightValue> preflightUpdatedValues = {{"BoxDimensions", boxDimensions}};
+  std::vector<PreflightValue> preflightUpdatedValues = {{.name = "BoxDimensions", .value = boxDimensions}};
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> CreateImageGeometryFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> CreateImageGeometryFilter::executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                                                const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   return {};
 }
@@ -156,14 +156,14 @@ Result<> CreateImageGeometryFilter::executeImpl(DataStructure& dataStructure, co
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_SelectedDataContainerKey = "SelectedDataContainer";
-constexpr StringLiteral k_DimensionsKey = "Dimensions";
-constexpr StringLiteral k_OriginKey = "Origin";
-constexpr StringLiteral k_SpacingKey = "Spacing";
-constexpr StringLiteral k_ResolutionKey = "Resolution";
-} // namespace SIMPL
+constexpr StringLiteralType k_SelectedDataContainerKey = "SelectedDataContainer";
+constexpr StringLiteralType k_DimensionsKey = "Dimensions";
+constexpr StringLiteralType k_OriginKey = "Origin";
+constexpr StringLiteralType k_SpacingKey = "Spacing";
+constexpr StringLiteralType k_ResolutionKey = "Resolution";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> CreateImageGeometryFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -172,14 +172,14 @@ Result<Arguments> CreateImageGeometryFilter::FromSIMPLJson(const nlohmann::json&
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_SelectedDataContainerKey, k_GeometryDataPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::UInt64Vec3FilterParameterConverter>(args, json, SIMPL::k_DimensionsKey, k_Dimensions_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_OriginKey, k_Origin_Key));
-  Result<> resolutionResult = SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_ResolutionKey, k_Spacing_Key);
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataContainerKey, k_GeometryDataPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::UInt64Vec3FilterParameterConverterType>(args, json, simpl::k_DimensionsKey, k_Dimensions_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(args, json, simpl::k_OriginKey, k_Origin_Key));
+  Result<> resolutionResult = simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(args, json, simpl::k_ResolutionKey, k_Spacing_Key);
   if(resolutionResult.invalid())
   {
     // Key renamed in 6.6
-    results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatVec3FilterParameterConverter>(args, json, SIMPL::k_SpacingKey, k_Spacing_Key));
+    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatVec3FilterParameterConverterType>(args, json, simpl::k_SpacingKey, k_Spacing_Key));
   }
   else
   {

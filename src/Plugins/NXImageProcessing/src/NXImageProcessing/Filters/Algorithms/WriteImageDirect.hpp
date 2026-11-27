@@ -21,7 +21,7 @@ public:
   WriteImageDirect(DataStructure& dataStructure, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const WriteImageInputValues& inputValues);
 
   /** @brief Destroys the direct image writer. */
-  ~WriteImageDirect() noexcept;
+  ~WriteImageDirect() noexcept = default;
 
   WriteImageDirect(const WriteImageDirect&) = delete;
   WriteImageDirect(WriteImageDirect&&) noexcept = delete;

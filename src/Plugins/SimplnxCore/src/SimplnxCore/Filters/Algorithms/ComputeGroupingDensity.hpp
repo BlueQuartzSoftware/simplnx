@@ -11,15 +11,15 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT ComputeGroupingDensityInputValues
 {
-  DataPath VolumesPath;
-  DataPath ContiguousNLPath;
-  bool UseNonContiguousNeighbors;
-  DataPath NonContiguousNLPath;
-  DataPath ParentIdsPath;
-  DataPath ParentVolumesPath;
-  bool FindCheckedFeatures;
-  DataPath CheckedFeaturesPath;
-  DataPath GroupingDensitiesPath;
+  DataPath volumes_path;
+  DataPath contiguous_nl_path;
+  bool use_non_contiguous_neighbors{};
+  DataPath non_contiguous_nl_path;
+  DataPath parent_ids_path;
+  DataPath parent_volumes_path;
+  bool find_checked_features{};
+  DataPath checked_features_path;
+  DataPath grouping_densities_path;
 };
 
 /**

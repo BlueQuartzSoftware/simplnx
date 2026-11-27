@@ -58,7 +58,7 @@ Parameters RandomizeFeatureIdsFilter::parameters() const
   Parameters params;
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Feature IDs Array", "Array storing the Feature IDs", DataPath(),
-                                                          ArraySelectionParameter::AllowedTypes{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_FeatureAMPath_Key, "Feature Attribute Matrix", "The path to the Feature Attribute Matrix, so it can be updated", DataPath{}));
 
   return params;
@@ -76,14 +76,14 @@ IFilter::VersionType RandomizeFeatureIdsFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer RandomizeFeatureIdsFilter::clone() const
+IFilter::UniquePointerType RandomizeFeatureIdsFilter::clone() const
 {
   return std::make_unique<RandomizeFeatureIdsFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult RandomizeFeatureIdsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult RandomizeFeatureIdsFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                  const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto featureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
   auto featureAMPath = filterArgs.value<DataPath>(k_FeatureAMPath_Key);
@@ -93,19 +93,19 @@ IFilter::PreflightResult RandomizeFeatureIdsFilter::preflightImpl(const DataStru
   // Preflight reports that execution remaps Feature IDs in place.
   nx::core::MarkDataPathModified(dataStructure, resultOutputActions, featureIdsPath);
   // Preflight reports that execution reorders Feature AttributeMatrix arrays in place.
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, featureAMPath, {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, featureAMPath, {});
 
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> RandomizeFeatureIdsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> RandomizeFeatureIdsFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                                                const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   auto featureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsPath_Key);
   auto featureAMPath = filterArgs.value<AttributeMatrixSelectionParameter::ValueType>(k_FeatureAMPath_Key);
 
-  auto& featureIdsArray = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
+  auto& featureIdsArray = dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath);
   auto& featureIdsStore = featureIdsArray.getDataStoreRef();
   // Discover the maximum ID with one-mebibyte bulk reads. Iterating the store
   // element by element would repeatedly enter the OOC cache and dominate this
@@ -131,11 +131,11 @@ Result<> RandomizeFeatureIdsFilter::executeImpl(DataStructure& dataStructure, co
   }
   const usize totalFeatures = static_cast<usize>(maxFeatureId) + 1;
 
-  const auto* featureAM = dataStructure.getDataAs<AttributeMatrix>(featureAMPath);
-  if(totalFeatures > featureAM->getNumberOfTuples())
+  const auto* featureAmPtr = dataStructure.getDataAs<AttributeMatrix>(featureAMPath);
+  if(totalFeatures > featureAmPtr->getNumberOfTuples())
   {
     return MakeErrorResult(
-        -82640, fmt::format("The number of tuples in the supplied Attribute Matrix ({}) is less than the max feature in the Feature Ids Array ({})", featureAM->getNumberOfTuples(), maxFeatureId));
+        -82640, fmt::format("The number of tuples in the supplied Attribute Matrix ({}) is less than the max feature in the Feature Ids Array ({})", featureAmPtr->getNumberOfTuples(), maxFeatureId));
   }
 
   std::optional<std::vector<DataPath>> amChildPaths = GetAllChildArrayDataPaths(dataStructure, featureAMPath);
@@ -149,6 +149,6 @@ Result<> RandomizeFeatureIdsFilter::executeImpl(DataStructure& dataStructure, co
     }
   }
 
-  return ClusterUtilities::RandomizeFeatureIds(featureIdsStore, totalFeatures, featureIArrays);
+  return cluster_utilities::RandomizeFeatureIds(featureIdsStore, totalFeatures, featureIArrays);
 }
 } // namespace nx::core

@@ -17,9 +17,9 @@
 
 namespace nx::core
 {
-StringParameter::StringParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+StringParameter::StringParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -28,7 +28,7 @@ Uuid StringParameter::uuid() const
   return ParameterTraits<StringParameter>::uuid;
 }
 
-IParameter::AcceptedTypes StringParameter::acceptedTypes() const
+IParameter::AcceptedTypesType StringParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -46,18 +46,18 @@ nlohmann::json StringParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> StringParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> StringParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'StringParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'StringParameter' JSON Error: ";
   if(!json.is_string())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a string", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a string", k_Prefix, name()));
   }
   auto string = json.get<ValueType>();
   return {{string}};
 }
 
-IParameter::UniquePointer StringParameter::clone() const
+IParameter::UniquePointerType StringParameter::clone() const
 {
   return std::make_unique<StringParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -78,11 +78,11 @@ Result<> StringParameter::validate(const std::any& value) const
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 namespace
 {
-std::optional<int32> float32MidpointPrecision(float64 value)
+std::optional<int32> Float32MidpointPrecision(float64 value)
 {
   if(!std::isfinite(value) || value == 0.0)
   {
@@ -109,7 +109,7 @@ std::optional<int32> float32MidpointPrecision(float64 value)
 } // namespace
 
 template <typename T>
-Result<typename NumberToStringFilterParameterConverter<T>::ValueType> NumberToStringFilterParameterConverter<T>::convert(const nlohmann::json& json)
+Result<typename NumberToStringFilterParameterConverter<T>::ValueType> NumberToStringFilterParameterConverter<T>::Convert(const nlohmann::json& json)
 {
   if(!json.is_number())
   {
@@ -123,7 +123,7 @@ Result<typename NumberToStringFilterParameterConverter<T>::ValueType> NumberToSt
     if constexpr(std::is_same_v<T, float64>)
     {
       // Shortest Float64 text can move a Float32 rounding tie to either side of the midpoint.
-      if(const auto precision = float32MidpointPrecision(value); precision.has_value())
+      if(const auto precision = Float32MidpointPrecision(value); precision.has_value())
       {
         return {fmt::format("{:.{}f}", value, *precision)};
       }
@@ -163,7 +163,7 @@ template struct SIMPLNX_TEMPLATE_EXPORT NumberToStringFilterParameterConverter<u
 template struct SIMPLNX_TEMPLATE_EXPORT NumberToStringFilterParameterConverter<float32>;
 template struct SIMPLNX_TEMPLATE_EXPORT NumberToStringFilterParameterConverter<float64>;
 
-Result<StringFilterParameterConverter::ValueType> StringFilterParameterConverter::convert(const nlohmann::json& json)
+Result<StringFilterParameterConverter::ValueType> StringFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_string())
   {
@@ -174,5 +174,5 @@ Result<StringFilterParameterConverter::ValueType> StringFilterParameterConverter
 
   return {std::move(value)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

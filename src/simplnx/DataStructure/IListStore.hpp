@@ -13,7 +13,7 @@ namespace nx::core
  * @brief Contains simplnx core types and functions.
  */
 
-namespace HDF5
+namespace hdf5
 {
 class DatasetIO;
 }
@@ -90,13 +90,13 @@ public:
    * @brief Reads list data from an HDF5 dataset.
    * @param datasetReader HDF5 dataset to read.
    */
-  virtual void readHdf5(const HDF5::DatasetIO& datasetReader) = 0;
+  virtual void readHdf5(const hdf5::DatasetIO& datasetReader) = 0;
 
   /**
    * @brief Writes list data to an HDF5 dataset.
    * @param datasetReader HDF5 dataset to write.
    */
-  virtual void writeHdf5(HDF5::DatasetIO& datasetReader) = 0;
+  virtual void writeHdf5(hdf5::DatasetIO& datasetReader) = 0;
 
 protected:
   /**

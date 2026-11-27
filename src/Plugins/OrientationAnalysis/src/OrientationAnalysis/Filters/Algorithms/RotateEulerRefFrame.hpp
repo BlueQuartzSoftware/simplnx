@@ -17,8 +17,8 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT RotateEulerRefFrameInputValues
 {
-  std::vector<float> rotationAxis; ///< Axis {x, y, z} followed by an angle in degrees.
-  DataPath eulerAngleDataPath;     ///< Three-component Float32 Euler angles in radians.
+  std::vector<float> rotation_axis; ///< Axis {x, y, z} followed by an angle in degrees.
+  DataPath euler_angle_data_path;   ///< Three-component Float32 Euler angles in radians.
 };
 
 /**
@@ -75,7 +75,7 @@ public:
 private:
   DataStructure& m_DataStructure;
   const IFilter::MessageHandler& m_MessageHandler;
-  mutable std::mutex m_ProgressMessage_Mutex;
+  mutable std::mutex m_ProgressMessageMutex;
   ThrottledMessageHandler m_Throttle;
   const std::atomic_bool& m_ShouldCancel;
   const RotateEulerRefFrameInputValues* m_InputValues = nullptr;

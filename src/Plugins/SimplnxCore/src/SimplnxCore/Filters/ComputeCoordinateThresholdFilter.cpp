@@ -57,23 +57,23 @@ Parameters ComputeCoordinateThresholdFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(
       std::make_unique<ChoicesParameter>(k_ContainerShapeType_Key, "Coordinate Container Shape", "This will determine how the bounding box for determining included points is defined",
-                                         to_underlying(ComputeCoordinateThreshold::BoundsType::Rectangle), ChoicesParameter::Choices{"Rectangle", "Sphere"})); // sequence dependent DO NOT REORDER
+                                         to_underlying(ComputeCoordinateThreshold::BoundsType::Rectangle), ChoicesParameter::ChoicesType{"Rectangle", "Sphere"})); // sequence dependent DO NOT REORDER
   params.insert(std::make_unique<BoolParameter>(k_InvertContainer_Key, "Invert Bounding Container",
                                                 "If selected, only points/edges/faces outside the container will be marked `true`, else only values in the container will be marked `true`", false));
 
   params.insertSeparator(Parameters::Separator{"Coordinate Bounds"});
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_MinCoord_Key, "Lower Bound (Physical Units)", "Specifies the lower corner of the rectangular prism (bounding box)",
-                                                         std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<std::string>{"Min X", "Min Y", "Min Z"}));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_MaxCoord_Key, "Upper Bound (Physical Units)", "Specifies the upper corner of the rectangular prism (bounding box)",
-                                                         std::vector<float32>{1.0f, 1.0f, 1.0f}, std::vector<std::string>{"Max X", "Max Y", "Max Z"}));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_SphereInfo_Key, "Sphere centroid and Radius (Physical Units)",
-                                                         "Specifies the centroid of the bounding sphere in the first 3 values (XYZ) and radius in the 4th",
-                                                         std::vector<float32>{0.0f, 0.0f, 0.0f, 1.0f}, std::vector<std::string>{"X", "Y", "Z", "Radius"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_MinCoord_Key, "Lower Bound (Physical Units)", "Specifies the lower corner of the rectangular prism (bounding box)",
+                                                             std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<std::string>{"Min X", "Min Y", "Min Z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_MaxCoord_Key, "Upper Bound (Physical Units)", "Specifies the upper corner of the rectangular prism (bounding box)",
+                                                             std::vector<float32>{1.0f, 1.0f, 1.0f}, std::vector<std::string>{"Max X", "Max Y", "Max Z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_SphereInfo_Key, "Sphere centroid and Radius (Physical Units)",
+                                                             "Specifies the centroid of the bounding sphere in the first 3 values (XYZ) and radius in the 4th",
+                                                             std::vector<float32>{0.0f, 0.0f, 0.0f, 1.0f}, std::vector<std::string>{"X", "Y", "Z", "Radius"}));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(
       k_SelectedGeometryPath_Key, "Selected Geometry", "The DataPath to the Geometry that contains the points/edges/faces for the geometry", DataPath{},
-      GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Image, IGeometry::Type::Triangle, IGeometry::Type::Quad}));
+      GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Image, IGeometry::Type::Triangle, IGeometry::Type::Quad}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_CreatedMaskPath_Key, "Created Mask Path/Name", "The path/name of the created mask", DataPath({"Geometric Coordinate Mask"})));
@@ -93,14 +93,14 @@ IFilter::VersionType ComputeCoordinateThresholdFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeCoordinateThresholdFilter::clone() const
+IFilter::UniquePointerType ComputeCoordinateThresholdFilter::clone() const
 {
   return std::make_unique<ComputeCoordinateThresholdFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeCoordinateThresholdFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeCoordinateThresholdFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pContainerShapeTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_ContainerShapeType_Key);
   auto pSelectedGeomPathValue = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometryPath_Key);
@@ -112,9 +112,9 @@ IFilter::PreflightResult ComputeCoordinateThresholdFilter::preflightImpl(const D
   if(geom.getGeomType() == IGeometry::Type::Image)
   {
     const auto& imageGeom = dynamic_cast<const ImageGeom&>(geom);
-    FloatVec3 origin = imageGeom.getOrigin();
-    FloatVec3 spacing = imageGeom.getSpacing();
-    SizeVec3 dims = imageGeom.getDimensions();
+    FloatVec3Type origin = imageGeom.getOrigin();
+    FloatVec3Type spacing = imageGeom.getSpacing();
+    SizeVec3Type dims = imageGeom.getDimensions();
     preflightUpdatedValues.push_back({.name = "Image Origin [XYZ]:", .value = fmt::format("{:.2f}, {:.2f}, {:.2f}", origin[0], origin[1], origin[2])});
     preflightUpdatedValues.push_back({.name = "Max Image Coordinate [XYZ]:",
                                       .value = fmt::format("{:.2f}, {:.2f}, {:.2f}", (spacing[0] * static_cast<float32>(dims[0])) + origin[0], (spacing[1] * static_cast<float32>(dims[1])) + origin[1],
@@ -126,8 +126,8 @@ IFilter::PreflightResult ComputeCoordinateThresholdFilter::preflightImpl(const D
   switch(static_cast<ComputeCoordinateThreshold::BoundsType>(pContainerShapeTypeValue))
   {
   case ComputeCoordinateThreshold::Rectangle: {
-    auto pMinPoint = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MinCoord_Key);
-    auto pMaxPoint = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MaxCoord_Key);
+    auto pMinPoint = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MinCoord_Key);
+    auto pMaxPoint = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MaxCoord_Key);
 
     if(pMaxPoint[0] < pMinPoint[0] || pMaxPoint[1] < pMinPoint[1] || pMaxPoint[2] < pMinPoint[2])
     {
@@ -140,9 +140,9 @@ IFilter::PreflightResult ComputeCoordinateThresholdFilter::preflightImpl(const D
     {
       const auto& imageGeom = dynamic_cast<const ImageGeom&>(geom);
 
-      BoundingBox3Df bounds = imageGeom.getBoundingBoxf();
-      const Point3Df& minBound = bounds.getMinPoint();
-      const Point3Df& maxBound = bounds.getMaxPoint();
+      BoundingBox3DfType bounds = imageGeom.getBoundingBoxf();
+      const FloatVec3Type& minBound = bounds.getMinPoint();
+      const FloatVec3Type& maxBound = bounds.getMaxPoint();
 
       if(pMaxPoint[0] < minBound[0] || pMaxPoint[1] < minBound[1] || pMaxPoint[2] < minBound[2])
       {
@@ -160,7 +160,7 @@ IFilter::PreflightResult ComputeCoordinateThresholdFilter::preflightImpl(const D
     break;
   }
   case ComputeCoordinateThreshold::Sphere: {
-    auto pSphereInfo = filterArgs.value<VectorFloat32Parameter::ValueType>(k_SphereInfo_Key);
+    auto pSphereInfo = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_SphereInfo_Key);
 
     if(pSphereInfo[3] <= 0)
     {
@@ -171,11 +171,11 @@ IFilter::PreflightResult ComputeCoordinateThresholdFilter::preflightImpl(const D
     {
       const auto& imageGeom = dynamic_cast<const ImageGeom&>(geom);
 
-      BoundingBox3Df bounds = imageGeom.getBoundingBoxf();
-      const Point3Df& minBound = bounds.getMinPoint();
-      const Point3Df& maxBound = bounds.getMaxPoint();
+      BoundingBox3DfType bounds = imageGeom.getBoundingBoxf();
+      const FloatVec3Type& minBound = bounds.getMinPoint();
+      const FloatVec3Type& maxBound = bounds.getMaxPoint();
 
-      bool doesIntersect = IntersectionUtilities::SphereIntersectsRectangularPrism({pSphereInfo[0], pSphereInfo[1], pSphereInfo[2]}, pSphereInfo[3], minBound.toArray(), maxBound.toArray());
+      bool doesIntersect = intersection_utilities::SphereIntersectsRectangularPrism({pSphereInfo[0], pSphereInfo[1], pSphereInfo[2]}, pSphereInfo[3], minBound.toArray(), maxBound.toArray());
 
       if(!doesIntersect)
       {
@@ -196,24 +196,24 @@ IFilter::PreflightResult ComputeCoordinateThresholdFilter::preflightImpl(const D
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeCoordinateThresholdFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeCoordinateThresholdFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeCoordinateThresholdInputValues inputValues;
 
-  inputValues.ShapeType = filterArgs.value<ChoicesParameter::ValueType>(k_ContainerShapeType_Key);
-  inputValues.Invert = filterArgs.value<bool>(k_InvertContainer_Key);
+  inputValues.shape_type = filterArgs.value<ChoicesParameter::ValueType>(k_ContainerShapeType_Key);
+  inputValues.invert = filterArgs.value<bool>(k_InvertContainer_Key);
 
-  inputValues.MinCoord = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MinCoord_Key);
-  inputValues.MaxCoord = filterArgs.value<VectorFloat32Parameter::ValueType>(k_MaxCoord_Key);
-  inputValues.SphereInfo = filterArgs.value<VectorFloat32Parameter::ValueType>(k_SphereInfo_Key);
+  inputValues.min_coord = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MinCoord_Key);
+  inputValues.max_coord = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_MaxCoord_Key);
+  inputValues.sphere_info = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_SphereInfo_Key);
 
-  inputValues.GeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometryPath_Key);
-  inputValues.MaskArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_CreatedMaskPath_Key);
+  inputValues.geometry_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedGeometryPath_Key);
+  inputValues.mask_array_path = filterArgs.value<ArrayCreationParameter::ValueType>(k_CreatedMaskPath_Key);
 
   return ComputeCoordinateThreshold(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

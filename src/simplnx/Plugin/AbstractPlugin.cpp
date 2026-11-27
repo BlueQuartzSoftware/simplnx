@@ -8,14 +8,15 @@
 
 #include <memory>
 #include <stdexcept>
+#include <utility>
 
 using namespace nx::core;
 
-AbstractPlugin::AbstractPlugin(IdType identifier, const std::string& name, const std::string& description, const std::string& vendor)
+AbstractPlugin::AbstractPlugin(IdType identifier, std::string name, std::string description, std::string vendor)
 : m_Id(identifier)
-, m_Name(name)
-, m_Description(description)
-, m_Vendor(vendor)
+, m_Name(std::move(name))
+, m_Description(std::move(description))
+, m_Vendor(std::move(vendor))
 {
 }
 
@@ -56,7 +57,7 @@ AbstractPlugin::FilterContainerType::size_type AbstractPlugin::getFilterCount() 
   return m_FilterHandles.size();
 }
 
-IFilter::UniquePointer AbstractPlugin::createFilter(FilterHandle::FilterIdType identifier) const
+IFilter::UniquePointerType AbstractPlugin::createFilter(FilterHandle::FilterIdType identifier) const
 {
   if(!containsFilterId(identifier))
   {
@@ -66,9 +67,9 @@ IFilter::UniquePointer AbstractPlugin::createFilter(FilterHandle::FilterIdType i
   return m_InitializerMap.at(identifier)();
 }
 
-void AbstractPlugin::addFilter(FilterCreationFunc filterFunc)
+void AbstractPlugin::addFilter(const FilterCreationFuncType& filterFunc)
 {
-  IFilter::UniquePointer filter = filterFunc();
+  IFilter::UniquePointerType filter = filterFunc();
   if(filter == nullptr)
   {
     throw std::runtime_error(fmt::format("Failed to instantiate filter in plugin '{}'", getName()));
@@ -76,9 +77,9 @@ void AbstractPlugin::addFilter(FilterCreationFunc filterFunc)
 
   Uuid uuid = filter->uuid();
 
-  if(m_InitializerMap.count(uuid) > 0)
+  if(m_InitializerMap.contains(uuid))
   {
-    IFilter::UniquePointer existingFilter = m_InitializerMap[uuid]();
+    IFilter::UniquePointerType existingFilter = m_InitializerMap[uuid]();
     throw std::runtime_error(
         fmt::format("Attempted to add filter '{}' with uuid '{}' in plugin '{}', but filter '{}' already exists with that uuid", filter->name(), uuid.str(), getName(), existingFilter->name()));
   }
@@ -92,13 +93,13 @@ AbstractPlugin::IOManagersContainerType AbstractPlugin::getDataIOManagers() cons
   return m_IOManagers;
 }
 
-void AbstractPlugin::addDataIOManager(const IOManagerPointer& ioManager)
+void AbstractPlugin::addDataIOManager(const IoManagerPointerType& ioManager)
 {
   m_IOManagers.push_back(ioManager);
 }
 
-void AbstractPlugin::addDefaultValue(std::string keyName, const nlohmann::json& value)
+void AbstractPlugin::addDefaultValue(std::string keyName, const nlohmann::json& value) const
 {
-  Preferences* preferences = Application::GetOrCreateInstance()->getPreferences();
-  preferences->addDefaultValues(getName(), keyName, value);
+  Preferences* preferencesPtr = Application::GetOrCreateInstance()->getPreferences();
+  preferencesPtr->addDefaultValues(getName(), std::move(keyName), value);
 }

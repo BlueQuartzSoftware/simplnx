@@ -7,9 +7,9 @@
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/Utilities/DataArrayUtilities.hpp"
 
+#include <algorithm>
 #include <nonstd/span.hpp>
 
-#include <algorithm>
 #include <memory>
 #include <vector>
 
@@ -26,18 +26,17 @@ ComputeLargestCrossSectionsScanline::ComputeLargestCrossSectionsScanline(DataStr
 }
 
 // -----------------------------------------------------------------------------
-ComputeLargestCrossSectionsScanline::~ComputeLargestCrossSectionsScanline() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> ComputeLargestCrossSectionsScanline::operator()()
 {
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
-  const auto& featureIds = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->FeatureIdsArrayPath);
-  auto& featureIdsStore = featureIds.getDataStoreRef();
-  auto& largestCrossSectStore = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->LargestCrossSectionsArrayPath).getDataStoreRef();
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
+  const auto& featureIds = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path);
+  const auto& featureIdsStore = featureIds.getDataStoreRef();
+  auto& largestCrossSectStore = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->largest_cross_sections_array_path).getDataStoreRef();
   const usize numFeatures = largestCrossSectStore.getNumberOfTuples();
 
-  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->LargestCrossSectionsArrayPath, featureIds, false, m_MessageHandler);
+  auto validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, m_InputValues->largest_cross_sections_array_path, featureIds, false, m_MessageHandler);
   if(validateNumFeatResult.invalid())
   {
     return validateNumFeatResult;
@@ -54,32 +53,32 @@ Result<> ComputeLargestCrossSectionsScanline::operator()()
   const usize xCells = imageGeom.getNumXCells();
   const usize yCells = imageGeom.getNumYCells();
   const usize zCells = imageGeom.getNumZCells();
-  const FloatVec3 spacing = imageGeom.getSpacing();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
 
   usize numPlanes = 0;
   usize planeCellCount = 0;
   float32 areaScalar = 0.0f;
 
-  if(m_InputValues->Plane == 0)
+  if(m_InputValues->plane == 0)
   {
     numPlanes = zCells;
     planeCellCount = xCells * yCells;
     areaScalar = spacing[0] * spacing[1];
   }
-  if(m_InputValues->Plane == 1)
+  if(m_InputValues->plane == 1)
   {
     numPlanes = yCells;
     planeCellCount = xCells * zCells;
     areaScalar = spacing[0] * spacing[2];
   }
-  if(m_InputValues->Plane == 2)
+  if(m_InputValues->plane == 2)
   {
     numPlanes = xCells;
     planeCellCount = yCells * zCells;
     areaScalar = spacing[1] * spacing[2];
   }
 
-  auto contiguousPlane = std::make_unique<int32[]>(m_InputValues->Plane == 0 ? planeCellCount : 0);
+  auto contiguousPlane = std::make_unique<int32[]>(m_InputValues->plane == 0 ? planeCellCount : 0);
 
   for(usize planeIndex = 0; planeIndex < numPlanes; planeIndex++)
   {
@@ -92,7 +91,7 @@ Result<> ComputeLargestCrossSectionsScanline::operator()()
 
     nonstd::span<const int32> planeFeatureIds;
     std::vector<int32> stridedPlane;
-    if(m_InputValues->Plane == 0)
+    if(m_InputValues->plane == 0)
     {
       Result<> inputReadResult = featureIdsStore.copyIntoBuffer(planeIndex * planeCellCount, nonstd::span<int32>(contiguousPlane.get(), planeCellCount));
       if(inputReadResult.invalid())
@@ -105,7 +104,7 @@ Result<> ComputeLargestCrossSectionsScanline::operator()()
     {
       // Feature Id tuple axes are [Z, Y, X]. Extent reads collect one
       // noncontiguous cross-section without per-cell OOC access or rescanning.
-      const Extent planeExtent = m_InputValues->Plane == 1 ? Extent({0, planeIndex, 0}, {zCells - 1, planeIndex, xCells - 1}) : Extent({0, 0, planeIndex}, {zCells - 1, yCells - 1, planeIndex});
+      const Extent planeExtent = m_InputValues->plane == 1 ? Extent({0, planeIndex, 0}, {zCells - 1, planeIndex, xCells - 1}) : Extent({0, 0, planeIndex}, {zCells - 1, yCells - 1, planeIndex});
       Result<std::vector<int32>> readResult = featureIdsStore.readExtent(planeExtent);
       if(readResult.invalid())
       {
@@ -123,10 +122,7 @@ Result<> ComputeLargestCrossSectionsScanline::operator()()
     for(usize featureId = 1; featureId < numFeatures; featureId++)
     {
       const float32 area = featureCounts[featureId] * areaScalar;
-      if(area > largestCrossSections[featureId])
-      {
-        largestCrossSections[featureId] = area;
-      }
+      largestCrossSections[featureId] = std::max(area, largestCrossSections[featureId]);
     }
   }
   return largestCrossSectStore.copyFromBuffer(0, nonstd::span<const float32>(largestCrossSections.data(), numFeatures));

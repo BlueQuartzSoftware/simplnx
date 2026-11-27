@@ -66,22 +66,22 @@ IFilter::VersionType ExtractPipelineToFileFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ExtractPipelineToFileFilter::clone() const
+IFilter::UniquePointerType ExtractPipelineToFileFilter::clone() const
 {
   return std::make_unique<ExtractPipelineToFileFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExtractPipelineToFileFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ExtractPipelineToFileFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   const auto importFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_ImportFileData);
   auto outputFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile);
 
-  Result<nlohmann::json> pipelineResult = DREAM3D::ImportPipelineJsonFromFile(importFile);
+  Result<nlohmann::json> pipelineResult = dream3d::ImportPipelineJsonFromFile(importFile);
   if(pipelineResult.invalid())
   {
-    return {ConvertInvalidResult<OutputActions, nlohmann::json>(std::move(pipelineResult))};
+    return {.output_actions = ConvertInvalidResult<OutputActions, nlohmann::json>(std::move(pipelineResult))};
   }
 
   Result<OutputActions> results;
@@ -100,32 +100,35 @@ IFilter::PreflightResult ExtractPipelineToFileFilter::preflightImpl(const DataSt
   {
     finalOutputPath.concat(extension);
     results.warnings().push_back(Warning{
-        -2580, fmt::format("Output file '{}' is missing an extension. A {} extension will be added to the provided output file so that the extracted pipeline will be written to the file at path '{}'",
-                           outputFile.string(), extension, finalOutputPath.string())});
+        .code = -2580,
+        .message =
+            fmt::format("Output file '{}' is missing an extension. A {} extension will be added to the provided output file so that the extracted pipeline will be written to the file at path '{}'",
+                        outputFile.string(), extension, finalOutputPath.string())});
   }
   if(finalOutputPath.extension().string() != extension)
   {
     finalOutputPath.replace_extension(extension);
     results.warnings().push_back(
-        Warning{-2581, fmt::format("Output file '{}' has the incorrect extension. A {} extension will be used instead so that the extracted pipeline will be written to the file at path '{}'",
-                                   outputFile.string(), extension, finalOutputPath.string())});
+        Warning{.code = -2581,
+                .message = fmt::format("Output file '{}' has the incorrect extension. A {} extension will be used instead so that the extracted pipeline will be written to the file at path '{}'",
+                                       outputFile.string(), extension, finalOutputPath.string())});
   }
 
-  return {results};
+  return {.output_actions = results};
 }
 
 //------------------------------------------------------------------------------
-Result<> ExtractPipelineToFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ExtractPipelineToFileFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ExtractPipelineToFileInputValues inputValues;
-  inputValues.InputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_ImportFileData);
-  inputValues.OutputFilePath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile);
+  inputValues.input_file_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_ImportFileData);
+  inputValues.output_file_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputFile);
 
   return ExtractPipelineToFile(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
-Result<Arguments> ExtractPipelineToFileFilter::FromSIMPLJson(const nlohmann::json& json)
+Result<Arguments> ExtractPipelineToFileFilter::FromSIMPLJson(const nlohmann::json& /*json*/)
 {
   return {};
 }

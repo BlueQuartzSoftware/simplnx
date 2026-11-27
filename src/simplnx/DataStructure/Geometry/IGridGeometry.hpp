@@ -5,19 +5,17 @@
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/Geometry/IGeometry.hpp"
 
-#include "simplnx/Common/StringLiteral.hpp"
-
 namespace nx::core
 {
 class SIMPLNX_EXPORT IGridGeometry : public IGeometry
 {
 public:
-  static constexpr StringLiteral k_CellAttributeMatrixName = "Cell Data";
-  static constexpr StringLiteral k_TypeName = "IGridGeometry";
+  static constexpr StringLiteralType k_CellAttributeMatrixName = "Cell Data";
+  static constexpr StringLiteralType k_TypeName = "IGridGeometry";
 
   IGridGeometry() = delete;
   IGridGeometry(const IGridGeometry&) = default;
-  IGridGeometry(IGridGeometry&&) = default;
+  IGridGeometry(IGridGeometry&&) noexcept = default;
 
   IGridGeometry& operator=(const IGridGeometry&) = delete;
   IGridGeometry& operator=(IGridGeometry&&) noexcept = delete;
@@ -28,13 +26,13 @@ public:
    * @brief Returns the dimensions of the grid geometry.
    * @return SizeVec3 The dimensions in X, Y, and Z
    */
-  virtual SizeVec3 getDimensions() const = 0;
+  virtual SizeVec3Type getDimensions() const = 0;
 
   /**
    * @brief Sets the dimensions of the grid geometry.
    * @param dims The new dimensions in X, Y, and Z
    */
-  virtual void setDimensions(const SizeVec3& dims) = 0;
+  virtual void setDimensions(const SizeVec3Type& dims) = 0;
 
   /**
    * @brief Returns the number of cells in the X dimension.
@@ -57,94 +55,94 @@ public:
   /**
    * @brief Returns the plane coordinates at the specified index array as float32.
    * @param idx Array of indices [x, y, z]
-   * @return Point3D<float32> The plane coordinates
+   * @return Vec3<float32> The plane coordinates
    */
-  virtual Point3D<float32> getPlaneCoordsf(usize idx[3]) const = 0;
+  virtual Vec3<float32> getPlaneCoordsf(usize idx[3]) const = 0;
 
   /**
    * @brief Returns the plane coordinates at the specified X, Y, Z indices as float32.
    * @param x The X index
    * @param y The Y index
    * @param z The Z index
-   * @return Point3D<float32> The plane coordinates
+   * @return Vec3<float32> The plane coordinates
    */
-  virtual Point3D<float32> getPlaneCoordsf(usize x, usize y, usize z) const = 0;
+  virtual Vec3<float32> getPlaneCoordsf(usize x, usize y, usize z) const = 0;
 
   /**
    * @brief Returns the plane coordinates at the specified flat index as float32.
    * @param idx The flat index
-   * @return Point3D<float32> The plane coordinates
+   * @return Vec3<float32> The plane coordinates
    */
-  virtual Point3D<float32> getPlaneCoordsf(usize idx) const = 0;
+  virtual Vec3<float32> getPlaneCoordsf(usize idx) const = 0;
 
   /**
    * @brief Returns the plane coordinates at the specified index array as float64.
    * @param idx Array of indices [x, y, z]
-   * @return Point3D<float64> The plane coordinates
+   * @return Vec3<float64> The plane coordinates
    */
-  virtual Point3D<float64> getPlaneCoords(usize idx[3]) const = 0;
+  virtual Vec3<float64> getPlaneCoords(usize idx[3]) const = 0;
 
   /**
    * @brief Returns the plane coordinates at the specified X, Y, Z indices as float64.
    * @param x The X index
    * @param y The Y index
    * @param z The Z index
-   * @return Point3D<float64> The plane coordinates
+   * @return Vec3<float64> The plane coordinates
    */
-  virtual Point3D<float64> getPlaneCoords(usize x, usize y, usize z) const = 0;
+  virtual Vec3<float64> getPlaneCoords(usize x, usize y, usize z) const = 0;
 
   /**
    * @brief Returns the plane coordinates at the specified flat index as float64.
    * @param idx The flat index
-   * @return Point3D<float64> The plane coordinates
+   * @return Vec3<float64> The plane coordinates
    */
-  virtual Point3D<float64> getPlaneCoords(usize idx) const = 0;
+  virtual Vec3<float64> getPlaneCoords(usize idx) const = 0;
 
   /**
    * @brief Returns the cell center coordinates at the specified index array as float32.
    * @param idx Array of indices [x, y, z]
-   * @return Point3D<float32> The cell center coordinates
+   * @return Vec3<float32> The cell center coordinates
    */
-  virtual Point3D<float32> getCoordsf(usize idx[3]) const = 0;
+  virtual Vec3<float32> getCoordsf(usize idx[3]) const = 0;
 
   /**
    * @brief Returns the cell center coordinates at the specified X, Y, Z indices as float32.
    * @param x The X index
    * @param y The Y index
    * @param z The Z index
-   * @return Point3D<float32> The cell center coordinates
+   * @return Vec3<float32> The cell center coordinates
    */
-  virtual Point3D<float32> getCoordsf(usize x, usize y, usize z) const = 0;
+  virtual Vec3<float32> getCoordsf(usize x, usize y, usize z) const = 0;
 
   /**
    * @brief Returns the cell center coordinates at the specified flat index as float32.
    * @param idx The flat index
-   * @return Point3D<float32> The cell center coordinates
+   * @return Vec3<float32> The cell center coordinates
    */
-  virtual Point3D<float32> getCoordsf(usize idx) const = 0;
+  virtual Vec3<float32> getCoordsf(usize idx) const = 0;
 
   /**
    * @brief Returns the cell center coordinates at the specified index array as float64.
    * @param idx Array of indices [x, y, z]
-   * @return Point3D<float64> The cell center coordinates
+   * @return Vec3<float64> The cell center coordinates
    */
-  virtual Point3D<float64> getCoords(usize idx[3]) const = 0;
+  virtual Vec3<float64> getCoords(usize idx[3]) const = 0;
 
   /**
    * @brief Returns the cell center coordinates at the specified X, Y, Z indices as float64.
    * @param x The X index
    * @param y The Y index
    * @param z The Z index
-   * @return Point3D<float64> The cell center coordinates
+   * @return Vec3<float64> The cell center coordinates
    */
-  virtual Point3D<float64> getCoords(usize x, usize y, usize z) const = 0;
+  virtual Vec3<float64> getCoords(usize x, usize y, usize z) const = 0;
 
   /**
    * @brief Returns the cell center coordinates at the specified flat index as float64.
    * @param idx The flat index
-   * @return Point3D<float64> The cell center coordinates
+   * @return Vec3<float64> The cell center coordinates
    */
-  virtual Point3D<float64> getCoords(usize idx) const = 0;
+  virtual Vec3<float64> getCoords(usize idx) const = 0;
 
   /**
    * @brief Returns the flat index for the cell containing the specified coordinates (float32).
@@ -210,7 +208,7 @@ public:
    * @brief Sets the cell data AttributeMatrix by ID.
    * @param id The optional ID of the AttributeMatrix to use as cell data
    */
-  void setCellData(OptionalId id);
+  void setCellData(OptionalIdType id);
 
   /**
    * @brief validates that linkages between shared node lists and their associated Attribute Matrix is correct.

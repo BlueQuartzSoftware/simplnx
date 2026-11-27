@@ -8,9 +8,7 @@
 #include <utility>
 #include <vector>
 
-namespace nx::core
-{
-namespace FilePathGenerator
+namespace nx::core::file_path_generator
 {
 enum class Ordering : uint8
 {
@@ -67,5 +65,4 @@ SIMPLNX_EXPORT std::vector<std::string> GenerateFileList(int32 start, int32 end,
  */
 SIMPLNX_EXPORT std::string GenerateExampleFile(int32 start, int32 end, int32 increment, Ordering order, std::string_view inputPath, std::string_view filePrefix, std::string_view fileSuffix,
                                                std::string_view fileExtension, uint32 paddingDigits);
-} // namespace FilePathGenerator
-} // namespace nx::core
+} // namespace nx::core::file_path_generator

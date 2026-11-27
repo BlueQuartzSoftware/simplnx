@@ -7,5 +7,5 @@
 
 int main(int argc, char* argv[])
 {
-  return nx::core::UnitTest::RunOwnedCatchSession(argc, argv);
+  return nx::core::unit_test::RunOwnedCatchSession(argc, argv);
 }

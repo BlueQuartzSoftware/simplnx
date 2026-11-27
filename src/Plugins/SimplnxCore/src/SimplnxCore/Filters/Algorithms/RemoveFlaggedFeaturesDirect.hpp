@@ -34,7 +34,7 @@ public:
   /**
    * @brief Destroys the non-owning algorithm.
    */
-  ~RemoveFlaggedFeaturesDirect() noexcept;
+  ~RemoveFlaggedFeaturesDirect() noexcept = default;
 
   RemoveFlaggedFeaturesDirect(const RemoveFlaggedFeaturesDirect&) = delete;
   RemoveFlaggedFeaturesDirect(RemoveFlaggedFeaturesDirect&&) noexcept = delete;

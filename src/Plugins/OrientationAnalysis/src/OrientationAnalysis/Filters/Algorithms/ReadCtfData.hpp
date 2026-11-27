@@ -22,13 +22,13 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ReadCtfDataInputValues
 {
-  FileSystemPathParameter::ValueType InputFile;
-  std::optional<FloatVec3> SpacingOverride;
-  DataPath DataContainerName;
-  std::string CellAttributeMatrixName;
-  std::string CellEnsembleAttributeMatrixName;
-  bool DegreesToRadians;
-  bool EdaxHexagonalAlignment;
+  FileSystemPathParameter::ValueType input_file;
+  std::optional<FloatVec3Type> spacing_override;
+  DataPath data_container_name;
+  std::string cell_attribute_matrix_name;
+  std::string cell_ensemble_attribute_matrix_name;
+  bool degrees_to_radians{};
+  bool edax_hexagonal_alignment{};
 };
 
 /**
@@ -55,7 +55,7 @@ public:
   /**
    * @brief Destroys the .ctf reader.
    */
-  ~ReadCtfData() noexcept;
+  ~ReadCtfData() noexcept = default;
 
   ReadCtfData(const ReadCtfData&) = delete;
   ReadCtfData(ReadCtfData&&) noexcept = delete;

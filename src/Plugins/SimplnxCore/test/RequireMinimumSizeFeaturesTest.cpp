@@ -24,33 +24,33 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::UnitTest;
+using namespace nx::core::unit_test;
 
 TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Small IN100 Pipeline", "[SimplnxCore][RequireMinimumSizeFeatures]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_min_size_output.tar.gz", "6_6_min_size_output.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_min_size_output.tar.gz", "6_6_min_size_output.dream3d");
 
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "6_6_min_size_input.tar.gz", "6_6_min_size_input.dream3d");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel1(nx::core::unit_test::k_TestFilesDir, "6_6_min_size_input.tar.gz", "6_6_min_size_input.dream3d");
 
   // Load the expected feature arrays from the output exemplar.
   auto exemplarFilePath = fs::path(fmt::format("{}/6_6_min_size_output.dream3d", unit_test::k_TestFilesDir));
-  DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(exemplarFilePath);
+  DataStructure exemplarDataStructure = unit_test::LoadDataStructure(exemplarFilePath);
 
   // Load the Small IN100 input before feature removal.
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_min_size_input.dream3d", unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
 
-  const std::string k_GrainData("Grain Data");
-  const std::string k_NumCells("NumElements");
-  const std::string k_ExemplarDataContainer("Exemplar Data");
-  const DataPath k_DataContainerPath({Constants::k_DataContainer});
-  const DataPath k_CellAttributeMatrix = k_DataContainerPath.createChildPath(Constants::k_CellData);
-  const DataPath k_CellFeatureAttributeMatrix = k_DataContainerPath.createChildPath(k_GrainData);
-  const DataPath k_FeatureIdsArrayPath = k_CellAttributeMatrix.createChildPath(Constants::k_FeatureIds);
-  const DataPath k_NumCellsPath = k_CellFeatureAttributeMatrix.createChildPath(k_NumCells);
-  const DataPath k_FeaturePhasesPath = k_CellFeatureAttributeMatrix.createChildPath(Constants::k_Phases);
+  const std::string kGrainData("Grain Data");
+  const std::string kNumCells("NumElements");
+  const std::string kExemplarDataContainer("Exemplar Data");
+  const DataPath kDataContainerPath({constants::k_DataContainer});
+  const DataPath kCellAttributeMatrix = kDataContainerPath.createChildPath(constants::k_CellData);
+  const DataPath kCellFeatureAttributeMatrix = kDataContainerPath.createChildPath(kGrainData);
+  const DataPath kFeatureIdsArrayPath = kCellAttributeMatrix.createChildPath(constants::k_FeatureIds);
+  const DataPath kNumCellsPath = kCellFeatureAttributeMatrix.createChildPath(kNumCells);
+  const DataPath kFeaturePhasesPath = kCellFeatureAttributeMatrix.createChildPath(constants::k_Phases);
 
   {
     RequireMinimumSizeFeaturesFilter filter;
@@ -60,13 +60,13 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Small IN100 Pipeline", "[Sim
     args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_MinAllowedFeaturesSize_Key, std::make_any<int64>(16));
     args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_ApplySinglePhase_Key, std::make_any<bool>(false));
     args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_SinglePhaseNumber_Key, std::make_any<int32>(1));
-    args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(k_DataContainerPath));
-    args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(k_FeatureIdsArrayPath));
-    args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_FeatureNumCellsPath_Key, std::make_any<DataPath>(k_NumCellsPath));
-    args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_FeaturePhasesPath_Key, std::make_any<DataPath>(k_FeaturePhasesPath));
+    args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(kDataContainerPath));
+    args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(kFeatureIdsArrayPath));
+    args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_FeatureNumCellsPath_Key, std::make_any<DataPath>(kNumCellsPath));
+    args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_FeaturePhasesPath_Key, std::make_any<DataPath>(kFeaturePhasesPath));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
@@ -74,13 +74,13 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Small IN100 Pipeline", "[Sim
 
   // Compare each generated feature array with its corresponding exemplar array.
   {
-    auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(k_CellFeatureAttributeMatrix);
+    auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(kCellFeatureAttributeMatrix);
     std::vector<DataPath> selectedCellArrays;
 
     // Snapshot the generated child paths before comparisons start.
     for(auto& child : cellDataGroup)
     {
-      selectedCellArrays.push_back(k_CellFeatureAttributeMatrix.createChildPath(child.second->getName()));
+      selectedCellArrays.push_back(kCellFeatureAttributeMatrix.createChildPath(child.second->getName()));
     }
 
     for(const auto& cellArrayPath : selectedCellArrays)
@@ -90,7 +90,7 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Small IN100 Pipeline", "[Sim
 
       // The exemplar uses a different top-level container but the same child path.
       std::vector<std::string> generatedPathVector = cellArrayPath.getPathVector();
-      generatedPathVector[0] = k_ExemplarDataContainer;
+      generatedPathVector[0] = kExemplarDataContainer;
       DataPath exemplarDataArrayPath(generatedPathVector);
 
       // An absent exemplar array means that this generated array has no reference.
@@ -102,60 +102,60 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Small IN100 Pipeline", "[Sim
       auto& exemplarDataArray = exemplarDataStructure.getDataRefAs<IDataArray>(exemplarDataArrayPath);
       DataType exemplarType = exemplarDataArray.getDataType();
 
-      std::cout << "Comparing: " << cellArrayPath.toString() << " <==> " << exemplarDataArrayPath.toString() << std::endl;
+      std::cout << "Comparing: " << cellArrayPath.toString() << " <==> " << exemplarDataArrayPath.toString() << '\n';
 
       if(type != exemplarType)
       {
         std::cout << fmt::format("DataArray {} and {} do not have the same type: {} vs {}. Data Will not be compared.", generatedDataArray.getName(), exemplarDataArray.getName(),
                                  fmt::underlying(type), fmt::underlying(exemplarType))
-                  << std::endl;
+                  << '\n';
         continue;
       }
 
       switch(type)
       {
       case DataType::boolean: {
-        UnitTest::CompareDataArrays<bool>(generatedDataArray, exemplarDataArray);
+        unit_test::CompareDataArrays<bool>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::int8: {
-        UnitTest::CompareDataArrays<int8>(generatedDataArray, exemplarDataArray);
+        unit_test::CompareDataArrays<int8>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::int16: {
-        UnitTest::CompareDataArrays<int16>(generatedDataArray, exemplarDataArray);
+        unit_test::CompareDataArrays<int16>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::int32: {
-        UnitTest::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
+        unit_test::CompareDataArrays<int32>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::int64: {
-        UnitTest::CompareDataArrays<int64>(generatedDataArray, exemplarDataArray);
+        unit_test::CompareDataArrays<int64>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::uint8: {
-        UnitTest::CompareDataArrays<uint8>(generatedDataArray, exemplarDataArray);
+        unit_test::CompareDataArrays<uint8>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::uint16: {
-        UnitTest::CompareDataArrays<uint16>(generatedDataArray, exemplarDataArray);
+        unit_test::CompareDataArrays<uint16>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::uint32: {
-        UnitTest::CompareDataArrays<uint32>(generatedDataArray, exemplarDataArray);
+        unit_test::CompareDataArrays<uint32>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::uint64: {
-        UnitTest::CompareDataArrays<uint64>(generatedDataArray, exemplarDataArray);
+        unit_test::CompareDataArrays<uint64>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::float32: {
-        UnitTest::CompareDataArrays<float32>(generatedDataArray, exemplarDataArray);
+        unit_test::CompareDataArrays<float32>(generatedDataArray, exemplarDataArray);
         break;
       }
       case DataType::float64: {
-        UnitTest::CompareDataArrays<float64>(generatedDataArray, exemplarDataArray);
+        unit_test::CompareDataArrays<float64>(generatedDataArray, exemplarDataArray);
         break;
       }
       default: {
@@ -169,12 +169,12 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Small IN100 Pipeline", "[Sim
   WriteTestDataStructure(dataStructure, fmt::format("{}/7_0_min_size_output.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Strict Feature Ids", "[SimplnxCore][RequireMinimumSizeFeatures][StrictFeatureIds]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   const DataPath geometryPath({"Strict Geometry"});
   const DataPath cellPath = geometryPath.createChildPath("Cells");
@@ -192,15 +192,15 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Strict Feature Ids", "[Simpl
   REQUIRE(featuresPtr != nullptr);
   auto* otherPtr = AttributeMatrix::Create(dataStructure, "Other Cells", shape, imageGeomPtr->getId());
   REQUIRE(otherPtr != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId()) != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Other Values", shape, {1}, otherPtr->getId()) != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Feature Values", {4}, {1}, featuresPtr->getId()) != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Cell Feature Values", shape, {1}, cellsPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Other Values", shape, {1}, otherPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Feature Values", {4}, {1}, featuresPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Cell Feature Values", shape, {1}, cellsPtr->getId()) != nullptr);
   auto* elsewherePtr = DataGroup::Create(dataStructure, "Elsewhere");
   REQUIRE(elsewherePtr != nullptr);
   auto* externalFeaturesPtr = AttributeMatrix::Create(dataStructure, "External Features", {4}, elsewherePtr->getId());
   REQUIRE(externalFeaturesPtr != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Feature Values", {4}, {1}, externalFeaturesPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Feature Values", {4}, {1}, externalFeaturesPtr->getId()) != nullptr);
 
   RequireMinimumSizeFeaturesFilter filter;
   auto args = filter.getDefaultArguments();
@@ -227,7 +227,7 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Strict Feature Ids", "[Simpl
   }
   SECTION("Feature array under a plain DataGroup")
   {
-    REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Ungrouped Features", {4}, {1}, elsewherePtr->getId()) != nullptr);
+    REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Ungrouped Features", {4}, {1}, elsewherePtr->getId()) != nullptr);
     offendingPath = DataPath({"Elsewhere", "Ungrouped Features"});
     args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_FeatureNumCellsPath_Key, std::make_any<DataPath>(offendingPath));
     expectedCode = -5563;
@@ -251,27 +251,27 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Strict Feature Ids", "[Simpl
   const auto result = filter.preflight(dataStructure, args);
   if(expectedCode == 0)
   {
-    REQUIRE(result.outputActions.valid());
-    for(const auto& modification : result.outputActions.value().modifiedActions)
+    REQUIRE(result.output_actions.valid());
+    for(const auto& modification : result.output_actions.value().modified_actions)
     {
-      CHECK(modification.modifiedPath.getParent() != DataPath({"Elsewhere", "Cells"}));
+      CHECK(modification.modified_path.getParent() != DataPath({"Elsewhere", "Cells"}));
     }
   }
   else
   {
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().size() == 1);
-    CHECK(result.outputActions.errors().front().code == expectedCode);
-    CHECK(result.outputActions.errors().front().message.find(offendingPath.toString()) != std::string::npos);
-    CHECK(result.outputActions.errors().front().message.find(cellPath.toString()) != std::string::npos);
-    CHECK(result.outputActions.errors().front().message.find(geometryPath.toString()) != std::string::npos);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().size() == 1);
+    CHECK(result.output_actions.errors().front().code == expectedCode);
+    CHECK(result.output_actions.errors().front().message.find(offendingPath.toString()) != std::string::npos);
+    CHECK(result.output_actions.errors().front().message.find(cellPath.toString()) != std::string::npos);
+    CHECK(result.output_actions.errors().front().message.find(geometryPath.toString()) != std::string::npos);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Shared Cell Paths and Selected Feature Matrix", "[SimplnxCore][RequireMinimumSizeFeatures][StrictFeatureIds]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool useAliasForIds = GENERATE(false, true);
   CAPTURE(useAliasForIds);
   DataStructure dataStructure;
@@ -290,9 +290,9 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Shared Cell Paths and Select
   imageGeomPtr->setCellData(*cellsPtr);
   REQUIRE(dataStructure.setAdditionalParent(cellsPtr->getId(), earlierParentPtr->getId()));
   REQUIRE(imageGeomPtr->getCellDataPath() == cellPath);
-  auto* idsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId());
-  auto* valuesPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Values", shape, {1}, cellsPtr->getId());
-  auto* ignoredPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Ignored", shape, {1}, cellsPtr->getId());
+  auto* idsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId());
+  auto* valuesPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Values", shape, {1}, cellsPtr->getId());
+  auto* ignoredPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Ignored", shape, {1}, cellsPtr->getId());
   REQUIRE(idsPtr != nullptr);
   REQUIRE(valuesPtr != nullptr);
   REQUIRE(ignoredPtr != nullptr);
@@ -305,14 +305,14 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Shared Cell Paths and Select
   }
 
   // The selected array has another parent; only the selected Feature Attribute Matrix is compacted.
-  auto* featureValuesPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Feature Values", {3}, {1}, earlierParentPtr->getId());
-  auto* externalMarkerPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "External Marker", {3}, {1}, earlierParentPtr->getId());
+  auto* featureValuesPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Feature Values", {3}, {1}, earlierParentPtr->getId());
+  auto* externalMarkerPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "External Marker", {3}, {1}, earlierParentPtr->getId());
   REQUIRE(featureValuesPtr != nullptr);
   REQUIRE(externalMarkerPtr != nullptr);
   auto* featuresPtr = AttributeMatrix::Create(dataStructure, "Features", {3}, imageGeomPtr->getId());
   REQUIRE(featuresPtr != nullptr);
   REQUIRE(dataStructure.setAdditionalParent(featureValuesPtr->getId(), featuresPtr->getId()));
-  auto* markerPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Marker", {3}, {1}, featuresPtr->getId());
+  auto* markerPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Marker", {3}, {1}, featuresPtr->getId());
   REQUIRE(markerPtr != nullptr);
   for(usize index = 0; index < 3; index++)
   {
@@ -330,12 +330,12 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Shared Cell Paths and Select
   args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_FeatureNumCellsPath_Key, std::make_any<DataPath>(featurePath.createChildPath("Feature Values")));
   args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_MinAllowedFeaturesSize_Key, std::make_any<int64>(2));
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   bool reportsValues = false;
-  for(const auto& modification : preflight.outputActions.value().modifiedActions)
+  for(const auto& modification : preflight.output_actions.value().modified_actions)
   {
-    CHECK(modification.modifiedPath.getParent() != aliasCellPath);
-    reportsValues = reportsValues || modification.modifiedPath == cellPath.createChildPath("Values");
+    CHECK(modification.modified_path.getParent() != aliasCellPath);
+    reportsValues = reportsValues || modification.modified_path == cellPath.createChildPath("Values");
   }
   CHECK(reportsValues);
   const auto execute = filter.execute(dataStructure, args);
@@ -358,14 +358,14 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeatures: Shared Cell Paths and Select
   {
     CHECK((*externalMarkerPtr)[index] == static_cast<int32>(90 + index));
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RequireMinimumSizeFeaturesFilter: SIMPL Backwards Compatibility", "[SimplnxCore][RequireMinimumSizeFeaturesFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -378,22 +378,22 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeaturesFilter: SIMPL Backwards Compat
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<RequireMinimumSizeFeaturesFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<RequireMinimumSizeFeaturesFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<int64>(RequireMinimumSizeFeaturesFilter::k_MinAllowedFeaturesSize_Key) == 5);
       CHECK(args.value<bool>(RequireMinimumSizeFeaturesFilter::k_ApplySinglePhase_Key) == true);
       CHECK(args.value<int32>(RequireMinimumSizeFeaturesFilter::k_SinglePhaseNumber_Key) == 5);
@@ -407,35 +407,35 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeaturesFilter: SIMPL Backwards Compat
 
 TEST_CASE("SimplnxCore::RequireMinimumSizeFeaturesFilter: Preflight Stale Arrays", "[SimplnxCore][RequireMinimumSizeFeaturesFilter][preflight]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_6_min_size_input.tar.gz", "6_6_min_size_input.dream3d");
-  DataStructure dataStructure = UnitTest::LoadDataStructure(fs::path(fmt::format("{}/6_6_min_size_input.dream3d", unit_test::k_TestFilesDir)));
-  const DataPath imageGeomPath({Constants::k_DataContainer});
+  unit_test::LoadPlugins();
+  const unit_test::TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "6_6_min_size_input.tar.gz", "6_6_min_size_input.dream3d");
+  DataStructure dataStructure = unit_test::LoadDataStructure(fs::path(fmt::format("{}/6_6_min_size_input.dream3d", unit_test::k_TestFilesDir)));
+  const DataPath imageGeomPath({constants::k_DataContainer});
   const DataPath featureAMPath = imageGeomPath.createChildPath("Grain Data");
   const DataPath numCellsPath = featureAMPath.createChildPath("NumElements");
-  const auto* featureAM = dataStructure.getDataAs<AttributeMatrix>(featureAMPath);
-  REQUIRE(featureAM != nullptr);
-  REQUIRE(Int32NeighborList::Create(dataStructure, "StaleArrayTestNeighbors", featureAM->getShape(), featureAM->getId()) != nullptr);
+  const auto* featureAmPtr = dataStructure.getDataAs<AttributeMatrix>(featureAMPath);
+  REQUIRE(featureAmPtr != nullptr);
+  REQUIRE(Int32NeighborListType::Create(dataStructure, "StaleArrayTestNeighbors", featureAmPtr->getShape(), featureAmPtr->getId()) != nullptr);
 
   RequireMinimumSizeFeaturesFilter filter;
   Arguments args;
   args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_MinAllowedFeaturesSize_Key, std::make_any<int64>(16));
   args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_ApplySinglePhase_Key, std::make_any<bool>(false));
   args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_ImageGeomPath_Key, std::make_any<DataPath>(imageGeomPath));
-  args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(imageGeomPath.createChildPath(Constants::k_CellData).createChildPath(Constants::k_FeatureIds)));
+  args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_FeatureIdsPath_Key, std::make_any<DataPath>(imageGeomPath.createChildPath(constants::k_CellData).createChildPath(constants::k_FeatureIds)));
   args.insertOrAssign(RequireMinimumSizeFeaturesFilter::k_FeatureNumCellsPath_Key, std::make_any<DataPath>(numCellsPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   usize staleArrayCount = 0;
-  for(const auto& value : preflightResult.outputValues)
+  for(const auto& value : preflightResult.output_values)
   {
     CHECK(value.name != "Feature Data Modification Warning");
     if(value.name == "Stale Arrays")
     {
       ++staleArrayCount;
       CHECK(value.value.find(numCellsPath.toString()) != std::string::npos);
-      for(const auto& [identifier, object] : *featureAM)
+      for(const auto& [identifier, object] : *featureAmPtr)
       {
         const std::string path = featureAMPath.createChildPath(object->getName()).toString();
         if(dynamic_cast<const IDataArray*>(object.get()) != nullptr)
@@ -450,5 +450,5 @@ TEST_CASE("SimplnxCore::RequireMinimumSizeFeaturesFilter: Preflight Stale Arrays
     }
   }
   CHECK(staleArrayCount == 1);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

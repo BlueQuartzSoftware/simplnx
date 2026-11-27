@@ -14,7 +14,7 @@
 #include <vector>
 
 #if defined(__linux__)
-#include <limits.h>
+#include <climits>
 #include <unistd.h>
 #elif defined(_WIN32)
 #include <Windows.h>
@@ -22,14 +22,9 @@
 #include <mach-o/dyld.h>
 #endif
 
-#include <fmt/core.h>
-
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/IO/Generic/DataIOCollection.hpp"
 #include "simplnx/DataStructure/IO/Generic/IDataIOManager.hpp"
-#include "simplnx/Filter/FilterList.hpp"
-#include "simplnx/Plugin/AbstractPlugin.hpp"
-#include "simplnx/Plugin/PluginLoader.hpp"
 
 using namespace nx::core;
 
@@ -39,7 +34,7 @@ namespace
  * @brief Locates the executable that hosts this process.
  * @return Executable path, or an error when the platform query fails.
  */
-Result<std::filesystem::path> findCurrentPath()
+Result<std::filesystem::path> FindCurrentPath()
 {
 #if defined(__linux__)
   std::vector<char> buffer(PATH_MAX + 1);
@@ -80,13 +75,13 @@ Result<std::filesystem::path> findCurrentPath()
 #endif
 }
 
-std::string getApplicationName(Application* app)
+std::string GetApplicationName(Application* app)
 {
   return "DREAM3DNX";
 }
 } // namespace
 
-std::shared_ptr<Application> Application::s_Instance = nullptr;
+std::shared_ptr<Application> Application::SInstance = nullptr;
 
 Application::Application()
 : m_FilterList(std::make_unique<FilterList>())
@@ -100,7 +95,7 @@ Application::Application()
   }
 }
 
-Application::Application(int argc, char** argv)
+Application::Application(int /*argc*/, char** /*argv*/)
 : Application()
 {
 }
@@ -116,7 +111,7 @@ Result<> Application::initialize()
     combinedResult = MergeResults(std::move(combinedResult), std::move(prefsResult));
   }
 
-  auto pathResult = findCurrentPath();
+  auto pathResult = FindCurrentPath();
   if(pathResult.invalid())
   {
     return MakeErrorResult(-5, fmt::format("Failed to determine executable path: {}", pathResult.errors()[0].message));
@@ -154,35 +149,35 @@ Application::~Application()
     // The destructor cannot return an error, so it logs the preference-write failure.
     fmt::print(stderr, "Error saving preferences in destructor: {}\n", result.errors().empty() ? "unknown error" : result.errors()[0].message);
   }
-  s_Instance = nullptr;
+  SInstance = nullptr;
 }
 
 std::shared_ptr<Application> Application::Instance()
 {
-  return s_Instance;
+  return SInstance;
 }
 
 std::shared_ptr<Application> Application::GetOrCreateInstance()
 {
-  if(s_Instance == nullptr)
+  if(SInstance == nullptr)
   {
-    s_Instance = std::shared_ptr<Application>(new Application());
+    SInstance = std::shared_ptr<Application>(new Application());
   }
-  return s_Instance;
+  return SInstance;
 }
 
 void Application::DeleteInstance()
 {
-  if(s_Instance != nullptr)
+  if(SInstance != nullptr)
   {
-    auto result = s_Instance->savePreferences();
+    auto result = SInstance->savePreferences();
     if(result.invalid())
     {
       // The static shutdown API cannot return an error, so it logs the failure.
       fmt::print(stderr, "Error saving preferences on shutdown: {}\n", result.errors().empty() ? "unknown error" : result.errors()[0].message);
     }
   }
-  s_Instance = nullptr;
+  SInstance = nullptr;
 }
 
 std::filesystem::path Application::getCurrentPath() const
@@ -197,7 +192,7 @@ std::filesystem::path Application::getCurrentDir() const
 
 Result<> Application::loadPreferences()
 {
-  return loadPreferences(Preferences::DefaultFilePath(getApplicationName(this)));
+  return loadPreferences(Preferences::DefaultFilePath(GetApplicationName(this)));
 }
 
 Result<> Application::loadPreferences(const std::filesystem::path& filepath)
@@ -210,7 +205,7 @@ Result<> Application::loadPreferences(const std::filesystem::path& filepath)
   m_PendingPreferenceLoadWarnings.insert(m_PendingPreferenceLoadWarnings.end(), result.warnings().begin(), result.warnings().end());
   if(result.invalid())
   {
-    if(!result.errors().empty() && result.errors()[0].code == Preferences::k_FileDoesNotExist_Code)
+    if(!result.errors().empty() && result.errors()[0].code == Preferences::k_FileDoesNotExistCode)
     {
       // On the first run, defaults are used and the preferences file is written on shutdown.
       return {};
@@ -220,9 +215,9 @@ Result<> Application::loadPreferences(const std::filesystem::path& filepath)
   return result;
 }
 
-WarningCollection Application::takePreferenceLoadWarnings()
+WarningCollectionType Application::takePreferenceLoadWarnings()
 {
-  return std::exchange(m_PendingPreferenceLoadWarnings, WarningCollection{});
+  return std::exchange(m_PendingPreferenceLoadWarnings, WarningCollectionType{});
 }
 
 Result<> Application::savePreferences()
@@ -231,7 +226,7 @@ Result<> Application::savePreferences()
   {
     return MakeErrorResult(-2, "No preferences to save");
   }
-  std::string applicationName = getApplicationName(this);
+  std::string applicationName = GetApplicationName(this);
   const auto filepath = Preferences::DefaultFilePath(applicationName);
 
   auto result = m_Preferences->saveToFile(filepath);
@@ -244,11 +239,11 @@ Result<> Application::savePreferences()
 
 std::optional<Uuid> Application::getSimplnxUuid(const Uuid& simplUuid)
 {
-  for(usize index = 0; index < m_Simpl_Uuids.size(); index++)
+  for(usize index = 0; index < m_SimplUuids.size(); index++)
   {
-    if(m_Simpl_Uuids[index] == simplUuid)
+    if(m_SimplUuids[index] == simplUuid)
     {
-      return m_Simplnx_Uuids[index];
+      return m_SimplnxUuids[index];
     }
   }
 
@@ -258,17 +253,18 @@ std::optional<Uuid> Application::getSimplnxUuid(const Uuid& simplUuid)
 std::vector<Uuid> Application::getSimplUuid(const Uuid& simplnxUuid)
 {
   std::vector<usize> indices;
-  for(usize index = 0; index < m_Simplnx_Uuids.size(); index++)
+  for(usize index = 0; index < m_SimplnxUuids.size(); index++)
   {
-    if(m_Simplnx_Uuids[index] == simplnxUuid)
+    if(m_SimplnxUuids[index] == simplnxUuid)
     {
       indices.push_back(index);
     }
   }
   std::vector<Uuid> uuidList;
+  uuidList.reserve(indices.size());
   for(const auto& index : indices)
   {
-    uuidList.push_back(m_Simpl_Uuids[index]);
+    uuidList.push_back(m_SimplUuids[index]);
   }
   return uuidList;
 }
@@ -300,11 +296,11 @@ Result<> Application::loadPlugins(const std::filesystem::path& pluginDir, bool v
   {
     for(const auto& entry : std::filesystem::directory_iterator(pluginDir))
     {
-      std::filesystem::path path = entry.path();
+      const std::filesystem::path& path = entry.path();
 #ifdef NDEBUG // Release mode
-      if(!StringUtilities::ends_with(path.string(), "_d.simplnx") && StringUtilities::ends_with(path.string(), ".simplnx"))
+      if(!string_utilities::EndsWith(path.string(), "_d.simplnx") && string_utilities::EndsWith(path.string(), ".simplnx"))
 #else
-      if(StringUtilities::ends_with(path.string(), "_d.simplnx"))
+      if(string_utilities::EndsWith(path.string(), "_d.simplnx"))
 #endif
       {
         auto result = loadPlugin(path, verbose);
@@ -336,11 +332,11 @@ std::unordered_set<AbstractPlugin*> Application::getPluginList() const
 const AbstractPlugin* Application::getPlugin(const Uuid& uuid) const
 {
   std::unordered_set<AbstractPlugin*> plugins = m_FilterList->getLoadedPlugins();
-  for(const auto* plugin : plugins)
+  for(const auto* pluginPtr : plugins)
   {
-    if(plugin->getId() == uuid)
+    if(pluginPtr->getId() == uuid)
     {
-      return plugin;
+      return pluginPtr;
     }
   }
   return nullptr;
@@ -351,7 +347,7 @@ Preferences* Application::getPreferences()
   return m_Preferences.get();
 }
 
-JsonPipelineBuilder* Application::getPipelineBuilder() const
+JsonPipelineBuilder* Application::GetPipelineBuilder()
 {
   return nullptr;
 }
@@ -380,39 +376,39 @@ Result<> Application::loadPlugin(const std::filesystem::path& path, bool verbose
     return MakeErrorResult(-30, fmt::format("Failed to add plugin from '{}': {}", path.string(), addResult.errors().empty() ? "unknown error" : addResult.errors()[0].message));
   }
 
-  auto plugin = pluginLoader->getPlugin();
-  if(plugin == nullptr)
+  auto* pluginPtr = pluginLoader->getPlugin();
+  if(pluginPtr == nullptr)
   {
     return MakeErrorResult(-31, fmt::format("Plugin loaded from '{}' but returned null", path.string()));
   }
 
   // Reject duplicate legacy UUIDs before appending the paired reverse mapping.
-  AbstractPlugin::SIMPLMapType simplToSimplnxUuids = plugin->getSimplToSimplnxMap();
+  AbstractPlugin::SIMPLMapType simplToSimplnxUuids = pluginPtr->getSimplToSimplnxMap();
   for(auto const& [simplUuid, simplData] : simplToSimplnxUuids)
   {
-    for(const auto& uuid : m_Simpl_Uuids)
+    for(const auto& uuid : m_SimplUuids)
     {
       if(uuid == simplUuid)
       {
-        return MakeErrorResult(-32, fmt::format("Duplicate UUIDs found in SIMPL UUID maps! UUID: {} Plugin: {}", simplUuid.str(), plugin->getName()));
+        return MakeErrorResult(-32, fmt::format("Duplicate UUIDs found in SIMPL UUID maps! UUID: {} Plugin: {}", simplUuid.str(), pluginPtr->getName()));
       }
     }
-    m_Simpl_Uuids.push_back(simplUuid);
-    m_Simplnx_Uuids.push_back(simplData.simplnxUuid);
+    m_SimplUuids.push_back(simplUuid);
+    m_SimplnxUuids.push_back(simplData.simplnx_uuid);
   }
 
-  if(m_Simpl_Uuids.size() != m_Simplnx_Uuids.size())
+  if(m_SimplUuids.size() != m_SimplnxUuids.size())
   {
-    return MakeErrorResult(-33, fmt::format("UUID maps are not of the same size! SIMPL: {} Simplnx: {}", m_Simpl_Uuids.size(), m_Simplnx_Uuids.size()));
+    return MakeErrorResult(-33, fmt::format("UUID maps are not of the same size! SIMPL: {} Simplnx: {}", m_SimplUuids.size(), m_SimplnxUuids.size()));
   }
 
-  for(const auto& pluginIO : plugin->getDataIOManagers())
+  for(const auto& pluginIO : pluginPtr->getDataIOManagers())
   {
     auto addManagerResult = m_DataIOCollection->addIOManager(pluginIO);
     if(addManagerResult.invalid())
     {
-      return MakeErrorResult(
-          -34, fmt::format("Failed to register data I/O manager from plugin '{}': {}", plugin->getName(), addManagerResult.errors().empty() ? "unknown error" : addManagerResult.errors()[0].message));
+      return MakeErrorResult(-34, fmt::format("Failed to register data I/O manager from plugin '{}': {}", pluginPtr->getName(),
+                                              addManagerResult.errors().empty() ? "unknown error" : addManagerResult.errors()[0].message));
     }
   }
 

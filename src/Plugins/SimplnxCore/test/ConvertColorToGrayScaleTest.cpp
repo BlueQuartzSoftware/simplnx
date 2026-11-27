@@ -31,11 +31,11 @@ using namespace nx::core;
 using namespace nx::core::types;
 namespace fs = std::filesystem;
 
-const std::string m_GeomName = "VertexGeom";
-const std::string m_DataArrayName = "DataArray";
-const std::string m_outputArrayPrefix = "grayTestImage";
+const std::string k_MGeomName = "VertexGeom";
+const std::string k_MDataArrayName = "DataArray";
+const std::string k_MOutputArrayPrefix = "grayTestImage";
 const size_t numTuples = 16;
-const std::vector<std::vector<uint8_t>> testColors{
+const std::vector<std::vector<uint8_t>> k_TestColors{
     {0, 0, 0},       // black
     {0, 0, 128},     // navy
     {0, 0, 255},     // blue
@@ -53,7 +53,7 @@ const std::vector<std::vector<uint8_t>> testColors{
     {255, 255, 0},   // yellow
     {255, 255, 255}, // white
 };
-const std::vector<uint8_t> checkDefaultLuminosityColors{
+const std::vector<uint8_t> k_CheckDefaultLuminosityColors{
     0,   // black
     9,   // navy
     18,  // blue
@@ -71,7 +71,7 @@ const std::vector<uint8_t> checkDefaultLuminosityColors{
     237, // yellow
     255, // white
 };
-const std::vector<uint8_t> checkCustomLuminosityColors{
+const std::vector<uint8_t> k_CheckCustomLuminosityColors{
     0,   // black
     96,  // navy
     191, // blue
@@ -89,7 +89,7 @@ const std::vector<uint8_t> checkCustomLuminosityColors{
     127, // yellow
     62,  // white
 };
-const std::vector<uint8_t> checkLessZeroLuminosityColors{
+const std::vector<uint8_t> k_CheckLessZeroLuminosityColors{
     0,   // black
     160, // navy
     65,  // blue
@@ -107,7 +107,7 @@ const std::vector<uint8_t> checkLessZeroLuminosityColors{
     129, // yellow
     194, // white
 };
-const std::vector<uint8_t> checkGreaterOneLuminosityColors{
+const std::vector<uint8_t> k_CheckGreaterOneLuminosityColors{
     0,   // black
     224, // navy
     190, // blue
@@ -125,7 +125,7 @@ const std::vector<uint8_t> checkGreaterOneLuminosityColors{
     125, // yellow
     59,  // white
 };
-const std::vector<uint8_t> checkLessNegativeOneLuminosityColors{
+const std::vector<uint8_t> k_CheckLessNegativeOneLuminosityColors{
     0,   // black
     32,  // navy
     66,  // blue
@@ -143,7 +143,7 @@ const std::vector<uint8_t> checkLessNegativeOneLuminosityColors{
     131, // yellow
     197, // white
 };
-const std::vector<uint8_t> checkAverageColors{
+const std::vector<uint8_t> k_CheckAverageColors{
     0,   // black
     43,  // navy
     85,  // blue
@@ -161,7 +161,7 @@ const std::vector<uint8_t> checkAverageColors{
     170, // yellow
     255, // white
 };
-const std::vector<uint8_t> checkLightnessColors{
+const std::vector<uint8_t> k_CheckLightnessColors{
     0,   // black
     64,  // navy
     128, // blue
@@ -179,7 +179,7 @@ const std::vector<uint8_t> checkLightnessColors{
     128, // yellow
     255, // white
 };
-const std::vector<uint8_t> checkRChannelColors{
+const std::vector<uint8_t> k_CheckRChannelColors{
     0,   // black
     0,   // navy
     0,   // blue
@@ -197,7 +197,7 @@ const std::vector<uint8_t> checkRChannelColors{
     255, // yellow
     255, // white
 };
-const std::vector<uint8_t> checkGChannelColors{
+const std::vector<uint8_t> k_CheckGChannelColors{
     0,   // black
     0,   // navy
     0,   // blue
@@ -215,7 +215,7 @@ const std::vector<uint8_t> checkGChannelColors{
     255, // yellow
     255, // white
 };
-const std::vector<uint8_t> checkBChannelColors{
+const std::vector<uint8_t> k_CheckBChannelColors{
     0,   // black
     128, // navy
     255, // blue
@@ -233,54 +233,54 @@ const std::vector<uint8_t> checkBChannelColors{
     0,   // yellow
     255, // white
 };
-const std::vector<std::vector<uint8_t>> algorithmMap{checkDefaultLuminosityColors,
-                                                     checkCustomLuminosityColors,
-                                                     checkLessZeroLuminosityColors,
-                                                     checkGreaterOneLuminosityColors,
-                                                     checkLessNegativeOneLuminosityColors,
-                                                     checkAverageColors,
-                                                     checkLightnessColors,
-                                                     checkRChannelColors,
-                                                     checkGChannelColors,
-                                                     checkBChannelColors};
+const std::vector<std::vector<uint8_t>> k_AlgorithmMap{k_CheckDefaultLuminosityColors,
+                                                       k_CheckCustomLuminosityColors,
+                                                       k_CheckLessZeroLuminosityColors,
+                                                       k_CheckGreaterOneLuminosityColors,
+                                                       k_CheckLessNegativeOneLuminosityColors,
+                                                       k_CheckAverageColors,
+                                                       k_CheckLightnessColors,
+                                                       k_CheckRChannelColors,
+                                                       k_CheckGChannelColors,
+                                                       k_CheckBChannelColors};
 
 //------------------------------------------------------------------------------
-void SetDataArrayTestValues(UInt8Array* aa)
+static void SetDataArrayTestValues(UInt8ArrayType* aa)
 {
   aa->fill(0);
   size_t index = 0;
-  for(const auto& eachColor : testColors)
+  for(const auto& eachColor : k_TestColors)
   {
     aa->getDataStore()->setTuple(index++, eachColor);
   }
 }
 
 //------------------------------------------------------------------------------
-static VertexGeom* createVertexGeometry(DataStructure& dataStructure, const std::vector<size_t>& tDims, const std::vector<size_t>& cDims)
+static VertexGeom* CreateVertexGeometry(DataStructure& dataStructure, const std::vector<size_t>& tDims, const std::vector<size_t>& cDims)
 {
-  VertexGeom* vertexGeo = VertexGeom::Create(dataStructure, "VertexGeom");
-  auto* vertexArray = Float32Array::CreateWithStore<DataStore<float32>>(dataStructure, "Vertices", tDims, cDims, vertexGeo->getId());
-  vertexGeo->setVertices(*vertexArray);
-  auto& vertices = vertexArray->getDataStoreRef();
+  VertexGeom* vertexGeoPtr = VertexGeom::Create(dataStructure, "VertexGeom");
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "Vertices", tDims, cDims, vertexGeoPtr->getId());
+  vertexGeoPtr->setVertices(*vertexArrayPtr);
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
   for(usize i = 0; i < numTuples; ++i)
   {
     vertices[i * 3 + 0] = i;
     vertices[i * 3 + 1] = i;
     vertices[i * 3 + 2] = i;
   }
-  return vertexGeo;
+  return vertexGeoPtr;
 }
 
 //------------------------------------------------------------------------------
-void CompareResults(const uint8& algoMapIndex, const DataStructure& dataStructure)
+static void CompareResults(const uint8& algoMapIndex, const DataStructure& dataStructure)
 {
-  DataPath arrayName({m_GeomName});
-  arrayName = arrayName.createChildPath(m_outputArrayPrefix + m_DataArrayName);
-  auto* testArray = dataStructure.getDataAs<UInt8Array>(arrayName);
-  REQUIRE(testArray != nullptr);
-  auto& testData = testArray->getDataStoreRef();
+  DataPath arrayName({k_MGeomName});
+  arrayName = arrayName.createChildPath(k_MOutputArrayPrefix + k_MDataArrayName);
+  const auto* testArrayPtr = dataStructure.getDataAs<UInt8ArrayType>(arrayName);
+  REQUIRE(testArrayPtr != nullptr);
+  const auto& testData = testArrayPtr->getDataStoreRef();
 
-  std::vector<uint8> colorArray{algorithmMap[algoMapIndex]};
+  const std::vector<uint8>& colorArray{k_AlgorithmMap[algoMapIndex]};
 
   for(size_t index = 0; index < colorArray.size(); ++index)
   {
@@ -291,37 +291,37 @@ void CompareResults(const uint8& algoMapIndex, const DataStructure& dataStructur
 }
 
 //------------------------------------------------------------------------------
-void RunTest(const uint8& algoMapIndex, const ConvertColorToGrayScale::ConversionType& algorithm, const std::vector<float32>& colorWeights, const int32& colorChannel, bool shouldFail)
+static void RunTest(const uint8& algoMapIndex, const ConvertColorToGrayScale::ConversionType& algorithm, const std::vector<float32>& colorWeights, const int32& colorChannel, bool shouldFail)
 {
   DataStructure dataStruct;
   const std::vector<size_t> tDims{numTuples};
   const std::vector<size_t> cDims{3};
 
   // NOTE: This filter has no geometry requirements
-  VertexGeom* vertexGeo = createVertexGeometry(dataStruct, tDims, cDims);
-  auto* testAA = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStruct, m_DataArrayName, tDims, cDims, vertexGeo->getId());
-  SetDataArrayTestValues(testAA);
+  VertexGeom* vertexGeoPtr = CreateVertexGeometry(dataStruct, tDims, cDims);
+  auto* testAaPtr = UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStruct, k_MDataArrayName, tDims, cDims, vertexGeoPtr->getId());
+  SetDataArrayTestValues(testAaPtr);
 
-  std::vector<DataPath> daps = {DataPath({m_GeomName, m_DataArrayName})};
+  std::vector<DataPath> daps = {DataPath({k_MGeomName, k_MDataArrayName})};
 
   // Configure the filter arguments.
   ConvertColorToGrayScaleFilter filter;
   Arguments args;
 
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ConversionAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<uint64>(algorithm)));
-  args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(colorWeights));
+  args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ColorWeights_Key, std::make_any<VectorFloat32ParameterType::ValueType>(colorWeights));
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ColorChannel_Key, std::make_any<int32>(colorChannel));
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_InputDataArrayPath_Key, std::make_any<MultiArraySelectionParameter::ValueType>(daps));
-  args.insertOrAssign(ConvertColorToGrayScaleFilter::k_OutputArrayPrefix_Key, std::make_any<StringParameter::ValueType>(m_outputArrayPrefix));
+  args.insertOrAssign(ConvertColorToGrayScaleFilter::k_OutputArrayPrefix_Key, std::make_any<StringParameter::ValueType>(k_MOutputArrayPrefix));
 
   auto preflightResult = filter.preflight(dataStruct, args);
   if(shouldFail)
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   }
 
   auto executeResult = filter.execute(dataStruct, args);
@@ -340,70 +340,70 @@ void RunTest(const uint8& algoMapIndex, const ConvertColorToGrayScale::Conversio
 
   CompareResults(algoMapIndex, dataStruct);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStruct);
+  unit_test::CheckArraysInheritTupleDims(dataStruct);
 }
 
 TEST_CASE("SimplnxCore::ConvertColorToGrayScale: Valid Execution", "[SimplnxCore][ConvertColorToGrayScaleFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  UnitTest::LoadPlugins();
+  unit_test::AlgorithmTestScope scope(scenario);
+  unit_test::LoadPlugins();
 
   // Luminosity Algorithm testing
   // Test defaults
-  std::cout << "Testing luminosity algorithm..." << std::endl;
+  std::cout << "Testing luminosity algorithm..." << '\n';
   std::cout << "Default weights (0.2125, 0.7154, 0.0721)...";
   scope.execute([&] { RunTest(0, ConvertColorToGrayScale::ConversionType::Luminosity, {0.2125f, 0.7154f, 0.0721f}, 0, false); });
 
   // Test custom
   std::vector<float32> colorWeights{0.75, 0.75, 0.75};
-  std::cout << "Custom weights (0.75, 0.75, 0.75)..." << std::endl;
+  std::cout << "Custom weights (0.75, 0.75, 0.75)..." << '\n';
   RunTest(1, ConvertColorToGrayScale::ConversionType::Luminosity, colorWeights, 0, true);
 
   // Test <0
   colorWeights = {-0.75, -0.75, -0.75};
-  std::cout << "Testing weights < 0 (-0.75, -0.75, -0.75)..." << std::endl;
+  std::cout << "Testing weights < 0 (-0.75, -0.75, -0.75)..." << '\n';
   RunTest(2, ConvertColorToGrayScale::ConversionType::Luminosity, colorWeights, 0, true);
 
   // Test >1
   colorWeights = {1.75, 1.75, 1.75};
-  std::cout << "Testing weights > 1 (1.75, 1.75, 1.75)..." << std::endl;
+  std::cout << "Testing weights > 1 (1.75, 1.75, 1.75)..." << '\n';
   RunTest(3, ConvertColorToGrayScale::ConversionType::Luminosity, colorWeights, 0, true);
 
   // Test <-1
   colorWeights = {-1.75, -1.75, -1.75};
-  std::cout << "Testing weights < -1 (-1.75, -1.75, -1.75)..." << std::endl;
+  std::cout << "Testing weights < -1 (-1.75, -1.75, -1.75)..." << '\n';
   RunTest(4, ConvertColorToGrayScale::ConversionType::Luminosity, colorWeights, 0, true);
 
   // Average Algorithm testing
-  std::cout << "Testing average algorithm..." << std::endl;
+  std::cout << "Testing average algorithm..." << '\n';
   scope.execute([&] { RunTest(5, ConvertColorToGrayScale::ConversionType::Average, {0.2125f, 0.7154f, 0.0721f}, 0, false); });
 
   // Lightness Algorithm testing
-  std::cout << "Testing lightness algorithm..." << std::endl;
+  std::cout << "Testing lightness algorithm..." << '\n';
   scope.execute([&] { RunTest(6, ConvertColorToGrayScale::ConversionType::Lightness, {0.2125f, 0.7154f, 0.0721f}, 0, false); });
 
   // Single Channel Algorithm testing
   // Red channel
-  std::cout << "Testing red channel algorithm..." << std::endl;
+  std::cout << "Testing red channel algorithm..." << '\n';
   scope.execute([&] { RunTest(7, ConvertColorToGrayScale::ConversionType::SingleChannel, {0.2125f, 0.7154f, 0.0721f}, 0, false); });
 
   // Green channel
-  std::cout << "Testing green channel algorithm..." << std::endl;
+  std::cout << "Testing green channel algorithm..." << '\n';
   scope.execute([&] { RunTest(8, ConvertColorToGrayScale::ConversionType::SingleChannel, {0.2125f, 0.7154f, 0.0721f}, 1, false); });
 
   // Blue channel
-  std::cout << "Testing blue channel algorithm..." << std::endl;
+  std::cout << "Testing blue channel algorithm..." << '\n';
   scope.execute([&] { RunTest(9, ConvertColorToGrayScale::ConversionType::SingleChannel, {0.2125f, 0.7154f, 0.0721f}, 2, false); });
 }
 
 TEST_CASE("SimplnxCore::ConvertColorToGrayScale: Multiple input arrays", "[SimplnxCore][ConvertColorToGrayScaleFilter]")
 {
-  UnitTest::LoadPlugins();
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::LoadPlugins();
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
   const std::array<std::string, 2> matrixNames = {"ColorsA", "ColorsB"};
@@ -415,11 +415,11 @@ TEST_CASE("SimplnxCore::ConvertColorToGrayScale: Multiple input arrays", "[Simpl
   for(usize arrayIndex = 0; arrayIndex < colors.size(); ++arrayIndex)
   {
     const usize tupleCount = expectedGray[arrayIndex].size();
-    auto* matrix = AttributeMatrix::Create(dataStructure, matrixNames[arrayIndex], {tupleCount});
-    REQUIRE(matrix != nullptr);
-    auto* input = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "RGB", {tupleCount}, {3}, matrix->getId());
-    REQUIRE(input != nullptr);
-    const auto writeResult = input->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint8>(colors[arrayIndex].data(), colors[arrayIndex].size()));
+    auto* matrixPtr = AttributeMatrix::Create(dataStructure, matrixNames[arrayIndex], {tupleCount});
+    REQUIRE(matrixPtr != nullptr);
+    auto* inputPtr = UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, "RGB", {tupleCount}, {3}, matrixPtr->getId());
+    REQUIRE(inputPtr != nullptr);
+    const auto writeResult = inputPtr->getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint8>(colors[arrayIndex].data(), colors[arrayIndex].size()));
     SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
     inputPaths.emplace_back(DataPath({matrixNames[arrayIndex], "RGB"}));
   }
@@ -427,11 +427,11 @@ TEST_CASE("SimplnxCore::ConvertColorToGrayScale: Multiple input arrays", "[Simpl
   ConvertColorToGrayScaleFilter filter;
   auto args = filter.getDefaultArguments();
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ConversionAlgorithm_Key, std::make_any<ChoicesParameter::ValueType>(0));
-  args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ColorWeights_Key, std::make_any<VectorFloat32Parameter::ValueType>(std::vector<float32>{0.2125F, 0.7154F, 0.0721F}));
+  args.insertOrAssign(ConvertColorToGrayScaleFilter::k_ColorWeights_Key, std::make_any<VectorFloat32ParameterType::ValueType>(std::vector<float32>{0.2125F, 0.7154F, 0.0721F}));
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_InputDataArrayPath_Key, std::make_any<MultiArraySelectionParameter::ValueType>(inputPaths));
   args.insertOrAssign(ConvertColorToGrayScaleFilter::k_OutputArrayPrefix_Key, std::make_any<std::string>("Gray_"));
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   auto execution = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(execution.result);
 
@@ -439,60 +439,60 @@ TEST_CASE("SimplnxCore::ConvertColorToGrayScale: Multiple input arrays", "[Simpl
   {
     const DataPath outputPath({matrixNames[arrayIndex], "Gray_RGB"});
     CAPTURE(outputPath.toString());
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(outputPath));
-    const auto& output = dataStructure.getDataRefAs<UInt8Array>(outputPath);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(outputPath));
+    const auto& output = dataStructure.getDataRefAs<UInt8ArrayType>(outputPath);
     REQUIRE(output.getNumberOfTuples() == expectedGray[arrayIndex].size());
     REQUIRE(output.getNumberOfComponents() == 1);
     for(usize tuple = 0; tuple < expectedGray[arrayIndex].size(); ++tuple)
     {
       CHECK(output[tuple] == expectedGray[arrayIndex][tuple]);
     }
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(inputPaths[arrayIndex]));
-    const auto& input = dataStructure.getDataRefAs<UInt8Array>(inputPaths[arrayIndex]);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(inputPaths[arrayIndex]));
+    const auto& input = dataStructure.getDataRefAs<UInt8ArrayType>(inputPaths[arrayIndex]);
     for(usize value = 0; value < colors[arrayIndex].size(); ++value)
     {
       CHECK(input[value] == colors[arrayIndex][value]);
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ConvertColorToGrayScale: Mismatched output path count", "[SimplnxCore][ConvertColorToGrayScaleFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const usize outputCount = GENERATE(1, 3);
   CAPTURE(outputCount);
   DataStructure dataStructure;
   for(const auto& name : {"A", "B"})
   {
-    auto* input = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, name, {1}, {3});
-    REQUIRE(input != nullptr);
-    input->fill(11);
+    auto* inputPtr = UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, name, {1}, {3});
+    REQUIRE(inputPtr != nullptr);
+    inputPtr->fill(11);
   }
-  auto* output = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Gray", {1}, {1});
-  REQUIRE(output != nullptr);
-  output->fill(199);
+  auto* outputPtr = UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, "Gray", {1}, {1});
+  REQUIRE(outputPtr != nullptr);
+  outputPtr->fill(199);
 
   ConvertColorToGrayScaleInputValues inputValues{};
-  inputValues.ConversionAlgorithm = 3;
-  inputValues.ColorWeights = {0.2125F, 0.7154F, 0.0721F};
-  inputValues.InputDataArrayPaths = {DataPath({"A"}), DataPath({"B"})};
-  inputValues.OutputDataArrayPaths.assign(outputCount, DataPath({"Gray"}));
+  inputValues.conversion_algorithm = 3;
+  inputValues.color_weights = {0.2125F, 0.7154F, 0.0721F};
+  inputValues.input_data_array_paths = {DataPath({"A"}), DataPath({"B"})};
+  inputValues.output_data_array_paths.assign(outputCount, DataPath({"Gray"}));
   // Invalid counts must be rejected before selecting an algorithm or writing any output.
   const auto result = ConvertColorToGrayScaleArrays(dataStructure, inputValues, {}, std::atomic_bool{false});
   SIMPLNX_RESULT_REQUIRE_INVALID(result);
   REQUIRE(result.errors().size() == 1);
   CHECK(result.errors()[0].code == -10706);
   CHECK(result.errors()[0].message == fmt::format("Grayscale conversion needs one output path for each input path. Input paths: 2. Output paths: {}.", outputCount));
-  CHECK((*output)[0] == 199);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  CHECK((*outputPtr)[0] == 199);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ConvertColorToGrayScaleFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ConvertColorToGrayScaleFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -505,22 +505,22 @@ TEST_CASE("SimplnxCore::ConvertColorToGrayScaleFilter: SIMPL Backwards Compatibi
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ConvertColorToGrayScaleFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ConvertColorToGrayScaleFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<ChoicesParameter::ValueType>(ConvertColorToGrayScaleFilter::k_ConversionAlgorithm_Key) == 0);
       // Successful pipeline loading verifies the FloatVec3FilterParameterConverter value.
       CHECK(args.value<int32>(ConvertColorToGrayScaleFilter::k_ColorChannel_Key) == 5);
@@ -535,9 +535,9 @@ TEST_CASE("SimplnxCore::PreflightColorToGrayScale: rejects invalid component rel
   struct RejectionCase
   {
     ChoicesParameter::ValueType Algorithm;
-    usize Components;
-    int32 Channel;
-    int32 Error;
+    usize components;
+    int32 channel;
+    int32 error;
   };
   const auto testCase = GENERATE(from_range(std::vector<RejectionCase>{{0, 1, 0, -10710},
                                                                        {0, 2, 0, -10710},
@@ -552,28 +552,28 @@ TEST_CASE("SimplnxCore::PreflightColorToGrayScale: rejects invalid component rel
                                                                        {3, 3, 3, -10711},
                                                                        {3, 4, 4, -10711}}));
   DataStructure dataStructure;
-  auto* inputPtr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Input", {2}, {testCase.Components});
+  auto* inputPtr = UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, "Input", {2}, {testCase.components});
   REQUIRE(inputPtr != nullptr);
   ConvertColorToGrayScaleInputValues values{};
-  values.ConversionAlgorithm = testCase.Algorithm;
-  values.ColorWeights = {0.25f, 0.5f, 0.25f};
-  values.ColorChannel = testCase.Channel;
-  values.InputDataArrayPaths = {DataPath({"Input"})};
-  values.OutputArrayPrefix = "gray";
+  values.conversion_algorithm = testCase.Algorithm;
+  values.color_weights = {0.25f, 0.5f, 0.25f};
+  values.color_channel = testCase.channel;
+  values.input_data_array_paths = {DataPath({"Input"})};
+  values.output_array_prefix = "gray";
   auto result = PreflightColorToGrayScale(dataStructure, values);
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE_FALSE(result.outputActions.errors().empty());
-  REQUIRE(result.outputActions.errors().front().code == testCase.Error);
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE_FALSE(result.output_actions.errors().empty());
+  REQUIRE(result.output_actions.errors().front().code == testCase.error);
 }
 
 TEST_CASE("SimplnxCore::PreflightColorToGrayScale: accepts valid component relationships", "[SimplnxCore][ConvertColorToGrayScaleFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
-  UnitTest::AlgorithmTestScope scope(scenario);
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::AlgorithmTestScope scope(scenario);
   const auto algorithm = GENERATE(0, 1, 2, 3);
   const auto components = GENERATE(3, 4);
   DataStructure dataStructure;
-  auto* inputPtr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Input", {1}, {static_cast<usize>(components)});
+  auto* inputPtr = UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, "Input", {1}, {static_cast<usize>(components)});
   REQUIRE(inputPtr != nullptr);
   (*inputPtr)[0] = 200;
   (*inputPtr)[1] = 100;
@@ -583,33 +583,33 @@ TEST_CASE("SimplnxCore::PreflightColorToGrayScale: accepts valid component relat
     (*inputPtr)[3] = 3;
   }
   ConvertColorToGrayScaleInputValues values{};
-  values.ConversionAlgorithm = algorithm;
-  values.ColorWeights = {0.25f, 0.5f, 0.25f};
-  values.ColorChannel = components - 1;
-  values.InputDataArrayPaths = {DataPath({"Input"})};
-  values.OutputArrayPrefix = "gray";
+  values.conversion_algorithm = algorithm;
+  values.color_weights = {0.25f, 0.5f, 0.25f};
+  values.color_channel = components - 1;
+  values.input_data_array_paths = {DataPath({"Input"})};
+  values.output_array_prefix = "gray";
   auto pre = PreflightColorToGrayScale(dataStructure, values);
-  SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
-  auto actionResult = pre.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(pre.output_actions);
+  auto actionResult = pre.output_actions.value().applyAll(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(actionResult);
   const std::atomic_bool cancel = false;
   scope.execute([&] {
     auto conversionResult = ConvertColorToGrayScaleArrays(dataStructure, values, {}, cancel);
     SIMPLNX_RESULT_REQUIRE_VALID(conversionResult);
   });
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(DataPath({"grayInput"})));
-  const auto& output = dataStructure.getDataRefAs<UInt8Array>(DataPath({"grayInput"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(DataPath({"grayInput"})));
+  const auto& output = dataStructure.getDataRefAs<UInt8ArrayType>(DataPath({"grayInput"}));
   const std::vector<uint8> expected = components == 3 ? std::vector<uint8>{113, 117, 125, 50} : std::vector<uint8>{113, 117, 125, 3};
   REQUIRE(output[0] == expected[algorithm]);
 }
 
 TEST_CASE("SimplnxCore::ConvertColorToGrayScale: single channel accepts scalar and two component input", "[SimplnxCore][ConvertColorToGrayScaleFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
-  UnitTest::AlgorithmTestScope scope(scenario);
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
+  unit_test::AlgorithmTestScope scope(scenario);
   const usize components = GENERATE(1, 2);
   DataStructure dataStructure;
-  auto* inputPtr = UInt8Array::CreateWithStore<DataStore<uint8>>(dataStructure, "Input", {1}, {components});
+  auto* inputPtr = UInt8ArrayType::CreateWithStore<DataStore<uint8>>(dataStructure, "Input", {1}, {components});
   REQUIRE(inputPtr != nullptr);
   (*inputPtr)[0] = 64;
   if(components == 2)
@@ -617,20 +617,20 @@ TEST_CASE("SimplnxCore::ConvertColorToGrayScale: single channel accepts scalar a
     (*inputPtr)[1] = 50;
   }
   ConvertColorToGrayScaleInputValues values{};
-  values.ConversionAlgorithm = 3;
-  values.ColorWeights = {0.25f, 0.5f, 0.25f};
-  values.ColorChannel = static_cast<int32>(components - 1);
-  values.InputDataArrayPaths = {DataPath({"Input"})};
-  values.OutputArrayPrefix = "gray";
+  values.conversion_algorithm = 3;
+  values.color_weights = {0.25f, 0.5f, 0.25f};
+  values.color_channel = static_cast<int32>(components - 1);
+  values.input_data_array_paths = {DataPath({"Input"})};
+  values.output_array_prefix = "gray";
   auto pre = PreflightColorToGrayScale(dataStructure, values);
-  SIMPLNX_RESULT_REQUIRE_VALID(pre.outputActions);
-  auto actionResult = pre.outputActions.value().applyAll(dataStructure, IDataAction::Mode::Execute);
+  SIMPLNX_RESULT_REQUIRE_VALID(pre.output_actions);
+  auto actionResult = pre.output_actions.value().applyAll(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(actionResult);
   const std::atomic_bool cancel = false;
   scope.execute([&] {
     auto conversionResult = ConvertColorToGrayScaleArrays(dataStructure, values, {}, cancel);
     SIMPLNX_RESULT_REQUIRE_VALID(conversionResult);
   });
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8Array>(DataPath({"grayInput"})));
-  REQUIRE(dataStructure.getDataRefAs<UInt8Array>(DataPath({"grayInput"}))[0] == (components == 1 ? 64 : 50));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(DataPath({"grayInput"})));
+  REQUIRE(dataStructure.getDataRefAs<UInt8ArrayType>(DataPath({"grayInput"}))[0] == (components == 1 ? 64 : 50));
 }

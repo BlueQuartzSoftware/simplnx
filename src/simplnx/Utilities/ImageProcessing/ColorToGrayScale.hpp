@@ -19,12 +19,12 @@ namespace nx::core
  */
 struct SIMPLNX_EXPORT ConvertColorToGrayScaleInputValues
 {
-  ChoicesParameter::ValueType ConversionAlgorithm;
-  VectorFloat32Parameter::ValueType ColorWeights;
-  int32 ColorChannel;
-  MultiArraySelectionParameter::ValueType InputDataArrayPaths;
-  std::vector<DataPath> OutputDataArrayPaths;
-  StringParameter::ValueType OutputArrayPrefix;
+  ChoicesParameter::ValueType conversion_algorithm{};
+  VectorFloat32ParameterType::ValueType color_weights;
+  int32 color_channel{};
+  MultiArraySelectionParameter::ValueType input_data_array_paths;
+  std::vector<DataPath> output_data_array_paths;
+  StringParameter::ValueType output_array_prefix;
 };
 
 /**
@@ -50,7 +50,7 @@ public:
   /**
    * @brief Destroys the non-owning grayscale dispatcher.
    */
-  ~ConvertColorToGrayScale() noexcept;
+  ~ConvertColorToGrayScale() noexcept = default;
 
   ConvertColorToGrayScale(const ConvertColorToGrayScale&) = delete;
   ConvertColorToGrayScale(ConvertColorToGrayScale&&) noexcept = delete;

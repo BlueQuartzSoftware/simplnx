@@ -54,21 +54,21 @@ inline usize FlatIndex(usize x, usize y, usize z, usize dimX, usize dimY)
  *        Returns the input array DataPath; the geometry and cell-data-matrix paths derive from it.
  */
 template <class T>
-inline DataPath BuildMorphologyImage(DataStructure& ds, usize dimX, usize dimY, usize dimZ)
+inline DataPath BuildMorphologyImage(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ)
 {
   const ShapeType cellShape = {dimZ, dimY, dimX};
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<T>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
 
   for(usize z = 0; z < dimZ; ++z)
   {
@@ -97,21 +97,21 @@ inline DataPath BuildMorphologyImage(DataStructure& ds, usize dimX, usize dimY, 
  *        branches). Returns the input array DataPath.
  */
 template <class T>
-inline DataPath BuildBinaryPatternImage(DataStructure& ds, usize dim, T foreground, T background)
+inline DataPath BuildBinaryPatternImage(DataStructure& dataStructure, usize dim, T foreground, T background)
 {
   const ShapeType cellShape = {dim, dim, dim};
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dim, dim, dim});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  imageGeomPtr->setDimensions({dim, dim, dim});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<T>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
 
   const usize total = ref.getSize();
   constexpr usize k_ChunkValues = 65536;
@@ -145,21 +145,21 @@ inline DataPath BuildBinaryPatternImage(DataStructure& ds, usize dim, T foregrou
  * (multi-label) input at execution. Each filter's "Rejects non-binary input at execute" test covers that path.
  */
 template <class T>
-inline DataPath BuildBinaryLabelImage(DataStructure& ds, usize dimX, usize dimY, usize dimZ, T foreground, T background)
+inline DataPath BuildBinaryLabelImage(DataStructure& dataStructure, usize dimX, usize dimY, usize dimZ, T foreground, T background)
 {
   const ShapeType cellShape = {dimZ, dimY, dimX};
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dimX, dimY, dimZ});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  imageGeomPtr->setDimensions({dimX, dimY, dimZ});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
 
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {1});
-  auto* array = DataArray<T>::Create(ds, "Input", store, cellAM->getId());
-  auto& ref = array->getDataStoreRef();
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {1});
+  auto* arrayPtr = DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
+  auto& ref = arrayPtr->getDataStoreRef();
 
   for(usize z = 0; z < dimZ; ++z)
   {
@@ -180,18 +180,18 @@ inline DataPath BuildBinaryLabelImage(DataStructure& ds, usize dimX, usize dimY,
  *        Injected into the parity/oracle helpers so Task 6's composite morphology filters (Open/Close/...),
  *        which share the same kernel-parameter shape, can reuse the exact same driver with their own keys.
  */
-using KernelParamSetter = std::function<void(Arguments&, uint64 kernelType, const std::vector<uint32>& radius)>;
+using KernelParamSetterType = std::function<void(Arguments&, uint64 kernelType, const std::vector<uint32>& radius)>;
 
 /**
  * @brief Default kernel-parameter setter for any filter exposing k_KernelType_Key / k_KernelRadius_Key with
  *        the grayscale-morphology semantics (a ChoicesParameter index + an X/Y/Z uint32 radius).
  */
 template <class NewFilterT>
-inline KernelParamSetter DefaultKernelParamSetter()
+inline KernelParamSetterType DefaultKernelParamSetter()
 {
   return [](Arguments& args, uint64 kernelType, const std::vector<uint32>& radius) {
     args.insertOrAssign(NewFilterT::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
-    args.insertOrAssign(NewFilterT::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(radius));
+    args.insertOrAssign(NewFilterT::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(radius));
   };
 }
 
@@ -201,11 +201,11 @@ inline KernelParamSetter DefaultKernelParamSetter()
  *        and pins Safe Border to @p safeBorder. Pass @c false to validate the skip-OOB composition oracle.
  */
 template <class NewFilterT>
-inline KernelParamSetter CompositeKernelParamSetter(bool safeBorder)
+inline KernelParamSetterType CompositeKernelParamSetter(bool safeBorder)
 {
   return [safeBorder](Arguments& args, uint64 kernelType, const std::vector<uint32>& radius) {
     args.insertOrAssign(NewFilterT::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
-    args.insertOrAssign(NewFilterT::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(radius));
+    args.insertOrAssign(NewFilterT::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(radius));
     args.insertOrAssign(NewFilterT::k_SafeBorder_Key, std::make_any<bool>(safeBorder));
   };
 }
@@ -217,11 +217,11 @@ inline KernelParamSetter CompositeKernelParamSetter(bool safeBorder)
  *        Task 5's binary composites reuse it (same kernel + fg/bg/boundary shape).
  */
 template <class NewFilterT>
-inline KernelParamSetter BinaryKernelParamSetter(float64 foreground, float64 background, bool boundaryToForeground)
+inline KernelParamSetterType BinaryKernelParamSetter(float64 foreground, float64 background, bool boundaryToForeground)
 {
   return [foreground, background, boundaryToForeground](Arguments& args, uint64 kernelType, const std::vector<uint32>& radius) {
     args.insertOrAssign(NewFilterT::k_KernelType_Key, std::make_any<ChoicesParameter::ValueType>(static_cast<ChoicesParameter::ValueType>(kernelType)));
-    args.insertOrAssign(NewFilterT::k_KernelRadius_Key, std::make_any<VectorUInt32Parameter::ValueType>(radius));
+    args.insertOrAssign(NewFilterT::k_KernelRadius_Key, std::make_any<VectorUInt32ParameterType::ValueType>(radius));
     args.insertOrAssign(NewFilterT::k_ForegroundValue_Key, std::make_any<float64>(foreground));
     args.insertOrAssign(NewFilterT::k_BackgroundValue_Key, std::make_any<float64>(background));
     args.insertOrAssign(NewFilterT::k_BoundaryToForeground_Key, std::make_any<bool>(boundaryToForeground));
@@ -239,24 +239,24 @@ inline KernelParamSetter BinaryKernelParamSetter(float64 foreground, float64 bac
  *        before the shared PreflightImageFilter type/geometry checks. Isolates that non-scalar rejection guard.
  */
 template <class NewFilterT, class T>
-inline void RequirePreflightRejectsNonScalar(int32 expectedErrorCode, const KernelParamSetter& setKernelParams)
+inline void RequirePreflightRejectsNonScalar(int32 expectedErrorCode, const KernelParamSetterType& setKernelParams)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  constexpr usize dim = 4;
-  const ShapeType cellShape = {dim, dim, dim};
-  DataStructure ds;
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({dim, dim, dim});
-  REQUIRE(imageGeom->setSpacing({1.0f, 1.0f, 1.0f}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 0.0f, 0.0f}).valid());
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  constexpr usize k_Dim = 4;
+  const ShapeType cellShape = {k_Dim, k_Dim, k_Dim};
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  imageGeomPtr->setDimensions({k_Dim, k_Dim, k_Dim});
+  REQUIRE(imageGeomPtr->setSpacing({1.0f, 1.0f, 1.0f}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<T>(ds, inputPath, cellShape, {3}); // 3-component (non-scalar)
-  DataArray<T>::Create(ds, "Input", store, cellAM->getId());
+  auto store = data_store_utilities::CreateDataStore<T>(dataStructure, inputPath, cellShape, {3}); // 3-component (non-scalar)
+  DataArray<T>::Create(dataStructure, "Input", store, cellAmPtr->getId());
 
   NewFilterT filter;
   Arguments args;
@@ -265,9 +265,9 @@ inline void RequirePreflightRejectsNonScalar(int32 expectedErrorCode, const Kern
   args.insertOrAssign(NewFilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   setKernelParams(args, static_cast<uint64>(KernelType::Box), {1, 1, 1});
 
-  const auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().front().code == expectedErrorCode);
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().front().code == expectedErrorCode);
 }
 
 //------------------------------------------------------------------------------
@@ -276,9 +276,9 @@ struct MorphCase
 {
   const char* label;
   std::vector<uint32> radius;
-  usize dimX;
-  usize dimY;
-  usize dimZ;
+  usize dim_x;
+  usize dim_y;
+  usize dim_z;
 };
 
 namespace detail
@@ -287,7 +287,7 @@ namespace detail
 // parameters. The function then requires that preflight and execute succeed. It reads the key constants from
 // NewFilterT.
 template <class NewFilterT>
-inline void RunFilter(IFilter& filter, DataStructure& ds, const DataPath& inputPath, uint64 kernelType, const std::vector<uint32>& radius, const KernelParamSetter& setKernelParams)
+inline void RunFilter(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, uint64 kernelType, const std::vector<uint32>& radius, const KernelParamSetterType& setKernelParams)
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
@@ -295,9 +295,9 @@ inline void RunFilter(IFilter& filter, DataStructure& ds, const DataPath& inputP
   args.insertOrAssign(NewFilterT::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(NewFilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   setKernelParams(args, kernelType, radius);
-  auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 } // namespace detail
@@ -316,17 +316,17 @@ inline void RunFilter(IFilter& filter, DataStructure& ds, const DataPath& inputP
  */
 template <class NewFilterT, class T>
 inline void RunMorphologyComputedExpected(const std::function<DataPath(DataStructure&, usize, usize, usize)>& buildImage, usize dimX, usize dimY, usize dimZ, KernelType kernelType,
-                                          const std::array<int32, 3>& radius, MorphOp op, const KernelParamSetter& setKernelParams)
+                                          const std::array<int32, 3>& radius, MorphOp op, const KernelParamSetterType& setKernelParams)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  const DataPath inputPath = buildImage(ds, dimX, dimY, dimZ);
+  DataStructure dataStructure;
+  const DataPath inputPath = buildImage(dataStructure, dimX, dimY, dimZ);
 
   // Snapshot the input BEFORE running the filter (the filter writes a separate Output array, but read the
   // input independently so the oracle never depends on filter state).
-  const auto& inStore = ds.getDataRefAs<DataArray<T>>(inputPath).getDataStoreRef();
+  const auto& inStore = dataStructure.getDataRefAs<DataArray<T>>(inputPath).getDataStoreRef();
   std::vector<T> input(inStore.getSize());
   for(usize i = 0; i < input.size(); ++i)
   {
@@ -334,7 +334,7 @@ inline void RunMorphologyComputedExpected(const std::function<DataPath(DataStruc
   }
 
   NewFilterT filter;
-  detail::RunFilter<NewFilterT>(filter, ds, inputPath, static_cast<uint64>(kernelType), {static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])},
+  detail::RunFilter<NewFilterT>(filter, dataStructure, inputPath, static_cast<uint64>(kernelType), {static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])},
                                 setKernelParams);
 
   // Independent oracle over the SAME offsets, but a plain triple-loop with explicit OOB skipping --
@@ -344,7 +344,7 @@ inline void RunMorphologyComputedExpected(const std::function<DataPath(DataStruc
   const bool dilate = (op == MorphOp::Dilate);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<T>>(outputPath).getDataStoreRef();
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<T>>(outputPath).getDataStoreRef();
 
   for(usize z = 0; z < dimZ; ++z)
   {
@@ -476,16 +476,16 @@ inline std::vector<T> BinaryMorphologyCompositeFgOracle(const std::vector<T>& in
  */
 template <class NewFilterT, class T>
 inline void RunBinaryMorphologyCompositeComputedExpected(const std::function<DataPath(DataStructure&, usize, usize, usize)>& buildImage, usize dimX, usize dimY, usize dimZ, KernelType kernelType,
-                                                         const std::array<int32, 3>& radius, BinaryCompositeKind kind, T fg, T bg, const KernelParamSetter& setKernelParams)
+                                                         const std::array<int32, 3>& radius, BinaryCompositeKind kind, T fg, T bg, const KernelParamSetterType& setKernelParams)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  const DataPath inputPath = buildImage(ds, dimX, dimY, dimZ);
+  DataStructure dataStructure;
+  const DataPath inputPath = buildImage(dataStructure, dimX, dimY, dimZ);
 
   // Snapshot the input independently of the filter (which writes a separate "Output" array).
-  const auto& inStore = ds.getDataRefAs<DataArray<T>>(inputPath).getDataStoreRef();
+  const auto& inStore = dataStructure.getDataRefAs<DataArray<T>>(inputPath).getDataStoreRef();
   std::vector<T> input(inStore.getSize());
   for(usize i = 0; i < input.size(); ++i)
   {
@@ -493,7 +493,7 @@ inline void RunBinaryMorphologyCompositeComputedExpected(const std::function<Dat
   }
 
   NewFilterT filter;
-  detail::RunFilter<NewFilterT>(filter, ds, inputPath, static_cast<uint64>(kernelType), {static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])},
+  detail::RunFilter<NewFilterT>(filter, dataStructure, inputPath, static_cast<uint64>(kernelType), {static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])},
                                 setKernelParams);
 
   const StructuringElement se = MakeStructuringElement(kernelType, radius);
@@ -502,7 +502,7 @@ inline void RunBinaryMorphologyCompositeComputedExpected(const std::function<Dat
   const std::vector<T> expected = BinaryMorphologyCompositeFgOracle<T>(input, dimX, dimY, dimZ, se, kind, fg, bg);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<T>>(outputPath).getDataStoreRef();
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<T>>(outputPath).getDataStoreRef();
   REQUIRE(outStore.getSize() == expected.size());
   for(usize i = 0; i < expected.size(); ++i)
   {
@@ -587,16 +587,16 @@ enum class CompositeKind
  */
 template <class NewFilterT, class T>
 inline void RunMorphologyCompositeComputedExpected(const std::function<DataPath(DataStructure&, usize, usize, usize)>& buildImage, usize dimX, usize dimY, usize dimZ, KernelType kernelType,
-                                                   const std::array<int32, 3>& radius, CompositeKind kind, const KernelParamSetter& setKernelParams)
+                                                   const std::array<int32, 3>& radius, CompositeKind kind, const KernelParamSetterType& setKernelParams)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  const DataPath inputPath = buildImage(ds, dimX, dimY, dimZ);
+  DataStructure dataStructure;
+  const DataPath inputPath = buildImage(dataStructure, dimX, dimY, dimZ);
 
   // Snapshot the input independently of the filter (which writes a separate "Output" array).
-  const auto& inStore = ds.getDataRefAs<DataArray<T>>(inputPath).getDataStoreRef();
+  const auto& inStore = dataStructure.getDataRefAs<DataArray<T>>(inputPath).getDataStoreRef();
   std::vector<T> input(inStore.getSize());
   for(usize i = 0; i < input.size(); ++i)
   {
@@ -604,7 +604,7 @@ inline void RunMorphologyCompositeComputedExpected(const std::function<DataPath(
   }
 
   NewFilterT filter;
-  detail::RunFilter<NewFilterT>(filter, ds, inputPath, static_cast<uint64>(kernelType), {static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])},
+  detail::RunFilter<NewFilterT>(filter, dataStructure, inputPath, static_cast<uint64>(kernelType), {static_cast<uint32>(radius[0]), static_cast<uint32>(radius[1]), static_cast<uint32>(radius[2])},
                                 setKernelParams);
 
   const StructuringElement se = MakeStructuringElement(kernelType, radius);
@@ -649,7 +649,7 @@ inline void RunMorphologyCompositeComputedExpected(const std::function<DataPath(
   }
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<T>>(outputPath).getDataStoreRef();
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<T>>(outputPath).getDataStoreRef();
   REQUIRE(outStore.getSize() == expected.size());
   for(usize i = 0; i < expected.size(); ++i)
   {
@@ -667,19 +667,19 @@ inline void RunMorphologyCompositeComputedExpected(const std::function<DataPath(
  */
 template <class NewFilterT, class T>
 inline void RunMorphologyEmptySEPassthrough(const std::function<DataPath(DataStructure&, usize, usize, usize)>& buildImage, usize dimX, usize dimY, usize dimZ,
-                                            const KernelParamSetter& setKernelParams)
+                                            const KernelParamSetterType& setKernelParams)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   // Sanity: confirm Annulus {0,0,0} really is the empty-SE case this test targets.
   REQUIRE(MakeStructuringElement(KernelType::Annulus, {0, 0, 0}).offsets.empty());
 
-  DataStructure ds;
-  const DataPath inputPath = buildImage(ds, dimX, dimY, dimZ);
+  DataStructure dataStructure;
+  const DataPath inputPath = buildImage(dataStructure, dimX, dimY, dimZ);
 
   // Snapshot the input independently, then run the filter (which writes a separate "Output" array).
-  const auto& inStore = ds.getDataRefAs<DataArray<T>>(inputPath).getDataStoreRef();
+  const auto& inStore = dataStructure.getDataRefAs<DataArray<T>>(inputPath).getDataStoreRef();
   std::vector<T> input(inStore.getSize());
   for(usize i = 0; i < input.size(); ++i)
   {
@@ -687,10 +687,10 @@ inline void RunMorphologyEmptySEPassthrough(const std::function<DataPath(DataStr
   }
 
   NewFilterT filter;
-  detail::RunFilter<NewFilterT>(filter, ds, inputPath, static_cast<uint64>(KernelType::Annulus), {0, 0, 0}, setKernelParams);
+  detail::RunFilter<NewFilterT>(filter, dataStructure, inputPath, static_cast<uint64>(KernelType::Annulus), {0, 0, 0}, setKernelParams);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<T>>(outputPath).getDataStoreRef();
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<T>>(outputPath).getDataStoreRef();
   REQUIRE(outStore.getSize() == input.size());
   for(usize i = 0; i < input.size(); ++i)
   {
@@ -710,10 +710,10 @@ inline void RunMorphologyEmptySEPassthrough(const std::function<DataPath(DataStr
  * @p committedMd5 (md5-validity-first, plan Sec.4). The case is pinned ForceInCore.
  */
 template <class FilterT>
-inline void RunMorphologyMd5ItkGolden(const std::string& inputFile, const std::string& committedMd5, uint64 kernelType, const std::vector<uint32>& radius, const KernelParamSetter& setKernelParams)
+inline void RunMorphologyMd5ItkGolden(const std::string& inputFile, const std::string& committedMd5, uint64 kernelType, const std::vector<uint32>& radius, const KernelParamSetterType& setKernelParams)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath cellData = geom.createChildPath("CellData");
@@ -721,8 +721,8 @@ inline void RunMorphologyMd5ItkGolden(const std::string& inputFile, const std::s
   const DataPath output = cellData.createChildPath("Output");
 
   // --- read input through OUR reader ---
-  DataStructure ds;
-  const Result<> readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath(inputFile), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const Result<> readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath(inputFile), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
 
   // --- run OUR filter with the case's kernel parameters ---
@@ -732,17 +732,17 @@ inline void RunMorphologyMd5ItkGolden(const std::string& inputFile, const std::s
   args.insertOrAssign(FilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   setKernelParams(args, kernelType, radius);
   FilterT filter;
-  const auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  const auto executeResult = filter.execute(ds, args);
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // --- (A) DURABLE golden: md5-validity-first (plan Sec.4) -- our output's md5 must equal the committed hash. ---
-  const std::string ourMd5 = ip_golden::ComputeMd5Hash(ds, output);
+  const std::string ourMd5 = ip_golden::ComputeMd5Hash(dataStructure, output);
   INFO(fmt::format("{} md5: ours='{}' committed='{}'", inputFile, ourMd5, committedMd5));
   REQUIRE(ourMd5 == committedMd5);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace morph_test
 
@@ -793,28 +793,28 @@ void RequireKernelRadiusPreflight()
 {
   const auto application = Application::GetOrCreateInstance();
   REQUIRE(application != nullptr);
-  const UnitTest::PreferencesSentinel prefs(DataStorageMode::ForceInCore, 0);
-  DataStructure ds;
-  const DataPath inputPath = BuildMorphologyImage<uint8>(ds, 3, 1, 1);
+  const unit_test::PreferencesSentinel prefs(DataStorageMode::ForceInCore, 0);
+  DataStructure dataStructure;
+  const DataPath inputPath = BuildMorphologyImage<uint8>(dataStructure, 3, 1, 1);
   const std::array<std::vector<uint32>, 2> invalidRadii = {{{std::numeric_limits<uint32>::max(), 0, 0}, {0, 2147483647u, 0}}};
   FilterT filter;
   for(usize i = 0; i < invalidRadii.size(); ++i)
   {
     DYNAMIC_SECTION("Invalid radius axis " << i)
     {
-      auto result = filter.preflight(ds, KernelRadiusTestArguments<FilterT>(inputPath, invalidRadii[i]));
-      SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-      REQUIRE(result.outputActions.errors().front().code == ImageProcessing::k_KernelRadiusRangeError);
-      const auto& message = result.outputActions.errors().front().message;
+      auto result = filter.preflight(dataStructure, KernelRadiusTestArguments<FilterT>(inputPath, invalidRadii[i]));
+      SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+      REQUIRE(result.output_actions.errors().front().code == ImageProcessing::k_KernelRadiusRangeError);
+      const auto& message = result.output_actions.errors().front().message;
       REQUIRE(message.find(i == 0 ? "X" : "Y") != std::string::npos);
       REQUIRE(message.find(std::to_string(invalidRadii[i][i])) != std::string::npos);
       REQUIRE(message.find("2147483646") != std::string::npos);
-      auto executeResult = filter.execute(ds, KernelRadiusTestArguments<FilterT>(inputPath, invalidRadii[i]));
+      auto executeResult = filter.execute(dataStructure, KernelRadiusTestArguments<FilterT>(inputPath, invalidRadii[i]));
       SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
       REQUIRE(executeResult.result.errors().front().code == ImageProcessing::k_KernelRadiusRangeError);
-      REQUIRE_FALSE(ds.containsData(inputPath.replaceName("Output")));
-      REQUIRE_NOTHROW(ds.getDataRefAs<UInt8Array>(inputPath));
-      const auto& input = ds.getDataRefAs<UInt8Array>(inputPath);
+      REQUIRE_FALSE(dataStructure.containsData(inputPath.replaceName("Output")));
+      REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(inputPath));
+      const auto& input = dataStructure.getDataRefAs<UInt8ArrayType>(inputPath);
       for(usize x = 0; x < 3; ++x)
       {
         REQUIRE(input[x] == (x + ((x * 131) % 37)) % 200);
@@ -823,10 +823,10 @@ void RequireKernelRadiusPreflight()
   }
   SECTION("Last representable Z radius")
   {
-    auto result = filter.preflight(ds, KernelRadiusTestArguments<FilterT>(inputPath, {0, 0, 2147483646u}));
-    SIMPLNX_RESULT_REQUIRE_VALID(result.outputActions);
+    auto result = filter.preflight(dataStructure, KernelRadiusTestArguments<FilterT>(inputPath, {0, 0, 2147483646u}));
+    SIMPLNX_RESULT_REQUIRE_VALID(result.output_actions);
   }
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 /**
@@ -837,28 +837,28 @@ void RequireKernelRadiusPreflight()
 template <class FilterT>
 void RequireOrdinaryKernelRadius(const std::array<uint8, 3>& expected)
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
-  DataStructure ds;
-  const DataPath inputPath = BuildMorphologyImage<uint8>(ds, 3, 1, 1);
-  REQUIRE_NOTHROW(ds.getDataRefAs<UInt8Array>(inputPath));
-  auto& input = ds.getDataRefAs<UInt8Array>(inputPath);
+  unit_test::AlgorithmTestScope scope(scenario);
+  DataStructure dataStructure;
+  const DataPath inputPath = BuildMorphologyImage<uint8>(dataStructure, 3, 1, 1);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(inputPath));
+  auto& input = dataStructure.getDataRefAs<UInt8ArrayType>(inputPath);
   const std::array<uint8, 3> values = {5, 0, 5};
   auto writeResult = input.getDataStoreRef().copyFromBuffer(0, nonstd::span<const uint8>(values));
   SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
   FilterT filter;
   auto args = KernelRadiusTestArguments<FilterT>(inputPath, {1, 0, 0});
-  auto result = scope.executeFilter(filter, ds, args);
+  auto result = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   const auto outputPath = inputPath.replaceName("Output");
-  REQUIRE_NOTHROW(ds.getDataRefAs<UInt8Array>(outputPath));
-  const auto& output = ds.getDataRefAs<UInt8Array>(outputPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt8ArrayType>(outputPath));
+  const auto& output = dataStructure.getDataRefAs<UInt8ArrayType>(outputPath);
   for(usize i = 0; i < expected.size(); ++i)
   {
     REQUIRE(output[i] == expected[i]);
   }
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace morph_test
 
@@ -870,16 +870,16 @@ namespace morph_test
  * @param dims X, Y and Z image extents in cells.
  * @return Input array path.
  */
-inline DataPath BuildKernelRadiusMetadata(DataStructure& ds, const SizeVec3& dims)
+inline DataPath BuildKernelRadiusMetadata(DataStructure& dataStructure, const SizeVec3Type& dims)
 {
   const ShapeType shape = {dims[2], dims[1], dims[0]};
-  auto* geom = ImageGeom::Create(ds, "Image Geometry");
-  geom->setDimensions(dims);
-  auto* cells = AttributeMatrix::Create(ds, "CellData", shape, geom->getId());
-  geom->setCellData(*cells);
+  auto* geomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  geomPtr->setDimensions(dims);
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, "CellData", shape, geomPtr->getId());
+  geomPtr->setCellData(*cellsPtr);
   auto store = EmptyDataStore<uint8>::Create(shape, {1}, "");
   SIMPLNX_RESULT_REQUIRE_VALID(store);
-  DataArray<uint8>::Create(ds, "Input", std::move(store.value()), cells->getId());
+  DataArray<uint8>::Create(dataStructure, "Input", std::move(store.value()), cellsPtr->getId());
   return DataPath({"Image Geometry", "CellData", "Input"});
 }
 
@@ -903,21 +903,21 @@ inline void RequireSingleGeometryContext(const std::string& message, const DataP
 template <class FilterT>
 void RequireKernelRadiusLayoutPreflight()
 {
-  DataStructure ds;
-  const auto inputPath = BuildKernelRadiusMetadata(ds, {3, 3, 1024});
+  DataStructure dataStructure;
+  const auto inputPath = BuildKernelRadiusMetadata(dataStructure, {3, 3, 1024});
   FilterT filter;
-  auto result = filter.preflight(ds, KernelRadiusTestArguments<FilterT>(inputPath, {100000000, 100000000, 0}, true));
-  SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-  REQUIRE(result.outputActions.errors().front().code == ImageProcessing::k_MorphologyVolumeError);
-  REQUIRE(result.outputActions.errors().front().message.find("volume") != std::string::npos);
+  auto result = filter.preflight(dataStructure, KernelRadiusTestArguments<FilterT>(inputPath, {100000000, 100000000, 0}, true));
+  SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+  REQUIRE(result.output_actions.errors().front().code == ImageProcessing::k_MorphologyVolumeError);
+  REQUIRE(result.output_actions.errors().front().message.find("volume") != std::string::npos);
   const auto geometryPath = inputPath.getParent().getParent();
-  RequireSingleGeometryContext(result.outputActions.errors().front().message, geometryPath);
+  RequireSingleGeometryContext(result.output_actions.errors().front().message, geometryPath);
   // Public execute repeats preflight and must preserve one copy of the geometry context.
-  auto executeResult = filter.execute(ds, KernelRadiusTestArguments<FilterT>(inputPath, {100000000, 100000000, 0}, true));
+  auto executeResult = filter.execute(dataStructure, KernelRadiusTestArguments<FilterT>(inputPath, {100000000, 100000000, 0}, true));
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().front().code == ImageProcessing::k_MorphologyVolumeError);
   RequireSingleGeometryContext(executeResult.result.errors().front().message, geometryPath);
-  REQUIRE_FALSE(ds.containsData(inputPath.replaceName("Output")));
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  REQUIRE_FALSE(dataStructure.containsData(inputPath.replaceName("Output")));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace morph_test

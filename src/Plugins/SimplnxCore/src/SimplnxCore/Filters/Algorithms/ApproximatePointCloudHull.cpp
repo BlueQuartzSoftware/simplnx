@@ -1,5 +1,7 @@
 #include "ApproximatePointCloudHull.hpp"
 
+#include <algorithm>
+
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
 #include "simplnx/DataStructure/Geometry/VertexGeom.hpp"
@@ -9,7 +11,7 @@ using namespace nx::core;
 
 namespace
 {
-bool validNeighbor(const SizeVec3& dims, const int64 neighborhood[78], usize index, int64 x, int64 y, int64 z)
+bool ValidNeighbor(const SizeVec3Type& dims, const int64 neighborhood[78], usize index, int64 x, int64 y, int64 z)
 {
   int64 modX = x + neighborhood[3 * index + 0];
   int64 modY = y + neighborhood[3 * index + 1];
@@ -30,25 +32,24 @@ ApproximatePointCloudHull::ApproximatePointCloudHull(DataStructure& dataStructur
 }
 
 // -----------------------------------------------------------------------------
-ApproximatePointCloudHull::~ApproximatePointCloudHull() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> ApproximatePointCloudHull::operator()()
 {
-  float inverseResolution[3] = {1.0f / m_InputValues->GridResolution[0], 1.0f / m_InputValues->GridResolution[1], 1.0f / m_InputValues->GridResolution[2]};
+  float inverseResolution[3] = {1.0f / m_InputValues->grid_resolution[0], 1.0f / m_InputValues->grid_resolution[1], 1.0f / m_InputValues->grid_resolution[2]};
 
-  auto* source = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->InputVertexGeometryPath);
-  auto* verts = source->getVertices();
+  auto* sourcePtr = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->input_vertex_geometry_path);
+  auto* vertsPtr = sourcePtr->getVertices();
 
   DataStructure temp;
-  auto* samplingGrid = ImageGeom::Create(temp, "Image Geometry");
-  if(auto result = samplingGrid->setSpacing(m_InputValues->GridResolution[0], m_InputValues->GridResolution[1], m_InputValues->GridResolution[2]); result.invalid())
+  auto* samplingGridPtr = ImageGeom::Create(temp, "Image Geometry");
+  if(auto result = samplingGridPtr->setSpacing(m_InputValues->grid_resolution[0], m_InputValues->grid_resolution[1], m_InputValues->grid_resolution[2]); result.invalid())
   {
     return result;
   }
 
-  usize numVerts = source->getNumberOfVertices();
-  auto& vertex = source->getVertices()->getDataStoreRef();
+  usize numVerts = sourcePtr->getNumberOfVertices();
+  auto& vertex = sourcePtr->getVertices()->getDataStoreRef();
 
   std::vector<float32> meshMaxExtents;
   std::vector<float32> meshMinExtents;
@@ -61,30 +62,12 @@ Result<> ApproximatePointCloudHull::operator()()
 
   for(int64 i = 0; i < numVerts; i++)
   {
-    if(vertex[3 * i] > meshMaxExtents[0])
-    {
-      meshMaxExtents[0] = vertex[3 * i];
-    }
-    if(vertex[3 * i + 1] > meshMaxExtents[1])
-    {
-      meshMaxExtents[1] = vertex[3 * i + 1];
-    }
-    if(vertex[3 * i + 2] > meshMaxExtents[2])
-    {
-      meshMaxExtents[2] = vertex[3 * i + 2];
-    }
-    if(vertex[3 * i] < meshMinExtents[0])
-    {
-      meshMinExtents[0] = vertex[3 * i];
-    }
-    if(vertex[3 * i + 1] < meshMinExtents[1])
-    {
-      meshMinExtents[1] = vertex[3 * i + 1];
-    }
-    if(vertex[3 * i + 2] < meshMinExtents[2])
-    {
-      meshMinExtents[2] = vertex[3 * i + 2];
-    }
+    meshMaxExtents[0] = std::max<float>(vertex[3 * i], meshMaxExtents[0]);
+    meshMaxExtents[1] = std::max<float>(vertex[3 * i + 1], meshMaxExtents[1]);
+    meshMaxExtents[2] = std::max<float>(vertex[3 * i + 2], meshMaxExtents[2]);
+    meshMinExtents[0] = std::min<float>(vertex[3 * i], meshMinExtents[0]);
+    meshMinExtents[1] = std::min<float>(vertex[3 * i + 1], meshMinExtents[1]);
+    meshMinExtents[2] = std::min<float>(vertex[3 * i + 2], meshMinExtents[2]);
   }
 
   int64 bboxMin[3] = {0, 0, 0};
@@ -101,11 +84,11 @@ Result<> ApproximatePointCloudHull::operator()()
   auto dims1 = static_cast<usize>(bboxMax[0] - bboxMin[0] + 1);
   auto dims2 = static_cast<usize>(bboxMax[1] - bboxMin[1] + 1);
   auto dims3 = static_cast<usize>(bboxMax[2] - bboxMin[2] + 1);
-  SizeVec3 dims(std::vector<usize>{dims1, dims2, dims3});
-  samplingGrid->setDimensions(dims);
+  SizeVec3Type dims(std::vector<usize>{dims1, dims2, dims3});
+  samplingGridPtr->setDimensions(dims);
 
-  int64 multiplier[3] = {1, static_cast<int64>(samplingGrid->getNumXCells()), static_cast<int64>(samplingGrid->getNumXCells() * samplingGrid->getNumYCells())};
-  std::vector<std::vector<int64>> vertsInVoxels(samplingGrid->getNumberOfCells());
+  int64 multiplier[3] = {1, static_cast<int64>(samplingGridPtr->getNumXCells()), static_cast<int64>(samplingGridPtr->getNumXCells() * samplingGridPtr->getNumYCells())};
+  std::vector<std::vector<int64>> vertsInVoxels(samplingGridPtr->getNumberOfCells());
 
   ThrottledMessageHandler progressThrottle(m_MessageHandler);
   progressThrottle.reset(numVerts, "Mapping Vertices to Voxels");
@@ -123,9 +106,9 @@ Result<> ApproximatePointCloudHull::operator()()
         progressThrottle.updatePercent(v);
       }
     }
-    auto i = static_cast<int64>(std::floor((*verts)[3 * v + 0] * inverseResolution[0])) - bboxMin[0];
-    auto j = static_cast<int64>(std::floor((*verts)[3 * v + 1] * inverseResolution[1])) - bboxMin[1];
-    auto k = static_cast<int64>(std::floor((*verts)[3 * v + 2] * inverseResolution[2])) - bboxMin[2];
+    auto i = static_cast<int64>(std::floor((*vertsPtr)[3 * v + 0] * inverseResolution[0])) - bboxMin[0];
+    auto j = static_cast<int64>(std::floor((*vertsPtr)[3 * v + 1] * inverseResolution[1])) - bboxMin[1];
+    auto k = static_cast<int64>(std::floor((*vertsPtr)[3 * v + 2] * inverseResolution[2])) - bboxMin[2];
     int64 index = i * multiplier[0] + j * multiplier[1] + k * multiplier[2];
     vertsInVoxels[index].push_back(v);
   }
@@ -162,7 +145,7 @@ Result<> ApproximatePointCloudHull::operator()()
 
         for(usize n = 0; n < 26; n++)
         {
-          if(validNeighbor(dims, neighborhood, n, x, y, z))
+          if(ValidNeighbor(dims, neighborhood, n, x, y, z))
           {
             usize neighborIndex = ((z + neighborhood[3 * n + 2]) * dims[1] * dims[0]) + ((y + neighborhood[3 * n + 1]) * dims[0]) + (x + neighborhood[3 * n + 0]);
             if(vertsInVoxels[neighborIndex].empty())
@@ -172,14 +155,14 @@ Result<> ApproximatePointCloudHull::operator()()
           }
         }
 
-        if(emtpyNeighbors > m_InputValues->MinEmptyNeighbors)
+        if(emtpyNeighbors > m_InputValues->min_empty_neighbors)
         {
           for(auto vert : vertsInVoxels[index])
           {
             vertCounter++;
-            xAvg += (*verts)[3 * vert + 0];
-            yAvg += (*verts)[3 * vert + 1];
-            zAvg += (*verts)[3 * vert + 2];
+            xAvg += (*vertsPtr)[3 * vert + 0];
+            yAvg += (*vertsPtr)[3 * vert + 1];
+            zAvg += (*vertsPtr)[3 * vert + 2];
           }
           xAvg /= static_cast<float>(vertCounter);
           yAvg /= static_cast<float>(vertCounter);
@@ -197,25 +180,25 @@ Result<> ApproximatePointCloudHull::operator()()
     progressThrottle.updateCount(z + 1);
   }
 
-  auto* hull = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->OutputVertexGeometryPath);
-  Result<> resizeResult = hull->resizeVertexList(tmpVerts.size() / 3);
+  auto* hullPtr = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->output_vertex_geometry_path);
+  Result<> resizeResult = hullPtr->resizeVertexList(tmpVerts.size() / 3);
   if(resizeResult.invalid())
   {
     return resizeResult;
   }
-  if(hull->getVertexAttributeMatrix() != nullptr)
+  if(hullPtr->getVertexAttributeMatrix() != nullptr)
   {
-    resizeResult = hull->getVertexAttributeMatrix()->resizeTuples({tmpVerts.size() / 3});
+    resizeResult = hullPtr->getVertexAttributeMatrix()->resizeTuples({tmpVerts.size() / 3});
     if(resizeResult.invalid())
     {
       return resizeResult;
     }
   }
-  auto* hullVerts = hull->getVertices();
-  auto tmpVertData = tmpVerts.data();
-  for(usize i = 0; i < hull->getNumberOfVertices() * 3; i++)
+  auto* hullVertsPtr = hullPtr->getVertices();
+  auto* tmpVertDataPtr = tmpVerts.data();
+  for(usize i = 0; i < hullPtr->getNumberOfVertices() * 3; i++)
   {
-    (*hullVerts)[i] = tmpVertData[i];
+    (*hullVertsPtr)[i] = tmpVertDataPtr[i];
   }
 
   return {};

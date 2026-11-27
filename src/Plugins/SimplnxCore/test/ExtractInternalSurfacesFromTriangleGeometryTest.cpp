@@ -20,13 +20,13 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
-using namespace nx::core::UnitTest;
+using namespace nx::core::constants;
+using namespace nx::core::unit_test;
 
 namespace
 {
-constexpr StringLiteral k_TriangleGeomName = "TriangleGeom";
-constexpr StringLiteral k_ComputedTriangleGeomName = "Internal Surface";
+constexpr StringLiteralType k_TriangleGeomName = "TriangleGeom";
+constexpr StringLiteralType k_ComputedTriangleGeomName = "Internal Surface";
 
 const DataPath k_TriangleGeomPath({k_TriangleGeomName});
 const DataPath k_ComputedTrianglePath({k_ComputedTriangleGeomName});
@@ -45,7 +45,7 @@ const std::vector<DataPath> k_TriangleArrays = {DataPath::FromString("TriangleGe
 
 TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Instantiate)", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "extract_internal_surface.tar.gz", "extract_internal_surface");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/extract_internal_surface/extract_internal_surface.dream3d", unit_test::k_TestFilesDir));
@@ -63,9 +63,10 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Instan
   args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_TriangleAttributeMatrixName_Key, std::make_any<std::string>("Face Data"));
 
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
-  UnitTest::RequireAutomaticCreateArrayActions(preflight.outputActions, k_VertexArrays.size() + k_TriangleArrays.size());
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
+  unit_test::RequireAutomaticCreateArrayActions(preflight.output_actions, k_VertexArrays.size() + k_TriangleArrays.size());
   std::vector<DataPath> expectedArrayPaths;
+  expectedArrayPaths.reserve(k_VertexArrays.size());
   for(const auto& path : k_VertexArrays)
   {
     expectedArrayPaths.push_back(k_ComputedTrianglePath.createChildPath("Vertex Data").createChildPath(path.getTargetName()));
@@ -74,14 +75,14 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Instan
   {
     expectedArrayPaths.push_back(k_ComputedTrianglePath.createChildPath("Face Data").createChildPath(path.getTargetName()));
   }
-  UnitTest::RequireAutomaticCreateArrayActions(preflight.outputActions, expectedArrayPaths);
+  unit_test::RequireAutomaticCreateArrayActions(preflight.output_actions, expectedArrayPaths);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Failed Vertex Copy)", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "extract_internal_surface.tar.gz", "extract_internal_surface");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/extract_internal_surface/extract_internal_surface.dream3d", unit_test::k_TestFilesDir));
@@ -99,12 +100,12 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Failed
   args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_TriangleAttributeMatrixName_Key, std::make_any<std::string>("Face Data"));
 
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.output_actions);
 }
 
 TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Failed Face Copy)", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const TestFileSentinel testDataSentinel(unit_test::k_TestFilesDir, "extract_internal_surface.tar.gz", "extract_internal_surface");
   // Read Exemplar DREAM3D File Filter
   auto exemplarFilePath = fs::path(fmt::format("{}/extract_internal_surface/extract_internal_surface.dream3d", unit_test::k_TestFilesDir));
@@ -122,7 +123,7 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Failed
   args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_TriangleAttributeMatrixName_Key, std::make_any<std::string>("Face Data"));
 
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.output_actions);
 }
 TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Data)", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter]")
 {
@@ -144,7 +145,7 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Data)"
   args.insert(ExtractInternalSurfacesFromTriangleGeometryFilter::k_TriangleAttributeMatrixName_Key, std::make_any<std::string>("Face Data"));
 
   auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
 
   auto result = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
@@ -162,8 +163,8 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter(Data)"
 TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: SIMPL Backwards Compatibility", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -176,22 +177,22 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: SIMPL
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<ExtractInternalSurfacesFromTriangleGeometryFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<ExtractInternalSurfacesFromTriangleGeometryFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(ExtractInternalSurfacesFromTriangleGeometryFilter::k_SelectedTriangleGeometryPath_Key) == DataPath({"DataContainer"}));
       CHECK(args.value<DataPath>(ExtractInternalSurfacesFromTriangleGeometryFilter::k_NodeTypesPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       // Complex type (StringToDataPathFilterParameterConverter) - verified by successful pipeline loading
@@ -207,22 +208,22 @@ namespace
 // on, to be pruned by this filter) and the "direct" oracle mesh (skin already omitted by the mesher).
 const DataPath k_QuickMeshPath({"QuickMesh"});
 
-SurfaceMeshingTest::MeshResult RunQuickSurfaceMeshForExtraction(ChoicesParameter::ValueType boundingBoxSkinMode)
+surface_meshing_test::MeshResult RunQuickSurfaceMeshForExtraction(ChoicesParameter::ValueType boundingBoxSkinMode)
 {
-  return SurfaceMeshingTest::RunMesher<QuickSurfaceMeshFilter>(SurfaceMeshingTest::CreateCylinderInBox(true), k_QuickMeshPath, boundingBoxSkinMode,
-                                                               [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
+  return surface_meshing_test::RunMesher<QuickSurfaceMeshFilter>(surface_meshing_test::CreateCylinderInBox(true), k_QuickMeshPath, boundingBoxSkinMode,
+                                                                 [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
 }
 } // namespace
 
 TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: Face Labels criterion", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Mesh the flush cylinder WITHOUT omitting the skin, then strip it with the Face Labels
   // criterion. The result must match what QuickSurfaceMesh produces with the option ON.
-  SurfaceMeshingTest::MeshResult fullMeshResult = RunQuickSurfaceMeshForExtraction(BoundingBoxSkinMode::k_Off);
-  DataStructure dataStructure = std::move(fullMeshResult.Structure);
-  const DataPath faceLabelsPath = fullMeshResult.FaceLabelsPath;
+  surface_meshing_test::MeshResult fullMeshResult = RunQuickSurfaceMeshForExtraction(bounding_box_skin_mode::k_Off);
+  DataStructure dataStructure = std::move(fullMeshResult.structure);
+  const DataPath faceLabelsPath = fullMeshResult.face_labels_path;
 
   const DataPath extractedPath({"Internal"});
   {
@@ -241,7 +242,7 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: Face 
                         std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{faceLabelsPath}));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
@@ -250,12 +251,12 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: Face 
   const auto& extractedGeom = dataStructure.getDataRefAs<TriangleGeom>(extractedPath);
 
   // Face-label stripping does not erode the rim, so the cylinder stays closed.
-  REQUIRE(SurfaceMeshingTest::IsWatertight(extractedGeom));
+  REQUIRE(surface_meshing_test::IsWatertight(extractedGeom));
 
   // Same face and vertex counts as meshing with QuickSurfaceMesh's own option turned on directly:
   // both code paths must agree on what "internal" means.
-  SurfaceMeshingTest::MeshResult directMeshResult = RunQuickSurfaceMeshForExtraction(BoundingBoxSkinMode::k_BackgroundBackedWallsOnly);
-  const auto& directGeom = directMeshResult.Structure.getDataRefAs<TriangleGeom>(k_QuickMeshPath);
+  surface_meshing_test::MeshResult directMeshResult = RunQuickSurfaceMeshForExtraction(bounding_box_skin_mode::k_BackgroundBackedWallsOnly);
+  const auto& directGeom = directMeshResult.structure.getDataRefAs<TriangleGeom>(k_QuickMeshPath);
 
   REQUIRE(extractedGeom.getNumberOfFaces() == directGeom.getNumberOfFaces());
   REQUIRE(extractedGeom.getNumberOfVertices() == directGeom.getNumberOfVertices());
@@ -263,19 +264,19 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: Face 
   // The two paths must agree exactly, not just on counts: compare the Face Labels array copied
   // into the extracted geometry against the one QuickSurfaceMesh produced directly.
   const DataPath extractedFaceLabelsPath = extractedPath.createChildPath("Face Data").createChildPath(faceLabelsPath.getTargetName());
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(extractedFaceLabelsPath));
-  REQUIRE_NOTHROW(directMeshResult.Structure.getDataRefAs<Int32Array>(directMeshResult.FaceLabelsPath));
-  UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<Int32Array>(extractedFaceLabelsPath), directMeshResult.Structure.getDataRefAs<Int32Array>(directMeshResult.FaceLabelsPath));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(extractedFaceLabelsPath));
+  REQUIRE_NOTHROW(directMeshResult.structure.getDataRefAs<Int32ArrayType>(directMeshResult.face_labels_path));
+  unit_test::CompareDataArrays<int32>(dataStructure.getDataRefAs<Int32ArrayType>(extractedFaceLabelsPath), directMeshResult.structure.getDataRefAs<Int32ArrayType>(directMeshResult.face_labels_path));
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: Face Labels criterion requires a valid array", "[SimplnxCore][ExtractInternalSurfacesFromTriangleGeometryFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
-  SurfaceMeshingTest::MeshResult meshResult = RunQuickSurfaceMeshForExtraction(BoundingBoxSkinMode::k_Off);
-  DataStructure dataStructure = std::move(meshResult.Structure);
+  surface_meshing_test::MeshResult meshResult = RunQuickSurfaceMeshForExtraction(bounding_box_skin_mode::k_Off);
+  DataStructure dataStructure = std::move(meshResult.structure);
 
   ExtractInternalSurfacesFromTriangleGeometryFilter filter;
   Arguments args;
@@ -290,5 +291,5 @@ TEST_CASE("SimplnxCore::ExtractInternalSurfacesFromTriangleGeometryFilter: Face 
   args.insertOrAssign(ExtractInternalSurfacesFromTriangleGeometryFilter::k_CopyTrianglePaths_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType()));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
 }

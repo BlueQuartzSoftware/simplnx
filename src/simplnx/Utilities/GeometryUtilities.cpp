@@ -19,11 +19,11 @@ namespace
 constexpr uint64 k_FullRange = 0;
 constexpr uint64 k_UserDefinedRange = 1;
 constexpr float32 k_PartitionEdgePadding = 0.000001;
-const Point3Df k_Padding(k_PartitionEdgePadding, k_PartitionEdgePadding, k_PartitionEdgePadding);
+const FloatVec3Type k_Padding(k_PartitionEdgePadding, k_PartitionEdgePadding, k_PartitionEdgePadding);
 
 } // namespace
 
-GeometryUtilities::FindUniqueIdsImpl::FindUniqueIdsImpl(VertexStore& vertexStore, const std::vector<std::vector<size_t>>& nodesInBin, nx::core::Int64AbstractDataStore& uniqueIds)
+geometry_utilities::FindUniqueIdsImpl::FindUniqueIdsImpl(VertexStoreType& vertexStore, const std::vector<std::vector<size_t>>& nodesInBin, nx::core::Int64AbstractDataStoreType& uniqueIds)
 : m_VertexStore(vertexStore)
 , m_NodesInBin(nodesInBin)
 , m_UniqueIds(uniqueIds)
@@ -31,7 +31,7 @@ GeometryUtilities::FindUniqueIdsImpl::FindUniqueIdsImpl(VertexStore& vertexStore
 }
 
 // -----------------------------------------------------------------------------
-void GeometryUtilities::FindUniqueIdsImpl::convert(size_t start, size_t end) const
+void geometry_utilities::FindUniqueIdsImpl::convert(size_t start, size_t end) const
 {
   for(size_t i = start; i < end; i++)
   {
@@ -54,12 +54,12 @@ void GeometryUtilities::FindUniqueIdsImpl::convert(size_t start, size_t end) con
 }
 
 // -----------------------------------------------------------------------------
-void GeometryUtilities::FindUniqueIdsImpl::operator()(const Range& range) const
+void geometry_utilities::FindUniqueIdsImpl::operator()(const Range& range) const
 {
   convert(range.min(), range.max());
 }
 
-BoundingBox3Df GeometryUtilities::GetPaddedNodePartitionBounds(const INodeGeometry0D& geometry)
+BoundingBox3DfType geometry_utilities::GetPaddedNodePartitionBounds(const INodeGeometry0D& geometry)
 {
   const auto bounds = geometry.getBoundingBox();
   if(!bounds.isValid())
@@ -69,99 +69,99 @@ BoundingBox3Df GeometryUtilities::GetPaddedNodePartitionBounds(const INodeGeomet
   return {bounds.getMinPoint() - k_Padding, bounds.getMaxPoint() + k_Padding};
 }
 
-Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(const INodeGeometry0D& geometry, const SizeVec3& numberOfPartitionsPerAxis)
+Result<FloatVec3Type> geometry_utilities::CalculatePartitionLengthsByPartitionCount(const INodeGeometry0D& geometry, const SizeVec3Type& numberOfPartitionsPerAxis)
 {
   const auto boundingBox = GetPaddedNodePartitionBounds(geometry);
   if(!boundingBox.isValid())
   {
     return {};
   }
-  return GeometryUtilities::CalculatePartitionLengthsOfBoundingBox(boundingBox, numberOfPartitionsPerAxis);
+  return geometry_utilities::CalculatePartitionLengthsOfBoundingBox(boundingBox, numberOfPartitionsPerAxis);
 }
 
-Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(const ImageGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis)
+Result<FloatVec3Type> geometry_utilities::CalculatePartitionLengthsByPartitionCount(const ImageGeom& geometry, const SizeVec3Type& numberOfPartitionsPerAxis)
 {
-  SizeVec3 dims = geometry.getDimensions();
-  FloatVec3 spacing = geometry.getSpacing();
+  SizeVec3Type dims = geometry.getDimensions();
+  FloatVec3Type spacing = geometry.getSpacing();
   float32 lengthX = static_cast<float32>(dims.getX()) / static_cast<float32>(numberOfPartitionsPerAxis.getX()) * spacing[0];
   float32 lengthY = static_cast<float32>(dims.getY()) / static_cast<float32>(numberOfPartitionsPerAxis.getY()) * spacing[1];
   float32 lengthZ = static_cast<float32>(dims.getZ()) / static_cast<float32>(numberOfPartitionsPerAxis.getZ()) * spacing[2];
-  return Result<FloatVec3>{FloatVec3(lengthX, lengthY, lengthZ)};
+  return Result<FloatVec3Type>{FloatVec3Type(lengthX, lengthY, lengthZ)};
 }
 
-Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsByPartitionCount(const RectGridGeom& geometry, const SizeVec3& numberOfPartitionsPerAxis)
+Result<FloatVec3Type> geometry_utilities::CalculatePartitionLengthsByPartitionCount(const RectGridGeom& geometry, const SizeVec3Type& numberOfPartitionsPerAxis)
 {
-  const Float32Array* xBounds = geometry.getXBounds();
-  const Float32Array* yBounds = geometry.getYBounds();
-  const Float32Array* zBounds = geometry.getZBounds();
+  const Float32ArrayType* xBoundsPtr = geometry.getXBounds();
+  const Float32ArrayType* yBoundsPtr = geometry.getYBounds();
+  const Float32ArrayType* zBoundsPtr = geometry.getZBounds();
 
-  if(xBounds == nullptr)
+  if(xBoundsPtr == nullptr)
   {
-    return MakeErrorResult<FloatVec3>(-4000, "Unable to calculate partition lengths using the partition count - X Bounds array is not available.");
+    return MakeErrorResult<FloatVec3Type>(-4000, "Unable to calculate partition lengths using the partition count - X Bounds array is not available.");
   }
 
-  if(yBounds == nullptr)
+  if(yBoundsPtr == nullptr)
   {
-    return MakeErrorResult<FloatVec3>(-4001, "Unable to calculate partition lengths using the partition count - Y Bounds array is not available.");
+    return MakeErrorResult<FloatVec3Type>(-4001, "Unable to calculate partition lengths using the partition count - Y Bounds array is not available.");
   }
 
-  if(zBounds == nullptr)
+  if(zBoundsPtr == nullptr)
   {
-    return MakeErrorResult<FloatVec3>(-4002, "Unable to calculate partition lengths using the partition count - Z Bounds array is not available.");
+    return MakeErrorResult<FloatVec3Type>(-4002, "Unable to calculate partition lengths using the partition count - Z Bounds array is not available.");
   }
 
-  if(xBounds->getSize() == 0)
+  if(xBoundsPtr->getSize() == 0)
   {
-    return MakeErrorResult<FloatVec3>(-4003, "Unable to calculate partition lengths using the partition count - X Bounds array is empty.");
+    return MakeErrorResult<FloatVec3Type>(-4003, "Unable to calculate partition lengths using the partition count - X Bounds array is empty.");
   }
 
-  if(yBounds->getSize() == 0)
+  if(yBoundsPtr->getSize() == 0)
   {
-    return MakeErrorResult<FloatVec3>(-4004, "Unable to calculate partition lengths using the partition count - Y Bounds array is empty.");
+    return MakeErrorResult<FloatVec3Type>(-4004, "Unable to calculate partition lengths using the partition count - Y Bounds array is empty.");
   }
 
-  if(zBounds->getSize() == 0)
+  if(zBoundsPtr->getSize() == 0)
   {
-    return MakeErrorResult<FloatVec3>(-4005, "Unable to calculate partition lengths using the partition count - Z Bounds array is empty.");
+    return MakeErrorResult<FloatVec3Type>(-4005, "Unable to calculate partition lengths using the partition count - Z Bounds array is empty.");
   }
 
-  FloatVec3 lengthPerPartition = {0.0f, 0.0f, 0.0f};
+  FloatVec3Type lengthPerPartition = {0.0f, 0.0f, 0.0f};
 
-  const AbstractDataStore<float32>& xStore = xBounds->getDataStoreRef();
-  float32 maxX = xStore.getValue(xBounds->getNumberOfTuples() - 1);
+  const AbstractDataStore<float32>& xStore = xBoundsPtr->getDataStoreRef();
+  float32 maxX = xStore.getValue(xBoundsPtr->getNumberOfTuples() - 1);
   lengthPerPartition.setX((maxX - xStore.getValue(0)) / static_cast<float32>(numberOfPartitionsPerAxis.getX()));
 
-  const AbstractDataStore<float32>& yStore = yBounds->getDataStoreRef();
-  float32 maxY = yStore.getValue(yBounds->getNumberOfTuples() - 1);
+  const AbstractDataStore<float32>& yStore = yBoundsPtr->getDataStoreRef();
+  float32 maxY = yStore.getValue(yBoundsPtr->getNumberOfTuples() - 1);
   lengthPerPartition.setY((maxY - yStore.getValue(0)) / static_cast<float32>(numberOfPartitionsPerAxis.getY()));
 
-  const AbstractDataStore<float32>& zStore = zBounds->getDataStoreRef();
-  float32 maxZ = zStore.getValue(zBounds->getNumberOfTuples() - 1);
+  const AbstractDataStore<float32>& zStore = zBoundsPtr->getDataStoreRef();
+  float32 maxZ = zStore.getValue(zBoundsPtr->getNumberOfTuples() - 1);
   lengthPerPartition.setZ((maxZ - zStore.getValue(0)) / static_cast<float32>(numberOfPartitionsPerAxis.getZ()));
 
-  return Result<FloatVec3>{lengthPerPartition};
+  return Result<FloatVec3Type>{lengthPerPartition};
 }
 
-Result<FloatVec3> GeometryUtilities::CalculateNodeBasedPartitionSchemeOrigin(const INodeGeometry0D& geometry)
+Result<FloatVec3Type> geometry_utilities::CalculateNodeBasedPartitionSchemeOrigin(const INodeGeometry0D& geometry)
 {
   const auto boundingBox = GetPaddedNodePartitionBounds(geometry);
   if(!boundingBox.isValid())
   {
     return {};
   }
-  return Result<FloatVec3>{FloatVec3(boundingBox.getMinPoint())};
+  return Result<FloatVec3Type>{FloatVec3Type(boundingBox.getMinPoint())};
 }
 
-Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsOfBoundingBox(const BoundingBox3Df& boundingBox, const SizeVec3& numberOfPartitionsPerAxis)
+Result<FloatVec3Type> geometry_utilities::CalculatePartitionLengthsOfBoundingBox(const BoundingBox3DfType& boundingBox, const SizeVec3Type& numberOfPartitionsPerAxis)
 {
-  auto min = boundingBox.getMinPoint();
-  auto max = boundingBox.getMaxPoint();
+  const auto& min = boundingBox.getMinPoint();
+  const auto& max = boundingBox.getMaxPoint();
   // Calculate the length per partition for each dimension, and set it into the partitioning scheme image geometry
   float32 lengthX = ((max[0] - min[0]) / static_cast<float32>(numberOfPartitionsPerAxis.getX()));
   float32 lengthY = ((max[1] - min[1]) / static_cast<float32>(numberOfPartitionsPerAxis.getY()));
   float32 lengthZ = ((max[2] - min[2]) / static_cast<float32>(numberOfPartitionsPerAxis.getZ()));
-  FloatVec3 lengthPerPartition = {lengthX, lengthY, lengthZ};
-  return Result<FloatVec3>{lengthPerPartition};
+  FloatVec3Type lengthPerPartition = {lengthX, lengthY, lengthZ};
+  return Result<FloatVec3Type>{lengthPerPartition};
 }
 
 /**
@@ -171,7 +171,7 @@ Result<FloatVec3> GeometryUtilities::CalculatePartitionLengthsOfBoundingBox(cons
 class ComputeTriangleAreasImpl
 {
 public:
-  ComputeTriangleAreasImpl(const TriangleGeom* triangleGeom, Float64AbstractDataStore& areas, const std::atomic_bool& shouldCancel)
+  ComputeTriangleAreasImpl(const TriangleGeom* triangleGeom, Float64AbstractDataStoreType& areas, const std::atomic_bool& shouldCancel)
   : m_TriangleGeom(triangleGeom)
   , m_Areas(areas)
   , m_ShouldCancel(shouldCancel)
@@ -187,7 +187,7 @@ public:
       {
         break;
       }
-      std::array<Point3Df, 3> vertCoords;
+      std::array<FloatVec3Type, 3> vertCoords;
       m_TriangleGeom->getFaceCoordinates(triangleIndex, vertCoords);
       m_Areas[triangleIndex] = 0.5F * (vertCoords[0] - vertCoords[1]).cross(vertCoords[0] - vertCoords[2]).magnitude();
     }
@@ -200,11 +200,11 @@ public:
 
 private:
   const TriangleGeom* m_TriangleGeom = nullptr;
-  Float64AbstractDataStore& m_Areas;
+  Float64AbstractDataStoreType& m_Areas;
   const std::atomic_bool& m_ShouldCancel;
 };
 
-Result<> GeometryUtilities::ComputeTriangleAreas(const nx::core::TriangleGeom* triangleGeom, Float64AbstractDataStore& faceAreas, const std::atomic_bool& shouldCancel)
+Result<> geometry_utilities::ComputeTriangleAreas(const nx::core::TriangleGeom* triangleGeom, Float64AbstractDataStoreType& faceAreas, const std::atomic_bool& shouldCancel)
 {
   // Parallel algorithm to find duplicate nodes
   ParallelDataAlgorithm dataAlg;
@@ -221,7 +221,7 @@ Result<> GeometryUtilities::ComputeTriangleAreas(const nx::core::TriangleGeom* t
 class CalculateNormalsImpl
 {
 public:
-  CalculateNormalsImpl(const TriangleGeom* triangleGeom, Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel)
+  CalculateNormalsImpl(const TriangleGeom* triangleGeom, Float64AbstractDataStoreType& normals, const std::atomic_bool& shouldCancel)
   : m_TriangleGeom(triangleGeom)
   , m_Normals(normals)
   , m_ShouldCancel(shouldCancel)
@@ -237,7 +237,7 @@ public:
       {
         break;
       }
-      std::array<Point3Df, 3> vertCoords;
+      std::array<FloatVec3Type, 3> vertCoords;
       m_TriangleGeom->getFaceCoordinates(triangleIndex, vertCoords);
 
       auto normal = (vertCoords[1] - vertCoords[0]).cross(vertCoords[2] - vertCoords[0]);
@@ -256,11 +256,11 @@ public:
 
 private:
   const TriangleGeom* m_TriangleGeom = nullptr;
-  Float64AbstractDataStore& m_Normals;
+  Float64AbstractDataStoreType& m_Normals;
   const std::atomic_bool& m_ShouldCancel;
 };
 
-Result<> GeometryUtilities::ComputeTriangleNormals(const nx::core::TriangleGeom* triangleGeom, Float64AbstractDataStore& normals, const std::atomic_bool& shouldCancel)
+Result<> geometry_utilities::ComputeTriangleNormals(const nx::core::TriangleGeom* triangleGeom, Float64AbstractDataStoreType& normals, const std::atomic_bool& shouldCancel)
 {
   const bool usesOutOfCoreStore = AnyOutOfCore({triangleGeom->getFaces(), triangleGeom->getVertices()}) || normals.getStoreType() == IDataStore::StoreType::OutOfCore;
   const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
@@ -268,13 +268,14 @@ Result<> GeometryUtilities::ComputeTriangleNormals(const nx::core::TriangleGeom*
   if(useOutOfCoreAlgorithm)
   {
     // Preserve this utility's float arithmetic, which differs from the Eigen double path.
-    return MeshingUtilities::detail::CalculateNormalsInBlocks(triangleGeom->getFaces()->getDataStoreRef(), triangleGeom->getVertices()->getDataStoreRef(), normals, shouldCancel,
-                                                              [](const float32* a, const float32* b, const float32* c) -> std::array<float64, 3> {
-                                                                const std::array<Point3Df, 3> vertCoords = {Point3Df{a[0], a[1], a[2]}, Point3Df{b[0], b[1], b[2]}, Point3Df{c[0], c[1], c[2]}};
-                                                                auto normal = (vertCoords[1] - vertCoords[0]).cross(vertCoords[2] - vertCoords[0]);
-                                                                normal = normal / normal.magnitude();
-                                                                return {static_cast<float64>(normal[0]), static_cast<float64>(normal[1]), static_cast<float64>(normal[2])};
-                                                              });
+    return meshing_utilities::detail::CalculateNormalsInBlocks(triangleGeom->getFaces()->getDataStoreRef(), triangleGeom->getVertices()->getDataStoreRef(), normals, shouldCancel,
+                                                               [](const float32* a, const float32* b, const float32* c) -> std::array<float64, 3> {
+                                                                 const std::array<FloatVec3Type, 3> vertCoords = {FloatVec3Type{a[0], a[1], a[2]}, FloatVec3Type{b[0], b[1], b[2]},
+                                                                                                                  FloatVec3Type{c[0], c[1], c[2]}};
+                                                                 auto normal = (vertCoords[1] - vertCoords[0]).cross(vertCoords[2] - vertCoords[0]);
+                                                                 normal = normal / normal.magnitude();
+                                                                 return {static_cast<float64>(normal[0]), static_cast<float64>(normal[1]), static_cast<float64>(normal[2])};
+                                                               });
   }
 
   // Parallel algorithm to find duplicate nodes
@@ -292,25 +293,25 @@ const float EPSILON = 1e-6f;
 // Edge Structure: Pair of points representing a line segment
 struct Edge
 {
-  Point3Df start;
-  Point3Df end;
+  FloatVec3Type start;
+  FloatVec3Type end;
   bool valid;
-  int32 regionId;
-  uint8 positiveCount = 0;
-  uint8 negativeCount = 0;
+  int32 region_id;
+  uint8 positive_count = 0;
+  uint8 negative_count = 0;
   uint8 zeroCount = 0;
 
   // Constructors
   Edge()
   : valid(false)
-  , regionId(0)
+  , region_id(0)
   {
   }
-  Edge(const Point3Df& start_, const Point3Df& end_)
-  : start(start_)
-  , end(end_)
+  Edge(FloatVec3Type start_, FloatVec3Type end_)
+  : start(std::move(start_))
+  , end(std::move(end_))
   , valid(true)
-  , regionId(0)
+  , region_id(0)
   {
   }
 
@@ -331,18 +332,18 @@ struct Edge
 // Plane Structure: Defined by a normal vector and a distance from the origin (plane constant)
 struct Plane
 {
-  Point3Df normal; // Should be normalized
-  float d;         // Plane constant
+  FloatVec3Type normal; // Should be normalized
+  float d;              // Plane constant
 
   // Construct a plane from a normal and a point on the plane
-  Plane(const Point3Df& normal_, const Point3Df& point)
+  Plane(const FloatVec3Type& normal_, const FloatVec3Type& point)
   {
     normal = normal_;
     d = -normal.dot(point);
   }
 
   // Compute signed distance from a point to the plane
-  float signedDistance(const Point3Df& point) const
+  float signedDistance(const FloatVec3Type& point) const
   {
     return normal.dot(point) + d;
   }
@@ -353,18 +354,18 @@ struct Plane
  */
 struct PointInfo
 {
-  float SignedDistance;
+  float signed_distance;
   uint8 location;
 
   explicit PointInfo(float signedDistance)
-  : SignedDistance(signedDistance)
+  : signed_distance(signedDistance)
   , location(3) // Default the point is on the plane
   {
-    if(SignedDistance > EPSILON)
+    if(signed_distance > EPSILON)
     {
       location = 1; // Above the plane
     }
-    else if(SignedDistance < -EPSILON)
+    else if(signed_distance < -EPSILON)
     {
       location = 2; // Below the plane
     }
@@ -390,45 +391,45 @@ struct PointInfo
 
 // ----------------------------------------------------------------------------
 // Function to compute the intersection between a triangle and a plane
-Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Point3Df& v2, const Plane& plane, float zPlane)
+static Edge IntersectTriangleWithPlane(const FloatVec3Type& v0, const FloatVec3Type& v1, const FloatVec3Type& v2, const Plane& plane, float zPlane)
 {
   PointInfo p0{plane.signedDistance(v0)};
   PointInfo p1{plane.signedDistance(v1)};
   PointInfo p2{plane.signedDistance(v2)};
 
   // Count the number of vertices on each side of the plane
-  int positiveCount = p0.positive() + p1.positive() + p2.positive();
-  int negativeCount = p0.negative() + p1.negative() + p2.negative();
-  int zeroCount = p0.onPlane() + p1.onPlane() + p2.onPlane();
+  int positiveCount = static_cast<int>(p0.positive()) + static_cast<int>(p1.positive()) + static_cast<int>(p2.positive());
+  int negativeCount = static_cast<int>(p0.negative()) + static_cast<int>(p1.negative()) + static_cast<int>(p2.negative());
+  int zeroCount = static_cast<int>(p0.onPlane()) + static_cast<int>(p1.onPlane()) + static_cast<int>(p2.onPlane());
 
   // No intersection if all vertices are on one side of the plane
   // Handle case where the triangle lies entirely on the plane
   if(positiveCount == 3 || negativeCount == 3 || zeroCount == 3)
   {
     Edge e;
-    e.positiveCount = positiveCount;
-    e.negativeCount = negativeCount;
+    e.positive_count = positiveCount;
+    e.negative_count = negativeCount;
     e.zeroCount = zeroCount;
     return e; // Invalid edge because triangle is completely above or below the plane
   }
 
   // Edge to store the intersection line segment
   Edge intersectionEdge;
-  intersectionEdge.positiveCount = positiveCount;
-  intersectionEdge.negativeCount = negativeCount;
+  intersectionEdge.positive_count = positiveCount;
+  intersectionEdge.negative_count = negativeCount;
   intersectionEdge.zeroCount = zeroCount;
 
   // Interpolate from the lower-z endpoint so shared edges produce identical points.
-  auto computeIntersection = [](const Edge& e, float d1, float d2, float planeZ) -> Point3Df {
-    Point3Df s = e.start;
-    Point3Df en = e.end;
+  auto computeIntersection = [](const Edge& e, float d1, float d2, float planeZ) -> FloatVec3Type {
+    FloatVec3Type s = e.start;
+    FloatVec3Type en = e.end;
     if(s[2] > en[2])
     {
       std::swap(s, en);
       std::swap(d1, d2);
     }
     const float t = d1 / (d1 - d2);
-    Point3Df p = s + (en - s) * t;
+    FloatVec3Type p = s + (en - s) * t;
     p[2] = planeZ;
     return p;
   };
@@ -439,8 +440,8 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
   if(zeroCount == 1 && (positiveCount == 2 || negativeCount == 2))
   {
     Edge e;
-    e.positiveCount = positiveCount;
-    e.negativeCount = negativeCount;
+    e.positive_count = positiveCount;
+    e.negative_count = negativeCount;
     e.zeroCount = zeroCount;
     return e;
   }
@@ -451,21 +452,21 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
     if(p0.onPlane())
     {
       e.start = v0;
-      e.end = computeIntersection({v1, v2}, p1.SignedDistance, p2.SignedDistance, zPlane);
+      e.end = computeIntersection({v1, v2}, p1.signed_distance, p2.signed_distance, zPlane);
     }
     else if(p1.onPlane())
     {
       e.start = v1;
-      e.end = computeIntersection({v0, v2}, p0.SignedDistance, p2.SignedDistance, zPlane);
+      e.end = computeIntersection({v0, v2}, p0.signed_distance, p2.signed_distance, zPlane);
     }
     else if(p2.onPlane())
     {
       e.start = v2;
-      e.end = computeIntersection({v0, v1}, p0.SignedDistance, p1.SignedDistance, zPlane);
+      e.end = computeIntersection({v0, v1}, p0.signed_distance, p1.signed_distance, zPlane);
     }
     e.start[2] = zPlane;
-    e.positiveCount = positiveCount;
-    e.negativeCount = negativeCount;
+    e.positive_count = positiveCount;
+    e.negative_count = negativeCount;
     e.zeroCount = zeroCount;
     e.valid = true;
     return e;
@@ -477,8 +478,8 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
     Edge e{v0, v1};
     e.start[2] = zPlane;
     e.end[2] = zPlane;
-    e.positiveCount = positiveCount;
-    e.negativeCount = negativeCount;
+    e.positive_count = positiveCount;
+    e.negative_count = negativeCount;
     e.zeroCount = zeroCount;
     return e;
   }
@@ -487,8 +488,8 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
     Edge e{v1, v2};
     e.start[2] = zPlane;
     e.end[2] = zPlane;
-    e.positiveCount = positiveCount;
-    e.negativeCount = negativeCount;
+    e.positive_count = positiveCount;
+    e.negative_count = negativeCount;
     e.zeroCount = zeroCount;
     return e;
   }
@@ -497,50 +498,50 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
     Edge e{v0, v2};
     e.start[2] = zPlane;
     e.end[2] = zPlane;
-    e.positiveCount = positiveCount;
-    e.negativeCount = negativeCount;
+    e.positive_count = positiveCount;
+    e.negative_count = negativeCount;
     e.zeroCount = zeroCount;
     return e;
   }
 
   if(p0.planeSplitsEdge(p1) && p0.planeSplitsEdge(p2))
   {
-    auto intersectionPoint0 = computeIntersection({v0, v1}, p0.SignedDistance, p1.SignedDistance, zPlane);
-    auto intersectionPoint1 = computeIntersection({v0, v2}, p0.SignedDistance, p2.SignedDistance, zPlane);
+    auto intersectionPoint0 = computeIntersection({v0, v1}, p0.signed_distance, p1.signed_distance, zPlane);
+    auto intersectionPoint1 = computeIntersection({v0, v2}, p0.signed_distance, p2.signed_distance, zPlane);
 
     Edge e{intersectionPoint0, intersectionPoint1};
-    e.positiveCount = positiveCount;
-    e.negativeCount = negativeCount;
+    e.positive_count = positiveCount;
+    e.negative_count = negativeCount;
     e.zeroCount = zeroCount;
     return e;
   }
 
   if(p0.planeSplitsEdge(p1) && p1.planeSplitsEdge(p2))
   {
-    auto intersectionPoint0 = computeIntersection({v0, v1}, p0.SignedDistance, p1.SignedDistance, zPlane);
-    auto intersectionPoint1 = computeIntersection({v1, v2}, p1.SignedDistance, p2.SignedDistance, zPlane);
+    auto intersectionPoint0 = computeIntersection({v0, v1}, p0.signed_distance, p1.signed_distance, zPlane);
+    auto intersectionPoint1 = computeIntersection({v1, v2}, p1.signed_distance, p2.signed_distance, zPlane);
     Edge e{intersectionPoint0, intersectionPoint1};
-    e.positiveCount = positiveCount;
-    e.negativeCount = negativeCount;
+    e.positive_count = positiveCount;
+    e.negative_count = negativeCount;
     e.zeroCount = zeroCount;
     return e;
   }
 
   if(p1.planeSplitsEdge(p2) && p2.planeSplitsEdge(p0))
   {
-    auto intersectionPoint0 = computeIntersection({v1, v2}, p1.SignedDistance, p2.SignedDistance, zPlane);
-    auto intersectionPoint1 = computeIntersection({v2, v0}, p2.SignedDistance, p0.SignedDistance, zPlane);
+    auto intersectionPoint0 = computeIntersection({v1, v2}, p1.signed_distance, p2.signed_distance, zPlane);
+    auto intersectionPoint1 = computeIntersection({v2, v0}, p2.signed_distance, p0.signed_distance, zPlane);
     Edge e{intersectionPoint0, intersectionPoint1};
-    e.positiveCount = positiveCount;
-    e.negativeCount = negativeCount;
+    e.positive_count = positiveCount;
+    e.negative_count = negativeCount;
     e.zeroCount = zeroCount;
     return e;
   }
 
   // No valid intersection found
   Edge e;
-  e.positiveCount = positiveCount;
-  e.negativeCount = negativeCount;
+  e.positive_count = positiveCount;
+  e.negative_count = negativeCount;
   e.zeroCount = zeroCount;
   return e; // Invalid edge
 }
@@ -548,23 +549,17 @@ Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Po
 
 // ----------------------------------------------------------------------------
 //
-usize GeometryUtilities::determineBoundsAndNumSlices(float32& minDim, float32& maxDim, usize numTris, AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>& tris,
-                                                     AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>& triVerts, uint64 sliceRange, float32 zStart, float32 zEnd,
-                                                     float32 sliceResolution)
+usize geometry_utilities::DetermineBoundsAndNumSlices(float32& minDim, float32& maxDim, usize numTris, AbstractDataStore<INodeGeometry2D::SharedFaceListType::value_type>& tris,
+                                                      AbstractDataStore<INodeGeometry0D::SharedVertexListType::value_type>& triVerts, uint64 sliceRange, float32 zStart, float32 zEnd,
+                                                      float32 sliceResolution)
 {
   for(usize i = 0; i < numTris; i++)
   {
     for(usize j = 0; j < 3; j++)
     {
       const usize vert = tris[3 * i + j];
-      if(minDim > triVerts[3 * vert + 2])
-      {
-        minDim = triVerts[3 * vert + 2];
-      }
-      if(maxDim < triVerts[3 * vert + 2])
-      {
-        maxDim = triVerts[3 * vert + 2];
-      }
+      minDim = std::min<nx::core::types::float32>(minDim, triVerts[3 * vert + 2]);
+      maxDim = std::max<nx::core::types::float32>(maxDim, triVerts[3 * vert + 2]);
     }
   }
 
@@ -589,22 +584,22 @@ usize GeometryUtilities::determineBoundsAndNumSlices(float32& minDim, float32& m
 
 // ----------------------------------------------------------------------------
 //
-using TriStore = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
-using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
+using TriStore = AbstractDataStore<INodeGeometry2D::SharedFaceListType::value_type>;
+using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexListType::value_type>;
 
-inline std::array<nx::core::Point3Df, 3> GetFaceCoordinates(usize triangleId, VertsStore& verts, TriStore& triangleList)
+inline static std::array<nx::core::FloatVec3Type, 3> GetFaceCoordinates(usize triangleId, VertsStore& verts, TriStore& triangleList)
 {
   usize v0Idx = triangleList[triangleId * 3];
   usize v1Idx = triangleList[triangleId * 3 + 1];
   usize v2Idx = triangleList[triangleId * 3 + 2];
-  return {Point3Df{verts[v0Idx * 3], verts[v0Idx * 3 + 1], verts[v0Idx * 3 + 2]}, Point3Df{verts[v1Idx * 3], verts[v1Idx * 3 + 1], verts[v1Idx * 3 + 2]},
-          Point3Df{verts[v2Idx * 3], verts[v2Idx * 3 + 1], verts[v2Idx * 3 + 2]}};
+  return {FloatVec3Type{verts[v0Idx * 3], verts[v0Idx * 3 + 1], verts[v0Idx * 3 + 2]}, FloatVec3Type{verts[v1Idx * 3], verts[v1Idx * 3 + 1], verts[v1Idx * 3 + 2]},
+          FloatVec3Type{verts[v2Idx * 3], verts[v2Idx * 3 + 1], verts[v2Idx * 3 + 2]}};
 }
 
 // ----------------------------------------------------------------------------
 //
-GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeometry(nx::core::TriangleGeom& triangle, const std::atomic_bool& shouldCancel, uint64 sliceRange, float32 zStart,
-                                                                                    float32 zEnd, float32 sliceSpacing, AbstractDataStore<int32>* triRegionIdPtr)
+geometry_utilities::SliceTriangleReturnType geometry_utilities::SliceTriangleGeometry(nx::core::TriangleGeom& triangle, const std::atomic_bool& shouldCancel, uint64 sliceRange, float32 zStart,
+                                                                                      float32 zEnd, float32 sliceSpacing, AbstractDataStore<int32>* triRegionIdPtr)
 {
   if(!(sliceSpacing > 0.0f))
   {
@@ -620,7 +615,7 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
   float32 d = 0;
   float32 minZValue = std::numeric_limits<float32>::max();
   float32 maxZValue = -minZValue;
-  usize numberOfSlices = determineBoundsAndNumSlices(minZValue, maxZValue, numTris, triEdgeStore, triVertStore, sliceRange, zStart, zEnd, sliceSpacing);
+  usize numberOfSlices = DetermineBoundsAndNumSlices(minZValue, maxZValue, numTris, triEdgeStore, triVertStore, sliceRange, zStart, zEnd, sliceSpacing);
 
   std::vector<float32> slicedVerts;
   std::vector<int32> sliceIds;
@@ -639,8 +634,8 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
     d = zValue;
 
     // Define a plane with a normal vector and a point on the plane
-    Point3Df planeNormal(0.0f, 0.0f, 1.0f); // Plane normal pointing along +Z
-    Point3Df pointOnPlane(0.0f, 0.0f, d);   // Plane passes through current Z Plane
+    FloatVec3Type planeNormal(0.0f, 0.0f, 1.0f); // Plane normal pointing along +Z
+    FloatVec3Type pointOnPlane(0.0f, 0.0f, d);   // Plane passes through current Z Plane
 
     // Create the plane
     slice_helper::Plane plane(planeNormal, pointOnPlane);
@@ -654,7 +649,7 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
       {
         regionId = triRegionIdPtr->operator[](triIdx);
       }
-      std::array<nx::core::Point3Df, 3> faceVertices = GetFaceCoordinates(triIdx, triVertStore, triEdgeStore);
+      std::array<nx::core::FloatVec3Type, 3> faceVertices = GetFaceCoordinates(triIdx, triVertStore, triEdgeStore);
 
       // Compute the intersection
       slice_helper::Edge intersectionEdge = IntersectTriangleWithPlane(faceVertices[0], faceVertices[1], faceVertices[2], plane, zValue);
@@ -677,11 +672,11 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
     } // END TRIANGLE LOOP
   } // END SLICE LOOP
 
-  return {std::move(slicedVerts), std::move(sliceIds), std::move(regionIds), numberOfSlices};
+  return {.slice_verts = std::move(slicedVerts), .slice_ids = std::move(sliceIds), .region_ids = std::move(regionIds), .number_of_slices = numberOfSlices};
 }
 
 // -----------------------------------------------------------------------------
-Result<> GeometryUtilities::ValidateFiniteVector(nonstd::span<const float32> values, std::string_view parameterName, int32 errorCode)
+Result<> geometry_utilities::ValidateFiniteVector(nonstd::span<const float32> values, std::string_view parameterName, int32 errorCode)
 {
   for(usize axis = 0; axis < values.size(); ++axis)
   {
@@ -695,7 +690,7 @@ Result<> GeometryUtilities::ValidateFiniteVector(nonstd::span<const float32> val
 }
 
 // -----------------------------------------------------------------------------
-Result<> GeometryUtilities::ValidatePositiveFiniteVector(nonstd::span<const float32> values, std::string_view parameterName, int32 errorCode)
+Result<> geometry_utilities::ValidatePositiveFiniteVector(nonstd::span<const float32> values, std::string_view parameterName, int32 errorCode)
 {
   for(usize axis = 0; axis < values.size(); ++axis)
   {
@@ -709,10 +704,10 @@ Result<> GeometryUtilities::ValidatePositiveFiniteVector(nonstd::span<const floa
 }
 
 // -----------------------------------------------------------------------------
-Result<SizeVec3> GeometryUtilities::ComputePaddedDimensions(const SizeVec3& dims, const std::array<std::array<int32, 2>, 3>& padding, const std::array<bool, 3>& active)
+Result<SizeVec3Type> geometry_utilities::ComputePaddedDimensions(const SizeVec3Type& dims, const std::array<std::array<int32, 2>, 3>& padding, const std::array<bool, 3>& active)
 {
-  SizeVec3 output = dims;
-  constexpr usize max = std::numeric_limits<usize>::max();
+  SizeVec3Type output = dims;
+  constexpr usize k_Max = std::numeric_limits<usize>::max();
   for(usize axis = 0; axis < 3; ++axis)
   {
     if(!active[axis])
@@ -722,10 +717,10 @@ Result<SizeVec3> GeometryUtilities::ComputePaddedDimensions(const SizeVec3& dims
     for(usize side = 0; side < 2; ++side)
     {
       const usize amount = static_cast<usize>(padding[axis][side]);
-      if(amount > max - output[axis])
+      if(amount > k_Max - output[axis])
       {
-        return MakeErrorResult<SizeVec3>(k_PaddedExtentOverflowError, fmt::format("Parameter '{} Min & Max Padding' {} value {} with dimension {} produces an extent above {}.", "XYZ"[axis],
-                                                                                  side == 0 ? "Min" : "Max", amount, output[axis], max));
+        return MakeErrorResult<SizeVec3Type>(k_PaddedExtentOverflowError, fmt::format("Parameter '{} Min & Max Padding' {} value {} with dimension {} produces an extent above {}.", "XYZ"[axis],
+                                                                                      side == 0 ? "Min" : "Max", amount, output[axis], k_Max));
       }
       output[axis] += amount;
     }
@@ -737,11 +732,11 @@ Result<SizeVec3> GeometryUtilities::ComputePaddedDimensions(const SizeVec3& dims
   usize product = 1;
   for(usize axis = 0; axis < 3; ++axis)
   {
-    if(output[axis] > max / product)
+    if(output[axis] > k_Max / product)
     {
-      return MakeErrorResult<SizeVec3>(k_PaddedTupleOverflowError,
-                                       fmt::format("Parameter '{} Min & Max Padding' values [{}, {}] with dimension {} produce padded {} extent {} and a tuple product above {}.", "XYZ"[axis],
-                                                   padding[axis][0], padding[axis][1], dims[axis], "XYZ"[axis], output[axis], max));
+      return MakeErrorResult<SizeVec3Type>(k_PaddedTupleOverflowError,
+                                           fmt::format("Parameter '{} Min & Max Padding' values [{}, {}] with dimension {} produce padded {} extent {} and a tuple product above {}.", "XYZ"[axis],
+                                                       padding[axis][0], padding[axis][1], dims[axis], "XYZ"[axis], output[axis], k_Max));
     }
     product *= output[axis];
   }

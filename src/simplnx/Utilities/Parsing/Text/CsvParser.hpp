@@ -17,16 +17,16 @@
 #include <string>
 #include <vector>
 
-namespace nx::core::CsvParser
+namespace nx::core::csv_parser
 {
 
-constexpr int32_t k_RBR_NO_ERROR = 0;
-constexpr int32_t k_RBR_FILE_NOT_OPEN = -1000;
-constexpr int32_t k_RBR_READ_EOF = -1030;
-constexpr int32_t k_RBR_READ_FAIL = -1035;
-constexpr int32_t k_RBR_READ_ERROR = 1040;
-constexpr int32_t k_RBR_READ_BAD = 1045;
-constexpr int32_t k_RBR_FILE_NOT_EXIST = 1050;
+constexpr int32_t k_RbrNoError = 0;
+constexpr int32_t k_RbrFileNotOpen = -1000;
+constexpr int32_t k_RbrReadEof = -1030;
+constexpr int32_t k_RbrReadFail = -1035;
+constexpr int32_t k_RbrReadError = 1040;
+constexpr int32_t k_RbrReadBad = 1045;
+constexpr int32_t k_RbrFileNotExist = 1050;
 
 constexpr size_t k_BufferSize = 1024;
 
@@ -39,7 +39,7 @@ constexpr size_t k_BufferSize = 1024;
  */
 class DelimiterType : public std::ctype<char>
 {
-  std::ctype<char>::mask my_table[std::ctype<char>::table_size] = {};
+  std::ctype<char>::mask m_MyTable[std::ctype<char>::table_size] = {};
 
 public:
   /**
@@ -49,10 +49,10 @@ public:
    * @pre delimiter has a nonnegative unsigned-character index.
    */
   explicit DelimiterType(char delimiter, size_t refs = 0)
-  : std::ctype<char>(&my_table[0], false, refs)
+  : std::ctype<char>(&m_MyTable[0], false, refs)
   {
-    std::copy_n(std::ctype<char>::classic_table(), table_size, my_table);
-    my_table[static_cast<std::ctype<char>::mask>(delimiter)] = (std::ctype<char>::mask)space;
+    std::copy_n(std::ctype<char>::classic_table(), table_size, m_MyTable);
+    m_MyTable[static_cast<std::ctype<char>::mask>(delimiter)] = (std::ctype<char>::mask)space;
   }
 };
 
@@ -108,31 +108,31 @@ SIMPLNX_EXPORT int32_t ReadLine(std::istream& in, char* buffer, size_t length);
 template <typename T, typename K>
 Result<> ReadFile(const std::filesystem::path& filename, AbstractDataStore<T>& data, uint64_t skipHeaderLines, char delimiter, bool inputIsBool = false)
 {
-  int32 err;
+  int32 err = 0;
   if(!std::filesystem::exists(filename))
   {
-    return MakeErrorResult(k_RBR_FILE_NOT_EXIST, fmt::format("Input file does not exist: {}", filename.string()));
+    return MakeErrorResult(k_RbrFileNotExist, fmt::format("Input file does not exist: {}", filename.string()));
   }
 
   std::ifstream in(filename.c_str(), std::ios_base::in | std::ios_base::binary);
   if(!in.is_open())
   {
-    return MakeErrorResult(k_RBR_FILE_NOT_OPEN, fmt::format("Could not open file for reading: {}", filename.string()));
+    return MakeErrorResult(k_RbrFileNotOpen, fmt::format("Could not open file for reading: {}", filename.string()));
   }
 
-  in.imbue(std::locale(std::locale(), new nx::core::CsvParser::DelimiterType(delimiter)));
+  in.imbue(std::locale(std::locale(), new nx::core::csv_parser::DelimiterType(delimiter)));
 
   std::array<char, k_BufferSize> buf = {};
-  char* buffer = buf.data();
+  char* bufferPtr = buf.data();
 
   // Discard each bounded header line. ReadLine discards any suffix beyond its buffer.
   for(int i = 0; i < skipHeaderLines; i++)
   {
     buf.fill(0x00);
-    err = nx::core::CsvParser::ReadLine(in, buffer, k_BufferSize);
+    err = nx::core::csv_parser::ReadLine(in, bufferPtr, k_BufferSize);
     if(err < 0)
     {
-      return MakeErrorResult(k_RBR_READ_ERROR, fmt::format("Could not read data from file while skipping header lines: {}", filename.string()));
+      return MakeErrorResult(k_RbrReadError, fmt::format("Could not read data from file while skipping header lines: {}", filename.string()));
     }
   }
 
@@ -177,13 +177,13 @@ Result<> ReadFile(const std::filesystem::path& filename, AbstractDataStore<T>& d
       }
       bufferedValues++;
       err = CheckErrorBits(&in);
-      if(err == k_RBR_READ_EOF && i < totalSize - 1)
+      if(err == k_RbrReadEof && i < totalSize - 1)
       {
-        return MakeErrorResult(k_RBR_READ_EOF, fmt::format("Read past End Of File (EOF) while parsing file: {}", filename.string()));
+        return MakeErrorResult(k_RbrReadEof, fmt::format("Read past End Of File (EOF) while parsing file: {}", filename.string()));
       }
-      if(err == k_RBR_READ_ERROR)
+      if(err == k_RbrReadError)
       {
-        return MakeErrorResult(k_RBR_READ_ERROR, fmt::format("Read error while parsing file: {}", filename.string()));
+        return MakeErrorResult(k_RbrReadError, fmt::format("Read error while parsing file: {}", filename.string()));
       }
       if(bufferedValues == bufferSize)
       {
@@ -203,13 +203,13 @@ Result<> ReadFile(const std::filesystem::path& filename, AbstractDataStore<T>& d
       in >> value;
       valueBuffer[bufferedValues++] = static_cast<T>(value);
       err = CheckErrorBits(&in);
-      if(err == k_RBR_READ_EOF && i < totalSize - 1)
+      if(err == k_RbrReadEof && i < totalSize - 1)
       {
-        return MakeErrorResult(k_RBR_READ_EOF, fmt::format("Read past End Of File (EOF) while parsing file: {}", filename.string()));
+        return MakeErrorResult(k_RbrReadEof, fmt::format("Read past End Of File (EOF) while parsing file: {}", filename.string()));
       }
-      if(err == k_RBR_READ_ERROR)
+      if(err == k_RbrReadError)
       {
-        return MakeErrorResult(k_RBR_READ_ERROR, fmt::format("Read error while parsing file: {}", filename.string()));
+        return MakeErrorResult(k_RbrReadError, fmt::format("Read error while parsing file: {}", filename.string()));
       }
       if(bufferedValues == bufferSize)
       {
@@ -241,31 +241,31 @@ Result<> ReadFile(const std::filesystem::path& filename, AbstractDataStore<T>& d
 template <typename T>
 Result<> ReadFile(const std::filesystem::path& filename, AbstractDataStore<T>& data, uint64_t skipHeaderLines, char delimiter)
 {
-  int32 err;
+  int32 err = 0;
   if(!std::filesystem::exists(filename))
   {
-    return MakeErrorResult(k_RBR_FILE_NOT_EXIST, fmt::format("Input file does not exist: {}", filename.string()));
+    return MakeErrorResult(k_RbrFileNotExist, fmt::format("Input file does not exist: {}", filename.string()));
   }
 
   std::ifstream in(filename.c_str(), std::ios_base::in | std::ios_base::binary);
   if(!in.is_open())
   {
-    return MakeErrorResult(k_RBR_FILE_NOT_OPEN, fmt::format("Could not open file for reading: {}", filename.string()));
+    return MakeErrorResult(k_RbrFileNotOpen, fmt::format("Could not open file for reading: {}", filename.string()));
   }
 
-  in.imbue(std::locale(std::locale(), new nx::core::CsvParser::DelimiterType(delimiter)));
+  in.imbue(std::locale(std::locale(), new nx::core::csv_parser::DelimiterType(delimiter)));
 
   std::array<char, k_BufferSize> buf = {};
-  char* buffer = buf.data();
+  char* bufferPtr = buf.data();
 
   // Discard each bounded header line. ReadLine discards any suffix beyond its buffer.
   for(int i = 0; i < skipHeaderLines; i++)
   {
     buf.fill(0x00);
-    err = nx::core::CsvParser::ReadLine(in, buffer, k_BufferSize);
+    err = nx::core::csv_parser::ReadLine(in, bufferPtr, k_BufferSize);
     if(err < 0)
     {
-      return MakeErrorResult(k_RBR_READ_ERROR, fmt::format("Could not read data from file while skipping header lines: {}", filename.string()));
+      return MakeErrorResult(k_RbrReadError, fmt::format("Could not read data from file while skipping header lines: {}", filename.string()));
     }
   }
 
@@ -283,20 +283,20 @@ Result<> ReadFile(const std::filesystem::path& filename, AbstractDataStore<T>& d
   for(size_t i = 0; i < totalSize; ++i)
   {
     in >> value;
-    Result<T> parseResult = StringInterpretationUtilities::Convert<T>(value);
+    Result<T> parseResult = string_interpretation_utilities::Convert<T>(value);
     if(parseResult.invalid())
     {
       return ConvertResult(std::move(parseResult));
     }
     valueBuffer[bufferedValues++] = parseResult.value();
     err = CheckErrorBits(&in);
-    if(err == k_RBR_READ_EOF && i < totalSize - 1)
+    if(err == k_RbrReadEof && i < totalSize - 1)
     {
-      return MakeErrorResult(k_RBR_READ_EOF, fmt::format("Read past End Of File (EOF) while parsing file: {}", filename.string()));
+      return MakeErrorResult(k_RbrReadEof, fmt::format("Read past End Of File (EOF) while parsing file: {}", filename.string()));
     }
-    if(err == k_RBR_READ_ERROR)
+    if(err == k_RbrReadError)
     {
-      return MakeErrorResult(k_RBR_READ_ERROR, fmt::format("Read error while parsing file: {}", filename.string()));
+      return MakeErrorResult(k_RbrReadError, fmt::format("Read error while parsing file: {}", filename.string()));
     }
     if(bufferedValues == bufferSize)
     {
@@ -316,4 +316,4 @@ Result<> ReadFile(const std::filesystem::path& filename, AbstractDataStore<T>& d
   }
   return data.copyFromBuffer(outputOffset, nonstd::span<const T>(valueBuffer.get(), bufferedValues));
 }
-} // namespace nx::core::CsvParser
+} // namespace nx::core::csv_parser

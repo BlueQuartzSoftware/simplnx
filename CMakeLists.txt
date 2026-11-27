@@ -370,6 +370,15 @@ set(CoreParameters
 )
 
 set(SIMPLNX_SOURCE_DIR ${simplnx_SOURCE_DIR}/src/simplnx)
+set(SIMPLNX_THIRD_PARTY_DIR ${simplnx_SOURCE_DIR}/3rdParty)
+
+set(SIMPLNX_THIRD_PARTY_HEADERS
+  ${SIMPLNX_THIRD_PARTY_DIR}/MD5/MD5.hpp
+  ${SIMPLNX_THIRD_PARTY_DIR}/RTree/RTree.hpp
+)
+set(SIMPLNX_THIRD_PARTY_SOURCES
+  ${SIMPLNX_THIRD_PARTY_DIR}/MD5/MD5.cpp
+)
 
 set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Common/Aliases.hpp
@@ -627,7 +636,6 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/TooltipRowItem.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/OStreamUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ParallelAlgorithmUtilities.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/RTree.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageRotationUtilities.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/FlyingEdges.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/SampleSurfaceMesh.hpp
@@ -675,7 +683,6 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/ObjectIO.hpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.hpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/MD5.hpp
 )
 
 set(SIMPLNX_GENERATED_HEADERS
@@ -898,7 +905,6 @@ set(SIMPLNX_SRCS
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/HDF5/IO/ObjectIO.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/Parsing/Text/CsvParser.cpp
-  ${SIMPLNX_SOURCE_DIR}/Utilities/MD5.cpp
 
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/ImageIOFactory.cpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageIO/MhaImageIO.cpp
@@ -963,6 +969,13 @@ list(APPEND SIMPLNX_GENERATED_HEADERS
   ${SIMPLNX_GENERATED_HEADER_DIR}/SIMPLNXVersion.cpp
 )
 
+# Preserve the public include spellings in the build and installed packages.
+foreach(header IN ITEMS MD5 RTree)
+  set(legacy_header "${SIMPLNX_GENERATED_HEADER_DIR}/Utilities/${header}.hpp")
+  file(CONFIGURE OUTPUT "${legacy_header}" CONTENT "#pragma once\n\n#include <${header}/${header}.hpp>\n")
+  list(APPEND SIMPLNX_GENERATED_HEADERS "${legacy_header}")
+endforeach()
+
 set(SIMPLNX_ALL_HDRS
   ${SIMPLNX_HDRS}
   ${SIMPLNX_GENERATED_HEADERS}
@@ -972,11 +985,16 @@ target_sources(simplnx
   PRIVATE
     ${SIMPLNX_ALL_HDRS}
     ${SIMPLNX_SRCS}
+    ${SIMPLNX_THIRD_PARTY_HEADERS}
+    ${SIMPLNX_THIRD_PARTY_SOURCES}
 )
 
 source_group(TREE ${SIMPLNX_SOURCE_DIR} PREFIX "simplnx" FILES ${SIMPLNX_HDRS})
 source_group(TREE ${SIMPLNX_GENERATED_HEADER_DIR} PREFIX "simplnx/generated" FILES ${SIMPLNX_GENERATED_HEADERS})
 source_group(TREE ${SIMPLNX_SOURCE_DIR} PREFIX "simplnx" FILES ${SIMPLNX_SRCS})
+
+source_group(TREE "${SIMPLNX_THIRD_PARTY_DIR}" PREFIX "3rdParty" FILES
+  ${SIMPLNX_THIRD_PARTY_HEADERS} ${SIMPLNX_THIRD_PARTY_SOURCES})
 
 set(SIMPLNX_INCLUDE_DIR ${simplnx_SOURCE_DIR}/src)
 
@@ -984,8 +1002,13 @@ target_include_directories(simplnx
   PUBLIC
     $<BUILD_INTERFACE:${SIMPLNX_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${SIMPLNX_GENERATED_DIR}>
-    $<BUILD_INTERFACE:${SIMPLNX_SOURCE_DIR}/3rdParty/canvas_ity/src>
     $<INSTALL_INTERFACE:include>
+)
+
+target_include_directories(simplnx SYSTEM
+  PUBLIC
+    $<BUILD_INTERFACE:${SIMPLNX_THIRD_PARTY_DIR}>
+    $<BUILD_INTERFACE:${SIMPLNX_THIRD_PARTY_DIR}/canvas_ity/src>
 )
 
 cmake_dependent_option(SIMPLNX_DOWNLOAD_TEST_FILES_FIRST "Forces test files to download before simplnx builds" OFF "SIMPLNX_DOWNLOAD_TEST_FILES" OFF)
@@ -1160,6 +1183,12 @@ if(SIMPLNX_ENABLE_INSTALL)
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/simplnx
     COMPONENT develop
     BASE_DIR ${SIMPLNX_SOURCE_DIR}
+  )
+
+  install_with_directory(FILES ${SIMPLNX_THIRD_PARTY_HEADERS}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    COMPONENT develop
+    BASE_DIR ${SIMPLNX_THIRD_PARTY_DIR}
   )
 
   install_with_directory(FILES ${SIMPLNX_GENERATED_HEADERS}

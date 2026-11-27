@@ -14,7 +14,7 @@ public:
   using ValueType = DataPath;
 
   ArrayCreationParameter() = delete;
-  ArrayCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  ArrayCreationParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~ArrayCreationParameter() override = default;
 
   ArrayCreationParameter(const ArrayCreationParameter&) = delete;
@@ -33,13 +33,13 @@ public:
    * @brief
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -97,19 +97,19 @@ protected:
   Result<std::any> fromJsonImpl(const nlohmann::json& json, VersionType version) const override;
 
 private:
-  ValueType m_DefaultValue = {};
+  ValueType m_DefaultValue;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT DataArrayCreationFilterParameterConverter
 {
   using ParameterType = ArrayCreationParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::ArrayCreationParameter, "ab047a7d-f81b-4e6f-99b5-610e7b69fc5b");

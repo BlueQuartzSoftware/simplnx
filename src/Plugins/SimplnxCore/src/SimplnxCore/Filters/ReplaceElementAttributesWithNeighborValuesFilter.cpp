@@ -64,7 +64,7 @@ Parameters ReplaceElementAttributesWithNeighborValuesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
-  params.insert(std::make_unique<Float32Parameter>(k_MinConfidence_Key, "Threshold Value", "The value to of the threshold", 0.1F));
+  params.insert(std::make_unique<Float32ParameterType>(k_MinConfidence_Key, "Threshold Value", "The value to of the threshold", 0.1F));
   params.insert(std::make_unique<ChoicesParameter>(k_SelectedComparison_Key, "Comparison Operator", "The operator to use for comparisons. 0=Less, 1=Greater Than", 0, detail::k_OperationChoices));
   params.insert(std::make_unique<BoolParameter>(
       k_Loop_Key, "Loop Until Gone",
@@ -74,9 +74,9 @@ Parameters ReplaceElementAttributesWithNeighborValuesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_ComparisonDataPath, "Input Comparison Array", "The DataPath to the input array to use for comparison", DataPath{},
-                                                          nx::core::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          nx::core::GetAllDataTypes(), ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   return params;
 }
@@ -88,21 +88,21 @@ IFilter::VersionType ReplaceElementAttributesWithNeighborValuesFilter::parameter
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ReplaceElementAttributesWithNeighborValuesFilter::clone() const
+IFilter::UniquePointerType ReplaceElementAttributesWithNeighborValuesFilter::clone() const
 {
   return std::make_unique<ReplaceElementAttributesWithNeighborValuesFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   const auto geometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
   const auto inputArrayPath = filterArgs.value<DataPath>(k_ComparisonDataPath);
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, geometryPath, {inputArrayPath}, k_TupleCountMismatchError); tupleResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(tupleResult), {})};
   }
 
   const auto& imageGeomRef = dataStructure.getDataRefAs<ImageGeom>(geometryPath);
@@ -113,7 +113,7 @@ IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::prefl
   {
     if(auto cellDataResult = ValidateArrayInGeometryCellData(dataStructure, geometryPath, inputArrayPath, k_ComparisonNotInCellDataError, "Input Comparison Array"); cellDataResult.invalid())
     {
-      return {ConvertResultTo<OutputActions>(std::move(cellDataResult), {})};
+      return {.output_actions = ConvertResultTo<OutputActions>(std::move(cellDataResult), {})};
     }
   }
 
@@ -127,33 +127,33 @@ IFilter::PreflightResult ReplaceElementAttributesWithNeighborValuesFilter::prefl
     }
   }
 
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ReplaceElementAttributesWithNeighborValuesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode,
-                                                                       const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ReplaceElementAttributesWithNeighborValuesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/,
+                                                                       const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ReplaceElementAttributesWithNeighborValuesInputValues inputValues;
 
-  inputValues.MinConfidence = filterArgs.value<float32>(k_MinConfidence_Key);
-  inputValues.SelectedComparison = filterArgs.value<ChoicesParameter::ValueType>(k_SelectedComparison_Key);
-  inputValues.Loop = filterArgs.value<bool>(k_Loop_Key);
-  inputValues.InputArrayPath = filterArgs.value<DataPath>(k_ComparisonDataPath);
-  inputValues.SelectedImageGeometryPath = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.min_confidence = filterArgs.value<float32>(k_MinConfidence_Key);
+  inputValues.selected_comparison = filterArgs.value<ChoicesParameter::ValueType>(k_SelectedComparison_Key);
+  inputValues.loop = filterArgs.value<bool>(k_Loop_Key);
+  inputValues.input_array_path = filterArgs.value<DataPath>(k_ComparisonDataPath);
+  inputValues.selected_image_geometry_path = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   return ReplaceElementAttributesWithNeighborValues(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_MinConfidenceKey = "MinConfidence";
-constexpr StringLiteral k_SelectedComparisonKey = "SelectedComparison";
-constexpr StringLiteral k_LoopKey = "Loop";
-constexpr StringLiteral k_ConfidenceIndexArrayPathKey = "ConfidenceIndexArrayPath";
-} // namespace SIMPL
+constexpr StringLiteralType k_MinConfidenceKey = "MinConfidence";
+constexpr StringLiteralType k_SelectedComparisonKey = "SelectedComparison";
+constexpr StringLiteralType k_LoopKey = "Loop";
+constexpr StringLiteralType k_ConfidenceIndexArrayPathKey = "ConfidenceIndexArrayPath";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ReplaceElementAttributesWithNeighborValuesFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -162,12 +162,12 @@ Result<Arguments> ReplaceElementAttributesWithNeighborValuesFilter::FromSIMPLJso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::FloatFilterParameterConverter<float32>>(args, json, SIMPL::k_MinConfidenceKey, k_MinConfidence_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_SelectedComparisonKey, k_SelectedComparison_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_LoopKey, k_Loop_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_ConfidenceIndexArrayPathKey, k_ComparisonDataPath));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_MinConfidenceKey, k_MinConfidence_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_SelectedComparisonKey, k_SelectedComparison_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_LoopKey, k_Loop_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ConfidenceIndexArrayPathKey, k_ComparisonDataPath));
   results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_ConfidenceIndexArrayPathKey, k_SelectedImageGeometryPath_Key));
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_ConfidenceIndexArrayPathKey, k_SelectedImageGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

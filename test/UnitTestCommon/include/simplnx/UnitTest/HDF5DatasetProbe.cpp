@@ -8,7 +8,7 @@
 #include <mutex>
 #include <optional>
 
-namespace nx::core::UnitTest
+namespace nx::core::unit_test
 {
 namespace
 {
@@ -32,7 +32,7 @@ std::optional<DatasetLayout> TranslateH5Layout(H5D_layout_t layout) noexcept
 
 std::optional<DatasetProbeInfo> ProbeHdf5Dataset(const std::filesystem::path& filePath, const std::string& datasetPath)
 {
-  std::lock_guard<std::mutex> hdf5Lock(HDF5::Support::ApiLock());
+  std::lock_guard<std::mutex> hdf5Lock(hdf5::Support::ApiLock());
   const hid_t fileId = H5Fopen(filePath.string().c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
   if(fileId < 0)
   {
@@ -79,8 +79,8 @@ std::optional<DatasetProbeInfo> ProbeHdf5Dataset(const std::filesystem::path& fi
     const H5Z_filter_t filterId = H5Pget_filter2(dcplId, static_cast<unsigned int>(i), &flags, &cdCapacity, cdValues.data(), filterName.size(), filterName.data(), &filterConfig);
     if(filterId == H5Z_FILTER_DEFLATE)
     {
-      info.hasDeflate = true;
-      info.deflateLevel = static_cast<std::int32_t>(cdValues[0]);
+      info.has_deflate = true;
+      info.deflate_level = static_cast<std::int32_t>(cdValues[0]);
       break;
     }
   }
@@ -91,4 +91,4 @@ std::optional<DatasetProbeInfo> ProbeHdf5Dataset(const std::filesystem::path& fi
   return info;
 }
 
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test

@@ -22,27 +22,16 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 
+#include <algorithm>
 #include <atomic>
+#include <cstdio>
 #include <filesystem>
 #include <iostream>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <type_traits>
-
-#if defined(_MSC_VER)
-/**
- * @def FSEEK64
- * @brief Selects the 64-bit file-seek function.
- */
-#define FSEEK64 _fseeki64
-#else
-/**
- * @def FSEEK64
- * @brief Selects the 64-bit file-seek function.
- */
-#define FSEEK64 std::fseek
-#endif
+#include <utility>
 
 /**
  * @namespace nx::core
@@ -74,7 +63,7 @@ enum class LegacyDimensionCheck : uint8
   NonPositive    ///< Uses the legacy error code for values less than or equal to zero.
 };
 
-namespace DimensionConversion
+namespace dimension_conversion
 {
 inline constexpr int32 k_InvalidValue = -79000;
 inline constexpr int32 k_ProductOverflow = -79001;
@@ -86,7 +75,7 @@ inline constexpr int32 k_ComponentCapacity = -79006;
 inline constexpr int32 k_StringTupleOverflow = -79007;
 inline constexpr int32 k_StringCapacity = -79008;
 inline constexpr int32 k_ZeroDimension = -79009;
-} // namespace DimensionConversion
+} // namespace dimension_conversion
 
 /**
  * @brief Checks a shape product before multiplication. A zero factor gives zero in every order.
@@ -95,7 +84,7 @@ inline constexpr int32 k_ZeroDimension = -79009;
  * @param errorCode Reports an unrepresentable product.
  * @return The product, or a contextual error. No element storage is allocated.
  */
-SIMPLNX_EXPORT Result<usize> ComputeDimensionProduct(nonstd::span<const usize> dimensions, const std::string& name, int32 errorCode = DimensionConversion::k_ProductOverflow);
+SIMPLNX_EXPORT Result<usize> ComputeDimensionProduct(nonstd::span<const usize> dimensions, const std::string& name, int32 errorCode = dimension_conversion::k_ProductOverflow);
 
 /**
  * @brief Converts finite whole table values below 2^usize::digits without truncation.
@@ -108,7 +97,7 @@ SIMPLNX_EXPORT Result<usize> ComputeDimensionProduct(nonstd::span<const usize> d
  * Invalid input returns an error without a throwing numeric conversion or an element allocation.
  */
 SIMPLNX_EXPORT Result<ShapeType> ConvertDimensions(nonstd::span<const float64> dimensions, const std::string& name, ZeroDimensionPolicy zeroPolicy,
-                                                   LegacyDimensionCheck legacyCheck = LegacyDimensionCheck::None, int32 legacyErrorCode = DimensionConversion::k_InvalidValue);
+                                                   LegacyDimensionCheck legacyCheck = LegacyDimensionCheck::None, int32 legacyErrorCode = dimension_conversion::k_InvalidValue);
 
 /**
  * @brief Parses comma-separated unsigned decimal dimensions, with ASCII whitespace around tokens.
@@ -119,7 +108,7 @@ SIMPLNX_EXPORT Result<ShapeType> ConvertDimensions(nonstd::span<const float64> d
  * @return Validated shape with a representable product, or the first token or product error.
  * Parsing uses uint64 directly and consumes each complete token without throwing numeric conversions.
  */
-SIMPLNX_EXPORT Result<ShapeType> ConvertDimensions(const std::string& dimensions, const std::string& name, ZeroDimensionPolicy zeroPolicy, int32 parseErrorCode = DimensionConversion::k_InvalidToken);
+SIMPLNX_EXPORT Result<ShapeType> ConvertDimensions(const std::string& dimensions, const std::string& name, ZeroDimensionPolicy zeroPolicy, int32 parseErrorCode = dimension_conversion::k_InvalidToken);
 
 /**
  * @brief Checks that data has one tuple per geometry cell.
@@ -303,7 +292,7 @@ struct ConditionalReplaceValueInArrayFromString
     using DataArrayType = DataArray<T>;
 
     auto& inputDataArray = dynamic_cast<DataArrayType&>(inputDataObject);
-    Result<T> conversionResult = StringInterpretationUtilities::Convert<T>(valueAsStr);
+    Result<T> conversionResult = string_interpretation_utilities::Convert<T>(valueAsStr);
     if(conversionResult.invalid())
     {
       return MakeErrorResult<>(-4000, "Input String Value could not be converted to the appropriate numeric type.");
@@ -313,15 +302,15 @@ struct ConditionalReplaceValueInArrayFromString
 
     if(nx::core::DataType::uint8 == arrayType)
     {
-      ReplaceValue<T, uint8>(inputDataArray, dynamic_cast<const UInt8Array*>(&conditionalDataArray), conversionResult.value(), invertMask);
+      ReplaceValue<T, uint8>(inputDataArray, dynamic_cast<const UInt8ArrayType*>(&conditionalDataArray), conversionResult.value(), invertMask);
     }
     else if(nx::core::DataType::int8 == arrayType)
     {
-      ReplaceValue<T, int8>(inputDataArray, dynamic_cast<const Int8Array*>(&conditionalDataArray), conversionResult.value(), invertMask);
+      ReplaceValue<T, int8>(inputDataArray, dynamic_cast<const Int8ArrayType*>(&conditionalDataArray), conversionResult.value(), invertMask);
     }
     else if(nx::core::DataType::boolean == arrayType)
     {
-      ReplaceValue<T, bool>(inputDataArray, dynamic_cast<const BoolArray*>(&conditionalDataArray), conversionResult.value(), invertMask);
+      ReplaceValue<T, bool>(inputDataArray, dynamic_cast<const BoolArrayType*>(&conditionalDataArray), conversionResult.value(), invertMask);
     }
     else
     {
@@ -350,14 +339,14 @@ SIMPLNX_EXPORT Result<> ConditionalReplaceValueInArray(const std::string& valueA
  * @return True if conversion succeeds.
  */
 template <typename T>
-bool ConvertDataArrayDataStore(const std::shared_ptr<DataArray<T>> dataArray, const std::string& dataFormat)
+bool ConvertDataArrayDataStore(const std::shared_ptr<DataArray<T>>& dataArray, const std::string& dataFormat)
 {
   if(dataArray == nullptr)
   {
     return false;
   }
   const AbstractDataStore<T>& dataStore = dataArray->getDataStoreRef();
-  auto convertedDataStore = DataStoreUtilities::ConvertDataStore<T>(dataStore, dataFormat);
+  auto convertedDataStore = data_store_utilities::ConvertDataStore<T>(dataStore, dataFormat);
   if(convertedDataStore == nullptr)
   {
     return false;
@@ -391,7 +380,7 @@ SIMPLNX_EXPORT bool ConvertIDataArray(const std::shared_ptr<IDataArray>& dataArr
 template <class T>
 Result<> CreateNeighbors(DataStructure& dataStructure, const ShapeType& tupleShape, const DataPath& path, IDataAction::Mode mode, const std::string& dataFormat = "")
 {
-  static constexpr StringLiteral prefix = "CreateNeighborListAction: ";
+  static constexpr StringLiteralType k_Prefix = "CreateNeighborListAction: ";
   auto parentPath = path.getParent();
 
   std::optional<DataObject::IdType> dataObjectId;
@@ -401,7 +390,7 @@ Result<> CreateNeighbors(DataStructure& dataStructure, const ShapeType& tupleSha
     auto* parentObjectPtr = dataStructure.getData(parentPath);
     if(parentObjectPtr == nullptr)
     {
-      return MakeErrorResult(-5801, fmt::format("{}Parent object \"{}\" does not exist", prefix, parentPath.toString()));
+      return MakeErrorResult(-5801, fmt::format("{}Parent object \"{}\" does not exist", k_Prefix, parentPath.toString()));
     }
 
     dataObjectId = parentObjectPtr->getId();
@@ -409,14 +398,14 @@ Result<> CreateNeighbors(DataStructure& dataStructure, const ShapeType& tupleSha
 
   const usize last = path.getLength() - 1;
 
-  std::string name = path[last];
+  const std::string& name = path[last];
   // The resolver selects the backing storage.
-  auto listStore = DataStoreUtilities::CreateListStore<T>(dataStructure, path, tupleShape, mode, dataFormat);
-  NeighborList<T>* neighborList = NeighborList<T>::Create(dataStructure, name, listStore, dataObjectId);
+  auto listStore = data_store_utilities::CreateListStore<T>(dataStructure, path, tupleShape, mode, dataFormat);
+  NeighborList<T>* neighborListPtr = NeighborList<T>::Create(dataStructure, name, listStore, dataObjectId);
 
-  if(neighborList == nullptr)
+  if(neighborListPtr == nullptr)
   {
-    return MakeErrorResult(-5802, fmt::format("{}Unable to create NeighborList at \"{}\"", prefix, path.toString()));
+    return MakeErrorResult(-5802, fmt::format("{}Unable to create NeighborList at \"{}\"", k_Prefix, path.toString()));
   }
 
   return {};
@@ -442,6 +431,18 @@ DataArray<T>& ArrayRefFromPath(DataStructure& dataStructure, const DataPath& pat
   return *dataArrayPtr;
 }
 
+namespace detail
+{
+inline int FileSeek64(std::FILE* filePtr, int64 offset, int origin)
+{
+#if defined(_MSC_VER)
+  return _fseeki64(filePtr, offset, origin);
+#else
+  return std::fseek(filePtr, static_cast<long>(offset), origin);
+#endif
+}
+} // namespace detail
+
 /**
  * @brief Reads a binary file into a preallocated array in bounded pages.
  *
@@ -466,7 +467,7 @@ Result<> ImportFromBinaryFile(const std::filesystem::path& binaryFilePath, DataA
 
   if(startByte > 0)
   {
-    int result = FSEEK64(inputFilePtr, static_cast<int64>(startByte), SEEK_SET);
+    int result = detail::FileSeek64(inputFilePtr, static_cast<int64>(startByte), SEEK_SET);
     if(result != 0)
     {
       std::fclose(inputFilePtr);
@@ -501,7 +502,7 @@ Result<> ImportFromBinaryFile(const std::filesystem::path& binaryFilePath, DataA
 
     if(swapEndian)
     {
-      std::transform(buffer.get(), buffer.get() + elementsRead, buffer.get(), [](T value) { return nx::core::byteswap(value); });
+      std::transform(buffer.get(), buffer.get() + elementsRead, buffer.get(), [](T value) { return nx::core::Byteswap(value); });
     }
 
     Result<> copyResult = outputDataArray.getDataStoreRef().copyFromBuffer(elementCounter, nonstd::span<const T>(buffer.get(), elementsRead));
@@ -515,10 +516,7 @@ Result<> ImportFromBinaryFile(const std::filesystem::path& binaryFilePath, DataA
 
     usize elementsLeft = numElements - elementCounter;
 
-    if(elementsLeft < chunkSize)
-    {
-      chunkSize = elementsLeft;
-    }
+    chunkSize = std::min(elementsLeft, chunkSize);
   }
 
   std::fclose(inputFilePtr);
@@ -637,8 +635,8 @@ SIMPLNX_EXPORT bool CheckArraysHaveSameTupleCount(const DataStructure& dataStruc
  * @param messageHandler Receives validation progress.
  * @return Error for negative, out-of-range, or unreadable identifiers.
  */
-SIMPLNX_EXPORT Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& sourceDataPath, const Int32Array& featureIds, bool ignoreNegativeValues,
-                                                                           const IFilter::MessageHandler& messageHandler);
+SIMPLNX_EXPORT Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& sourceDataPath, const Int32ArrayType& featureIds,
+                                                                           bool ignoreNegativeValues, const IFilter::MessageHandler& messageHandler);
 /**
  * @brief Validates feature identifiers with cancellation.
  * @param dataStructure Data structure that owns the source.
@@ -652,8 +650,8 @@ SIMPLNX_EXPORT Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const
  * The routine checks cancellation between bounded batches and does not modify output.
  * Cancellation returns a valid result without completing validation.
  */
-SIMPLNX_EXPORT Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& sourceDataPath, const Int32Array& featureIds, bool ignoreNegativeValues,
-                                                                           const IFilter::MessageHandler& messageHandler, const std::atomic_bool* shouldCancel);
+SIMPLNX_EXPORT Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& sourceDataPath, const Int32ArrayType& featureIds,
+                                                                           bool ignoreNegativeValues, const IFilter::MessageHandler& messageHandler, const std::atomic_bool* shouldCancel);
 
 /**
  * @brief Ensures NeighborList storage reaches its declared tuple count.
@@ -756,7 +754,7 @@ private:
  * @namespace Indexing
  * @brief Contains multidimensional index utilities.
  */
-namespace Indexing
+namespace indexing
 {
 /**
  * @brief Flattens a position with the rightmost dimension fastest.
@@ -797,11 +795,11 @@ inline usize Flatten(const std::vector<usize>& position, const std::vector<usize
 inline std::vector<uint64> FindPosition(uint64 index, const std::vector<uint64>& shape)
 {
   using index_type = uint64;
-  using shape_type = std::vector<index_type>;
+  using PositionType = std::vector<index_type>;
 
   const bool usingColumnMajor = true;
   const usize dimensions = shape.size();
-  shape_type position(dimensions);
+  PositionType position(dimensions);
   for(index_type i = 0; i < dimensions; i++)
   {
     const index_type offset = (usingColumnMajor) ? dimensions - i - 1 : i;
@@ -828,13 +826,11 @@ inline void IncrementLikeOdometer(std::vector<usize>& idx, const std::vector<usi
     {
       break;
     }
-    else
-    {
-      idx[d] = 0;
-    }
+
+    idx[d] = 0;
   }
 }
-} // namespace Indexing
+} // namespace indexing
 
 /**
  * @brief Creates an initialized array that matches another array type.
@@ -848,7 +844,7 @@ inline void IncrementLikeOdometer(std::vector<usize>& idx, const std::vector<usi
  * @pre array is not null.
  */
 SIMPLNX_EXPORT Result<IArray*> CreateDefaultValueArrayFromArray(DataStructure& destDataStructure, IArray* array, const std::string& newArrayName, const ShapeType& tupleShape,
-                                                                const std::string& defaultValue, const std::optional<DataObject::IdType> parentId = {});
+                                                                const std::string& defaultValue, std::optional<DataObject::IdType> parentId = {});
 
 /**
  * @brief Computes minimum and maximum values for each component.
@@ -888,7 +884,7 @@ std::vector<std::array<T, 2>> GetComponentMinMax(std::shared_ptr<DataArray<T>> d
  * @namespace CopyFromArray
  * @brief Contains storage-aware array copy and append utilities.
  */
-namespace CopyFromArray
+namespace copy_from_array
 {
 /**
  * @class ParallelTaskResult
@@ -1229,8 +1225,8 @@ template <class K>
   usize dstOffset = 0;
   for(usize n = 0; n < tuplesToCopy; ++n)
   {
-    const usize srcLinearIdx = Indexing::Flatten(currentIdx, inputShape) + Indexing::Flatten(srcStart, inputShape);
-    const usize dstLinearIdx = Indexing::Flatten(dstStart, destShape) + dstOffset;
+    const usize srcLinearIdx = indexing::Flatten(currentIdx, inputShape) + indexing::Flatten(srcStart, inputShape);
+    const usize dstLinearIdx = indexing::Flatten(dstStart, destShape) + dstOffset;
 
     if constexpr(std::is_same_v<K, StringArray>)
     {
@@ -1249,7 +1245,7 @@ template <class K>
       }
     }
 
-    Indexing::IncrementLikeOdometer(currentIdx, extent);
+    indexing::IncrementLikeOdometer(currentIdx, extent);
 
     dstOffset++;
   }
@@ -1997,18 +1993,18 @@ public:
     Result<> result;
     if(m_ArrayType == IArray::ArrayType::NeighborListArray)
     {
-      using NeighborListT = NeighborList<T>;
-      auto* destArray = dynamic_cast<NeighborListT*>(m_DestCellArray);
+      using NeighborListTType = NeighborList<T>;
+      auto* destArrayPtr = dynamic_cast<NeighborListTType*>(m_DestCellArray);
       // NeighborList copies need an initialized destination list.
-      if(destArray->getVectors().empty() || destArray->getList(0).empty())
+      if(destArrayPtr->getVectors().empty() || destArrayPtr->getList(0).empty())
       {
-        destArray->addEntry(destArray->getNumberOfTuples() - 1, 0);
+        destArrayPtr->addEntry(destArrayPtr->getNumberOfTuples() - 1, 0);
       }
-      std::vector<const NeighborListT*> castedArrays;
+      std::vector<const NeighborListTType*> castedArrays;
       castedArrays.reserve(m_InputCellArrays.size());
       std::transform(m_InputCellArrays.begin(), m_InputCellArrays.end(), std::back_inserter(castedArrays),
-                     [](const IArray* elem) -> const NeighborListT* { return dynamic_cast<const NeighborListT*>(elem); });
-      result = CombineData<NeighborListT>(castedArrays, m_InputTupleShapes, *destArray, m_NewDestDims, m_Direction, m_Mirror, &m_TaskResult);
+                     [](const IArray* elem) -> const NeighborListTType* { return dynamic_cast<const NeighborListTType*>(elem); });
+      result = CombineData<NeighborListTType>(castedArrays, m_InputTupleShapes, *destArrayPtr, m_NewDestDims, m_Direction, m_Mirror, &m_TaskResult);
     }
     else if(m_ArrayType == IArray::ArrayType::DataArray)
     {
@@ -2120,27 +2116,27 @@ private:
         // The bool copy path must not instantiate the unsupported NeighborList<bool> type.
         if constexpr(!std::is_same_v<T, bool>)
         {
-          using NeighborListT = NeighborList<T>;
-          auto* destArray = dynamic_cast<NeighborListT*>(m_DestCellArray);
+          using NeighborListTType = NeighborList<T>;
+          auto* destArrayPtr = dynamic_cast<NeighborListTType*>(m_DestCellArray);
           // The destination list must be initialized before the tuple copy.
-          destArray->setList(i, typename NeighborListT::SharedVectorType(new typename NeighborListT::VectorType));
+          destArrayPtr->setList(i, typename NeighborListTType::SharedVectorType(new typename NeighborListTType::VectorType));
           if(oldIndexI >= 0)
           {
-            copySucceeded = CopyData<NeighborListT>(*dynamic_cast<const NeighborListT*>(m_InputCellArray), *destArray, i, oldIndexI, 1);
+            copySucceeded = CopyData<NeighborListTType>(*dynamic_cast<const NeighborListTType*>(m_InputCellArray), *destArrayPtr, i, oldIndexI, 1);
           }
         }
       }
       else if(m_ArrayType == IArray::ArrayType::DataArray)
       {
         using DataArrayType = DataArray<T>;
-        auto* destArray = dynamic_cast<DataArrayType*>(m_DestCellArray);
+        auto* destArrayPtr = dynamic_cast<DataArrayType*>(m_DestCellArray);
         if(oldIndexI >= 0)
         {
-          copySucceeded = CopyData<DataArrayType>(*dynamic_cast<const DataArrayType*>(m_InputCellArray), *destArray, i, oldIndexI, 1);
+          copySucceeded = CopyData<DataArrayType>(*dynamic_cast<const DataArrayType*>(m_InputCellArray), *destArrayPtr, i, oldIndexI, 1);
         }
         else
         {
-          destArray->initializeTuple(i, 0);
+          destArrayPtr->initializeTuple(i, 0);
         }
       }
       else if(m_ArrayType == IArray::ArrayType::StringArray)
@@ -2184,7 +2180,7 @@ namespace
  *
  * Axis-aligned geometry lets the utility precompute one mapping per axis position.
  */
-std::vector<usize> ComputeAxisBinIndices(usize dimSize, float32 originComp, float32 spacingComp, float32 halfSpacingComp, const Float32Array& gridValues)
+std::vector<usize> ComputeAxisBinIndices(usize dimSize, float32 originComp, float32 spacingComp, float32 halfSpacingComp, const Float32ArrayType& gridValues)
 {
   std::vector<usize> binIndices(dimSize, 0);
   const usize gridValueCount = gridValues.size();
@@ -2230,21 +2226,21 @@ public:
    * @pre Source and destination arrays and grid-value arrays outlive this mapper.
    * @pre xGridValues, yGridValues, and zGridValues are not null.
    */
-  MapRectGridDataToImageData(IArray& destCellArray, ParallelTaskResult& taskResult, const IArray& inputCellArray, const FloatVec3& origin, const SizeVec3& imageGeoDims,
-                             const std::vector<float32>& imageGeoSpacing, const SizeVec3& rectGridDims, const Float32Array* xGridValues, const Float32Array* yGridValues,
-                             const Float32Array* zGridValues)
+  MapRectGridDataToImageData(IArray& destCellArray, ParallelTaskResult& taskResult, const IArray& inputCellArray, FloatVec3Type origin, SizeVec3Type imageGeoDims,
+                             const std::vector<float32>& imageGeoSpacing, SizeVec3Type rectGridDims, const Float32ArrayType* xGridValues, const Float32ArrayType* yGridValues,
+                             const Float32ArrayType* zGridValues)
   : m_ArrayType(destCellArray.getArrayType())
   , m_TaskResult(taskResult)
   , m_InputCellArray(&inputCellArray)
   , m_DestCellArray(&destCellArray)
-  , m_Origin(origin)
-  , m_ImageGeomDims(imageGeoDims)
+  , m_Origin(std::move(origin))
+  , m_ImageGeomDims(std::move(imageGeoDims))
   , m_ImageGeomSpacing(imageGeoSpacing)
-  , m_RectGridDims(rectGridDims)
+  , m_RectGridDims(std::move(rectGridDims))
   , m_XGridValues(xGridValues)
   , m_YGridValues(yGridValues)
   , m_ZGridValues(zGridValues)
-  , m_HalfSpacing(FloatVec3{imageGeoSpacing[0] * 0.5f, imageGeoSpacing[1] * 0.5f, imageGeoSpacing[2] * 0.5f})
+  , m_HalfSpacing(FloatVec3Type{imageGeoSpacing[0] * 0.5f, imageGeoSpacing[1] * 0.5f, imageGeoSpacing[2] * 0.5f})
   {
   }
 
@@ -2307,12 +2303,12 @@ private:
    */
   Result<> mapDataArray(const std::vector<usize>& zIndices, const std::vector<usize>& yIndices, const std::vector<usize>& xIndices) const
   {
-    auto* destArray = dynamic_cast<DataArray<T>*>(m_DestCellArray);
-    const auto* srcArray = dynamic_cast<const DataArray<T>*>(m_InputCellArray);
-    auto& destStore = destArray->getDataStoreRef();
-    const auto& srcStore = srcArray->getDataStoreRef();
+    auto* destArrayPtr = dynamic_cast<DataArray<T>*>(m_DestCellArray);
+    const auto* srcArrayPtr = dynamic_cast<const DataArray<T>*>(m_InputCellArray);
+    auto& destStore = destArrayPtr->getDataStoreRef();
+    const auto& srcStore = srcArrayPtr->getDataStoreRef();
 
-    const usize numComponents = destArray->getNumberOfComponents();
+    const usize numComponents = destArrayPtr->getNumberOfComponents();
     const usize destRowLength = m_ImageGeomDims[0] * numComponents;
     const usize srcRowLength = m_RectGridDims[0] * numComponents;
 
@@ -2357,8 +2353,8 @@ private:
           const int64 rectGridIndex = static_cast<int64>((m_RectGridDims[0] * m_RectGridDims[1] * zIndex) + (m_RectGridDims[0] * yIndex) + xIndex);
           if(rectGridIndex >= 0)
           {
-            const T* srcTuple = srcRowBuffer.data() + (xIndex * numComponents);
-            std::copy_n(srcTuple, numComponents, destRowBuffer.data() + (x * numComponents));
+            const T* srcTuplePtr = srcRowBuffer.data() + (xIndex * numComponents);
+            std::copy_n(srcTuplePtr, numComponents, destRowBuffer.data() + (x * numComponents));
           }
         }
 
@@ -2409,13 +2405,13 @@ private:
           {
             if(m_ArrayType == IArray::ArrayType::NeighborListArray)
             {
-              using NeighborListT = NeighborList<T>;
-              auto* destArrayPtr = dynamic_cast<NeighborListT*>(m_DestCellArray);
+              using NeighborListTType = NeighborList<T>;
+              auto* destArrayPtr = dynamic_cast<NeighborListTType*>(m_DestCellArray);
               // NeighborList tuple copies require an initialized destination list.
-              destArrayPtr->setList(imageIndex, typename NeighborListT::SharedVectorType(new typename NeighborListT::VectorType));
+              destArrayPtr->setList(imageIndex, typename NeighborListTType::SharedVectorType(new typename NeighborListTType::VectorType));
               if(rectGridIndex >= 0)
               {
-                copySucceeded = CopyData<NeighborListT>(*dynamic_cast<const NeighborListT*>(m_InputCellArray), *destArrayPtr, imageIndex, rectGridIndex, 1);
+                copySucceeded = CopyData<NeighborListTType>(*dynamic_cast<const NeighborListTType*>(m_InputCellArray), *destArrayPtr, imageIndex, rectGridIndex, 1);
               }
             }
           }
@@ -2447,14 +2443,14 @@ private:
   ParallelTaskResult& m_TaskResult;
   const IArray* m_InputCellArray = nullptr;
   IArray* m_DestCellArray = nullptr;
-  const FloatVec3 m_Origin;
-  const SizeVec3 m_ImageGeomDims;
+  const FloatVec3Type m_Origin;
+  const SizeVec3Type m_ImageGeomDims;
   const std::vector<float32> m_ImageGeomSpacing;
-  const SizeVec3 m_RectGridDims;
-  const Float32Array* m_XGridValues = nullptr;
-  const Float32Array* m_YGridValues = nullptr;
-  const Float32Array* m_ZGridValues = nullptr;
-  const FloatVec3 m_HalfSpacing;
+  const SizeVec3Type m_RectGridDims;
+  const Float32ArrayType* m_XGridValues = nullptr;
+  const Float32ArrayType* m_YGridValues = nullptr;
+  const Float32ArrayType* m_ZGridValues = nullptr;
+  const FloatVec3Type m_HalfSpacing;
 };
 
 /**
@@ -2530,9 +2526,9 @@ inline void RunBoolCopyUsingIndexList(IArray& destCellArray, ParallelTaskResult&
  * @pre destCellArray and inputCellArray identify DataArray<bool> objects.
  * @note The function executes synchronously.
  */
-inline void RunBoolMapRectToImage(IArray& destCellArray, ParallelTaskResult& taskResult, const IArray& inputCellArray, const FloatVec3& origin, const SizeVec3& imageGeoDims,
-                                  const std::vector<float32>& imageGeoSpacing, const SizeVec3& rectGridDims, const Float32Array* xGridValues, const Float32Array* yGridValues,
-                                  const Float32Array* zGridValues)
+inline void RunBoolMapRectToImage(IArray& destCellArray, ParallelTaskResult& taskResult, const IArray& inputCellArray, const FloatVec3Type& origin, const SizeVec3Type& imageGeoDims,
+                                  const std::vector<float32>& imageGeoSpacing, const SizeVec3Type& rectGridDims, const Float32ArrayType* xGridValues, const Float32ArrayType* yGridValues,
+                                  const Float32ArrayType* zGridValues)
 {
   using DataArrayType = DataArray<bool>;
   MapRectGridDataToImageData<bool>(*dynamic_cast<DataArrayType*>(&destCellArray), taskResult, *dynamic_cast<const DataArrayType*>(&inputCellArray), origin, imageGeoDims, imageGeoSpacing, rectGridDims,
@@ -2672,13 +2668,13 @@ void RunParallelMapRectToImage(IArray& destArray, ParallelRunnerT&& runner, Para
   ExecuteParallelFunction<MapRectGridDataToImageData, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), destArray, taskResult, std::forward<ArgsT>(args)...);
 }
 
-} // namespace CopyFromArray
+} // namespace copy_from_array
 
 /**
  * @namespace TransferGeometryElementData
  * @brief Contains geometry element-data transfer utilities.
  */
-namespace TransferGeometryElementData
+namespace transfer_geometry_element_data
 {
 /**
  * @class CopyCellDataArray
@@ -2768,7 +2764,7 @@ private:
  *
  * The routine checks cancellation before it schedules each source array.
  */
-SIMPLNX_EXPORT void transferElementData(DataStructure& m_DataStructure, AttributeMatrix& destCellDataAM, const std::vector<DataPath>& sourceDataPaths, const std::vector<usize>& newEdgesIndexList,
+SIMPLNX_EXPORT void TransferElementData(DataStructure& m_DataStructure, AttributeMatrix& destCellDataAM, const std::vector<DataPath>& sourceDataPaths, const std::vector<usize>& newEdgesIndexList,
                                         const std::atomic_bool& m_ShouldCancel, const IFilter::MessageHandler& m_MessageHandler);
 
 /**
@@ -2782,5 +2778,5 @@ SIMPLNX_EXPORT void transferElementData(DataStructure& m_DataStructure, Attribut
  */
 SIMPLNX_EXPORT void CreateDataArrayActions(const DataStructure& dataStructure, const AttributeMatrix* sourceAttrMatPtr, const MultiArraySelectionParameter::ValueType& selectedArrayPaths,
                                            const DataPath& reducedGeometryPathAttrMatPath, Result<OutputActions>& resultOutputActions);
-} // namespace TransferGeometryElementData
+} // namespace transfer_geometry_element_data
 } // namespace nx::core

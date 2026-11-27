@@ -23,7 +23,7 @@
  * @brief Locks the process HDF5 mutex for the current scope when mutex support is enabled.
  */
 #ifdef H5Support_USE_MUTEX
-#define H5SUPPORT_MUTEX_LOCK() std::lock_guard<std::mutex> h5ApiLock(nx::core::HDF5::Support::ApiLock());
+#define H5SUPPORT_MUTEX_LOCK() std::lock_guard<std::mutex> h5ApiLock(nx::core::hdf5::Support::ApiLock());
 #else
 #define H5SUPPORT_MUTEX_LOCK()
 #endif
@@ -50,77 +50,15 @@
 #define HDF_ERROR_HANDLER_ON H5Eset_auto(H5E_DEFAULT, _oldHDF_error_func, _oldHDF_error_client_data);
 
 /**
- * @def H5S_CLOSE_H5_ATTRIBUTE
- * @brief Closes an attribute and records a close failure.
- * @param attributeId HDF5 attribute identifier to close.
- * @param error Receives the HDF5 close status.
- * @param returnError Receives an error Result when close fails.
- */
-#define H5S_CLOSE_H5_ATTRIBUTE(attributeId, error, returnError)                                                                                                                                        \
-  error = H5Aclose(attributeId);                                                                                                                                                                       \
-  if(error < 0)                                                                                                                                                                                        \
-  {                                                                                                                                                                                                    \
-    std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): " << "Error Closing Attribute." << std::endl;                                                                                          \
-    returnError = MakeErrorResult(error, "Error Closing Attribute");                                                                                                                                   \
-  }
-
-/**
- * @def H5S_CLOSE_H5_DATASPACE
- * @brief Closes a data space and records a close failure.
- * @param dataspaceId HDF5 data-space identifier to close.
- * @param error Receives the HDF5 close status.
- * @param returnError Receives an error Result when close fails.
- */
-#define H5S_CLOSE_H5_DATASPACE(dataspaceId, error, returnError)                                                                                                                                        \
-  error = H5Sclose(dataspaceId);                                                                                                                                                                       \
-  if(error < 0)                                                                                                                                                                                        \
-  {                                                                                                                                                                                                    \
-    std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): " << "Error closing Dataspace." << std::endl;                                                                                          \
-    returnError = MakeErrorResult(error, "Error Closing Dataspace");                                                                                                                                   \
-  }
-
-/**
- * @def H5S_CLOSE_H5_TYPE
- * @brief Closes a data-type identifier and records a close failure.
- * @param typeId HDF5 data-type identifier to close.
- * @param error Receives the HDF5 close status.
- * @param returnError Receives an error Result when close fails.
- */
-#define H5S_CLOSE_H5_TYPE(typeId, error, returnError)                                                                                                                                                  \
-  error = H5Tclose(typeId);                                                                                                                                                                            \
-  if(error < 0)                                                                                                                                                                                        \
-  {                                                                                                                                                                                                    \
-    std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): " << "Error closing DataType" << std::endl;                                                                                            \
-    returnError = MakeErrorResult(error, "Error closing DataType");                                                                                                                                    \
-  }
-
-/**
- * @def H5_CLOSE_H5_DATASET
- * @brief Closes a dataset and records a close failure.
- * @param datasetId HDF5 dataset identifier to close.
- * @param error Receives the HDF5 close status.
- * @param returnError Receives the negative HDF5 status when close fails.
- * @param datasetName Dataset name included in the diagnostic.
- */
-#define H5_CLOSE_H5_DATASET(datasetId, error, returnError, datasetName)                                                                                                                                \
-  error = H5Dclose(datasetId);                                                                                                                                                                         \
-  if(error < 0)                                                                                                                                                                                        \
-  {                                                                                                                                                                                                    \
-    std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): " << "Error Closing Dataset: " << datasetName << " datasetId=" << datasetId << " retError=" << returnError << std::endl;               \
-    returnError = error;                                                                                                                                                                               \
-  }
-
-/**
  * @namespace nx::core::HDF5
  * @brief Contains HDF5 parsing and I/O utilities.
  */
-namespace nx::core::HDF5
-{
+
 /**
  * @namespace nx::core::HDF5::Support
  * @brief Contains low-level HDF5 support functions.
  */
-namespace Support
+namespace nx::core::hdf5::Support
 {
 /**
  * @brief Tests whether a named child is an HDF5 group.
@@ -368,5 +306,4 @@ std::string SIMPLNX_EXPORT GetNameFromFilterType(H5Z_filter_t id);
  */
 SIMPLNX_EXPORT std::mutex& ApiLock();
 
-} // namespace Support
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5::Support

@@ -53,12 +53,12 @@ Parameters ComputeCoordinatesImageGeomFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_OutputType_Key, "Output Array(s) Type", "The selection here effects which arrays will be produced by the filter",
                                                                     to_underlying(ComputeCoordinatesImageGeom::OutputType::Physical),
-                                                                    ChoicesParameter::Choices{"Physical Coordinates", "Indices", "Both"})); // sequence dependent DO NOT REORDER
+                                                                    ChoicesParameter::ChoicesType{"Physical Coordinates", "Indices", "Both"})); // sequence dependent DO NOT REORDER
 
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeomPath_Key, "Selected Image Geometry",
                                                              "The DataPath to the Image Geometry that produced coordinates or indices will map to", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Array(s)"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_CoordsArrayPath_Key, "Created Physical Coordinate Array Path",
@@ -85,14 +85,14 @@ IFilter::VersionType ComputeCoordinatesImageGeomFilter::parametersVersion() cons
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeCoordinatesImageGeomFilter::clone() const
+IFilter::UniquePointerType ComputeCoordinatesImageGeomFilter::clone() const
 {
   return std::make_unique<ComputeCoordinatesImageGeomFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeCoordinatesImageGeomFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                          const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeCoordinatesImageGeomFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                          const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pOutputTypeValue = filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key);
   auto pSelectedImageGeomValue = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedImageGeomPath_Key);
@@ -116,19 +116,19 @@ IFilter::PreflightResult ComputeCoordinatesImageGeomFilter::preflightImpl(const 
   }
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeCoordinatesImageGeomFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeCoordinatesImageGeomFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                        const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeCoordinatesImageGeomInputValues inputValues;
 
-  inputValues.CoordinateOption = filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key);
-  inputValues.ImageGeomPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedImageGeomPath_Key);
-  inputValues.CoordArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_CoordsArrayPath_Key);
-  inputValues.IndexArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_IndicesArrayPath_Key);
+  inputValues.coordinate_option = filterArgs.value<ChoicesParameter::ValueType>(k_OutputType_Key);
+  inputValues.image_geom_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_SelectedImageGeomPath_Key);
+  inputValues.coord_array_path = filterArgs.value<ArrayCreationParameter::ValueType>(k_CoordsArrayPath_Key);
+  inputValues.index_array_path = filterArgs.value<ArrayCreationParameter::ValueType>(k_IndicesArrayPath_Key);
 
   return ComputeCoordinatesImageGeom(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

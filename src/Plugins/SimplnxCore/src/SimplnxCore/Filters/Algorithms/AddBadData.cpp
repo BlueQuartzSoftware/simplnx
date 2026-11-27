@@ -41,13 +41,13 @@ usize GenerateMutationIndices(const int32* distances, usize tupleCount, const Ad
   for(usize tupleIndex = 0; tupleIndex < tupleCount; tupleIndex++)
   {
     bool shouldMutate = false;
-    if(inputValues.BoundaryNoise && distances[tupleIndex] < 1)
+    if(inputValues.boundary_noise && distances[tupleIndex] < 1)
     {
-      shouldMutate = distribution(generator) < inputValues.BoundaryVolFraction;
+      shouldMutate = distribution(generator) < inputValues.boundary_vol_fraction;
     }
 
     // Keep the independent Poisson draw even when boundary noise already selected the tuple.
-    if(inputValues.PoissonNoise && distribution(generator) < inputValues.PoissonVolFraction)
+    if(inputValues.poisson_noise && distribution(generator) < inputValues.poisson_vol_fraction)
     {
       shouldMutate = true;
     }
@@ -71,11 +71,11 @@ struct ZeroTuplesDirectFunctor
   {
     auto& dataStore = array.template getIDataStoreRefAs<AbstractDataStore<T>>();
     auto& contiguousStore = dynamic_cast<DataStore<T>&>(dataStore);
-    T* values = contiguousStore.data();
+    T* valuesPtr = contiguousStore.data();
     const usize numComponents = dataStore.getNumberOfComponents();
     for(const usize localTupleIndex : mutationIndices)
     {
-      std::fill_n(values + (tupleOffset + localTupleIndex) * numComponents, numComponents, T{});
+      std::fill_n(valuesPtr + (tupleOffset + localTupleIndex) * numComponents, numComponents, T{});
     }
     return {};
   }
@@ -130,7 +130,7 @@ public:
 
   Result<> operator()()
   {
-    auto& distancesArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->GBEuclideanDistancesArrayPath);
+    auto& distancesArray = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->gb_euclidean_distances_array_path);
     auto& distancesStore = distancesArray.getDataStoreRef();
     const usize totalPoints = distancesStore.getNumberOfTuples();
     if(totalPoints == 0)
@@ -140,7 +140,7 @@ public:
 
     auto distances = std::make_unique<int32[]>(k_ChunkTuples);
     auto mutationIndices = std::make_unique<usize[]>(k_ChunkTuples);
-    std::mt19937 generator(m_InputValues->SeedValue);
+    std::mt19937 generator(m_InputValues->seed_value);
     std::uniform_real_distribution<float32> distribution(0.0F, 1.0F);
 
     for(usize tupleOffset = 0; tupleOffset < totalPoints; tupleOffset += k_ChunkTuples)
@@ -164,7 +164,7 @@ public:
         for(const DataPath& voxelArrayPath : m_VoxelArrayPaths)
         {
           Result<> mutationResult;
-          if(voxelArrayPath == m_InputValues->GBEuclideanDistancesArrayPath && distancesStore.getNumberOfComponents() == 1)
+          if(voxelArrayPath == m_InputValues->gb_euclidean_distances_array_path && distancesStore.getNumberOfComponents() == 1)
           {
             for(const usize localTupleIndex : mutations)
             {
@@ -213,10 +213,10 @@ public:
 
   Result<> operator()()
   {
-    auto& distancesArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->GBEuclideanDistancesArrayPath);
+    auto& distancesArray = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->gb_euclidean_distances_array_path);
     auto& distancesStore = distancesArray.getDataStoreRef();
-    auto* contiguousDistancesStore = dynamic_cast<Int32DataStore*>(&distancesStore);
-    if(contiguousDistancesStore == nullptr)
+    auto* contiguousDistancesStorePtr = dynamic_cast<Int32DataStoreType*>(&distancesStore);
+    if(contiguousDistancesStorePtr == nullptr)
     {
       return AddBadDataScanline(m_DataStructure, m_ShouldCancel, m_InputValues, m_VoxelArrayPaths)();
     }
@@ -235,9 +235,9 @@ public:
       return {};
     }
 
-    int32* distances = contiguousDistancesStore->data();
+    int32* distancesPtr = contiguousDistancesStorePtr->data();
     auto mutationIndices = std::make_unique<usize[]>(k_ChunkTuples);
-    std::mt19937 generator(m_InputValues->SeedValue);
+    std::mt19937 generator(m_InputValues->seed_value);
     std::uniform_real_distribution<float32> distribution(0.0F, 1.0F);
 
     for(usize tupleOffset = 0; tupleOffset < totalPoints; tupleOffset += k_ChunkTuples)
@@ -248,7 +248,7 @@ public:
       }
 
       const usize tupleCount = std::min(k_ChunkTuples, totalPoints - tupleOffset);
-      const usize mutationCount = GenerateMutationIndices(distances + tupleOffset, tupleCount, *m_InputValues, generator, distribution, mutationIndices.get());
+      const usize mutationCount = GenerateMutationIndices(distancesPtr + tupleOffset, tupleCount, *m_InputValues, generator, distribution, mutationIndices.get());
       if(mutationCount != 0)
       {
         const nonstd::span<const usize> mutations(mutationIndices.get(), mutationCount);
@@ -283,8 +283,6 @@ AddBadData::AddBadData(DataStructure& dataStructure, const IFilter::MessageHandl
 {
 }
 
-AddBadData::~AddBadData() noexcept = default;
-
 const std::atomic_bool& AddBadData::getCancel()
 {
   return m_ShouldCancel;
@@ -292,21 +290,21 @@ const std::atomic_bool& AddBadData::getCancel()
 
 Result<> AddBadData::operator()()
 {
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
   auto childArrayPaths = GetAllChildArrayDataPaths(m_DataStructure, imageGeom.getCellDataPath());
   const std::vector<DataPath> voxelArrayPaths = childArrayPaths.has_value() ? std::move(childArrayPaths.value()) : std::vector<DataPath>{};
 
-  const auto& distancesArray = m_DataStructure.getDataRefAs<Int32Array>(m_InputValues->GBEuclideanDistancesArrayPath);
-  const IDataArray* oocChildArray = nullptr;
+  const auto& distancesArray = m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->gb_euclidean_distances_array_path);
+  const IDataArray* oocChildArrayPtr = nullptr;
   for(const DataPath& voxelArrayPath : voxelArrayPaths)
   {
     const auto& voxelArray = m_DataStructure.getDataRefAs<IDataArray>(voxelArrayPath);
     if(IsOutOfCore(voxelArray))
     {
-      oocChildArray = &voxelArray;
+      oocChildArrayPtr = &voxelArray;
       break;
     }
   }
 
-  return DispatchAlgorithm<AddBadDataDirect, AddBadDataScanline>({&distancesArray, oocChildArray}, m_DataStructure, m_ShouldCancel, m_InputValues, voxelArrayPaths);
+  return DispatchAlgorithm<AddBadDataDirect, AddBadDataScanline>({&distancesArray, oocChildArrayPtr}, m_DataStructure, m_ShouldCancel, m_InputValues, voxelArrayPaths);
 }

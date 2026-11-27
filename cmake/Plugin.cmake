@@ -161,7 +161,7 @@ function(create_simplnx_plugin)
     )
 
     string(APPEND Public_Filter_Registration_Code
-      "  filters.push_back([]() -> nx::core::IFilter::UniquePointer { return std::make_unique<nx::core::${filter}>(); });\n"
+      "  filters.push_back([]() -> nx::core::IFilter::UniquePointerType { return std::make_unique<nx::core::${filter}>(); });\n"
     )
   endforeach()
 

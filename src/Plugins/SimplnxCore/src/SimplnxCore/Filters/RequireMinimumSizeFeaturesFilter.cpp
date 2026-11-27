@@ -20,9 +20,9 @@
 namespace nx::core
 {
 
-using FeatureIdsArrayType = Int32Array;
-using NumCellsArrayType = Int32Array;
-using PhasesArrayType = Int32Array;
+using FeatureIdsArrayType = Int32ArrayType;
+using NumCellsArrayType = Int32ArrayType;
+using PhasesArrayType = Int32ArrayType;
 
 namespace
 {
@@ -68,15 +68,15 @@ Parameters RequireMinimumSizeFeaturesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeomPath_Key, "Input Image Geometry", "The input image geometry (cell)", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsPath_Key, "Cell Feature Ids", "DataPath to FeatureIds DataArray", DataPath({"FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureNumCellsPath_Key, "Feature Num. Cells Array", "DataPath to NumCells DataArray", DataPath({"NumElements"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesPath_Key, "Feature Phases", "DataPath to Feature Phases DataArray", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   // Link the checkbox to the other parameters
   params.linkParameters(k_ApplySinglePhase_Key, k_SinglePhaseNumber_Key, std::make_any<bool>(true));
   params.linkParameters(k_ApplySinglePhase_Key, k_FeaturePhasesPath_Key, std::make_any<bool>(true));
@@ -90,13 +90,13 @@ IFilter::VersionType RequireMinimumSizeFeaturesFilter::parametersVersion() const
   return 1;
 }
 
-IFilter::UniquePointer RequireMinimumSizeFeaturesFilter::clone() const
+IFilter::UniquePointerType RequireMinimumSizeFeaturesFilter::clone() const
 {
   return std::make_unique<RequireMinimumSizeFeaturesFilter>();
 }
 
-IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto featurePhasesPath = filterArgs.value<DataPath>(k_FeaturePhasesPath_Key);
   auto featureIdsPath = filterArgs.value<DataPath>(k_FeatureIdsPath_Key);
@@ -108,13 +108,13 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
   auto featureIdsResult = ValidateArrayInGeometryCellData(dataStructure, imageGeomPath, featureIdsPath, -5562, "Cell Feature Ids");
   if(featureIdsResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(featureIdsResult), {})};
   }
 
   auto featureAttributeMatrixResult = ValidateFeatureAttributeMatrixInGeometry(dataStructure, imageGeomPath, featureNumCellsPath.getParent(), -5563, "Feature Num. Cells", featureNumCellsPath);
   if(featureAttributeMatrixResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(featureAttributeMatrixResult), {})};
   }
 
   // The Cell Attribute Matrix can have more than one DataPath. Use the geometry's Cell Attribute Matrix path for Feature Ids.
@@ -126,7 +126,7 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
   if(minAllowedFeatureSize < 0)
   {
     std::string ss = fmt::format("The minimum Feature size ({}) must be 0 or positive", minAllowedFeatureSize);
-    return {MakeErrorResult<OutputActions>(-k_BadMinAllowedFeatureSize, ss)};
+    return {.output_actions = MakeErrorResult<OutputActions>(-k_BadMinAllowedFeatureSize, ss)};
   }
 
   dataArrayPaths.push_back(featureNumCellsPath);
@@ -154,51 +154,51 @@ IFilter::PreflightResult RequireMinimumSizeFeaturesFilter::preflightImpl(const D
 
   // This section will warn the user about the removal of NeighborLists
   auto result = nx::core::NeighborListRemovalPreflightCode(dataStructure, featureIdsPath, featureNumCellsPath, resultOutputActions);
-  if(result.outputActions.invalid())
+  if(result.output_actions.invalid())
   {
     return result;
   }
 
   // Inform users that the following arrays are going to be modified in place
   // Cell Data is going to be modified
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, cellDataPath, {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, cellDataPath, {});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 // -----------------------------------------------------------------------------
-Result<> RequireMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> RequireMinimumSizeFeaturesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   RequireMinimumSizeFeaturesInputValues inputValues;
 
-  inputValues.MinAllowedFeaturesSize = filterArgs.value<Int64Parameter::ValueType>(k_MinAllowedFeaturesSize_Key);
-  inputValues.FeatureIdsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsPath_Key);
-  inputValues.InputImageGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_ImageGeomPath_Key);
-  inputValues.FeatureNumCellsPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureNumCellsPath_Key);
-  inputValues.FeaturePhasesPath = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeaturePhasesPath_Key);
-  inputValues.ApplySinglePhase = filterArgs.value<BoolParameter::ValueType>(k_ApplySinglePhase_Key);
-  inputValues.PhaseNumber = filterArgs.value<Int32Parameter::ValueType>(k_SinglePhaseNumber_Key);
+  inputValues.min_allowed_features_size = filterArgs.value<Int64ParameterType::ValueType>(k_MinAllowedFeaturesSize_Key);
+  inputValues.feature_ids_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureIdsPath_Key);
+  inputValues.input_image_geometry_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_ImageGeomPath_Key);
+  inputValues.feature_num_cells_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeatureNumCellsPath_Key);
+  inputValues.feature_phases_path = filterArgs.value<ArraySelectionParameter::ValueType>(k_FeaturePhasesPath_Key);
+  inputValues.apply_single_phase = filterArgs.value<BoolParameter::ValueType>(k_ApplySinglePhase_Key);
+  inputValues.phase_number = filterArgs.value<Int32ParameterType::ValueType>(k_SinglePhaseNumber_Key);
 
   // The algorithm finds the Cell arrays through the parent of Feature Ids. Use the geometry's Cell Attribute Matrix path for Feature Ids.
-  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.InputImageGeometryPath).getCellDataPath();
-  inputValues.FeatureIdsPath = MapToGeometryCellDataPath(cellDataPath, inputValues.FeatureIdsPath);
+  const auto cellDataPath = dataStructure.getDataRefAs<ImageGeom>(inputValues.input_image_geometry_path).getCellDataPath();
+  inputValues.feature_ids_path = MapToGeometryCellDataPath(cellDataPath, inputValues.feature_ids_path);
 
   return RequireMinimumSizeFeatures(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_MinAllowedFeatureSizeKey = "MinAllowedFeatureSize";
-constexpr StringLiteral k_ApplyToSinglePhaseKey = "ApplyToSinglePhase";
-constexpr StringLiteral k_PhaseNumberKey = "PhaseNumber";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
-constexpr StringLiteral k_NumCellsArrayPathKey = "NumCellsArrayPath";
-} // namespace SIMPL
+constexpr StringLiteralType k_MinAllowedFeatureSizeKey = "MinAllowedFeatureSize";
+constexpr StringLiteralType k_ApplyToSinglePhaseKey = "ApplyToSinglePhase";
+constexpr StringLiteralType k_PhaseNumberKey = "PhaseNumber";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_FeaturePhasesArrayPathKey = "FeaturePhasesArrayPath";
+constexpr StringLiteralType k_NumCellsArrayPathKey = "NumCellsArrayPath";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> RequireMinimumSizeFeaturesFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -207,13 +207,13 @@ Result<Arguments> RequireMinimumSizeFeaturesFilter::FromSIMPLJson(const nlohmann
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int64>>(args, json, SIMPL::k_MinAllowedFeatureSizeKey, k_MinAllowedFeaturesSize_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_ApplyToSinglePhaseKey, k_ApplySinglePhase_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_PhaseNumberKey, k_SinglePhaseNumber_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_ImageGeomPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_FeatureIdsPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeaturePhasesArrayPathKey, k_FeaturePhasesPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_NumCellsArrayPathKey, k_FeatureNumCellsPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int64>>(args, json, simpl::k_MinAllowedFeatureSizeKey, k_MinAllowedFeaturesSize_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_ApplyToSinglePhaseKey, k_ApplySinglePhase_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_PhaseNumberKey, k_SinglePhaseNumber_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_ImageGeomPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_NumCellsArrayPathKey, k_FeatureNumCellsPath_Key));
   // Ignored Array Paths parameter is not applicable in NX
 
   Result<> conversionResult = MergeResults(std::move(results));

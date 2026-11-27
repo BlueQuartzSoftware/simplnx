@@ -17,12 +17,12 @@ namespace nx::core
 /** @brief RefFrameZDir defined for the Stacking order of images into a 3D Volume. This is taken from
  * EbsdLib. If EbsdLib changes, this should follow suit.
  */
-namespace RefFrameZDir
+namespace ref_frame_z_dir
 {
 inline constexpr uint32_t k_LowtoHigh = 0;
 inline constexpr uint32_t k_HightoLow = 1;
-inline constexpr uint32_t UnknownRefFrameZDirection = 2;
-} // namespace RefFrameZDir
+inline constexpr uint32_t k_UnknownRefFrameZDirection = 2;
+} // namespace ref_frame_z_dir
 
 class SIMPLNX_EXPORT OEMEbsdScanSelectionParameter : public ValueParameter
 {
@@ -33,9 +33,9 @@ public:
    */
   struct ValueType
   {
-    fs::path inputFilePath;
-    uint32_t stackingOrder = RefFrameZDir::k_LowtoHigh;
-    std::list<std::string> scanNames = {};
+    fs::path input_file_path;
+    uint32_t stacking_order = ref_frame_z_dir::k_LowtoHigh;
+    std::list<std::string> scan_names;
   };
 
   using ExtensionsType = std::unordered_set<std::string>;
@@ -55,9 +55,9 @@ public:
    * @param helpText The help text that should be displayed to a user
    * @param defaultValue The default value for the parameter
    */
-  OEMEbsdScanSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
+  OEMEbsdScanSelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue,
                                 /* const AllowedManufacturers& allowedManufacturers, */
-                                const EbsdReaderType& readerType, const ExtensionsType& extensionsType);
+                                const EbsdReaderType& readerType, ExtensionsType extensionsType);
 
   ~OEMEbsdScanSelectionParameter() override = default;
 
@@ -76,13 +76,13 @@ public:
    * @brief
    * @return
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -142,7 +142,7 @@ protected:
 
 private:
   ValueType m_DefaultValue = {};
-  ExtensionsType m_AvailableExtensions = {};
+  ExtensionsType m_AvailableExtensions;
   EbsdReaderType m_ReaderType = {};
 };
 } // namespace nx::core

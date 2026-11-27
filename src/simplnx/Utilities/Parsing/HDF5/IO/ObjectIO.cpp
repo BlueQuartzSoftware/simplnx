@@ -5,38 +5,39 @@
 #include "simplnx/Utilities/Parsing/HDF5/IO/GroupIO.hpp"
 
 #include <mutex>
+#include <utility>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 ObjectIO::ObjectIO() = default;
 
-ObjectIO::ObjectIO(hid_t parentId, const std::string& objectName)
+ObjectIO::ObjectIO(hid_t parentId, std::string objectName)
 : m_ParentId(parentId)
-, m_ObjectName(objectName)
+, m_ObjectName(std::move(objectName))
 {
 }
 
-ObjectIO::ObjectIO(const std::filesystem::path& filepath, const std::string& objectName)
-: m_FilePath(filepath)
-, m_ObjectName(objectName)
+ObjectIO::ObjectIO(std::filesystem::path filepath, std::string objectName)
+: m_FilePath(std::move(filepath))
+, m_ObjectName(std::move(objectName))
 {
 }
 
 ObjectIO::ObjectIO(ObjectIO&& other) noexcept
 : m_FilePath(std::move(other.m_FilePath))
 , m_ObjectName(std::move(other.m_ObjectName))
-, m_ParentId(std::move(other.m_ParentId))
-, m_Id(std::move(other.m_Id))
+, m_ParentId(other.m_ParentId)
+, m_Id(other.m_Id)
 {
   other.m_Id = -1;
 }
 
 ObjectIO& ObjectIO::operator=(ObjectIO&& other) noexcept
 {
-  m_Id = std::move(other.m_Id);
+  m_Id = other.m_Id;
   m_FilePath = std::move(other.m_FilePath);
   m_ObjectName = std::move(other.m_ObjectName);
-  m_ParentId = std::move(other.m_ParentId);
+  m_ParentId = other.m_ParentId;
 
   other.m_Id = -1;
   return *this;
@@ -58,7 +59,7 @@ std::string ObjectIO::getName() const
     return {};
   }
   open();
-  return nx::core::HDF5::GetNameFromBuffer(m_ObjectName);
+  return nx::core::hdf5::GetNameFromBuffer(m_ObjectName);
 }
 
 std::string ObjectIO::getNamePath() const
@@ -77,7 +78,7 @@ std::string ObjectIO::getObjectPath() const
   return path;
 }
 
-std::string ObjectIO::getParentName() const
+std::string ObjectIO::GetParentName()
 {
   return "";
 }
@@ -165,8 +166,8 @@ void ObjectIO::moveObj(ObjectIO&& rhs) noexcept
 {
   m_FilePath = std::move(rhs.m_FilePath);
   m_ObjectName = std::move(rhs.m_ObjectName);
-  m_ParentId = std::move(rhs.m_ParentId);
-  m_Id = std::move(rhs.m_Id);
+  m_ParentId = rhs.m_ParentId;
+  m_Id = rhs.m_Id;
 }
 
 usize ObjectIO::getNumAttributes() const
@@ -209,12 +210,12 @@ std::string ObjectIO::getAttributeNameByIndex(int64 idx) const
   return GetNameFromBuffer(buffer);
 }
 
-void ObjectIO::deleteAttribute(const std::string& name)
+void ObjectIO::deleteAttribute(const std::string& name) const
 {
   // getId() self-locks; resolve it before the leaf-locked existence-check + delete.
   const hid_t selfId = getId();
   std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
-  if(H5Aexists(selfId, name.c_str()))
+  if(H5Aexists(selfId, name.c_str()) != 0)
   {
     H5Adelete(selfId, name.c_str());
   }
@@ -288,7 +289,7 @@ Result<std::string> ObjectIO::readStringAttribute(const std::string& attributeNa
   }
   if(attributeOpened && readError < 0)
   {
-    std::cout << "Error Reading Attribute." << std::endl;
+    std::cout << "Error Reading Attribute." << '\n';
     return MakeErrorResult<std::string>(-450, fmt::format("Error reading attribute: '{}'", attributeName));
   }
   returnResult = {data};
@@ -345,7 +346,7 @@ bool ObjectIO::hasAttribute(const std::string& attributeName) const
   return H5Aexists(selfId, attributeName.c_str()) > 0;
 }
 
-usize ObjectIO::getNumElementsInAttribute(hid_t attribId) const
+usize ObjectIO::GetNumElementsInAttribute(hid_t attribId)
 {
   // getTypeFromId() self-locks, so retain the local HDF5 handles across the
   // lock boundary and call it without holding the non-recursive ApiLock.
@@ -359,7 +360,7 @@ usize ObjectIO::getNumElementsInAttribute(hid_t attribId) const
     typeSize = H5Tget_size(attrType);
     dataspaceId = H5Aget_space(attribId);
   }
-  const Type type = getTypeFromId(attrType);
+  const Type type = GetTypeFromId(attrType);
   {
     std::lock_guard<std::mutex> hdf5Lock(Support::ApiLock());
     if(dataspaceId >= 0)
@@ -378,7 +379,7 @@ usize ObjectIO::getNumElementsInAttribute(hid_t attribId) const
         herr_t error = H5Sget_simple_extent_dims(dataspaceId, hdims.data(), nullptr);
         if(error < 0)
         {
-          std::cout << "Error Getting Attribute dims" << std::endl;
+          std::cout << "Error Getting Attribute dims" << '\n';
           H5Sclose(dataspaceId);
           H5Tclose(attrType);
           return 0;
@@ -396,4 +397,4 @@ usize ObjectIO::getNumElementsInAttribute(hid_t attribId) const
   hsize_t numElements = std::accumulate(dims.cbegin(), dims.cend(), static_cast<hsize_t>(1), std::multiplies<hsize_t>());
   return numElements;
 }
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

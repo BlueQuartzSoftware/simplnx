@@ -18,16 +18,16 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT DBSCANInputValues
 {
-  DataPath ClusteringArrayPath;
-  DataPath MaskArrayPath;
-  bool UseMask = false;
-  DataPath FeatureIdsArrayPath;
-  float32 Epsilon;
-  int32 MinPoints;
-  ClusterUtilities::DistanceMetric DistanceMetric;
-  DataPath FeatureAM;
-  ChoicesParameter::ValueType ParseOrder;
-  std::mt19937_64::result_type Seed;
+  DataPath clustering_array_path;
+  DataPath mask_array_path;
+  bool use_mask = false;
+  DataPath feature_ids_array_path;
+  float32 epsilon{};
+  int32 min_points{};
+  cluster_utilities::DistanceMetric distance_metric;
+  DataPath feature_am;
+  ChoicesParameter::ValueType parse_order{};
+  std::mt19937_64::result_type seed{};
 };
 
 /**
@@ -55,7 +55,7 @@ public:
    * @pre All arguments and the inputValues object outlive this executor.
    */
   DBSCAN(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, DBSCANInputValues* inputValues);
-  ~DBSCAN() noexcept;
+  ~DBSCAN() noexcept = default;
 
   DBSCAN(const DBSCAN&) = delete;
   DBSCAN(DBSCAN&&) noexcept = delete;

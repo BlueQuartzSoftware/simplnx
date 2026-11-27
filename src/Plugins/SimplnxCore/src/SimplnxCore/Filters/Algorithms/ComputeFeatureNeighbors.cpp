@@ -17,10 +17,8 @@ ComputeFeatureNeighbors::ComputeFeatureNeighbors(DataStructure& dataStructure, c
 {
 }
 
-ComputeFeatureNeighbors::~ComputeFeatureNeighbors() noexcept = default;
-
 Result<> ComputeFeatureNeighbors::operator()()
 {
-  auto* featureIdsArray = m_DataStructure.getDataAs<Int32Array>(m_InputValues->FeatureIdsPath);
-  return DispatchAlgorithm<ComputeFeatureNeighborsDirect, ComputeFeatureNeighborsScanline>({featureIdsArray}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
+  auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_path);
+  return DispatchAlgorithm<ComputeFeatureNeighborsDirect, ComputeFeatureNeighborsScanline>({featureIdsArrayPtr}, m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

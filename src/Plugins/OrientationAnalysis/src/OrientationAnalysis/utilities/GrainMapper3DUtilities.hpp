@@ -13,10 +13,10 @@
 #include <string>
 #include <vector>
 
-namespace GrainMapper3DUtilities
+namespace grain_mapper_3d_utilities
 {
 
-namespace Constants
+namespace constants
 {
 const std::string k_LabDCTGroupName("LabDCT");
 const std::string k_AbsorptionCTName("AbsorptionCT");
@@ -50,7 +50,7 @@ const std::string k_SpaceGroupName("SpaceGroup");
 const std::string k_UnitCellName("UnitCell");
 const std::string k_UniversalHermannMauguinName("UniversalHermannMauguin");
 
-} // namespace Constants
+} // namespace constants
 
 /**
  * @brief Checks if a LabDCT dataset name identifies an IPF color dataset.
@@ -59,7 +59,7 @@ const std::string k_UniversalHermannMauguinName("UniversalHermannMauguin");
  */
 inline bool IsIpfColorDataset(const std::string& dataSetName)
 {
-  return dataSetName == Constants::k_IPF001Name || dataSetName == Constants::k_IPF010Name || dataSetName == Constants::k_IPF100Name;
+  return dataSetName == constants::k_IPF001Name || dataSetName == constants::k_IPF010Name || dataSetName == constants::k_IPF100Name;
 }
 
 int32_t GetLaueIndexFromSpaceGroup(int32_t spaceGroupId);
@@ -70,17 +70,17 @@ int32_t GetLaueIndexFromSpaceGroup(int32_t spaceGroupId);
 class ORIENTATIONANALYSIS_EXPORT GrainMapperReader
 {
 public:
-  explicit GrainMapperReader(const std::string& filePath, bool readDctData, bool readAbsorptionData);
+  explicit GrainMapperReader(std::string filePath, bool readDctData, bool readAbsorptionData);
   ~GrainMapperReader();
 
-  typedef struct
+  using GrainMapperPhaseType = struct
   {
-    std::string Name;
-    int32_t SpaceGroup;
-    std::vector<double> UnitCell; //  ABC, Alpha, Beta, Gamma
-    std::string UniversalHermannMauguin;
-    int32_t PhaseIndex;
-  } GrainMapperPhase;
+    std::string name;
+    int32_t space_group;
+    std::vector<double> unit_cell; //  ABC, Alpha, Beta, Gamma
+    std::string universal_hermann_mauguin;
+    int32_t phase_index;
+  };
 
   nx::core::Result<> readHeaderOnly();
 
@@ -97,8 +97,8 @@ public:
 
   std::vector<std::string> getDctDatasetNames() const;
   std::map<std::string, nx::core::DataType> getNameToDataTypeMap() const;
-  std::map<std::string, size_t> getNameToCompDimMap() const;
-  std::vector<GrainMapperPhase> getPhaseVector() const;
+  static std::map<std::string, size_t> GetNameToCompDimMap();
+  std::vector<GrainMapperPhaseType> getPhaseVector() const;
   herr_t readPhaseInfo(hid_t parentId);
   herr_t findAvailableDctDatasets(hid_t parentId);
 
@@ -112,10 +112,10 @@ private:
   bool m_ReadDctData = false;
   bool m_ReadAbsorptionData = false;
 
-  std::string m_ErrorMessage = {};
-  std::string m_FileName = {};
-  std::string m_HDF5Path = {};
-  std::string m_OINAVersion = {};
+  std::string m_ErrorMessage;
+  std::string m_FileName;
+  std::string m_HDF5Path;
+  std::string m_OINAVersion;
 
   std::vector<size_t> m_LabDctDimensions;
   std::vector<double> m_LabDctSpacing = {1.0, 1.0, 1.0};
@@ -126,9 +126,9 @@ private:
   std::vector<double> m_AbsorptionCTOrigin = {0.0, 0.0, 0.0};
 
   std::vector<std::string> m_AvailableDCTDatasets;
-  std::vector<GrainMapperPhase> m_PhaseInfos;
+  std::vector<GrainMapperPhaseType> m_PhaseInfos;
 
   std::map<std::string, nx::core::DataType> m_NameToDataTypeMap;
 };
 
-}; // namespace GrainMapper3DUtilities
+}; // namespace grain_mapper_3d_utilities

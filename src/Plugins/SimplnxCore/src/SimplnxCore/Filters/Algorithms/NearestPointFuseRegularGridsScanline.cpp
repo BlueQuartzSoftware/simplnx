@@ -109,14 +109,14 @@ Result<> CopyArray(const IDataArray& sourceArray, IDataArray& destinationArray, 
         }
         for(usize x = 0; x < referenceDims[0]; x++)
         {
-          T* destinationTuple = destinationRow.get() + x * components;
+          T* destinationTuplePtr = destinationRow.get() + x * components;
           if(xIndices[x] == k_InvalidIndex)
           {
-            std::fill_n(destinationTuple, components, static_cast<T>(fillValue));
+            std::fill_n(destinationTuplePtr, components, static_cast<T>(fillValue));
           }
           else
           {
-            std::copy_n(sourceRow.get() + xIndices[x] * components, components, destinationTuple);
+            std::copy_n(sourceRow.get() + xIndices[x] * components, components, destinationTuplePtr);
           }
         }
       }
@@ -172,9 +172,9 @@ NearestPointFuseRegularGridsScanline::NearestPointFuseRegularGridsScanline(DataS
 
 Result<> NearestPointFuseRegularGridsScanline::operator()()
 {
-  const auto& sampleGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SamplingGeometryPath);
-  const auto& referenceGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ReferenceGeometryPath);
-  const auto& sampleAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->SamplingCellAttributeMatrixPath);
+  const auto& sampleGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->sampling_geometry_path);
+  const auto& referenceGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->reference_geometry_path);
+  const auto& sampleAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->sampling_cell_attribute_matrix_path);
   for(const auto& source : sampleAM.findAllChildrenOfType<IArray>())
   {
     if(m_ShouldCancel)
@@ -185,10 +185,10 @@ Result<> NearestPointFuseRegularGridsScanline::operator()()
     {
       continue;
     }
-    auto& destination = m_DataStructure.getDataRefAs<IArray>(m_InputValues->ReferenceCellAttributeMatrixPath.createChildPath(source->getName()));
+    auto& destination = m_DataStructure.getDataRefAs<IArray>(m_InputValues->reference_cell_attribute_matrix_path.createChildPath(source->getName()));
     const auto& sourceData = dynamic_cast<const IDataArray&>(*source);
     auto& destinationData = dynamic_cast<IDataArray&>(destination);
-    auto result = ExecuteDataFunction(CopyArrayFunctor{}, sourceData.getDataType(), sourceData, destinationData, sampleGeom, referenceGeom, m_InputValues->fillValue, m_ShouldCancel);
+    auto result = ExecuteDataFunction(CopyArrayFunctor{}, sourceData.getDataType(), sourceData, destinationData, sampleGeom, referenceGeom, m_InputValues->fill_value, m_ShouldCancel);
     if(result.invalid())
     {
       return result;

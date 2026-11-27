@@ -54,7 +54,7 @@ public:
   CliCompletionStore(const CliCompletionStore&) = default;
   CliCompletionStore(CliCompletionStore&&) = default;
   CliCompletionStore& operator=(const CliCompletionStore&) = delete;
-  CliCompletionStore& operator=(CliCompletionStore&&) = default;
+  CliCompletionStore& operator=(CliCompletionStore&&) noexcept = default;
 
   /**
    * @brief Reports a checked-only completion fault while leaving legacy flush harmless.
@@ -81,9 +81,9 @@ private:
  */
 struct CliSnapshotControl
 {
-  bool Armed = false;
-  bool Allocation = false;
-  nod::scoped_connection EndConnection;
+  bool armed = false;
+  bool allocation = false;
+  nod::scoped_connection end_connection;
 };
 
 /**
@@ -122,9 +122,9 @@ public:
    */
   DataObject* shallowCopy() override
   {
-    if(m_Control->Armed)
+    if(m_Control->armed)
     {
-      if(m_Control->Allocation)
+      if(m_Control->allocation)
       {
         throw std::bad_alloc{};
       }
@@ -169,12 +169,12 @@ IFilter::VersionType FlushFailureFilter::parametersVersion() const
 Parameters FlushFailureFilter::parameters() const
 {
   Parameters result;
-  result.insert(std::make_unique<UInt64Parameter>(
+  result.insert(std::make_unique<UInt64ParameterType>(
       k_Mode_Key, "Completion Test Mode", "0: unarmed; 1: flush error; 2: execute and flush errors; 3: flush allocation; 4: repeated snapshot; 5: root snapshot; 6: snapshot allocation.", uint64{0}));
   return result;
 }
 
-IFilter::UniquePointer FlushFailureFilter::clone() const
+IFilter::UniquePointerType FlushFailureFilter::clone() const
 {
   return std::make_unique<FlushFailureFilter>();
 }
@@ -188,7 +188,7 @@ IFilter::PreflightResult FlushFailureFilter::preflightImpl([[maybe_unused]] cons
     return MakePreflightErrorResult(-76409, fmt::format("Completion Test Mode {} is outside the fixture range [0, 6].", mode));
   }
   PreflightResult result{};
-  result.outputValues.push_back({.name = "Completion value", .value = "preserved"});
+  result.output_values.push_back({.name = "Completion value", .value = "preserved"});
   return result;
 }
 
@@ -205,8 +205,8 @@ Result<> FlushFailureFilter::executeImpl(DataStructure& dataStructure, const Arg
   if(mode >= 4)
   {
     auto control = std::make_shared<CliSnapshotControl>();
-    control->Allocation = mode == 6;
-    control->Armed = mode != 5;
+    control->allocation = mode == 6;
+    control->armed = mode != 5;
     if(!dataStructure.insert(std::make_shared<CliSnapshotGroup>(dataStructure, control), DataPath{}))
     {
       return MakeErrorResult(-76409, "Cannot insert CLI completion fixture group 'CompletionSnapshot'.");
@@ -222,12 +222,12 @@ Result<> FlushFailureFilter::executeImpl(DataStructure& dataStructure, const Arg
           if(node.get() == pipelineNode)
           {
             const std::weak_ptr<CliSnapshotControl> weakControl = control;
-            control->EndConnection = node->getFilterUpdateSignal().connect([weakControl](AbstractPipelineNode*, int32, const std::string& message) {
+            control->end_connection = node->getFilterUpdateSignal().connect([weakControl](AbstractPipelineNode*, int32, const std::string& message) {
               if(message == "End")
               {
                 if(auto state = weakControl.lock())
                 {
-                  state->Armed = true;
+                  state->armed = true;
                 }
               }
             });

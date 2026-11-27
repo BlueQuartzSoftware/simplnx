@@ -131,7 +131,7 @@ bool ConvertOrientations::shouldCancel() const
 
 void ConvertOrientations::sendThreadSafeProgressMessage(usize counter)
 {
-  std::lock_guard<std::mutex> guard(m_ProgressMessage_Mutex);
+  std::lock_guard<std::mutex> guard(m_ProgressMessageMutex);
 
   m_Throttle.incrementPercent(counter);
 }
@@ -148,21 +148,21 @@ void ConvertOrientations::storeResult(Result<> result)
 
 Result<> ConvertOrientations::operator()()
 {
-  DataPath outputDataPath = m_InputValues->InputOrientationArrayPath.replaceName(m_InputValues->OutputOrientationArrayName);
-  auto& inputArray = m_DataStructure.getDataRefAs<Float32Array>(m_InputValues->InputOrientationArrayPath);
-  auto& outputArray = m_DataStructure.getDataRefAs<Float32Array>(outputDataPath);
+  DataPath outputDataPath = m_InputValues->input_orientation_array_path.replaceName(m_InputValues->output_orientation_array_name);
+  auto& inputArray = m_DataStructure.getDataRefAs<Float32ArrayType>(m_InputValues->input_orientation_array_path);
+  auto& outputArray = m_DataStructure.getDataRefAs<Float32ArrayType>(outputDataPath);
   const usize totalPoints = inputArray.getNumberOfTuples();
   m_Throttle.reset(totalPoints, "Converting Orientations");
 
   m_MessageHandler.sendInfoMessage(
-      fmt::format("Converting {} orientations from {} to {}", totalPoints, k_TypeNames[static_cast<usize>(m_InputValues->InputType)], k_TypeNames[static_cast<usize>(m_InputValues->OutputType)]));
+      fmt::format("Converting {} orientations from {} to {}", totalPoints, k_TypeNames[static_cast<usize>(m_InputValues->input_type)], k_TypeNames[static_cast<usize>(m_InputValues->output_type)]));
 
   ParallelDataAlgorithm parallelAlgorithm;
   parallelAlgorithm.setRange(0, totalPoints);
 
-  if(m_InputValues->OutputType == ebsdlib::orientations::Type::Euler)
+  if(m_InputValues->output_type == ebsdlib::orientations::Type::Euler)
   {
-    switch(m_InputValues->InputType)
+    switch(m_InputValues->input_type)
     {
     case ebsdlib::orientations::Type::Euler:
       parallelAlgorithm.execute(EulerConvertor<float32, float32, ebsdlib::EulerFType, ebsdlib::EulerFType>(this, inputArray, outputArray));
@@ -194,9 +194,9 @@ Result<> ConvertOrientations::operator()()
     return m_ParallelResult.takeResult();
   }
 
-  if(m_InputValues->OutputType == ebsdlib::orientations::Type::OrientationMatrix)
+  if(m_InputValues->output_type == ebsdlib::orientations::Type::OrientationMatrix)
   {
-    switch(m_InputValues->InputType)
+    switch(m_InputValues->input_type)
     {
     case ebsdlib::orientations::Type::Euler:
       parallelAlgorithm.execute(OrientationMatrixConvertor<float32, float32, ebsdlib::EulerFType, ebsdlib::OrientationMatrixFType>(this, inputArray, outputArray));
@@ -228,9 +228,9 @@ Result<> ConvertOrientations::operator()()
     return m_ParallelResult.takeResult();
   }
 
-  if(m_InputValues->OutputType == ebsdlib::orientations::Type::Quaternion)
+  if(m_InputValues->output_type == ebsdlib::orientations::Type::Quaternion)
   {
-    switch(m_InputValues->InputType)
+    switch(m_InputValues->input_type)
     {
     case ebsdlib::orientations::Type::Euler:
       parallelAlgorithm.execute(QuaternionConvertor<float32, float32, ebsdlib::EulerFType, ebsdlib::QuaternionFType>(this, inputArray, outputArray));
@@ -262,9 +262,9 @@ Result<> ConvertOrientations::operator()()
     return m_ParallelResult.takeResult();
   }
 
-  if(m_InputValues->OutputType == ebsdlib::orientations::Type::AxisAngle)
+  if(m_InputValues->output_type == ebsdlib::orientations::Type::AxisAngle)
   {
-    switch(m_InputValues->InputType)
+    switch(m_InputValues->input_type)
     {
     case ebsdlib::orientations::Type::Euler:
       parallelAlgorithm.execute(AxisAngleConvertor<float32, float32, ebsdlib::EulerFType, ebsdlib::AxisAngleFType>(this, inputArray, outputArray));
@@ -296,9 +296,9 @@ Result<> ConvertOrientations::operator()()
     return m_ParallelResult.takeResult();
   }
 
-  if(m_InputValues->OutputType == ebsdlib::orientations::Type::Rodrigues)
+  if(m_InputValues->output_type == ebsdlib::orientations::Type::Rodrigues)
   {
-    switch(m_InputValues->InputType)
+    switch(m_InputValues->input_type)
     {
     case ebsdlib::orientations::Type::Euler:
       parallelAlgorithm.execute(RodriguesConvertor<float32, float32, ebsdlib::EulerFType, ebsdlib::RodriguesFType>(this, inputArray, outputArray));
@@ -330,9 +330,9 @@ Result<> ConvertOrientations::operator()()
     return m_ParallelResult.takeResult();
   }
 
-  if(m_InputValues->OutputType == ebsdlib::orientations::Type::Homochoric)
+  if(m_InputValues->output_type == ebsdlib::orientations::Type::Homochoric)
   {
-    switch(m_InputValues->InputType)
+    switch(m_InputValues->input_type)
     {
     case ebsdlib::orientations::Type::Euler:
       parallelAlgorithm.execute(HomochoricConvertor<float32, float32, ebsdlib::EulerFType, ebsdlib::HomochoricFType>(this, inputArray, outputArray));
@@ -364,9 +364,9 @@ Result<> ConvertOrientations::operator()()
     return m_ParallelResult.takeResult();
   }
 
-  if(m_InputValues->OutputType == ebsdlib::orientations::Type::Cubochoric)
+  if(m_InputValues->output_type == ebsdlib::orientations::Type::Cubochoric)
   {
-    switch(m_InputValues->InputType)
+    switch(m_InputValues->input_type)
     {
     case ebsdlib::orientations::Type::Euler:
       parallelAlgorithm.execute(CubochoricConvertor<float32, float32, ebsdlib::EulerFType, ebsdlib::CubochoricFType>(this, inputArray, outputArray));
@@ -398,9 +398,9 @@ Result<> ConvertOrientations::operator()()
     return m_ParallelResult.takeResult();
   }
 
-  if(m_InputValues->OutputType == ebsdlib::orientations::Type::Stereographic)
+  if(m_InputValues->output_type == ebsdlib::orientations::Type::Stereographic)
   {
-    switch(m_InputValues->InputType)
+    switch(m_InputValues->input_type)
     {
     case ebsdlib::orientations::Type::Euler:
       parallelAlgorithm.execute(StereographicConvertor<float32, float32, ebsdlib::EulerFType, ebsdlib::StereographicFType>(this, inputArray, outputArray));

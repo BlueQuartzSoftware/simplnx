@@ -10,13 +10,13 @@
 #include <map>
 #include <string>
 
-namespace nx::core::DREAM3D
+namespace nx::core::dream3d
 {
 /** @brief Origin and spacing read from an image geometry before validation. */
 struct ImageGeometryMetadata
 {
-  FloatVec3 origin;  /**< Stored origin in X, Y, Z order. */
-  FloatVec3 spacing; /**< Stored spacing in X, Y, Z order. */
+  FloatVec3Type origin;  /**< Stored origin in X, Y, Z order. */
+  FloatVec3Type spacing; /**< Stored spacing in X, Y, Z order. */
 };
 
 /**
@@ -24,10 +24,10 @@ struct ImageGeometryMetadata
  *
  * Selective discovery records these results so callers can validate only the geometries they import.
  */
-using DeferredImageMetadata = std::map<DataObject::IdType, Result<ImageGeometryMetadata>>;
-} // namespace nx::core::DREAM3D
+using DeferredImageMetadataType = std::map<DataObject::IdType, Result<ImageGeometryMetadata>>;
+} // namespace nx::core::dream3d
 
-namespace nx::core::DREAM3D::detail
+namespace nx::core::dream3d::detail
 {
 inline constexpr int32 k_DefaultImageGeometryValuesWarning = 502693;
 
@@ -106,7 +106,7 @@ inline std::string ImageGeometryPath(const ImageGeom& geometry)
 /**
  * @brief Records unvalidated metadata for selective import, or installs it immediately for a direct read.
  */
-[[nodiscard]] inline Result<> ImportImageMetadata(ImageGeom& geometry, const std::filesystem::path& filePath, Result<ImageGeometryMetadata> metadata, DeferredImageMetadata* deferredMetadata)
+[[nodiscard]] inline Result<> ImportImageMetadata(ImageGeom& geometry, const std::filesystem::path& filePath, Result<ImageGeometryMetadata> metadata, DeferredImageMetadataType* deferredMetadata)
 {
   if(deferredMetadata != nullptr)
   {
@@ -115,4 +115,4 @@ inline std::string ImageGeometryPath(const ImageGeom& geometry)
   }
   return ApplyImportedImageMetadata(geometry, filePath, metadata, false);
 }
-} // namespace nx::core::DREAM3D::detail
+} // namespace nx::core::dream3d::detail

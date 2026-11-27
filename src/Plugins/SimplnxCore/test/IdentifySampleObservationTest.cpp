@@ -11,7 +11,7 @@ using namespace nx::core;
 
 namespace
 {
-using namespace IdentifySampleBenchmarkTest;
+using namespace identify_sample_benchmark_test;
 
 /**
  * @enum CopyFault
@@ -111,8 +111,8 @@ public:
 template <class T>
 void RequireOriginal(const DataStructure& data)
 {
-  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
-  const auto& store = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath).getDataStoreRef();
+  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath));
+  const auto& store = data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath).getDataStoreRef();
   auto xy = std::make_unique<T[]>(19 * 11);
   for(usize z = 0; z < 13; z++)
   {
@@ -122,11 +122,11 @@ void RequireOriginal(const DataStructure& data)
     {
       for(usize x = 0; x < 19; x++)
       {
-        REQUIRE(xy[y * 19 + x] == static_cast<T>(IdentifySampleBatchTest::InputValue(y, z, x)));
+        REQUIRE(xy[y * 19 + x] == static_cast<T>(identify_sample_batch_test::InputValue(y, z, x)));
       }
     }
   }
-  UnitTest::CheckArraysInheritTupleDims(data);
+  unit_test::CheckArraysInheritTupleDims(data);
 }
 
 /**
@@ -139,29 +139,29 @@ void RequireOriginal(const DataStructure& data)
 template <class T>
 void CheckControl(CopyFault fault, bool matchIdentity, bool installObserver)
 {
-  const IdentifySampleBatchTest::ScopedPreferenceRestore restorePreferences;
-  const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+  const identify_sample_batch_test::ScopedPreferenceRestore restorePreferences;
+  const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
   const BudgetRestore restoreBudget;
-  auto& budget = CacheMemoryBudgetManager::instance();
+  auto& budget = CacheMemoryBudgetManager::Instance();
   REQUIRE(budget.reservedWorkingMemoryBytes() == 0);
   REQUIRE_FALSE(budget.setBudgetBytes(4ULL * 1024 * 1024));
   // Keep first-copy controls on their exact one-plane schedule.
   const auto occupied = budget.reserveWorkingMemory(budget.maximumWorkingMemoryBytes());
   REQUIRE(occupied.sizeBytes() == budget.maximumWorkingMemoryBytes());
   auto store = std::make_shared<FaultStore<T>>();
-  DataStructure data = IdentifySampleBatchTest::CreateFixture<T>(2, 19, store);
-  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
-  auto& mask = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath);
+  DataStructure data = identify_sample_batch_test::CreateFixture<T>(2, 19, store);
+  REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath));
+  auto& mask = data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath);
   REQUIRE(mask.getDataStore()->getStoreType() == IDataStore::StoreType::InMemory);
   LogicalCounters counters;
   counters.selected = matchIdentity ? &mask : nullptr;
   store->fault = fault;
   IdentifySampleInputValues inputs{};
-  inputs.FillHoles = false;
-  inputs.InputImageGeometryPath = IdentifySampleBatchTest::k_ImagePath;
-  inputs.MaskArrayPath = IdentifySampleBatchTest::k_MaskPath;
-  inputs.SliceBySlice = true;
-  inputs.SliceBySlicePlaneIndex = 2;
+  inputs.fill_holes = false;
+  inputs.input_image_geometry_path = identify_sample_batch_test::k_ImagePath;
+  inputs.mask_array_path = identify_sample_batch_test::k_MaskPath;
+  inputs.slice_by_slice = true;
+  inputs.slice_by_slice_plane_index = 2;
   const std::atomic_bool cancel = false;
   const IFilter::MessageHandler messages;
   IdentifySampleCCL algorithm(data, messages, cancel, &inputs);
@@ -170,7 +170,8 @@ void CheckControl(CopyFault fault, bool matchIdentity, bool installObserver)
   const auto restoreInitial = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(initial); });
   REQUIRE(initial.callback == nullptr);
   {
-    const IdentifySampleSliceObserverForTesting installed = installObserver ? IdentifySampleSliceObserverForTesting{&counters, &LogicalCounters::Observe} : IdentifySampleSliceObserverForTesting{};
+    const IdentifySampleSliceObserverForTesting installed =
+        installObserver ? IdentifySampleSliceObserverForTesting{.context = &counters, .callback = &LogicalCounters::Observe} : IdentifySampleSliceObserverForTesting{};
     const auto previous = SetIdentifySampleSliceObserverForTesting(installed);
     const auto restore = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(previous); });
     REQUIRE(previous.callback == nullptr);
@@ -200,48 +201,48 @@ void CheckControl(CopyFault fault, bool matchIdentity, bool installObserver)
   REQUIRE(restored.context == nullptr);
   REQUIRE_FALSE(counters.invalid);
   REQUIRE(counters.active == 0);
-  REQUIRE(counters.planeLive == 0);
-  REQUIRE(counters.xyLive == 0);
+  REQUIRE(counters.plane_live == 0);
+  REQUIRE(counters.xy_live == 0);
   if(matchIdentity && installObserver)
   {
     REQUIRE(counters.reads == store->reads);
     REQUIRE(counters.writes == store->writes);
     REQUIRE(counters.concurrent == 1);
-    REQUIRE(counters.allocationEvents == 2);
-    REQUIRE(counters.releaseEvents == 2);
-    REQUIRE(counters.namedCarrierPeak == (11 * 13 + 19 * 11) * sizeof(T));
+    REQUIRE(counters.allocation_events == 2);
+    REQUIRE(counters.release_events == 2);
+    REQUIRE(counters.named_carrier_peak == (11 * 13 + 19 * 11) * sizeof(T));
     if(fault == CopyFault::None)
     {
       REQUIRE(counters.reads == 494);
       REQUIRE(counters.writes == 247);
-      REQUIRE(counters.readSuccess == 494);
-      REQUIRE(counters.writeSuccess == 247);
+      REQUIRE(counters.read_success == 494);
+      REQUIRE(counters.write_success == 247);
     }
     else if(fault == CopyFault::ReadResult || fault == CopyFault::ReadThrow)
     {
       REQUIRE(counters.reads == 1);
       REQUIRE(counters.writes == 0);
-      REQUIRE(counters.readSuccess == 0);
-      REQUIRE(counters.writeSuccess == 0);
+      REQUIRE(counters.read_success == 0);
+      REQUIRE(counters.write_success == 0);
     }
     else
     {
       REQUIRE(counters.reads == 14);
       REQUIRE(counters.writes == 1);
-      REQUIRE(counters.readSuccess == 14);
-      REQUIRE(counters.writeSuccess == 0);
+      REQUIRE(counters.read_success == 14);
+      REQUIRE(counters.write_success == 0);
     }
   }
   else
   {
     REQUIRE(counters.reads == 0);
     REQUIRE(counters.writes == 0);
-    REQUIRE(counters.allocationEvents == 0);
-    REQUIRE(counters.releaseEvents == 0);
+    REQUIRE(counters.allocation_events == 0);
+    REQUIRE(counters.release_events == 0);
   }
   if(fault == CopyFault::None)
   {
-    IdentifySampleBatchTest::RequireOutput<T>(data, 2, false);
+    identify_sample_batch_test::RequireOutput<T>(data, 2, false);
   }
   else
   {
@@ -252,7 +253,7 @@ void CheckControl(CopyFault fault, bool matchIdentity, bool installObserver)
 
 TEST_CASE("IdentifySample observation preserves results through success and copy failures", "[.IdentifySampleObservation]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const auto fault = GENERATE(CopyFault::None, CopyFault::ReadResult, CopyFault::WriteResult, CopyFault::ReadThrow, CopyFault::WriteThrow);
   const bool useBool = GENERATE(false, true);
   CAPTURE(static_cast<int>(fault), useBool);
@@ -268,7 +269,7 @@ TEST_CASE("IdentifySample observation preserves results through success and copy
 
 TEST_CASE("IdentifySample observation ignores null and unrelated identities", "[.IdentifySampleObservation]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool installObserver = GENERATE(false, true);
   CAPTURE(installObserver);
   CheckControl<uint8>(CopyFault::None, false, installObserver);
@@ -278,11 +279,11 @@ TEST_CASE("IdentifySample observation restores nested observers and isolates thr
 {
   LogicalCounters outer;
   LogicalCounters inner;
-  const auto initial = SetIdentifySampleSliceObserverForTesting({&outer, &LogicalCounters::Observe});
+  const auto initial = SetIdentifySampleSliceObserverForTesting({.context = &outer, .callback = &LogicalCounters::Observe});
   const auto restoreInitial = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(initial); });
   REQUIRE(initial.callback == nullptr);
   {
-    const auto prior = SetIdentifySampleSliceObserverForTesting({&inner, &LogicalCounters::Observe});
+    const auto prior = SetIdentifySampleSliceObserverForTesting({.context = &inner, .callback = &LogicalCounters::Observe});
     const auto restorePrior = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(prior); });
     REQUIRE(prior.context == &outer);
     REQUIRE(prior.callback == &LogicalCounters::Observe);
@@ -295,7 +296,7 @@ TEST_CASE("IdentifySample observation restores nested observers and isolates thr
   });
   worker.join();
   REQUIRE(childWasNull.load());
-  const auto current = SetIdentifySampleSliceObserverForTesting({&outer, &LogicalCounters::Observe});
+  const auto current = SetIdentifySampleSliceObserverForTesting({.context = &outer, .callback = &LogicalCounters::Observe});
   REQUIRE(current.context == &outer);
   REQUIRE(current.callback == &LogicalCounters::Observe);
 }
@@ -314,19 +315,19 @@ TEST_CASE("IdentifySample benchmark decimal fields reject malformed values", "[.
 
 TEST_CASE("IdentifySample positive headroom batches YZ transfers", "[.IdentifySampleObservation][.IdentifySampleBatchScheduleRed]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool useBool = GENERATE(false, true);
   const bool fillHoles = GENERATE(false, true);
   DYNAMIC_SECTION("Bool=" << useBool << " fill holes=" << fillHoles)
   {
     const auto check = [&]<class T>() {
-      const IdentifySampleBatchTest::ScopedPreferenceRestore restorePreferences;
-      const UnitTest::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
-      DataStructure data = IdentifySampleBatchTest::CreateFixture<T>(2);
-      REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath));
-      auto& mask = data.getDataRefAs<DataArray<T>>(IdentifySampleBatchTest::k_MaskPath);
+      const identify_sample_batch_test::ScopedPreferenceRestore restorePreferences;
+      const unit_test::PreferencesSentinel resident(DataStorageMode::ForceInCore, 1);
+      DataStructure data = identify_sample_batch_test::CreateFixture<T>(2);
+      REQUIRE_NOTHROW(data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath));
+      auto& mask = data.getDataRefAs<DataArray<T>>(identify_sample_batch_test::k_MaskPath);
       REQUIRE(mask.getDataStoreRef().getStoreType() == IDataStore::StoreType::InMemory);
-      auto& budget = CacheMemoryBudgetManager::instance();
+      auto& budget = CacheMemoryBudgetManager::Instance();
       REQUIRE(budget.reservedWorkingMemoryBytes() == 0);
       const BudgetRestore restoreBudget;
       REQUIRE_FALSE(budget.setBudgetBytes(4ULL * 1024 * 1024));
@@ -337,16 +338,16 @@ TEST_CASE("IdentifySample positive headroom batches YZ transfers", "[.IdentifySa
       LogicalCounters counters;
       counters.selected = &mask;
       IdentifySampleInputValues inputs{};
-      inputs.FillHoles = fillHoles;
-      inputs.InputImageGeometryPath = IdentifySampleBatchTest::k_ImagePath;
-      inputs.MaskArrayPath = IdentifySampleBatchTest::k_MaskPath;
-      inputs.SliceBySlice = true;
-      inputs.SliceBySlicePlaneIndex = 2;
+      inputs.fill_holes = fillHoles;
+      inputs.input_image_geometry_path = identify_sample_batch_test::k_ImagePath;
+      inputs.mask_array_path = identify_sample_batch_test::k_MaskPath;
+      inputs.slice_by_slice = true;
+      inputs.slice_by_slice_plane_index = 2;
       const std::atomic_bool cancel = false;
       const IFilter::MessageHandler messages;
       IdentifySampleCCL algorithm(data, messages, cancel, &inputs);
       {
-        const auto prior = SetIdentifySampleSliceObserverForTesting({&counters, &LogicalCounters::Observe});
+        const auto prior = SetIdentifySampleSliceObserverForTesting({.context = &counters, .callback = &LogicalCounters::Observe});
         const auto restore = MakeScopeGuard([&]() noexcept { (void)SetIdentifySampleSliceObserverForTesting(prior); });
         REQUIRE(prior.callback == nullptr);
         const auto result = algorithm();
@@ -355,16 +356,16 @@ TEST_CASE("IdentifySample positive headroom batches YZ transfers", "[.IdentifySa
       REQUIRE(budget.reservedWorkingMemoryBytes() == occupied.sizeBytes());
       REQUIRE_FALSE(counters.invalid);
       REQUIRE(counters.active == 0);
-      REQUIRE(counters.planeLive == 0);
-      REQUIRE(counters.xyLive == 0);
+      REQUIRE(counters.plane_live == 0);
+      REQUIRE(counters.xy_live == 0);
       REQUIRE(counters.concurrent == 1);
-      REQUIRE(counters.maximumSpan == 19 * 11);
-      IdentifySampleBatchTest::RequireOutput<T>(data, 2, fillHoles);
+      REQUIRE(counters.maximum_span == 19 * 11);
+      identify_sample_batch_test::RequireOutput<T>(data, 2, fillHoles);
       // Nineteen columns require three batches of at most eight columns.
       CHECK(counters.reads == 2 * 3 * 13);
       CHECK(counters.writes == 3 * 13);
-      CHECK(counters.readSuccess == counters.reads);
-      CHECK(counters.writeSuccess == counters.writes);
+      CHECK(counters.read_success == counters.reads);
+      CHECK(counters.write_success == counters.writes);
     };
     if(useBool)
     {

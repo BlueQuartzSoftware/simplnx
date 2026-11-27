@@ -107,8 +107,8 @@ public:
    */
   void operator()() const
   {
-    using ArrayT = DataArray<T>;
-    CopyData(dynamic_cast<const ArrayT&>(m_Source), dynamic_cast<ArrayT&>(m_Destination), m_SampleGeom, m_ReferenceGeom, m_ShouldCancel, static_cast<T>(m_FillValue));
+    using ArrayTType = DataArray<T>;
+    CopyData(dynamic_cast<const ArrayTType&>(m_Source), dynamic_cast<ArrayTType&>(m_Destination), m_SampleGeom, m_ReferenceGeom, m_ShouldCancel, static_cast<T>(m_FillValue));
   }
 
 private:
@@ -132,9 +132,9 @@ NearestPointFuseRegularGridsDirect::NearestPointFuseRegularGridsDirect(DataStruc
 
 Result<> NearestPointFuseRegularGridsDirect::operator()()
 {
-  const auto& sampleGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->SamplingGeometryPath);
-  const auto& referenceGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ReferenceGeometryPath);
-  const auto& sampleAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->SamplingCellAttributeMatrixPath);
+  const auto& sampleGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->sampling_geometry_path);
+  const auto& referenceGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->reference_geometry_path);
+  const auto& sampleAM = m_DataStructure.getDataRefAs<AttributeMatrix>(m_InputValues->sampling_cell_attribute_matrix_path);
   // Each task owns a separate source and destination pair. Array-level parallelism
   // therefore needs no shared DataStore access.
   ParallelTaskAlgorithm taskRunner;
@@ -148,9 +148,9 @@ Result<> NearestPointFuseRegularGridsDirect::operator()()
     {
       continue;
     }
-    auto& destination = m_DataStructure.getDataRefAs<IArray>(m_InputValues->ReferenceCellAttributeMatrixPath.createChildPath(source->getName()));
-    auto& sourceData = dynamic_cast<const IDataArray&>(*source);
-    ExecuteParallelFunction<CopyArrayImpl>(sourceData.getDataType(), taskRunner, *source, destination, sampleGeom, referenceGeom, m_InputValues->fillValue, m_ShouldCancel);
+    auto& destination = m_DataStructure.getDataRefAs<IArray>(m_InputValues->reference_cell_attribute_matrix_path.createChildPath(source->getName()));
+    const auto& sourceData = dynamic_cast<const IDataArray&>(*source);
+    ExecuteParallelFunction<CopyArrayImpl>(sourceData.getDataType(), taskRunner, *source, destination, sampleGeom, referenceGeom, m_InputValues->fill_value, m_ShouldCancel);
   }
   taskRunner.wait();
   return {};

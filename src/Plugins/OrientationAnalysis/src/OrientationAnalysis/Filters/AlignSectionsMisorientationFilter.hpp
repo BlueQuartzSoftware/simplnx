@@ -24,21 +24,21 @@ public:
   AlignSectionsMisorientationFilter& operator=(AlignSectionsMisorientationFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_MisorientationTolerance_Key = "misorientation_tolerance";
+  static constexpr StringLiteralType k_MisorientationTolerance_Key = "misorientation_tolerance";
 
-  static constexpr StringLiteral k_UseMask_Key = "use_mask";
-  static constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  static constexpr StringLiteralType k_UseMask_Key = "use_mask";
+  static constexpr StringLiteralType k_MaskArrayPath_Key = "mask_array_path";
 
-  static constexpr StringLiteral k_QuatsArrayPath_Key = "quats_array_path";
-  static constexpr StringLiteral k_CellPhasesArrayPath_Key = "cell_phases_array_path";
-  static constexpr StringLiteral k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
-  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_QuatsArrayPath_Key = "quats_array_path";
+  static constexpr StringLiteralType k_CellPhasesArrayPath_Key = "cell_phases_array_path";
+  static constexpr StringLiteralType k_CrystalStructuresArrayPath_Key = "crystal_structures_array_path";
+  static constexpr StringLiteralType k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
 
-  static constexpr StringLiteral k_StoreAlignmentShifts_Key = "store_alignment_shifts";
-  static constexpr StringLiteral k_AlignmentAMName_Key = "alignment_attribute_matrix_name";
-  static constexpr StringLiteral k_SlicesArrayName_Key = "slices_array_name";
-  static constexpr StringLiteral k_RelativeShiftsArrayName_Key = "relative_shifts_array_name";
-  static constexpr StringLiteral k_CumulativeShiftsArrayName_Key = "cumulative_shifts_array_name";
+  static constexpr StringLiteralType k_StoreAlignmentShifts_Key = "store_alignment_shifts";
+  static constexpr StringLiteralType k_AlignmentAMName_Key = "alignment_attribute_matrix_name";
+  static constexpr StringLiteralType k_SlicesArrayName_Key = "slices_array_name";
+  static constexpr StringLiteralType k_RelativeShiftsArrayName_Key = "relative_shifts_array_name";
+  static constexpr StringLiteralType k_CumulativeShiftsArrayName_Key = "cumulative_shifts_array_name";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -95,7 +95,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

@@ -29,39 +29,39 @@ const std::string k_Exemplar0 = "Exemplar0";
 
 TEST_CASE("OrientationAnalysis::RodriguesConvertorFilter", "[OrientationAnalysis][RodriguesConvertorFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   // AlgorithmTestScope forces the selected path and records its target-call
   // witness.
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
 
-  Float32Array* quats = UnitTest::CreateTestDataArray<float32>(dataStructure, k_InputArrayName, {4ULL}, {3ULL}, {});
-  scope.requireExpectedStore(*quats);
+  Float32ArrayType* quatsPtr = unit_test::CreateTestDataArray<float32>(dataStructure, k_InputArrayName, {4ULL}, {3ULL}, {});
+  scope.requireExpectedStore(*quatsPtr);
 
   for(usize i = 0; i < 12; i++)
   {
-    (*quats)[i] = static_cast<float32>(i);
+    (*quatsPtr)[i] = static_cast<float32>(i);
   }
-  Float32Array* exemplarData = UnitTest::CreateTestDataArray<float32>(dataStructure, k_Exemplar0, {4ULL}, {4ULL}, {});
-  (*exemplarData)[0] = 0.0F;
-  (*exemplarData)[1] = 0.447214F;
-  (*exemplarData)[2] = 0.894427F;
-  (*exemplarData)[3] = 2.23607F;
-  (*exemplarData)[4] = 0.424264F;
-  (*exemplarData)[5] = 0.565685F;
-  (*exemplarData)[6] = 0.707107F;
-  (*exemplarData)[7] = 7.07107F;
-  (*exemplarData)[8] = 0.491539F;
-  (*exemplarData)[9] = 0.573462F;
-  (*exemplarData)[10] = 0.655386F;
-  (*exemplarData)[11] = 12.2066F;
-  (*exemplarData)[12] = 0.517893F;
-  (*exemplarData)[13] = 0.575437F;
-  (*exemplarData)[14] = 0.632980F;
-  (*exemplarData)[15] = 17.3781F;
+  Float32ArrayType* exemplarDataPtr = unit_test::CreateTestDataArray<float32>(dataStructure, k_Exemplar0, {4ULL}, {4ULL}, {});
+  (*exemplarDataPtr)[0] = 0.0F;
+  (*exemplarDataPtr)[1] = 0.447214F;
+  (*exemplarDataPtr)[2] = 0.894427F;
+  (*exemplarDataPtr)[3] = 2.23607F;
+  (*exemplarDataPtr)[4] = 0.424264F;
+  (*exemplarDataPtr)[5] = 0.565685F;
+  (*exemplarDataPtr)[6] = 0.707107F;
+  (*exemplarDataPtr)[7] = 7.07107F;
+  (*exemplarDataPtr)[8] = 0.491539F;
+  (*exemplarDataPtr)[9] = 0.573462F;
+  (*exemplarDataPtr)[10] = 0.655386F;
+  (*exemplarDataPtr)[11] = 12.2066F;
+  (*exemplarDataPtr)[12] = 0.517893F;
+  (*exemplarDataPtr)[13] = 0.575437F;
+  (*exemplarDataPtr)[14] = 0.632980F;
+  (*exemplarDataPtr)[15] = 17.3781F;
   {
     const RodriguesConvertorFilter filter;
 
@@ -72,26 +72,26 @@ TEST_CASE("OrientationAnalysis::RodriguesConvertorFilter", "[OrientationAnalysis
     args.insertOrAssign(RodriguesConvertorFilter::k_DeleteOriginalData_Key, std::make_any<bool>(false));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(DataPath({k_ConvertedName})));
-    auto& outputArray = dataStructure.getDataRefAs<Float32Array>(DataPath({k_ConvertedName}));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(DataPath({k_ConvertedName})));
+    auto& outputArray = dataStructure.getDataRefAs<Float32ArrayType>(DataPath({k_ConvertedName}));
     scope.requireExpectedStore(outputArray);
 
-    UnitTest::CompareDataArrays<float32>(*exemplarData, outputArray);
+    unit_test::CompareDataArrays<float32>(*exemplarDataPtr, outputArray);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("OrientationAnalysis::RodriguesConvertorFilter: SIMPL Backwards Compatibility", "[OrientationAnalysis][RodriguesConvertorFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -104,22 +104,22 @@ TEST_CASE("OrientationAnalysis::RodriguesConvertorFilter: SIMPL Backwards Compat
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<RodriguesConvertorFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<RodriguesConvertorFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<DataPath>(RodriguesConvertorFilter::k_RodriguesDataArrayPath_Key) == DataPath({"DataContainer", "CellData", "TestArray"}));
       CHECK(args.value<std::string>(RodriguesConvertorFilter::k_OutputDataArrayName_Key) == "TestArray");
       CHECK(args.value<bool>(RodriguesConvertorFilter::k_DeleteOriginalData_Key) == true);

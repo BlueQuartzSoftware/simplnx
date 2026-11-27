@@ -38,7 +38,7 @@
 
 namespace fs = std::filesystem;
 using namespace nx::core;
-using namespace nx::core::Constants;
+using namespace nx::core::constants;
 
 namespace
 {
@@ -46,7 +46,7 @@ namespace
  * @namespace DiscriminatingFixture
  * @brief Defines an analytical coarsening fixture with boundary and tie cases.
  */
-namespace DiscriminatingFixture
+namespace discriminating_fixture
 {
 constexpr usize k_Dimension = 6;
 constexpr usize k_CellCount = k_Dimension * k_Dimension * k_Dimension;
@@ -75,12 +75,12 @@ struct Coordinate
   }
 };
 
-constexpr Coordinate k_TieCell = {5, 5, 5};
-constexpr Coordinate k_TieNegativeXCell = {4, 5, 5};
-constexpr Coordinate k_PositiveXBoundaryCell = {0, 5, 5};
-constexpr Coordinate k_PositiveYBoundaryCell = {5, 0, 5};
-constexpr Coordinate k_Feature3Seed = {5, 5, 4};
-constexpr Coordinate k_Feature4Seed = {5, 4, 5};
+constexpr Coordinate k_TieCell = {.x = 5, .y = 5, .z = 5};
+constexpr Coordinate k_TieNegativeXCell = {.x = 4, .y = 5, .z = 5};
+constexpr Coordinate k_PositiveXBoundaryCell = {.x = 0, .y = 5, .z = 5};
+constexpr Coordinate k_PositiveYBoundaryCell = {.x = 5, .y = 0, .z = 5};
+constexpr Coordinate k_Feature3Seed = {.x = 5, .y = 5, .z = 4};
+constexpr Coordinate k_Feature4Seed = {.x = 5, .y = 4, .z = 5};
 constexpr std::array<float32, 3> k_VectorOffsets = {0.25F, 0.5F, 0.75F};
 
 /**
@@ -241,27 +241,27 @@ constexpr int32 GetExpectedFeatureId(usize x, usize y, usize z)
  */
 void PopulateDataStructure(DataStructure& dataStructure)
 {
-  const SizeVec3 imageSize = {k_Dimension, k_Dimension, k_Dimension};
+  const SizeVec3Type imageSize = {k_Dimension, k_Dimension, k_Dimension};
   const ShapeType cellShape = {k_Dimension, k_Dimension, k_Dimension};
 
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
-  imageGeom->setDimensions(imageSize);
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
-  auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {k_FeatureCount}, imageGeom->getId());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions(imageSize);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "FeatureData", {k_FeatureCount}, imageGeomPtr->getId());
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "CellData", "FeatureIds"}), cellShape, {1});
-  auto* featureIds = DataArray<int32>::Create(dataStructure, "FeatureIds", featureIdsStore, cellAM->getId());
-  auto copiedScalarStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "CellData", "CopiedScalar"}), cellShape, {1});
-  auto* copiedScalar = DataArray<int32>::Create(dataStructure, "CopiedScalar", copiedScalarStore, cellAM->getId());
-  auto copiedVectorStore = DataStoreUtilities::CreateDataStore<float32>(dataStructure, DataPath({"ImageGeometry", "CellData", "CopiedVector"}), cellShape, {3});
-  auto* copiedVector = DataArray<float32>::Create(dataStructure, "CopiedVector", copiedVectorStore, cellAM->getId());
-  auto ignoredValuesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "CellData", "IgnoredValues"}), cellShape, {1});
-  auto* ignoredValues = DataArray<int32>::Create(dataStructure, "IgnoredValues", ignoredValuesStore, cellAM->getId());
-  auto numNeighborsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"}), {k_FeatureCount}, {1});
-  auto* numNeighbors = DataArray<int32>::Create(dataStructure, "NumNeighbors", numNeighborsStore, featureAM->getId());
-  auto phasesStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "FeatureData", "Phases"}), {k_FeatureCount}, {1});
-  auto* phases = DataArray<int32>::Create(dataStructure, "Phases", phasesStore, featureAM->getId());
+  auto featureIdsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "CellData", "FeatureIds"}), cellShape, {1});
+  auto* featureIdsPtr = DataArray<int32>::Create(dataStructure, "FeatureIds", featureIdsStore, cellAmPtr->getId());
+  auto copiedScalarStore = data_store_utilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "CellData", "CopiedScalar"}), cellShape, {1});
+  auto* copiedScalarPtr = DataArray<int32>::Create(dataStructure, "CopiedScalar", copiedScalarStore, cellAmPtr->getId());
+  auto copiedVectorStore = data_store_utilities::CreateDataStore<float32>(dataStructure, DataPath({"ImageGeometry", "CellData", "CopiedVector"}), cellShape, {3});
+  auto* copiedVectorPtr = DataArray<float32>::Create(dataStructure, "CopiedVector", copiedVectorStore, cellAmPtr->getId());
+  auto ignoredValuesStore = data_store_utilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "CellData", "IgnoredValues"}), cellShape, {1});
+  auto* ignoredValuesPtr = DataArray<int32>::Create(dataStructure, "IgnoredValues", ignoredValuesStore, cellAmPtr->getId());
+  auto numNeighborsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"}), {k_FeatureCount}, {1});
+  auto* numNeighborsPtr = DataArray<int32>::Create(dataStructure, "NumNeighbors", numNeighborsStore, featureAmPtr->getId());
+  auto phasesStore = data_store_utilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "FeatureData", "Phases"}), {k_FeatureCount}, {1});
+  auto* phasesPtr = DataArray<int32>::Create(dataStructure, "Phases", phasesStore, featureAmPtr->getId());
 
   for(usize z = 0; z < k_Dimension; z++)
   {
@@ -270,12 +270,12 @@ void PopulateDataStructure(DataStructure& dataStructure)
       for(usize x = 0; x < k_Dimension; x++)
       {
         const usize index = GetIndex(x, y, z);
-        featureIds->getDataStoreRef()[index] = GetInputFeatureId(x, y, z);
-        copiedScalar->getDataStoreRef()[index] = static_cast<int32>(10000 + index);
-        ignoredValues->getDataStoreRef()[index] = static_cast<int32>(20000 + index);
+        featureIdsPtr->getDataStoreRef()[index] = GetInputFeatureId(x, y, z);
+        copiedScalarPtr->getDataStoreRef()[index] = static_cast<int32>(10000 + index);
+        ignoredValuesPtr->getDataStoreRef()[index] = static_cast<int32>(20000 + index);
         for(usize component = 0; component < k_VectorOffsets.size(); component++)
         {
-          copiedVector->getDataStoreRef()[index * k_VectorOffsets.size() + component] = static_cast<float32>(index) + k_VectorOffsets[component];
+          copiedVectorPtr->getDataStoreRef()[index * k_VectorOffsets.size() + component] = static_cast<float32>(index) + k_VectorOffsets[component];
         }
       }
     }
@@ -285,17 +285,17 @@ void PopulateDataStructure(DataStructure& dataStructure)
   const std::array<int32, k_FeatureCount> inputPhases = {0, 1, 1, 1, 1, 2};
   for(usize featureId = 0; featureId < k_FeatureCount; featureId++)
   {
-    numNeighbors->getDataStoreRef()[featureId] = inputNumNeighbors[featureId];
-    phases->getDataStoreRef()[featureId] = inputPhases[featureId];
+    numNeighborsPtr->getDataStoreRef()[featureId] = inputNumNeighbors[featureId];
+    phasesPtr->getDataStoreRef()[featureId] = inputPhases[featureId];
   }
 }
-} // namespace DiscriminatingFixture
+} // namespace discriminating_fixture
 
 /**
  * @brief Selects the analytical fixture inputs for array-kind validation.
  * @return Arguments with all three numeric inputs active.
  */
-Arguments createArrayKindValidationArguments()
+Arguments CreateArrayKindValidationArguments()
 {
   Arguments args = RequireMinNumNeighborsFilter().getDefaultArguments();
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_SelectedImageGeometryPath_Key, DataPath({"ImageGeometry"}));
@@ -336,7 +336,7 @@ Arguments createArrayKindValidationArguments()
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Analytical Oracle", "[SimplnxCore][RequireMinNumNeighborsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   const bool singlePhase = GENERATE(false, true);
   DYNAMIC_SECTION("ApplyToSinglePhase=" << singlePhase)
@@ -346,20 +346,20 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Analytical Oracle", "[Simp
     // Inactive-feature removal then produces FeatureIds [1, 1, 2, 2].
     DataStructure dataStructure;
 
-    const SizeVec3 imageSize = {4, 1, 1};
+    const SizeVec3Type imageSize = {4, 1, 1};
     const ShapeType arraySize(std::reverse_iterator(imageSize.end()), std::reverse_iterator(imageSize.begin()));
 
-    auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
-    imageGeom->setDimensions(imageSize);
-    auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", arraySize, imageGeom->getId());
-    imageGeom->setCellData(*cellAM);
-    auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {4}, imageGeom->getId());
+    auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+    imageGeomPtr->setDimensions(imageSize);
+    auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", arraySize, imageGeomPtr->getId());
+    imageGeomPtr->setCellData(*cellAmPtr);
+    auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "FeatureData", {4}, imageGeomPtr->getId());
 
-    auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", arraySize, {1}, cellAM->getId());
-    auto* copiedValues = UnitTest::CreateTestDataArray<int32>(dataStructure, "CopiedValues", arraySize, {1}, cellAM->getId());
-    auto* ignoredValues = UnitTest::CreateTestDataArray<int32>(dataStructure, "IgnoredValues", arraySize, {1}, cellAM->getId());
-    auto* numNeighbors = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAM->getId());
-    auto* phases = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {4}, {1}, featureAM->getId());
+    auto* featureIdsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "FeatureIds", arraySize, {1}, cellAmPtr->getId());
+    auto* copiedValuesPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "CopiedValues", arraySize, {1}, cellAmPtr->getId());
+    auto* ignoredValuesPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "IgnoredValues", arraySize, {1}, cellAmPtr->getId());
+    auto* numNeighborsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAmPtr->getId());
+    auto* phasesPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Phases", {4}, {1}, featureAmPtr->getId());
 
     const std::array<int32, 4> inputFeatureIds = {2, 1, 1, 3};
     const std::array<int32, 4> inputCopiedValues = {20, 101, 102, 30};
@@ -368,11 +368,11 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Analytical Oracle", "[Simp
     const std::array<int32, 4> inputPhases = {0, 1, 2, 1};
     for(usize i = 0; i < inputFeatureIds.size(); i++)
     {
-      featureIds->getDataStoreRef()[i] = inputFeatureIds[i];
-      copiedValues->getDataStoreRef()[i] = inputCopiedValues[i];
-      ignoredValues->getDataStoreRef()[i] = inputIgnoredValues[i];
-      numNeighbors->getDataStoreRef()[i] = inputNumNeighbors[i];
-      phases->getDataStoreRef()[i] = inputPhases[i];
+      featureIdsPtr->getDataStoreRef()[i] = inputFeatureIds[i];
+      copiedValuesPtr->getDataStoreRef()[i] = inputCopiedValues[i];
+      ignoredValuesPtr->getDataStoreRef()[i] = inputIgnoredValues[i];
+      numNeighborsPtr->getDataStoreRef()[i] = inputNumNeighbors[i];
+      phasesPtr->getDataStoreRef()[i] = inputPhases[i];
     }
 
     RequireMinNumNeighborsFilter filter;
@@ -387,18 +387,18 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Analytical Oracle", "[Simp
     args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{DataPath({"ImageGeometry", "CellData", "IgnoredValues"})}));
 
     const auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     const auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "CellData", "FeatureIds"})));
-    const auto& outputFeatureIds = dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "CellData", "FeatureIds"}));
-    const auto& outputCopiedValues = dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "CellData", "CopiedValues"}));
-    const auto& outputIgnoredValues = dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "CellData", "IgnoredValues"}));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"})));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "FeatureData", "Phases"})));
-    const auto& outputNumNeighbors = dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"}));
-    const auto& outputPhases = dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "FeatureData", "Phases"}));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"ImageGeometry", "CellData", "FeatureIds"})));
+    const auto& outputFeatureIds = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"ImageGeometry", "CellData", "FeatureIds"}));
+    const auto& outputCopiedValues = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"ImageGeometry", "CellData", "CopiedValues"}));
+    const auto& outputIgnoredValues = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"ImageGeometry", "CellData", "IgnoredValues"}));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"})));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"ImageGeometry", "FeatureData", "Phases"})));
+    const auto& outputNumNeighbors = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"}));
+    const auto& outputPhases = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"ImageGeometry", "FeatureData", "Phases"}));
     const std::array<int32, 4> expectedFeatureIds = {1, 1, 2, 2};
     const std::array<int32, 4> expectedCopiedValues = {20, 20, 30, 30};
     const std::array<int32, 3> expectedNumNeighbors = singlePhase ? std::array<int32, 3>{0, 0, 3} : std::array<int32, 3>{0, 3, 3};
@@ -419,13 +419,13 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Analytical Oracle", "[Simp
       CHECK(outputNumNeighbors[i] == expectedNumNeighbors[i]);
       CHECK(outputPhases[i] == expectedPhases[i]);
     }
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Discriminating 6x6x6 Analytical Fixture", "[SimplnxCore][RequireMinNumNeighborsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   std::vector<int32> allPhaseFeatureIds;
   for(const bool singlePhase : std::array<bool, 2>{false, true})
@@ -433,7 +433,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Discriminating 6x6x6 Analy
     INFO("ApplyToSinglePhase=" << singlePhase);
 
     DataStructure dataStructure;
-    DiscriminatingFixture::PopulateDataStructure(dataStructure);
+    discriminating_fixture::PopulateDataStructure(dataStructure);
 
     const DataPath featureIdsPath({"ImageGeometry", "CellData", "FeatureIds"});
     const DataPath copiedScalarPath({"ImageGeometry", "CellData", "CopiedScalar"});
@@ -454,40 +454,40 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Discriminating 6x6x6 Analy
     args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{ignoredValuesPath}));
 
     const auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     const auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(featureIdsPath));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(copiedScalarPath));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(copiedVectorPath));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(ignoredValuesPath));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(numNeighborsPath));
-    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(phasesPath));
-    const auto& outputFeatureIds = dataStructure.getDataRefAs<Int32Array>(featureIdsPath);
-    const auto& outputCopiedScalar = dataStructure.getDataRefAs<Int32Array>(copiedScalarPath);
-    const auto& outputCopiedVector = dataStructure.getDataRefAs<Float32Array>(copiedVectorPath);
-    const auto& outputIgnoredValues = dataStructure.getDataRefAs<Int32Array>(ignoredValuesPath);
-    const auto& outputNumNeighbors = dataStructure.getDataRefAs<Int32Array>(numNeighborsPath);
-    const auto& outputPhases = dataStructure.getDataRefAs<Int32Array>(phasesPath);
-    REQUIRE(outputFeatureIds.getNumberOfTuples() == DiscriminatingFixture::k_CellCount);
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(copiedScalarPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(copiedVectorPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(ignoredValuesPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(numNeighborsPath));
+    REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(phasesPath));
+    const auto& outputFeatureIds = dataStructure.getDataRefAs<Int32ArrayType>(featureIdsPath);
+    const auto& outputCopiedScalar = dataStructure.getDataRefAs<Int32ArrayType>(copiedScalarPath);
+    const auto& outputCopiedVector = dataStructure.getDataRefAs<Float32ArrayType>(copiedVectorPath);
+    const auto& outputIgnoredValues = dataStructure.getDataRefAs<Int32ArrayType>(ignoredValuesPath);
+    const auto& outputNumNeighbors = dataStructure.getDataRefAs<Int32ArrayType>(numNeighborsPath);
+    const auto& outputPhases = dataStructure.getDataRefAs<Int32ArrayType>(phasesPath);
+    REQUIRE(outputFeatureIds.getNumberOfTuples() == discriminating_fixture::k_CellCount);
 
-    for(usize z = 0; z < DiscriminatingFixture::k_Dimension; z++)
+    for(usize z = 0; z < discriminating_fixture::k_Dimension; z++)
     {
-      for(usize y = 0; y < DiscriminatingFixture::k_Dimension; y++)
+      for(usize y = 0; y < discriminating_fixture::k_Dimension; y++)
       {
-        for(usize x = 0; x < DiscriminatingFixture::k_Dimension; x++)
+        for(usize x = 0; x < discriminating_fixture::k_Dimension; x++)
         {
-          const usize index = DiscriminatingFixture::GetIndex(x, y, z);
-          const usize sourceIndex = DiscriminatingFixture::GetExpectedSourceIndex(x, y, z);
+          const usize index = discriminating_fixture::GetIndex(x, y, z);
+          const usize sourceIndex = discriminating_fixture::GetExpectedSourceIndex(x, y, z);
           CAPTURE(x, y, z, index, sourceIndex, singlePhase);
-          CHECK(outputFeatureIds[index] == DiscriminatingFixture::GetExpectedFeatureId(x, y, z));
+          CHECK(outputFeatureIds[index] == discriminating_fixture::GetExpectedFeatureId(x, y, z));
           CHECK(outputCopiedScalar[index] == static_cast<int32>(10000 + sourceIndex));
           CHECK(outputIgnoredValues[index] == static_cast<int32>(20000 + index));
-          for(usize component = 0; component < DiscriminatingFixture::k_VectorOffsets.size(); component++)
+          for(usize component = 0; component < discriminating_fixture::k_VectorOffsets.size(); component++)
           {
-            CHECK(outputCopiedVector[index * DiscriminatingFixture::k_VectorOffsets.size() + component] == static_cast<float32>(sourceIndex) + DiscriminatingFixture::k_VectorOffsets[component]);
+            CHECK(outputCopiedVector[index * discriminating_fixture::k_VectorOffsets.size() + component] == static_cast<float32>(sourceIndex) + discriminating_fixture::k_VectorOffsets[component]);
           }
         }
       }
@@ -517,20 +517,20 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Discriminating 6x6x6 Analy
       allPhaseFeatureIds = currentFeatureIds;
     }
 
-    UnitTest::CheckArraysInheritTupleDims(dataStructure);
+    unit_test::CheckArraysInheritTupleDims(dataStructure);
   }
 }
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter", "[SimplnxCore][RequireMinNumNeighborsFilter]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   constexpr int32 k_MinNumNeighbors = 3;
-  const nx::core::UnitTest::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_test_data_1_v2.tar.gz", "6_5_test_data_1_v2");
+  const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_5_test_data_1_v2.tar.gz", "6_5_test_data_1_v2");
   // Load the Small IN100 exemplar before each selected algorithm scenario.
   auto baseDataFilePath = fs::path(fmt::format("{}/6_5_test_data_1_v2/6_5_test_data_1_v2.dream3d", nx::core::unit_test::k_TestFilesDir));
-  DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
-  DataPath smallIn100Group({nx::core::Constants::k_DataContainer});
+  DataStructure dataStructure = unit_test::LoadDataStructure(baseDataFilePath);
+  DataPath smallIn100Group({nx::core::constants::k_DataContainer});
   DataPath cellDataAttributeMatrix = smallIn100Group.createChildPath(k_CellData);
   DataPath featureIdsDataPath({k_DataContainer, k_CellData, k_FeatureIds});
   DataPath cellFeatureAttributeMatrixPath({k_DataContainer, k_CellFeatureData});
@@ -565,7 +565,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter", "[SimplnxCore][RequireMin
 
     // Preflight must accept the configured feature arrays.
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
     // Execution must complete the selected feature-coarsening scenario.
     auto executeResult = filter.execute(dataStructure, args);
@@ -573,8 +573,8 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter", "[SimplnxCore][RequireMin
   }
 
   DataPath numElementsPath = cellFeatureAttributeMatrixPath.createChildPath("NumElements");
-  const auto& inputNumElements = dataStructure.getDataRefAs<Int32Array>(numElementsPath);
-  const auto& computedNumNeighbors = dataStructure.getDataRefAs<Int32Array>(numNeighborPath);
+  const auto& inputNumElements = dataStructure.getDataRefAs<Int32ArrayType>(numElementsPath);
+  const auto& computedNumNeighbors = dataStructure.getDataRefAs<Int32ArrayType>(numNeighborPath);
   REQUIRE(inputNumElements.getNumberOfTuples() == computedNumNeighbors.getNumberOfTuples());
 
   // Feature 0 is retained. Other feature tuples meeting the minimum-neighbor
@@ -602,15 +602,15 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter", "[SimplnxCore][RequireMin
 
     // Preflight must accept the configured feature arrays.
     auto preflightResult = filter.preflight(dataStructure, args);
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.warnings().size() == 1);
-    CHECK(preflightResult.outputActions.warnings()[0].code == -5558);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.warnings().size() == 1);
+    CHECK(preflightResult.output_actions.warnings()[0].code == -5558);
 
     // Execution must complete the selected feature-coarsening scenario.
     auto executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-    const Int32Array& createdFeatureArray = dataStructure.getDataRefAs<Int32Array>(numElementsPath);
+    const Int32ArrayType& createdFeatureArray = dataStructure.getDataRefAs<Int32ArrayType>(numElementsPath);
     REQUIRE(createdFeatureArray.getNumberOfTuples() == expectedNumElements.size());
 
     for(usize i = 0; i < expectedNumElements.size(); i++)
@@ -621,35 +621,35 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter", "[SimplnxCore][RequireMin
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   // The optional output supports manual inspection of the coarsened arrays.
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/minimum_neighbors_test.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/minimum_neighbors_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - tuple count mismatch (-252)", "[SimplnxCore][RequireMinNumNeighborsFilter][preflight]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   // Single-phase preflight requires equal tuple counts for NumNeighbors and FeaturePhases.
   // Separate AttributeMatrix objects give these arrays different tuple counts.
   // This mismatch reaches the validateNumberOfTuples() guard for error -252.
   DataStructure dataStructure;
-  auto* imageGeom = ImageGeom::Create(dataStructure, "DataContainer");
-  imageGeom->setDimensions({4, 1, 1});
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "DataContainer");
+  imageGeomPtr->setDimensions({4, 1, 1});
 
   // FeatureIds must exist for preflight, but it is not part of the feature-level tuple-count check.
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", {1, 1, 4}, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {1, 1, 4}, {1}, cellAM->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", {1, 1, 4}, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  unit_test::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {1, 1, 4}, {1}, cellAmPtr->getId());
 
   // NumNeighbors has five feature tuples.
-  auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {5}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {5}, {1}, featureAM->getId());
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "FeatureData", {5}, imageGeomPtr->getId());
+  unit_test::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {5}, {1}, featureAmPtr->getId());
 
   // FeaturePhases has four tuples in a separate AttributeMatrix.
-  auto* mismatchAM = AttributeMatrix::Create(dataStructure, "MismatchData", {4}, imageGeom->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {4}, {1}, mismatchAM->getId());
+  auto* mismatchAmPtr = AttributeMatrix::Create(dataStructure, "MismatchData", {4}, imageGeomPtr->getId());
+  unit_test::CreateTestDataArray<int32>(dataStructure, "Phases", {4}, {1}, mismatchAmPtr->getId());
 
   RequireMinNumNeighborsFilter filter;
   Arguments args;
@@ -663,13 +663,13 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - tuple co
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -252);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -252);
 }
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Selected cell tuple counts", "[SimplnxCore][RequireMinNumNeighborsFilter][preflight]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const usize tupleCount = GENERATE(usize{3}, usize{4}, usize{5});
   CAPTURE(tupleCount);
 
@@ -686,8 +686,8 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Selected cell tuple counts
   imageGeomPtr->setCellData(*cellAMPtr);
   auto* featureAMPtr = AttributeMatrix::Create(dataStructure, "FeatureData", {4}, imageGeomPtr->getId());
   REQUIRE(featureAMPtr != nullptr);
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {tupleCount}, {1}, cellAMPtr->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAMPtr->getId());
+  unit_test::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {tupleCount}, {1}, cellAMPtr->getId());
+  unit_test::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAMPtr->getId());
   const DataPath geometryPath({"Selected", "ImageGeometry"});
   const DataPath featureIdsPath({"Selected", "ImageGeometry", "CellData", "FeatureIds"});
 
@@ -704,13 +704,13 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Selected cell tuple counts
   const auto preflightResult = filter.preflight(dataStructure, args);
   if(tupleCount == 4)
   {
-    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   }
   else
   {
-    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-    REQUIRE(preflightResult.outputActions.errors().size() == 1);
-    const auto& error = preflightResult.outputActions.errors()[0];
+    SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+    REQUIRE(preflightResult.output_actions.errors().size() == 1);
+    const auto& error = preflightResult.output_actions.errors()[0];
     CHECK(error.code == -59571);
     CHECK(error.message.find(featureIdsPath.toString()) != std::string::npos);
     CHECK(error.message.find(geometryPath.toString()) != std::string::npos);
@@ -718,12 +718,12 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Selected cell tuple counts
     CHECK(error.message.find("has 4 cells") != std::string::npos);
     CHECK(error.message.find("one tuple per geometry cell") != std::string::npos);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - FeatureIds outside Cell Attribute Matrix (-55575)", "[SimplnxCore][RequireMinNumNeighborsFilter][preflight]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
@@ -732,8 +732,8 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - FeatureI
   imageGeomPtr->setCellData(*cellAMPtr);
   auto* otherAMPtr = AttributeMatrix::Create(dataStructure, "OtherData", {1, 1, 4}, imageGeomPtr->getId());
   auto* featureAMPtr = AttributeMatrix::Create(dataStructure, "FeatureData", {4}, imageGeomPtr->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {1, 1, 4}, {1}, otherAMPtr->getId());
-  UnitTest::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAMPtr->getId());
+  unit_test::CreateTestDataArray<int32>(dataStructure, "FeatureIds", {1, 1, 4}, {1}, otherAMPtr->getId());
+  unit_test::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAMPtr->getId());
 
   RequireMinNumNeighborsFilter filter;
   Arguments args;
@@ -746,22 +746,22 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Error - FeatureI
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
 
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors()[0].code == -55575);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors()[0].code == -55575);
 }
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Rejects unsupported array kinds", "[SimplnxCore][RequireMinNumNeighborsFilter][preflight]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const usize inputIndex = GENERATE(usize{0}, usize{1}, usize{2});
   const bool useStringArray = GENERATE(false, true);
   CAPTURE(inputIndex, useStringArray);
-  const std::array<StringLiteral, 3> inputKeys = {RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key,
-                                                  RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key};
-  constexpr std::array<int32, 3> expectedCodes = {-59574, -59575, -59576};
+  const std::array<StringLiteralType, 3> inputKeys = {RequireMinNumNeighborsFilter::k_FeatureIdsPath_Key, RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key,
+                                                      RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key};
+  constexpr std::array<int32, 3> k_ExpectedCodes = {-59574, -59575, -59576};
   DataStructure dataStructure;
-  DiscriminatingFixture::PopulateDataStructure(dataStructure);
-  Arguments args = createArrayKindValidationArguments();
+  discriminating_fixture::PopulateDataStructure(dataStructure);
+  Arguments args = CreateArrayKindValidationArguments();
   const auto parentPath = args.value<DataPath>(inputKeys.at(inputIndex)).getParent();
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<AttributeMatrix>(parentPath));
   const auto& parent = dataStructure.getDataRefAs<AttributeMatrix>(parentPath);
@@ -786,10 +786,10 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Rejects unsupported array 
   const RequireMinNumNeighborsFilter filter;
   IFilter::PreflightResult preflightResult;
   REQUIRE_NOTHROW(preflightResult = filter.preflight(dataStructure, args));
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  const auto& error = preflightResult.outputActions.errors().front();
-  CHECK(error.code == expectedCodes.at(inputIndex));
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  const auto& error = preflightResult.output_actions.errors().front();
+  CHECK(error.code == k_ExpectedCodes.at(inputIndex));
   CHECK(error.message.find(rejectedPath.toString()) != std::string::npos);
   CHECK(error.message.find(useStringArray ? "StringArray" : "NeighborList<int32>") != std::string::npos);
   CHECK(error.message.find("scalar int32 DataArray") != std::string::npos);
@@ -806,18 +806,18 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Rejects unsupported array 
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<NeighborList<int32>>(rejectedPath));
     CHECK(dataStructure.getDataRefAs<NeighborList<int32>>(rejectedPath).getList(0) == std::vector<int32>{17});
   }
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "CellData", "CopiedScalar"})));
-  CHECK(dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "CellData", "CopiedScalar"}))[0] == 10000);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"ImageGeometry", "CellData", "CopiedScalar"})));
+  CHECK(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"ImageGeometry", "CellData", "CopiedScalar"}))[0] == 10000);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Inactive phases skip array-kind validation", "[SimplnxCore][RequireMinNumNeighborsFilter][preflight]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const usize inactiveKind = GENERATE(usize{0}, usize{1}, usize{2});
   CAPTURE(inactiveKind);
   DataStructure dataStructure;
-  DiscriminatingFixture::PopulateDataStructure(dataStructure);
+  discriminating_fixture::PopulateDataStructure(dataStructure);
   const DataPath inactivePath({"InactivePhases"});
   if(inactiveKind == 0)
   {
@@ -827,26 +827,26 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Inactive phases skip array
   {
     REQUIRE(NeighborList<int32>::Create(dataStructure, inactivePath.getTargetName(), {1}) != nullptr);
   }
-  Arguments args = createArrayKindValidationArguments();
+  Arguments args = CreateArrayKindValidationArguments();
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key, false);
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key, inactivePath);
   const auto initialPaths = dataStructure.getAllDataPaths();
   IFilter::PreflightResult preflightResult;
   REQUIRE_NOTHROW(preflightResult = RequireMinNumNeighborsFilter().preflight(dataStructure, args));
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   CHECK(dataStructure.getAllDataPaths() == initialPaths);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Tuple errors precede feature array-kind errors", "[SimplnxCore][RequireMinNumNeighborsFilter][preflight]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool replaceNeighbors = GENERATE(false, true);
   const bool useStringArray = GENERATE(false, true);
   const bool cellMismatch = GENERATE(false, true);
   CAPTURE(replaceNeighbors, useStringArray, cellMismatch);
   DataStructure dataStructure;
-  DiscriminatingFixture::PopulateDataStructure(dataStructure);
+  discriminating_fixture::PopulateDataStructure(dataStructure);
   const auto& featureAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"ImageGeometry", "FeatureData"}));
   const DataPath rejectedPath({"ImageGeometry", "FeatureData", "RejectedFeatureInput"});
   if(useStringArray)
@@ -860,49 +860,49 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Tuple errors precede featu
   }
   // Keep the other selected feature array in a separate AM so its tuple count can differ.
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(DataPath({"ImageGeometry"}));
-  auto* mismatchAM = AttributeMatrix::Create(dataStructure, "MismatchData", {5}, imageGeom.getId());
-  REQUIRE(mismatchAM != nullptr);
+  auto* mismatchAmPtr = AttributeMatrix::Create(dataStructure, "MismatchData", {5}, imageGeom.getId());
+  REQUIRE(mismatchAmPtr != nullptr);
   const DataPath mismatchPath({"ImageGeometry", "MismatchData", "OtherFeatureInput"});
-  UnitTest::CreateTestDataArray<int32>(dataStructure, mismatchPath.getTargetName(), {5}, {1}, mismatchAM->getId());
+  unit_test::CreateTestDataArray<int32>(dataStructure, mismatchPath.getTargetName(), {5}, {1}, mismatchAmPtr->getId());
   if(cellMismatch)
   {
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<ImageGeom>(DataPath({"ImageGeometry"})));
     dataStructure.getDataRefAs<ImageGeom>(DataPath({"ImageGeometry"})).setDimensions({7, 6, 6});
   }
-  Arguments args = createArrayKindValidationArguments();
+  Arguments args = CreateArrayKindValidationArguments();
   args.insertOrAssign(replaceNeighbors ? RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key : RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key, rejectedPath);
   args.insertOrAssign(replaceNeighbors ? RequireMinNumNeighborsFilter::k_FeaturePhasesPath_Key : RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, mismatchPath);
   IFilter::PreflightResult preflightResult;
   REQUIRE_NOTHROW(preflightResult = RequireMinNumNeighborsFilter().preflight(dataStructure, args));
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().size() == 1);
-  CHECK(preflightResult.outputActions.errors().front().code == (cellMismatch ? -59571 : -252));
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().size() == 1);
+  CHECK(preflightResult.output_actions.errors().front().code == (cellMismatch ? -59571 : -252));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - feature ID out of range (-55567)", "[SimplnxCore][RequireMinNumNeighborsFilter][execute]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
 
-  const SizeVec3 imageSize = {4, 1, 1};
+  const SizeVec3Type imageSize = {4, 1, 1};
   const ShapeType arraySize(std::reverse_iterator(imageSize.end()), std::reverse_iterator(imageSize.begin()));
 
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
-  imageGeom->setDimensions(imageSize);
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", arraySize, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
-  auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {4}, imageGeom->getId());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions(imageSize);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", arraySize, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "FeatureData", {4}, imageGeomPtr->getId());
 
-  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", arraySize, {1}, cellAM->getId());
-  auto* numNeighbors = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAM->getId());
+  auto* featureIdsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "FeatureIds", arraySize, {1}, cellAmPtr->getId());
+  auto* numNeighborsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAmPtr->getId());
   const std::array<int32, 4> inputFeatureIds = {1, 4, 2, 3};
   const std::array<int32, 4> inputNumNeighbors = {0, 0, 3, 3};
   for(usize i = 0; i < inputFeatureIds.size(); i++)
   {
-    featureIds->getDataStoreRef()[i] = inputFeatureIds[i];
-    numNeighbors->getDataStoreRef()[i] = inputNumNeighbors[i];
+    featureIdsPtr->getDataStoreRef()[i] = inputFeatureIds[i];
+    numNeighborsPtr->getDataStoreRef()[i] = inputNumNeighbors[i];
   }
 
   RequireMinNumNeighborsFilter filter;
@@ -916,7 +916,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - feature ID
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
 
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors()[0].code == -55567);
@@ -924,29 +924,29 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - feature ID
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute - negative feature ID is reassigned", "[SimplnxCore][RequireMinNumNeighborsFilter][execute]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
 
-  const SizeVec3 imageSize = {4, 1, 1};
+  const SizeVec3Type imageSize = {4, 1, 1};
   const ShapeType arraySize(std::reverse_iterator(imageSize.end()), std::reverse_iterator(imageSize.begin()));
 
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
-  imageGeom->setDimensions(imageSize);
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", arraySize, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
-  auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {3}, imageGeom->getId());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions(imageSize);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", arraySize, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "FeatureData", {3}, imageGeomPtr->getId());
 
-  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", arraySize, {1}, cellAM->getId());
-  auto* numNeighbors = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {3}, {1}, featureAM->getId());
+  auto* featureIdsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "FeatureIds", arraySize, {1}, cellAmPtr->getId());
+  auto* numNeighborsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {3}, {1}, featureAmPtr->getId());
   const std::array<int32, 4> inputFeatureIds = {-1, 1, 1, 2};
   const std::array<int32, 3> inputNumNeighbors = {0, 3, 3};
   for(usize i = 0; i < inputFeatureIds.size(); i++)
   {
-    featureIds->getDataStoreRef()[i] = inputFeatureIds[i];
+    featureIdsPtr->getDataStoreRef()[i] = inputFeatureIds[i];
     if(i < inputNumNeighbors.size())
     {
-      numNeighbors->getDataStoreRef()[i] = inputNumNeighbors[i];
+      numNeighborsPtr->getDataStoreRef()[i] = inputNumNeighbors[i];
     }
   }
 
@@ -961,12 +961,12 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute - negative feature
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
 
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "CellData", "FeatureIds"})));
-  const auto& outputFeatureIds = dataStructure.getDataRefAs<Int32Array>(DataPath({"ImageGeometry", "CellData", "FeatureIds"}));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"ImageGeometry", "CellData", "FeatureIds"})));
+  const auto& outputFeatureIds = dataStructure.getDataRefAs<Int32ArrayType>(DataPath({"ImageGeometry", "CellData", "FeatureIds"}));
   const std::array<int32, 4> expectedFeatureIds = {1, 1, 1, 2};
   for(usize i = 0; i < expectedFeatureIds.size(); i++)
   {
@@ -976,30 +976,30 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute - negative feature
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - unavailable phase (-5555)", "[SimplnxCore][RequireMinNumNeighborsFilter][execute]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
 
-  const SizeVec3 imageSize = {4, 1, 1};
+  const SizeVec3Type imageSize = {4, 1, 1};
   const ShapeType arraySize(std::reverse_iterator(imageSize.end()), std::reverse_iterator(imageSize.begin()));
 
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
-  imageGeom->setDimensions(imageSize);
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", arraySize, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
-  auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {4}, imageGeom->getId());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions(imageSize);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", arraySize, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "FeatureData", {4}, imageGeomPtr->getId());
 
-  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", arraySize, {1}, cellAM->getId());
-  auto* numNeighbors = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAM->getId());
-  auto* phases = UnitTest::CreateTestDataArray<int32>(dataStructure, "Phases", {4}, {1}, featureAM->getId());
+  auto* featureIdsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "FeatureIds", arraySize, {1}, cellAmPtr->getId());
+  auto* numNeighborsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAmPtr->getId());
+  auto* phasesPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Phases", {4}, {1}, featureAmPtr->getId());
   const std::array<int32, 4> inputFeatureIds = {2, 1, 1, 3};
   const std::array<int32, 4> inputNumNeighbors = {0, 0, 3, 3};
   const std::array<int32, 4> inputPhases = {0, 1, 2, 1};
   for(usize i = 0; i < inputFeatureIds.size(); i++)
   {
-    featureIds->getDataStoreRef()[i] = inputFeatureIds[i];
-    numNeighbors->getDataStoreRef()[i] = inputNumNeighbors[i];
-    phases->getDataStoreRef()[i] = inputPhases[i];
+    featureIdsPtr->getDataStoreRef()[i] = inputFeatureIds[i];
+    numNeighborsPtr->getDataStoreRef()[i] = inputNumNeighbors[i];
+    phasesPtr->getDataStoreRef()[i] = inputPhases[i];
   }
 
   RequireMinNumNeighborsFilter filter;
@@ -1014,7 +1014,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - unavailabl
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
 
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors()[0].code == -5555);
@@ -1022,27 +1022,27 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - unavailabl
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - all features rejected (-55569)", "[SimplnxCore][RequireMinNumNeighborsFilter][execute]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
 
-  const SizeVec3 imageSize = {4, 1, 1};
+  const SizeVec3Type imageSize = {4, 1, 1};
   const ShapeType arraySize(std::reverse_iterator(imageSize.end()), std::reverse_iterator(imageSize.begin()));
 
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
-  imageGeom->setDimensions(imageSize);
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", arraySize, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
-  auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {4}, imageGeom->getId());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions(imageSize);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", arraySize, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "FeatureData", {4}, imageGeomPtr->getId());
 
-  auto* featureIds = UnitTest::CreateTestDataArray<int32>(dataStructure, "FeatureIds", arraySize, {1}, cellAM->getId());
-  auto* numNeighbors = UnitTest::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAM->getId());
+  auto* featureIdsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "FeatureIds", arraySize, {1}, cellAmPtr->getId());
+  auto* numNeighborsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "NumNeighbors", {4}, {1}, featureAmPtr->getId());
   const std::array<int32, 4> inputFeatureIds = {1, 2, 3, 1};
   const std::array<int32, 4> inputNumNeighbors = {0, 0, 0, 0};
   for(usize i = 0; i < inputFeatureIds.size(); i++)
   {
-    featureIds->getDataStoreRef()[i] = inputFeatureIds[i];
-    numNeighbors->getDataStoreRef()[i] = inputNumNeighbors[i];
+    featureIdsPtr->getDataStoreRef()[i] = inputFeatureIds[i];
+    numNeighborsPtr->getDataStoreRef()[i] = inputNumNeighbors[i];
   }
 
   RequireMinNumNeighborsFilter filter;
@@ -1056,7 +1056,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - all featur
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{}));
 
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors()[0].code == -55569);
@@ -1064,28 +1064,28 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - all featur
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - no coarsening progress (-55572)", "[SimplnxCore][RequireMinNumNeighborsFilter][execute]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
 
   DataStructure dataStructure;
 
-  const SizeVec3 imageSize = {4, 1, 1};
+  const SizeVec3Type imageSize = {4, 1, 1};
   const ShapeType cellShape = {1, 1, 4};
 
-  auto* imageGeom = ImageGeom::Create(dataStructure, "ImageGeometry");
-  imageGeom->setDimensions(imageSize);
-  auto* cellAM = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
-  auto* featureAM = AttributeMatrix::Create(dataStructure, "FeatureData", {2}, imageGeom->getId());
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "ImageGeometry");
+  imageGeomPtr->setDimensions(imageSize);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
+  auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "FeatureData", {2}, imageGeomPtr->getId());
 
-  auto featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "CellData", "FeatureIds"}), cellShape, {1});
-  auto* featureIds = DataArray<int32>::Create(dataStructure, "FeatureIds", featureIdsStore, cellAM->getId());
+  auto featureIdsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "CellData", "FeatureIds"}), cellShape, {1});
+  auto* featureIdsPtr = DataArray<int32>::Create(dataStructure, "FeatureIds", featureIdsStore, cellAmPtr->getId());
 
-  auto numNeighborsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"}), {2}, {1});
-  auto* numNeighbors = DataArray<int32>::Create(dataStructure, "NumNeighbors", numNeighborsStore, featureAM->getId());
+  auto numNeighborsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, DataPath({"ImageGeometry", "FeatureData", "NumNeighbors"}), {2}, {1});
+  auto* numNeighborsPtr = DataArray<int32>::Create(dataStructure, "NumNeighbors", numNeighborsStore, featureAmPtr->getId());
 
-  featureIds->fill(-1);
-  numNeighbors->fill(0);
-  numNeighbors->getDataStoreRef()[1] = 5;
+  featureIdsPtr->fill(-1);
+  numNeighborsPtr->fill(0);
+  numNeighborsPtr->getDataStoreRef()[1] = 5;
 
   RequireMinNumNeighborsFilter filter;
   Arguments args;
@@ -1098,24 +1098,24 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Execute Error - no coarsen
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<MultiArraySelectionParameter::ValueType>(MultiArraySelectionParameter::ValueType{}));
 
   const auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(executeResult.result);
   REQUIRE(executeResult.result.errors().size() == 1);
   CHECK(executeResult.result.errors()[0].code == -55572);
 
-  for(usize i = 0; i < featureIds->getNumberOfTuples(); i++)
+  for(usize i = 0; i < featureIdsPtr->getNumberOfTuples(); i++)
   {
-    CHECK((*featureIds)[i] == -1);
+    CHECK((*featureIdsPtr)[i] == -1);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Strict Feature Ids", "[SimplnxCore][RequireMinNumNeighborsFilter][StrictFeatureIds]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
   const DataPath geometryPath({"Strict Geometry"});
   const DataPath cellPath = geometryPath.createChildPath("Cells");
@@ -1133,15 +1133,15 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Strict Feature Ids", "[Sim
   REQUIRE(featuresPtr != nullptr);
   auto* otherPtr = AttributeMatrix::Create(dataStructure, "Other Cells", shape, imageGeomPtr->getId());
   REQUIRE(otherPtr != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId()) != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Other Values", shape, {1}, otherPtr->getId()) != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Feature Values", {4}, {1}, featuresPtr->getId()) != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Cell Feature Values", shape, {1}, cellsPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Other Values", shape, {1}, otherPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Feature Values", {4}, {1}, featuresPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Cell Feature Values", shape, {1}, cellsPtr->getId()) != nullptr);
   auto* elsewherePtr = DataGroup::Create(dataStructure, "Elsewhere");
   REQUIRE(elsewherePtr != nullptr);
   auto* externalFeaturesPtr = AttributeMatrix::Create(dataStructure, "External Features", {4}, elsewherePtr->getId());
   REQUIRE(externalFeaturesPtr != nullptr);
-  REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Feature Values", {4}, {1}, externalFeaturesPtr->getId()) != nullptr);
+  REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Feature Values", {4}, {1}, externalFeaturesPtr->getId()) != nullptr);
 
   RequireMinNumNeighborsFilter filter;
   auto args = filter.getDefaultArguments();
@@ -1168,7 +1168,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Strict Feature Ids", "[Sim
   }
   SECTION("Feature array under a plain DataGroup")
   {
-    REQUIRE(UnitTest::CreateTestDataArray<int32>(dataStructure, "Ungrouped Features", {4}, {1}, elsewherePtr->getId()) != nullptr);
+    REQUIRE(unit_test::CreateTestDataArray<int32>(dataStructure, "Ungrouped Features", {4}, {1}, elsewherePtr->getId()) != nullptr);
     offendingPath = DataPath({"Elsewhere", "Ungrouped Features"});
     args.insertOrAssign(RequireMinNumNeighborsFilter::k_NumNeighborsPath_Key, std::make_any<DataPath>(offendingPath));
     expectedCode = -55574;
@@ -1198,27 +1198,27 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Strict Feature Ids", "[Sim
   const auto result = filter.preflight(dataStructure, args);
   if(expectedCode == 0)
   {
-    REQUIRE(result.outputActions.valid());
-    for(const auto& modification : result.outputActions.value().modifiedActions)
+    REQUIRE(result.output_actions.valid());
+    for(const auto& modification : result.output_actions.value().modified_actions)
     {
-      CHECK(modification.modifiedPath.getParent() != DataPath({"Elsewhere", "Cells"}));
+      CHECK(modification.modified_path.getParent() != DataPath({"Elsewhere", "Cells"}));
     }
   }
   else
   {
-    REQUIRE(result.outputActions.invalid());
-    REQUIRE(result.outputActions.errors().size() == 1);
-    CHECK(result.outputActions.errors().front().code == expectedCode);
-    CHECK(result.outputActions.errors().front().message.find(offendingPath.toString()) != std::string::npos);
-    CHECK(result.outputActions.errors().front().message.find(cellPath.toString()) != std::string::npos);
-    CHECK(result.outputActions.errors().front().message.find(geometryPath.toString()) != std::string::npos);
+    REQUIRE(result.output_actions.invalid());
+    REQUIRE(result.output_actions.errors().size() == 1);
+    CHECK(result.output_actions.errors().front().code == expectedCode);
+    CHECK(result.output_actions.errors().front().message.find(offendingPath.toString()) != std::string::npos);
+    CHECK(result.output_actions.errors().front().message.find(cellPath.toString()) != std::string::npos);
+    CHECK(result.output_actions.errors().front().message.find(geometryPath.toString()) != std::string::npos);
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Shared Cell Paths and Selected Feature Matrix", "[SimplnxCore][RequireMinNumNeighborsFilter][StrictFeatureIds]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   const bool useAliasForIds = GENERATE(false, true);
   CAPTURE(useAliasForIds);
   DataStructure dataStructure;
@@ -1237,9 +1237,9 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Shared Cell Paths and Sele
   imageGeomPtr->setCellData(*cellsPtr);
   REQUIRE(dataStructure.setAdditionalParent(cellsPtr->getId(), earlierParentPtr->getId()));
   REQUIRE(imageGeomPtr->getCellDataPath() == cellPath);
-  auto* idsPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId());
-  auto* valuesPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Values", shape, {1}, cellsPtr->getId());
-  auto* ignoredPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Ignored", shape, {1}, cellsPtr->getId());
+  auto* idsPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Ids", shape, {1}, cellsPtr->getId());
+  auto* valuesPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Values", shape, {1}, cellsPtr->getId());
+  auto* ignoredPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Ignored", shape, {1}, cellsPtr->getId());
   REQUIRE(idsPtr != nullptr);
   REQUIRE(valuesPtr != nullptr);
   REQUIRE(ignoredPtr != nullptr);
@@ -1252,14 +1252,14 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Shared Cell Paths and Sele
   }
 
   // The selected array has another parent; only the selected Feature Attribute Matrix is compacted.
-  auto* featureValuesPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Feature Values", {3}, {1}, earlierParentPtr->getId());
-  auto* externalMarkerPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "External Marker", {3}, {1}, earlierParentPtr->getId());
+  auto* featureValuesPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Feature Values", {3}, {1}, earlierParentPtr->getId());
+  auto* externalMarkerPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "External Marker", {3}, {1}, earlierParentPtr->getId());
   REQUIRE(featureValuesPtr != nullptr);
   REQUIRE(externalMarkerPtr != nullptr);
   auto* featuresPtr = AttributeMatrix::Create(dataStructure, "Features", {3}, imageGeomPtr->getId());
   REQUIRE(featuresPtr != nullptr);
   REQUIRE(dataStructure.setAdditionalParent(featureValuesPtr->getId(), featuresPtr->getId()));
-  auto* markerPtr = UnitTest::CreateTestDataArray<int32>(dataStructure, "Marker", {3}, {1}, featuresPtr->getId());
+  auto* markerPtr = unit_test::CreateTestDataArray<int32>(dataStructure, "Marker", {3}, {1}, featuresPtr->getId());
   REQUIRE(markerPtr != nullptr);
   for(usize index = 0; index < 3; index++)
   {
@@ -1279,12 +1279,12 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Shared Cell Paths and Sele
   const auto ignoreParent = useAliasForIds ? cellPath : aliasCellPath;
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_IgnoredVoxelArrays_Key, std::make_any<std::vector<DataPath>>(std::vector<DataPath>{ignoreParent.createChildPath("Ignored")}));
   const auto preflight = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflight.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
   bool reportsValues = false;
-  for(const auto& modification : preflight.outputActions.value().modifiedActions)
+  for(const auto& modification : preflight.output_actions.value().modified_actions)
   {
-    CHECK(modification.modifiedPath.getParent() != aliasCellPath);
-    reportsValues = reportsValues || modification.modifiedPath == cellPath.createChildPath("Values");
+    CHECK(modification.modified_path.getParent() != aliasCellPath);
+    reportsValues = reportsValues || modification.modified_path == cellPath.createChildPath("Values");
   }
   CHECK(reportsValues);
   const auto execute = filter.execute(dataStructure, args);
@@ -1308,14 +1308,14 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Shared Cell Paths and Sele
   {
     CHECK((*externalMarkerPtr)[index] == static_cast<int32>(90 + index));
   }
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: SIMPL Backwards Compatibility", "[SimplnxCore][RequireMinNumNeighborsFilter][BackwardsCompatibility]")
 {
   auto app = Application::GetOrCreateInstance();
-  UnitTest::LoadPlugins();
-  auto filterList = app->getFilterList();
+  unit_test::LoadPlugins();
+  auto* filterListPtr = app->getFilterList();
 
   const fs::path conversionDir = fs::path(nx::core::unit_test::k_SourceDir.view()) / "test" / "simpl_conversion";
 
@@ -1328,22 +1328,22 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: SIMPL Backwards Compatibil
   {
     DYNAMIC_SECTION(label)
     {
-      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterList);
+      auto pipelineResult = Pipeline::FromSIMPLFile(fixturePath, filterListPtr);
       REQUIRE(pipelineResult.valid());
 
       auto& pipeline = pipelineResult.value();
       REQUIRE(pipeline.size() == 1);
 
-      auto* pipelineFilter = dynamic_cast<PipelineFilter*>(pipeline.at(0));
-      REQUIRE(pipelineFilter != nullptr);
+      auto* pipelineFilterPtr = dynamic_cast<PipelineFilter*>(pipeline.at(0));
+      REQUIRE(pipelineFilterPtr != nullptr);
 
-      const IFilter* filter = pipelineFilter->getFilter();
-      REQUIRE(filter != nullptr);
-      REQUIRE(filter->uuid() == FilterTraits<RequireMinNumNeighborsFilter>::uuid);
+      const IFilter* filterPtr = pipelineFilterPtr->getFilter();
+      REQUIRE(filterPtr != nullptr);
+      REQUIRE(filterPtr->uuid() == FilterTraits<RequireMinNumNeighborsFilter>::uuid);
 
-      CHECK(pipelineFilter->getComments().empty());
+      CHECK(pipelineFilterPtr->getComments().empty());
 
-      const Arguments args = pipelineFilter->getArguments();
+      const Arguments args = pipelineFilterPtr->getArguments();
       CHECK(args.value<uint64>(RequireMinNumNeighborsFilter::k_MinNumNeighbors_Key) == 5);
       CHECK(args.value<bool>(RequireMinNumNeighborsFilter::k_ApplyToSinglePhase_Key) == true);
       CHECK(args.value<uint64>(RequireMinNumNeighborsFilter::k_PhaseNumber_Key) == 5);
@@ -1358,14 +1358,14 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: SIMPL Backwards Compatibil
 
 TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Stale Arrays", "[SimplnxCore][RequireMinNumNeighborsFilter][preflight]")
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   DataStructure dataStructure;
-  DiscriminatingFixture::PopulateDataStructure(dataStructure);
+  discriminating_fixture::PopulateDataStructure(dataStructure);
   const DataPath featureAMPath({"ImageGeometry", "FeatureData"});
-  const auto* featureAM = dataStructure.getDataAs<AttributeMatrix>(featureAMPath);
-  REQUIRE(featureAM != nullptr);
+  const auto* featureAmPtr = dataStructure.getDataAs<AttributeMatrix>(featureAMPath);
+  REQUIRE(featureAmPtr != nullptr);
   const DataPath neighborListPath = featureAMPath.createChildPath("NeighborList");
-  REQUIRE(Int32NeighborList::Create(dataStructure, "NeighborList", featureAM->getShape(), featureAM->getId()) != nullptr);
+  REQUIRE(Int32NeighborListType::Create(dataStructure, "NeighborList", featureAmPtr->getShape(), featureAmPtr->getId()) != nullptr);
 
   RequireMinNumNeighborsFilter filter;
   Arguments args;
@@ -1376,9 +1376,9 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Stale Arrays", "
   args.insertOrAssign(RequireMinNumNeighborsFilter::k_MinNumNeighbors_Key, std::make_any<uint64>(1));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   usize staleArrayCount = 0;
-  for(const auto& value : preflightResult.outputValues)
+  for(const auto& value : preflightResult.output_values)
   {
     CHECK(value.name != "Feature Data Modification Warning");
     if(value.name == "Stale Arrays")
@@ -1390,5 +1390,5 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter: Preflight Stale Arrays", "
     }
   }
   CHECK(staleArrayCount == 1);
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

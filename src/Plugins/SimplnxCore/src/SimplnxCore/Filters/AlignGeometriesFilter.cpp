@@ -49,7 +49,7 @@ std::vector<std::string> AlignGeometriesFilter::defaultTags() const
 //------------------------------------------------------------------------------
 Parameters AlignGeometriesFilter::parameters() const
 {
-  GeometrySelectionParameter::AllowedTypes geomTypes = IGeometry::GetAllGeomTypes();
+  GeometrySelectionParameter::AllowedTypeSetType geomTypes = IGeometry::GetAllGeomTypes();
 
   Parameters params;
 
@@ -67,44 +67,44 @@ IFilter::VersionType AlignGeometriesFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer AlignGeometriesFilter::clone() const
+IFilter::UniquePointerType AlignGeometriesFilter::clone() const
 {
   return std::make_unique<AlignGeometriesFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult AlignGeometriesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult AlignGeometriesFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                              const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   nx::core::Result<OutputActions> resultOutputActions;
 
   // Inform users that the moving geometry is going to be modified in place
   auto pMovingGeomPath = filterArgs.value<DataPath>(k_MovingGeometry_Key);
-  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modifiedActions, pMovingGeomPath, {});
+  nx::core::AppendDataObjectModifications(dataStructure, resultOutputActions.value().modified_actions, pMovingGeomPath, {});
 
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> AlignGeometriesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> AlignGeometriesFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                            const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   AlignGeometriesInputValues inputValues;
-  inputValues.AlignmentTypeIndex = filterArgs.value<ChoicesParameter::ValueType>(k_AlignmentType_Key);
-  inputValues.InputMovingGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_MovingGeometry_Key);
-  inputValues.InputTargetGeometryPath = filterArgs.value<GeometrySelectionParameter::ValueType>(k_TargetGeometry_Key);
+  inputValues.alignment_type_index = filterArgs.value<ChoicesParameter::ValueType>(k_AlignmentType_Key);
+  inputValues.input_moving_geometry_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_MovingGeometry_Key);
+  inputValues.input_target_geometry_path = filterArgs.value<GeometrySelectionParameter::ValueType>(k_TargetGeometry_Key);
 
   return AlignGeometries(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_AlignmentTypeKey = "AlignmentType";
-constexpr StringLiteral k_MovingGeometryKey = "MovingGeometry";
-constexpr StringLiteral k_TargetGeometryKey = "TargetGeometry";
-} // namespace SIMPL
+constexpr StringLiteralType k_AlignmentTypeKey = "AlignmentType";
+constexpr StringLiteralType k_MovingGeometryKey = "MovingGeometry";
+constexpr StringLiteralType k_TargetGeometryKey = "TargetGeometry";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> AlignGeometriesFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -113,9 +113,9 @@ Result<Arguments> AlignGeometriesFilter::FromSIMPLJson(const nlohmann::json& jso
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::ChoiceFilterParameterConverter>(args, json, SIMPL::k_AlignmentTypeKey, k_AlignmentType_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_MovingGeometryKey, k_MovingGeometry_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataContainerSelectionFilterParameterConverter>(args, json, SIMPL::k_TargetGeometryKey, k_TargetGeometry_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_AlignmentTypeKey, k_AlignmentType_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_MovingGeometryKey, k_MovingGeometry_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_TargetGeometryKey, k_TargetGeometry_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -16,11 +16,11 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT AvizoWriterInputValues
 {
-  FileSystemPathParameter::ValueType OutputFile;
-  bool WriteBinaryFile;
-  DataPath GeometryPath;
-  DataPath FeatureIdsArrayPath;
-  StringParameter::ValueType Units;
+  FileSystemPathParameter::ValueType output_file;
+  bool write_binary_file{};
+  DataPath geometry_path;
+  DataPath feature_ids_array_path;
+  StringParameter::ValueType units;
 };
 
 /**

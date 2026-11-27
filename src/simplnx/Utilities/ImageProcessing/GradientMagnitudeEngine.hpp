@@ -55,21 +55,21 @@ inline bool GradientMagnitudeCheckedAdd(usize left, usize right, usize& sum)
 struct GradientMagnitudeResidentMemoryAllocation
 {
   CacheMemoryBudgetManager::WorkingMemoryReservation reservation;
-  usize requiredBytes = 0;
+  usize required_bytes = 0;
 
   [[nodiscard]] bool holdsCompleteState() const noexcept
   {
-    return requiredBytes > 0 && reservation.sizeBytes() == requiredBytes;
+    return required_bytes > 0 && reservation.sizeBytes() == required_bytes;
   }
 };
 
-inline bool ShouldUseGradientMagnitudeResidentState(const SizeVec3& dims)
+inline bool ShouldUseGradientMagnitudeResidentState(const SizeVec3Type& dims)
 {
   return dims[2] > 1;
 }
 
 template <class T>
-Result<usize> CalculateGradientMagnitudeResidentWorkingMemoryBytes(const SizeVec3& dims)
+Result<usize> CalculateGradientMagnitudeResidentWorkingMemoryBytes(const SizeVec3Type& dims)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -91,13 +91,13 @@ Result<usize> CalculateGradientMagnitudeResidentWorkingMemoryBytes(const SizeVec
   {
     return MakeErrorResult<usize>(
         -8760, fmt::format("Gradient magnitude dimensions ({}) and input element size ({} bytes) overflow while sizing the resident input, float32 output, and rolling-plane working state.",
-                           StringUtilities::formatDimensions3D(dims), sizeof(T)));
+                           string_utilities::FormatDimensions3D(dims), sizeof(T)));
   }
   return {requiredBytes};
 }
 
 template <class T>
-Result<GradientMagnitudeResidentMemoryAllocation> ReserveGradientMagnitudeResidentWorkingMemory(const SizeVec3& dims)
+Result<GradientMagnitudeResidentMemoryAllocation> ReserveGradientMagnitudeResidentWorkingMemory(const SizeVec3Type& dims)
 {
   auto requiredResult = CalculateGradientMagnitudeResidentWorkingMemoryBytes<T>(dims);
   if(requiredResult.invalid())
@@ -117,15 +117,15 @@ enum class GradientMagnitude2DRoute : uint8
 struct GradientMagnitude2DPlan
 {
   GradientMagnitude2DRoute route = GradientMagnitude2DRoute::Rows;
-  usize blockRows = 0;
-  usize tileColumns = 0;
-  usize inputValues = 0;
-  usize outputValues = 0;
-  usize residentBytes = 0;
+  usize block_rows = 0;
+  usize tile_columns = 0;
+  usize input_values = 0;
+  usize output_values = 0;
+  usize resident_bytes = 0;
 };
 
 template <class T>
-Result<GradientMagnitude2DPlan> CreateGradientMagnitude2DPlan(const SizeVec3& dims, usize targetBytes = k_GradientMagnitude2DTargetBytes)
+Result<GradientMagnitude2DPlan> CreateGradientMagnitude2DPlan(const SizeVec3Type& dims, usize targetBytes = k_GradientMagnitude2DTargetBytes)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
@@ -166,14 +166,14 @@ Result<GradientMagnitude2DPlan> CreateGradientMagnitude2DPlan(const SizeVec3& di
   if(minimumRowBytes <= availableBytes)
   {
     plan.route = GradientMagnitude2DRoute::Rows;
-    plan.blockRows = std::min(dimY, (availableBytes - haloBytes) / bytesPerOutputRow);
-    plan.tileColumns = dimX;
+    plan.block_rows = std::min(dimY, (availableBytes - haloBytes) / bytesPerOutputRow);
+    plan.tile_columns = dimX;
     usize inputRows = 0;
-    if(!GradientMagnitudeCheckedAdd(plan.blockRows, 2, inputRows) || !GradientMagnitudeCheckedMultiply(inputRows, dimX, plan.inputValues) ||
-       !GradientMagnitudeCheckedMultiply(plan.blockRows, dimX, plan.outputValues))
+    if(!GradientMagnitudeCheckedAdd(plan.block_rows, 2, inputRows) || !GradientMagnitudeCheckedMultiply(inputRows, dimX, plan.input_values) ||
+       !GradientMagnitudeCheckedMultiply(plan.block_rows, dimX, plan.output_values))
     {
       return MakeErrorResult<GradientMagnitude2DPlan>(
-          -8755, fmt::format("Gradient magnitude true-2-D row-buffer planning overflowed for dimensions {} x {} x {} and {} block rows.", dimX, dimY, dims[2], plan.blockRows));
+          -8755, fmt::format("Gradient magnitude true-2-D row-buffer planning overflowed for dimensions {} x {} x {} and {} block rows.", dimX, dimY, dims[2], plan.block_rows));
     }
   }
   else
@@ -192,40 +192,40 @@ Result<GradientMagnitude2DPlan> CreateGradientMagnitude2DPlan(const SizeVec3& di
     }
 
     plan.route = GradientMagnitude2DRoute::Tiles;
-    plan.blockRows = 1;
-    plan.tileColumns = std::min(dimX, (availableBytes - fixedHaloBytes) / bytesPerOutputColumn);
+    plan.block_rows = 1;
+    plan.tile_columns = std::min(dimX, (availableBytes - fixedHaloBytes) / bytesPerOutputColumn);
     usize haloedColumns = 0;
-    if(plan.tileColumns == 0 || !GradientMagnitudeCheckedAdd(plan.tileColumns, 2, haloedColumns) || !GradientMagnitudeCheckedMultiply(k_InputRows, haloedColumns, plan.inputValues))
+    if(plan.tile_columns == 0 || !GradientMagnitudeCheckedAdd(plan.tile_columns, 2, haloedColumns) || !GradientMagnitudeCheckedMultiply(k_InputRows, haloedColumns, plan.input_values))
     {
       return MakeErrorResult<GradientMagnitude2DPlan>(
           -8756, fmt::format("Gradient magnitude true-2-D target ({} bytes) cannot hold one output column and its radius-one halo for dimensions {} x {} x {} and {}-byte input values.", targetBytes,
                              dimX, dimY, dims[2], sizeof(T)));
     }
-    plan.outputValues = plan.tileColumns;
+    plan.output_values = plan.tile_columns;
   }
 
   usize inputBytes = 0;
   usize outputBytes = 0;
   usize residentCellBytes = 0;
-  if(!GradientMagnitudeCheckedMultiply(plan.inputValues, sizeof(T), inputBytes) || !GradientMagnitudeCheckedMultiply(plan.outputValues, sizeof(float32), outputBytes) ||
-     !GradientMagnitudeCheckedAdd(inputBytes, outputBytes, residentCellBytes) || !GradientMagnitudeCheckedAdd(residentCellBytes, k_GradientMagnitude2DMetadataBytes, plan.residentBytes) ||
-     plan.residentBytes > targetBytes)
+  if(!GradientMagnitudeCheckedMultiply(plan.input_values, sizeof(T), inputBytes) || !GradientMagnitudeCheckedMultiply(plan.output_values, sizeof(float32), outputBytes) ||
+     !GradientMagnitudeCheckedAdd(inputBytes, outputBytes, residentCellBytes) || !GradientMagnitudeCheckedAdd(residentCellBytes, k_GradientMagnitude2DMetadataBytes, plan.resident_bytes) ||
+     plan.resident_bytes > targetBytes)
   {
     return MakeErrorResult<GradientMagnitude2DPlan>(-8755,
                                                     fmt::format("Gradient magnitude true-2-D resident-byte accounting overflowed for dimensions {} x {} x {}, {} input values, and {} output values.",
-                                                                dimX, dimY, dims[2], plan.inputValues, plan.outputValues));
+                                                                dimX, dimY, dims[2], plan.input_values, plan.output_values));
   }
   return {plan};
 }
 
 template <class T>
-Result<> ApplyGradientMagnitude2DRows(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3& dims, double invSpacingX, double invSpacingY,
+Result<> ApplyGradientMagnitude2DRows(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3Type& dims, double invSpacingX, double invSpacingY,
                                       const std::atomic_bool& shouldCancel, const GradientMagnitude2DPlan& plan)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
-  std::vector<T> inputBuffer(plan.inputValues);
-  std::vector<float32> outputBuffer(plan.outputValues);
+  std::vector<T> inputBuffer(plan.input_values);
+  std::vector<float32> outputBuffer(plan.output_values);
 
   for(usize yStart = 0; yStart < dimY;)
   {
@@ -233,7 +233,7 @@ Result<> ApplyGradientMagnitude2DRows(const AbstractDataStore<T>& inStore, Abstr
     {
       return {};
     }
-    const usize rowCount = std::min(plan.blockRows, dimY - yStart);
+    const usize rowCount = std::min(plan.block_rows, dimY - yStart);
     const usize readYStart = yStart == 0 ? 0 : yStart - 1;
     const usize outputYEnd = yStart + rowCount;
     const usize readYEnd = outputYEnd == dimY ? dimY : outputYEnd + 1;
@@ -290,7 +290,7 @@ Result<> ApplyGradientMagnitude2DRows(const AbstractDataStore<T>& inStore, Abstr
 }
 
 template <class T>
-Result<> ApplyGradientMagnitude2DTiles(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3& dims, double invSpacingX, double invSpacingY,
+Result<> ApplyGradientMagnitude2DTiles(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3Type& dims, double invSpacingX, double invSpacingY,
                                        const std::atomic_bool& shouldCancel, const GradientMagnitude2DPlan& plan)
 {
   const usize dimX = dims[0];
@@ -298,9 +298,9 @@ Result<> ApplyGradientMagnitude2DTiles(const AbstractDataStore<T>& inStore, Abst
   std::array<std::vector<T>, 3> inputRows;
   for(auto& inputRow : inputRows)
   {
-    inputRow.resize(plan.tileColumns + 2);
+    inputRow.resize(plan.tile_columns + 2);
   }
-  std::vector<float32> outputBuffer(plan.outputValues);
+  std::vector<float32> outputBuffer(plan.output_values);
 
   for(usize y = 0; y < dimY; ++y)
   {
@@ -311,7 +311,7 @@ Result<> ApplyGradientMagnitude2DTiles(const AbstractDataStore<T>& inStore, Abst
       {
         return {};
       }
-      const usize tileColumns = std::min(plan.tileColumns, dimX - xStart);
+      const usize tileColumns = std::min(plan.tile_columns, dimX - xStart);
       const usize readXStart = xStart == 0 ? 0 : xStart - 1;
       const usize outputXEnd = xStart + tileColumns;
       const usize readXEnd = outputXEnd == dimX ? dimX : outputXEnd + 1;
@@ -361,7 +361,7 @@ Result<> ApplyGradientMagnitude2DTiles(const AbstractDataStore<T>& inStore, Abst
 }
 
 template <class T>
-Result<> ApplyGradientMagnitude2D(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3& dims, bool useSpacing, FloatVec3 spacing,
+Result<> ApplyGradientMagnitude2D(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3Type& dims, bool useSpacing, FloatVec3Type spacing,
                                   const std::atomic_bool& shouldCancel, usize targetBytes = k_GradientMagnitude2DTargetBytes)
 {
   if(shouldCancel)
@@ -392,15 +392,15 @@ Result<> ApplyGradientMagnitude2D(const AbstractDataStore<T>& inStore, AbstractD
 // `messageHandler` is currently unused: progress messaging is deferred (see engine-level TODO); the parameter is kept
 // for facade signature parity with the other ImageProcessing engines.
 template <class T>
-Result<> ApplyGradientMagnitude(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3& dims, bool useSpacing, FloatVec3 spacing,
+Result<> ApplyGradientMagnitude(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3Type& dims, bool useSpacing, FloatVec3Type spacing,
                                 const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize target2DBytes = detail::k_GradientMagnitude2DTargetBytes)
 {
   const usize nX = dims[0];
-  const usize nY = dims[1];
-  const usize nZ = dims[2];
-  if(nX == 0 || nY == 0 || nZ == 0)
+  const usize ny = dims[1];
+  const usize nz = dims[2];
+  if(nX == 0 || ny == 0 || nz == 0)
   {
-    return MakeErrorResult(-8356, fmt::format("Gradient magnitude requires nonzero image dimensions. Dimensions: {} x {} x {}.", nX, nY, nZ));
+    return MakeErrorResult(-8356, fmt::format("Gradient magnitude requires nonzero image dimensions. Dimensions: {} x {} x {}.", nX, ny, nz));
   }
 
   auto checkedMultiply = [](usize left, usize right, usize& product) {
@@ -413,22 +413,22 @@ Result<> ApplyGradientMagnitude(const AbstractDataStore<T>& inStore, AbstractDat
   };
   usize slice = 0;
   usize volume = 0;
-  if(!checkedMultiply(nX, nY, slice) || !checkedMultiply(slice, nZ, volume))
+  if(!checkedMultiply(nX, ny, slice) || !checkedMultiply(slice, nz, volume))
   {
-    return MakeErrorResult(-8357, fmt::format("Gradient magnitude image dimensions overflow the addressable value count. Dimensions: {} x {} x {}.", nX, nY, nZ));
+    return MakeErrorResult(-8357, fmt::format("Gradient magnitude image dimensions overflow the addressable value count. Dimensions: {} x {} x {}.", nX, ny, nz));
   }
   if(inStore.getSize() != volume)
   {
     return MakeErrorResult(-8358, fmt::format("Gradient magnitude input store size does not match the image dimensions. Actual size: {}; expected size: {}; dimensions: {} x {} x {}.",
-                                              inStore.getSize(), volume, nX, nY, nZ));
+                                              inStore.getSize(), volume, nX, ny, nz));
   }
   if(outStore.getSize() != volume)
   {
     return MakeErrorResult(-8359, fmt::format("Gradient magnitude output store size does not match the image dimensions. Actual size: {}; expected size: {}; dimensions: {} x {} x {}.",
-                                              outStore.getSize(), volume, nX, nY, nZ));
+                                              outStore.getSize(), volume, nX, ny, nz));
   }
 
-  const bool hasZ = nZ > 1;
+  const bool hasZ = nz > 1;
   if(useSpacing)
   {
     const usize effectiveDimensions = hasZ ? 3 : 2;
@@ -469,8 +469,8 @@ Result<> ApplyGradientMagnitude(const AbstractDataStore<T>& inStore, AbstractDat
     {
       try
       {
-        DataStore<T> residentInput(ShapeType{nZ, nY, nX}, ShapeType{1}, std::nullopt);
-        DataStore<float32> residentOutput(ShapeType{nZ, nY, nX}, ShapeType{1}, std::nullopt);
+        DataStore<T> residentInput(ShapeType{nz, ny, nX}, ShapeType{1}, std::nullopt);
+        DataStore<float32> residentOutput(ShapeType{nz, ny, nX}, ShapeType{1}, std::nullopt);
         if(Result<> result = inStore.copyIntoBuffer(0, residentInput.createSpan()); result.invalid())
         {
           return result;
@@ -523,7 +523,7 @@ Result<> ApplyGradientMagnitude(const AbstractDataStore<T>& inStore, AbstractDat
     std::copy(win[0].cbegin(), win[0].cend(), win[2].begin());
   }
 
-  for(usize z = 0; z < nZ; ++z)
+  for(usize z = 0; z < nz; ++z)
   {
     if(shouldCancel)
     {
@@ -545,7 +545,7 @@ Result<> ApplyGradientMagnitude(const AbstractDataStore<T>& inStore, AbstractDat
         }
         const usize row = y * nX;
         const usize previousRow = (y == 0 ? 0 : y - 1) * nX;
-        const usize nextRow = (y + 1 == nY ? y : y + 1) * nX;
+        const usize nextRow = (y + 1 == ny ? y : y + 1) * nX;
         for(usize x = 0; x < nX; ++x)
         {
           const usize previousX = x == 0 ? 0 : x - 1;
@@ -564,7 +564,7 @@ Result<> ApplyGradientMagnitude(const AbstractDataStore<T>& inStore, AbstractDat
       }
     };
     ParallelDataAlgorithm parallelAlgorithm;
-    parallelAlgorithm.setRange(0, nY);
+    parallelAlgorithm.setRange(0, ny);
     parallelAlgorithm.execute(calculateRows);
     if(shouldCancel)
     {
@@ -574,11 +574,11 @@ Result<> ApplyGradientMagnitude(const AbstractDataStore<T>& inStore, AbstractDat
     {
       return r;
     }
-    if(z + 1 < nZ)
+    if(z + 1 < nz)
     {
       std::swap(win[0], win[1]);
       std::swap(win[1], win[2]);
-      if(z + 2 < nZ)
+      if(z + 2 < nz)
       {
         if(Result<> r = loadPlane(win[2], z + 2); r.invalid())
         {

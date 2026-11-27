@@ -38,9 +38,9 @@ bool IsFilterAvailable(const Uuid& uuid, const FilterList& filterList)
   }
 
   // FindFilterReplacement is private to PipelineFilter.cpp. Match its first-replacement lookup.
-  for(const auto* plugin : filterList.getLoadedPlugins())
+  for(const auto* pluginPtr : filterList.getLoadedPlugins())
   {
-    const auto replacements = plugin->getFilterReplacementMap();
+    const auto replacements = pluginPtr->getFilterReplacementMap();
     const auto iter = replacements.find(uuid);
     if(iter != replacements.end())
     {
@@ -90,8 +90,8 @@ std::set<std::string> FindMissingFilterUuids(const fs::path& path, const FilterL
 
 TEST_CASE("Prebuilt Pipelines: Parameter Keys Are Current", "[Pipeline][PrebuiltPipelines]")
 {
-  UnitTest::LoadPlugins();
-  const auto* filterList = Application::GetOrCreateInstance()->getFilterList();
+  unit_test::LoadPlugins();
+  const auto* filterListPtr = Application::GetOrCreateInstance()->getFilterList();
 
   std::vector<fs::path> pipelinePaths;
   for(const auto& pluginDir : unit_test::k_PluginSourceDirs)
@@ -123,7 +123,7 @@ TEST_CASE("Prebuilt Pipelines: Parameter Keys Are Current", "[Pipeline][Prebuilt
   usize checkedCount = 0;
   for(const auto& pipelinePath : pipelinePaths)
   {
-    const auto missingUuids = FindMissingFilterUuids(pipelinePath, *filterList);
+    const auto missingUuids = FindMissingFilterUuids(pipelinePath, *filterListPtr);
     if(!SIMPLNX_TEST_ALL_OPTIONAL_PLUGINS_ENABLED && !missingUuids.empty())
     {
       std::ostringstream missingReport;

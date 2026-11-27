@@ -21,8 +21,6 @@ RemoveFlaggedFeatures::RemoveFlaggedFeatures(DataStructure& dataStructure, const
 {
 }
 
-RemoveFlaggedFeatures::~RemoveFlaggedFeatures() noexcept = default;
-
 const std::atomic_bool& RemoveFlaggedFeatures::getCancel()
 {
   return m_ShouldCancel;
@@ -38,10 +36,10 @@ Result<> RemoveFlaggedFeatures::operator()()
     }
   };
 
-  append(m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath));
-  if(static_cast<Functionality>(m_InputValues->ExtractFeatures) != Functionality::Extract && m_InputValues->FillRemovedFeatures)
+  append(m_DataStructure.getDataAs<IDataArray>(m_InputValues->feature_ids_array_path));
+  if(static_cast<Functionality>(m_InputValues->extract_features) != Functionality::Extract && m_InputValues->fill_removed_features)
   {
-    for(const auto& array : GenerateDataArrayList(m_DataStructure, m_InputValues->FeatureIdsArrayPath, m_InputValues->IgnoredDataArrayPaths))
+    for(const auto& array : GenerateDataArrayList(m_DataStructure, m_InputValues->feature_ids_array_path, m_InputValues->ignored_data_array_paths))
     {
       append(array.get());
     }

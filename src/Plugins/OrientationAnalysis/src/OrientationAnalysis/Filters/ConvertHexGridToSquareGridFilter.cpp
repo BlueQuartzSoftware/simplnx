@@ -22,28 +22,28 @@ namespace
 {
 struct ConvertHexGridToSquareGridFilterCache
 {
-  fs::path workingPath;
-  std::string preflightReturnString;
-  fs::file_time_type lastWrite;
+  fs::path working_path;
+  std::string preflight_return_string;
+  fs::file_time_type last_write;
 };
 
-std::atomic_int32_t s_InstanceId = 0;
-std::map<int32, ConvertHexGridToSquareGridFilterCache> s_HeaderCache;
+std::atomic_int32_t SInstanceId = 0;
+std::map<int32, ConvertHexGridToSquareGridFilterCache> SHeaderCache;
 } // namespace
 
 namespace nx::core
 {
 //------------------------------------------------------------------------------
 ConvertHexGridToSquareGridFilter::ConvertHexGridToSquareGridFilter()
-: m_InstanceId(s_InstanceId.fetch_add(1))
+: m_InstanceId(SInstanceId.fetch_add(1))
 {
-  s_HeaderCache[m_InstanceId] = {};
+  SHeaderCache[m_InstanceId] = {};
 }
 
 //------------------------------------------------------------------------------
 ConvertHexGridToSquareGridFilter::~ConvertHexGridToSquareGridFilter() noexcept
 {
-  s_HeaderCache.erase(m_InstanceId);
+  SHeaderCache.erase(m_InstanceId);
 }
 
 //------------------------------------------------------------------------------
@@ -84,7 +84,7 @@ Parameters ConvertHexGridToSquareGridFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_MultipleFiles_Key, "Convert Multiple Files", "True=Convert a list of files, False, just convert a single file", false));
-  params.insert(std::make_unique<VectorFloat32Parameter>(k_Spacing_Key, "Spacing", "Specifies the new spacing values", std::vector<float32>{1.0f, 1.0f}, std::vector<std::string>{"X", "Y"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Spacing_Key, "Spacing", "Specifies the new spacing values", std::vector<float32>{1.0f, 1.0f}, std::vector<std::string>{"X", "Y"}));
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputPath_Key, "Input File", "Path to the single file to convert", fs::path("input.ang"), FileSystemPathParameter::ExtensionsType{".ang"},
                                                           FileSystemPathParameter::PathType::InputFile, false));
   params.insert(std::make_unique<GeneratedFileListParameter>(k_GeneratedFileList_Key, "Generated File List",
@@ -110,14 +110,14 @@ IFilter::VersionType ConvertHexGridToSquareGridFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ConvertHexGridToSquareGridFilter::clone() const
+IFilter::UniquePointerType ConvertHexGridToSquareGridFilter::clone() const
 {
   return std::make_unique<ConvertHexGridToSquareGridFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pUseMultipleFilesValue = filterArgs.value<bool>(k_MultipleFiles_Key);
   auto pInputFileListInfoValue = filterArgs.value<GeneratedFileListParameter::ValueType>(k_GeneratedFileList_Key);
@@ -144,7 +144,7 @@ IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const D
   {
     return MakePreflightErrorResult(-44601, "Ctf files are not on a hexagonal grid and do not need to be converted");
   }
-  else if(inputPath.extension() != ("." + ebsdlib::Ang::FileExt))
+  if(inputPath.extension() != ("." + ebsdlib::Ang::FileExt))
   {
     return MakePreflightErrorResult(-44602, fmt::format("The file extension '{}' was not detected correctly for file '{}'", inputPath.extension().string(), inputPath.string()));
   }
@@ -154,11 +154,11 @@ IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const D
     return MakePreflightErrorResult(-446003, "Please select a valid file path to run");
   }
 
-  if(!fs::exists(s_HeaderCache[m_InstanceId].workingPath) || s_HeaderCache[m_InstanceId].workingPath != inputPath ||
-     fs::last_write_time(s_HeaderCache[m_InstanceId].workingPath) > s_HeaderCache[m_InstanceId].lastWrite || s_HeaderCache[m_InstanceId].preflightReturnString.empty())
+  if(!fs::exists(SHeaderCache[m_InstanceId].working_path) || SHeaderCache[m_InstanceId].working_path != inputPath ||
+     fs::last_write_time(SHeaderCache[m_InstanceId].working_path) > SHeaderCache[m_InstanceId].last_write || SHeaderCache[m_InstanceId].preflight_return_string.empty())
   {
-    s_HeaderCache[m_InstanceId].workingPath = inputPath;
-    s_HeaderCache[m_InstanceId].lastWrite = fs::last_write_time(inputPath);
+    SHeaderCache[m_InstanceId].working_path = inputPath;
+    SHeaderCache[m_InstanceId].last_write = fs::last_write_time(inputPath);
     ebsdlib::AngReader reader;
     reader.setFileName(inputPath.string());
     reader.setReadHexGrid(true);
@@ -172,39 +172,39 @@ IFilter::PreflightResult ConvertHexGridToSquareGridFilter::preflightImpl(const D
       nx::core::Warning warning;
       warning.code = reader.getErrorCode();
       warning.message = reader.getErrorMessage();
-      resultOutputActions.m_Warnings.emplace_back(std::move(warning));
+      resultOutputActions.m_warnings.emplace_back(std::move(warning));
     }
 
     std::stringstream preflightString;
     preflightString << "Hex Grid X Spacing: " << reader.getXStep() << "\n"
                     << "Hex Grid Y Spacing: " << reader.getYStep();
-    s_HeaderCache[m_InstanceId].preflightReturnString = preflightString.str();
+    SHeaderCache[m_InstanceId].preflight_return_string = preflightString.str();
   }
 
-  preflightUpdatedValues.emplace_back(PreflightValue{"Suggested Spacing", s_HeaderCache[m_InstanceId].preflightReturnString});
+  preflightUpdatedValues.emplace_back(PreflightValue{.name = "Suggested Spacing", .value = SHeaderCache[m_InstanceId].preflight_return_string});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ConvertHexGridToSquareGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ConvertHexGridToSquareGridFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ConvertHexGridToSquareGridInputValues inputValues;
 
-  inputValues.MultiFile = filterArgs.value<bool>(k_MultipleFiles_Key);
-  inputValues.XYSpacing = filterArgs.value<VectorFloat32Parameter::ValueType>(k_Spacing_Key);
-  inputValues.OutputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
-  inputValues.OutputFilePrefix = filterArgs.value<std::string>(k_OutputPrefix_Key);
-  inputValues.InputFileListInfo = filterArgs.value<GeneratedFileListParameter::ValueType>(k_GeneratedFileList_Key);
-  if(inputValues.MultiFile)
+  inputValues.multi_file = filterArgs.value<bool>(k_MultipleFiles_Key);
+  inputValues.xy_spacing = filterArgs.value<VectorFloat32ParameterType::ValueType>(k_Spacing_Key);
+  inputValues.output_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputPath_Key);
+  inputValues.output_file_prefix = filterArgs.value<std::string>(k_OutputPrefix_Key);
+  inputValues.input_file_list_info = filterArgs.value<GeneratedFileListParameter::ValueType>(k_GeneratedFileList_Key);
+  if(inputValues.multi_file)
   {
-    inputValues.InputPath = fs::path(inputValues.InputFileListInfo.inputPath);
+    inputValues.input_path = fs::path(inputValues.input_file_list_info.input_path);
   }
   else
   {
-    inputValues.InputPath = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputPath_Key);
+    inputValues.input_path = filterArgs.value<FileSystemPathParameter::ValueType>(k_InputPath_Key);
   }
 
   return ConvertHexGridToSquareGrid(dataStructure, messageHandler, shouldCancel, &inputValues)();

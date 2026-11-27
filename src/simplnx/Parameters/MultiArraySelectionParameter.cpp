@@ -8,16 +8,17 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 
 namespace nx::core
 {
-MultiArraySelectionParameter::MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue,
-                                                           const AllowedTypes& allowedTypes, const AllowedDataTypes& allowedDataTypes, AllowedComponentShapes requiredComps)
+MultiArraySelectionParameter::MultiArraySelectionParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue, AllowedTypeSetType allowedTypes,
+                                                           AllowedDataTypesType allowedDataTypes, AllowedComponentShapesType requiredComps)
 : MutableDataParameter(name, humanName, helpText, Category::Required)
-, m_DefaultValue(defaultValue)
-, m_AllowedTypes(allowedTypes)
-, m_AllowedDataTypes(allowedDataTypes)
-, m_RequiredComponentShapes(requiredComps)
+, m_DefaultValue(std::move(defaultValue))
+, m_AllowedTypes(std::move(allowedTypes))
+, m_AllowedDataTypes(std::move(allowedDataTypes))
+, m_RequiredComponentShapes(std::move(requiredComps))
 {
 }
 
@@ -26,7 +27,7 @@ Uuid MultiArraySelectionParameter::uuid() const
   return ParameterTraits<MultiArraySelectionParameter>::uuid;
 }
 
-IParameter::AcceptedTypes MultiArraySelectionParameter::acceptedTypes() const
+IParameter::AcceptedTypesType MultiArraySelectionParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -48,12 +49,12 @@ nlohmann::json MultiArraySelectionParameter::toJsonImpl(const std::any& value) c
   return json;
 }
 
-Result<std::any> MultiArraySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> MultiArraySelectionParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'MultiArraySelectionParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'MultiArraySelectionParameter' JSON Error: ";
   if(!json.is_array())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an array", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not an array", k_Prefix, name()));
   }
 
   ValueType paths;
@@ -64,13 +65,13 @@ Result<std::any> MultiArraySelectionParameter::fromJsonImpl(const nlohmann::json
   {
     if(!item.is_string())
     {
-      return MakeErrorResult<std::any>(-3, fmt::format("{}JSON value in array is not a string", prefix));
+      return MakeErrorResult<std::any>(-3, fmt::format("{}JSON value in array is not a string", k_Prefix));
     }
     auto string = item.get<std::string>();
     auto path = DataPath::FromString(string);
     if(!path.has_value())
     {
-      errors.push_back(Error{FilterParameter::Constants::k_Json_Value_Not_Value_Type, fmt::format("{}Failed to parse '{}' as DataPath", prefix.view(), string)});
+      errors.push_back(Error{.code = filter_parameter::constants::k_JsonValueNotValueType, .message = fmt::format("{}Failed to parse '{}' as DataPath", k_Prefix.view(), string)});
       continue;
     }
     paths.push_back(std::move(*path));
@@ -84,7 +85,7 @@ Result<std::any> MultiArraySelectionParameter::fromJsonImpl(const nlohmann::json
   return {{std::move(paths)}};
 }
 
-IParameter::UniquePointer MultiArraySelectionParameter::clone() const
+IParameter::UniquePointerType MultiArraySelectionParameter::clone() const
 {
   return std::make_unique<MultiArraySelectionParameter>(name(), humanName(), helpText(), m_DefaultValue, m_AllowedTypes, m_AllowedDataTypes, m_RequiredComponentShapes);
 }
@@ -99,17 +100,17 @@ typename MultiArraySelectionParameter::ValueType MultiArraySelectionParameter::d
   return m_DefaultValue;
 }
 
-MultiArraySelectionParameter::AllowedTypes MultiArraySelectionParameter::allowedTypes() const
+MultiArraySelectionParameter::AllowedTypeSetType MultiArraySelectionParameter::allowedTypes() const
 {
   return m_AllowedTypes;
 }
 
-MultiArraySelectionParameter::AllowedDataTypes MultiArraySelectionParameter::allowedDataTypes() const
+MultiArraySelectionParameter::AllowedDataTypesType MultiArraySelectionParameter::allowedDataTypes() const
 {
   return m_AllowedDataTypes;
 }
 
-MultiArraySelectionParameter::AllowedComponentShapes MultiArraySelectionParameter::requiredComponentShapes() const
+MultiArraySelectionParameter::AllowedComponentShapesType MultiArraySelectionParameter::requiredComponentShapes() const
 {
   return m_RequiredComponentShapes;
 }
@@ -132,25 +133,26 @@ Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataSt
 
     if(path.empty())
     {
-      errors.push_back(Error{FilterParameter::Constants::k_Validate_Empty_Value, fmt::format("{}DataPath cannot be empty at index {}", prefix, i)});
+      errors.push_back(Error{.code = filter_parameter::constants::k_ValidateEmptyValue, .message = fmt::format("{}DataPath cannot be empty at index {}", prefix, i)});
       continue;
     }
-    const DataObject* object = dataStructure.getData(path);
-    if(object == nullptr)
+    const DataObject* objectPtr = dataStructure.getData(path);
+    if(objectPtr == nullptr)
     {
-      errors.push_back(Error{FilterParameter::Constants::k_Validate_Does_Not_Exist, fmt::format("{}Object does not exist at path '{}'", prefix, path.toString())});
+      errors.push_back(Error{.code = filter_parameter::constants::k_ValidateDoesNotExist, .message = fmt::format("{}Object does not exist at path '{}'", prefix, path.toString())});
       continue;
     }
-    const auto* dataArray = dataStructure.getDataAs<IArray>(path);
-    if(dataArray == nullptr)
+    const auto* dataArrayPtr = dataStructure.getDataAs<IArray>(path);
+    if(dataArrayPtr == nullptr)
     {
-      errors.push_back(Error{FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Object at path '{}' is not an IArray type", prefix, path.toString())});
+      errors.push_back(Error{.code = filter_parameter::constants::k_ValidateTypeError, .message = fmt::format("{}Object at path '{}' is not an IArray type", prefix, path.toString())});
       continue;
     }
-    if(m_AllowedTypes.find(IArray::ArrayType::Any) == m_AllowedTypes.end() && m_AllowedTypes.count(dataArray->getArrayType()) == 0)
+    if(m_AllowedTypes.find(IArray::ArrayType::Any) == m_AllowedTypes.end() && !m_AllowedTypes.contains(dataArrayPtr->getArrayType()))
     {
-      errors.push_back(Error{FilterParameter::Constants::k_Validate_Type_Error, fmt::format("{}Array at path '{}' was of type {}, but only {} are allowed", prefix, path.toString(),
-                                                                                            dataArray->getTypeName(), IArray::StringListFromArrayType(m_AllowedTypes))});
+      errors.push_back(Error{.code = filter_parameter::constants::k_ValidateTypeError,
+                             .message = fmt::format("{}Array at path '{}' was of type {}, but only {} are allowed", prefix, path.toString(), dataArrayPtr->getTypeName(),
+                                                    IArray::StringListFromArrayType(m_AllowedTypes))});
       continue;
     }
     if(!m_RequiredComponentShapes.empty())
@@ -159,23 +161,23 @@ Result<> MultiArraySelectionParameter::validatePaths(const DataStructure& dataSt
       bool foundMatch = false;
       for(const auto& compShape : m_RequiredComponentShapes)
       {
-        if(compShape == dataArray->getComponentShape())
+        if(compShape == dataArrayPtr->getComponentShape())
         {
           foundMatch = true;
           break;
         }
-        compStr += StringUtilities::number(compShape[0]);
+        compStr += string_utilities::Number(compShape[0]);
         for(usize j = 1; j < compShape.size(); ++j)
         {
-          compStr += " x " + StringUtilities::number(compShape[j]);
+          compStr += " x " + string_utilities::Number(compShape[j]);
         }
         compStr += " or ";
       }
       if(!foundMatch)
       {
         compStr.erase(compStr.size() - 4); // Remove trailing " or "
-        errors.push_back(
-            Error{nx::core::FilterParameter::Constants::k_Validate_TupleShapeValue, fmt::format("{}Object at path '{}' must have a component shape of {}.", prefix, path.toString(), compStr)});
+        errors.push_back(Error{.code = nx::core::filter_parameter::constants::k_ValidateTupleShapeValue,
+                               .message = fmt::format("{}Object at path '{}' must have a component shape of {}.", prefix, path.toString(), compStr)});
       }
     }
   }
@@ -192,6 +194,7 @@ Result<std::any> MultiArraySelectionParameter::resolve(DataStructure& dataStruct
 {
   const auto& paths = GetAnyRef<ValueType>(value);
   std::vector<DataObject*> objects;
+  objects.reserve(paths.size());
   for(const auto& path : paths)
   {
     objects.push_back(dataStructure.getData(path));
@@ -199,9 +202,9 @@ Result<std::any> MultiArraySelectionParameter::resolve(DataStructure& dataStruct
   return {{objects}};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
-Result<MultiDataArraySelectionFilterParameterConverter::ValueType> MultiDataArraySelectionFilterParameterConverter::convert(const nlohmann::json& json)
+Result<MultiDataArraySelectionFilterParameterConverter::ValueType> MultiDataArraySelectionFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_array())
   {
@@ -210,7 +213,7 @@ Result<MultiDataArraySelectionFilterParameterConverter::ValueType> MultiDataArra
 
   std::vector<DataPath> dataPaths;
 
-  for(auto& iter : json)
+  for(const auto& iter : json)
   {
     auto dataContainerNameResult = ReadDataContainerName(iter, "DataContainerSelectionFilterParameter");
     if(dataContainerNameResult.invalid())
@@ -236,5 +239,5 @@ Result<MultiDataArraySelectionFilterParameterConverter::ValueType> MultiDataArra
 
   return {std::move(dataPaths)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

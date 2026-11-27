@@ -2,9 +2,7 @@
 
 namespace fs = std::filesystem;
 
-namespace nx::core
-{
-namespace CsvParser
+namespace nx::core::csv_parser
 {
 
 int32_t ReadLine(std::istream& in, char* result, size_t length)
@@ -49,18 +47,18 @@ uint64 LineCount(const fs::path& inputPath)
 
 int CheckErrorBits(std::ifstream* f)
 {
-  int stop = k_RBR_NO_ERROR;
+  int stop = k_RbrNoError;
   if(f->eof())
   {
-    stop = k_RBR_READ_EOF;
+    stop = k_RbrReadEof;
   }
   else if(f->fail())
   {
-    stop = k_RBR_READ_FAIL;
+    stop = k_RbrReadFail;
   }
   else if(f->bad())
   {
-    stop = k_RBR_READ_BAD;
+    stop = k_RbrReadBad;
   }
   return stop;
 }
@@ -85,5 +83,4 @@ char IndexToDelimiter(uint64_t index)
     throw std::runtime_error(fmt::format("CsvParser::IndexToDelimiter() - Invalid index '{}'", index));
   }
 }
-} // namespace CsvParser
-} // namespace nx::core
+} // namespace nx::core::csv_parser

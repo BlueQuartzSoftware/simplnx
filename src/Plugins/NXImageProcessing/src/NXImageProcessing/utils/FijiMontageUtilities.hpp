@@ -23,9 +23,9 @@ namespace nx::core::fiji
 /** @brief One montage tile: source file, world origin, and the (prefix-decorated) geometry name. */
 struct NXIMAGEPROCESSING_EXPORT FijiTile
 {
-  std::filesystem::path filePath;     ///< Absolute path to the tile image (resolved against the config dir).
-  FloatVec3 origin{0.0f, 0.0f, 0.0f}; ///< Parsed tile origin (Z=0 for 2D configs).
-  std::string imageName;              ///< `<prefix><file-stem>`; filled by AssignTileNames.
+  std::filesystem::path file_path;        ///< Absolute path to the tile image (resolved against the config dir).
+  FloatVec3Type origin{0.0f, 0.0f, 0.0f}; ///< Parsed tile origin (Z=0 for 2D configs).
+  std::string image_name;                 ///< `<prefix><file-stem>`; filled by AssignTileNames.
 };
 
 /**
@@ -43,6 +43,6 @@ void NXIMAGEPROCESSING_EXPORT AssignTileNames(std::vector<FijiTile>& tiles, cons
  * @brief Rebases every tile origin so the montage's minimum corner lands on @p userOrigin.
  *        newOrigin = origin - (minCorner - userOrigin). Matches the legacy change-origin path.
  */
-void NXIMAGEPROCESSING_EXPORT RebaseOrigins(std::vector<FijiTile>& tiles, const FloatVec3& userOrigin);
+void NXIMAGEPROCESSING_EXPORT RebaseOrigins(std::vector<FijiTile>& tiles, const FloatVec3Type& userOrigin);
 
 } // namespace nx::core::fiji

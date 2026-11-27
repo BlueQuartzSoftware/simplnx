@@ -16,22 +16,22 @@ namespace nx::core
 
 struct SIMPLNXCORE_EXPORT FeatureFaceCurvatureInputValues
 {
-  int64 NRingCount = 0;
-  DataPath triangleGeomPath;
-  DataPath surfaceMeshPrincipalCurvature1Path;
-  DataPath surfaceMeshFeatureFaceIdsPath;
-  DataPath surfaceMeshFaceLabelsPath;
-  DataPath surfaceMeshFaceNormalsPath;
-  DataPath surfaceMeshTriangleCentroidsPath;
+  int64 n_ring_count = 0;
+  DataPath triangle_geom_path;
+  DataPath surface_mesh_principal_curvature1_path;
+  DataPath surface_mesh_feature_face_ids_path;
+  DataPath surface_mesh_face_labels_path;
+  DataPath surface_mesh_face_normals_path;
+  DataPath surface_mesh_triangle_centroids_path;
 
-  bool useNormalsForCurveFitting;
-  DataPath surfaceMeshPrincipalCurvature1sPath;
-  DataPath surfaceMeshPrincipalCurvature2sPath;
-  DataPath surfaceMeshPrincipalDirection1sPath;
-  DataPath surfaceMeshPrincipalDirection2sPath;
-  DataPath surfaceMeshMeanCurvaturesPath;
-  DataPath surfaceMeshGaussianCurvaturesPath;
-  DataPath surfaceMeshWeingartenMatrixPath;
+  bool use_normals_for_curve_fitting{};
+  DataPath surface_mesh_principal_curvature1s_path;
+  DataPath surface_mesh_principal_curvature2s_path;
+  DataPath surface_mesh_principal_direction1s_path;
+  DataPath surface_mesh_principal_direction2s_path;
+  DataPath surface_mesh_mean_curvatures_path;
+  DataPath surface_mesh_gaussian_curvatures_path;
+  DataPath surface_mesh_weingarten_matrix_path;
 };
 
 /**
@@ -73,7 +73,7 @@ private:
   const FeatureFaceCurvatureInputValues* m_InputValues = nullptr;
   const std::atomic_bool& m_ShouldCancel;
   const IFilter::MessageHandler& m_MessageHandler;
-  mutable std::mutex m_ProgressMessage_Mutex;
+  mutable std::mutex m_ProgressMessageMutex;
   ThrottledMessageHandler m_Throttle;
 };
 

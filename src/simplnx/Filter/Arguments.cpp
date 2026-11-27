@@ -44,6 +44,6 @@ bool Arguments::empty() const
 
 bool Arguments::contains(std::string_view key) const
 {
-  return m_Args.count(key) > 0;
+  return m_Args.contains(key);
 }
 } // namespace nx::core

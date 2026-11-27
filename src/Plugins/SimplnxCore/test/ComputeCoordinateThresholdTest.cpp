@@ -24,13 +24,13 @@ namespace
 {
 constexpr uint64 k_TupleCount = 8;
 
-constexpr StringLiteral k_GeomName = "TestGeom";
+constexpr StringLiteralType k_GeomName = "TestGeom";
 const DataPath k_GeomPath({k_GeomName});
 
-constexpr StringLiteral k_MaskName = "mask_array";
+constexpr StringLiteralType k_MaskName = "mask_array";
 const DataPath k_MaskPath({k_MaskName});
 
-void SphereExecuteFilter(DataStructure& dataStructure, bool shouldInvert, const VectorFloat32Parameter::ValueType& sphereInfo)
+void SphereExecuteFilter(DataStructure& dataStructure, bool shouldInvert, const VectorFloat32ParameterType::ValueType& sphereInfo)
 {
   // Configure the filter arguments.
   ComputeCoordinateThresholdFilter filter;
@@ -40,18 +40,18 @@ void SphereExecuteFilter(DataStructure& dataStructure, bool shouldInvert, const 
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_InvertContainer_Key, std::make_any<bool>(shouldInvert));
 
-  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SphereInfo_Key, std::make_any<VectorFloat32Parameter::ValueType>(sphereInfo));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SphereInfo_Key, std::make_any<VectorFloat32ParameterType::ValueType>(sphereInfo));
 
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
-void RectangleExecuteFilter(DataStructure& dataStructure, bool shouldInvert, const VectorFloat32Parameter::ValueType& minPoint, const VectorFloat32Parameter::ValueType& maxPoint)
+void RectangleExecuteFilter(DataStructure& dataStructure, bool shouldInvert, const VectorFloat32ParameterType::ValueType& minPoint, const VectorFloat32ParameterType::ValueType& maxPoint)
 {
   // Configure the filter arguments.
   ComputeCoordinateThresholdFilter filter;
@@ -61,13 +61,13 @@ void RectangleExecuteFilter(DataStructure& dataStructure, bool shouldInvert, con
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_InvertContainer_Key, std::make_any<bool>(shouldInvert));
 
-  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MinCoord_Key, std::make_any<VectorFloat32Parameter::ValueType>(minPoint));
-  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MaxCoord_Key, std::make_any<VectorFloat32Parameter::ValueType>(maxPoint));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MinCoord_Key, std::make_any<VectorFloat32ParameterType::ValueType>(minPoint));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MaxCoord_Key, std::make_any<VectorFloat32ParameterType::ValueType>(maxPoint));
 
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -78,15 +78,15 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Preflight Er
 {
   DataStructure dataStructure;
 
-  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = TriangleGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < 6; ++i)
   {
     faces[i] = i;
@@ -95,8 +95,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Preflight Er
     vertices[(i * 3) + 2] = i;
   }
 
-  VectorFloat32Parameter::ValueType minCoord = {3.5f, 3.5f, 3.5f};
-  VectorFloat32Parameter::ValueType maxCoord = {-1.0f, -1.0f, -1.0f};
+  VectorFloat32ParameterType::ValueType minCoord = {3.5f, 3.5f, 3.5f};
+  VectorFloat32ParameterType::ValueType maxCoord = {-1.0f, -1.0f, -1.0f};
 
   // Configure the filter arguments.
   ComputeCoordinateThresholdFilter filter;
@@ -105,30 +105,30 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Preflight Er
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Rectangle)));
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
 
-  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MinCoord_Key, std::make_any<VectorFloat32Parameter::ValueType>(minCoord));
-  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MaxCoord_Key, std::make_any<VectorFloat32Parameter::ValueType>(maxCoord));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MinCoord_Key, std::make_any<VectorFloat32ParameterType::ValueType>(minCoord));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MaxCoord_Key, std::make_any<VectorFloat32ParameterType::ValueType>(maxCoord));
 
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Error - Triangle Geom", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
 {
   DataStructure dataStructure;
 
-  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = TriangleGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < 6; ++i)
   {
     faces[i] = i;
@@ -137,7 +137,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Error
     vertices[(i * 3) + 2] = i;
   }
 
-  VectorFloat32Parameter::ValueType sphereInfo = {1.0f, 1.0f, 1.0f, -1.75f};
+  VectorFloat32ParameterType::ValueType sphereInfo = {1.0f, 1.0f, 1.0f, -1.75f};
 
   // Configure the filter arguments.
   ComputeCoordinateThresholdFilter filter;
@@ -146,25 +146,25 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Error
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Sphere)));
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
 
-  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SphereInfo_Key, std::make_any<VectorFloat32Parameter::ValueType>(sphereInfo));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SphereInfo_Key, std::make_any<VectorFloat32ParameterType::ValueType>(sphereInfo));
 
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Preflight Bounds Error - Image Geom", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
 {
   DataStructure dataStructure;
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
-  constexpr size_t dimsIn[3] = {5, 5, 1};
-  imageGeom->setDimensions(dimsIn);
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeomName);
+  constexpr size_t k_DimsIn[3] = {5, 5, 1};
+  imageGeomPtr->setDimensions(k_DimsIn);
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
 
 #if 0
       0, 0, 0, 0, 0,
@@ -174,8 +174,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Preflight Bo
       0, 0, 0, 0, 0;
 #endif
 
-  VectorFloat32Parameter::ValueType minCoord = {5.5f, 5.5f, 1.5f};
-  VectorFloat32Parameter::ValueType maxCoord = {6.5f, 6.5f, 1.5f};
+  VectorFloat32ParameterType::ValueType minCoord = {5.5f, 5.5f, 1.5f};
+  VectorFloat32ParameterType::ValueType maxCoord = {6.5f, 6.5f, 1.5f};
 
   // Configure the filter arguments.
   ComputeCoordinateThresholdFilter filter;
@@ -184,26 +184,26 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Preflight Bo
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Rectangle)));
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
 
-  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MinCoord_Key, std::make_any<VectorFloat32Parameter::ValueType>(minCoord));
-  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MaxCoord_Key, std::make_any<VectorFloat32Parameter::ValueType>(maxCoord));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MinCoord_Key, std::make_any<VectorFloat32ParameterType::ValueType>(minCoord));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MaxCoord_Key, std::make_any<VectorFloat32ParameterType::ValueType>(maxCoord));
 
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Bounds Error - Image Geom", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
 {
   DataStructure dataStructure;
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
-  constexpr size_t dimsIn[3] = {5, 5, 1};
-  imageGeom->setDimensions(dimsIn);
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeomName);
+  constexpr size_t k_DimsIn[3] = {5, 5, 1};
+  imageGeomPtr->setDimensions(k_DimsIn);
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
 
 #if 0
       0, 0, 0, 0, 0,
@@ -213,7 +213,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Bound
       0, 0, 0, 0, 0;
 #endif
 
-  VectorFloat32Parameter::ValueType sphereInfo = {5.5f, 5.5f, 1.5f, 0.5f};
+  VectorFloat32ParameterType::ValueType sphereInfo = {5.5f, 5.5f, 1.5f, 0.5f};
 
   // Configure the filter arguments.
   ComputeCoordinateThresholdFilter filter;
@@ -222,29 +222,29 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Preflight Bound
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Sphere)));
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
 
-  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SphereInfo_Key, std::make_any<VectorFloat32Parameter::ValueType>(sphereInfo));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SphereInfo_Key, std::make_any<VectorFloat32ParameterType::ValueType>(sphereInfo));
 
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Runtime Warning - Triangle Geom", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
 {
   DataStructure dataStructure;
 
-  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = TriangleGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < 6; ++i)
   {
     faces[i] = i;
@@ -253,8 +253,8 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Runtime Warn
     vertices[(i * 3) + 2] = i;
   }
 
-  VectorFloat32Parameter::ValueType minCoord;
-  VectorFloat32Parameter::ValueType maxCoord;
+  VectorFloat32ParameterType::ValueType minCoord;
+  VectorFloat32ParameterType::ValueType maxCoord;
 
   SECTION("Positive Case")
   {
@@ -275,35 +275,35 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Rectangle Runtime Warn
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Rectangle)));
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
 
-  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MinCoord_Key, std::make_any<VectorFloat32Parameter::ValueType>(minCoord));
-  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MaxCoord_Key, std::make_any<VectorFloat32Parameter::ValueType>(maxCoord));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MinCoord_Key, std::make_any<VectorFloat32ParameterType::ValueType>(minCoord));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_MaxCoord_Key, std::make_any<VectorFloat32ParameterType::ValueType>(maxCoord));
 
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   REQUIRE(!executeResult.result.warnings().empty());
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Runtime Warning - Triangle Geom", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
 {
   DataStructure dataStructure;
 
-  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = TriangleGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < 6; ++i)
   {
     faces[i] = i;
@@ -312,7 +312,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Runtime Warning
     vertices[(i * 3) + 2] = i;
   }
 
-  VectorFloat32Parameter::ValueType sphereInfo = {6.0f, 6.0f, 6.0f, 0.75f};
+  VectorFloat32ParameterType::ValueType sphereInfo = {6.0f, 6.0f, 6.0f, 0.75f};
 
   // Configure the filter arguments.
   ComputeCoordinateThresholdFilter filter;
@@ -321,34 +321,34 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Sphere Runtime Warning
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_ContainerShapeType_Key, std::make_any<ChoicesParameter::ValueType>(to_underlying(ComputeCoordinateThreshold::BoundsType::Sphere)));
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SelectedGeometryPath_Key, std::make_any<DataPath>(k_GeomPath));
 
-  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SphereInfo_Key, std::make_any<VectorFloat32Parameter::ValueType>(sphereInfo));
+  args.insertOrAssign(ComputeCoordinateThresholdFilter::k_SphereInfo_Key, std::make_any<VectorFloat32ParameterType::ValueType>(sphereInfo));
 
   args.insertOrAssign(ComputeCoordinateThresholdFilter::k_CreatedMaskPath_Key, std::make_any<DataPath>(k_MaskPath));
 
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
 
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   REQUIRE(!executeResult.result.warnings().empty());
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Rectangle", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
 
   DataStructure dataStructure;
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
-  constexpr size_t dimsIn[3] = {5, 5, 1};
-  imageGeom->setDimensions(dimsIn);
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeomName);
+  constexpr size_t k_DimsIn[3] = {5, 5, 1};
+  imageGeomPtr->setDimensions(k_DimsIn);
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
 
 #if 0
       0, 0, 0, 0, 0,
@@ -358,14 +358,14 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Rect
       0, 0, 0, 0, 0;
 #endif
 
-  VectorFloat32Parameter::ValueType minCoord = {1.0f, 1.0f, 0.0f};
-  VectorFloat32Parameter::ValueType maxCoord = {4.0f, 4.0f, 1.0f};
+  VectorFloat32ParameterType::ValueType minCoord = {1.0f, 1.0f, 0.0f};
+  VectorFloat32ParameterType::ValueType maxCoord = {4.0f, 4.0f, 1.0f};
 
   SECTION("Baseline")
   {
     scope.execute([&] { RectangleExecuteFilter(dataStructure, false, minCoord, maxCoord); });
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
 
     REQUIRE(mask[0] == 0);
     REQUIRE(mask[1] == 0);
@@ -402,7 +402,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Rect
   {
     scope.execute([&] { RectangleExecuteFilter(dataStructure, true, minCoord, maxCoord); });
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
 
     REQUIRE(mask[0] == 1);
     REQUIRE(mask[1] == 1);
@@ -435,21 +435,21 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Rect
     REQUIRE(mask[24] == 1);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Sphere", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
-  constexpr size_t dimsIn[3] = {5, 5, 1};
-  imageGeom->setDimensions(dimsIn);
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeomName);
+  constexpr size_t k_DimsIn[3] = {5, 5, 1};
+  imageGeomPtr->setDimensions(k_DimsIn);
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
 
 #if 0
       0, 0, 0, 0, 0,
@@ -459,13 +459,13 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Sphe
       0, 0, 0, 0, 0;
 #endif
 
-  VectorFloat32Parameter::ValueType sphereInfo = {2.5f, 2.5f, 0.5f, 1.66f};
+  VectorFloat32ParameterType::ValueType sphereInfo = {2.5f, 2.5f, 0.5f, 1.66f};
 
   SECTION("Baseline")
   {
     scope.execute([&] { SphereExecuteFilter(dataStructure, false, sphereInfo); });
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
 
     REQUIRE(mask[0] == 0);
     REQUIRE(mask[1] == 0);
@@ -502,7 +502,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Sphe
   {
     scope.execute([&] { SphereExecuteFilter(dataStructure, true, sphereInfo); });
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
 
     REQUIRE(mask[0] == 1);
     REQUIRE(mask[1] == 1);
@@ -535,45 +535,45 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Test - Sphe
     REQUIRE(mask[24] == 1);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Image Geom Chunk Boundary", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
 {
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
-  UnitTest::AlgorithmTestScope scope(scenario);
+  unit_test::AlgorithmTestScope scope(scenario);
   DataStructure dataStructure;
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, k_GeomName);
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeomName);
   constexpr std::array<usize, 3> k_Dimensions = {257, 257, 1};
-  imageGeom->setDimensions(k_Dimensions);
-  REQUIRE(imageGeom->setOrigin({0, 0, 0}).valid());
-  REQUIRE(imageGeom->setSpacing({1, 1, 1}).valid());
+  imageGeomPtr->setDimensions(k_Dimensions);
+  REQUIRE(imageGeomPtr->setOrigin({0, 0, 0}).valid());
+  REQUIRE(imageGeomPtr->setSpacing({1, 1, 1}).valid());
 
-  const VectorFloat32Parameter::ValueType minCoord = {1.0f, 255.0f, 0.0f};
-  const VectorFloat32Parameter::ValueType maxCoord = {2.0f, 256.0f, 1.0f};
+  const VectorFloat32ParameterType::ValueType minCoord = {1.0f, 255.0f, 0.0f};
+  const VectorFloat32ParameterType::ValueType maxCoord = {2.0f, 256.0f, 1.0f};
   scope.execute([&] { RectangleExecuteFilter(dataStructure, false, minCoord, maxCoord); });
 
-  const UInt8Array* mask = nullptr;
-  REQUIRE_NOTHROW(mask = &dataStructure.getDataRefAs<UInt8Array>(k_MaskPath));
+  const UInt8ArrayType* maskPtr = nullptr;
+  REQUIRE_NOTHROW(maskPtr = &dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath));
   constexpr usize k_FirstTupleAfterChunkBoundary = 65536;
-  REQUIRE((*mask)[k_FirstTupleAfterChunkBoundary - 1] == 0);
-  REQUIRE((*mask)[k_FirstTupleAfterChunkBoundary] == 1);
-  REQUIRE((*mask)[k_FirstTupleAfterChunkBoundary + 1] == 0);
+  REQUIRE((*maskPtr)[k_FirstTupleAfterChunkBoundary - 1] == 0);
+  REQUIRE((*maskPtr)[k_FirstTupleAfterChunkBoundary] == 1);
+  REQUIRE((*maskPtr)[k_FirstTupleAfterChunkBoundary + 1] == 0);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Vertex Geom Test - Rectangle", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
 {
   DataStructure dataStructure;
 
-  auto* vertexGeom = VertexGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeom->getId());
-  vertexGeom->setVertices(*vertexArray);
+  auto* vertexGeomPtr = VertexGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeomPtr->getId());
+  vertexGeomPtr->setVertices(*vertexArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
   {
     vertices[i * 3 + 0] = i;
@@ -581,14 +581,14 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Vertex Geom Test - Rec
     vertices[i * 3 + 2] = i;
   }
 
-  VectorFloat32Parameter::ValueType minCoord = {3.0f, 3.0f, 3.0f};
-  VectorFloat32Parameter::ValueType maxCoord = {5.0f, 5.0f, 5.0f};
+  VectorFloat32ParameterType::ValueType minCoord = {3.0f, 3.0f, 3.0f};
+  VectorFloat32ParameterType::ValueType maxCoord = {5.0f, 5.0f, 5.0f};
 
   SECTION("Baseline")
   {
     RectangleExecuteFilter(dataStructure, false, minCoord, maxCoord);
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
 
     REQUIRE(mask[0] == 0);
     REQUIRE(mask[1] == 0);
@@ -604,7 +604,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Vertex Geom Test - Rec
   {
     RectangleExecuteFilter(dataStructure, true, minCoord, maxCoord);
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
 
     REQUIRE(mask[0] == 1);
     REQUIRE(mask[1] == 1);
@@ -616,18 +616,18 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Vertex Geom Test - Rec
     REQUIRE(mask[7] == 1);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Vertex Geom Test - Sphere", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
 {
   DataStructure dataStructure;
 
-  auto* vertexGeom = VertexGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeom->getId());
-  vertexGeom->setVertices(*vertexArray);
+  auto* vertexGeomPtr = VertexGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {k_TupleCount}, {3}, vertexGeomPtr->getId());
+  vertexGeomPtr->setVertices(*vertexArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
   {
     vertices[i * 3 + 0] = i;
@@ -635,13 +635,13 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Vertex Geom Test - Sph
     vertices[i * 3 + 2] = i;
   }
 
-  VectorFloat32Parameter::ValueType sphereInfo = {2.5f, 2.5f, 2.5f, 2.6f};
+  VectorFloat32ParameterType::ValueType sphereInfo = {2.5f, 2.5f, 2.5f, 2.6f};
 
   SECTION("Baseline")
   {
     SphereExecuteFilter(dataStructure, false, sphereInfo);
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
     REQUIRE(mask[0] == 0);
     REQUIRE(mask[1] == 1);
     REQUIRE(mask[2] == 1);
@@ -656,7 +656,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Vertex Geom Test - Sph
   {
     SphereExecuteFilter(dataStructure, true, sphereInfo);
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
 
     REQUIRE(mask[0] == 1);
     REQUIRE(mask[1] == 0);
@@ -668,22 +668,22 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Vertex Geom Test - Sph
     REQUIRE(mask[7] == 1);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Edge Geom Test - Rectangle", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
 {
   DataStructure dataStructure;
 
-  auto* geom = EdgeGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = EdgeGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* edgesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geom->getId());
-  geom->setEdgeList(*edgesArray);
+  auto* edgesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geomPtr->getId());
+  geomPtr->setEdgeList(*edgesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& edges = edgesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& edges = edgesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
   {
     edges[(i * 2) + 0] = i;
@@ -694,14 +694,14 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Edge Geom Test - Recta
   }
   edges[((k_TupleCount - 1) * 2) + 1] = 0;
 
-  VectorFloat32Parameter::ValueType minCoord = {3.0f, 3.0f, 3.0f};
-  VectorFloat32Parameter::ValueType maxCoord = {5.0f, 5.0f, 5.0f};
+  VectorFloat32ParameterType::ValueType minCoord = {3.0f, 3.0f, 3.0f};
+  VectorFloat32ParameterType::ValueType maxCoord = {5.0f, 5.0f, 5.0f};
 
   SECTION("Baseline")
   {
     RectangleExecuteFilter(dataStructure, false, minCoord, maxCoord);
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
 
     REQUIRE(mask[0] == 0);
     REQUIRE(mask[1] == 0);
@@ -717,7 +717,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Edge Geom Test - Recta
   {
     RectangleExecuteFilter(dataStructure, true, minCoord, maxCoord);
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
 
     REQUIRE(mask[0] == 1);
     REQUIRE(mask[1] == 1);
@@ -729,22 +729,22 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Edge Geom Test - Recta
     REQUIRE(mask[7] == 1);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Edge Geom Test - Sphere", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
 {
   DataStructure dataStructure;
 
-  auto* geom = EdgeGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = EdgeGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* edgesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geom->getId());
-  geom->setEdgeList(*edgesArray);
+  auto* edgesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "edges", {k_TupleCount}, {2}, geomPtr->getId());
+  geomPtr->setEdgeList(*edgesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& edges = edgesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& edges = edgesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
   {
     edges[(i * 2) + 0] = i;
@@ -755,13 +755,13 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Edge Geom Test - Spher
   }
   edges[((k_TupleCount - 1) * 2) + 1] = 0;
 
-  VectorFloat32Parameter::ValueType sphereInfo = {2.5f, 2.5f, 2.5f, 1.0f};
+  VectorFloat32ParameterType::ValueType sphereInfo = {2.5f, 2.5f, 2.5f, 1.0f};
 
   SECTION("Baseline")
   {
     SphereExecuteFilter(dataStructure, false, sphereInfo);
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
 
     REQUIRE(mask[0] == 0);
     REQUIRE(mask[1] == 0);
@@ -777,7 +777,7 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Edge Geom Test - Spher
   {
     SphereExecuteFilter(dataStructure, true, sphereInfo);
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
 
     REQUIRE(mask[0] == 1);
     REQUIRE(mask[1] == 1);
@@ -789,22 +789,22 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Edge Geom Test - Spher
     REQUIRE(mask[7] == 1);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Triangle Geom Test - Rectangle", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
 {
   DataStructure dataStructure;
 
-  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = TriangleGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < 6; ++i)
   {
     faces[i] = i;
@@ -813,14 +813,14 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Triangle Geom Test - R
     vertices[(i * 3) + 2] = i;
   }
 
-  VectorFloat32Parameter::ValueType minCoord = {-1.0f, -1.0f, -1.0f};
-  VectorFloat32Parameter::ValueType maxCoord = {3.5f, 3.5f, 3.5f};
+  VectorFloat32ParameterType::ValueType minCoord = {-1.0f, -1.0f, -1.0f};
+  VectorFloat32ParameterType::ValueType maxCoord = {3.5f, 3.5f, 3.5f};
 
   SECTION("Baseline")
   {
     RectangleExecuteFilter(dataStructure, false, minCoord, maxCoord);
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
 
     REQUIRE(mask[0] == 1);
     REQUIRE(mask[1] == 0);
@@ -830,28 +830,28 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Triangle Geom Test - R
   {
     RectangleExecuteFilter(dataStructure, true, minCoord, maxCoord);
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
 
     REQUIRE(mask[0] == 0);
     REQUIRE(mask[1] == 1);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Triangle Geom Test - Sphere", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
 {
   DataStructure dataStructure;
 
-  auto* geom = TriangleGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {6}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = TriangleGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {6}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {3}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < 6; ++i)
   {
     faces[i] = i;
@@ -860,13 +860,13 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Triangle Geom Test - S
     vertices[(i * 3) + 2] = i;
   }
 
-  VectorFloat32Parameter::ValueType sphereInfo = {1.0f, 1.0f, 1.0f, 1.75f};
+  VectorFloat32ParameterType::ValueType sphereInfo = {1.0f, 1.0f, 1.0f, 1.75f};
 
   SECTION("Baseline")
   {
     SphereExecuteFilter(dataStructure, false, sphereInfo);
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
 
     REQUIRE(mask[0] == 1);
     REQUIRE(mask[1] == 0);
@@ -876,28 +876,28 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Triangle Geom Test - S
   {
     SphereExecuteFilter(dataStructure, true, sphereInfo);
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
 
     REQUIRE(mask[0] == 0);
     REQUIRE(mask[1] == 1);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Quad Geom Test - Rectangle", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
 {
   DataStructure dataStructure;
 
-  auto* geom = QuadGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = QuadGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
   {
     faces[i] = i;
@@ -906,14 +906,14 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Quad Geom Test - Recta
     vertices[(i * 3) + 2] = i;
   }
 
-  VectorFloat32Parameter::ValueType minCoord = {0.0f, 0.0f, 0.0f};
-  VectorFloat32Parameter::ValueType maxCoord = {3.0f, 3.0f, 3.0f};
+  VectorFloat32ParameterType::ValueType minCoord = {0.0f, 0.0f, 0.0f};
+  VectorFloat32ParameterType::ValueType maxCoord = {3.0f, 3.0f, 3.0f};
 
   SECTION("Baseline")
   {
     RectangleExecuteFilter(dataStructure, false, minCoord, maxCoord);
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
 
     REQUIRE(mask[0] == 1);
     REQUIRE(mask[1] == 0);
@@ -923,28 +923,28 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Quad Geom Test - Recta
   {
     RectangleExecuteFilter(dataStructure, true, minCoord, maxCoord);
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
 
     REQUIRE(mask[0] == 0);
     REQUIRE(mask[1] == 1);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 
 TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Quad Geom Test - Sphere", "[SimplnxCore][ComputeCoordinateThresholdFilter]")
 {
   DataStructure dataStructure;
 
-  auto* geom = QuadGeom::Create(dataStructure, k_GeomName);
-  auto* vertexArray = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, "Vertices", {k_TupleCount}, {3}, geom->getId());
-  geom->setVertices(*vertexArray);
+  auto* geomPtr = QuadGeom::Create(dataStructure, k_GeomName);
+  auto* vertexArrayPtr = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, "Vertices", {k_TupleCount}, {3}, geomPtr->getId());
+  geomPtr->setVertices(*vertexArrayPtr);
 
-  auto* facesArray = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geom->getId());
-  geom->setFaceList(*facesArray);
+  auto* facesArrayPtr = IGeometry::MeshIndexArrayType::CreateWithStore<DataStore<IGeometry::MeshIndexType>>(dataStructure, "faces", {2}, {4}, geomPtr->getId());
+  geomPtr->setFaceList(*facesArrayPtr);
 
-  auto& vertices = vertexArray->getDataStoreRef();
-  auto& faces = facesArray->getDataStoreRef();
+  auto& vertices = vertexArrayPtr->getDataStoreRef();
+  auto& faces = facesArrayPtr->getDataStoreRef();
   for(usize i = 0; i < k_TupleCount; ++i)
   {
     faces[i] = i;
@@ -953,13 +953,13 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Quad Geom Test - Spher
     vertices[(i * 3) + 2] = i;
   }
 
-  VectorFloat32Parameter::ValueType sphereInfo = {5.5f, 5.5f, 5.5f, 2.6f};
+  VectorFloat32ParameterType::ValueType sphereInfo = {5.5f, 5.5f, 5.5f, 2.6f};
 
   SECTION("Baseline")
   {
     SphereExecuteFilter(dataStructure, false, sphereInfo);
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
 
     REQUIRE(mask[0] == 0);
     REQUIRE(mask[1] == 1);
@@ -969,11 +969,11 @@ TEST_CASE("SimplnxCore::ComputeCoordinateThresholdFilter: Quad Geom Test - Spher
   {
     SphereExecuteFilter(dataStructure, true, sphereInfo);
 
-    const auto& mask = dataStructure.getDataRefAs<UInt8Array>(k_MaskPath);
+    const auto& mask = dataStructure.getDataRefAs<UInt8ArrayType>(k_MaskPath);
 
     REQUIRE(mask[0] == 1);
     REQUIRE(mask[1] == 0);
   }
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

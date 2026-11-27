@@ -36,11 +36,11 @@ struct ExecuteFindDifferenceMapFunctor
   template <typename DataType>
   Result<> operator()(const IDataArray& firstArray, const IDataArray& secondArray, IDataArray& differenceMap, const std::atomic_bool& shouldCancel) const
   {
-    using store_type = AbstractDataStore<DataType>;
+    using StoreTypeType = AbstractDataStore<DataType>;
 
-    const auto& firstStore = firstArray.template getIDataStoreRefAs<store_type>();
-    const auto& secondStore = secondArray.template getIDataStoreRefAs<store_type>();
-    auto& differenceStore = differenceMap.template getIDataStoreRefAs<store_type>();
+    const auto& firstStore = firstArray.template getIDataStoreRefAs<StoreTypeType>();
+    const auto& secondStore = secondArray.template getIDataStoreRefAs<StoreTypeType>();
+    auto& differenceStore = differenceMap.template getIDataStoreRefAs<StoreTypeType>();
 
     const usize numTuples = firstStore.getNumberOfTuples();
     const usize numComps = firstStore.getNumberOfComponents();
@@ -99,13 +99,11 @@ ComputeDifferencesMap::ComputeDifferencesMap(DataStructure& dataStructure, const
 {
 }
 
-ComputeDifferencesMap::~ComputeDifferencesMap() noexcept = default;
-
 Result<> ComputeDifferencesMap::operator()()
 {
-  const auto& firstInputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->FirstInputArrayPath);
-  const auto& secondInputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->SecondInputArrayPath);
-  auto& differenceMapArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->DifferenceMapArrayPath);
+  const auto& firstInputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->first_input_array_path);
+  const auto& secondInputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->second_input_array_path);
+  auto& differenceMapArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->difference_map_array_path);
 
   if(m_ShouldCancel)
   {

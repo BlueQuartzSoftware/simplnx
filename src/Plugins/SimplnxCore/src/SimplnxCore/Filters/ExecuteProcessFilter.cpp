@@ -53,7 +53,7 @@ Parameters ExecuteProcessFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<StringParameter>(k_Arguments_Key, "Command Line Arguments", "The complete command to execute.", "SomeString"));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_Blocking_Key, "Should Block", "Whether to block the process while the command executes or not", false));
-  params.insert(std::make_unique<Int32Parameter>(k_Timeout_Key, "Timeout (ms)", "The amount of time to wait for the command to start/finish when blocking is selected", 30000));
+  params.insert(std::make_unique<Int32ParameterType>(k_Timeout_Key, "Timeout (ms)", "The amount of time to wait for the command to start/finish when blocking is selected", 30000));
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputLogFile_Key, "Output Log File", "The log file where the output from the process will be stored", "Data/Output/ProcessOutput.txt",
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputFile));
   // Associate the Linkable Parameter(s) to the children parameters that they control
@@ -69,18 +69,18 @@ IFilter::VersionType ExecuteProcessFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ExecuteProcessFilter::clone() const
+IFilter::UniquePointerType ExecuteProcessFilter::clone() const
 {
   return std::make_unique<ExecuteProcessFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExecuteProcessFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                             const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ExecuteProcessFilter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                             const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pArgumentsValue = filterArgs.value<StringParameter::ValueType>(k_Arguments_Key);
 
-  std::vector<std::string> arguments = ExecuteProcess::splitArgumentsString(pArgumentsValue);
+  std::vector<std::string> arguments = ExecuteProcess::SplitArgumentsString(pArgumentsValue);
   if(arguments.empty())
   {
     return MakePreflightErrorResult(-4001, "No command line arguments have been specified.");
@@ -90,27 +90,27 @@ IFilter::PreflightResult ExecuteProcessFilter::preflightImpl(const DataStructure
 }
 
 //------------------------------------------------------------------------------
-Result<> ExecuteProcessFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                           const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ExecuteProcessFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                           const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ExecuteProcessInputValues inputValues;
 
-  inputValues.Arguments = filterArgs.value<StringParameter::ValueType>(k_Arguments_Key);
-  inputValues.Blocking = filterArgs.value<bool>(k_Blocking_Key);
-  inputValues.Timeout = filterArgs.value<int32>(k_Timeout_Key);
-  inputValues.LogFile = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputLogFile_Key);
+  inputValues.arguments = filterArgs.value<StringParameter::ValueType>(k_Arguments_Key);
+  inputValues.blocking = filterArgs.value<bool>(k_Blocking_Key);
+  inputValues.timeout = filterArgs.value<int32>(k_Timeout_Key);
+  inputValues.log_file = filterArgs.value<FileSystemPathParameter::ValueType>(k_OutputLogFile_Key);
 
   return ExecuteProcess(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_ArgumentsKey = "Arguments";
-constexpr StringLiteral k_BlockingKey = "Blocking";
-constexpr StringLiteral k_TimeoutKey = "Timeout";
-} // namespace SIMPL
+constexpr StringLiteralType k_ArgumentsKey = "Arguments";
+constexpr StringLiteralType k_BlockingKey = "Blocking";
+constexpr StringLiteralType k_TimeoutKey = "Timeout";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ExecuteProcessFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -119,9 +119,9 @@ Result<Arguments> ExecuteProcessFilter::FromSIMPLJson(const nlohmann::json& json
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::StringFilterParameterConverter>(args, json, SIMPL::k_ArgumentsKey, k_Arguments_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedBooleanFilterParameterConverter>(args, json, SIMPL::k_BlockingKey, k_Blocking_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::IntFilterParameterConverter<int32>>(args, json, SIMPL::k_TimeoutKey, k_Timeout_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_ArgumentsKey, k_Arguments_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_BlockingKey, k_Blocking_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_TimeoutKey, k_Timeout_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

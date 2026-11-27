@@ -22,7 +22,7 @@ class SIMPLNXCORE_EXPORT MMCellMap
 {
 public:
   // Basic cell map containing tissue-type labels
-  MMCellMap(TriangleGeom::SharedVertexList::store_type& verticesStore, Int32Array* labels, size_t arraySize[3], const float voxelSize[3]);
+  MMCellMap(TriangleGeom::SharedVertexListType::StoreType& verticesStore, Int32ArrayType* labels, size_t arraySize[3], const float voxelSize[3]);
 
   ~MMCellMap();
 
@@ -57,12 +57,12 @@ public:
 
   struct Vertex
   {
-    int32_t cellIndex[3];
+    int32_t cell_index[3];
   };
 
   struct Cell
   {
-    size_t vertexIndex;
+    size_t vertex_index{};
     MMCellFlag flag;
   };
 
@@ -76,15 +76,15 @@ public:
   size_t cellArrayIndex(const int cellIndex[3]) const;
 
 private:
-  std::array<size_t, 3> m_arraySize = {0, 0, 0};
-  std::array<float, 3> m_voxelSize = {1.0f, 1.0f, 1.0f};
+  std::array<size_t, 3> m_ArraySize = {0, 0, 0};
+  std::array<float, 3> m_VoxelSize = {1.0f, 1.0f, 1.0f};
   std::array<size_t, 3> m_NxDims = {0, 0, 0};
 
-  Cell* m_cellArray;
+  Cell* m_CellArray;
 
   std::vector<Vertex> m_VertexArray;
-  TriangleGeom::SharedVertexList::store_type& m_VerticesStoreRef;
-  Int32Array* m_NxLabelsPtr = nullptr;
+  TriangleGeom::SharedVertexListType::StoreType& m_VerticesStoreRef;
+  Int32ArrayType* m_NxLabelsPtr = nullptr;
 
   /**
    * @brief Assigns one output vertex to each active cell.

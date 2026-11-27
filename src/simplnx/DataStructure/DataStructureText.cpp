@@ -26,7 +26,7 @@ constexpr std::string_view k_Delimiter = "|--";
  * @param outputStream Stream that receives the escaped name.
  * @param name Unescaped object name.
  */
-void writeEscapedTextName(std::ostream& outputStream, std::string_view name)
+void WriteEscapedTextName(std::ostream& outputStream, std::string_view name)
 {
   for(const unsigned char character : name)
   {
@@ -62,16 +62,16 @@ void writeEscapedTextName(std::ostream& outputStream, std::string_view name)
  * @param outputStream Stream that receives the spaces.
  * @param depth Zero-based hierarchy depth.
  */
-void writeIndent(std::ostream& outputStream, usize depth)
+void WriteIndent(std::ostream& outputStream, usize depth)
 {
-  constexpr std::string_view kSpaces = "                                                                ";
+  constexpr std::string_view k_Spaces = "                                                                ";
   usize remainingSpaces = depth * 2;
-  while(remainingSpaces >= kSpaces.size())
+  while(remainingSpaces >= k_Spaces.size())
   {
-    outputStream << kSpaces;
-    remainingSpaces -= kSpaces.size();
+    outputStream << k_Spaces;
+    remainingSpaces -= k_Spaces.size();
   }
-  outputStream << kSpaces.substr(0, remainingSpaces);
+  outputStream << k_Spaces.substr(0, remainingSpaces);
 }
 
 /**
@@ -119,7 +119,7 @@ private:
 
 void DataStructure::exportHierarchyAsText(std::ostream& outputStream) const
 {
-  const std::vector<const DataObject*> rootObjectPtrs = DataStructureExportUtilities::GetSortedObjectPointers(m_RootGroup);
+  const std::vector<const DataObject*> rootObjectPtrs = data_structure_export_utilities::GetSortedObjectPointers(m_RootGroup);
   std::vector<PendingTextNode> pendingNodes;
   pendingNodes.reserve(rootObjectPtrs.size());
   for(const DataObject* objectPtr : std::ranges::reverse_view(rootObjectPtrs))
@@ -133,9 +133,9 @@ void DataStructure::exportHierarchyAsText(std::ostream& outputStream) const
     pendingNodes.pop_back();
 
     const DataObject* objectPtr = pendingNode.getObjectPtr();
-    writeIndent(outputStream, pendingNode.getDepth());
+    WriteIndent(outputStream, pendingNode.getDepth());
     outputStream << k_Delimiter;
-    writeEscapedTextName(outputStream, objectPtr->getName());
+    WriteEscapedTextName(outputStream, objectPtr->getName());
     outputStream << '\n';
 
     const auto* groupPtr = dynamic_cast<const BaseGroup*>(objectPtr);
@@ -144,7 +144,7 @@ void DataStructure::exportHierarchyAsText(std::ostream& outputStream) const
       continue;
     }
 
-    const std::vector<const DataObject*> childObjectPtrs = DataStructureExportUtilities::GetSortedObjectPointers(groupPtr->getDataMap());
+    const std::vector<const DataObject*> childObjectPtrs = data_structure_export_utilities::GetSortedObjectPointers(groupPtr->getDataMap());
     for(const DataObject* childPtr : std::ranges::reverse_view(childObjectPtrs))
     {
       pendingNodes.emplace_back(childPtr, pendingNode.getDepth() + 1);

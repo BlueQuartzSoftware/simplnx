@@ -23,10 +23,10 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ComputeFeaturePhasesBinaryInputValues
 {
-  AttributeMatrixSelectionParameter::ValueType CellFeatureAttributeMatrixPath;
-  ArraySelectionParameter::ValueType FeatureIdsArrayPath;
-  DataObjectNameParameter::ValueType FeaturePhasesArrayName;
-  ArraySelectionParameter::ValueType MaskArrayPath;
+  AttributeMatrixSelectionParameter::ValueType cell_feature_attribute_matrix_path;
+  ArraySelectionParameter::ValueType feature_ids_array_path;
+  DataObjectNameParameter::ValueType feature_phases_array_name;
+  ArraySelectionParameter::ValueType mask_array_path;
 };
 
 /**
@@ -54,7 +54,7 @@ public:
   /**
    * @brief Destroys the binary feature-phase algorithm.
    */
-  ~ComputeFeaturePhasesBinary() noexcept;
+  ~ComputeFeaturePhasesBinary() noexcept = default;
 
   ComputeFeaturePhasesBinary(const ComputeFeaturePhasesBinary&) = delete;
   ComputeFeaturePhasesBinary(ComputeFeaturePhasesBinary&&) noexcept = delete;

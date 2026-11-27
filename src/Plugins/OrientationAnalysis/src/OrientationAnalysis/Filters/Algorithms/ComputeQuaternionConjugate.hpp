@@ -15,9 +15,9 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ComputeQuaternionConjugateInputValues
 {
-  DataPath QuaternionDataArrayPath;
-  DataPath OutputDataArrayPath;
-  bool DeleteOriginalData;
+  DataPath quaternion_data_array_path;
+  DataPath output_data_array_path;
+  bool delete_original_data{};
 };
 
 /**
@@ -43,7 +43,7 @@ public:
   /**
    * @brief Destroys the quaternion-conjugation dispatcher.
    */
-  ~ComputeQuaternionConjugate() noexcept;
+  ~ComputeQuaternionConjugate() noexcept = default;
 
   ComputeQuaternionConjugate(const ComputeQuaternionConjugate&) = delete;
   ComputeQuaternionConjugate(ComputeQuaternionConjugate&&) noexcept = delete;

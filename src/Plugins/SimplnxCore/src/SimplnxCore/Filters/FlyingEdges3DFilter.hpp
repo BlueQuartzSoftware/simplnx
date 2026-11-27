@@ -24,10 +24,10 @@ public:
   FlyingEdges3DFilter& operator=(FlyingEdges3DFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-  static constexpr StringLiteral k_SelectedDataArrayPath_Key = "input_data_array_path";
-  static constexpr StringLiteral k_CreatedTriangleGeometryPath_Key = "output_triangle_geometry_path";
-  static constexpr StringLiteral k_IsoVal_Key = "contour_value";
+  static constexpr StringLiteralType k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
+  static constexpr StringLiteralType k_SelectedDataArrayPath_Key = "input_data_array_path";
+  static constexpr StringLiteralType k_CreatedTriangleGeometryPath_Key = "output_triangle_geometry_path";
+  static constexpr StringLiteralType k_IsoVal_Key = "contour_value";
 
   /**
    * @brief Returns the name of the filter.
@@ -77,7 +77,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

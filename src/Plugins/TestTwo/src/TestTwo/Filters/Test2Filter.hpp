@@ -60,7 +60,7 @@ public:
    * @brief Returns a unique_pointer to a copy of the filter.
    * @return nx::core::IFilter::UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

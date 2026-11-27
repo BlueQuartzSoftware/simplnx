@@ -9,9 +9,9 @@ using namespace nx::core;
 
 namespace
 {
-constexpr StringLiteral k_Param1 = "param1";
-constexpr StringLiteral k_Param2 = "param2";
-constexpr StringLiteral k_Param3 = "param3_index";
+constexpr StringLiteralType k_Param1 = "param1";
+constexpr StringLiteralType k_Param2 = "param2";
+constexpr StringLiteralType k_Param3 = "param3_index";
 } // namespace
 
 Test2Filter::Test2Filter() = default;
@@ -52,9 +52,9 @@ std::vector<std::string> Test2Filter::defaultTags() const
 nx::core::Parameters Test2Filter::parameters() const
 {
   Parameters params;
-  params.insert(std::make_unique<Int32Parameter>(k_Param1, "Parameter 1", "The 1st parameter", 0));
+  params.insert(std::make_unique<Int32ParameterType>(k_Param1, "Parameter 1", "The 1st parameter", 0));
   params.insert(std::make_unique<StringParameter>(k_Param2, "Parameter 2", "The 2nd parameter", "test string"));
-  params.insert(std::make_unique<ChoicesParameter>(k_Param3, "Parameter 3", "The 3rd parameter", 0, ChoicesParameter::Choices{"foo", "bar", "baz"}));
+  params.insert(std::make_unique<ChoicesParameter>(k_Param3, "Parameter 3", "The 3rd parameter", 0, ChoicesParameter::ChoicesType{"foo", "bar", "baz"}));
   return params;
 }
 
@@ -65,21 +65,21 @@ IFilter::VersionType Test2Filter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-nx::core::IFilter::UniquePointer Test2Filter::clone() const
+nx::core::IFilter::UniquePointerType Test2Filter::clone() const
 {
   return std::make_unique<Test2Filter>();
 }
 
 //------------------------------------------------------------------------------
-nx::core::IFilter::PreflightResult Test2Filter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                              const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+nx::core::IFilter::PreflightResult Test2Filter::preflightImpl(const DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const MessageHandler& /*messageHandler*/,
+                                                              const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   return {};
 }
 
 //------------------------------------------------------------------------------
-nx::core::Result<> Test2Filter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                            const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+nx::core::Result<> Test2Filter::executeImpl(DataStructure& /*dataStructure*/, const Arguments& /*filterArgs*/, const PipelineFilter* /*pipelineNode*/, const MessageHandler& /*messageHandler*/,
+                                            const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   return {};
 }

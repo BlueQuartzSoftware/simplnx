@@ -71,7 +71,7 @@ Uuid NumericTypeParameter::uuid() const
   return ParameterTraits<NumericTypeParameter>::uuid;
 }
 
-IParameter::AcceptedTypes NumericTypeParameter::acceptedTypes() const
+IParameter::AcceptedTypesType NumericTypeParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -89,18 +89,18 @@ nlohmann::json NumericTypeParameter::toJsonImpl(const std::any& value) const
   return json;
 }
 
-Result<std::any> NumericTypeParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> NumericTypeParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'NumericTypeParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'NumericTypeParameter' JSON Error: ";
   if(!json.is_number())
   {
-    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a number", prefix, name()));
+    return MakeErrorResult<std::any>(-2, fmt::format("{}JSON value for key '{}' is not a number", k_Prefix, name()));
   }
   auto type = json.get<ValueType>();
   return {{type}};
 }
 
-IParameter::UniquePointer NumericTypeParameter::clone() const
+IParameter::UniquePointerType NumericTypeParameter::clone() const
 {
   return std::make_unique<NumericTypeParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -121,9 +121,9 @@ Result<> NumericTypeParameter::validate(const std::any& value) const
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
-Result<NumericTypeParameterConverter::ValueType> NumericTypeParameterConverter::convert(const nlohmann::json& json)
+Result<NumericTypeParameterConverter::ValueType> NumericTypeParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_number_integer())
   {
@@ -146,9 +146,9 @@ Result<NumericTypeParameterConverter::ValueType> NumericTypeParameterConverter::
   return {static_cast<NumericType>(value)};
 }
 
-Result<ScalarTypeParameterToNumericTypeConverter::ValueType> ScalarTypeParameterToNumericTypeConverter::convert(const nlohmann::json& json)
+Result<ScalarTypeParameterToNumericTypeConverter::ValueType> ScalarTypeParameterToNumericTypeConverter::Convert(const nlohmann::json& json)
 {
-  auto dataTypeResult = SIMPLConversion::ScalarTypeParameterConverter::convert(json);
+  auto dataTypeResult = simpl_conversion::ScalarTypeParameterConverter::Convert(json);
   if(dataTypeResult.invalid())
   {
     return ConvertInvalidResult<ValueType>(std::move(dataTypeResult));
@@ -165,5 +165,5 @@ Result<ScalarTypeParameterToNumericTypeConverter::ValueType> ScalarTypeParameter
 
   return {*numericType};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

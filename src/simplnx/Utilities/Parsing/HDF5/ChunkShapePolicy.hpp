@@ -6,7 +6,7 @@
 
 #include <nonstd/span.hpp>
 
-namespace nx::core::HDF5
+namespace nx::core::hdf5
 {
 
 /**
@@ -59,7 +59,7 @@ enum class ChunkShapeRegime
  */
 struct ChunkShapeOptions
 {
-  uint64 targetBytes = k_TargetChunkBytes;
+  uint64 target_bytes = k_TargetChunkBytes;
   ChunkShapeRegime regime = ChunkShapeRegime::BundleOuterSlabs;
 };
 
@@ -93,6 +93,6 @@ SIMPLNX_EXPORT bool ComputeChunkShapeInto(nonstd::span<const usize> dims, usize 
  * component-shape product. Thus, component bytes count toward the target. The
  * caller makes the separate contiguous-versus-chunked decision.
  */
-SIMPLNX_EXPORT nx::core::ShapeType computeChunkShape(const nx::core::ShapeType& dims, usize numComponents, usize elementByteSize, const ChunkShapeOptions& opts);
+SIMPLNX_EXPORT nx::core::ShapeType ComputeChunkShape(const nx::core::ShapeType& dims, usize numComponents, usize elementByteSize, const ChunkShapeOptions& opts);
 
-} // namespace nx::core::HDF5
+} // namespace nx::core::hdf5

@@ -27,9 +27,9 @@ Result<> AlignSectionsList::operator()()
   {
     return {};
   }
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->ImageGeometryPath);
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->image_geometry_path);
 
-  return execute(imageGeom.getDimensions(), m_InputValues->ImageGeometryPath);
+  return execute(imageGeom.getDimensions(), m_InputValues->image_geometry_path);
 }
 
 // -----------------------------------------------------------------------------
@@ -39,12 +39,12 @@ Result<> AlignSectionsList::findShifts(std::vector<int64>& xShifts, std::vector<
   {
     return {};
   }
-  auto alignSectionsType = m_InputValues->AlignSectionsType;
+  auto alignSectionsType = m_InputValues->align_sections_type;
 
   if(alignSectionsType == static_cast<ChoicesParameter::ValueType>(to_underlying(AlignSectionsInputType::RelativeShifts)))
   {
     // Size validated in preflight
-    const auto& relativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->ShiftsArrayPath)->getDataStoreRef();
+    const auto& relativeShiftsStore = m_DataStructure.getDataAs<Int64ArrayType>(m_InputValues->shifts_array_path)->getDataStoreRef();
     const usize numTup = relativeShiftsStore.getNumberOfTuples();
     for(usize i = 1; i < numTup; i++)
     {
@@ -55,7 +55,7 @@ Result<> AlignSectionsList::findShifts(std::vector<int64>& xShifts, std::vector<
   else if(alignSectionsType == static_cast<ChoicesParameter::ValueType>(to_underlying(AlignSectionsInputType::CumulativeShifts)))
   {
     // Size validated in preflight
-    const auto& cumulativeShiftsStore = m_DataStructure.getDataAs<Int64Array>(m_InputValues->ShiftsArrayPath)->getDataStoreRef();
+    const auto& cumulativeShiftsStore = m_DataStructure.getDataAs<Int64ArrayType>(m_InputValues->shifts_array_path)->getDataStoreRef();
     const usize numTup = cumulativeShiftsStore.getNumberOfTuples();
     for(usize i = 1; i < numTup; i++)
     {

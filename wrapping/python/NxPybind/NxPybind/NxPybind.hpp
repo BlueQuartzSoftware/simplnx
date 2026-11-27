@@ -30,16 +30,15 @@
 #include <unordered_map>
 #include <vector>
 
-#define SIMPLNX_PY_BIND_CLASS(scope, className) pybind11::class_<className>(scope, #className)
-#define SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, ...) pybind11::class_<className, __VA_ARGS__>(scope, #className)
-#define SIMPLNX_PY_BIND_PARAMETER(scope, className) SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, nx::core::IParameter)
+// Keep Python class names explicit so C++ renames preserve the exported names.
+#define SIMPLNX_PY_BIND_CLASS(scope, className, pyName) pybind11::class_<className>(scope, pyName)
+#define SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, pyName, ...) pybind11::class_<className, __VA_ARGS__>(scope, pyName)
+#define SIMPLNX_PY_BIND_PARAMETER(scope, className, pyName) SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, pyName, nx::core::IParameter)
 
-namespace pybind11
-{
-namespace detail
+namespace pybind11::detail
 {
 template <>
-struct type_caster<nx::core::AnyParameter>
+struct type_caster<nx::core::AnyParameterType>
 {
 public:
   /**
@@ -47,14 +46,14 @@ public:
    * function signatures and declares a local variable
    * 'value' of type AnyParameter
    */
-  PYBIND11_TYPE_CASTER(nx::core::AnyParameter, const_name("AnyParameter"));
+  PYBIND11_TYPE_CASTER(nx::core::AnyParameterType, const_name("AnyParameter"));
 
   /**
    * Conversion part 1 (Python->C++): convert a PyObject into a AnyParameter
    * instance or return false upon failure. The second argument
    * indicates whether implicit conversions should be applied.
    */
-  bool load(handle src, bool)
+  bool load(handle src, bool /*unused*/)
   {
     if(!isinstance<nx::core::IParameter>(src))
     {
@@ -73,29 +72,28 @@ public:
    * ``return_value_policy::reference_internal``) and are generally
    * ignored by implicit casters.
    */
-  static handle cast(const nx::core::AnyParameter& src, return_value_policy /* policy */, handle /* parent */)
+  static handle cast(const nx::core::AnyParameterType& src, return_value_policy /* policy */, handle /* parent */)
   {
     return pybind11::cast(src->clone()).release();
   }
 };
-} // namespace detail
-} // namespace pybind11
+} // namespace pybind11::detail
 
-namespace nx::core::NxPybind
+namespace nx::core::nx_pybind
 {
 namespace py = pybind11;
 
 template <class T>
-using CastNameT = std::remove_cv_t<decltype(py::detail::make_caster<T>::name)>;
+using CastNameTType = std::remove_cv_t<decltype(py::detail::make_caster<T>::name)>;
 
 template <usize N, class... Ts>
-boost::mp11::mp_list<Ts...> ExtractListFromDescr(py::detail::descr<N, Ts...>*)
+boost::mp11::mp_list<Ts...> ExtractListFromDescr(py::detail::descr<N, Ts...>* /*unused*/)
 {
   return boost::mp11::mp_list<Ts...>{};
 }
 
 template <class T>
-using ParamTypeListT = decltype(ExtractListFromDescr(static_cast<CastNameT<T>*>(nullptr)));
+using ParamTypeListTType = decltype(ExtractListFromDescr(static_cast<CastNameTType<T>*>(nullptr)));
 
 inline std::string GetFullPythonNameFromType(py::handle type)
 {
@@ -130,7 +128,7 @@ template <usize N, class... Ts>
 constexpr bool CheckIfPythonNameNeedsFixup(const py::detail::descr<N, Ts...>& descr) noexcept
 {
   std::string_view text = descr.text;
-  usize index = text.find("%");
+  usize index = text.find('%');
   return index != std::string_view::npos;
 }
 
@@ -140,11 +138,11 @@ std::string GetFixedPythonTypeCasterName()
   using namespace boost::mp11;
 
   std::string typeName = py::detail::make_caster<T>::name.text;
-  using Types = ParamTypeListT<T>;
-  static constexpr usize N = mp_size<Types>::value;
-  mp_for_each<mp_iota_c<N>>([&](auto I) {
-    using CurrentType = mp_at_c<Types, static_cast<usize>(I)>;
-    usize index = typeName.find("%");
+  using TypesType = ParamTypeListTType<T>;
+  static constexpr usize k_N = mp_size<TypesType>::value;
+  mp_for_each<mp_iota_c<k_N>>([&](auto I) {
+    using CurrentType = mp_at_c<TypesType, static_cast<usize>(I)>;
+    usize index = typeName.find('%');
     if(index == std::string::npos)
     {
       return;
@@ -171,12 +169,12 @@ std::string GetFullPythonName()
 
 struct PyParameterInfo
 {
-  using ToPyObjectFunc = py::object (*)(const std::any&);
-  using FromPyObjectFunc = std::any (*)(py::handle);
+  using ToPyObjectFuncType = py::object (*)(const std::any&);
+  using FromPyObjectFuncType = std::any (*)(py::handle);
 
-  ToPyObjectFunc toPyObjectFunc = {};
-  FromPyObjectFunc fromPyObjectFunc = {};
-  std::string pythonTypeName;
+  ToPyObjectFuncType to_py_object_func = {};
+  FromPyObjectFuncType from_py_object_func = {};
+  std::string python_type_name;
 
   template <class T>
   static PyParameterInfo Create()
@@ -193,7 +191,7 @@ class PythonPlugin;
 class Internals
 {
 public:
-  static inline constexpr StringLiteral k_Key = "SIMPLNX_INTERNAL";
+  static constexpr StringLiteralType k_Key = "SIMPLNX_INTERNAL";
 
   Internals()
   : m_App(Application::GetOrCreateInstance())
@@ -202,12 +200,12 @@ public:
 
   static Internals& Instance()
   {
-    auto* ptr = py::get_shared_data(k_Key);
-    if(ptr == nullptr)
+    auto* ptrPtr = py::get_shared_data(k_Key);
+    if(ptrPtr == nullptr)
     {
       throw std::runtime_error("Unable to acquire simplnx internals");
     }
-    return *static_cast<Internals*>(ptr);
+    return *static_cast<Internals*>(ptrPtr);
   }
 
   PyParameterInfo& at(const Uuid& uuid)
@@ -230,7 +228,7 @@ public:
 
   bool contains(const Uuid& uuid) const
   {
-    return m_ParameterConversionMap.count(uuid) > 0;
+    return m_ParameterConversionMap.contains(uuid);
   }
 
   template <class ParameterT>
@@ -239,7 +237,7 @@ public:
     static_assert(std::is_base_of_v<IParameter, ParameterT>);
 
     Uuid uuid = ParameterTraits<ParameterT>::uuid;
-    if(m_ParameterConversionMap.count(uuid) > 0)
+    if(m_ParameterConversionMap.contains(uuid))
     {
       throw std::invalid_argument("Duplicate uuid");
     }
@@ -257,21 +255,21 @@ public:
   }
 
   template <class T>
-  const T* addPlugin(std::shared_ptr<T> plugin)
+  const T* addPlugin(const std::shared_ptr<T>& plugin)
   {
     static_assert(std::is_base_of_v<AbstractPlugin, T>);
 
     const T* pluginPtr = plugin.get();
-    FilterList* filterList = m_App->getFilterList();
+    FilterList* filterListPtr = m_App->getFilterList();
     Uuid pluginUuid = plugin->getId();
-    if(filterList->containsPlugin(pluginUuid))
+    if(filterListPtr->containsPlugin(pluginUuid))
     {
-      pluginPtr = dynamic_cast<const T*>(filterList->getPlugin(pluginUuid));
+      pluginPtr = dynamic_cast<const T*>(filterListPtr->getPlugin(pluginUuid));
     }
     else
     {
       auto pluginLoader = std::make_shared<InMemoryPluginLoader>(plugin);
-      filterList->addPlugin(std::dynamic_pointer_cast<IPluginLoader>(pluginLoader));
+      filterListPtr->addPlugin(std::dynamic_pointer_cast<IPluginLoader>(pluginLoader));
     }
 
     return pluginPtr;
@@ -302,6 +300,7 @@ public:
   std::vector<std::shared_ptr<PythonPlugin>> getPythonPlugins()
   {
     std::vector<std::shared_ptr<PythonPlugin>> plugins;
+    plugins.reserve(m_PythonPlugins.size());
     for(auto&& [id, plugin] : m_PythonPlugins)
     {
       plugins.push_back(plugin);
@@ -326,10 +325,10 @@ inline py::dict ConvertArgsToDict(const Internals& internals, const Parameters& 
       continue;
     }
 
-    const AnyParameter& anyParam = parameters.at(name);
+    const AnyParameterType& anyParam = parameters.at(name);
     const IParameter& param = anyParam.getRef();
     Uuid uuid = param.uuid();
-    py::object object = internals.at(uuid).toPyObjectFunc(value);
+    py::object object = internals.at(uuid).to_py_object_func(value);
     dict[name.c_str()] = std::move(object);
   }
   return dict;
@@ -347,10 +346,10 @@ inline Arguments ConvertDictToArgs(const Internals& internals, const Parameters&
       continue;
     }
 
-    const AnyParameter& anyParam = parameters.at(name);
+    const AnyParameterType& anyParam = parameters.at(name);
     const IParameter& param = anyParam.getRef();
     Uuid uuid = param.uuid();
-    std::any value = internals.at(uuid).fromPyObjectFunc(item.second);
+    std::any value = internals.at(uuid).from_py_object_func(item.second);
     args.insert(std::move(name), std::move(value));
   }
   return args;
@@ -383,9 +382,9 @@ inline std::vector<std::string> MakePythonParamListString(const Parameters& para
   for(const auto& [name, p] : params)
   {
     const auto& info = internals.at(p->uuid());
-    py::object defaultValue = info.toPyObjectFunc(p->defaultValue());
+    py::object defaultValue = info.to_py_object_func(p->defaultValue());
     std::string defaultValueString = py::repr(defaultValue).cast<std::string>();
-    paramList.push_back(MakePythonParamStringWithDefaulValue(p->name(), info.pythonTypeName, defaultValueString));
+    paramList.push_back(MakePythonParamStringWithDefaulValue(p->name(), info.python_type_name, defaultValueString));
   }
   return paramList;
 }
@@ -524,7 +523,7 @@ std::map<std::string, py::object> CreateDefaultArgs(const Internals& internals)
   std::map<std::string, py::object> defaults;
   for(const auto& [name, param] : params)
   {
-    defaults.insert({name, internals.at(param->uuid()).toPyObjectFunc(param->defaultValue())});
+    defaults.insert({name, internals.at(param->uuid()).to_py_object_func(param->defaultValue())});
   }
 
   return defaults;
@@ -574,8 +573,7 @@ public:
   PyFilter() = delete;
 
   PyFilter(py::object object)
-  : IFilter()
-  , m_Object(std::move(object))
+  : m_Object(std::move(object))
   {
     py::gil_scoped_acquire gil;
     m_Name = m_Object.attr("name")().cast<std::string>();
@@ -634,7 +632,7 @@ public:
     return m_ParametersVersion;
   }
 
-  UniquePointer clone() const override
+  UniquePointerType clone() const override
   {
     py::gil_scoped_acquire gil;
     return std::make_unique<PyFilter>(m_Object.attr("clone")());
@@ -642,7 +640,7 @@ public:
 
 protected:
   PreflightResult preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                                const ExecutionContext& executionContext) const override
+                                const ExecutionContext& /*executionContext*/) const override
   {
     try
     {
@@ -656,15 +654,15 @@ protected:
       return result;
     } catch(const py::error_already_set& pyException)
     {
-      return {MakeErrorResult<OutputActions>(-42000, fmt::format("Python exception: {}", pyException.what()))};
+      return {.output_actions = MakeErrorResult<OutputActions>(-42000, fmt::format("Python exception: {}", pyException.what()))};
     } catch(const std::exception& exception)
     {
-      return {MakeErrorResult<OutputActions>(-42001, fmt::format("C++ exception: {}", exception.what()))};
+      return {.output_actions = MakeErrorResult<OutputActions>(-42001, fmt::format("C++ exception: {}", exception.what()))};
     }
   }
 
-  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
-                       const ExecutionContext& executionContext) const override
+  Result<> executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler, const std::atomic_bool& shouldCancel,
+                       const ExecutionContext& /*executionContext*/) const override
   {
     try
     {
@@ -720,11 +718,11 @@ public:
 
     for(py::handle filterTypeHandle : filters)
     {
-      FilterCreationFunc filterCreationFunc = [filterType = py::reinterpret_borrow<py::object>(filterTypeHandle)]() -> IFilter::UniquePointer {
-        py::gil_scoped_acquire global_interpreter_lock;
+      FilterCreationFuncType filterCreationFunc = [filterType = py::reinterpret_borrow<py::object>(filterTypeHandle)]() -> IFilter::UniquePointerType {
+        py::gil_scoped_acquire globalInterpreterLock;
         return std::make_unique<PyFilter>(filterType());
       };
-      plugin->addFilter(std::move(filterCreationFunc));
+      plugin->addFilter(filterCreationFunc);
     }
 
     return plugin;
@@ -768,22 +766,22 @@ inline void Internals::loadPythonPlugin(py::module_& mod)
 
 inline void Internals::reloadPythonPlugins()
 {
-  FilterList* filterList = m_App->getFilterList();
+  FilterList* filterListPtr = m_App->getFilterList();
   for(auto&& [id, plugin] : m_PythonPlugins)
   {
-    filterList->removePlugin(id);
+    filterListPtr->removePlugin(id);
     plugin->reload();
     auto pluginLoader = std::make_shared<InMemoryPluginLoader>(plugin);
-    filterList->addPlugin(std::dynamic_pointer_cast<IPluginLoader>(pluginLoader));
+    filterListPtr->addPlugin(std::dynamic_pointer_cast<IPluginLoader>(pluginLoader));
   }
 }
 
 inline void Internals::unloadPythonPlugins()
 {
-  FilterList* filterList = m_App->getFilterList();
+  FilterList* filterListPtr = m_App->getFilterList();
   for(auto&& [id, plugin] : m_PythonPlugins)
   {
-    filterList->removePlugin(id);
+    filterListPtr->removePlugin(id);
   }
   m_PythonPlugins.clear();
 }
@@ -802,4 +800,4 @@ void BindParameterConstructor(py::class_<T, Options...>& object)
 
   object.def(py::init<const std::string&, const std::string&, const std::string&, const typename T::ValueType&>(), "name"_a, "human_name"_a, "help_text"_a, "default_value"_a);
 }
-} // namespace nx::core::NxPybind
+} // namespace nx::core::nx_pybind

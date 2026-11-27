@@ -54,7 +54,7 @@ Parameters ConcatenateDataArraysFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameters"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_InputArrays_Key, "Arrays To Concatenate",
                                                                "Select the arrays that will be concatenated together.  The arrays will be concatenated in the order they are listed here.",
-                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypes{IArray::ArrayType::Any}, GetAllDataTypes()));
+                                                               std::vector<DataPath>{}, MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::Any}, GetAllDataTypes()));
 
   params.insertSeparator(Parameters::Separator{"Output Parameters"});
   params.insert(std::make_unique<ArrayCreationParameter>(k_OutputArray_Key, "Output Array", "The output array that contains the concatenated arrays.", DataPath({"Concatenated Array"})));
@@ -69,14 +69,14 @@ IFilter::VersionType ConcatenateDataArraysFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ConcatenateDataArraysFilter::clone() const
+IFilter::UniquePointerType ConcatenateDataArraysFilter::clone() const
 {
   return std::make_unique<ConcatenateDataArraysFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                    const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto inputArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputArrays_Key);
   auto outputArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_OutputArray_Key);
@@ -162,17 +162,17 @@ IFilter::PreflightResult ConcatenateDataArraysFilter::preflightImpl(const DataSt
                     arrayTypeName));
   }
 
-  return {std::move(resultOutputActions)};
+  return {.output_actions = std::move(resultOutputActions)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ConcatenateDataArraysFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ConcatenateDataArraysFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                  const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ConcatenateDataArraysInputValues inputValues;
 
-  inputValues.InputArrayPaths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputArrays_Key);
-  inputValues.OutputArrayPath = filterArgs.value<ArrayCreationParameter::ValueType>(k_OutputArray_Key);
+  inputValues.input_array_paths = filterArgs.value<MultiArraySelectionParameter::ValueType>(k_InputArrays_Key);
+  inputValues.output_array_path = filterArgs.value<ArrayCreationParameter::ValueType>(k_OutputArray_Key);
 
   return ConcatenateDataArrays(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

@@ -25,18 +25,18 @@ constexpr int32 k_BadFeatureCount = -78231;
 // NumElements stores int32 values.
 constexpr uint64 k_MaxVoxelCount = std::numeric_limits<int32>::max();
 // Equivalent spherical diameter uses d = 2*cbrt(V/(4*pi/3)).
-constexpr float64 k_ESDVolumeDenominator = (4.0 * nx::core::numbers::pi_v<float64>) / 3.0;
+constexpr float64 k_ESDVolumeDenominator = (4.0 * nx::core::numbers::k_PiV<float64>) / 3.0;
 // Equivalent circular diameter uses d = 2*sqrt(A/pi).
-constexpr float64 k_ECDAreaDenominator = nx::core::numbers::pi_v<float64>;
+constexpr float64 k_ECDAreaDenominator = nx::core::numbers::k_PiV<float64>;
 
 /**
  * @brief Defines thread-local feature voxel counts.
  */
-using FeatureVoxelCountsT = tbb::combinable<std::vector<uint64>>;
+using FeatureVoxelCountsTType = tbb::combinable<std::vector<uint64>>;
 /**
  * @brief Defines thread-local feature volume sums.
  */
-using FeatureVolumesT = tbb::combinable<std::vector<float64>>;
+using FeatureVolumesTType = tbb::combinable<std::vector<float64>>;
 
 /**
  * @class ImageSummationImpl
@@ -55,7 +55,7 @@ public:
    * @param shouldCancel Signals cancellation between Z slices.
    * @pre All arguments outlive the worker execution.
    */
-  ImageSummationImpl(FeatureVoxelCountsT& voxelCounts, const SizeVec3& dims, const Int32AbstractDataStore& featureIds, const std::atomic_bool& shouldCancel)
+  ImageSummationImpl(FeatureVoxelCountsTType& voxelCounts, const SizeVec3Type& dims, const Int32AbstractDataStoreType& featureIds, const std::atomic_bool& shouldCancel)
   : m_VoxelCounts(voxelCounts)
   , m_Dims(dims)
   , m_FeatureIds(featureIds)
@@ -100,9 +100,9 @@ public:
   }
 
 private:
-  FeatureVoxelCountsT& m_VoxelCounts;
-  const SizeVec3& m_Dims;
-  const Int32AbstractDataStore& m_FeatureIds;
+  FeatureVoxelCountsTType& m_VoxelCounts;
+  const SizeVec3Type& m_Dims;
+  const Int32AbstractDataStoreType& m_FeatureIds;
   const std::atomic_bool& m_ShouldCancel;
 };
 
@@ -121,23 +121,23 @@ private:
  * requireStoresInMemory() only disables parallel scheduling for a nonresident Feature ID store.
  * It does not pin or synchronize store access.
  */
-Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, Int32AbstractDataStore& numElements,
-                          const Int32AbstractDataStore& featureIds, const bool saveElementSizes, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
+Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStoreType& volumes, Float32AbstractDataStoreType& equivalentDiameters, Int32AbstractDataStoreType& numElements,
+                          const Int32AbstractDataStoreType& featureIds, const bool saveElementSizes, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   ThrottledMessageHandler progressThrottle(messageHandler);
 
   const usize numFeatures = volumes.getNumberOfTuples();
-  SizeVec3 dims = imageGeom.getDimensions();
+  SizeVec3Type dims = imageGeom.getDimensions();
 
   std::vector<uint64> featureVoxelCounts(numFeatures, 0);
 
   messageHandler.sendInfoMessage("Finding Voxel Counts...");
   // Count each feature with thread-local Z-slice accumulators.
-  FeatureVoxelCountsT threadLocalVoxelCounts([numFeatures] { return std::vector<uint64>(numFeatures, 0); });
+  FeatureVoxelCountsTType threadLocalVoxelCounts([numFeatures] { return std::vector<uint64>(numFeatures, 0); });
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, dims[2]);
   // A nonresident Feature ID store disables parallel scheduling. This does not pin or synchronize access.
-  IParallelAlgorithm::AlgorithmStores algStores;
+  IParallelAlgorithm::AlgorithmStoresType algStores;
   algStores.push_back(&featureIds);
   dataAlg.requireStoresInMemory(algStores);
   dataAlg.execute(ImageSummationImpl(threadLocalVoxelCounts, dims, featureIds, shouldCancel));
@@ -156,7 +156,7 @@ Result<> ProcessImageGeom(ImageGeom& imageGeom, Float32AbstractDataStore& volume
     return {};
   }
 
-  const FloatVec3 spacing = imageGeom.getSpacing();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
 
   const usize xDimSize = imageGeom.getNumXCells();
   const usize yDimSize = imageGeom.getNumYCells();
@@ -253,8 +253,8 @@ public:
    * @param shouldCancel Signals cancellation between Z slices.
    * @pre All arguments outlive the worker execution.
    */
-  RectGridSummationImpl(FeatureVoxelCountsT& voxelCounts, FeatureVolumesT& volumes, const SizeVec3& dims, const Int32AbstractDataStore& featureIds, const Float32AbstractDataStore& elemSizes,
-                        const std::atomic_bool& shouldCancel)
+  RectGridSummationImpl(FeatureVoxelCountsTType& voxelCounts, FeatureVolumesTType& volumes, const SizeVec3Type& dims, const Int32AbstractDataStoreType& featureIds,
+                        const Float32AbstractDataStoreType& elemSizes, const std::atomic_bool& shouldCancel)
   : m_VoxelCounts(voxelCounts)
   , m_Volumes(volumes)
   , m_Dims(dims)
@@ -311,11 +311,11 @@ public:
   }
 
 private:
-  FeatureVoxelCountsT& m_VoxelCounts;
-  FeatureVolumesT& m_Volumes;
-  const SizeVec3& m_Dims;
-  const Int32AbstractDataStore& m_FeatureIds;
-  const Float32AbstractDataStore& m_ElemSizes;
+  FeatureVoxelCountsTType& m_VoxelCounts;
+  FeatureVolumesTType& m_Volumes;
+  const SizeVec3Type& m_Dims;
+  const Int32AbstractDataStoreType& m_FeatureIds;
+  const Float32AbstractDataStoreType& m_ElemSizes;
   const std::atomic_bool& m_ShouldCancel;
 };
 
@@ -334,13 +334,13 @@ private:
  * requireStoresInMemory() considers Feature IDs only. It does not pin or synchronize Feature IDs
  * or element sizes.
  */
-Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStore& volumes, Float32AbstractDataStore& equivalentDiameters, Int32AbstractDataStore& numElements,
-                             const Int32AbstractDataStore& featureIds, const bool saveElementSizes, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
+Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStoreType& volumes, Float32AbstractDataStoreType& equivalentDiameters, Int32AbstractDataStoreType& numElements,
+                             const Int32AbstractDataStoreType& featureIds, const bool saveElementSizes, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel)
 {
   ThrottledMessageHandler progressThrottle(messageHandler);
 
   const usize numFeatures = volumes.getNumberOfTuples();
-  SizeVec3 dims = rectGridGeom.getDimensions();
+  SizeVec3Type dims = rectGridGeom.getDimensions();
 
   messageHandler.sendInfoMessage("Finding Element Sizes...");
   Result<> result = rectGridGeom.findElementSizes(false);
@@ -349,19 +349,19 @@ Result<> ProcessRectGridGeom(RectGridGeom& rectGridGeom, Float32AbstractDataStor
     return result;
   }
 
-  const Float32AbstractDataStore& elemSizes = rectGridGeom.getElementSizes()->getDataStoreRef();
+  const Float32AbstractDataStoreType& elemSizes = rectGridGeom.getElementSizes()->getDataStoreRef();
 
   std::vector<uint64> featureVoxelCounts(numFeatures, 0);
   std::vector<float64> featureVolumes(numFeatures, 0.0);
 
   messageHandler.sendInfoMessage("Cell Level: Finding Voxel Counts and Summing Volumes...");
   // Count each feature and sum element volumes with thread-local Z ranges.
-  FeatureVoxelCountsT threadLocalVoxelCounts([numFeatures] { return std::vector<uint64>(numFeatures, 0); });
-  FeatureVolumesT threadLocalVolumes([numFeatures] { return std::vector<float64>(numFeatures, 0); });
+  FeatureVoxelCountsTType threadLocalVoxelCounts([numFeatures] { return std::vector<uint64>(numFeatures, 0); });
+  FeatureVolumesTType threadLocalVolumes([numFeatures] { return std::vector<float64>(numFeatures, 0); });
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, dims[2]);
   // The scheduling guard includes Feature IDs only. It does not pin or synchronize element sizes.
-  IParallelAlgorithm::AlgorithmStores algStores;
+  IParallelAlgorithm::AlgorithmStoresType algStores;
   algStores.push_back(&featureIds);
   dataAlg.requireStoresInMemory(algStores);
   dataAlg.execute(RectGridSummationImpl(threadLocalVoxelCounts, threadLocalVolumes, dims, featureIds, elemSizes, shouldCancel));
@@ -430,19 +430,17 @@ ComputeFeatureSizesDirect::ComputeFeatureSizesDirect(DataStructure& dataStructur
 {
 }
 
-ComputeFeatureSizesDirect::~ComputeFeatureSizesDirect() noexcept = default;
-
 Result<> ComputeFeatureSizesDirect::operator()()
 {
   const IFilter::MessageHandler& messageHandler = m_MessageHandler;
 
-  const bool saveElementSizes = m_InputValues->SaveElementSizes;
+  const bool saveElementSizes = m_InputValues->save_element_sizes;
 
   messageHandler.sendInfoMessage("Validating Feature Ids and Feature Attribute Matrix...");
-  const DataPath featureIdsArrayPath = m_InputValues->FeatureIdsPath;
-  const auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32Array>(featureIdsArrayPath);
+  const DataPath featureIdsArrayPath = m_InputValues->feature_ids_path;
+  const auto* featureIdsArrayPtr = m_DataStructure.getDataAs<Int32ArrayType>(featureIdsArrayPath);
   {
-    const DataPath featureAttributeMatrixPath = m_InputValues->FeatureAttributeMatrixPath;
+    const DataPath featureAttributeMatrixPath = m_InputValues->feature_attribute_matrix_path;
     Result<> validateNumFeatResult = ValidateFeatureIdsToFeatureAttributeMatrixIndexing(m_DataStructure, featureAttributeMatrixPath, *featureIdsArrayPtr, false, m_MessageHandler);
     if(validateNumFeatResult.invalid())
     {
@@ -450,18 +448,18 @@ Result<> ComputeFeatureSizesDirect::operator()()
     }
   }
 
-  const DataPath geomPath = m_InputValues->InputImageGeometryPath;
+  const DataPath geomPath = m_InputValues->input_image_geometry_path;
   auto& geom = m_DataStructure.getDataRefAs<IGeometry>(geomPath);
   const auto& featureIds = featureIdsArrayPtr->getDataStoreRef();
 
-  const DataPath featureAttributeMatrixPath = m_InputValues->FeatureAttributeMatrixPath;
-  const DataPath volumesPath = featureAttributeMatrixPath.createChildPath(m_InputValues->VolumesName);
-  const DataPath equivDiamPath = featureAttributeMatrixPath.createChildPath(m_InputValues->EquivalentDiametersName);
-  const DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(m_InputValues->NumElementsName);
+  const DataPath featureAttributeMatrixPath = m_InputValues->feature_attribute_matrix_path;
+  const DataPath volumesPath = featureAttributeMatrixPath.createChildPath(m_InputValues->volumes_name);
+  const DataPath equivDiamPath = featureAttributeMatrixPath.createChildPath(m_InputValues->equivalent_diameters_name);
+  const DataPath numElementsPath = featureAttributeMatrixPath.createChildPath(m_InputValues->num_elements_name);
 
-  auto& volumes = m_DataStructure.getDataAs<Float32Array>(volumesPath)->getDataStoreRef();
-  auto& equivalentDiameters = m_DataStructure.getDataAs<Float32Array>(equivDiamPath)->getDataStoreRef();
-  auto& numElements = m_DataStructure.getDataAs<Int32Array>(numElementsPath)->getDataStoreRef();
+  auto& volumes = m_DataStructure.getDataAs<Float32ArrayType>(volumesPath)->getDataStoreRef();
+  auto& equivalentDiameters = m_DataStructure.getDataAs<Float32ArrayType>(equivDiamPath)->getDataStoreRef();
+  auto& numElements = m_DataStructure.getDataAs<Int32ArrayType>(numElementsPath)->getDataStoreRef();
 
   const IGeometry::Type geomType = geom.getGeomType();
   if(geomType == IGeometry::Type::Image)

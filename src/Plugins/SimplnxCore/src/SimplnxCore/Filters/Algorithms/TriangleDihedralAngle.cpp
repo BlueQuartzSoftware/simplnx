@@ -31,7 +31,7 @@ using namespace nx::core;
 
 namespace
 {
-constexpr float64 k_radToDeg = Constants::k_180OverPiD; // used for translating radians to degrees
+constexpr float64 k_RadToDeg = constants::k_180OverPiD; // used for translating radians to degrees
 
 /**
  * @brief The CalculateAreasImpl class implements a threaded algorithm that computes the normal of each
@@ -40,7 +40,7 @@ constexpr float64 k_radToDeg = Constants::k_180OverPiD; // used for translating 
 class CalculateDihedralAnglesImpl
 {
 public:
-  CalculateDihedralAnglesImpl(const TriangleGeom* triangleGeom, Float64AbstractDataStore& dihedralAngles, const std::atomic_bool& shouldCancel)
+  CalculateDihedralAnglesImpl(const TriangleGeom* triangleGeom, Float64AbstractDataStoreType& dihedralAngles, const std::atomic_bool& shouldCancel)
   : m_TriangleGeom(triangleGeom)
   , m_DihedralAngles(dihedralAngles)
   , m_ShouldCancel(shouldCancel)
@@ -61,7 +61,7 @@ public:
       {
         break;
       }
-      std::array<Point3Df, 3> vertCoords;
+      std::array<FloatVec3Type, 3> vertCoords;
       m_TriangleGeom->getFaceCoordinates(triangleIndex, vertCoords);
 
       for(usize i = 0; i < 3; i++)
@@ -82,11 +82,11 @@ public:
       else
       {
         std::array<float64, 3> dihedralAnglesVec{};
-        dihedralAnglesVec[0] = k_radToDeg * acos(std::clamp(vecAB.dot(vecAC) / (magAB * magAC), -1.0, 1.0));
+        dihedralAnglesVec[0] = k_RadToDeg * acos(std::clamp(vecAB.dot(vecAC) / (magAB * magAC), -1.0, 1.0));
 
         // vecAB points out of B and vecBC points into B, so subtract their angle from 180 to get the interior angle at B.
-        dihedralAnglesVec[1] = 180.0 - (k_radToDeg * acos(std::clamp(vecAB.dot(vecBC) / (magAB * magBC), -1.0, 1.0)));
-        dihedralAnglesVec[2] = k_radToDeg * acos(std::clamp(vecBC.dot(vecAC) / (magBC * magAC), -1.0, 1.0));
+        dihedralAnglesVec[1] = 180.0 - (k_RadToDeg * acos(std::clamp(vecAB.dot(vecBC) / (magAB * magBC), -1.0, 1.0)));
+        dihedralAnglesVec[2] = k_RadToDeg * acos(std::clamp(vecBC.dot(vecAC) / (magBC * magAC), -1.0, 1.0));
 
         m_DihedralAngles[triangleIndex] = *std::min_element(dihedralAnglesVec.begin(), dihedralAnglesVec.end());
       }
@@ -105,7 +105,7 @@ public:
 
 private:
   const TriangleGeom* m_TriangleGeom = nullptr;
-  Float64AbstractDataStore& m_DihedralAngles;
+  Float64AbstractDataStoreType& m_DihedralAngles;
   const std::atomic_bool& m_ShouldCancel;
 };
 
@@ -116,10 +116,10 @@ static_assert(k_DihedralBlockTriangles <= std::numeric_limits<usize>::max() / k_
 
 struct TriangleDihedralWorkingPlan
 {
-  bool CacheVertices = false;
-  usize FaceCapacity = 0;
-  usize PageVertices = 0;
-  usize PayloadBytes = 0;
+  bool cache_vertices = false;
+  usize face_capacity = 0;
+  usize page_vertices = 0;
+  usize payload_bytes = 0;
 };
 
 /**
@@ -131,7 +131,7 @@ struct TriangleDihedralWorkingPlan
  * @pre The caller checks three-component shapes and addressable coordinate and face sizes.
  * @note The caller must reserve working memory and plan again from the actual grant before allocating buffers.
  */
-TriangleDihedralWorkingPlan planDihedralWorkingMemory(const AbstractDataStore<IGeometry::MeshIndexType>& triangles, const Float32AbstractDataStore& vertices, usize availableBytes)
+TriangleDihedralWorkingPlan PlanDihedralWorkingMemory(const AbstractDataStore<IGeometry::MeshIndexType>& triangles, const Float32AbstractDataStoreType& vertices, usize availableBytes)
 {
   const usize maximumTriangles = std::min(k_DihedralBlockTriangles, triangles.getNumberOfTuples());
   const usize vertexCount = vertices.getNumberOfTuples();
@@ -152,10 +152,10 @@ TriangleDihedralWorkingPlan planDihedralWorkingMemory(const AbstractDataStore<IG
   {
     return {};
   }
-  return {.CacheVertices = cacheVertices, .FaceCapacity = faceCapacity, .PageVertices = pageVertices, .PayloadBytes = coordinateBytes + (faceCapacity * bytesPerFace)};
+  return {.cache_vertices = cacheVertices, .face_capacity = faceCapacity, .page_vertices = pageVertices, .payload_bytes = coordinateBytes + (faceCapacity * bytesPerFace)};
 }
 
-Result<> CalculateDihedralAnglesInBlocks(const TriangleGeom& triangleGeom, Float64AbstractDataStore& dihedralAngles, const std::atomic_bool& shouldCancel)
+Result<> CalculateDihedralAnglesInBlocks(const TriangleGeom& triangleGeom, Float64AbstractDataStoreType& dihedralAngles, const std::atomic_bool& shouldCancel)
 {
   const auto& triangles = triangleGeom.getFaces()->getDataStoreRef();
   const auto& verts = triangleGeom.getVertices()->getDataStoreRef();
@@ -166,28 +166,28 @@ Result<> CalculateDihedralAnglesInBlocks(const TriangleGeom& triangleGeom, Float
     return {};
   }
 
-  constexpr usize maximum = std::numeric_limits<usize>::max();
+  constexpr usize k_Maximum = std::numeric_limits<usize>::max();
   const usize maximumTriangles = std::min(k_DihedralBlockTriangles, numTriangles);
-  if(verts.getNumberOfComponents() != 3 || triangles.getNumberOfComponents() != 3 || numVertices > maximum / (3 * sizeof(float32)) || numTriangles > maximum / 3 ||
-     numVertices * (3 * sizeof(float32)) > maximum - maximumTriangles * k_DihedralFastBytesPerFace)
+  if(verts.getNumberOfComponents() != 3 || triangles.getNumberOfComponents() != 3 || numVertices > k_Maximum / (3 * sizeof(float32)) || numTriangles > k_Maximum / 3 ||
+     numVertices * (3 * sizeof(float32)) > k_Maximum - maximumTriangles * k_DihedralFastBytesPerFace)
   {
     return MakeErrorResult(-65824, "Triangle dihedral-angle buffers require addressable three-component vertex and face arrays. Reduce the mesh size or repair the array shapes.");
   }
   const usize vertexBytes = numVertices * 3 * sizeof(float32);
   const usize desiredBytes = vertexBytes + (maximumTriangles * k_DihedralFastBytesPerFace);
-  auto& budget = CacheMemoryBudgetManager::instance();
+  auto& budget = CacheMemoryBudgetManager::Instance();
   const uint64 maximumWorkingBytes = budget.maximumWorkingMemoryBytes();
   const uint64 reservedBytes = budget.reservedWorkingMemoryBytes();
-  const usize observedHeadroom = static_cast<usize>(std::min<uint64>(maximumWorkingBytes > reservedBytes ? maximumWorkingBytes - reservedBytes : 0, maximum));
-  const auto observedPlan = planDihedralWorkingMemory(triangles, verts, observedHeadroom);
+  const usize observedHeadroom = static_cast<usize>(std::min<uint64>(maximumWorkingBytes > reservedBytes ? maximumWorkingBytes - reservedBytes : 0, k_Maximum));
+  const auto observedPlan = PlanDihedralWorkingMemory(triangles, verts, observedHeadroom);
   const usize preferredBytes = std::min(desiredBytes, maximumTriangles * k_DihedralGatherBytesPerFace);
-  const uint64 requestedBytes = std::min<uint64>(observedPlan.FaceCapacity == 0 ? preferredBytes : observedPlan.PayloadBytes, budget.maximumWorkingMemoryBytes());
+  const uint64 requestedBytes = std::min<uint64>(observedPlan.face_capacity == 0 ? preferredBytes : observedPlan.payload_bytes, budget.maximumWorkingMemoryBytes());
   // A snapshot avoids known excess admission; a racing reservation can still reduce the actual grant.
   auto reservation = budget.reserveWorkingMemory(requestedBytes);
-  const usize grantedBytes = static_cast<usize>(std::min<uint64>(reservation.sizeBytes(), maximum));
-  const auto plan = planDihedralWorkingMemory(triangles, verts, grantedBytes);
-  const bool cacheVertices = plan.CacheVertices;
-  const usize bufferTriangles = plan.FaceCapacity;
+  const usize grantedBytes = static_cast<usize>(std::min<uint64>(reservation.sizeBytes(), k_Maximum));
+  const auto plan = PlanDihedralWorkingMemory(triangles, verts, grantedBytes);
+  const bool cacheVertices = plan.cache_vertices;
+  const usize bufferTriangles = plan.face_capacity;
   if(bufferTriangles == 0)
   {
     return MakeErrorResult(
@@ -195,20 +195,20 @@ Result<> CalculateDihedralAnglesInBlocks(const TriangleGeom& triangleGeom, Float
         fmt::format("Triangle dihedral-angle calculation requested {} working bytes and received {}. At least {} bytes are needed for one gathered face, or {} bytes for cached vertices and one face.",
                     requestedBytes, grantedBytes, k_DihedralGatherBytesPerFace, vertexBytes + k_DihedralFastBytesPerFace));
   }
-  const usize pageVertices = plan.PageVertices;
+  const usize pageVertices = plan.page_vertices;
   // The checked plan fits the actual grant; release any remainder before allocations or I/O.
-  reservation.shrinkTo(plan.PayloadBytes);
+  reservation.shrinkTo(plan.payload_bytes);
   Result<> result;
   try
   {
     std::vector<float32> vertices(cacheVertices ? numVertices * 3 : 0);
     if(cacheVertices)
     {
-      result = MeshingUtilities::detail::MergeTransferResult(result, verts.copyIntoBuffer(0, {vertices.data(), vertices.size()}));
+      result = meshing_utilities::detail::MergeTransferResult(result, verts.copyIntoBuffer(0, {vertices.data(), vertices.size()}));
       if(result.invalid())
       {
-        return MeshingUtilities::detail::WithTransferFailureContext(std::move(result),
-                                                                    [&] { return MakeErrorResult(-65820, "Error reading vertex coordinates for triangle dihedral angle calculation."); });
+        return meshing_utilities::detail::WithTransferFailureContext(std::move(result),
+                                                                     [&] { return MakeErrorResult(-65820, "Error reading vertex coordinates for triangle dihedral angle calculation."); });
       }
     }
     std::vector<usize> order(cacheVertices ? 0 : bufferTriangles * 3);
@@ -223,10 +223,10 @@ Result<> CalculateDihedralAnglesInBlocks(const TriangleGeom& triangleGeom, Float
         return result;
       }
       const usize count = std::min(bufferTriangles, numTriangles - start);
-      result = MeshingUtilities::detail::MergeTransferResult(result, triangles.copyIntoBuffer(start * 3, nonstd::span<IGeometry::MeshIndexType>(triangleBuffer.data(), count * 3)));
+      result = meshing_utilities::detail::MergeTransferResult(result, triangles.copyIntoBuffer(start * 3, nonstd::span<IGeometry::MeshIndexType>(triangleBuffer.data(), count * 3)));
       if(result.invalid())
       {
-        return MeshingUtilities::detail::WithTransferFailureContext(
+        return meshing_utilities::detail::WithTransferFailureContext(
             std::move(result), [&] { return MakeErrorResult(-65821, fmt::format("Error reading connectivity for triangle dihedral angle calculation at triangle {} ({} triangles).", start, count)); });
       }
 
@@ -245,11 +245,11 @@ Result<> CalculateDihedralAnglesInBlocks(const TriangleGeom& triangleGeom, Float
       }
       if(!cacheVertices)
       {
-        result = MeshingUtilities::detail::MergeTransferResult(
-            result, MeshingUtilities::detail::GatherVertexCoordinates(verts, {triangleBuffer.data(), count * 3}, {order.data(), count * 3}, {gathered.data(), count * 9}, {page.data(), page.size()}));
+        result = meshing_utilities::detail::MergeTransferResult(
+            result, meshing_utilities::detail::GatherVertexCoordinates(verts, {triangleBuffer.data(), count * 3}, {order.data(), count * 3}, {gathered.data(), count * 9}, {page.data(), page.size()}));
         if(result.invalid())
         {
-          return MeshingUtilities::detail::WithTransferFailureContext(std::move(result), [&] {
+          return meshing_utilities::detail::WithTransferFailureContext(std::move(result), [&] {
             return MakeErrorResult(-65820, fmt::format("Error reading vertex coordinates for triangle dihedral-angle calculation at triangle {} ({} triangles).", start, count));
           });
         }
@@ -259,12 +259,12 @@ Result<> CalculateDihedralAnglesInBlocks(const TriangleGeom& triangleGeom, Float
       nx::core::Vec3<float64> vecBC = {0.0f, 0.0f, 0.0f};
       for(usize triangleIndex = 0; triangleIndex < count; triangleIndex++)
       {
-        std::array<Point3Df, 3> vertCoords;
+        std::array<FloatVec3Type, 3> vertCoords;
         for(usize vertex = 0; vertex < 3; ++vertex)
         {
           const usize offset = cacheVertices ? triangleBuffer[(triangleIndex * 3) + vertex] * 3 : (triangleIndex * 9) + (vertex * 3);
           const auto& coordinates = cacheVertices ? vertices : gathered;
-          vertCoords.at(vertex) = Point3Df{coordinates[offset], coordinates[offset + 1], coordinates[offset + 2]};
+          vertCoords.at(vertex) = FloatVec3Type{coordinates[offset], coordinates[offset + 1], coordinates[offset + 2]};
         }
         // Keep float coordinate subtraction and the exact in-core operation order.
         for(usize i = 0; i < 3; i++)
@@ -285,20 +285,20 @@ Result<> CalculateDihedralAnglesInBlocks(const TriangleGeom& triangleGeom, Float
         else
         {
           std::array<float64, 3> dihedralAnglesVec{};
-          dihedralAnglesVec[0] = k_radToDeg * acos(std::clamp(vecAB.dot(vecAC) / (magAB * magAC), -1.0, 1.0));
+          dihedralAnglesVec[0] = k_RadToDeg * acos(std::clamp(vecAB.dot(vecAC) / (magAB * magAC), -1.0, 1.0));
 
           // vecAB points out of B and vecBC points into B, so subtract their angle from 180 to get the interior angle at B.
-          dihedralAnglesVec[1] = 180.0 - (k_radToDeg * acos(std::clamp(vecAB.dot(vecBC) / (magAB * magBC), -1.0, 1.0)));
-          dihedralAnglesVec[2] = k_radToDeg * acos(std::clamp(vecBC.dot(vecAC) / (magBC * magAC), -1.0, 1.0));
+          dihedralAnglesVec[1] = 180.0 - (k_RadToDeg * acos(std::clamp(vecAB.dot(vecBC) / (magAB * magBC), -1.0, 1.0)));
+          dihedralAnglesVec[2] = k_RadToDeg * acos(std::clamp(vecBC.dot(vecAC) / (magBC * magAC), -1.0, 1.0));
 
           angleBuffer[triangleIndex] = *std::ranges::min_element(dihedralAnglesVec);
         }
       }
-      result = MeshingUtilities::detail::MergeTransferResult(result, dihedralAngles.copyFromBuffer(start, nonstd::span<const float64>(angleBuffer.data(), count)));
+      result = meshing_utilities::detail::MergeTransferResult(result, dihedralAngles.copyFromBuffer(start, nonstd::span<const float64>(angleBuffer.data(), count)));
       if(result.invalid())
       {
-        return MeshingUtilities::detail::WithTransferFailureContext(std::move(result),
-                                                                    [&] { return MakeErrorResult(-65822, fmt::format("Error writing dihedral angles at triangle {} ({} triangles).", start, count)); });
+        return meshing_utilities::detail::WithTransferFailureContext(
+            std::move(result), [&] { return MakeErrorResult(-65822, fmt::format("Error writing dihedral angles at triangle {} ({} triangles).", start, count)); });
       }
       start += count;
     }
@@ -324,20 +324,19 @@ TriangleDihedralAngle::TriangleDihedralAngle(DataStructure& dataStructure, const
 }
 
 // -----------------------------------------------------------------------------
-TriangleDihedralAngle::~TriangleDihedralAngle() noexcept = default;
 
 // -----------------------------------------------------------------------------
 Result<> TriangleDihedralAngle::operator()()
 {
-  auto pTriangleGeometryDataPath = m_InputValues->InputTriangleGeometryPath;
-  auto pMinDihedralAnglesName = m_InputValues->SurfaceMeshTriangleDihedralAnglesArrayName;
+  auto pTriangleGeometryDataPath = m_InputValues->input_triangle_geometry_path;
+  auto pMinDihedralAnglesName = m_InputValues->surface_mesh_triangle_dihedral_angles_array_name;
 
   const auto& triangleGeom = m_DataStructure.getDataRefAs<TriangleGeom>(pTriangleGeometryDataPath);
-  const AttributeMatrix* faceAttributeMatrix = triangleGeom.getFaceAttributeMatrix();
-  const DataPath dihedralAnglesArrayPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrix->getName()).createChildPath(pMinDihedralAnglesName);
-  auto& dihedralAnglesRef = m_DataStructure.getDataAs<Float64Array>(dihedralAnglesArrayPath)->getDataStoreRef();
+  const AttributeMatrix* faceAttributeMatrixPtr = triangleGeom.getFaceAttributeMatrix();
+  const DataPath dihedralAnglesArrayPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrixPtr->getName()).createChildPath(pMinDihedralAnglesName);
+  auto& dihedralAnglesRef = m_DataStructure.getDataAs<Float64ArrayType>(dihedralAnglesArrayPath)->getDataStoreRef();
 
-  const bool usesOutOfCoreStore = AnyOutOfCore({triangleGeom.getFaces(), triangleGeom.getVertices(), m_DataStructure.getDataAs<Float64Array>(dihedralAnglesArrayPath)});
+  const bool usesOutOfCoreStore = AnyOutOfCore({triangleGeom.getFaces(), triangleGeom.getVertices(), m_DataStructure.getDataAs<Float64ArrayType>(dihedralAnglesArrayPath)});
   const bool useOutOfCoreAlgorithm = !ForceInCoreAlgorithm() && (usesOutOfCoreStore || ForceOocAlgorithm());
   RecordAlgorithmPathExecution(useOutOfCoreAlgorithm ? AlgorithmPath::OutOfCore : AlgorithmPath::InCore, usesOutOfCoreStore);
   if(useOutOfCoreAlgorithm)

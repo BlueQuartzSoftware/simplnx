@@ -15,7 +15,7 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT ReadH5EspritDataInputValues
 {
-  bool DegreesToRadians;
+  bool degrees_to_radians;
 };
 
 /**

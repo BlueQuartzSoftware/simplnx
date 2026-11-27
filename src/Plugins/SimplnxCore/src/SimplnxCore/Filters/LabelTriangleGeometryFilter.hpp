@@ -24,10 +24,10 @@ public:
   LabelTriangleGeometryFilter& operator=(LabelTriangleGeometryFilter&&) noexcept = delete;
 
   // Parameter Keys
-  static constexpr StringLiteral k_TriangleGeomPath_Key = "input_triangle_geometry_path";
-  static constexpr StringLiteral k_CreatedRegionIdsPath_Key = "created_region_ids_path";
-  static constexpr StringLiteral k_TriangleAttributeMatrixName_Key = "triangle_attribute_matrix_name";
-  static constexpr StringLiteral k_NumTrianglesName_Key = "num_triangles_name";
+  static constexpr StringLiteralType k_TriangleGeomPath_Key = "input_triangle_geometry_path";
+  static constexpr StringLiteralType k_CreatedRegionIdsPath_Key = "created_region_ids_path";
+  static constexpr StringLiteralType k_TriangleAttributeMatrixName_Key = "triangle_attribute_matrix_name";
+  static constexpr StringLiteralType k_NumTrianglesName_Key = "num_triangles_name";
 
   /**
    * @brief Reads SIMPL json and converts it complex Arguments.
@@ -84,7 +84,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

@@ -25,7 +25,7 @@ class SIMPLNX_EXPORT Range3D
 {
 public:
   using RangeType = std::array<size_t, 6>; //<* {size_t xMin, size_t xMax, size_t yMin, size_t yMax, size_t zMin, size_t zMax}
-  using DimensionRange = std::array<size_t, 2>;
+  using DimensionRangeType = std::array<size_t, 2>;
 
   Range3D();
   /**
@@ -62,19 +62,19 @@ public:
    * @brief Returns the range along the X dimension
    * @return
    */
-  DimensionRange getXRange() const;
+  DimensionRangeType getXRange() const;
 
   /**
    * @brief Returns the range along the Y dimension
    * @return
    */
-  DimensionRange getYRange() const;
+  DimensionRangeType getYRange() const;
 
   /**
    * @brief Returns the range along the Z dimension
    * @return
    */
-  DimensionRange getZRange() const;
+  DimensionRangeType getZRange() const;
 
   /**
    * @brief Returns true if the range is empty.  Returns false otherwise.

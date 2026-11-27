@@ -60,7 +60,7 @@ public:
    * @brief Returns the index's 3D tile position.
    * @return SizeVec3Type
    */
-  SizeVec3 getTilePos() const;
+  SizeVec3Type getTilePos() const;
 
   /**
    * @brief Returns a const pointer to the target geometry.
@@ -89,9 +89,9 @@ protected:
    * @param montage
    * @param pos
    */
-  GridTileIndex(const GridMontage* montage, const SizeVec3& pos);
+  GridTileIndex(const GridMontage* montage, SizeVec3Type pos);
 
 private:
-  SizeVec3 m_Pos;
+  SizeVec3Type m_Pos;
 };
 } // namespace nx::core

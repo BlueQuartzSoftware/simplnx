@@ -10,28 +10,27 @@
 using namespace nx::core;
 
 DataStructObserver::DataStructObserver(DataStructure& dataStruct)
-: AbstractDataStructureObserver()
-, m_DataStructure(dataStruct)
+: m_DataStructure(dataStruct)
 {
   startObservingStructure(&dataStruct);
 }
 
 DataStructObserver::~DataStructObserver() = default;
 
-void DataStructObserver::onNotify(DataStructure* target, const std::shared_ptr<AbstractDataStructureMessage>& msg)
+void DataStructObserver::onNotify(DataStructure* /*target*/, const std::shared_ptr<AbstractDataStructureMessage>& msg)
 {
   switch(msg->getMsgType())
   {
-  case DataAddedMessage::MsgType:
+  case DataAddedMessage::k_MsgType:
     m_AddedCount++;
     break;
-  case DataRemovedMessage::MsgType:
+  case DataRemovedMessage::k_MsgType:
     m_RemovedCount++;
     break;
-  case DataRenamedMessage::MsgType:
+  case DataRenamedMessage::k_MsgType:
     m_RenamedCount++;
     break;
-  case DataReparentedMessage::MsgType:
+  case DataReparentedMessage::k_MsgType:
     m_ReparentedCount++;
     break;
   }

@@ -56,19 +56,19 @@ Parameters ExtractFeatureBoundaries2DFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeometryPath_Key, "Input Image Geometry", "The input image geometry to create grain boundaries.", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(
       k_FeatureIdsArrayPath_Key, "Feature Ids", "The feature ids that will be used to draw the boundary edge geometry.", DataPath{},
-      ArraySelectionParameter::AllowedTypes{DataType::int8, DataType::int16, DataType::int32, DataType::int64, DataType::uint8, DataType::uint16, DataType::uint32, DataType::uint64},
-      ArraySelectionParameter::AllowedComponentShapes{{1}}));
+      ArraySelectionParameter::AllowedTypeSetType{DataType::int8, DataType::int16, DataType::int32, DataType::int64, DataType::uint8, DataType::uint16, DataType::uint32, DataType::uint64},
+      ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Z Value Options"});
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_ZValueChoice_Key, "Z Value Source", "Select the source for the Z coordinate of the generated vertices",
-                                                                    to_underlying(ExtractFeatureBoundaries2DInputValues::ZValueChoiceType::UseMinZValue),
-                                                                    ChoicesParameter::Choices{"Use min z value from Image geometry", "Use max z value from Image geometry", "Use Custom z Offset"}));
-  params.insert(std::make_unique<Float32Parameter>(k_CustomZValue_Key, "Custom Z Value", "The custom Z offset value for the generated vertices", 0.0f));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(
+      k_ZValueChoice_Key, "Z Value Source", "Select the source for the Z coordinate of the generated vertices", to_underlying(ExtractFeatureBoundaries2DInputValues::ZValueChoiceType::UseMinZValue),
+      ChoicesParameter::ChoicesType{"Use min z value from Image geometry", "Use max z value from Image geometry", "Use Custom z Offset"}));
+  params.insert(std::make_unique<Float32ParameterType>(k_CustomZValue_Key, "Custom Z Value", "The custom Z offset value for the generated vertices", 0.0f));
 
   // Link the custom Z value parameter to only show when "Use Custom z Offset" is selected
   params.linkParameters(k_ZValueChoice_Key, k_CustomZValue_Key, static_cast<ChoicesParameter::ValueType>(to_underlying(ExtractFeatureBoundaries2DInputValues::ZValueChoiceType::UseCustomZValue)));
@@ -89,14 +89,14 @@ IFilter::VersionType ExtractFeatureBoundaries2DFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ExtractFeatureBoundaries2DFilter::clone() const
+IFilter::UniquePointerType ExtractFeatureBoundaries2DFilter::clone() const
 {
   return std::make_unique<ExtractFeatureBoundaries2DFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ExtractFeatureBoundaries2DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                         const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ExtractFeatureBoundaries2DFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                         const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pInputImageGeometryPathValue = filterArgs.value<DataPath>(k_InputImageGeometryPath_Key);
   auto pFeatureIdsArrayPathValue = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
@@ -107,7 +107,7 @@ IFilter::PreflightResult ExtractFeatureBoundaries2DFilter::preflightImpl(const D
 
   if(auto result = ValidateCellTupleCount(dataStructure, pInputImageGeometryPathValue, {pFeatureIdsArrayPathValue}, -1019); result.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(result), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(result), {})};
   }
 
   PreflightResult preflightResult;
@@ -116,10 +116,10 @@ IFilter::PreflightResult ExtractFeatureBoundaries2DFilter::preflightImpl(const D
 
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(pInputImageGeometryPathValue);
 
-  SizeVec3 dims = imageGeom.getDimensions();
+  SizeVec3Type dims = imageGeom.getDimensions();
   if(dims.getZ() != 1)
   {
-    return {MakeErrorResult<OutputActions>(-1001, fmt::format("Input image geometry must have a Z dimension of 1. Current Z dimension is {}", dims.getZ()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-1001, fmt::format("Input image geometry must have a Z dimension of 1. Current Z dimension is {}", dims.getZ()))};
   }
 
   // Estimate the maximum number of edges:
@@ -136,25 +136,26 @@ IFilter::PreflightResult ExtractFeatureBoundaries2DFilter::preflightImpl(const D
   usize maxVertices = maxEdges * 2; // Conservative estimate. It will be reduced by deduplication
 
   // Create the Edge Geometry action
-  auto createEdgeGeomAction = std::make_unique<CreateEdgeGeometryAction>(pOutputEdgeGeometryPathValue, maxEdges, maxVertices, INodeGeometry0D::k_VertexAttributeMatrixName,
-                                                                         INodeGeometry1D::k_EdgeAttributeMatrixName, INodeGeometry0D::k_SharedVertexListName, INodeGeometry1D::k_SharedEdgeListName);
+  auto createEdgeGeomAction =
+      std::make_unique<CreateEdgeGeometryActionType>(pOutputEdgeGeometryPathValue, maxEdges, maxVertices, INodeGeometry0D::k_VertexAttributeMatrixName, INodeGeometry1D::k_EdgeAttributeMatrixName,
+                                                     INodeGeometry0D::k_SharedVertexListName, INodeGeometry1D::k_SharedEdgeListName);
   resultOutputActions.value().appendAction(std::move(createEdgeGeomAction));
 
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ExtractFeatureBoundaries2DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ExtractFeatureBoundaries2DFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                       const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ExtractFeatureBoundaries2DInputValues inputValues;
 
-  inputValues.InputImageGeometryPath = filterArgs.value<DataPath>(k_InputImageGeometryPath_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
-  inputValues.OutputEdgeGeometryPath = filterArgs.value<DataPath>(k_OutputEdgeGeometryPath_Key);
-  inputValues.ZValueChoice = static_cast<ExtractFeatureBoundaries2DInputValues::ZValueChoiceType>(filterArgs.value<ChoicesParameter::ValueType>(k_ZValueChoice_Key));
-  inputValues.CustomZValue = filterArgs.value<float32>(k_CustomZValue_Key);
-  inputValues.ExtractVirtualSampleEdges = filterArgs.value<bool>(k_ExtractVirtualSampleEdges_Key);
+  inputValues.input_image_geometry_path = filterArgs.value<DataPath>(k_InputImageGeometryPath_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_FeatureIdsArrayPath_Key);
+  inputValues.output_edge_geometry_path = filterArgs.value<DataPath>(k_OutputEdgeGeometryPath_Key);
+  inputValues.z_value_choice = static_cast<ExtractFeatureBoundaries2DInputValues::ZValueChoiceType>(filterArgs.value<ChoicesParameter::ValueType>(k_ZValueChoice_Key));
+  inputValues.custom_z_value = filterArgs.value<float32>(k_CustomZValue_Key);
+  inputValues.extract_virtual_sample_edges = filterArgs.value<bool>(k_ExtractVirtualSampleEdges_Key);
 
   return ExtractFeatureBoundaries2D(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }

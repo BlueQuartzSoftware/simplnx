@@ -25,7 +25,7 @@
 
 using namespace nx::core;
 
-namespace EbsdReaderUtilities
+namespace ebsd_reader_utilities
 {
 /**
  * @brief Gives the rotation about the crystal c-axis from the Oxford/HKL hexagonal frame to EDAX/TSL, in radians.
@@ -53,7 +53,7 @@ inline constexpr float64 k_HexagonalAlignmentDegrees = 30.0;
  * @param crystalStructure EbsdLib crystal-structure value.
  * @return True for 6/m or 6/mmm; false for other structures, including unknown.
  */
-inline constexpr bool IsHexagonalCrystalStructure(uint32 crystalStructure)
+constexpr bool IsHexagonalCrystalStructure(uint32 crystalStructure)
 {
   return crystalStructure == ebsdlib::CrystalStructure::Hexagonal_Low || crystalStructure == ebsdlib::CrystalStructure::Hexagonal_High;
 }
@@ -66,19 +66,19 @@ struct ReaderTraits;
 template <>
 struct ReaderTraits<ebsdlib::AngReader>
 {
-  static auto getCols()
+  static auto GetCols()
   {
     return std::mem_fn(&ebsdlib::AngReader::getNumEvenCols);
   }
-  static auto getRows()
+  static auto GetRows()
   {
     return std::mem_fn(&ebsdlib::AngReader::getNumRows);
   }
-  static auto getXSpacing()
+  static auto GetXSpacing()
   {
     return std::mem_fn(&ebsdlib::AngReader::getXStep);
   }
-  static auto getYSpacing()
+  static auto GetYSpacing()
   {
     return std::mem_fn(&ebsdlib::AngReader::getYStep);
   }
@@ -93,19 +93,19 @@ struct ReaderTraits<ebsdlib::H5OIMReader> : public ReaderTraits<ebsdlib::AngRead
 template <>
 struct ReaderTraits<ebsdlib::CtfReader>
 {
-  static auto getCols()
+  static auto GetCols()
   {
     return std::mem_fn(&ebsdlib::CtfReader::getXCells);
   }
-  static auto getRows()
+  static auto GetRows()
   {
     return std::mem_fn(&ebsdlib::CtfReader::getYCells);
   }
-  static auto getXSpacing()
+  static auto GetXSpacing()
   {
     return std::mem_fn(&ebsdlib::CtfReader::getXStep);
   }
-  static auto getYSpacing()
+  static auto GetYSpacing()
   {
     return std::mem_fn(&ebsdlib::CtfReader::getYStep);
   }
@@ -114,19 +114,19 @@ struct ReaderTraits<ebsdlib::CtfReader>
 template <>
 struct ReaderTraits<ebsdlib::H5OINAReader>
 {
-  static auto getCols()
+  static auto GetCols()
   {
     return std::mem_fn(&ebsdlib::H5OINAReader::getXCells);
   }
-  static auto getRows()
+  static auto GetRows()
   {
     return std::mem_fn(&ebsdlib::H5OINAReader::getYCells);
   }
-  static auto getXSpacing()
+  static auto GetXSpacing()
   {
     return std::mem_fn(&ebsdlib::H5OINAReader::getXStep);
   }
-  static auto getYSpacing()
+  static auto GetYSpacing()
   {
     return std::mem_fn(&ebsdlib::H5OINAReader::getYStep);
   }
@@ -135,19 +135,19 @@ struct ReaderTraits<ebsdlib::H5OINAReader>
 template <>
 struct ReaderTraits<ebsdlib::CprReader> : public ReaderTraits<ebsdlib::CtfReader>
 {
-  static auto getCols()
+  static auto GetCols()
   {
     return std::mem_fn(&ebsdlib::CprReader::getXCells);
   }
-  static auto getRows()
+  static auto GetRows()
   {
     return std::mem_fn(&ebsdlib::CprReader::getYCells);
   }
-  static auto getXSpacing()
+  static auto GetXSpacing()
   {
     return std::mem_fn(&ebsdlib::CprReader::getXStep);
   }
-  static auto getYSpacing()
+  static auto GetYSpacing()
   {
     return std::mem_fn(&ebsdlib::CprReader::getYStep);
   }
@@ -156,61 +156,61 @@ struct ReaderTraits<ebsdlib::CprReader> : public ReaderTraits<ebsdlib::CtfReader
 template <>
 struct ReaderTraits<ebsdlib::H5EspritReader>
 {
-  static auto getCols()
+  static auto GetCols()
   {
     return std::mem_fn(&ebsdlib::H5EspritReader::getNumColumns);
   }
-  static auto getRows()
+  static auto GetRows()
   {
     return std::mem_fn(&ebsdlib::H5EspritReader::getNumRows);
   }
-  static auto getXSpacing()
+  static auto GetXSpacing()
   {
     return std::mem_fn(&ebsdlib::H5EspritReader::getXStep);
   }
-  static auto getYSpacing()
+  static auto GetYSpacing()
   {
     return std::mem_fn(&ebsdlib::H5EspritReader::getYStep);
   }
 };
 
 template <>
-struct ReaderTraits<GrainMapper3DUtilities::GrainMapperReader>
+struct ReaderTraits<grain_mapper_3d_utilities::GrainMapperReader>
 {
-  static auto getCols()
+  static auto GetCols()
   {
-    return std::mem_fn(&GrainMapper3DUtilities::GrainMapperReader::getNumColumns);
+    return std::mem_fn(&grain_mapper_3d_utilities::GrainMapperReader::getNumColumns);
   }
-  static auto getRows()
+  static auto GetRows()
   {
-    return std::mem_fn(&GrainMapper3DUtilities::GrainMapperReader::getNumRows);
+    return std::mem_fn(&grain_mapper_3d_utilities::GrainMapperReader::getNumRows);
   }
-  static auto getXSpacing()
+  static auto GetXSpacing()
   {
-    return std::mem_fn(&GrainMapper3DUtilities::GrainMapperReader::getXStep);
+    return std::mem_fn(&grain_mapper_3d_utilities::GrainMapperReader::getXStep);
   }
-  static auto getYSpacing()
+  static auto GetYSpacing()
   {
-    return std::mem_fn(&GrainMapper3DUtilities::GrainMapperReader::getYStep);
+    return std::mem_fn(&grain_mapper_3d_utilities::GrainMapperReader::getYStep);
   }
 };
 
 template <>
 struct ReaderTraits<ebsdlib::H5AngVolumeReader>
 {
-  static auto getCols()
+  static auto GetCols()
   {
     return std::mem_fn(&ebsdlib::H5AngVolumeReader::getNumEvenCols);
   }
-  static auto getRows()
+  static auto GetRows()
   {
     return std::mem_fn(&ebsdlib::H5AngVolumeReader::getNumRows);
   }
-  static auto getXSpacing()
+  static auto GetXSpacing()
   {
     return std::mem_fn(&ebsdlib::H5AngVolumeReader::getXStep);
   }
-  static auto getYSpacing()
+  static auto GetYSpacing()
   {
     return std::mem_fn(&ebsdlib::H5AngVolumeReader::getYStep);
   }
@@ -219,31 +219,31 @@ struct ReaderTraits<ebsdlib::H5AngVolumeReader>
 template <>
 struct ReaderTraits<ebsdlib::H5CtfVolumeReader>
 {
-  static auto getCols()
+  static auto GetCols()
   {
     return std::mem_fn(&ebsdlib::H5CtfVolumeReader::getXCells);
   }
-  static auto getRows()
+  static auto GetRows()
   {
     return std::mem_fn(&ebsdlib::H5CtfVolumeReader::getYCells);
   }
-  static auto getXSpacing()
+  static auto GetXSpacing()
   {
     return std::mem_fn(&ebsdlib::H5CtfVolumeReader::getXStep);
   }
-  static auto getYSpacing()
+  static auto GetYSpacing()
   {
     return std::mem_fn(&ebsdlib::H5CtfVolumeReader::getYStep);
   }
 };
 
 template <typename ReaderType>
-void GeneratePreflightScanInformation(ReaderType& reader, std::vector<IFilter::PreflightValue>& preflightUpdatedValues, const std::optional<FloatVec3>& spacing = {})
+void GeneratePreflightScanInformation(ReaderType& reader, std::vector<IFilter::PreflightValue>& preflightUpdatedValues, const std::optional<FloatVec3Type>& spacing = {})
 {
-  auto colCount = ReaderTraits<ReaderType>::getCols()(reader);
-  auto rowCount = ReaderTraits<ReaderType>::getRows()(reader);
-  const auto xStep = spacing ? (*spacing)[0] : ReaderTraits<ReaderType>::getXSpacing()(reader);
-  const auto yStep = spacing ? (*spacing)[1] : ReaderTraits<ReaderType>::getYSpacing()(reader);
+  auto colCount = ReaderTraits<ReaderType>::GetCols()(reader);
+  auto rowCount = ReaderTraits<ReaderType>::GetRows()(reader);
+  const auto xStep = spacing ? (*spacing)[0] : ReaderTraits<ReaderType>::GetXSpacing()(reader);
+  const auto yStep = spacing ? (*spacing)[1] : ReaderTraits<ReaderType>::GetYSpacing()(reader);
 
   std::stringstream ss;
 
@@ -322,13 +322,13 @@ void GeneratePreflightPhaseInformation(ReaderType& reader, std::vector<IFilter::
                                                                         laueOps[phaseInfo->determineOrientationOpsIndex()]->getSymmetryName(), phaseInfo->getSpaceGroup())});
     }
 
-    if constexpr(std::is_same_v<ReaderType, GrainMapper3DUtilities::GrainMapperReader>)
+    if constexpr(std::is_same_v<ReaderType, grain_mapper_3d_utilities::GrainMapperReader>)
     {
-      const auto laueOpPtr = ebsdlib::LaueOps::GetLaueOpsFromSpaceGroupNumber(phaseInfo.SpaceGroup);
-      preflightUpdatedValues.push_back({fmt::format("{}: ", phaseInfo.PhaseIndex), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo.Name,
-                                                                                               laueOpPtr != nullptr ? laueOpPtr->getSymmetryName() : "Unknown", phaseInfo.SpaceGroup)});
+      const auto laueOpPtr = ebsdlib::LaueOps::GetLaueOpsFromSpaceGroupNumber(phaseInfo.space_group);
+      preflightUpdatedValues.push_back({fmt::format("{}: ", phaseInfo.phase_index), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo.name,
+                                                                                                laueOpPtr != nullptr ? laueOpPtr->getSymmetryName() : "Unknown", phaseInfo.space_group)});
     }
   }
 }
 
-} // namespace EbsdReaderUtilities
+} // namespace ebsd_reader_utilities

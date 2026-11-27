@@ -23,8 +23,6 @@ SurfaceNets::SurfaceNets(DataStructure& dataStructure, const IFilter::MessageHan
 {
 }
 
-SurfaceNets::~SurfaceNets() noexcept = default;
-
 const std::atomic_bool& SurfaceNets::getCancel()
 {
   return m_ShouldCancel;
@@ -40,26 +38,26 @@ Result<> SurfaceNets::operator()()
     }
   };
 
-  appendArray(m_DataStructure.getDataAs<IDataArray>(m_InputValues->FeatureIdsArrayPath));
-  for(const auto& path : m_InputValues->SelectedCellDataArrayPaths)
+  appendArray(m_DataStructure.getDataAs<IDataArray>(m_InputValues->feature_ids_array_path));
+  for(const auto& path : m_InputValues->selected_cell_data_array_paths)
   {
     appendArray(m_DataStructure.getDataAs<IDataArray>(path));
   }
-  for(const auto& path : m_InputValues->SelectedFeatureDataArrayPaths)
+  for(const auto& path : m_InputValues->selected_feature_data_array_paths)
   {
     appendArray(m_DataStructure.getDataAs<IDataArray>(path));
   }
-  for(const auto& path : m_InputValues->CreatedDataArrayPaths)
+  for(const auto& path : m_InputValues->created_data_array_paths)
   {
     appendArray(m_DataStructure.getDataAs<IDataArray>(path));
   }
-  appendArray(m_DataStructure.getDataAs<IDataArray>(m_InputValues->NodeTypesDataPath));
-  appendArray(m_DataStructure.getDataAs<IDataArray>(m_InputValues->FaceLabelsDataPath));
+  appendArray(m_DataStructure.getDataAs<IDataArray>(m_InputValues->node_types_data_path));
+  appendArray(m_DataStructure.getDataAs<IDataArray>(m_InputValues->face_labels_data_path));
 
-  if(const auto* triangleGeom = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->TriangleGeometryPath); triangleGeom != nullptr)
+  if(const auto* triangleGeomPtr = m_DataStructure.getDataAs<TriangleGeom>(m_InputValues->triangle_geometry_path); triangleGeomPtr != nullptr)
   {
-    appendArray(triangleGeom->getVertices());
-    appendArray(triangleGeom->getFaces());
+    appendArray(triangleGeomPtr->getVertices());
+    appendArray(triangleGeomPtr->getFaces());
   }
   return DispatchAlgorithm<SurfaceNetsDirect, SurfaceNetsScanline>(AlgorithmArrayTargets(std::move(dispatchTargets)), m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues);
 }

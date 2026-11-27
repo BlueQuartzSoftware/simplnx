@@ -38,14 +38,14 @@ public:
   };
 
   // Parameter Keys
-  static constexpr StringLiteral k_OutputStyle_Key = "output_style_index";
-  static constexpr StringLiteral k_OutputPath_Key = "output_path";
-  static constexpr StringLiteral k_OutputDir_Key = "output_dir";
-  static constexpr StringLiteral k_FileExtension_Key = "file_extension";
-  static constexpr StringLiteral k_MaxTuplePerLine_Key = "max_val_per_line";
-  static constexpr StringLiteral k_Delimiter_Key = "delimiter_index";
-  static constexpr StringLiteral k_Includes_Key = "header_option_index";
-  static constexpr StringLiteral k_SelectedDataArrayPaths_Key = "input_data_array_paths";
+  static constexpr StringLiteralType k_OutputStyle_Key = "output_style_index";
+  static constexpr StringLiteralType k_OutputPath_Key = "output_path";
+  static constexpr StringLiteralType k_OutputDir_Key = "output_dir";
+  static constexpr StringLiteralType k_FileExtension_Key = "file_extension";
+  static constexpr StringLiteralType k_MaxTuplePerLine_Key = "max_val_per_line";
+  static constexpr StringLiteralType k_Delimiter_Key = "delimiter_index";
+  static constexpr StringLiteralType k_Includes_Key = "header_option_index";
+  static constexpr StringLiteralType k_SelectedDataArrayPaths_Key = "input_data_array_paths";
 
   /**
    * @brief Reads SIMPL json and converts it simplnx Arguments.
@@ -102,7 +102,7 @@ public:
    * @brief Returns a copy of the filter.
    * @return
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
 protected:
   /**

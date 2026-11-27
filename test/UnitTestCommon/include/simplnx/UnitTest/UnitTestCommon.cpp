@@ -19,7 +19,7 @@
 #include <Windows.h>
 #endif
 
-namespace nx::core::UnitTest
+namespace nx::core::unit_test
 {
 #ifdef _WIN32
 bool VolumeSupportsPosixRename(const fs::path& directory)
@@ -37,10 +37,10 @@ bool VolumeSupportsPosixRename(const fs::path& directory)
 
 void RequireBadReaderMetadata(const IFilter& filter, const Arguments& args, const std::filesystem::path& file, bool spacing)
 {
-  DataStructure ds;
-  const auto preflight = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.outputActions);
-  const auto& error = preflight.outputActions.errors().front();
+  DataStructure dataStructure;
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflight.output_actions);
+  const auto& error = preflight.output_actions.errors().front();
   CHECK(error.code == (spacing ? ImageGeom::k_InvalidSpacing : ImageGeom::k_InvalidOrigin));
   CHECK(error.message.starts_with(fmt::format("Input file '{}' has invalid {} values. Error Message: ", file.string(), spacing ? "spacing" : "origin")));
   CHECK(error.message.ends_with(fmt::format("Enable '{}' to use your own values.", spacing ? "Set Spacing" : "Set Origin")));
@@ -63,7 +63,7 @@ DataStructure LoadDataStructure(const fs::path& filepath)
   LoadPlugins();
   REQUIRE(fs::exists(filepath));
 
-  auto result = DREAM3D::LoadDataStructure(filepath);
+  auto result = dream3d::LoadDataStructure(filepath);
   if(result.invalid())
   {
     for(const auto& error : result.errors())
@@ -87,8 +87,8 @@ TestFileSentinel::TestFileSentinel(std::string testFilesDir, std::string inputAr
     const auto errorCode = decompress();
     if(errorCode)
     {
-      std::cout << "std::error_code.value(): " << errorCode.value() << std::endl;
-      std::cout << "std::error_code.message(): " << errorCode.message() << std::endl;
+      std::cout << "std::error_code.value(): " << errorCode.value() << '\n';
+      std::cout << "std::error_code.message(): " << errorCode.message() << '\n';
       //        REQUIRE(errorCode.value() == 0);
     }
   }
@@ -102,7 +102,7 @@ TestFileSentinel::~TestFileSentinel()
     fs::remove_all(fmt::format("{}/{}", m_TestFilesDir, m_ExpectedTopLevelOutput), errorCode);
     if(errorCode)
     {
-      std::cout << "Removing decompressed data failed: " << errorCode.message() << std::endl;
+      std::cout << "Removing decompressed data failed: " << errorCode.message() << '\n';
     }
   }
 }
@@ -115,7 +115,7 @@ namespace
  * @param length Maximum field length in bytes.
  * @return The parsed value, or 0 for an empty field.
  */
-uint64 parseOctal(const char* data, size_t length)
+uint64 ParseOctal(const char* data, size_t length)
 {
   uint64 value = 0;
   for(size_t i = 0; i < length; i++)
@@ -134,7 +134,7 @@ uint64 parseOctal(const char* data, size_t length)
  * @param block Header block to test.
  * @return True if all 512 bytes are zero.
  */
-bool isZeroBlock(const std::array<char, 512>& block)
+bool IsZeroBlock(const std::array<char, 512>& block)
 {
   for(char c : block)
   {
@@ -154,9 +154,9 @@ bool isZeroBlock(const std::array<char, 512>& block)
  * The checksum uses the unsigned sum of all header bytes. The calculation
  * treats the eight-byte checksum field at offset 148 as spaces.
  */
-bool validateChecksum(const std::array<char, 512>& header)
+bool ValidateChecksum(const std::array<char, 512>& header)
 {
-  uint64 stored = parseOctal(header.data() + 148, 8);
+  uint64 stored = ParseOctal(header.data() + 148, 8);
   uint64 computed = 0;
   for(size_t i = 0; i < 512; i++)
   {
@@ -177,10 +177,10 @@ std::error_code TestFileSentinel::decompress()
 {
   const std::string archivePath = fmt::format("{}/{}", m_TestFilesDir, m_InputArchiveName);
 
-  gzFile gz = gzopen(archivePath.c_str(), "rb");
-  if(gz == nullptr)
+  gzFile gzPtr = gzopen(archivePath.c_str(), "rb");
+  if(gzPtr == nullptr)
   {
-    std::cout << "Failed to open archive: " << archivePath << std::endl;
+    std::cout << "Failed to open archive: " << archivePath << '\n';
     return std::make_error_code(std::errc::no_such_file_or_directory);
   }
 
@@ -191,30 +191,30 @@ std::error_code TestFileSentinel::decompress()
   while(true)
   {
     {
-      int bytesRead = gzread(gz, header.data(), k_BlockSize);
+      int bytesRead = gzread(gzPtr, header.data(), k_BlockSize);
       if(bytesRead == 0)
       {
         break; // The gzip stream reached its end.
       }
       if(bytesRead < 0 || bytesRead != k_BlockSize)
       {
-        std::cout << "Failed to read tar header from: " << archivePath << std::endl;
-        gzclose(gz);
+        std::cout << "Failed to read tar header from: " << archivePath << '\n';
+        gzclose(gzPtr);
         return std::make_error_code(std::errc::io_error);
       }
     }
 
     // This extractor treats the first zero header block as the archive end.
-    if(isZeroBlock(header))
+    if(IsZeroBlock(header))
     {
       break;
     }
 
     // Validate each header before its fields control path or size calculations.
-    if(!validateChecksum(header))
+    if(!ValidateChecksum(header))
     {
-      std::cout << "Invalid tar header checksum in: " << archivePath << std::endl;
-      gzclose(gz);
+      std::cout << "Invalid tar header checksum in: " << archivePath << '\n';
+      gzclose(gzPtr);
       return std::make_error_code(std::errc::io_error);
     }
 
@@ -230,7 +230,7 @@ std::error_code TestFileSentinel::decompress()
       gnuLongName.clear();
     }
 
-    uint64 fileSize = parseOctal(header.data() + 124, 12);
+    uint64 fileSize = ParseOctal(header.data() + 124, 12);
     char typeFlag = header[156];
 
     // A GNU `L` entry stores the name for the next archive entry.
@@ -242,11 +242,11 @@ std::error_code TestFileSentinel::decompress()
       std::array<char, k_BlockSize> dataBuf{};
       for(uint64 i = 0; i < blocks; i++)
       {
-        int bytesRead = gzread(gz, dataBuf.data(), k_BlockSize);
+        int bytesRead = gzread(gzPtr, dataBuf.data(), k_BlockSize);
         if(bytesRead <= 0 || static_cast<size_t>(bytesRead) != k_BlockSize)
         {
-          std::cout << "Unexpected end of archive reading GNU long name in: " << archivePath << std::endl;
-          gzclose(gz);
+          std::cout << "Unexpected end of archive reading GNU long name in: " << archivePath << '\n';
+          gzclose(gzPtr);
           return std::make_error_code(std::errc::io_error);
         }
         uint64 useful = std::min(fileSize - longName.size(), static_cast<uint64>(k_BlockSize));
@@ -268,11 +268,11 @@ std::error_code TestFileSentinel::decompress()
       std::array<char, k_BlockSize> dataBuf{};
       for(uint64 i = 0; i < blocks; i++)
       {
-        int bytesRead = gzread(gz, dataBuf.data(), k_BlockSize);
+        int bytesRead = gzread(gzPtr, dataBuf.data(), k_BlockSize);
         if(bytesRead <= 0 || static_cast<size_t>(bytesRead) != k_BlockSize)
         {
-          std::cout << "Unexpected end of archive reading GNU long link in: " << archivePath << std::endl;
-          gzclose(gz);
+          std::cout << "Unexpected end of archive reading GNU long link in: " << archivePath << '\n';
+          gzclose(gzPtr);
           return std::make_error_code(std::errc::io_error);
         }
       }
@@ -295,8 +295,8 @@ std::error_code TestFileSentinel::decompress()
       std::ofstream outFile(fullPath, std::ios::binary);
       if(!outFile)
       {
-        std::cout << "Failed to create file: " << fullPath << std::endl;
-        gzclose(gz);
+        std::cout << "Failed to create file: " << fullPath << '\n';
+        gzclose(gzPtr);
         return std::make_error_code(std::errc::io_error);
       }
 
@@ -304,11 +304,11 @@ std::error_code TestFileSentinel::decompress()
       std::array<char, k_BlockSize> dataBuf{};
       while(remaining > 0)
       {
-        int bytesRead = gzread(gz, dataBuf.data(), k_BlockSize);
+        int bytesRead = gzread(gzPtr, dataBuf.data(), k_BlockSize);
         if(bytesRead <= 0 || static_cast<size_t>(bytesRead) != k_BlockSize)
         {
-          std::cout << "Unexpected end of archive reading: " << entryPath << std::endl;
-          gzclose(gz);
+          std::cout << "Unexpected end of archive reading: " << entryPath << '\n';
+          gzclose(gzPtr);
           return std::make_error_code(std::errc::io_error);
         }
         uint64 writeSize = std::min(remaining, static_cast<uint64>(k_BlockSize));
@@ -322,18 +322,18 @@ std::error_code TestFileSentinel::decompress()
       uint64 blocks = (fileSize + k_BlockSize - 1) / k_BlockSize;
       for(uint64 i = 0; i < blocks; i++)
       {
-        int bytesRead = gzread(gz, header.data(), k_BlockSize);
+        int bytesRead = gzread(gzPtr, header.data(), k_BlockSize);
         if(bytesRead <= 0 || static_cast<size_t>(bytesRead) != k_BlockSize)
         {
-          std::cout << "Unexpected end of archive skipping data for: " << entryPath << std::endl;
-          gzclose(gz);
+          std::cout << "Unexpected end of archive skipping data for: " << entryPath << '\n';
+          gzclose(gzPtr);
           return std::make_error_code(std::errc::io_error);
         }
       }
     }
   }
 
-  gzclose(gz);
+  gzclose(gzPtr);
   return {};
 }
 
@@ -344,7 +344,7 @@ PreferencesSentinel::PreferencesSentinel(nx::core::DataStorageMode mode, int64 l
 
 PreferencesSentinel::PreferencesSentinel(nx::core::DataStorageMode mode, const nlohmann::json& largeDataSize)
 {
-  auto* prefs = nx::core::Application::Instance()->getPreferences();
+  auto* prefsPtr = nx::core::Application::Instance()->getPreferences();
 
   const auto validation = nx::core::Preferences::ValidateOocSizeValue(nx::core::Preferences::k_LargeDataSize_Key, largeDataSize);
   if(validation.invalid())
@@ -353,38 +353,38 @@ PreferencesSentinel::PreferencesSentinel(nx::core::DataStorageMode mode, const n
   }
 
   // Save both values before this sentinel changes the process-wide preferences.
-  m_HadMode = prefs->contains(nx::core::Preferences::k_DataStorageMode_Key);
-  m_OriginalMode = prefs->value(nx::core::Preferences::k_DataStorageMode_Key);
-  m_HadSize = prefs->contains(nx::core::Preferences::k_LargeDataSize_Key);
-  m_OriginalSize = prefs->value(nx::core::Preferences::k_LargeDataSize_Key);
+  m_HadMode = prefsPtr->contains(nx::core::Preferences::k_DataStorageMode_Key);
+  m_OriginalMode = prefsPtr->value(nx::core::Preferences::k_DataStorageMode_Key);
+  m_HadSize = prefsPtr->contains(nx::core::Preferences::k_LargeDataSize_Key);
+  m_OriginalSize = prefsPtr->value(nx::core::Preferences::k_LargeDataSize_Key);
 
   // Apply the test values only after the complete prior state is available.
-  prefs->setDataStorageMode(mode);
-  prefs->setValue(nx::core::Preferences::k_LargeDataSize_Key, largeDataSize);
+  prefsPtr->setDataStorageMode(mode);
+  prefsPtr->setValue(nx::core::Preferences::k_LargeDataSize_Key, largeDataSize);
 }
 
 PreferencesSentinel::~PreferencesSentinel()
 {
-  auto* prefs = nx::core::Application::Instance()->getPreferences();
+  auto* prefsPtr = nx::core::Application::Instance()->getPreferences();
 
   // Restore only the in-memory values. Unit tests must not write the developer's preferences file.
   // A concurrent save or a terminated test could persist a temporary storage mode.
   // Later test processes would then inherit that incorrect mode.
   if(m_HadSize)
   {
-    prefs->setValue(nx::core::Preferences::k_LargeDataSize_Key, m_OriginalSize);
+    prefsPtr->setValue(nx::core::Preferences::k_LargeDataSize_Key, m_OriginalSize);
   }
   else
   {
-    prefs->removeValue(nx::core::Preferences::k_LargeDataSize_Key);
+    prefsPtr->removeValue(nx::core::Preferences::k_LargeDataSize_Key);
   }
   if(m_HadMode)
   {
-    prefs->setValue(nx::core::Preferences::k_DataStorageMode_Key, m_OriginalMode);
+    prefsPtr->setValue(nx::core::Preferences::k_DataStorageMode_Key, m_OriginalMode);
   }
   else
   {
-    prefs->removeValue(nx::core::Preferences::k_DataStorageMode_Key);
+    prefsPtr->removeValue(nx::core::Preferences::k_DataStorageMode_Key);
   }
 }
 
@@ -401,13 +401,13 @@ void RequireAutomaticCreateArrayActions(const Result<OutputActions>& outputActio
   usize actualCount = 0;
   for(const auto& action : outputActions.value().actions)
   {
-    const auto* createArray = dynamic_cast<const CreateArrayAction*>(action.get());
-    if(createArray == nullptr)
+    const auto* createArrayPtr = dynamic_cast<const CreateArrayAction*>(action.get());
+    if(createArrayPtr == nullptr)
     {
       continue;
     }
     ++actualCount;
-    CHECK(createArray->dataFormat().empty());
+    CHECK(createArrayPtr->dataFormat().empty());
   }
   REQUIRE(actualCount == expectedCount);
 }
@@ -419,13 +419,13 @@ void RequireAutomaticCreateArrayActions(const Result<OutputActions>& outputActio
   std::vector<DataPath> actualPaths;
   for(const auto& action : outputActions.value().actions)
   {
-    const auto* createArray = dynamic_cast<const CreateArrayAction*>(action.get());
-    if(createArray == nullptr || std::find(expectedPaths.begin(), expectedPaths.end(), createArray->path()) == expectedPaths.end())
+    const auto* createArrayPtr = dynamic_cast<const CreateArrayAction*>(action.get());
+    if(createArrayPtr == nullptr || std::find(expectedPaths.begin(), expectedPaths.end(), createArrayPtr->path()) == expectedPaths.end())
     {
       continue;
     }
-    CHECK(createArray->dataFormat().empty());
-    actualPaths.push_back(createArray->path());
+    CHECK(createArrayPtr->dataFormat().empty());
+    actualPaths.push_back(createArrayPtr->path());
   }
   CHECK_THAT(actualPaths, Catch::Matchers::UnorderedEquals(expectedPaths));
 }
@@ -445,7 +445,7 @@ void LoadPlugins()
 void WriteTestDataStructure(const DataStructure& dataStructure, const fs::path& filepath)
 {
   Pipeline pipeline;
-  const Result<> result2 = DREAM3D::WriteFile(filepath, dataStructure, pipeline, true);
+  const Result<> result2 = dream3d::WriteFile(filepath, dataStructure, pipeline, true);
   SIMPLNX_RESULT_REQUIRE_VALID(result2);
 }
 
@@ -476,9 +476,9 @@ void CompareImageGeometry(const ImageGeom* exemplarGeom, const ImageGeom* comput
 void CompareImageGeometry(const DataStructure& dataStructure, const DataPath& exemplaryDataPath, const DataPath& computedPath, float32 threshold)
 {
   INFO(fmt::format("Comparing Image Geometries. {} and {}", exemplaryDataPath.toString(), computedPath.toString()));
-  const auto* exemplarGeom = dataStructure.getDataAs<ImageGeom>(exemplaryDataPath);
-  const auto* computedGeom = dataStructure.getDataAs<ImageGeom>(computedPath);
-  CompareImageGeometry(exemplarGeom, computedGeom, threshold);
+  const auto* exemplarGeomPtr = dataStructure.getDataAs<ImageGeom>(exemplaryDataPath);
+  const auto* computedGeomPtr = dataStructure.getDataAs<ImageGeom>(computedPath);
+  CompareImageGeometry(exemplarGeomPtr, computedGeomPtr, threshold);
 }
 
 // -----------------------------------------------------------------------------
@@ -523,9 +523,9 @@ void CompareStringArrays(const StringArray& exemplar, const StringArray& compute
 
   INFO(fmt::format("Input Data Array:'{}'  Output StringArray: '{}' bad comparison", exemplar.getDataPaths()[0].toString(), computed.getDataPaths()[0].toString()));
 
-  constexpr usize start = 0;
+  constexpr usize k_Start = 0;
   const usize end = exemplar.getSize();
-  for(usize i = start; i < end; i++)
+  for(usize i = k_Start; i < end; i++)
   {
     REQUIRE(exemplar[i] == computed[i]);
   }
@@ -548,138 +548,138 @@ void CompareDataStructures(const DataStructure& dataStructureA, const DataStruct
     }
     else
     {
-      const auto* parentA = dataStructureA.getDataAs<BaseGroup>(parentGroup);
-      const auto* parentB = dataStructureB.getDataAs<BaseGroup>(parentGroup);
-      REQUIRE(parentA != nullptr);
-      REQUIRE(parentB != nullptr);
-      const BaseGroup::GroupType parentAGroupType = parentA->getGroupType();
-      const BaseGroup::GroupType parentBGroupType = parentB->getGroupType();
+      const auto* parentAPtr = dataStructureA.getDataAs<BaseGroup>(parentGroup);
+      const auto* parentBPtr = dataStructureB.getDataAs<BaseGroup>(parentGroup);
+      REQUIRE(parentAPtr != nullptr);
+      REQUIRE(parentBPtr != nullptr);
+      const BaseGroup::GroupType parentAGroupType = parentAPtr->getGroupType();
+      const BaseGroup::GroupType parentBGroupType = parentBPtr->getGroupType();
       REQUIRE(parentAGroupType == parentBGroupType);
       // std::cout << "DEBUG TEST: ds parentA size = " << parentA->getSize() << "\tds parentB size = " << parentB->getSize();
-      INFO(fmt::format("DEBUG TEST: ds parentA size = {}\tds parentB size = {}", parentA->getSize(), parentB->getSize()));
-      REQUIRE(parentA->getSize() == parentB->getSize());
-      childrenNamesA = parentA->getDataMap().getNames();
-      childrenNamesB = parentB->getDataMap().getNames();
+      INFO(fmt::format("DEBUG TEST: ds parentA size = {}\tds parentB size = {}", parentAPtr->getSize(), parentBPtr->getSize()));
+      REQUIRE(parentAPtr->getSize() == parentBPtr->getSize());
+      childrenNamesA = parentAPtr->getDataMap().getNames();
+      childrenNamesB = parentBPtr->getDataMap().getNames();
 
       switch(parentAGroupType)
       {
       case nx::core::BaseGroup::GroupType::AttributeMatrix: {
-        const auto* attributeMatrixA = dynamic_cast<const AttributeMatrix*>(parentA);
-        const auto* attributeMatrixB = dynamic_cast<const AttributeMatrix*>(parentB);
-        REQUIRE(attributeMatrixA != nullptr);
-        REQUIRE(attributeMatrixB != nullptr);
-        REQUIRE(attributeMatrixA->getShape() == attributeMatrixB->getShape());
+        const auto* attributeMatrixAPtr = dynamic_cast<const AttributeMatrix*>(parentAPtr);
+        const auto* attributeMatrixBPtr = dynamic_cast<const AttributeMatrix*>(parentBPtr);
+        REQUIRE(attributeMatrixAPtr != nullptr);
+        REQUIRE(attributeMatrixBPtr != nullptr);
+        REQUIRE(attributeMatrixAPtr->getShape() == attributeMatrixBPtr->getShape());
         break;
       }
       case nx::core::BaseGroup::GroupType::ImageGeom: {
-        const auto* geomA = dynamic_cast<const ImageGeom*>(parentA);
-        const auto* geomB = dynamic_cast<const ImageGeom*>(parentB);
-        CompareImageGeometry(geomA, geomB, UnitTest::EPSILON);
-        REQUIRE(geomA->getUnitDimensionality() == geomB->getUnitDimensionality());
-        REQUIRE(geomA->getSpatialDimensionality() == geomB->getSpatialDimensionality());
-        REQUIRE(geomA->getUnits() == geomB->getUnits());
+        const auto* geomAPtr = dynamic_cast<const ImageGeom*>(parentAPtr);
+        const auto* geomBPtr = dynamic_cast<const ImageGeom*>(parentBPtr);
+        CompareImageGeometry(geomAPtr, geomBPtr, unit_test::k_Epsilon);
+        REQUIRE(geomAPtr->getUnitDimensionality() == geomBPtr->getUnitDimensionality());
+        REQUIRE(geomAPtr->getSpatialDimensionality() == geomBPtr->getSpatialDimensionality());
+        REQUIRE(geomAPtr->getUnits() == geomBPtr->getUnits());
         break;
       }
       case nx::core::BaseGroup::GroupType::RectGridGeom: {
-        const auto* geomA = dynamic_cast<const RectGridGeom*>(parentA);
-        const auto* geomB = dynamic_cast<const RectGridGeom*>(parentB);
-        REQUIRE(geomA != nullptr);
-        REQUIRE(geomB != nullptr);
-        REQUIRE(geomA->getDimensions() == geomB->getDimensions());
-        const auto originA = geomA->getOrigin();
-        const auto originB = geomB->getOrigin();
+        const auto* geomAPtr = dynamic_cast<const RectGridGeom*>(parentAPtr);
+        const auto* geomBPtr = dynamic_cast<const RectGridGeom*>(parentBPtr);
+        REQUIRE(geomAPtr != nullptr);
+        REQUIRE(geomBPtr != nullptr);
+        REQUIRE(geomAPtr->getDimensions() == geomBPtr->getDimensions());
+        const auto originA = geomAPtr->getOrigin();
+        const auto originB = geomBPtr->getOrigin();
         REQUIRE(originA.valid());
         REQUIRE(originB.valid());
-        const auto originAVec = originA.value();
-        const auto originBVec = originB.value();
-        REQUIRE(std::fabs(originAVec[0] - originBVec[0]) <= UnitTest::EPSILON);
-        REQUIRE(std::fabs(originAVec[1] - originBVec[1]) <= UnitTest::EPSILON);
-        REQUIRE(std::fabs(originAVec[2] - originBVec[2]) <= UnitTest::EPSILON);
-        CompareDataArrays<float32>(geomA->getXBoundsRef(), geomB->getXBoundsRef());
-        CompareDataArrays<float32>(geomA->getYBoundsRef(), geomB->getYBoundsRef());
-        CompareDataArrays<float32>(geomA->getZBoundsRef(), geomB->getZBoundsRef());
-        REQUIRE(geomA->getUnitDimensionality() == geomB->getUnitDimensionality());
-        REQUIRE(geomA->getSpatialDimensionality() == geomB->getSpatialDimensionality());
-        REQUIRE(geomA->getUnits() == geomB->getUnits());
+        const auto& originAVec = originA.value();
+        const auto& originBVec = originB.value();
+        REQUIRE(std::fabs(originAVec[0] - originBVec[0]) <= unit_test::k_Epsilon);
+        REQUIRE(std::fabs(originAVec[1] - originBVec[1]) <= unit_test::k_Epsilon);
+        REQUIRE(std::fabs(originAVec[2] - originBVec[2]) <= unit_test::k_Epsilon);
+        CompareDataArrays<float32>(geomAPtr->getXBoundsRef(), geomBPtr->getXBoundsRef());
+        CompareDataArrays<float32>(geomAPtr->getYBoundsRef(), geomBPtr->getYBoundsRef());
+        CompareDataArrays<float32>(geomAPtr->getZBoundsRef(), geomBPtr->getZBoundsRef());
+        REQUIRE(geomAPtr->getUnitDimensionality() == geomBPtr->getUnitDimensionality());
+        REQUIRE(geomAPtr->getSpatialDimensionality() == geomBPtr->getSpatialDimensionality());
+        REQUIRE(geomAPtr->getUnits() == geomBPtr->getUnits());
         break;
       }
       case nx::core::BaseGroup::GroupType::HexahedralGeom:
       case nx::core::BaseGroup::GroupType::TetrahedralGeom: {
-        const auto* geomA = dynamic_cast<const INodeGeometry3D*>(parentA);
-        const auto* geomB = dynamic_cast<const INodeGeometry3D*>(parentB);
-        REQUIRE(geomA != nullptr);
-        REQUIRE(geomB != nullptr);
-        REQUIRE(geomA->getVertices() != nullptr);
-        REQUIRE(geomB->getVertices() != nullptr);
-        CompareDataArrays<float32>(geomA->getVerticesRef(), geomB->getVerticesRef());
-        REQUIRE(geomA->getEdges() != nullptr);
-        REQUIRE(geomB->getEdges() != nullptr);
-        CompareDataArrays<uint64>(geomA->getEdgesRef(), geomB->getEdgesRef());
-        REQUIRE(geomA->getFaces() != nullptr);
-        REQUIRE(geomB->getFaces() != nullptr);
-        CompareDataArrays<uint64>(geomA->getFacesRef(), geomB->getFacesRef());
-        REQUIRE(geomA->getPolyhedra() != nullptr);
-        REQUIRE(geomB->getPolyhedra() != nullptr);
-        CompareDataArrays<uint64>(geomA->getPolyhedraRef(), geomB->getPolyhedraRef());
-        REQUIRE(geomA->getUnitDimensionality() == geomB->getUnitDimensionality());
-        REQUIRE(geomA->getSpatialDimensionality() == geomB->getSpatialDimensionality());
-        REQUIRE(geomA->getUnits() == geomB->getUnits());
+        const auto* geomAPtr = dynamic_cast<const INodeGeometry3D*>(parentAPtr);
+        const auto* geomBPtr = dynamic_cast<const INodeGeometry3D*>(parentBPtr);
+        REQUIRE(geomAPtr != nullptr);
+        REQUIRE(geomBPtr != nullptr);
+        REQUIRE(geomAPtr->getVertices() != nullptr);
+        REQUIRE(geomBPtr->getVertices() != nullptr);
+        CompareDataArrays<float32>(geomAPtr->getVerticesRef(), geomBPtr->getVerticesRef());
+        REQUIRE(geomAPtr->getEdges() != nullptr);
+        REQUIRE(geomBPtr->getEdges() != nullptr);
+        CompareDataArrays<uint64>(geomAPtr->getEdgesRef(), geomBPtr->getEdgesRef());
+        REQUIRE(geomAPtr->getFaces() != nullptr);
+        REQUIRE(geomBPtr->getFaces() != nullptr);
+        CompareDataArrays<uint64>(geomAPtr->getFacesRef(), geomBPtr->getFacesRef());
+        REQUIRE(geomAPtr->getPolyhedra() != nullptr);
+        REQUIRE(geomBPtr->getPolyhedra() != nullptr);
+        CompareDataArrays<uint64>(geomAPtr->getPolyhedraRef(), geomBPtr->getPolyhedraRef());
+        REQUIRE(geomAPtr->getUnitDimensionality() == geomBPtr->getUnitDimensionality());
+        REQUIRE(geomAPtr->getSpatialDimensionality() == geomBPtr->getSpatialDimensionality());
+        REQUIRE(geomAPtr->getUnits() == geomBPtr->getUnits());
         break;
       }
       case nx::core::BaseGroup::GroupType::QuadGeom:
       case nx::core::BaseGroup::GroupType::TriangleGeom: {
-        const auto* geomA = dynamic_cast<const INodeGeometry2D*>(parentA);
-        const auto* geomB = dynamic_cast<const INodeGeometry2D*>(parentB);
-        REQUIRE(geomA != nullptr);
-        REQUIRE(geomB != nullptr);
-        REQUIRE(geomA->getVertices() != nullptr);
-        REQUIRE(geomB->getVertices() != nullptr);
-        CompareDataArrays<float32>(geomA->getVerticesRef(), geomB->getVerticesRef());
-        REQUIRE(geomA->getEdges() != nullptr);
-        REQUIRE(geomB->getEdges() != nullptr);
-        CompareDataArrays<uint64>(geomA->getEdgesRef(), geomB->getEdgesRef());
-        REQUIRE(geomA->getFaces() != nullptr);
-        REQUIRE(geomB->getFaces() != nullptr);
-        CompareDataArrays<uint64>(geomA->getFacesRef(), geomB->getFacesRef());
-        REQUIRE(geomA->getUnitDimensionality() == geomB->getUnitDimensionality());
-        REQUIRE(geomA->getSpatialDimensionality() == geomB->getSpatialDimensionality());
-        REQUIRE(geomA->getUnits() == geomB->getUnits());
+        const auto* geomAPtr = dynamic_cast<const INodeGeometry2D*>(parentAPtr);
+        const auto* geomBPtr = dynamic_cast<const INodeGeometry2D*>(parentBPtr);
+        REQUIRE(geomAPtr != nullptr);
+        REQUIRE(geomBPtr != nullptr);
+        REQUIRE(geomAPtr->getVertices() != nullptr);
+        REQUIRE(geomBPtr->getVertices() != nullptr);
+        CompareDataArrays<float32>(geomAPtr->getVerticesRef(), geomBPtr->getVerticesRef());
+        REQUIRE(geomAPtr->getEdges() != nullptr);
+        REQUIRE(geomBPtr->getEdges() != nullptr);
+        CompareDataArrays<uint64>(geomAPtr->getEdgesRef(), geomBPtr->getEdgesRef());
+        REQUIRE(geomAPtr->getFaces() != nullptr);
+        REQUIRE(geomBPtr->getFaces() != nullptr);
+        CompareDataArrays<uint64>(geomAPtr->getFacesRef(), geomBPtr->getFacesRef());
+        REQUIRE(geomAPtr->getUnitDimensionality() == geomBPtr->getUnitDimensionality());
+        REQUIRE(geomAPtr->getSpatialDimensionality() == geomBPtr->getSpatialDimensionality());
+        REQUIRE(geomAPtr->getUnits() == geomBPtr->getUnits());
         break;
       }
       case nx::core::BaseGroup::GroupType::EdgeGeom: {
-        const auto* geomA = dynamic_cast<const EdgeGeom*>(parentA);
-        const auto* geomB = dynamic_cast<const EdgeGeom*>(parentB);
-        REQUIRE(geomA != nullptr);
-        REQUIRE(geomB != nullptr);
-        REQUIRE(geomA->getVertices() != nullptr);
-        REQUIRE(geomB->getVertices() != nullptr);
-        CompareDataArrays<float32>(geomA->getVerticesRef(), geomB->getVerticesRef());
-        REQUIRE(geomA->getEdges() != nullptr);
-        REQUIRE(geomB->getEdges() != nullptr);
-        CompareDataArrays<uint64>(geomA->getEdgesRef(), geomB->getEdgesRef());
-        REQUIRE(geomA->getUnitDimensionality() == geomB->getUnitDimensionality());
-        REQUIRE(geomA->getSpatialDimensionality() == geomB->getSpatialDimensionality());
-        REQUIRE(geomA->getUnits() == geomB->getUnits());
+        const auto* geomAPtr = dynamic_cast<const EdgeGeom*>(parentAPtr);
+        const auto* geomBPtr = dynamic_cast<const EdgeGeom*>(parentBPtr);
+        REQUIRE(geomAPtr != nullptr);
+        REQUIRE(geomBPtr != nullptr);
+        REQUIRE(geomAPtr->getVertices() != nullptr);
+        REQUIRE(geomBPtr->getVertices() != nullptr);
+        CompareDataArrays<float32>(geomAPtr->getVerticesRef(), geomBPtr->getVerticesRef());
+        REQUIRE(geomAPtr->getEdges() != nullptr);
+        REQUIRE(geomBPtr->getEdges() != nullptr);
+        CompareDataArrays<uint64>(geomAPtr->getEdgesRef(), geomBPtr->getEdgesRef());
+        REQUIRE(geomAPtr->getUnitDimensionality() == geomBPtr->getUnitDimensionality());
+        REQUIRE(geomAPtr->getSpatialDimensionality() == geomBPtr->getSpatialDimensionality());
+        REQUIRE(geomAPtr->getUnits() == geomBPtr->getUnits());
         break;
       }
       case nx::core::BaseGroup::GroupType::VertexGeom: {
-        const auto* geomA = dynamic_cast<const VertexGeom*>(parentA);
-        const auto* geomB = dynamic_cast<const VertexGeom*>(parentB);
-        REQUIRE(geomA != nullptr);
-        REQUIRE(geomB != nullptr);
-        REQUIRE(geomA->getVertices() != nullptr);
-        REQUIRE(geomB->getVertices() != nullptr);
-        CompareDataArrays<float32>(geomA->getVerticesRef(), geomB->getVerticesRef());
-        REQUIRE(geomA->getUnitDimensionality() == geomB->getUnitDimensionality());
-        REQUIRE(geomA->getSpatialDimensionality() == geomB->getSpatialDimensionality());
-        REQUIRE(geomA->getUnits() == geomB->getUnits());
+        const auto* geomAPtr = dynamic_cast<const VertexGeom*>(parentAPtr);
+        const auto* geomBPtr = dynamic_cast<const VertexGeom*>(parentBPtr);
+        REQUIRE(geomAPtr != nullptr);
+        REQUIRE(geomBPtr != nullptr);
+        REQUIRE(geomAPtr->getVertices() != nullptr);
+        REQUIRE(geomBPtr->getVertices() != nullptr);
+        CompareDataArrays<float32>(geomAPtr->getVerticesRef(), geomBPtr->getVerticesRef());
+        REQUIRE(geomAPtr->getUnitDimensionality() == geomBPtr->getUnitDimensionality());
+        REQUIRE(geomAPtr->getSpatialDimensionality() == geomBPtr->getSpatialDimensionality());
+        REQUIRE(geomAPtr->getUnits() == geomBPtr->getUnits());
         break;
       }
       case nx::core::BaseGroup::GroupType::DataGroup: {
         break;
       }
       default: {
-        INFO(fmt::format("Object at path ({}) has unhandled type ({})", parentGroup.toString(), parentA->getTypeName()));
+        INFO(fmt::format("Object at path ({}) has unhandled type ({})", parentGroup.toString(), parentAPtr->getTypeName()));
         REQUIRE(false);
         break;
       }
@@ -692,13 +692,13 @@ void CompareDataStructures(const DataStructure& dataStructureA, const DataStruct
         REQUIRE(childrenNamesA[i] == childrenNamesB[i]);
 
         DataPath childPath = parentGroup.createChildPath(childrenNamesA[i]);
-        const DataObject* objectA = dataStructureA.getData(childPath);
-        const DataObject* objectB = dataStructureB.getData(childPath);
-        REQUIRE(objectA != nullptr);
-        REQUIRE(objectB != nullptr);
+        const DataObject* objectAPtr = dataStructureA.getData(childPath);
+        const DataObject* objectBPtr = dataStructureB.getData(childPath);
+        REQUIRE(objectAPtr != nullptr);
+        REQUIRE(objectBPtr != nullptr);
 
-        const DataObject::Type objectADataObjectType = objectA->getDataObjectType();
-        REQUIRE(objectADataObjectType == objectB->getDataObjectType());
+        const DataObject::Type objectADataObjectType = objectAPtr->getDataObjectType();
+        REQUIRE(objectADataObjectType == objectBPtr->getDataObjectType());
 
         switch(objectADataObjectType)
         {
@@ -708,7 +708,7 @@ void CompareDataStructures(const DataStructure& dataStructureA, const DataStruct
         }
         case nx::core::DataObject::Type::ScalarData: {
           // This recursive helper reports ScalarData objects without comparing values.
-          std::cout << objectA->getTypeName() << ": " << objectA->getName() << std::endl;
+          std::cout << objectAPtr->getTypeName() << ": " << objectAPtr->getName() << '\n';
           break;
         }
         case nx::core::DataObject::Type::AbstractMontage: {
@@ -717,38 +717,39 @@ void CompareDataStructures(const DataStructure& dataStructureA, const DataStruct
         }
         case nx::core::DataObject::Type::IDataArray:
         case nx::core::DataObject::Type::DataArray: {
-          const auto* dataArrayA = dynamic_cast<const IDataArray*>(objectA);
-          const auto* dataArrayB = dynamic_cast<const IDataArray*>(objectB);
-          REQUIRE(dataArrayA != nullptr);
-          REQUIRE(dataArrayB != nullptr);
-          REQUIRE(dataArrayA->getDataType() == dataArrayB->getDataType());
+          const auto* dataArrayAPtr = dynamic_cast<const IDataArray*>(objectAPtr);
+          const auto* dataArrayBPtr = dynamic_cast<const IDataArray*>(objectBPtr);
+          REQUIRE(dataArrayAPtr != nullptr);
+          REQUIRE(dataArrayBPtr != nullptr);
+          REQUIRE(dataArrayAPtr->getDataType() == dataArrayBPtr->getDataType());
           // std::cout << "DEBUG TEST: data array A DataType = " << DataTypeToString(dataArrayA->getDataType()) << "\tdata array B DataType = " << DataTypeToString(dataArrayB->getDataType());
-          INFO(fmt::format("DEBUG TEST: data array A DataType = {}\tdata array B DataType = {}", DataTypeToString(dataArrayA->getDataType()), DataTypeToString(dataArrayB->getDataType())));
+          INFO(fmt::format("DEBUG TEST: data array A DataType = {}\tdata array B DataType = {}", DataTypeToString(dataArrayAPtr->getDataType()), DataTypeToString(dataArrayBPtr->getDataType())));
 
-          ExecuteDataFunction(CompareArraysFunctor{}, dataArrayA->getDataType(), *dataArrayA, *dataArrayB);
+          ExecuteDataFunction(CompareArraysFunctor{}, dataArrayAPtr->getDataType(), *dataArrayAPtr, *dataArrayBPtr);
 
           break;
         }
         case nx::core::DataObject::Type::StringArray: {
-          const auto* stringArrayA = dynamic_cast<const StringArray*>(objectA);
-          const auto* stringArrayB = dynamic_cast<const StringArray*>(objectB);
-          REQUIRE(stringArrayA != nullptr);
-          REQUIRE(stringArrayB != nullptr);
-          CompareStringArrays(*stringArrayA, *stringArrayB);
+          const auto* stringArrayAPtr = dynamic_cast<const StringArray*>(objectAPtr);
+          const auto* stringArrayBPtr = dynamic_cast<const StringArray*>(objectBPtr);
+          REQUIRE(stringArrayAPtr != nullptr);
+          REQUIRE(stringArrayBPtr != nullptr);
+          CompareStringArrays(*stringArrayAPtr, *stringArrayBPtr);
           break;
         }
         case nx::core::DataObject::Type::INeighborList:
         case nx::core::DataObject::Type::NeighborList: {
-          const auto* neighborlistA = dynamic_cast<const INeighborList*>(objectA);
-          const auto* neighborlistB = dynamic_cast<const INeighborList*>(objectB);
-          REQUIRE(neighborlistA != nullptr);
-          REQUIRE(neighborlistB != nullptr);
+          const auto* neighborlistAPtr = dynamic_cast<const INeighborList*>(objectAPtr);
+          const auto* neighborlistBPtr = dynamic_cast<const INeighborList*>(objectBPtr);
+          REQUIRE(neighborlistAPtr != nullptr);
+          REQUIRE(neighborlistBPtr != nullptr);
           // std::cout << "DEBUG TEST: neighborlist array A DataType = " << DataTypeToString(neighborlistA->getDataType()) << "\tneighborlist B DataType = " <<
           // DataTypeToString(neighborlistB->getDataType());
-          INFO(fmt::format("DEBUG TEST: NeighborList A DataType = {}\tNeighborList B DataType = {}", DataTypeToString(neighborlistA->getDataType()), DataTypeToString(neighborlistB->getDataType())));
-          REQUIRE(neighborlistA->getDataType() == neighborlistB->getDataType());
+          INFO(fmt::format("DEBUG TEST: NeighborList A DataType = {}\tNeighborList B DataType = {}", DataTypeToString(neighborlistAPtr->getDataType()),
+                           DataTypeToString(neighborlistBPtr->getDataType())));
+          REQUIRE(neighborlistAPtr->getDataType() == neighborlistBPtr->getDataType());
 
-          ExecuteDataFunction(CompareNeighborListsFunctor{}, neighborlistA->getDataType(), neighborlistA, neighborlistB);
+          ExecuteDataFunction(CompareNeighborListsFunctor{}, neighborlistAPtr->getDataType(), neighborlistAPtr, neighborlistBPtr);
 
           break;
         }
@@ -770,7 +771,7 @@ void CompareDataStructures(const DataStructure& dataStructureA, const DataStruct
         }
         default: {
           auto underlyingDataType = to_underlying(objectADataObjectType);
-          std::cout << "Missing DataType: " << underlyingDataType << std::endl;
+          std::cout << "Missing DataType: " << underlyingDataType << '\n';
           INFO(fmt::format("Object at path ({}) has unhandled type ({})", childPath.toString(), underlyingDataType));
           REQUIRE(false);
           break;
@@ -789,39 +790,39 @@ void CompareDataStructures(const DataStructure& dataStructureA, const DataStruct
 DataStructure CreateDataStructure()
 {
   DataStructure dataStructure;
-  DataGroup* topLevelGroup = DataGroup::Create(dataStructure, Constants::k_SmallIN100);
-  DataGroup* scanData = DataGroup::Create(dataStructure, Constants::k_EbsdScanData, topLevelGroup->getId());
+  DataGroup* topLevelGroupPtr = DataGroup::Create(dataStructure, constants::k_SmallIN100);
+  DataGroup* scanDataPtr = DataGroup::Create(dataStructure, constants::k_EbsdScanData, topLevelGroupPtr->getId());
 
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, Constants::k_ImageGeometry, scanData->getId());
-  REQUIRE(imageGeom->setSpacing({0.25f, 0.55f, 1.86}).valid());
-  REQUIRE(imageGeom->setOrigin({0.0f, 20.0f, 66.0f}).valid());
-  SizeVec3 imageGeomDims = {40, 60, 80};
-  imageGeom->setDimensions(imageGeomDims); // ImageGeom dimensions use {X, Y, Z} order.
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, constants::k_ImageGeometry, scanDataPtr->getId());
+  REQUIRE(imageGeomPtr->setSpacing({0.25f, 0.55f, 1.86}).valid());
+  REQUIRE(imageGeomPtr->setOrigin({0.0f, 20.0f, 66.0f}).valid());
+  SizeVec3Type imageGeomDims = {40, 60, 80};
+  imageGeomPtr->setDimensions(imageGeomDims); // ImageGeom dimensions use {X, Y, Z} order.
 
   // The DataStructure owns each array. Local raw pointers remain non-owning.
   usize numComponents = 1;
   ShapeType tupleShape = {imageGeomDims[2], imageGeomDims[1], imageGeomDims[0]};
 
-  Float32Array* ci_data = CreateTestDataArray<float32>(dataStructure, Constants::k_ConfidenceIndex, tupleShape, {numComponents}, scanData->getId());
-  Int32Array* feature_ids_data = CreateTestDataArray<int32>(dataStructure, Constants::k_FeatureIds, tupleShape, {numComponents}, scanData->getId());
-  Int32Array* phases_data = CreateTestDataArray<int32>(dataStructure, "Phases", tupleShape, {numComponents}, scanData->getId());
-  UInt64Array* voxelIndices = CreateTestDataArray<uint64>(dataStructure, "Voxel Indices", tupleShape, {numComponents}, scanData->getId());
+  Float32ArrayType* ciDataPtr = CreateTestDataArray<float32>(dataStructure, constants::k_ConfidenceIndex, tupleShape, {numComponents}, scanDataPtr->getId());
+  Int32ArrayType* featureIdsDataPtr = CreateTestDataArray<int32>(dataStructure, constants::k_FeatureIds, tupleShape, {numComponents}, scanDataPtr->getId());
+  Int32ArrayType* phasesDataPtr = CreateTestDataArray<int32>(dataStructure, "Phases", tupleShape, {numComponents}, scanDataPtr->getId());
+  UInt64ArrayType* voxelIndicesPtr = CreateTestDataArray<uint64>(dataStructure, "Voxel Indices", tupleShape, {numComponents}, scanDataPtr->getId());
 
-  BoolArray* conditionalArray = CreateTestDataArray<bool>(dataStructure, Constants::k_ConditionalArray, tupleShape, {1}, scanData->getId());
-  conditionalArray->fill(true);
+  BoolArrayType* conditionalArrayPtr = CreateTestDataArray<bool>(dataStructure, constants::k_ConditionalArray, tupleShape, {1}, scanDataPtr->getId());
+  conditionalArrayPtr->fill(true);
 
   numComponents = 3;
-  UInt8Array* ipf_color_data = CreateTestDataArray<uint8>(dataStructure, "IPF Colors", tupleShape, {numComponents}, scanData->getId());
-  Float32Array* euler_data = CreateTestDataArray<float32>(dataStructure, "Euler", tupleShape, {numComponents}, scanData->getId());
+  UInt8ArrayType* ipfColorDataPtr = CreateTestDataArray<uint8>(dataStructure, "IPF Colors", tupleShape, {numComponents}, scanDataPtr->getId());
+  Float32ArrayType* eulerDataPtr = CreateTestDataArray<float32>(dataStructure, "Euler", tupleShape, {numComponents}, scanDataPtr->getId());
 
   // The ensemble group stores phase-level data, such as the Laue class.
-  DataGroup* ensembleGroup = DataGroup::Create(dataStructure, "Phase Data", topLevelGroup->getId());
+  DataGroup* ensembleGroupPtr = DataGroup::Create(dataStructure, "Phase Data", topLevelGroupPtr->getId());
   numComponents = 1;
   usize numTuples = 2;
-  Int32Array* laue_data = CreateTestDataArray<int32>(dataStructure, "Laue Class", {numTuples}, {numComponents}, ensembleGroup->getId());
+  Int32ArrayType* laueDataPtr = CreateTestDataArray<int32>(dataStructure, "Laue Class", {numTuples}, {numComponents}, ensembleGroupPtr->getId());
 
-  VertexGeom* vertexGeom = VertexGeom::Create(dataStructure, Constants::k_VertexGeometry, scanData->getId());
-  vertexGeom->setVertices(*euler_data);
+  VertexGeom* vertexGeomPtr = VertexGeom::Create(dataStructure, constants::k_VertexGeometry, scanDataPtr->getId());
+  vertexGeomPtr->setVertices(*eulerDataPtr);
 
   // NeighborList<float32>* neighborList = CreateTestNeighborList<float32>(dataStructure, "Neighbor List", numTuples, scanData->getId());
 
@@ -832,12 +833,12 @@ DataStructure CreateDataStructure()
 DataStructure CreateAllPrimitiveTypes(const ShapeType& tupleShape)
 {
   DataStructure dataStructure;
-  DataGroup* levelZeroGroup = DataGroup::Create(dataStructure, Constants::k_LevelZero);
+  DataGroup* levelZeroGroupPtr = DataGroup::Create(dataStructure, constants::k_LevelZero);
   // auto levelZeroId = levelZeroGroup->getId();
-  DataGroup* levelOneGroup = DataGroup::Create(dataStructure, Constants::k_LevelOne, levelZeroGroup->getId());
-  auto levelOneId = levelOneGroup->getId();
-  DataGroup* levelTwoGroup = DataGroup::Create(dataStructure, Constants::k_LevelTwo, levelZeroGroup->getId());
-  auto levelTwoId = levelTwoGroup->getId();
+  DataGroup* levelOneGroupPtr = DataGroup::Create(dataStructure, constants::k_LevelOne, levelZeroGroupPtr->getId());
+  auto levelOneId = levelOneGroupPtr->getId();
+  DataGroup* levelTwoGroupPtr = DataGroup::Create(dataStructure, constants::k_LevelTwo, levelZeroGroupPtr->getId());
+  auto levelTwoId = levelTwoGroupPtr->getId();
 
   //  // Create an Image Geometry grid for the Scan Data
   //  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, Constants::k_ImageGeometry, levelOneGroup->getId());
@@ -850,63 +851,63 @@ DataStructure CreateAllPrimitiveTypes(const ShapeType& tupleShape)
   // The first child group contains scalar arrays.
   ShapeType componentShape = {1ULL};
 
-  CreateTestDataArray<int8>(dataStructure, Constants::k_Int8DataSet, tupleShape, componentShape, levelOneId);
-  CreateTestDataArray<uint8>(dataStructure, Constants::k_Uint8DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<int8>(dataStructure, constants::k_Int8DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<uint8>(dataStructure, constants::k_Uint8DataSet, tupleShape, componentShape, levelOneId);
 
-  CreateTestDataArray<int16>(dataStructure, Constants::k_Int16DataSet, tupleShape, componentShape, levelOneId);
-  CreateTestDataArray<uint16>(dataStructure, Constants::k_Uint16DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<int16>(dataStructure, constants::k_Int16DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<uint16>(dataStructure, constants::k_Uint16DataSet, tupleShape, componentShape, levelOneId);
 
-  CreateTestDataArray<int32>(dataStructure, Constants::k_Int32DataSet, tupleShape, componentShape, levelOneId);
-  CreateTestDataArray<uint32>(dataStructure, Constants::k_Uint32DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<int32>(dataStructure, constants::k_Int32DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<uint32>(dataStructure, constants::k_Uint32DataSet, tupleShape, componentShape, levelOneId);
 
-  CreateTestDataArray<int64>(dataStructure, Constants::k_Int64DataSet, tupleShape, componentShape, levelOneId);
-  CreateTestDataArray<uint64>(dataStructure, Constants::k_Uint64DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<int64>(dataStructure, constants::k_Int64DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<uint64>(dataStructure, constants::k_Uint64DataSet, tupleShape, componentShape, levelOneId);
 
-  CreateTestDataArray<float32>(dataStructure, Constants::k_Float32DataSet, tupleShape, componentShape, levelOneId);
-  CreateTestDataArray<float64>(dataStructure, Constants::k_Float64DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<float32>(dataStructure, constants::k_Float32DataSet, tupleShape, componentShape, levelOneId);
+  CreateTestDataArray<float64>(dataStructure, constants::k_Float64DataSet, tupleShape, componentShape, levelOneId);
 
   // The second child group contains three-component arrays.
   componentShape = {3ULL};
-  CreateTestDataArray<int8>(dataStructure, Constants::k_Int8DataSet, tupleShape, componentShape, levelTwoId);
-  CreateTestDataArray<uint8>(dataStructure, Constants::k_Uint8DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<int8>(dataStructure, constants::k_Int8DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<uint8>(dataStructure, constants::k_Uint8DataSet, tupleShape, componentShape, levelTwoId);
 
-  CreateTestDataArray<int16>(dataStructure, Constants::k_Int16DataSet, tupleShape, componentShape, levelTwoId);
-  CreateTestDataArray<uint16>(dataStructure, Constants::k_Uint16DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<int16>(dataStructure, constants::k_Int16DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<uint16>(dataStructure, constants::k_Uint16DataSet, tupleShape, componentShape, levelTwoId);
 
-  CreateTestDataArray<int32>(dataStructure, Constants::k_Int32DataSet, tupleShape, componentShape, levelTwoId);
-  CreateTestDataArray<uint32>(dataStructure, Constants::k_Uint32DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<int32>(dataStructure, constants::k_Int32DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<uint32>(dataStructure, constants::k_Uint32DataSet, tupleShape, componentShape, levelTwoId);
 
-  CreateTestDataArray<int64>(dataStructure, Constants::k_Int64DataSet, tupleShape, componentShape, levelTwoId);
-  CreateTestDataArray<uint64>(dataStructure, Constants::k_Uint64DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<int64>(dataStructure, constants::k_Int64DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<uint64>(dataStructure, constants::k_Uint64DataSet, tupleShape, componentShape, levelTwoId);
 
-  CreateTestDataArray<float32>(dataStructure, Constants::k_Float32DataSet, tupleShape, componentShape, levelTwoId);
-  CreateTestDataArray<float64>(dataStructure, Constants::k_Float64DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<float32>(dataStructure, constants::k_Float32DataSet, tupleShape, componentShape, levelTwoId);
+  CreateTestDataArray<float64>(dataStructure, constants::k_Float64DataSet, tupleShape, componentShape, levelTwoId);
 
   return dataStructure;
 }
 
 // -----------------------------------------------------------------------------
-void AddImageGeometry(DataStructure& dataStructure, const SizeVec3& imageGeomDims, const FloatVec3& spacing, const FloatVec3& origin, const DataGroup& dataGroup)
+void AddImageGeometry(DataStructure& dataStructure, const SizeVec3Type& imageGeomDims, const FloatVec3Type& spacing, const FloatVec3Type& origin, const DataGroup& dataGroup)
 {
-  ImageGeom* imageGeom = ImageGeom::Create(dataStructure, Constants::k_ImageGeometry, dataGroup.getId());
-  if(imageGeom == nullptr)
+  ImageGeom* imageGeomPtr = ImageGeom::Create(dataStructure, constants::k_ImageGeometry, dataGroup.getId());
+  if(imageGeomPtr == nullptr)
   {
     throw std::runtime_error("UnitTestCommon: Unable to create ImageGeom");
   }
-  imageGeom->setDimensions(imageGeomDims);
-  REQUIRE(imageGeom->setSpacing(spacing).valid());
-  REQUIRE(imageGeom->setOrigin(origin).valid());
+  imageGeomPtr->setDimensions(imageGeomDims);
+  REQUIRE(imageGeomPtr->setSpacing(spacing).valid());
+  REQUIRE(imageGeomPtr->setOrigin(origin).valid());
 }
 
 // -----------------------------------------------------------------------------
 void CompareExemplarToGenerateAttributeMatrix(const DataStructure& exemplarDataStructure, const DataPath& exemplarAttributeMatrix, const DataStructure& computedDataStructure,
                                               const DataPath& computedAttributeMatrix, bool allMustMatch)
 {
-  auto& exemplarAttrMatr = exemplarDataStructure.getDataRefAs<AttributeMatrix>(exemplarAttributeMatrix);
+  const auto& exemplarAttrMatr = exemplarDataStructure.getDataRefAs<AttributeMatrix>(exemplarAttributeMatrix);
   // std::vector<DataPath> selectedCellArrays;
 
   // Each exemplar child selects the corresponding computed array by name.
-  for(auto& exemplarArrayPath : exemplarAttrMatr)
+  for(const auto& exemplarArrayPath : exemplarAttrMatr)
   {
 
     DataPath exemplarDataArrayPath = exemplarAttributeMatrix.createChildPath(exemplarArrayPath.second->getName());
@@ -946,47 +947,47 @@ void CompareExemplarToGenerateAttributeMatrix(const DataStructure& exemplarDataS
     switch(type)
     {
     case DataType::boolean: {
-      nx::core::UnitTest::CompareArrays<bool>(computedArrayPtr, exemplarArrayPtr);
+      nx::core::unit_test::CompareArrays<bool>(computedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::int8: {
-      nx::core::UnitTest::CompareArrays<int8>(computedArrayPtr, exemplarArrayPtr);
+      nx::core::unit_test::CompareArrays<int8>(computedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::int16: {
-      nx::core::UnitTest::CompareArrays<int16>(computedArrayPtr, exemplarArrayPtr);
+      nx::core::unit_test::CompareArrays<int16>(computedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::int32: {
-      nx::core::UnitTest::CompareArrays<int32>(computedArrayPtr, exemplarArrayPtr);
+      nx::core::unit_test::CompareArrays<int32>(computedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::int64: {
-      nx::core::UnitTest::CompareArrays<int64>(computedArrayPtr, exemplarArrayPtr);
+      nx::core::unit_test::CompareArrays<int64>(computedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::uint8: {
-      nx::core::UnitTest::CompareArrays<uint8>(computedArrayPtr, exemplarArrayPtr);
+      nx::core::unit_test::CompareArrays<uint8>(computedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::uint16: {
-      nx::core::UnitTest::CompareArrays<uint16>(computedArrayPtr, exemplarArrayPtr);
+      nx::core::unit_test::CompareArrays<uint16>(computedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::uint32: {
-      nx::core::UnitTest::CompareArrays<uint32>(computedArrayPtr, exemplarArrayPtr);
+      nx::core::unit_test::CompareArrays<uint32>(computedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::uint64: {
-      nx::core::UnitTest::CompareArrays<uint64>(computedArrayPtr, exemplarArrayPtr);
+      nx::core::unit_test::CompareArrays<uint64>(computedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::float32: {
-      nx::core::UnitTest::CompareArrays<float32>(computedArrayPtr, exemplarArrayPtr);
+      nx::core::unit_test::CompareArrays<float32>(computedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::float64: {
-      nx::core::UnitTest::CompareArrays<float64>(computedArrayPtr, exemplarArrayPtr);
+      nx::core::unit_test::CompareArrays<float64>(computedArrayPtr, exemplarArrayPtr);
       break;
     }
     default: {
@@ -999,32 +1000,32 @@ void CompareExemplarToGenerateAttributeMatrix(const DataStructure& exemplarDataS
 // -----------------------------------------------------------------------------
 void CompareExemplarToGeneratedData(const DataStructure& dataStructure, const DataStructure& exemplarDataStructure, const DataPath& attributeMatrix, const std::string& exemplarDataContainerName)
 {
-  auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(attributeMatrix);
+  const auto& cellDataGroup = dataStructure.getDataRefAs<AttributeMatrix>(attributeMatrix);
   std::vector<DataPath> selectedCellArrays;
 
   // Snapshot the child paths before the comparison starts.
-  for(auto& child : cellDataGroup)
+  for(const auto& child : cellDataGroup)
   {
     selectedCellArrays.push_back(attributeMatrix.createChildPath(child.second->getName()));
   }
 
   for(const auto& cellArrayPath : selectedCellArrays)
   {
-    const auto* generatedArray = dataStructure.getDataAs<IArray>(cellArrayPath);
+    const auto* generatedArrayPtr = dataStructure.getDataAs<IArray>(cellArrayPath);
     // The exemplar uses a different top-level container but the same child path.
     std::vector<std::string> generatedPathVector = cellArrayPath.getPathVector();
     generatedPathVector[0] = exemplarDataContainerName;
     DataPath exemplarDataArrayPath(generatedPathVector);
-    const auto* exemplarArray = exemplarDataStructure.getDataAs<IArray>(exemplarDataArrayPath);
+    const auto* exemplarArrayPtr = exemplarDataStructure.getDataAs<IArray>(exemplarDataArrayPath);
 
     // An absent exemplar array means that this generated array has no reference.
-    if(nullptr == exemplarArray)
+    if(nullptr == exemplarArrayPtr)
     {
       continue;
     }
 
     DataType type = DataType::int8;
-    const IArray::ArrayType arrayType = generatedArray->getArrayType();
+    const IArray::ArrayType arrayType = generatedArrayPtr->getArrayType();
     if(arrayType == IArray::ArrayType::DataArray)
     {
       type = dataStructure.getDataRefAs<IDataArray>(cellArrayPath).getDataType();
@@ -1037,47 +1038,47 @@ void CompareExemplarToGeneratedData(const DataStructure& dataStructure, const Da
     switch(type)
     {
     case DataType::boolean: {
-      nx::core::UnitTest::CompareArrays<bool>(generatedArray, exemplarArray);
+      nx::core::unit_test::CompareArrays<bool>(generatedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::int8: {
-      nx::core::UnitTest::CompareArrays<int8>(generatedArray, exemplarArray);
+      nx::core::unit_test::CompareArrays<int8>(generatedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::int16: {
-      nx::core::UnitTest::CompareArrays<int16>(generatedArray, exemplarArray);
+      nx::core::unit_test::CompareArrays<int16>(generatedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::int32: {
-      nx::core::UnitTest::CompareArrays<int32>(generatedArray, exemplarArray);
+      nx::core::unit_test::CompareArrays<int32>(generatedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::int64: {
-      nx::core::UnitTest::CompareArrays<int64>(generatedArray, exemplarArray);
+      nx::core::unit_test::CompareArrays<int64>(generatedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::uint8: {
-      nx::core::UnitTest::CompareArrays<uint8>(generatedArray, exemplarArray);
+      nx::core::unit_test::CompareArrays<uint8>(generatedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::uint16: {
-      nx::core::UnitTest::CompareArrays<uint16>(generatedArray, exemplarArray);
+      nx::core::unit_test::CompareArrays<uint16>(generatedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::uint32: {
-      nx::core::UnitTest::CompareArrays<uint32>(generatedArray, exemplarArray);
+      nx::core::unit_test::CompareArrays<uint32>(generatedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::uint64: {
-      nx::core::UnitTest::CompareArrays<uint64>(generatedArray, exemplarArray);
+      nx::core::unit_test::CompareArrays<uint64>(generatedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::float32: {
-      nx::core::UnitTest::CompareArrays<float32>(generatedArray, exemplarArray);
+      nx::core::unit_test::CompareArrays<float32>(generatedArrayPtr, exemplarArrayPtr);
       break;
     }
     case DataType::float64: {
-      nx::core::UnitTest::CompareArrays<float64>(generatedArray, exemplarArray);
+      nx::core::unit_test::CompareArrays<float64>(generatedArrayPtr, exemplarArrayPtr);
       break;
     }
     default: {
@@ -1119,71 +1120,71 @@ DataStructure CreateComplexMultiLevelDataGraph()
   DataStructure dataStructure;
 
   // Create the two root groups.
-  auto* groupA = DataGroup::Create(dataStructure, Constants::k_GroupAName);
-  auto* groupB = DataGroup::Create(dataStructure, Constants::k_GroupBName);
+  auto* groupAPtr = DataGroup::Create(dataStructure, constants::k_GroupAName);
+  auto* groupBPtr = DataGroup::Create(dataStructure, constants::k_GroupBName);
 
-  auto groupAPath = DataPath({groupA->getName()});
-  auto groupBPath = DataPath({groupB->getName()});
+  auto groupAPath = DataPath({groupAPtr->getName()});
+  auto groupBPath = DataPath({groupBPtr->getName()});
 
   // Create level-one groups, including shared group C.
-  auto* groupH = DataGroup::Create(dataStructure, Constants::k_GroupHName, groupA->getId());
-  auto* groupC = DataGroup::Create(dataStructure, Constants::k_GroupCName, groupA->getId());
-  groupB->insert(dataStructure.getSharedData(groupC->getId()));
-  auto* groupF = DataGroup::Create(dataStructure, Constants::k_GroupFName, groupB->getId());
+  auto* groupHPtr = DataGroup::Create(dataStructure, constants::k_GroupHName, groupAPtr->getId());
+  auto* groupCPtr = DataGroup::Create(dataStructure, constants::k_GroupCName, groupAPtr->getId());
+  groupBPtr->insert(dataStructure.getSharedData(groupCPtr->getId()));
+  auto* groupFPtr = DataGroup::Create(dataStructure, constants::k_GroupFName, groupBPtr->getId());
 
-  auto groupAHPath = groupAPath.createChildPath(groupH->getName());
+  auto groupAHPath = groupAPath.createChildPath(groupHPtr->getName());
 
-  auto groupACPath = groupAPath.createChildPath(groupC->getName());
-  auto groupBCPath = groupBPath.createChildPath(groupC->getName());
+  auto groupACPath = groupAPath.createChildPath(groupCPtr->getName());
+  auto groupBCPath = groupBPath.createChildPath(groupCPtr->getName());
 
-  auto groupBFPath = groupBPath.createChildPath(groupF->getName());
+  auto groupBFPath = groupBPath.createChildPath(groupFPtr->getName());
 
   // Create level-two groups, including shared group E.
-  auto* groupD = DataGroup::Create(dataStructure, Constants::k_GroupDName, groupC->getId());
-  auto* groupE = DataGroup::Create(dataStructure, Constants::k_GroupEName, groupC->getId());
-  groupB->insert(dataStructure.getSharedData(groupE->getId()));
-  groupF->insert(dataStructure.getSharedData(groupE->getId()));
-  auto* groupG = DataGroup::Create(dataStructure, Constants::k_GroupGName, groupF->getId());
-  auto* arrayN = CreateTestDataArray<int8>(dataStructure, Constants::k_ArrayNName, {1ULL}, {1ULL}, groupH->getId());
+  auto* groupDPtr = DataGroup::Create(dataStructure, constants::k_GroupDName, groupCPtr->getId());
+  auto* groupEPtr = DataGroup::Create(dataStructure, constants::k_GroupEName, groupCPtr->getId());
+  groupBPtr->insert(dataStructure.getSharedData(groupEPtr->getId()));
+  groupFPtr->insert(dataStructure.getSharedData(groupEPtr->getId()));
+  auto* groupGPtr = DataGroup::Create(dataStructure, constants::k_GroupGName, groupFPtr->getId());
+  auto* arrayNPtr = CreateTestDataArray<int8>(dataStructure, constants::k_ArrayNName, {1ULL}, {1ULL}, groupHPtr->getId());
 
   // groupAHPath.createChildPath(arrayN->getName());
 
-  auto groupACDPath = groupACPath.createChildPath(groupD->getName());
-  auto groupBCDPath = groupBCPath.createChildPath(groupD->getName());
+  auto groupACDPath = groupACPath.createChildPath(groupDPtr->getName());
+  auto groupBCDPath = groupBCPath.createChildPath(groupDPtr->getName());
 
-  auto groupACEPath = groupACPath.createChildPath(groupE->getName());
-  auto groupBCEPath = groupBCPath.createChildPath(groupE->getName());
-  auto groupBEPath = groupBPath.createChildPath(groupE->getName());
-  auto groupBFEPath = groupBFPath.createChildPath(groupE->getName());
+  auto groupACEPath = groupACPath.createChildPath(groupEPtr->getName());
+  auto groupBCEPath = groupBCPath.createChildPath(groupEPtr->getName());
+  auto groupBEPath = groupBPath.createChildPath(groupEPtr->getName());
+  auto groupBFEPath = groupBFPath.createChildPath(groupEPtr->getName());
 
-  auto groupBFGPath = groupBFPath.createChildPath(groupG->getName());
+  auto groupBFGPath = groupBFPath.createChildPath(groupGPtr->getName());
 
   // Create arrays that can have paths through more than one parent.
-  auto* arrayI = CreateTestDataArray<uint8>(dataStructure, Constants::k_ArrayIName, {1ULL}, {1ULL}, groupD->getId());
-  auto* arrayJ = CreateTestDataArray<float32>(dataStructure, Constants::k_ArrayJName, {1ULL}, {1ULL}, groupD->getId());
-  groupE->insert(dataStructure.getSharedData(arrayJ->getId()));
-  auto* arrayK = CreateTestDataArray<float64>(dataStructure, Constants::k_ArrayKName, {1ULL}, {1ULL}, groupE->getId());
-  groupG->insert(dataStructure.getSharedData(arrayK->getId()));
-  auto* arrayL = CreateTestDataArray<uint32>(dataStructure, Constants::k_ArrayLName, {1ULL}, {1ULL}, groupG->getId());
-  auto* arrayM = CreateTestDataArray<int64>(dataStructure, Constants::k_ArrayMName, {1ULL}, {1ULL}, groupG->getId());
+  auto* arrayIPtr = CreateTestDataArray<uint8>(dataStructure, constants::k_ArrayIName, {1ULL}, {1ULL}, groupDPtr->getId());
+  auto* arrayJPtr = CreateTestDataArray<float32>(dataStructure, constants::k_ArrayJName, {1ULL}, {1ULL}, groupDPtr->getId());
+  groupEPtr->insert(dataStructure.getSharedData(arrayJPtr->getId()));
+  auto* arrayKPtr = CreateTestDataArray<float64>(dataStructure, constants::k_ArrayKName, {1ULL}, {1ULL}, groupEPtr->getId());
+  groupGPtr->insert(dataStructure.getSharedData(arrayKPtr->getId()));
+  auto* arrayLPtr = CreateTestDataArray<uint32>(dataStructure, constants::k_ArrayLName, {1ULL}, {1ULL}, groupGPtr->getId());
+  auto* arrayMPtr = CreateTestDataArray<int64>(dataStructure, constants::k_ArrayMName, {1ULL}, {1ULL}, groupGPtr->getId());
 
-  groupACDPath.createChildPath(arrayI->getName());
-  groupBCDPath.createChildPath(arrayI->getName());
+  groupACDPath.createChildPath(arrayIPtr->getName());
+  groupBCDPath.createChildPath(arrayIPtr->getName());
 
-  groupBCDPath.createChildPath(arrayJ->getName());
-  groupACEPath.createChildPath(arrayJ->getName());
-  groupBCEPath.createChildPath(arrayJ->getName());
-  groupBEPath.createChildPath(arrayJ->getName());
-  groupBFEPath.createChildPath(arrayJ->getName());
+  groupBCDPath.createChildPath(arrayJPtr->getName());
+  groupACEPath.createChildPath(arrayJPtr->getName());
+  groupBCEPath.createChildPath(arrayJPtr->getName());
+  groupBEPath.createChildPath(arrayJPtr->getName());
+  groupBFEPath.createChildPath(arrayJPtr->getName());
 
-  groupACEPath.createChildPath(arrayK->getName());
-  groupBCEPath.createChildPath(arrayK->getName());
-  groupBEPath.createChildPath(arrayK->getName());
-  groupBFEPath.createChildPath(arrayK->getName());
+  groupACEPath.createChildPath(arrayKPtr->getName());
+  groupBCEPath.createChildPath(arrayKPtr->getName());
+  groupBEPath.createChildPath(arrayKPtr->getName());
+  groupBFEPath.createChildPath(arrayKPtr->getName());
 
-  groupBFGPath.createChildPath(arrayL->getName());
+  groupBFGPath.createChildPath(arrayLPtr->getName());
 
-  groupBFGPath.createChildPath(arrayM->getName());
+  groupBFGPath.createChildPath(arrayMPtr->getName());
 
   return dataStructure;
 }
@@ -1208,9 +1209,9 @@ void CheckArraysInheritTupleDims(const DataStructure& dataStructure, const std::
   }
 }
 
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test
 
-namespace nx::core::UnitTest::Cropping
+namespace nx::core::unit_test::cropping
 {
 // -----------------------------------------------------------------------------
 std::string BoolToString(bool v)
@@ -1243,10 +1244,10 @@ std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBo
   {
     CropGeometryParameter::ValueType cv;
     cv.type = CropGeometryParameter::CropValues::TypeEnum::NoCropping;
-    cv.cropX = false;
-    cv.cropY = false;
-    cv.cropZ = false;
-    cv.is2D = is2D;
+    cv.crop_x = false;
+    cv.crop_y = false;
+    cv.crop_z = false;
+    cv.is_2d = is2D;
     out.push_back(cv);
   }
 
@@ -1259,11 +1260,12 @@ std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBo
   // Generate the voxel-bounds combinations first.
   for(const auto& [cx, cy, cz] : flagOrder)
   {
-    std::vector<std::optional<SizeVec2>> xOpts = cx ? std::vector<std::optional<SizeVec2>>(C.voxelX.begin(), C.voxelX.end()) : std::vector<std::optional<SizeVec2>>{std::nullopt};
+    std::vector<std::optional<SizeVec2Type>> xOpts = cx ? std::vector<std::optional<SizeVec2Type>>(C.voxel_x.begin(), C.voxel_x.end()) : std::vector<std::optional<SizeVec2Type>>{std::nullopt};
 
-    std::vector<std::optional<SizeVec2>> yOpts = cy ? std::vector<std::optional<SizeVec2>>(C.voxelY.begin(), C.voxelY.end()) : std::vector<std::optional<SizeVec2>>{std::nullopt};
+    std::vector<std::optional<SizeVec2Type>> yOpts = cy ? std::vector<std::optional<SizeVec2Type>>(C.voxel_y.begin(), C.voxel_y.end()) : std::vector<std::optional<SizeVec2Type>>{std::nullopt};
 
-    std::vector<std::optional<SizeVec2>> zOpts = (!is2D && cz) ? std::vector<std::optional<SizeVec2>>(C.voxelZ.begin(), C.voxelZ.end()) : std::vector<std::optional<SizeVec2>>{std::nullopt};
+    std::vector<std::optional<SizeVec2Type>> zOpts =
+        (!is2D && cz) ? std::vector<std::optional<SizeVec2Type>>(C.voxel_z.begin(), C.voxel_z.end()) : std::vector<std::optional<SizeVec2Type>>{std::nullopt};
 
     for(const auto& xb : xOpts)
     {
@@ -1273,25 +1275,25 @@ std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBo
         {
           CropGeometryParameter::ValueType cv;
           cv.type = CropGeometryParameter::CropValues::TypeEnum::VoxelSubvolume;
-          cv.cropX = cx;
-          cv.cropY = cy;
-          cv.cropZ = false;
-          cv.is2D = is2D;
+          cv.crop_x = cx;
+          cv.crop_y = cy;
+          cv.crop_z = false;
+          cv.is_2d = is2D;
 
           if(xb)
           {
-            cv.xBoundVoxels = *xb;
+            cv.x_bound_voxels = *xb;
           }
           if(yb)
           {
-            cv.yBoundVoxels = *yb;
+            cv.y_bound_voxels = *yb;
           }
 
           // Two-dimensional crop values never set a Z bound.
           if(!is2D && zb)
           {
-            cv.zBoundVoxels = *zb;
-            cv.cropZ = cz;
+            cv.z_bound_voxels = *zb;
+            cv.crop_z = cz;
           }
 
           out.push_back(cv);
@@ -1303,12 +1305,12 @@ std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBo
   // Generate the physical-bounds combinations after the voxel combinations.
   for(const auto& [cx, cy, cz] : flagOrder)
   {
-    std::vector<std::optional<FloatVec2Type>> xOpts = cx ? std::vector<std::optional<FloatVec2Type>>(C.physX.begin(), C.physX.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
+    std::vector<std::optional<FloatVec2Type>> xOpts = cx ? std::vector<std::optional<FloatVec2Type>>(C.phys_x.begin(), C.phys_x.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
 
-    std::vector<std::optional<FloatVec2Type>> yOpts = cy ? std::vector<std::optional<FloatVec2Type>>(C.physY.begin(), C.physY.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
+    std::vector<std::optional<FloatVec2Type>> yOpts = cy ? std::vector<std::optional<FloatVec2Type>>(C.phys_y.begin(), C.phys_y.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
 
     std::vector<std::optional<FloatVec2Type>> zOpts =
-        (!is2D && cz) ? std::vector<std::optional<FloatVec2Type>>(C.physZ.begin(), C.physZ.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
+        (!is2D && cz) ? std::vector<std::optional<FloatVec2Type>>(C.phys_z.begin(), C.phys_z.end()) : std::vector<std::optional<FloatVec2Type>>{std::nullopt};
 
     for(const auto& xb : xOpts)
     {
@@ -1318,25 +1320,25 @@ std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBo
         {
           CropGeometryParameter::ValueType cv;
           cv.type = CropGeometryParameter::CropValues::TypeEnum::PhysicalSubvolume;
-          cv.cropX = cx;
-          cv.cropY = cy;
-          cv.cropZ = false;
-          cv.is2D = is2D;
+          cv.crop_x = cx;
+          cv.crop_y = cy;
+          cv.crop_z = false;
+          cv.is_2d = is2D;
 
           if(xb)
           {
-            cv.xBoundPhysical = *xb;
+            cv.x_bound_physical = *xb;
           }
           if(yb)
           {
-            cv.yBoundPhysical = *yb;
+            cv.y_bound_physical = *yb;
           }
 
           // Two-dimensional crop values never set a Z bound.
           if(!is2D && zb)
           {
-            cv.zBoundPhysical = *zb;
-            cv.cropZ = cz;
+            cv.z_bound_physical = *zb;
+            cv.crop_z = cz;
           }
 
           out.push_back(cv);
@@ -1348,16 +1350,16 @@ std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBo
   return out;
 }
 
-} // namespace nx::core::UnitTest::Cropping
+} // namespace nx::core::unit_test::cropping
 
-namespace SmallIn100
+namespace small_in100
 {
 // -----------------------------------------------------------------------------
 void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const FilterList& filterList, bool useBoolOutputType)
 {
-  constexpr StringLiteral k_ArrayThresholds_Key = "array_thresholds_object";
-  constexpr StringLiteral k_CreatedDataPath_Key = "output_data_array_name";
-  constexpr StringLiteral k_CreatedMaskType_Key = "created_mask_type";
+  constexpr StringLiteralType k_ArrayThresholds_Key = "array_thresholds_object";
+  constexpr StringLiteralType k_CreatedDataPath_Key = "output_data_array_name";
+  constexpr StringLiteralType k_CreatedMaskType_Key = "created_mask_type";
 
   INFO(fmt::format("Error creating Filter '{}'  ", k_MultiThresholdObjectsFilterHandle.getFilterName()));
 
@@ -1370,13 +1372,13 @@ void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const FilterList
   ArrayThresholdSet::CollectionType thresholds;
 
   std::shared_ptr<ArrayThreshold> ciThreshold = std::make_shared<ArrayThreshold>();
-  ciThreshold->setArrayPath(nx::core::Constants::k_ConfidenceIndexArrayPath);
+  ciThreshold->setArrayPath(nx::core::constants::k_ConfidenceIndexArrayPath);
   ciThreshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
   ciThreshold->setComparisonValue(0.1);
   thresholds.push_back(ciThreshold);
 
   std::shared_ptr<ArrayThreshold> iqThreshold = std::make_shared<ArrayThreshold>();
-  iqThreshold->setArrayPath(nx::core::Constants::k_ImageQualityArrayPath);
+  iqThreshold->setArrayPath(nx::core::constants::k_ImageQualityArrayPath);
   iqThreshold->setComparisonType(ArrayThreshold::ComparisonType::GreaterThan);
   iqThreshold->setComparisonValue(120.0);
   thresholds.push_back(iqThreshold);
@@ -1384,7 +1386,7 @@ void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const FilterList
   arrayThresholdset.setArrayThresholds(thresholds);
 
   args.insertOrAssign(k_ArrayThresholds_Key, std::make_any<ArrayThresholdsParameter::ValueType>(arrayThresholdset));
-  args.insertOrAssign(k_CreatedDataPath_Key, std::make_any<std::string>(nx::core::Constants::k_Mask));
+  args.insertOrAssign(k_CreatedDataPath_Key, std::make_any<std::string>(nx::core::constants::k_Mask));
   if(useBoolOutputType)
   {
     args.insertOrAssign(k_CreatedMaskType_Key, std::make_any<DataTypeParameter::ValueType>(DataType::boolean));
@@ -1392,13 +1394,13 @@ void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const FilterList
 
   // Preflight verifies that the exemplar contains the required threshold arrays.
   auto preflightResult = filter->preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execution creates the compatibility mask and must preserve tuple shapes.
   auto executeResult = filter->execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure, k_TupleCheckIgnoredPaths);
+  unit_test::CheckArraysInheritTupleDims(dataStructure, k_TupleCheckIgnoredPaths);
 }
 
 // -----------------------------------------------------------------------------
@@ -1409,24 +1411,24 @@ void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList& filte
   REQUIRE(nullptr != filter);
 
   // These keys select the inputs used by the legacy Small IN100 workflow.
-  constexpr StringLiteral k_FillHoles_Key = "fill_holes";
-  constexpr StringLiteral k_ImageGeom_Key = "input_image_geometry_path";
-  constexpr StringLiteral k_MaskArrayPath_Key = "mask_array_path";
+  constexpr StringLiteralType k_FillHoles_Key = "fill_holes";
+  constexpr StringLiteralType k_ImageGeom_Key = "input_image_geometry_path";
+  constexpr StringLiteralType k_MaskArrayPath_Key = "mask_array_path";
 
   Arguments args;
   args.insertOrAssign(k_FillHoles_Key, std::make_any<BoolParameter::ValueType>(false));
-  args.insertOrAssign(k_ImageGeom_Key, std::make_any<GeometrySelectionParameter::ValueType>(nx::core::Constants::k_DataContainerPath));
-  args.insertOrAssign(k_MaskArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(nx::core::Constants::k_MaskArrayPath));
+  args.insertOrAssign(k_ImageGeom_Key, std::make_any<GeometrySelectionParameter::ValueType>(nx::core::constants::k_DataContainerPath));
+  args.insertOrAssign(k_MaskArrayPath_Key, std::make_any<ArraySelectionParameter::ValueType>(nx::core::constants::k_MaskArrayPath));
 
   // Preflight verifies the legacy image geometry and mask paths.
   auto preflightResult = filter->preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
 
   // Execution updates the mask and must preserve tuple shapes.
   auto executeResult = filter->execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure, k_TupleCheckIgnoredPaths);
+  unit_test::CheckArraysInheritTupleDims(dataStructure, k_TupleCheckIgnoredPaths);
 }
 
-} // namespace SmallIn100
+} // namespace small_in100

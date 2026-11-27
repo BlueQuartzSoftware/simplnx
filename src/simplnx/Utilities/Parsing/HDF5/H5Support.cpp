@@ -3,7 +3,7 @@
 #include <cstring>
 #include <iostream>
 
-bool nx::core::HDF5::Support::IsGroup(hid_t nodeId, const std::string& objectName)
+bool nx::core::hdf5::Support::IsGroup(hid_t nodeId, const std::string& objectName)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -13,7 +13,7 @@ bool nx::core::HDF5::Support::IsGroup(hid_t nodeId, const std::string& objectNam
   error = H5Oget_info_by_name3(nodeId, objectName.c_str(), &objectInfo, H5O_INFO_BASIC, H5P_DEFAULT);
   if(error < 0)
   {
-    std::cout << "Error in method H5Oget_info_by_name()" << std::endl;
+    std::cout << "Error in method H5Oget_info_by_name()" << '\n';
     return false;
   }
   switch(objectInfo.type)
@@ -33,7 +33,7 @@ bool nx::core::HDF5::Support::IsGroup(hid_t nodeId, const std::string& objectNam
   return isGroup;
 }
 
-std::string nx::core::HDF5::Support::GetObjectPath(hid_t locationId)
+std::string nx::core::hdf5::Support::GetObjectPath(hid_t locationId)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -50,12 +50,10 @@ std::string nx::core::HDF5::Support::GetObjectPath(hid_t locationId)
   return objectPath;
 }
 
-hid_t nx::core::HDF5::Support::GetDatasetType(hid_t locationId, const std::string& datasetName)
+hid_t nx::core::hdf5::Support::GetDatasetType(hid_t locationId, const std::string& datasetName)
 {
   H5SUPPORT_MUTEX_LOCK()
 
-  herr_t error = 0;
-  herr_t returnError = 0;
   hid_t datasetId = -1;
   /* Open the dataset. */
   if((datasetId = H5Dopen(locationId, datasetName.c_str(), H5P_DEFAULT)) < 0)
@@ -64,28 +62,29 @@ hid_t nx::core::HDF5::Support::GetDatasetType(hid_t locationId, const std::strin
   }
   /* Get an identifier for the datatype. */
   hid_t typeId = H5Dget_type(datasetId);
-  H5_CLOSE_H5_DATASET(datasetId, error, returnError, datasetName);
-  if(returnError < 0)
+  const herr_t closeError = H5Dclose(datasetId);
+  if(closeError < 0)
   {
-    return static_cast<hid_t>(returnError);
+    std::cout << "File: " << __FILE__ << "(" << __LINE__ << "): Error Closing Dataset: " << datasetName << " datasetId=" << datasetId << " retError=" << closeError << '\n';
+    return static_cast<hid_t>(closeError);
   }
   return typeId;
 }
 
-herr_t nx::core::HDF5::Support::FindAttr(hid_t /*locationID*/, const char* name, const H5A_info_t* /*info*/, void* opData)
+herr_t nx::core::hdf5::Support::FindAttr(hid_t /*locationID*/, const char* name, const H5A_info_t* /*info*/, void* opData)
 {
   /* Define a default zero value for return. This will cause the iterator to
    * continue if the palette attribute is not found yet.
    */
   int32 returnError = 0;
 
-  char* attributeName = reinterpret_cast<char*>(opData);
+  char* attributeNamePtr = reinterpret_cast<char*>(opData);
 
   /* Define a positive value for return value if the attribute was found. This
    * will cause the iterator to immediately return that positive value,
    * indicating short-circuit success
    */
-  if(std::strcmp(name, attributeName) == 0)
+  if(std::strcmp(name, attributeNamePtr) == 0)
   {
     returnError = 1;
   }
@@ -93,11 +92,11 @@ herr_t nx::core::HDF5::Support::FindAttr(hid_t /*locationID*/, const char* name,
   return returnError;
 }
 
-herr_t nx::core::HDF5::Support::FindAttribute(hid_t locationId, const std::string& attributeName)
+herr_t nx::core::hdf5::Support::FindAttribute(hid_t locationId, const std::string& attributeName)
 {
   H5SUPPORT_MUTEX_LOCK()
 
-  hsize_t attributeNum;
+  hsize_t attributeNum = 0;
   herr_t returnError = 0;
 
   attributeNum = 0;
@@ -106,7 +105,7 @@ herr_t nx::core::HDF5::Support::FindAttribute(hid_t locationId, const std::strin
   return returnError;
 }
 
-std::string nx::core::HDF5::Support::HdfClassTypeAsStr(hid_t classType)
+std::string nx::core::hdf5::Support::HdfClassTypeAsStr(hid_t classType)
 {
   switch(classType)
   {
@@ -148,7 +147,7 @@ std::string nx::core::HDF5::Support::HdfClassTypeAsStr(hid_t classType)
   }
 }
 
-std::string nx::core::HDF5::Support::StringForHDFType(hid_t dataTypeIdentifier)
+std::string nx::core::hdf5::Support::StringForHDFType(hid_t dataTypeIdentifier)
 {
   H5SUPPORT_MUTEX_LOCK()
 
@@ -202,11 +201,11 @@ std::string nx::core::HDF5::Support::StringForHDFType(hid_t dataTypeIdentifier)
     return "H5T_NATIVE_DOUBLE";
   }
 
-  std::cout << "Error: StringForHDFType - Match for numeric type not found: " << dataTypeIdentifier << std::endl;
+  std::cout << "Error: StringForHDFType - Match for numeric type not found: " << dataTypeIdentifier << '\n';
   return "Unknown";
 }
 
-std::string nx::core::HDF5::Support::GetNameFromFilterType(H5Z_filter_t id)
+std::string nx::core::hdf5::Support::GetNameFromFilterType(H5Z_filter_t id)
 {
   switch(id)
   {
@@ -230,32 +229,10 @@ std::string nx::core::HDF5::Support::GetNameFromFilterType(H5Z_filter_t id)
   }
 }
 
-std::mutex& nx::core::HDF5::Support::ApiLock()
+std::mutex& nx::core::hdf5::Support::ApiLock()
 {
   // Keep the process lock alive while static HDF5 handles can still close.
   // Intentional heap lifetime avoids locking a destroyed function-local mutex during shutdown.
-  static std::mutex* s_ApiLock = new std::mutex();
-  return *s_ApiLock;
+  static std::mutex* sApiLockPtr = new std::mutex();
+  return *sApiLockPtr;
 }
-
-#if 0
-hid_t Support::getDatasetType(hid_t locationID, const std::string& datasetName)
-{
-  herr_t error = 0;
-  herr_t returnError = 0;
-  hid_t datasetID = -1;
-  /* Open the dataset. */
-  if((datasetID = H5Dopen(locationID, datasetName.c_str(), H5P_DEFAULT)) < 0)
-  {
-    return -1;
-  }
-  /* Get an identifier for the datatype. */
-  hid_t typeID = H5Dget_type(datasetID);
-  H5_CLOSE_H5_DATASET(datasetID, error, returnError, datasetName);
-  if(returnError < 0)
-  {
-    return static_cast<hid_t>(returnError);
-  }
-  return typeID;
-}
-#endif

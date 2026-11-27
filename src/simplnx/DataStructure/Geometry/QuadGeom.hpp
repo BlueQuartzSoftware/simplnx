@@ -14,14 +14,14 @@ class SIMPLNX_EXPORT QuadGeom : public INodeGeometry2D
 public:
   friend class DataStructure;
 
-  static inline constexpr usize k_NumEdgeVerts = 2;
-  static inline constexpr usize k_NumFaceVerts = 4;
-  static inline constexpr usize k_NumVerts = 4;
-  static inline constexpr StringLiteral k_VoxelSizes = "Quad Areas";
-  static inline constexpr StringLiteral k_EltsContainingVert = "Quads Containing Vert";
-  static inline constexpr StringLiteral k_EltNeighbors = "Quad Neighbors";
-  static inline constexpr StringLiteral k_EltCentroids = "Quad Centroids";
-  static inline constexpr StringLiteral k_TypeName = "QuadGeom";
+  static constexpr usize k_NumEdgeVerts = 2;
+  static constexpr usize k_NumFaceVerts = 4;
+  static constexpr usize k_NumVerts = 4;
+  static constexpr StringLiteralType k_VoxelSizes = "Quad Areas";
+  static constexpr StringLiteralType k_EltsContainingVert = "Quads Containing Vert";
+  static constexpr StringLiteralType k_EltNeighbors = "Quad Neighbors";
+  static constexpr StringLiteralType k_EltCentroids = "Quad Centroids";
+  static constexpr StringLiteralType k_TypeName = "QuadGeom";
   /**
    * @brief Creates a new QuadGeom in the specified DataStructure.
    * @param dataStructure The DataStructure to create the QuadGeom in
@@ -51,7 +51,7 @@ public:
    * @brief Move constructor.
    * @param other The QuadGeom to move from
    */
-  QuadGeom(QuadGeom&& other) = default;
+  QuadGeom(QuadGeom&& other) noexcept = default;
 
   ~QuadGeom() noexcept override = default;
 
@@ -150,16 +150,16 @@ public:
 
   /**
    * @brief Returns the parametric center of a quadrilateral element.
-   * @return Point3D<float64> The parametric center coordinates
+   * @return Vec3<float64> The parametric center coordinates
    */
-  Point3D<float64> getParametricCenter() const override;
+  Vec3<float64> getParametricCenter() const override;
 
   /**
    * @brief Calculates shape functions at the given parametric coordinates.
    * @param pCoords The parametric coordinates
    * @param shape Output array to store the calculated shape function values
    */
-  void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
+  void getShapeFunctions(const Vec3<float64>& pCoords, float64* shape) const override;
 
   /**
    * @brief finds the shared edges (no duplicates) of each quad in the

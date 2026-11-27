@@ -33,13 +33,14 @@
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
 #include <nlohmann/json.hpp>
+#include <utility>
 
 using namespace nx::core;
 namespace
 {
-constexpr StringLiteral k_DataPathsKey = "data_paths";
-constexpr StringLiteral k_InputFileKey = "input_file";
-constexpr StringLiteral k_ParentGroupKey = "parent_group";
+constexpr StringLiteralType k_DataPathsKey = "data_paths";
+constexpr StringLiteralType k_InputFileKey = "input_file";
+constexpr StringLiteralType k_ParentGroupKey = "parent_group";
 } // namespace
 
 namespace nx::core
@@ -52,33 +53,33 @@ Result<ReadHDF5DatasetParameter::DatasetImportInfo> ReadHDF5DatasetParameter::Da
   {
     return MakeErrorResult<DatasetImportInfo>(-500, fmt::format("ImportHDF5DatasetParameter ValueType: Cannot find the key \"{}\" in the ValueType json object.", k_DatasetPath_Key));
   }
-  else if(!json[k_DatasetPath_Key.str()].is_string())
+  if(!json[k_DatasetPath_Key.str()].is_string())
   {
     return MakeErrorResult<DatasetImportInfo>(-501, fmt::format("ImportHDF5DatasetParameter ValueType: 'Dataset Path' value is of type {} and is not a string.", json[k_DatasetPath_Key].type_name()));
   }
-  data.dataSetPath = json[k_DatasetPath_Key.str()];
+  data.data_set_path = json[k_DatasetPath_Key.str()];
 
   if(!json.contains(k_ComponentDimensions_Key.view()))
   {
     return MakeErrorResult<DatasetImportInfo>(-502, fmt::format("ImportHDF5DatasetParameter ValueType: Cannot find the key \"{}\" in the ValueType json object.", k_ComponentDimensions_Key));
   }
-  else if(!json[k_ComponentDimensions_Key.str()].is_string())
+  if(!json[k_ComponentDimensions_Key.str()].is_string())
   {
     return MakeErrorResult<DatasetImportInfo>(
         -503, fmt::format("ImportHDF5DatasetParameter ValueType: 'Component Dimensions' value is of type {} and is not a string.", json[k_ComponentDimensions_Key].type_name()));
   }
-  data.componentDimensions = json[k_ComponentDimensions_Key.str()];
+  data.component_dimensions = json[k_ComponentDimensions_Key.str()];
 
   if(!json.contains(k_TupleDimensions_Key.view()))
   {
     return MakeErrorResult<DatasetImportInfo>(-502, fmt::format("ImportHDF5DatasetParameter ValueType: Cannot find the key \"{}\" in the ValueType json object.", k_TupleDimensions_Key));
   }
-  else if(!json[k_TupleDimensions_Key.str()].is_string())
+  if(!json[k_TupleDimensions_Key.str()].is_string())
   {
     return MakeErrorResult<DatasetImportInfo>(
         -503, fmt::format("ImportHDF5DatasetParameter ValueType: 'Tuple Dimensions' value is of type {} and is not a string.", json[k_TupleDimensions_Key].type_name()));
   }
-  data.tupleDimensions = json[k_TupleDimensions_Key.str()];
+  data.tuple_dimensions = json[k_TupleDimensions_Key.str()];
 
   return {data};
 }
@@ -87,16 +88,16 @@ Result<ReadHDF5DatasetParameter::DatasetImportInfo> ReadHDF5DatasetParameter::Da
 nlohmann::json ReadHDF5DatasetParameter::DatasetImportInfo::writeJson() const
 {
   nlohmann::json json;
-  json[k_DatasetPath_Key.str()] = dataSetPath;
-  json[k_ComponentDimensions_Key.str()] = componentDimensions;
-  json[k_TupleDimensions_Key.str()] = tupleDimensions;
+  json[k_DatasetPath_Key.str()] = data_set_path;
+  json[k_ComponentDimensions_Key.str()] = component_dimensions;
+  json[k_TupleDimensions_Key.str()] = tuple_dimensions;
   return json;
 }
 
 // -----------------------------------------------------------------------------
-ReadHDF5DatasetParameter::ReadHDF5DatasetParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue)
+ReadHDF5DatasetParameter::ReadHDF5DatasetParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue)
 : ValueParameter(name, humanName, helpText)
-, m_DefaultValue(defaultValue)
+, m_DefaultValue(std::move(defaultValue))
 {
 }
 
@@ -107,7 +108,7 @@ Uuid ReadHDF5DatasetParameter::uuid() const
 }
 
 // -----------------------------------------------------------------------------
-IParameter::AcceptedTypes ReadHDF5DatasetParameter::acceptedTypes() const
+IParameter::AcceptedTypesType ReadHDF5DatasetParameter::acceptedTypes() const
 {
   return {typeid(ValueType)};
 }
@@ -122,8 +123,8 @@ IParameter::VersionType ReadHDF5DatasetParameter::getVersion() const
 std::any ReadHDF5DatasetParameter::construct(const Arguments& args, const ExecutionContext& executionContext) const
 {
   auto value = args.value<ValueType>(name());
-  std::filesystem::path absolutePath = executionContext.getAbsolutePath(value.inputFile);
-  value.inputFile = absolutePath.string();
+  std::filesystem::path absolutePath = executionContext.getAbsolutePath(value.input_file);
+  value.input_file = absolutePath.string();
   return value;
 }
 
@@ -137,7 +138,7 @@ nlohmann::json ReadHDF5DatasetParameter::toJsonImpl(const std::any& value) const
   {
     dataPathsJson.push_back(importInfo.writeJson());
   }
-  json[k_InputFileKey.str()] = datasetImportInfo.inputFile;
+  json[k_InputFileKey.str()] = datasetImportInfo.input_file;
   if(datasetImportInfo.parent.has_value())
   {
     json[k_ParentGroupKey.str()] = datasetImportInfo.parent.value().toString();
@@ -147,26 +148,26 @@ nlohmann::json ReadHDF5DatasetParameter::toJsonImpl(const std::any& value) const
 }
 
 // -----------------------------------------------------------------------------
-Result<std::any> ReadHDF5DatasetParameter::fromJsonImpl(const nlohmann::json& json, VersionType version) const
+Result<std::any> ReadHDF5DatasetParameter::fromJsonImpl(const nlohmann::json& json, VersionType /*version*/) const
 {
-  static constexpr StringLiteral prefix = "FilterParameter 'ImportHDF5DatasetParameter' JSON Error: ";
+  static constexpr StringLiteralType k_Prefix = "FilterParameter 'ImportHDF5DatasetParameter' JSON Error: ";
   if(!json.is_object())
   {
-    return MakeErrorResult<std::any>(-780, fmt::format("{}JSON value for key '{}' is not an object", prefix, name()));
+    return MakeErrorResult<std::any>(-780, fmt::format("{}JSON value for key '{}' is not an object", k_Prefix, name()));
   }
 
   if(!json.contains(k_DataPathsKey.view()))
   {
-    return MakeErrorResult<std::any>(-781, fmt::format("{}JSON does not contain key '{} / {}'", prefix, name(), k_DataPathsKey.view()));
+    return MakeErrorResult<std::any>(-781, fmt::format("{}JSON does not contain key '{} / {}'", k_Prefix, name(), k_DataPathsKey.view()));
   }
 
   if(!json.contains(k_InputFileKey.view()))
   {
-    return MakeErrorResult<std::any>(-782, fmt::format("{}JSON does not contain key '{} / {}'", prefix, name(), k_InputFileKey.view()));
+    return MakeErrorResult<std::any>(-782, fmt::format("{}JSON does not contain key '{} / {}'", k_Prefix, name(), k_InputFileKey.view()));
   }
 
   ValueType importData;
-  importData.inputFile = json[k_InputFileKey.str()];
+  importData.input_file = json[k_InputFileKey.str()];
   if(json.contains(k_ParentGroupKey.view()))
   {
     importData.parent = DataPath::FromString(json[k_ParentGroupKey.str()].get<std::string>());
@@ -176,7 +177,7 @@ Result<std::any> ReadHDF5DatasetParameter::fromJsonImpl(const nlohmann::json& js
   {
     if(!jsonDataPaths.is_array())
     {
-      return MakeErrorResult<std::any>(-783, fmt::format("{}JSON value for key '{} / {}' is not an array", prefix, name(), k_DataPathsKey));
+      return MakeErrorResult<std::any>(-783, fmt::format("{}JSON value for key '{} / {}' is not an array", k_Prefix, name(), k_DataPathsKey));
     }
     std::vector<Error> errors;
     for(const auto& jsonImportInfo : jsonDataPaths)
@@ -194,7 +195,7 @@ Result<std::any> ReadHDF5DatasetParameter::fromJsonImpl(const nlohmann::json& js
 }
 
 // -----------------------------------------------------------------------------
-IParameter::UniquePointer ReadHDF5DatasetParameter::clone() const
+IParameter::UniquePointerType ReadHDF5DatasetParameter::clone() const
 {
   return std::make_unique<ReadHDF5DatasetParameter>(name(), humanName(), helpText(), m_DefaultValue);
 }
@@ -212,16 +213,16 @@ Result<> ReadHDF5DatasetParameter::validate(const std::any& value) const
   return {};
 }
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 namespace
 {
-constexpr StringLiteral k_DatasetPathKey = "dataset_path";
-constexpr StringLiteral k_ComponentDimensionsKey = "component_dimensions";
-constexpr StringLiteral k_TupleDimensionsKey = "tuple_dimensions";
+constexpr StringLiteralType k_DatasetPathKey = "dataset_path";
+constexpr StringLiteralType k_ComponentDimensionsKey = "component_dimensions";
+constexpr StringLiteralType k_TupleDimensionsKey = "tuple_dimensions";
 } // namespace
 
-Result<ImportHDF5DatasetFilterParameterConverter::ValueType> ImportHDF5DatasetFilterParameterConverter::convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3)
+Result<ImportHDF5DatasetFilterParameterConverter::ValueType> ImportHDF5DatasetFilterParameterConverter::Convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3)
 {
   if(!json1.is_array())
   {
@@ -246,7 +247,7 @@ Result<ImportHDF5DatasetFilterParameterConverter::ValueType> ImportHDF5DatasetFi
   }
 
   ValueType value;
-  value.inputFile = json2.get<std::string>();
+  value.input_file = json2.get<std::string>();
   value.parent = DataPath({std::move(dataContainerNameResult.value()), std::move(attributeMatrixNameResult.value())});
 
   for(const auto& iter : json1)
@@ -257,12 +258,12 @@ Result<ImportHDF5DatasetFilterParameterConverter::ValueType> ImportHDF5DatasetFi
     }
 
     ParameterType::DatasetImportInfo info;
-    info.dataSetPath = iter[k_DatasetPathKey].get<std::string>();
-    info.componentDimensions = iter[k_ComponentDimensionsKey].get<std::string>();
+    info.data_set_path = iter[k_DatasetPathKey].get<std::string>();
+    info.component_dimensions = iter[k_ComponentDimensionsKey].get<std::string>();
     value.datasets.push_back(std::move(info));
   }
 
   return {std::move(value)};
 }
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core

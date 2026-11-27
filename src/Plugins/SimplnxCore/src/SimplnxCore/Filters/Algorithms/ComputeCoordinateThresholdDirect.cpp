@@ -23,7 +23,7 @@ namespace
  */
 bool AreEndpointsInBounds(float32 minValue, float32 maxValue, float32 minBound, float32 maxBound)
 {
-  return !(minBound > minValue || maxBound < minValue || minBound > maxValue || maxBound < maxValue);
+  return minBound <= minValue && maxBound >= minValue && minBound <= maxValue && maxBound >= maxValue;
 }
 
 /**
@@ -39,7 +39,7 @@ bool AreEndpointsInBounds(float32 minValue, float32 maxValue, float32 minBound, 
  *
  * Cancellation returns success after complete Z slices. Later slices are not written.
  */
-Result<> ComputeRectangleMask(const ImageGeom& imageGeom, uint8* mask, bool shouldInvert, const VectorFloat32Parameter::ValueType& minPoint, const VectorFloat32Parameter::ValueType& maxPoint,
+Result<> ComputeRectangleMask(const ImageGeom& imageGeom, uint8* mask, bool shouldInvert, const VectorFloat32ParameterType::ValueType& minPoint, const VectorFloat32ParameterType::ValueType& maxPoint,
                               const std::atomic_bool& shouldCancel)
 {
   const uint8 trueValue = shouldInvert ? 0 : 1;
@@ -48,8 +48,8 @@ Result<> ComputeRectangleMask(const ImageGeom& imageGeom, uint8* mask, bool shou
   const usize yCells = imageGeom.getNumYCells();
   const usize zCells = imageGeom.getNumZCells();
   const usize xyCells = xCells * yCells;
-  const FloatVec3 spacing = imageGeom.getSpacing();
-  const FloatVec3 origin = imageGeom.getOrigin();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
+  const FloatVec3Type origin = imageGeom.getOrigin();
 
   for(usize zIndex = 0; zIndex < zCells; zIndex++)
   {
@@ -64,12 +64,12 @@ Result<> ComputeRectangleMask(const ImageGeom& imageGeom, uint8* mask, bool shou
     const usize zOffset = zIndex * xyCells;
     for(usize yIndex = 0; yIndex < yCells; yIndex++)
     {
-      uint8* rowMask = mask + zOffset + (yIndex * xCells);
+      uint8* rowMaskPtr = mask + zOffset + (yIndex * xCells);
       const float32 minYValue = yIndex * spacing[1] + origin[1];
       const float32 maxYValue = yIndex * spacing[1] + origin[1] + spacing[1];
       if(!zInBounds || !AreEndpointsInBounds(minYValue, maxYValue, minPoint[1], maxPoint[1]))
       {
-        std::fill_n(rowMask, xCells, falseValue);
+        std::fill_n(rowMaskPtr, xCells, falseValue);
         continue;
       }
 
@@ -77,7 +77,7 @@ Result<> ComputeRectangleMask(const ImageGeom& imageGeom, uint8* mask, bool shou
       {
         const float32 minXValue = xIndex * spacing[0] + origin[0];
         const float32 maxXValue = xIndex * spacing[0] + origin[0] + spacing[0];
-        rowMask[xIndex] = AreEndpointsInBounds(minXValue, maxXValue, minPoint[0], maxPoint[0]) ? trueValue : falseValue;
+        rowMaskPtr[xIndex] = AreEndpointsInBounds(minXValue, maxXValue, minPoint[0], maxPoint[0]) ? trueValue : falseValue;
       }
     }
   }
@@ -92,7 +92,7 @@ Result<> ComputeRectangleMask(const ImageGeom& imageGeom, uint8* mask, bool shou
 struct SpherePredicate
 {
   // This value stores center x, y, z and radius.
-  VectorFloat32Parameter::ValueType sphereInfo;
+  VectorFloat32ParameterType::ValueType sphere_info;
 
   /**
    * @brief Tests one point against the sphere.
@@ -103,11 +103,11 @@ struct SpherePredicate
    */
   uint8 operator()(float32 x, float32 y, float32 z) const
   {
-    const float32 xDiff = x - sphereInfo[0];
-    const float32 yDiff = y - sphereInfo[1];
-    const float32 zDiff = z - sphereInfo[2];
+    const float32 xDiff = x - sphere_info[0];
+    const float32 yDiff = y - sphere_info[1];
+    const float32 zDiff = z - sphere_info[2];
     const float32 totalDiff = (xDiff * xDiff) + (yDiff * yDiff) + (zDiff * zDiff);
-    return totalDiff > (sphereInfo[3] * sphereInfo[3]) ? 0 : 1;
+    return totalDiff > (sphere_info[3] * sphere_info[3]) ? 0 : 1;
   }
 };
 
@@ -134,8 +134,8 @@ Result<> ComputeCornerMask(const ImageGeom& imageGeom, uint8* mask, bool shouldI
   const usize yCells = imageGeom.getNumYCells();
   const usize zCells = imageGeom.getNumZCells();
   const usize xyCells = xCells * yCells;
-  const FloatVec3 spacing = imageGeom.getSpacing();
-  const FloatVec3 origin = imageGeom.getOrigin();
+  const FloatVec3Type spacing = imageGeom.getSpacing();
+  const FloatVec3Type origin = imageGeom.getOrigin();
 
   for(usize zIndex = 0; zIndex < zCells; zIndex++)
   {
@@ -151,7 +151,7 @@ Result<> ComputeCornerMask(const ImageGeom& imageGeom, uint8* mask, bool shouldI
     {
       const float32 minYValue = yIndex * spacing[1] + origin[1];
       const float32 maxYValue = yIndex * spacing[1] + origin[1] + spacing[1];
-      uint8* rowMask = mask + zOffset + (yIndex * xCells);
+      uint8* rowMaskPtr = mask + zOffset + (yIndex * xCells);
       for(usize xIndex = 0; xIndex < xCells; xIndex++)
       {
         const float32 minXValue = xIndex * spacing[0] + origin[0];
@@ -166,7 +166,7 @@ Result<> ComputeCornerMask(const ImageGeom& imageGeom, uint8* mask, bool shouldI
         inBoundsVertexCount += isInBounds(minXValue, maxYValue, maxZValue);
         inBoundsVertexCount += isInBounds(maxXValue, minYValue, maxZValue);
         inBoundsVertexCount += isInBounds(maxXValue, maxYValue, minZValue);
-        rowMask[xIndex] = inBoundsVertexCount == 8 ? trueValue : falseValue;
+        rowMaskPtr[xIndex] = inBoundsVertexCount == 8 ? trueValue : falseValue;
       }
     }
   }
@@ -184,25 +184,23 @@ ComputeCoordinateThresholdDirect::ComputeCoordinateThresholdDirect(DataStructure
 {
 }
 
-ComputeCoordinateThresholdDirect::~ComputeCoordinateThresholdDirect() noexcept = default;
-
 Result<> ComputeCoordinateThresholdDirect::operator()()
 {
-  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->GeometryPath);
-  auto& maskStore = m_DataStructure.getDataRefAs<UInt8Array>(m_InputValues->MaskArrayPath).getDataStoreRef();
-  auto* inMemoryMask = dynamic_cast<UInt8DataStore*>(&maskStore);
-  if(inMemoryMask == nullptr)
+  const auto& imageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->geometry_path);
+  auto& maskStore = m_DataStructure.getDataRefAs<UInt8ArrayType>(m_InputValues->mask_array_path).getDataStoreRef();
+  auto* inMemoryMaskPtr = dynamic_cast<UInt8DataStoreType*>(&maskStore);
+  if(inMemoryMaskPtr == nullptr)
   {
     // A forced direct test can receive an out-of-core store. The scanline fallback keeps I/O bounded.
     return ComputeCoordinateThresholdScanline(m_DataStructure, m_MessageHandler, m_ShouldCancel, m_InputValues)();
   }
 
-  switch(static_cast<ComputeCoordinateThreshold::BoundsType>(m_InputValues->ShapeType))
+  switch(static_cast<ComputeCoordinateThreshold::BoundsType>(m_InputValues->shape_type))
   {
   case ComputeCoordinateThreshold::BoundsType::Rectangle:
-    return ComputeRectangleMask(imageGeom, inMemoryMask->data(), m_InputValues->Invert, m_InputValues->MinCoord, m_InputValues->MaxCoord, m_ShouldCancel);
+    return ComputeRectangleMask(imageGeom, inMemoryMaskPtr->data(), m_InputValues->invert, m_InputValues->min_coord, m_InputValues->max_coord, m_ShouldCancel);
   case ComputeCoordinateThreshold::BoundsType::Sphere:
-    return ComputeCornerMask(imageGeom, inMemoryMask->data(), m_InputValues->Invert, SpherePredicate{m_InputValues->SphereInfo}, m_ShouldCancel);
+    return ComputeCornerMask(imageGeom, inMemoryMaskPtr->data(), m_InputValues->invert, SpherePredicate{m_InputValues->sphere_info}, m_ShouldCancel);
   }
 
   return {};

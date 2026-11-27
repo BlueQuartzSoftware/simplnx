@@ -47,21 +47,21 @@ public:
      *                  If the path import policy is set to 'All', this parameter is ignored.
      */
     explicit ImportData(std::filesystem::path filePath, PathImportPolicy policy = PathImportPolicy::All, std::vector<nx::core::DataPath> dataPaths = {})
-    : FilePath(std::move(filePath))
-    , DataPaths(std::move(dataPaths))
-    , ImportPolicy(policy)
+    : file_path(std::move(filePath))
+    , data_paths(std::move(dataPaths))
+    , import_policy(policy)
     {
     }
 
     /**
      * @brief The path to the .dream3d file to import.
      */
-    std::filesystem::path FilePath;
+    std::filesystem::path file_path;
 
     /**
      * @brief Holds a vector of DataPaths that will be either imported or NOT imported, depending on the PathImportPolicy
      */
-    std::vector<nx::core::DataPath> DataPaths;
+    std::vector<nx::core::DataPath> data_paths;
 
     /**
      * @brief Determines the import policy, which governs how to use the DataPaths.
@@ -69,13 +69,13 @@ public:
      * ExcludeList -> Treats the DataPaths as a list of paths to NOT import.  If DataPaths is empty or missing, everything will be imported.
      * All -> Imports all possible data and ignores the DataPaths list.
      */
-    PathImportPolicy ImportPolicy = PathImportPolicy::All;
+    PathImportPolicy import_policy = PathImportPolicy::All;
   };
 
   /** @brief Filter name used in the filter list and in strict-load diagnostics. */
-  static constexpr StringLiteral k_ReadFilterHumanName = "Read DREAM3D-NX File";
+  static constexpr StringLiteralType k_ReadFilterHumanName = "Read DREAM3D-NX File";
   /** @brief Label of the option that supplies defaults for invalid image metadata. */
-  static constexpr StringLiteral k_UseDefaultGeometryValuesLabel = "Use Default Origin/Spacing for Invalid Values";
+  static constexpr StringLiteralType k_UseDefaultGeometryValuesLabel = "Use Default Origin/Spacing for Invalid Values";
 
   /**
    * @brief Appends Read DREAM3D-NX File recovery instructions to invalid image metadata errors for direct file-loading tools.
@@ -86,7 +86,7 @@ public:
   using ValueType = ImportData;
 
   Dream3dImportParameter() = delete;
-  Dream3dImportParameter(const std::string& name, const std::string& humanName, const std::string& helpText, const ValueType& defaultValue);
+  Dream3dImportParameter(const std::string& name, const std::string& humanName, const std::string& helpText, ValueType defaultValue);
   ~Dream3dImportParameter() override = default;
 
   Dream3dImportParameter(const Dream3dImportParameter&) = delete;
@@ -105,13 +105,13 @@ public:
    * @brief Returns a vector of accepted value types.
    * @return AcceptedTypes
    */
-  AcceptedTypes acceptedTypes() const override;
+  AcceptedTypesType acceptedTypes() const override;
 
   /**
    * @brief Creates and returns a copy of the parameter.
    * @return UniquePointer
    */
-  UniquePointer clone() const override;
+  UniquePointerType clone() const override;
 
   /**
    * @brief
@@ -149,7 +149,7 @@ public:
    * @param importData
    * @return Result<>
    */
-  Result<> validatePath(const ValueType& importData) const;
+  static Result<> ValidatePath(const ValueType& importData);
 
 protected:
   /**
@@ -168,16 +168,16 @@ private:
   ValueType m_DefaultValue;
 };
 
-namespace SIMPLConversion
+namespace simpl_conversion
 {
 struct SIMPLNX_EXPORT DataContainerReaderFilterParameterConverter
 {
   using ParameterType = Dream3dImportParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
-} // namespace SIMPLConversion
+} // namespace simpl_conversion
 } // namespace nx::core
 
 SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::Dream3dImportParameter, "170a257d-5952-4854-9a91-4281cd06f4f5");

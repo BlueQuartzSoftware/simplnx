@@ -21,23 +21,23 @@ namespace rt = recon_test;
 
 namespace
 {
-using ZCFilter = ZeroCrossingImageFilter;
+using ZcFilterType = ZeroCrossingImageFilter;
 
 // Sets the geometry, input, and output keys plus the foreground and background values on the Arguments. The helper
 // runs preflight and execute, and requires that both steps succeed.
-void RunZC(IFilter& filter, DataStructure& ds, const DataPath& inputPath, uint8 foregroundValue, uint8 backgroundValue, UnitTest::AlgorithmTestScope* scope = nullptr,
+void RunZC(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, uint8 foregroundValue, uint8 backgroundValue, unit_test::AlgorithmTestScope* scope = nullptr,
            const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
-  args.insertOrAssign(ZCFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(ZCFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(ZCFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-  args.insertOrAssign(ZCFilter::k_ForegroundValue_Key, std::make_any<uint8>(foregroundValue));
-  args.insertOrAssign(ZCFilter::k_BackgroundValue_Key, std::make_any<uint8>(backgroundValue));
-  auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = scope == nullptr ? filter.execute(ds, args) : scope->executeFilter(filter, ds, args);
+  args.insertOrAssign(ZcFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(ZcFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(ZcFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  args.insertOrAssign(ZcFilterType::k_ForegroundValue_Key, std::make_any<uint8>(foregroundValue));
+  args.insertOrAssign(ZcFilterType::k_BackgroundValue_Key, std::make_any<uint8>(backgroundValue));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  auto executeResult = scope == nullptr ? filter.execute(dataStructure, args) : scope->executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
@@ -77,63 +77,63 @@ std::vector<T> MakeZeroCrossingField(usize dimX, usize dimY, usize dimZ)
 
 // -----------------------------------------------------------------------------
 // (1) Preflight guards: an unsigned input is rejected (SignedScalar); a multi-component input is rejected
-//     (requireScalar); a valid signed scalar input produces a FIXED uint8 output array (AlwaysUInt8).
+//     (requireScalar); a valid signed scalar input produces a FIXED uint8 output array (AlwaysUInt8Type).
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ZeroCrossingImageFilter: preflight guards", "[NXImageProcessing][ZeroCrossingImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   SECTION("unsigned input rejected")
   {
-    DataStructure ds;
-    const DataPath inputPath = rt::BuildImageFromPattern<uint16>(ds, 6, 6, 1, std::vector<uint16>(36, uint16{1}));
+    DataStructure dataStructure;
+    const DataPath inputPath = rt::BuildImageFromPattern<uint16>(dataStructure, 6, 6, 1, std::vector<uint16>(36, uint16{1}));
     const DataPath geomPath = inputPath.getParent().getParent();
-    ZCFilter filter;
+    ZcFilterType filter;
     Arguments args;
-    args.insertOrAssign(ZCFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(ZCFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-    args.insertOrAssign(ZCFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(ZCFilter::k_ForegroundValue_Key, std::make_any<uint8>(uint8{1}));
-    args.insertOrAssign(ZCFilter::k_BackgroundValue_Key, std::make_any<uint8>(uint8{0}));
-    const auto result = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions); // uint16 is not a SignedScalar type (rejected by the ArraySelectionParameter's allowed-types check)
+    args.insertOrAssign(ZcFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(ZcFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+    args.insertOrAssign(ZcFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(ZcFilterType::k_ForegroundValue_Key, std::make_any<uint8>(uint8{1}));
+    args.insertOrAssign(ZcFilterType::k_BackgroundValue_Key, std::make_any<uint8>(uint8{0}));
+    const auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions); // uint16 is not a SignedScalar type (rejected by the ArraySelectionParameter's allowed-types check)
   }
   SECTION("multi-component rejected")
   {
-    DataStructure ds;
-    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, std::vector<int32>(36, 0));
+    DataStructure dataStructure;
+    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(ds, vecPath, {1, 6, 6}, {3});
-    const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
-    DataArray<int32>::Create(ds, "Vec", vecStore, cellAM.getId());
+    auto vecStore = data_store_utilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
+    DataArray<int32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
-    ZCFilter filter;
+    ZcFilterType filter;
     Arguments args;
-    args.insertOrAssign(ZCFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(ZCFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
-    args.insertOrAssign(ZCFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(ZCFilter::k_ForegroundValue_Key, std::make_any<uint8>(uint8{1}));
-    args.insertOrAssign(ZCFilter::k_BackgroundValue_Key, std::make_any<uint8>(uint8{0}));
-    const auto result = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    args.insertOrAssign(ZcFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(ZcFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
+    args.insertOrAssign(ZcFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(ZcFilterType::k_ForegroundValue_Key, std::make_any<uint8>(uint8{1}));
+    args.insertOrAssign(ZcFilterType::k_BackgroundValue_Key, std::make_any<uint8>(uint8{0}));
+    const auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("scalar signed input creates a uint8 output")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<int16> field = MakeZeroCrossingField<int16>(12, 12, 1);
-    const DataPath inputPath = rt::BuildImageFromPattern<int16>(ds, 12, 12, 1, field);
-    ZCFilter filter;
-    RunZC(filter, ds, inputPath, /*fg=*/1, /*bg=*/0);
+    const DataPath inputPath = rt::BuildImageFromPattern<int16>(dataStructure, 12, 12, 1, field);
+    ZcFilterType filter;
+    RunZC(filter, dataStructure, inputPath, /*fg=*/1, /*bg=*/0);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-    REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint8);
+    REQUIRE(dataStructure.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint8);
   }
 }
 
 // -----------------------------------------------------------------------------
 // ITK-sourced real-image golden -- duplicates ITKZeroCrossingImageTest.cpp on our ITK-free filter (2th_cthead1_distance
-// .nrrd input). The output is a fixed uint8 image (AlwaysUInt8). The durable golden is an md5 pin. The helper pins
+// .nrrd input). The output is a fixed uint8 image (AlwaysUInt8Type). The durable golden is an md5 pin. The helper pins
 // ForceInCore.
 //   defaults: the filter defaults (ForegroundValue 1, BackgroundValue 0). They agree with the ITK defaults.
 //   inverted: ForegroundValue = 0, BackgroundValue = 2.

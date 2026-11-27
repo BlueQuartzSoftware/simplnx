@@ -17,8 +17,8 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT ChangeAngleRepresentationInputValues
 {
-  ArraySelectionParameter::ValueType AnglesArrayPath;
-  ChoicesParameter::ValueType ConversionTypeIndex;
+  ArraySelectionParameter::ValueType angles_array_path;
+  ChoicesParameter::ValueType conversion_type_index{};
 };
 
 /**
@@ -43,7 +43,7 @@ public:
    * @pre All arguments outlive this executor.
    */
   ChangeAngleRepresentation(DataStructure& dataStructure, const IFilter::MessageHandler& mesgHandler, const std::atomic_bool& shouldCancel, ChangeAngleRepresentationInputValues* inputValues);
-  ~ChangeAngleRepresentation() noexcept;
+  ~ChangeAngleRepresentation() noexcept = default;
 
   ChangeAngleRepresentation(const ChangeAngleRepresentation&) = delete;
   ChangeAngleRepresentation(ChangeAngleRepresentation&&) noexcept = delete;

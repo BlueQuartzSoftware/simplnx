@@ -22,7 +22,7 @@ namespace rt = recon_test;
 
 namespace
 {
-using DTFilter = DoubleThresholdImageFilter;
+using DtFilterType = DoubleThresholdImageFilter;
 
 // A single (T1,T2,T3,T4) threshold arrangement.
 struct ThreshCase
@@ -39,30 +39,31 @@ struct ThreshCase
 // wide-band component stays outside. The third case is degenerate: the narrow band equals the wide band ({60}).
 // See MakeDoubleThresholdField for the gray levels that each band selects.
 const std::array<ThreshCase, 3> k_ThreshCases = {{
-    {"grow-from-narrow-seed", 10.0, 40.0, 80.0, 120.0}, // narrow [40,80] -> {60}; wide [10,120] -> {60,100}
-    {"grow-from-mask-only", 10.0, 90.0, 115.0, 120.0},  // narrow [90,115] -> {100}; wide [10,120] -> {60,100}
-    {"degenerate-all-equal", 60.0, 60.0, 60.0, 60.0},   // narrow == wide == {60}
+    {.label = "grow-from-narrow-seed", .t1 = 10.0, .t2 = 40.0, .t3 = 80.0, .t4 = 120.0}, // narrow [40,80] -> {60}; wide [10,120] -> {60,100}
+    {.label = "grow-from-mask-only", .t1 = 10.0, .t2 = 90.0, .t3 = 115.0, .t4 = 120.0},  // narrow [90,115] -> {100}; wide [10,120] -> {60,100}
+    {.label = "degenerate-all-equal", .t1 = 60.0, .t2 = 60.0, .t3 = 60.0, .t4 = 60.0},   // narrow == wide == {60}
 }};
 
 // Sets the geometry, input, and output keys plus the seven double-threshold parameters on the Arguments. The helper
 // runs preflight and execute, and requires that both steps succeed.
-void RunDT(IFilter& filter, DataStructure& ds, const DataPath& inputPath, const ThreshCase& tc, uint8 insideValue, uint8 outsideValue, bool fullyConnected, const std::string& outputName = "Output")
+void RunDT(IFilter& filter, DataStructure& dataStructure, const DataPath& inputPath, const ThreshCase& tc, uint8 insideValue, uint8 outsideValue, bool fullyConnected,
+           const std::string& outputName = "Output")
 {
   const DataPath geomPath = inputPath.getParent().getParent();
   Arguments args;
-  args.insertOrAssign(DTFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-  args.insertOrAssign(DTFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(DTFilter::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
-  args.insertOrAssign(DTFilter::k_Threshold1_Key, std::make_any<float64>(tc.t1));
-  args.insertOrAssign(DTFilter::k_Threshold2_Key, std::make_any<float64>(tc.t2));
-  args.insertOrAssign(DTFilter::k_Threshold3_Key, std::make_any<float64>(tc.t3));
-  args.insertOrAssign(DTFilter::k_Threshold4_Key, std::make_any<float64>(tc.t4));
-  args.insertOrAssign(DTFilter::k_InsideValue_Key, std::make_any<uint8>(insideValue));
-  args.insertOrAssign(DTFilter::k_OutsideValue_Key, std::make_any<uint8>(outsideValue));
-  args.insertOrAssign(DTFilter::k_FullyConnected_Key, std::make_any<bool>(fullyConnected));
-  auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  args.insertOrAssign(DtFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+  args.insertOrAssign(DtFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(DtFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>(outputName));
+  args.insertOrAssign(DtFilterType::k_Threshold1_Key, std::make_any<float64>(tc.t1));
+  args.insertOrAssign(DtFilterType::k_Threshold2_Key, std::make_any<float64>(tc.t2));
+  args.insertOrAssign(DtFilterType::k_Threshold3_Key, std::make_any<float64>(tc.t3));
+  args.insertOrAssign(DtFilterType::k_Threshold4_Key, std::make_any<float64>(tc.t4));
+  args.insertOrAssign(DtFilterType::k_InsideValue_Key, std::make_any<uint8>(insideValue));
+  args.insertOrAssign(DtFilterType::k_OutsideValue_Key, std::make_any<uint8>(outsideValue));
+  args.insertOrAssign(DtFilterType::k_FullyConnected_Key, std::make_any<bool>(fullyConnected));
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 
@@ -82,8 +83,8 @@ std::vector<T> MakeDoubleThresholdField(usize dimX, usize dimY, usize dimZ)
 {
   std::vector<T> v(dimX * dimY * dimZ, T{0});
   const int64 nX = static_cast<int64>(dimX);
-  const int64 nY = static_cast<int64>(dimY);
-  const int64 nZ = static_cast<int64>(dimZ);
+  const int64 ny = static_cast<int64>(dimY);
+  const int64 nz = static_cast<int64>(dimZ);
 
   auto frac = [](double f, int64 n) { return static_cast<int64>(f * static_cast<double>(n)); };
 
@@ -91,9 +92,9 @@ std::vector<T> MakeDoubleThresholdField(usize dimX, usize dimY, usize dimZ)
   auto paintBox = [&](double fx0, double fx1, double fy0, double fy1, T value) {
     const int64 x0 = std::max<int64>(0, frac(fx0, nX));
     const int64 x1 = std::min<int64>(nX - 1, frac(fx1, nX));
-    const int64 y0 = std::max<int64>(0, frac(fy0, nY));
-    const int64 y1 = std::min<int64>(nY - 1, frac(fy1, nY));
-    for(int64 z = 0; z < nZ; ++z)
+    const int64 y0 = std::max<int64>(0, frac(fy0, ny));
+    const int64 y1 = std::min<int64>(ny - 1, frac(fy1, ny));
+    for(int64 z = 0; z < nz; ++z)
     {
       for(int64 y = y0; y <= y1; ++y)
       {
@@ -116,53 +117,53 @@ std::vector<T> MakeDoubleThresholdField(usize dimX, usize dimY, usize dimZ)
 
 // -----------------------------------------------------------------------------
 // (1) Preflight guards: a multi-component input is rejected (requireScalar); a valid scalar input (of any scalar
-//     type, incl. unsigned and float -- AllNumeric) produces a FIXED uint8 output array (AlwaysUInt8).
+//     type, incl. unsigned and float -- AllNumeric) produces a FIXED uint8 output array (AlwaysUInt8Type).
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::DoubleThresholdImageFilter: preflight guards", "[NXImageProcessing][DoubleThresholdImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   SECTION("multi-component rejected")
   {
-    DataStructure ds;
-    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(ds, 6, 6, 1, std::vector<int32>(36, 0));
+    DataStructure dataStructure;
+    const DataPath scalarPath = rt::BuildImageFromPattern<int32>(dataStructure, 6, 6, 1, std::vector<int32>(36, 0));
     const DataPath vecPath({"Image Geometry", "CellData", "Vec"});
-    auto vecStore = DataStoreUtilities::CreateDataStore<int32>(ds, vecPath, {1, 6, 6}, {3});
-    const auto& cellAM = ds.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
-    DataArray<int32>::Create(ds, "Vec", vecStore, cellAM.getId());
+    auto vecStore = data_store_utilities::CreateDataStore<int32>(dataStructure, vecPath, {1, 6, 6}, {3});
+    const auto& cellAM = dataStructure.getDataRefAs<AttributeMatrix>(DataPath({"Image Geometry", "CellData"}));
+    DataArray<int32>::Create(dataStructure, "Vec", vecStore, cellAM.getId());
     const DataPath geomPath = vecPath.getParent().getParent();
-    DTFilter filter;
+    DtFilterType filter;
     Arguments args;
-    args.insertOrAssign(DTFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
-    args.insertOrAssign(DTFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
-    args.insertOrAssign(DTFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-    args.insertOrAssign(DTFilter::k_Threshold1_Key, std::make_any<float64>(0.0));
-    args.insertOrAssign(DTFilter::k_Threshold2_Key, std::make_any<float64>(1.0));
-    args.insertOrAssign(DTFilter::k_Threshold3_Key, std::make_any<float64>(254.0));
-    args.insertOrAssign(DTFilter::k_Threshold4_Key, std::make_any<float64>(255.0));
-    args.insertOrAssign(DTFilter::k_InsideValue_Key, std::make_any<uint8>(uint8{1}));
-    args.insertOrAssign(DTFilter::k_OutsideValue_Key, std::make_any<uint8>(uint8{0}));
-    args.insertOrAssign(DTFilter::k_FullyConnected_Key, std::make_any<bool>(false));
-    const auto result = filter.preflight(ds, args);
-    SIMPLNX_RESULT_REQUIRE_INVALID(result.outputActions);
-    REQUIRE(result.outputActions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
+    args.insertOrAssign(DtFilterType::k_InputImageGeomPath_Key, std::make_any<DataPath>(geomPath));
+    args.insertOrAssign(DtFilterType::k_InputImageDataPath_Key, std::make_any<DataPath>(vecPath));
+    args.insertOrAssign(DtFilterType::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+    args.insertOrAssign(DtFilterType::k_Threshold1_Key, std::make_any<float64>(0.0));
+    args.insertOrAssign(DtFilterType::k_Threshold2_Key, std::make_any<float64>(1.0));
+    args.insertOrAssign(DtFilterType::k_Threshold3_Key, std::make_any<float64>(254.0));
+    args.insertOrAssign(DtFilterType::k_Threshold4_Key, std::make_any<float64>(255.0));
+    args.insertOrAssign(DtFilterType::k_InsideValue_Key, std::make_any<uint8>(uint8{1}));
+    args.insertOrAssign(DtFilterType::k_OutsideValue_Key, std::make_any<uint8>(uint8{0}));
+    args.insertOrAssign(DtFilterType::k_FullyConnected_Key, std::make_any<bool>(false));
+    const auto result = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result.output_actions);
+    REQUIRE(result.output_actions.errors().front().code == nx::core::ImageProcessing::k_NonScalarInput);
   }
   SECTION("scalar float input creates a uint8 output")
   {
-    DataStructure ds;
+    DataStructure dataStructure;
     const std::vector<float32> field = MakeDoubleThresholdField<float32>(12, 12, 1);
-    const DataPath inputPath = rt::BuildImageFromPattern<float32>(ds, 12, 12, 1, field);
-    DTFilter filter;
-    RunDT(filter, ds, inputPath, k_ThreshCases[0], /*inside=*/1, /*outside=*/0, /*fullyConnected=*/false);
+    const DataPath inputPath = rt::BuildImageFromPattern<float32>(dataStructure, 12, 12, 1, field);
+    DtFilterType filter;
+    RunDT(filter, dataStructure, inputPath, k_ThreshCases[0], /*inside=*/1, /*outside=*/0, /*fullyConnected=*/false);
     const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-    REQUIRE(ds.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint8);
+    REQUIRE(dataStructure.getDataRefAs<IDataArray>(outputPath).getDataType() == DataType::uint8);
   }
 }
 
 // -----------------------------------------------------------------------------
 // ITK-sourced real-image golden -- duplicates ITKDoubleThresholdImageTest.cpp on our ITK-free filter. The output is a
-// fixed uint8 image (AlwaysUInt8). The durable golden is an md5 pin. The helper pins ForceInCore.
+// fixed uint8 image (AlwaysUInt8Type). The durable golden is an md5 pin. The helper pins ForceInCore.
 //   DoubleThreshold1: RA-Short.nrrd, filter defaults (T1..T4 = 0/1/254/255, Inside 1, Outside 0, FullyConnected false).
 //   DoubleThreshold2: RA-Slice-Short.png, thresholds 0/0/3000/2700 (passed verbatim -- non-monotone by design).
 // -----------------------------------------------------------------------------

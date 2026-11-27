@@ -19,31 +19,31 @@ using namespace nx::core;
 // requireScalar=false multi-component path once via Abs; it is identical for ALL the pointwise filters.
 TEST_CASE("NXImageProcessing::AbsImageFilter: multi-component (vector) input is processed per-component", "[NXImageProcessing][AbsImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({2, 1, 1}); // 2 cells
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  imageGeomPtr->setDimensions({2, 1, 1}); // 2 cells
   const ShapeType cellShape = {1, 1, 2};
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
 
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<float32>(ds, inputPath, cellShape, {3});
-  auto* inArray = DataArray<float32>::Create(ds, "Input", store, cellAM->getId());
-  auto& inRef = inArray->getDataStoreRef();
+  auto store = data_store_utilities::CreateDataStore<float32>(dataStructure, inputPath, cellShape, {3});
+  auto* inArrayPtr = DataArray<float32>::Create(dataStructure, "Input", store, cellAmPtr->getId());
+  auto& inRef = inArrayPtr->getDataStoreRef();
   // 2 tuples x 3 components = 6 values, mixed signs so abs is non-trivial on every component.
   const std::array<float32, 6> inputValues = {-1.0f, 2.0f, -3.0f, 4.0f, -5.0f, 6.0f};
   for(usize i = 0; i < inputValues.size(); ++i)
   {
     inRef.setValue(i, inputValues[i]);
   }
-  REQUIRE(inArray->getNumberOfComponents() == 3);
+  REQUIRE(inArrayPtr->getNumberOfComponents() == 3);
 
-  const DataPath outputPath = ip_test::RunPointwiseFilter<AbsImageFilter>(ds, inputPath);
+  const DataPath outputPath = ip_test::RunPointwiseFilter<AbsImageFilter>(dataStructure, inputPath);
 
-  const auto& outArray = ds.getDataRefAs<DataArray<float32>>(outputPath);
+  const auto& outArray = dataStructure.getDataRefAs<DataArray<float32>>(outputPath);
   REQUIRE(outArray.getNumberOfComponents() == 3); // component shape preserved
   const auto& outRef = outArray.getDataStoreRef();
   for(usize i = 0; i < inputValues.size(); ++i)
@@ -57,34 +57,34 @@ TEST_CASE("NXImageProcessing::AbsImageFilter: multi-component (vector) input is 
 // The integer-domain abs returns the exact 2^53 + 1.
 TEST_CASE("NXImageProcessing::AbsImageFilter: int64 abs is exact in the integer domain", "[NXImageProcessing][AbsImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   constexpr int64 k_Neg = -9007199254740993LL;     // -(2^53 + 1)
   constexpr int64 k_Expected = 9007199254740993LL; // 2^53 + 1 (unrepresentable in float64)
 
-  DataStructure ds;
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({2, 1, 1});
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  imageGeomPtr->setDimensions({2, 1, 1});
   const ShapeType cellShape = {1, 1, 2};
-  auto* cellAM = AttributeMatrix::Create(ds, "CellData", cellShape, imageGeom->getId());
-  imageGeom->setCellData(*cellAM);
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, "CellData", cellShape, imageGeomPtr->getId());
+  imageGeomPtr->setCellData(*cellAmPtr);
   const DataPath inputPath({"Image Geometry", "CellData", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<int64>(ds, inputPath, cellShape, {1});
-  auto* inArray = DataArray<int64>::Create(ds, "Input", store, cellAM->getId());
-  inArray->getDataStoreRef().setValue(0, k_Neg);
-  inArray->getDataStoreRef().setValue(1, int64{-5});
+  auto store = data_store_utilities::CreateDataStore<int64>(dataStructure, inputPath, cellShape, {1});
+  auto* inArrayPtr = DataArray<int64>::Create(dataStructure, "Input", store, cellAmPtr->getId());
+  inArrayPtr->getDataStoreRef().setValue(0, k_Neg);
+  inArrayPtr->getDataStoreRef().setValue(1, int64{-5});
 
   AbsImageFilter filter;
   Arguments args;
   args.insertOrAssign(AbsImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
   args.insertOrAssign(AbsImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(AbsImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
-  auto executeResult = filter.execute(ds, args);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   const DataPath outputPath({"Image Geometry", "CellData", "Output"});
-  const auto& outStore = ds.getDataRefAs<DataArray<int64>>(outputPath).getDataStoreRef();
+  const auto& outStore = dataStructure.getDataRefAs<DataArray<int64>>(outputPath).getDataStoreRef();
   REQUIRE(outStore.getValue(0) == k_Expected); // exact, NOT 2^53
   REQUIRE(outStore.getValue(1) == int64{5});
 }
@@ -99,15 +99,15 @@ namespace
 // -----------------------------------------------------------------------------
 void RunAbsItkGolden(const std::string& inputFile, const std::string& baselineFile)
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
   const DataPath geom({"Image Geometry"});
   const DataPath input = geom.createChildPath("CellData").createChildPath("Input");
   const DataPath output = geom.createChildPath("CellData").createChildPath("Output");
 
-  DataStructure ds;
-  const auto readInput = ip_golden::ReadInputImage(ds, ip_golden::InputPath(inputFile), geom, "CellData", "Input");
+  DataStructure dataStructure;
+  const auto readInput = ip_golden::ReadInputImage(dataStructure, ip_golden::InputPath(inputFile), geom, "CellData", "Input");
   SIMPLNX_RESULT_REQUIRE_VALID(readInput);
 
   Arguments args;
@@ -115,20 +115,20 @@ void RunAbsItkGolden(const std::string& inputFile, const std::string& baselineFi
   args.insertOrAssign(AbsImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(input));
   args.insertOrAssign(AbsImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
   AbsImageFilter filter;
-  auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
-  auto executeResult = filter.execute(ds, args);
+  auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
+  auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
   // DURABLE golden: baseline compare @ 0.01.
   const DataPath bGeom({"Baseline Geometry"});
-  const auto readBaseline = ip_golden::ReadInputImage(ds, ip_golden::BaselinePath(baselineFile), bGeom, "CellData", "Baseline");
+  const auto readBaseline = ip_golden::ReadInputImage(dataStructure, ip_golden::BaselinePath(baselineFile), bGeom, "CellData", "Baseline");
   SIMPLNX_RESULT_REQUIRE_VALID(readBaseline);
   const DataPath baseline = bGeom.createChildPath("CellData").createChildPath("Baseline");
-  const auto compareResult = ip_golden::CompareImages(ds, bGeom, baseline, geom, output, 0.01);
+  const auto compareResult = ip_golden::CompareImages(dataStructure, bGeom, baseline, geom, output, 0.01);
   SIMPLNX_RESULT_REQUIRE_VALID(compareResult);
 
-  UnitTest::CheckArraysInheritTupleDims(ds);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 } // namespace
 
@@ -150,21 +150,21 @@ TEST_CASE("NXImageProcessing::AbsImageFilter: ITK real-image golden (short)", "[
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::AbsImageFilter: Preflight rejects an array whose tuple count != geometry cell count", "[NXImageProcessing][AbsImageFilter]")
 {
-  UnitTest::LoadPlugins();
-  const UnitTest::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
+  unit_test::LoadPlugins();
+  const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);
 
-  DataStructure ds;
-  auto* imageGeom = ImageGeom::Create(ds, "Image Geometry");
-  imageGeom->setDimensions({4, 4, 4}); // 64 cells
+  DataStructure dataStructure;
+  auto* imageGeomPtr = ImageGeom::Create(dataStructure, "Image Geometry");
+  imageGeomPtr->setDimensions({4, 4, 4}); // 64 cells
 
   // Input array with a DELIBERATELY MISMATCHED tuple count (8 tuples != 64 cells), held in its own top-level
   // AttributeMatrix (NOT wired as the geometry's cell data), so the array's tuple count and the geometry's cell
   // count differ and the shared PreflightImageFilter geometry check is the sole violation.
   const ShapeType mismatchedShape = {8};
-  auto* am = AttributeMatrix::Create(ds, "Data", ShapeType(mismatchedShape.cbegin(), mismatchedShape.cend()));
+  auto* amPtr = AttributeMatrix::Create(dataStructure, "Data", ShapeType(mismatchedShape.cbegin(), mismatchedShape.cend()));
   const DataPath inputPath({"Data", "Input"});
-  auto store = DataStoreUtilities::CreateDataStore<float32>(ds, inputPath, mismatchedShape, {1});
-  DataArray<float32>::Create(ds, "Input", store, am->getId());
+  auto store = data_store_utilities::CreateDataStore<float32>(dataStructure, inputPath, mismatchedShape, {1});
+  DataArray<float32>::Create(dataStructure, "Input", store, amPtr->getId());
 
   AbsImageFilter filter;
   Arguments args;
@@ -172,7 +172,7 @@ TEST_CASE("NXImageProcessing::AbsImageFilter: Preflight rejects an array whose t
   args.insertOrAssign(AbsImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
   args.insertOrAssign(AbsImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
 
-  const auto preflightResult = filter.preflight(ds, args);
-  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.outputActions);
-  REQUIRE(preflightResult.outputActions.errors().front().code == nx::core::ImageProcessing::k_GeometryMismatch);
+  const auto preflightResult = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_INVALID(preflightResult.output_actions);
+  REQUIRE(preflightResult.output_actions.errors().front().code == nx::core::ImageProcessing::k_GeometryMismatch);
 }

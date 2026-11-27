@@ -68,9 +68,9 @@ Parameters ComputeEuclideanDistMapFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath{},
-                                                             GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
-                                                          ArraySelectionParameter::AllowedTypes{DataType::int32}, ArraySelectionParameter::AllowedComponentShapes{{1}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Cell Data"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_GBDistancesArrayName_Key, "Boundary Distances",
@@ -95,14 +95,14 @@ IFilter::VersionType ComputeEuclideanDistMapFilter::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer ComputeEuclideanDistMapFilter::clone() const
+IFilter::UniquePointerType ComputeEuclideanDistMapFilter::clone() const
 {
   return std::make_unique<ComputeEuclideanDistMapFilter>();
 }
 
 //------------------------------------------------------------------------------
-IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& messageHandler,
-                                                                      const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const DataStructure& dataStructure, const Arguments& filterArgs, const MessageHandler& /*messageHandler*/,
+                                                                      const std::atomic_bool& /*shouldCancel*/, const ExecutionContext& /*executionContext*/) const
 {
   auto pCalcManhattanDistValue = filterArgs.value<bool>(k_CalcManhattanDist_Key);
   auto pCalculateDistToBoundaries = filterArgs.value<bool>(k_DoBoundaries_Key);
@@ -113,7 +113,7 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key), {pFeatureIdsArrayPathValue}, -12805);
   if(tupleCountResult.invalid())
   {
-    return {ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
+    return {.output_actions = ConvertResultTo<OutputActions>(std::move(tupleCountResult), {})};
   }
 
   DataPath parentGroup = pFeatureIdsArrayPathValue.getParent();
@@ -123,13 +123,13 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
   nx::core::Result<OutputActions> resultOutputActions;
 
   // Get the Cell Data Array, so we get the tuple shape correct
-  const auto* cellDataArray = dataStructure.getDataAs<Int32Array>(pFeatureIdsArrayPathValue);
-  if(nullptr == cellDataArray)
+  const auto* cellDataArrayPtr = dataStructure.getDataAs<Int32ArrayType>(pFeatureIdsArrayPathValue);
+  if(nullptr == cellDataArrayPtr)
   {
-    return {MakeErrorResult<OutputActions>(-12801, fmt::format("{} Data Array is not of the correct type. Select a DataArray object.", pFeatureIdsArrayPathValue.toString()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(-12801, fmt::format("{} Data Array is not of the correct type. Select a DataArray object.", pFeatureIdsArrayPathValue.toString()))};
   }
 
-  ShapeType tupleShape = cellDataArray->getIDataStore()->getTupleShape();
+  ShapeType tupleShape = cellDataArrayPtr->getIDataStore()->getTupleShape();
   DataType outputDataType = DataType::int32;
   if(!pCalcManhattanDistValue)
   {
@@ -138,10 +138,10 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
 
   if(!pCalculateDistToBoundaries && !pCalculateDistToTripleLines && !pCalculateDistToQuadPoints)
   {
-    return {MakeErrorResult<OutputActions>(
-        -12802, fmt::format("There is no output.  One of the following options must be selected: Calculate Distance To Boundaries, Calculate Distance to Triple Lines, or Calculate "
-                            "Distance to Quadruple Points.",
-                            pFeatureIdsArrayPathValue.toString()))};
+    return {.output_actions = MakeErrorResult<OutputActions>(
+                -12802, fmt::format("There is no output.  One of the following options must be selected: Calculate Distance To Boundaries, Calculate Distance to Triple Lines, or Calculate "
+                                    "Distance to Quadruple Points.",
+                                    pFeatureIdsArrayPathValue.toString()))};
   }
 
   // Create the GBDistancesArray
@@ -169,42 +169,42 @@ IFilter::PreflightResult ComputeEuclideanDistMapFilter::preflightImpl(const Data
   std::vector<PreflightValue> preflightUpdatedValues;
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
-  return {std::move(resultOutputActions), std::move(preflightUpdatedValues)};
+  return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};
 }
 
 //------------------------------------------------------------------------------
-Result<> ComputeEuclideanDistMapFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* pipelineNode, const MessageHandler& messageHandler,
-                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& executionContext) const
+Result<> ComputeEuclideanDistMapFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
+                                                    const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const
 {
   ComputeEuclideanDistMapInputValues inputValues;
 
-  inputValues.CalcManhattanDist = filterArgs.value<bool>(k_CalcManhattanDist_Key);
-  inputValues.DoBoundaries = filterArgs.value<bool>(k_DoBoundaries_Key);
-  inputValues.DoTripleLines = filterArgs.value<bool>(k_DoTripleLines_Key);
-  inputValues.DoQuadPoints = filterArgs.value<bool>(k_DoQuadPoints_Key);
-  inputValues.FeatureIdsArrayPath = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
-  DataPath parentGroupPath = inputValues.FeatureIdsArrayPath.getParent();
-  inputValues.GBDistancesArrayPath = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_GBDistancesArrayName_Key));
-  inputValues.TJDistancesArrayPath = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_TJDistancesArrayName_Key));
-  inputValues.QPDistancesArrayPath = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_QPDistancesArrayName_Key));
-  inputValues.InputImageGeometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
+  inputValues.calc_manhattan_dist = filterArgs.value<bool>(k_CalcManhattanDist_Key);
+  inputValues.do_boundaries = filterArgs.value<bool>(k_DoBoundaries_Key);
+  inputValues.do_triple_lines = filterArgs.value<bool>(k_DoTripleLines_Key);
+  inputValues.do_quad_points = filterArgs.value<bool>(k_DoQuadPoints_Key);
+  inputValues.feature_ids_array_path = filterArgs.value<DataPath>(k_CellFeatureIdsArrayPath_Key);
+  DataPath parentGroupPath = inputValues.feature_ids_array_path.getParent();
+  inputValues.gb_distances_array_path = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_GBDistancesArrayName_Key));
+  inputValues.tj_distances_array_path = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_TJDistancesArrayName_Key));
+  inputValues.qp_distances_array_path = parentGroupPath.createChildPath(filterArgs.value<std::string>(k_QPDistancesArrayName_Key));
+  inputValues.input_image_geometry = filterArgs.value<DataPath>(k_SelectedImageGeometryPath_Key);
 
   return ComputeEuclideanDistMap(dataStructure, messageHandler, shouldCancel, &inputValues)();
 }
 
 namespace
 {
-namespace SIMPL
+namespace simpl
 {
-constexpr StringLiteral k_CalcManhattanDistKey = "CalcManhattanDist";
-constexpr StringLiteral k_DoBoundariesKey = "DoBoundaries";
-constexpr StringLiteral k_DoTripleLinesKey = "DoTripleLines";
-constexpr StringLiteral k_DoQuadPointsKey = "DoQuadPoints";
-constexpr StringLiteral k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
-constexpr StringLiteral k_GBDistancesArrayNameKey = "GBDistancesArrayName";
-constexpr StringLiteral k_TJDistancesArrayNameKey = "TJDistancesArrayName";
-constexpr StringLiteral k_QPDistancesArrayNameKey = "QPDistancesArrayName";
-} // namespace SIMPL
+constexpr StringLiteralType k_CalcManhattanDistKey = "CalcManhattanDist";
+constexpr StringLiteralType k_DoBoundariesKey = "DoBoundaries";
+constexpr StringLiteralType k_DoTripleLinesKey = "DoTripleLines";
+constexpr StringLiteralType k_DoQuadPointsKey = "DoQuadPoints";
+constexpr StringLiteralType k_FeatureIdsArrayPathKey = "FeatureIdsArrayPath";
+constexpr StringLiteralType k_GBDistancesArrayNameKey = "GBDistancesArrayName";
+constexpr StringLiteralType k_TJDistancesArrayNameKey = "TJDistancesArrayName";
+constexpr StringLiteralType k_QPDistancesArrayNameKey = "QPDistancesArrayName";
+} // namespace simpl
 } // namespace
 
 Result<Arguments> ComputeEuclideanDistMapFilter::FromSIMPLJson(const nlohmann::json& json)
@@ -213,16 +213,16 @@ Result<Arguments> ComputeEuclideanDistMapFilter::FromSIMPLJson(const nlohmann::j
 
   std::vector<Result<>> results;
 
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_CalcManhattanDistKey, k_CalcManhattanDist_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_DoBoundariesKey, k_DoBoundaries_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_DoTripleLinesKey, k_DoTripleLines_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::BooleanFilterParameterConverter>(args, json, SIMPL::k_DoQuadPointsKey, k_DoQuadPoints_Key));
-  results.push_back(
-      SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_SelectedImageGeometryPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::DataArraySelectionFilterParameterConverter>(args, json, SIMPL::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_GBDistancesArrayNameKey, k_GBDistancesArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_TJDistancesArrayNameKey, k_TJDistancesArrayName_Key));
-  results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::LinkedPathCreationFilterParameterConverter>(args, json, SIMPL::k_QPDistancesArrayNameKey, k_QPDistancesArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_CalcManhattanDistKey, k_CalcManhattanDist_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_DoBoundariesKey, k_DoBoundaries_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_DoTripleLinesKey, k_DoTripleLines_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_DoQuadPointsKey, k_DoQuadPoints_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey,
+                                                                                                                                        k_SelectedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_GBDistancesArrayNameKey, k_GBDistancesArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_TJDistancesArrayNameKey, k_TJDistancesArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_QPDistancesArrayNameKey, k_QPDistancesArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

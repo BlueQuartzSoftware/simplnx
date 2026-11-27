@@ -13,9 +13,7 @@
 
 #include <vector>
 
-namespace nx::core
-{
-namespace HDF5
+namespace nx::core::hdf5
 {
 
 /**
@@ -29,9 +27,9 @@ class NeighborListIO : public IDataIO
 public:
   using data_type = NeighborList<T>;
 
-  using store_type = typename data_type::store_type;
+  using StoreType = typename data_type::StoreType;
 
-  using shared_vector_type = typename data_type::SharedVectorType;
+  using SharedVectorType = typename data_type::SharedVectorType;
 
   NeighborListIO() = default;
 
@@ -48,7 +46,7 @@ public:
    * The NumNeighbors companion array maps flat values to ragged tuple vectors.
    * Metadata import returns EmptyListStore until finishImportingData().
    */
-  static std::shared_ptr<store_type> ReadHdf5Data(const nx::core::HDF5::GroupIO& parentGroup, const nx::core::HDF5::DatasetIO& dataReader, bool useEmptyDataStore, std::vector<Warning>& warnings)
+  static std::shared_ptr<StoreType> ReadHdf5Data(const nx::core::hdf5::GroupIO& parentGroup, const nx::core::hdf5::DatasetIO& dataReader, bool useEmptyDataStore, std::vector<Warning>& warnings)
   {
     try
     {
@@ -72,7 +70,7 @@ public:
         return std::make_shared<EmptyListStore<T>>(tupleDimsResult.value());
       }
 
-      auto numNeighborsResult = DataStoreIO::ReadDataStoreIntoMemory<int32>(numNeighborsReader);
+      auto numNeighborsResult = data_store_io::ReadDataStoreIntoMemory<int32>(numNeighborsReader);
       for(auto&& warning : numNeighborsResult.warnings())
       {
         warnings.push_back(std::move(warning));
@@ -117,7 +115,7 @@ public:
       return listStorePtr;
     } catch(const std::exception& e)
     {
-      std::cout << "Cannot Read Neighborlist Dataset at path '" << dataReader.getObjectPath() << "' with error '" << e.what() << "'" << std::endl;
+      std::cout << "Cannot Read Neighborlist Dataset at path '" << dataReader.getObjectPath() << "' with error '" << e.what() << "'" << '\n';
       return nullptr;
     }
   }
@@ -132,7 +130,7 @@ public:
    * @param useEmptyDataStore True for metadata-only import.
    * @return Import warnings or errors.
    */
-  Result<> readData(DataStructureReader& dataStructureReader, const group_reader_type& parentGroup, const std::string& objectName, DataObject::IdType importId,
+  Result<> readData(DataStructureReader& dataStructureReader, const GroupReaderType& parentGroup, const std::string& objectName, DataObject::IdType importId,
                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false) const override
   {
     auto datasetReader = parentGroup.openDataset(objectName);
@@ -140,16 +138,16 @@ public:
     auto listStorePtr = ReadHdf5Data(parentGroup, datasetReader, useEmptyDataStore, warnings);
 
     Result<> result;
-    result.m_Warnings = std::move(warnings);
+    result.m_warnings = std::move(warnings);
 
-    if(listStorePtr == nullptr && !result.m_Warnings.empty())
+    if(listStorePtr == nullptr && !result.m_warnings.empty())
     {
       // A recovery placeholder cannot materialize a NeighborList.
       return result;
     }
 
-    auto* dataObject = data_type::Import(dataStructureReader.getDataStructure(), objectName, importId, listStorePtr, parentId);
-    if(dataObject == nullptr)
+    auto* dataObjectPtr = data_type::Import(dataStructureReader.getDataStructure(), objectName, importId, listStorePtr, parentId);
+    if(dataObjectPtr == nullptr)
     {
       std::string ss = "Failed to import NeighborList from HDF5";
       return MakeErrorResult(-505, ss);
@@ -167,7 +165,7 @@ public:
    * The method reconstructs tuple vectors from packed values and companion
    * counts. A higher import layer selects an out-of-core store when applicable.
    */
-  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const group_reader_type& parentGroup) const override
+  Result<> finishImportingData(DataStructure& dataStructure, const DataPath& dataPath, const GroupReaderType& parentGroup) const override
   {
     if(!dataStructure.containsData(dataPath))
     {
@@ -187,12 +185,12 @@ public:
 
     // The companion count array maps flat values to per-tuple list boundaries.
     auto numNeighborsReader = parentGroup.openDataset(numNeighborsName);
-    auto numNeighborsResult = DataStoreIO::ReadDataStoreIntoMemory<int32>(numNeighborsReader);
+    auto numNeighborsResult = data_store_io::ReadDataStoreIntoMemory<int32>(numNeighborsReader);
 
     Result<> result;
     for(auto&& warning : numNeighborsResult.warnings())
     {
-      result.m_Warnings.push_back(std::move(warning));
+      result.m_warnings.push_back(std::move(warning));
     }
     if(numNeighborsResult.value() == nullptr)
     {
@@ -246,15 +244,15 @@ public:
    * @return Write warnings or errors.
    * @pre Each list size fits int32 and the packed value count fits usize.
    */
-  Result<> writeData(DataStructureWriter& dataStructureWriter, const NeighborList<T>& neighborList, group_writer_type& parentGroupWriter, bool importable) const
+  Result<> writeData(DataStructureWriter& dataStructureWriter, const NeighborList<T>& neighborList, GroupWriterType& parentGroupWriter, bool importable) const
   {
     DataStructure tmp;
 
     // Store list lengths separately so the reader can rebuild ragged vectors.
     const auto neighborData = neighborList.getVectors();
     const usize arraySize = neighborData.size();
-    auto* numNeighborsArray = Int32Array::CreateWithStore<Int32DataStore>(tmp, neighborList.getNumNeighborsArrayName(), std::vector<usize>{arraySize}, std::vector<usize>{1});
-    auto& numNeighborsStore = numNeighborsArray->getDataStoreRef();
+    auto* numNeighborsArrayPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(tmp, neighborList.getNumNeighborsArrayName(), std::vector<usize>{arraySize}, std::vector<usize>{1});
+    auto& numNeighborsStore = numNeighborsArrayPtr->getDataStoreRef();
     usize totalItems = 0;
     for(usize i = 0; i < arraySize; i++)
     {
@@ -264,7 +262,7 @@ public:
     }
 
     DataArrayIO<int32> dataArrayIO;
-    Result<> result = dataArrayIO.writeData(dataStructureWriter, *numNeighborsArray, parentGroupWriter, false);
+    Result<> result = dataArrayIO.writeData(dataStructureWriter, *numNeighborsArrayPtr, parentGroupWriter, false);
     if(result.invalid())
     {
       return result;
@@ -279,10 +277,10 @@ public:
       {
         continue;
       }
-      const T* start = segment.data();
+      const T* startPtr = segment.data();
       for(usize i = 0; i < numElements; i++)
       {
-        flattenedData[offset + i] = start[i];
+        flattenedData[offset + i] = startPtr[i];
       }
       offset += numElements;
     }
@@ -290,8 +288,8 @@ public:
     // Neighbor values can be large. Apply the configured compression level to
     // the packed array as well as the companion counts.
     auto datasetWriter = parentGroupWriter.createDataset(neighborList.getName());
-    datasetWriter.setCompressionLevel(dataStructureWriter.getWriteOptions().compressionLevel);
-    result = DataStoreIO::WriteDataStore<T>(datasetWriter, flattenedData);
+    datasetWriter.setCompressionLevel(dataStructureWriter.getWriteOptions().compression_level);
+    result = data_store_io::WriteDataStore<T>(datasetWriter, flattenedData);
     if(result.invalid())
     {
       return result;
@@ -311,7 +309,7 @@ public:
    * @param parentWriter Destination HDF5 group.
    * @return Type-validation or write errors.
    */
-  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, group_writer_type& parentWriter) const override
+  Result<> writeDataObject(DataStructureWriter& dataStructureWriter, const DataObject* dataObject, GroupWriterType& parentWriter) const override
   {
     return WriteDataObjectImpl(this, dataStructureWriter, dataObject, parentWriter);
   }
@@ -332,18 +330,17 @@ public:
   NeighborListIO& operator=(NeighborListIO&& rhs) = delete;
 };
 
-using Int8NeighborIO = NeighborListIO<int8>;
-using Int16NeighborIO = NeighborListIO<int16>;
-using Int32NeighborIO = NeighborListIO<int32>;
-using Int64NeighborIO = NeighborListIO<int64>;
+using Int8NeighborIoType = NeighborListIO<int8>;
+using Int16NeighborIoType = NeighborListIO<int16>;
+using Int32NeighborIoType = NeighborListIO<int32>;
+using Int64NeighborIoType = NeighborListIO<int64>;
 
-using UInt8NeighborIO = NeighborListIO<uint8>;
-using UInt16NeighborIO = NeighborListIO<uint16>;
-using UInt32NeighborIO = NeighborListIO<uint32>;
-using UInt64NeighborIO = NeighborListIO<uint64>;
+using UInt8NeighborIoType = NeighborListIO<uint8>;
+using UInt16NeighborIoType = NeighborListIO<uint16>;
+using UInt32NeighborIoType = NeighborListIO<uint32>;
+using UInt64NeighborIoType = NeighborListIO<uint64>;
 
 // using BoolNeighborIO = NeighborListIO<bool>;
-using Float32NeighborIO = NeighborListIO<float32>;
-using Float64NeighborIO = NeighborListIO<float64>;
-} // namespace HDF5
-} // namespace nx::core
+using Float32NeighborIoType = NeighborListIO<float32>;
+using Float64NeighborIoType = NeighborListIO<float64>;
+} // namespace nx::core::hdf5

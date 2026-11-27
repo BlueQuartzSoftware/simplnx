@@ -8,12 +8,11 @@
 #include <algorithm>
 #include <fstream>
 
-namespace fs = std::filesystem;
 using namespace nx::core;
 
 namespace
 {
-using ull = unsigned long long int;
+using UllType = unsigned long long int;
 }
 
 // -----------------------------------------------------------------------------
@@ -26,7 +25,6 @@ WriteLAMMPSFile::WriteLAMMPSFile(DataStructure& dataStructure, const IFilter::Me
 }
 
 // -----------------------------------------------------------------------------
-WriteLAMMPSFile::~WriteLAMMPSFile() noexcept = default;
 
 // -----------------------------------------------------------------------------
 const std::atomic_bool& WriteLAMMPSFile::getCancel()
@@ -39,22 +37,22 @@ Result<> WriteLAMMPSFile::operator()()
 {
   // Make sure any directory path is also available as the user may have just typed
   // in a path without actually creating the full path
-  Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->OutputFile.parent_path());
+  Result<> createDirectoriesResult = nx::core::CreateOutputDirectories(m_InputValues->output_file.parent_path());
   if(createDirectoriesResult.invalid())
   {
     return createDirectoriesResult;
   }
 
-  std::ofstream file = std::ofstream(m_InputValues->OutputFile, std::ios_base::out | std::ios_base::binary);
+  std::ofstream file = std::ofstream(m_InputValues->output_file, std::ios_base::out | std::ios_base::binary);
   if(!file.is_open())
   {
-    return MakeErrorResult(-77450, fmt::format("Error creating and opening output file at path: {}", m_InputValues->OutputFile.string()));
+    return MakeErrorResult(-77450, fmt::format("Error creating and opening output file at path: {}", m_InputValues->output_file.string()));
   }
 
-  const auto& vertexGeom = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->VertexGeomPath);
-  const AbstractDataStore<VertexGeom::SharedVertexList::value_type>& verts = vertexGeom->getVertices()->getDataStoreRef();
+  const auto& vertexGeom = m_DataStructure.getDataAs<VertexGeom>(m_InputValues->vertex_geom_path);
+  const AbstractDataStore<VertexGeom::SharedVertexListType::value_type>& verts = vertexGeom->getVertices()->getDataStoreRef();
 
-  const Int32AbstractDataStore& atomLabels = m_DataStructure.getDataAs<Int32Array>(m_InputValues->AtomLabelsPath)->getDataStoreRef();
+  const Int32AbstractDataStoreType& atomLabels = m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->atom_labels_path)->getDataStoreRef();
 
   m_MessageHandler.sendInfoMessage("Finding Max Atom Label...");
   int32 atomTypes = 0;
@@ -65,10 +63,7 @@ Result<> WriteLAMMPSFile::operator()()
       return {};
     }
     int32 atomLabel = atomLabels.getValue(i);
-    if(atomLabel > atomTypes)
-    {
-      atomTypes = atomLabel;
-    }
+    atomTypes = std::max(atomLabel, atomTypes);
   }
 
   float xMin = 1000000000.0;
@@ -87,30 +82,12 @@ Result<> WriteLAMMPSFile::operator()()
       return {};
     }
     std::array<float32, 3> pos = {verts.getValue((i * 3) + 0), verts.getValue((i * 3) + 1), verts.getValue((i * 3) + 2)};
-    if(pos[0] < xMin)
-    {
-      xMin = pos[0];
-    }
-    if(pos[0] > xMax)
-    {
-      xMax = pos[0];
-    }
-    if(pos[1] < yMin)
-    {
-      yMin = pos[1];
-    }
-    if(pos[1] > yMax)
-    {
-      yMax = pos[1];
-    }
-    if(pos[2] < zMin)
-    {
-      zMin = pos[2];
-    }
-    if(pos[2] > zMax)
-    {
-      zMax = pos[2];
-    }
+    xMin = std::min(pos[0], xMin);
+    xMax = std::max(pos[0], xMax);
+    yMin = std::min(pos[1], yMin);
+    yMax = std::max(pos[1], yMax);
+    zMin = std::min(pos[2], zMin);
+    zMax = std::max(pos[2], zMax);
   }
 
   m_MessageHandler.sendInfoMessage("Writing File Metadata...");

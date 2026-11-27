@@ -24,20 +24,20 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT QuickSurfaceMeshInputValues
 {
-  bool FixProblemVoxels;      ///< When true, run iterative problem-voxel correction before meshing
-  bool RepairTriangleWinding; ///< When true, run winding repair on the output triangle mesh
-  ChoicesParameter::ValueType BoundingBoxSkinMode;
+  bool fix_problem_voxels{};      ///< When true, run iterative problem-voxel correction before meshing
+  bool repair_triangle_winding{}; ///< When true, run winding repair on the output triangle mesh
+  ChoicesParameter::ValueType bounding_box_skin_mode{};
 
-  DataPath GridGeomDataPath;
-  DataPath FeatureIdsArrayPath;
-  MultiArraySelectionParameter::ValueType SelectedCellDataArrayPaths;
-  MultiArraySelectionParameter::ValueType SelectedFeatureDataArrayPaths;
-  DataPath TriangleGeometryPath;
-  DataPath VertexGroupDataPath;
-  DataPath NodeTypesDataPath;
-  DataPath FaceGroupDataPath;
-  DataPath FaceLabelsDataPath;
-  MultiArraySelectionParameter::ValueType CreatedDataArrayPaths;
+  DataPath grid_geom_data_path;
+  DataPath feature_ids_array_path;
+  MultiArraySelectionParameter::ValueType selected_cell_data_array_paths;
+  MultiArraySelectionParameter::ValueType selected_feature_data_array_paths;
+  DataPath triangle_geometry_path;
+  DataPath vertex_group_data_path;
+  DataPath node_types_data_path;
+  DataPath face_group_data_path;
+  DataPath face_labels_data_path;
+  MultiArraySelectionParameter::ValueType created_data_array_paths;
 };
 
 /**
@@ -63,11 +63,11 @@ public:
   /**
    * @brief Defines the storage interface for mesh vertex coordinates.
    */
-  using VertexStore = AbstractDataStore<IGeometry::SharedVertexList::value_type>;
+  using VertexStoreType = AbstractDataStore<IGeometry::SharedVertexListType::value_type>;
   /**
    * @brief Defines the storage interface for mesh triangle connectivity.
    */
-  using TriStore = AbstractDataStore<IGeometry::SharedTriList::value_type>;
+  using TriStoreType = AbstractDataStore<IGeometry::SharedTriListType::value_type>;
   /**
    * @brief Defines the integer type for mesh indices.
    */
@@ -88,7 +88,7 @@ public:
   /**
    * @brief Destroys the dispatcher.
    */
-  ~QuickSurfaceMesh() noexcept;
+  ~QuickSurfaceMesh() noexcept = default;
 
   QuickSurfaceMesh(const QuickSurfaceMesh&) = delete;
   QuickSurfaceMesh(QuickSurfaceMesh&&) noexcept = delete;
