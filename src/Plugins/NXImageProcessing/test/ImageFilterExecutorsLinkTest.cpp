@@ -2,6 +2,9 @@
 
 #include <catch2/catch.hpp>
 
+#include <atomic>
+#include <type_traits>
+
 using namespace nx::core;
 
 TEST_CASE("NXImageProcessing::ImageFilterExecutors: Exported functions link", "[NXImageProcessing][ImageFilterExecutors]")
@@ -62,7 +65,10 @@ TEST_CASE("NXImageProcessing::ImageFilterExecutors: Exported functions link", "[
   REQUIRE(binaryThinningImageFilterPtr != nullptr);
   auto* volatile thresholdMaximumConnectedComponentsImageFilterPtr = &ImageProcessing::ExecuteThresholdMaximumConnectedComponentsImageFilter;
   REQUIRE(thresholdMaximumConnectedComponentsImageFilterPtr != nullptr);
-  auto* volatile morphologicalWatershedFromMarkersImageFilterPtr = &ImageProcessing::ExecuteMorphologicalWatershedFromMarkersImageFilter;
+  using MarkerExecutor = Result<> (*)(DataStructure&, const DataPath&, const DataPath&, const DataPath&, const DataPath&, bool, bool, const std::atomic_bool&, const IFilter::MessageHandler&,
+                                      ImageProcessing::ConnectedComponentLabelLimitHandling);
+  static_assert(std::is_same_v<decltype(&ImageProcessing::ExecuteMorphologicalWatershedFromMarkersImageFilter), MarkerExecutor>);
+  MarkerExecutor volatile morphologicalWatershedFromMarkersImageFilterPtr = &ImageProcessing::ExecuteMorphologicalWatershedFromMarkersImageFilter;
   REQUIRE(morphologicalWatershedFromMarkersImageFilterPtr != nullptr);
   auto* volatile morphologicalWatershedImageFilterPtr = &ImageProcessing::ExecuteMorphologicalWatershedImageFilter;
   REQUIRE(morphologicalWatershedImageFilterPtr != nullptr);

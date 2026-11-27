@@ -428,17 +428,31 @@ NXIMAGEPROCESSING_EXPORT Result<> ExecuteThresholdMaximumConnectedComponentsImag
                                                                                         uint8 outsideValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler);
 
 /**
- * @brief Execute the (ITK-free, out-of-core) MorphologicalWatershedFromMarkers filter: a marker-controlled
- *        hierarchical-queue (FAH) watershed flood (see @ref ApplyWatershedFromMarkers).
- *        Dispatches the grayscale input over the 10 numeric scalar types in @c AllNumeric. The marker array is
- *        any integer type and the output is created of the marker's type by the filter's preflight. Reproduces legacy
- *        ITK's MorphologicalWatershedFromMarkersImageFilter output EXACTLY, including label values (see the Parity
- *        model and the direct-ITK oracle test). The caller's preflight must have validated the grayscale (scalar,
- *        allowed type, tuple==cells) and the marker (integer scalar, tuple==grayscale).
+ * @brief Selects how the watershed handles native marker IDs changed by uint32 conversion.
+ */
+using MarkerIdConversionHandling = ConnectedComponentLabelLimitHandling;
+
+/**
+ * @brief Floods a scalar grayscale image from integer markers.
+ * @param dataStructure Contains both inputs and the preflight-created output.
+ * @param imageGeomPath Defines the common image grid.
+ * @param inputArrayPath Selects the grayscale flood levels.
+ * @param markerArrayPath Selects native seed IDs. Zero denotes an unmarked cell.
+ * @param outputArrayPath Selects a distinct output with the marker element type and the grayscale tuple shape.
+ * @param markWatershedLine Assigns zero to watershed lines when enabled.
+ * @param fullyConnected Includes diagonal neighbors when enabled.
+ * @param shouldCancel Requests cancellation between units of work.
+ * @param messageHandler Receives flood progress messages.
+ * @param conversionHandling Error stops before flooding on the first changed marker ID. Warn continues with the converted IDs.
+ * @return Conversion and execution diagnostics, including observed conversion warnings on cancellation or a later error.
+ * @pre Each input has one component and one tuple per grid cell. Grayscale values use an integer or floating-point type from @c AllNumeric.
+ * Marker IDs use an integer type. Neither input accepts bool.
+ * @note Direct binary consumers of the previous signature must rebuild.
  */
 NXIMAGEPROCESSING_EXPORT Result<> ExecuteMorphologicalWatershedFromMarkersImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath,
                                                                                       const DataPath& markerArrayPath, const DataPath& outputArrayPath, bool markWatershedLine, bool fullyConnected,
-                                                                                      const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler);
+                                                                                      const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
+                                                                                      MarkerIdConversionHandling conversionHandling = MarkerIdConversionHandling::Error);
 
 /**
  * @brief Execute the (ITK-free, out-of-core) MorphologicalWatershed filter: the ITK composite (HMinima ->

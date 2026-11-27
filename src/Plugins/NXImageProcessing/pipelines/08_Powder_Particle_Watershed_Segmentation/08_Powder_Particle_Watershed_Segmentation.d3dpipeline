@@ -300,6 +300,10 @@
           "value": true,
           "version": 1
         },
+        "marker_id_conversion_handling_index": {
+          "value": 0,
+          "version": 1
+        },
         "marker_image_data_path": {
           "value": "Powder Particles/Cell Data/Marker Labels",
           "version": 1
@@ -308,7 +312,7 @@
           "value": "Particle Labels",
           "version": 1
         },
-        "parameters_version": 1
+        "parameters_version": 2
       },
       "comments": "Grow the particle markers across the gradient surface without merging touching particles.",
       "filter": {

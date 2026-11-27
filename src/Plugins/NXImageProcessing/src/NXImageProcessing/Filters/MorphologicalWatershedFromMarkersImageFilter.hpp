@@ -23,6 +23,7 @@ public:
   static constexpr StringLiteralType k_MarkerImageDataPath_Key = "marker_image_data_path";
   static constexpr StringLiteralType k_MarkWatershedLine_Key = "mark_watershed_line";
   static constexpr StringLiteralType k_FullyConnected_Key = "fully_connected";
+  static constexpr StringLiteralType k_MarkerIdConversionHandling_Key = "marker_id_conversion_handling_index";
   static constexpr StringLiteralType k_OutputImageArrayName_Key = "output_array_name";
 
   std::string name() const override;
