@@ -28,7 +28,7 @@ When **Use Reference Slice** is enabled, **Reference Slice** must be between 0 a
 
 The highest-Z section is also shifted when the reference slice is not 0. This corrects DREAM3D 6.5.171 behavior, which left that section unchanged.
 
-An empty mask section has no finite centroid. If either centroid used for a shift is not finite, the relative shift is zero. In consecutive mode, the cumulative shift stays equal to the previous section's shift. In reference mode, the section stays unchanged. This defines behavior that was undefined in DREAM3D 6.5.171.
+An empty mask section has no finite centroid. If either centroid used for a shift is not finite, that shift is zero. In consecutive mode, the relative shift is zero, so the cumulative shift stays equal to the previous section's shift. In reference mode, the cumulative shift is zero, so the section stays unchanged. This defines behavior that was undefined in DREAM3D 6.5.171.
 
 ## Algorithm
 
@@ -62,8 +62,8 @@ In this new structure, what follows is what the created structures represent:
 
 - Alignment Shifts Data (Attribute Matrix) - The tuple size here is defined by the number of slices [ie the Z Dimension of the Image Geometry]
 - Slices (DataArray | 2 component) - The slice indices (stored as uint32s)
-- Relative Shifts (DataArray | 2 component) - The slices shift relative to previous shift (stored as int64s) [*previously known as `newxshift` and `newyshift`*]
-- Cumulative Shifts (DataArray | 2 component) - The slice's accumulated shift (stored as int64s)
+- Relative Shifts (DataArray | 2 component) - The slice's shift relative to the slice above it (the slice with the next higher Z index), in both modes (stored as int64s). The first row has no slice above it, so its relative shift equals its cumulative shift. [*previously known as `newxshift` and `newyshift`*]
+- Cumulative Shifts (DataArray | 2 component) - The slice's accumulated shift (stored as int64s). With **Use Reference Slice** on, this shift is relative to the reference slice.
 - Centroids (DataArray | 2 component) - The xy centroids of the corresponding slice
 
 In previous versions a file would have been produced instead. If you wish to recreate this, you can write the Attribute Matrix as a CSV/Text file.
