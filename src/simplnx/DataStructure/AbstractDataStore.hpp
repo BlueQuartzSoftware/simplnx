@@ -1374,4 +1374,20 @@ using BoolAbstractDataStoreType = AbstractDataStore<bool>;
 
 using Float32AbstractDataStoreType = AbstractDataStore<float32>;
 using Float64AbstractDataStoreType = AbstractDataStore<float64>;
+
+// MSVC compiles the members defined in the class body in every consumer anyway, so these declarations would save
+// no time there. Without them, each MSVC consumer keeps its own static arrays and vftables instead of importing them.
+#if !defined(_MSC_VER)
+extern template class AbstractDataStore<int8>;
+extern template class AbstractDataStore<uint8>;
+extern template class AbstractDataStore<int16>;
+extern template class AbstractDataStore<uint16>;
+extern template class AbstractDataStore<int32>;
+extern template class AbstractDataStore<uint32>;
+extern template class AbstractDataStore<int64>;
+extern template class AbstractDataStore<uint64>;
+extern template class AbstractDataStore<float32>;
+extern template class AbstractDataStore<float64>;
+extern template class AbstractDataStore<bool>;
+#endif
 } // namespace nx::core

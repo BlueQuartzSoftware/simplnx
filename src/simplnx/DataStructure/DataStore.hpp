@@ -1173,4 +1173,20 @@ using Float32DataStoreType = DataStore<float32>;
  * @brief Names an in-memory float64 data store.
  */
 using Float64DataStoreType = DataStore<float64>;
+
+// MSVC compiles the members defined in the class body in every consumer anyway, so these declarations would save
+// no time there. Without them, each MSVC consumer keeps its own static arrays and vftables instead of importing them.
+#if !defined(_MSC_VER)
+extern template class DataStore<int8>;
+extern template class DataStore<uint8>;
+extern template class DataStore<int16>;
+extern template class DataStore<uint16>;
+extern template class DataStore<int32>;
+extern template class DataStore<uint32>;
+extern template class DataStore<int64>;
+extern template class DataStore<uint64>;
+extern template class DataStore<float32>;
+extern template class DataStore<float64>;
+extern template class DataStore<bool>;
+#endif
 } // namespace nx::core
