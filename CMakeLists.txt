@@ -617,6 +617,7 @@ set(SIMPLNX_HDRS
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ColorToGrayScale.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageGeometryCrop.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/ImageGeometryResample.hpp
+  ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/TerminalImageConversion.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ImageProcessing/WorkingMemory.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ProgressEstimator.hpp
   ${SIMPLNX_SOURCE_DIR}/Utilities/ThrottledMessageHandler.hpp

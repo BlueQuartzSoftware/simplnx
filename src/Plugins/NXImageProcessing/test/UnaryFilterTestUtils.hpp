@@ -6,6 +6,7 @@
 #include "simplnx/DataStructure/DataArray.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/DataStructure/Geometry/ImageGeom.hpp"
+#include "simplnx/Filter/Actions/CreateArrayAction.hpp"
 #include "simplnx/Filter/Arguments.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
@@ -98,6 +99,50 @@ inline DataPath BuildScalarValuesImage(DataStructure& dataStructure, const std::
 }
 
 /**
+ * @brief Selects the input and output arrays for a pointwise filter test.
+ * @tparam FilterT Filter with the standard pointwise image parameters.
+ * @param inputPath Cell array in the test image geometry.
+ * @return Arguments that create a sibling array named "Output".
+ */
+template <class FilterT>
+Arguments PointwiseFilterArguments(const DataPath& inputPath)
+{
+  Arguments args;
+  args.insertOrAssign(FilterT::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
+  args.insertOrAssign(FilterT::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(FilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  return args;
+}
+
+/**
+ * @brief Checks the preflight output before the filter processes the test data.
+ * @tparam FilterT Filter with the standard pointwise image parameters.
+ * @param dataStructure Contains the test image geometry.
+ * @param inputPath Array of test values.
+ * @param expectedType Expected output element type.
+ * @param tupleShape Expected output tuple dimensions.
+ * @param componentShape Expected output component dimensions.
+ * @return Path of the created output array.
+ */
+template <class FilterT>
+DataPath RunMappedPointwiseFilter(DataStructure& dataStructure, const DataPath& inputPath, DataType expectedType, const ShapeType& tupleShape, const ShapeType& componentShape)
+{
+  const FilterT filter;
+  const auto args = PointwiseFilterArguments<FilterT>(inputPath);
+  const auto preflight = filter.preflight(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
+  REQUIRE(preflight.output_actions.value().actions.size() == 1);
+  const auto* actionPtr = dynamic_cast<const CreateArrayAction*>(preflight.output_actions.value().actions.front().get());
+  REQUIRE(actionPtr != nullptr);
+  REQUIRE(actionPtr->type() == expectedType);
+  REQUIRE(actionPtr->dims() == tupleShape);
+  REQUIRE(actionPtr->componentDims() == componentShape);
+  const auto result = filter.execute(dataStructure, args);
+  SIMPLNX_RESULT_REQUIRE_VALID(result.result);
+  return inputPath.replaceName("Output");
+}
+
+/**
  * @brief Runs a pointwise unary NXImageProcessing filter (preflight + execute) on @p inputPath, writing the result
  *        to sibling array "Output", and returns that output DataPath. Requires the three boilerplate key constants
  *        every pointwise filter exposes. The caller owns LoadPlugins()/storage-mode setup (a domain-edge test pins
@@ -107,10 +152,7 @@ template <class FilterT>
 inline DataPath RunPointwiseFilter(DataStructure& dataStructure, const DataPath& inputPath)
 {
   FilterT filter;
-  Arguments args;
-  args.insertOrAssign(FilterT::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
-  args.insertOrAssign(FilterT::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
-  args.insertOrAssign(FilterT::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+  const auto args = PointwiseFilterArguments<FilterT>(inputPath);
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = filter.execute(dataStructure, args);

@@ -3,11 +3,217 @@
 
 #include "NXImageProcessing/Filters/ExpImageFilter.hpp"
 
+#include "simplnx/Common/Aliases.hpp"
+#include "simplnx/Common/Types.hpp"
+#include "simplnx/Common/TypesUtility.hpp"
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/Core/Preferences.hpp"
+#include "simplnx/DataStructure/AbstractDataStore.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataPath.hpp"
+#include "simplnx/DataStructure/DataStructure.hpp"
+#include "simplnx/DataStructure/IDataStore.hpp"
+#include "simplnx/Filter/Arguments.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
+#include "simplnx/Utilities/DataStoreUtilities.hpp"
+
+#include <catch2/catch.hpp>
+#include <nonstd/span.hpp>
+
+#include <any>
+#include <array>
+#include <cmath>
+#include <limits>
+#include <string>
+#include <type_traits>
+#include <vector>
+
 using namespace nx::core;
 
-// PART A domain edge (documents ITK-faithful behavior): the op is static_cast<U>(std::exp(static_cast<double>(x))).
-// exp overflows double above ~709.78, so exp(1000) is +inf and casting +inf to float32 stays +inf. ITK's Exp
-// functor is the same expression, so this pins the observed +inf overflow.
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros expand to these constructs.
+TEMPLATE_TEST_CASE("NXImageProcessing::ExpImageFilter: integer input produces float64 growth and decay", "[NXImageProcessing][ExpImageFilter]", int8, uint8, int16, uint16, int32, uint32, int64,
+                   uint64)
+{
+  Application::GetOrCreateInstance();
+  const unit_test::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
+  std::vector<TestType> values = {0, 1, 100};
+  if constexpr(std::is_signed_v<TestType>)
+  {
+    values.push_back(-1);
+    values.push_back(std::numeric_limits<TestType>::lowest());
+  }
+  values.push_back(std::numeric_limits<TestType>::max());
+
+  DataStructure dataStructure;
+  const DataPath input = ip_test::BuildScalarValuesImage<TestType>(dataStructure, values);
+  const DataPath output = ip_test::RunMappedPointwiseFilter<ExpImageFilter>(dataStructure, input, DataType::float64, {1, 1, values.size()}, {1});
+  const Float64ArrayType* exponentialPtr = nullptr;
+  REQUIRE_NOTHROW(exponentialPtr = &dataStructure.getDataRefAs<Float64ArrayType>(output));
+  REQUIRE(exponentialPtr->getDataType() == DataType::float64);
+  REQUIRE(exponentialPtr->getTupleShape() == ShapeType{1, 1, values.size()});
+  REQUIRE(exponentialPtr->getComponentShape() == ShapeType{1});
+  REQUIRE(exponentialPtr->getStoreType() == IDataStore::StoreType::InMemory);
+  const auto& store = exponentialPtr->getDataStoreRef();
+  REQUIRE(store.getValue(0) == 1.0);
+  REQUIRE(store.getValue(1) == Approx(2.71828182845904523536).epsilon(1.0e-15));
+  REQUIRE(store.getValue(2) == Approx(2.68811714181613544841e43).epsilon(1.0e-15));
+  if constexpr(std::is_signed_v<TestType>)
+  {
+    REQUIRE(store.getValue(3) == Approx(0.36787944117144232160).epsilon(1.0e-15));
+    if constexpr(std::is_same_v<TestType, int8>)
+    {
+      REQUIRE(store.getValue(4) > 0.0);
+      REQUIRE(store.getValue(4) == Approx(2.57220937264241482684e-56).epsilon(1.0e-15));
+    }
+    else
+    {
+      REQUIRE(store.getValue(4) == 0.0);
+    }
+  }
+  const float64 maximumResult = store.getValue(values.size() - 1);
+  if constexpr(std::is_same_v<TestType, int8>)
+  {
+    REQUIRE(maximumResult == Approx(1.43020799583481044656e55).epsilon(1.0e-15));
+  }
+  else if constexpr(std::is_same_v<TestType, uint8>)
+  {
+    REQUIRE(maximumResult == Approx(5.56023164772767512139e110).epsilon(1.0e-15));
+  }
+  else
+  {
+    REQUIRE(std::isinf(maximumResult));
+    REQUIRE(maximumResult > 0.0);
+  }
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEMPLATE_TEST_CASE("NXImageProcessing::ExpImageFilter: floating IEEE values retain growth decay and range behavior", "[NXImageProcessing][ExpImageFilter]", float32, float64)
+{
+  Application::GetOrCreateInstance();
+  const unit_test::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
+  DataStructure dataStructure;
+  const DataPath input = ip_test::BuildScalarValuesImage<TestType>(dataStructure, {std::numeric_limits<TestType>::quiet_NaN(),
+                                                                                   std::numeric_limits<TestType>::infinity(),
+                                                                                   -std::numeric_limits<TestType>::infinity(),
+                                                                                   TestType{0},
+                                                                                   -TestType{0},
+                                                                                   100,
+                                                                                   -128,
+                                                                                   1000,
+                                                                                   -1000,
+                                                                                   -100,
+                                                                                   -103,
+                                                                                   -104,
+                                                                                   10,
+                                                                                   88,
+                                                                                   89,
+                                                                                   709,
+                                                                                   710,
+                                                                                   -744,
+                                                                                   -745,
+                                                                                   -746,
+                                                                                   -1,
+                                                                                   1});
+  const DataPath output = ip_test::RunMappedPointwiseFilter<ExpImageFilter>(dataStructure, input, GetDataType<TestType>(), {1, 1, 22}, {1});
+  const DataArray<TestType>* exponentialPtr = nullptr;
+  REQUIRE_NOTHROW(exponentialPtr = &dataStructure.getDataRefAs<DataArray<TestType>>(output));
+  REQUIRE(exponentialPtr->getDataType() == GetDataType<TestType>());
+  REQUIRE(exponentialPtr->getTupleShape() == ShapeType{1, 1, 22});
+  REQUIRE(exponentialPtr->getComponentShape() == ShapeType{1});
+  REQUIRE(exponentialPtr->getStoreType() == IDataStore::StoreType::InMemory);
+  const auto& store = exponentialPtr->getDataStoreRef();
+  REQUIRE(std::isnan(store.getValue(0)));
+  REQUIRE(store.getValue(1) == std::numeric_limits<TestType>::infinity());
+  REQUIRE(store.getValue(2) == 0);
+  REQUIRE_FALSE(std::signbit(store.getValue(2)));
+  REQUIRE(store.getValue(3) == 1);
+  REQUIRE(store.getValue(4) == 1);
+  REQUIRE(store.getValue(7) == std::numeric_limits<TestType>::infinity());
+  REQUIRE(store.getValue(8) == 0);
+  REQUIRE_FALSE(std::signbit(store.getValue(8)));
+  constexpr float64 relativeTolerance = std::is_same_v<TestType, float32> ? 1.0e-7 : 1.0e-15;
+  REQUIRE(store.getValue(20) == Approx(0.36787944117144232160).epsilon(relativeTolerance));
+  REQUIRE(store.getValue(21) == Approx(2.71828182845904523536).epsilon(relativeTolerance));
+  REQUIRE(store.getValue(16) == std::numeric_limits<TestType>::infinity());
+  if constexpr(std::is_same_v<TestType, float32>)
+  {
+    REQUIRE(store.getValue(5) == std::numeric_limits<float32>::infinity());
+    REQUIRE(store.getValue(6) == 0);
+    REQUIRE(store.getValue(9) == 3.7835058536770060915e-44f);
+    REQUIRE(store.getValue(10) == std::numeric_limits<float32>::denorm_min());
+    REQUIRE(store.getValue(11) == 0);
+    REQUIRE(store.getValue(12) == Approx(22026.46579480671651696).epsilon(1.0e-7));
+    REQUIRE(store.getValue(13) == Approx(1.65163625499400185553e38).epsilon(1.0e-7));
+    REQUIRE(store.getValue(14) == std::numeric_limits<float32>::infinity());
+    REQUIRE(store.getValue(15) == std::numeric_limits<float32>::infinity());
+    REQUIRE(store.getValue(17) == 0);
+    REQUIRE(store.getValue(18) == 0);
+    REQUIRE(store.getValue(19) == 0);
+  }
+  else
+  {
+    REQUIRE(store.getValue(5) == Approx(2.68811714181613544841e43).epsilon(1.0e-15));
+    REQUIRE(store.getValue(6) > 0.0);
+    REQUIRE(store.getValue(6) == Approx(2.57220937264241482684e-56).epsilon(1.0e-15));
+    REQUIRE(store.getValue(9) > 0.0);
+    REQUIRE(store.getValue(9) == Approx(3.72007597602083596296e-44).epsilon(1.0e-15));
+    REQUIRE(store.getValue(10) > 0.0);
+    REQUIRE(store.getValue(10) == Approx(1.85211676951797542963e-45).epsilon(1.0e-15));
+    REQUIRE(store.getValue(11) > 0.0);
+    REQUIRE(store.getValue(11) == Approx(6.81355682154529853676e-46).epsilon(1.0e-15));
+    REQUIRE(store.getValue(12) == Approx(22026.46579480671651696).epsilon(1.0e-15));
+    REQUIRE(store.getValue(13) == Approx(1.65163625499400185553e38).epsilon(1.0e-15));
+    REQUIRE(store.getValue(14) == Approx(4.48961281917434524628e38).epsilon(1.0e-15));
+    REQUIRE(store.getValue(15) == Approx(8.21840746155497218924e307).epsilon(1.0e-15));
+    // exp(-744) < 2d, exp(-745) < d, and exp(-746) < d/2, where d = 2^-1074.
+    // Accept zero or bounded subnormal results without requiring a particular libm rounding.
+    for(usize index = 17; index < 20; ++index)
+    {
+      const float64 value = store.getValue(index);
+      const float64 upperBound = index == 17 ? 2 * std::numeric_limits<float64>::denorm_min() : std::numeric_limits<float64>::denorm_min();
+      CAPTURE(index);
+      REQUIRE(std::isfinite(value));
+      REQUIRE(value >= 0);
+      REQUIRE_FALSE(std::signbit(value));
+      REQUIRE(value <= upperBound);
+    }
+  }
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+}
+
+TEST_CASE("NXImageProcessing::ExpImageFilter: promoted output preserves tuples and components", "[NXImageProcessing][ExpImageFilter]")
+{
+  Application::GetOrCreateInstance();
+  const unit_test::PreferencesSentinel preferences(DataStorageMode::ForceInCore, 0);
+  DataStructure dataStructure;
+  const auto input = ip_test::BuildScalarValuesImage<int16>(dataStructure, {0, 0});
+  Int16ArrayType* inputArrayPtr = nullptr;
+  REQUIRE_NOTHROW(inputArrayPtr = &dataStructure.getDataRefAs<Int16ArrayType>(input));
+  const ShapeType tupleShape{1, 1, 2};
+  const ShapeType componentShape{2};
+  auto inputStore = data_store_utilities::CreateDataStore<int16>(dataStructure, input, tupleShape, componentShape);
+  REQUIRE(inputStore != nullptr);
+  const auto replaceResult = inputArrayPtr->setDataStore(inputStore);
+  SIMPLNX_RESULT_REQUIRE_VALID(replaceResult);
+  constexpr std::array<int16, 4> values = {-1, 0, 1, 2};
+  const auto writeResult = inputStore->copyFromBuffer(0, nonstd::span<const int16>(values.data(), values.size()));
+  SIMPLNX_RESULT_REQUIRE_VALID(writeResult);
+
+  const auto output = ip_test::RunMappedPointwiseFilter<ExpImageFilter>(dataStructure, input, DataType::float64, tupleShape, componentShape);
+  const Float64ArrayType* outputArrayPtr = nullptr;
+  REQUIRE_NOTHROW(outputArrayPtr = &dataStructure.getDataRefAs<Float64ArrayType>(output));
+  REQUIRE(outputArrayPtr->getTupleShape() == tupleShape);
+  REQUIRE(outputArrayPtr->getComponentShape() == componentShape);
+  const auto& store = outputArrayPtr->getDataStoreRef();
+  REQUIRE(store.getValue(0) == Approx(0.36787944117144232160).epsilon(1.0e-15));
+  REQUIRE(store.getValue(1) == 1.0);
+  REQUIRE(store.getValue(2) == Approx(2.71828182845904523536).epsilon(1.0e-15));
+  REQUIRE(store.getValue(3) == Approx(7.38905609893065022723).epsilon(1.0e-15));
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+}
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
+
+// exp(1000) exceeds the Float64 range and produces positive infinity.
 TEST_CASE("NXImageProcessing::ExpImageFilter: exp of a large input overflows to +inf (domain edge)", "[NXImageProcessing][ExpImageFilter]")
 {
   unit_test::LoadPlugins();

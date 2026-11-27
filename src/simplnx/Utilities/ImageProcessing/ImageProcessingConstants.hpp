@@ -6,6 +6,7 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 
 #include <set>
+#include <type_traits>
 
 namespace nx::core::ImageProcessing
 {
@@ -42,6 +43,13 @@ using SameAsInput = T;
 
 template <class T>
 using AlwaysFloat64Type = float64;
+
+/**
+ * @brief Maps integer input to float64 and retains the type of floating-point input.
+ * @tparam T Input pixel type.
+ */
+template <class T>
+using IntegerToFloat64Type = std::conditional_t<std::is_integral_v<T>, float64, T>;
 
 template <class T>
 using AlwaysUInt8Type = uint8;
