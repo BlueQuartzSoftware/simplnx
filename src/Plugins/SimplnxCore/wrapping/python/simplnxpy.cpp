@@ -479,7 +479,7 @@ static std::pair<std::vector<Error>, std::vector<Warning>> GetPipelineResult(con
 {
   std::vector<Error> errors;
   std::vector<Warning> warnings;
-  for(auto node : pipeline)
+  for(const auto& node : pipeline)
   {
     std::vector<Error> nodeErrors;
     std::vector<Warning> nodeWarnings;
