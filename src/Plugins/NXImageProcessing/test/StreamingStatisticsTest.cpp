@@ -1,4 +1,5 @@
 #include "simplnx/Utilities/ImageProcessing/StreamingStatistics.hpp"
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/Common/Types.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
@@ -17,6 +18,7 @@
 #include <numeric>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 using namespace nx::core;
@@ -56,7 +58,16 @@ public:
     {
       m_Cancel->store(true);
     }
+    if(result.valid() && completedReads <= m_ReadResults.size())
+    {
+      return m_ReadResults.at(completedReads - 1);
+    }
     return result;
+  }
+
+  void setReadResults(std::vector<Result<>> results)
+  {
+    m_ReadResults = std::move(results);
   }
 
   void cancelAfterReadCalls(std::atomic_bool& shouldCancel, usize readCalls)
@@ -83,6 +94,7 @@ private:
   mutable usize m_ActiveReads = 0;
   mutable usize m_MaxConcurrentReads = 0;
   std::atomic_bool* m_Cancel = nullptr;
+  std::vector<Result<>> m_ReadResults;
   usize m_CancelAfterReadCalls = 0;
 };
 
@@ -628,6 +640,7 @@ TEST_CASE("NXImageProcessing::StreamingStatistics: OOC fixed-block min-max cance
   REQUIRE(execution.used_fixed_block_parallel);
 }
 
+// NOLINTBEGIN(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while) Catch2 and simplnx assertion macros trigger these checks.
 TEST_CASE("NXImageProcessing::StreamingStatistics: OOC fixed-block min-max does not return a completed batch after cancellation", "[NXImageProcessing][StreamingStatistics][WorkingMemory]")
 {
   constexpr usize k_BlockValues = ImageProcessing::detail::k_ArrayMinMaxBlockValues;
@@ -642,15 +655,45 @@ TEST_CASE("NXImageProcessing::StreamingStatistics: OOC fixed-block min-max does 
   const StatisticsCacheBudgetScope budgetScope(4 * k_GrantedBytes);
   const ImageProcessing::ScopedWorkingMemoryTuningOverride workingMemoryOverride(k_GrantedBytes);
   std::atomic_bool shouldCancel{false};
-  oocStore.cancelAfterReadCalls(shouldCancel, 2);
+  const bool failSecondRead = GENERATE(false, true);
+  CAPTURE(failSecondRead);
+  Result<> firstRead;
+  firstRead.warnings().push_back({.code = -102, .message = "First batch warning"});
+  Result<> secondRead;
+  if(failSecondRead)
+  {
+    secondRead = MakeErrorResult(-101, "Second batch read failed");
+  }
+  else
+  {
+    oocStore.cancelAfterReadCalls(shouldCancel, 2);
+  }
+  secondRead.warnings().push_back({.code = -103, .message = "Second batch warning"});
+  oocStore.setReadResults({firstRead, secondRead});
   const auto result = ImageProcessing::ComputeArrayMinMax<float32>(oocStore, shouldCancel);
-  SIMPLNX_RESULT_REQUIRE_VALID(result);
-  REQUIRE(shouldCancel.load());
-  REQUIRE(result.value().count == k_ValueCount);
-  REQUIRE(result.value().min == 0.0F);
-  REQUIRE(result.value().max == 0.0F);
+  if(failSecondRead)
+  {
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    REQUIRE(result.errors().size() == 1);
+    REQUIRE(result.errors().front().code == -101);
+    REQUIRE(result.errors().front().message == "Second batch read failed");
+  }
+  else
+  {
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    REQUIRE(shouldCancel.load());
+    REQUIRE(result.value().count == k_ValueCount);
+    REQUIRE(result.value().min == 0.0F);
+    REQUIRE(result.value().max == 0.0F);
+  }
   REQUIRE(oocStore.readBatchValues().size() == 2);
+  REQUIRE(result.warnings().size() == 2);
+  REQUIRE(result.warnings().front().code == -102);
+  REQUIRE(result.warnings().front().message == "First batch warning");
+  REQUIRE(result.warnings().back().code == -103);
+  REQUIRE(result.warnings().back().message == "Second batch warning");
 }
+// NOLINTEND(bugprone-chained-comparison,cppcoreguidelines-avoid-do-while)
 
 TEST_CASE("NXImageProcessing::StreamingStatistics: OOC fixed-block min-max handles an empty store", "[NXImageProcessing][StreamingStatistics][WorkingMemory]")
 {

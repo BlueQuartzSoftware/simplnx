@@ -790,9 +790,10 @@ clamps it to the range of `U`, and reports one warning with the number of clippe
 for an integer output is an error that names the value's index and the output type; it is never written as 0. The
 general rule is in the numeric-correctness reference of `cpp-best-practices`.
 
-**Example of the broken rule:** `ExpImageFilter` casts `exp(double(value))` straight to the integer output, and
-`LogImageFilter`, `SquareImageFilter` and `TanImageFilter` do the same: `log(0)`, the `uint8` square of 16 and the
-`uint8` exponential of 10 are undefined (issue #1874).
+**Example of the broken rule:** At revision `4e8b21eee`, `ExpImageFilter`, `LogImageFilter`, `SquareImageFilter` and
+`TanImageFilter` cast computed floating-point values directly to integer output. Examples that exceeded the output
+range included the logarithm of zero, the UInt8 square of 16, and the UInt8 exponential of 10 (issue #1874).
+Square now preserves exact integer results by widening smaller types and checking the range of 64-bit inputs.
 
 **Why:** a `static_cast` of NaN or an out-of-range floating-point value to an integer type is undefined behavior.
 
