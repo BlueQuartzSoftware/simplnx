@@ -1,11 +1,16 @@
 #include <catch2/catch.hpp>
 
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/DataStructure/DataStructure.hpp"
 #include "simplnx/UnitTest/UnitTestCommon.hpp"
 #include "simplnx/Utilities/DataStoreUtilities.hpp"
 #include "simplnx/Utilities/ImageProcessing/PointwiseEngine.hpp"
+
+#include <nonstd/span.hpp>
 
 #include <atomic>
 #include <initializer_list>
@@ -16,6 +21,9 @@ using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_InjectedReadError = -187401;
+constexpr int32 k_InjectedWriteError = -187402;
+
 template <class T>
 class CountingDataStore : public DataStore<T>
 {
@@ -29,6 +37,10 @@ public:
   {
     m_ReadStarts.push_back(startIndex);
     m_ReadCounts.push_back(buffer.size());
+    if(m_FailTransfers)
+    {
+      return MakeErrorResult(k_InjectedReadError, "Injected pointwise input read failure.");
+    }
     return DataStore<T>::copyIntoBuffer(startIndex, buffer);
   }
 
@@ -36,6 +48,10 @@ public:
   {
     m_WriteStarts.push_back(startIndex);
     m_WriteCounts.push_back(buffer.size());
+    if(m_FailTransfers)
+    {
+      return MakeErrorResult(k_InjectedWriteError, "Injected pointwise output write failure.");
+    }
     return DataStore<T>::copyFromBuffer(startIndex, buffer);
   }
 
@@ -59,7 +75,13 @@ public:
     return m_WriteCounts;
   }
 
+  void failTransfers() noexcept
+  {
+    m_FailTransfers = true;
+  }
+
 private:
+  bool m_FailTransfers = false;
   mutable std::vector<usize> m_ReadStarts;
   mutable std::vector<usize> m_ReadCounts;
   std::vector<usize> m_WriteStarts;
@@ -423,6 +445,62 @@ TEST_CASE("NXImageProcessing::ApplyPointwise different-type buffered transfer re
   for(usize index = 0; index < k_ValueCount; ++index)
   {
     REQUIRE(outputStore.getValue(index) == static_cast<float64>(static_cast<int32>(index) - 3) + 0.5);
+  }
+}
+
+TEST_CASE("NXImageProcessing::ApplyPointwise preserves the destination when its first type-changing batch stops", "[NXImageProcessing][ApplyPointwise]")
+{
+  constexpr usize valueCount = 4;
+  constexpr float32 unwrittenValue = -7.0F;
+  CountingDataStore<int16> inputStore({valueCount}, {1}, 1);
+  CountingDataStore<float32> outputStore({valueCount}, {1}, unwrittenValue);
+  const auto run = [&](bool cancel) {
+    const std::atomic_bool shouldCancel{cancel};
+    const auto mapValue = [](int16 value) -> float32 { return static_cast<float32>(value) * 0.5F; };
+    return ImageProcessing::detail::ApplyPointwiseImpl(inputStore, outputStore, mapValue, shouldCancel, {}, {.force_buffered = true});
+  };
+  SECTION("cancellation before the first read")
+  {
+    const auto result = run(true);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    CHECK(inputStore.readCounts().empty());
+    CHECK(outputStore.writeCounts().empty());
+  }
+  SECTION("cancellation while mapping the first batch prevents its write")
+  {
+    std::atomic_bool shouldCancel{false};
+    const auto cancelDuringMap = [&](int16 value) -> float32 {
+      shouldCancel = true;
+      return static_cast<float32>(value) * 0.5F;
+    };
+    const ImageProcessing::detail::PointwiseExecutionOptions options{.target_scratch_bytes = sizeof(int16) + sizeof(float32), .force_buffered = true};
+    const auto result = ImageProcessing::detail::ApplyPointwiseImpl(inputStore, outputStore, cancelDuringMap, shouldCancel, {}, options);
+    SIMPLNX_RESULT_REQUIRE_VALID(result);
+    CHECK(shouldCancel.load());
+    CHECK(inputStore.readCounts() == std::vector<usize>{1});
+    CHECK(outputStore.writeCounts().empty());
+  }
+  SECTION("a failed read returns its error before any write")
+  {
+    inputStore.failTransfers();
+    const auto result = run(false);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    CHECK(result.errors().front().code == k_InjectedReadError);
+    CHECK(inputStore.readCounts() == std::vector<usize>{valueCount});
+    CHECK(outputStore.writeCounts().empty());
+  }
+  SECTION("a failed write returns its error after one read")
+  {
+    outputStore.failTransfers();
+    const auto result = run(false);
+    SIMPLNX_RESULT_REQUIRE_INVALID(result);
+    CHECK(result.errors().front().code == k_InjectedWriteError);
+    CHECK(inputStore.readCounts() == std::vector<usize>{valueCount});
+    CHECK(outputStore.writeCounts() == std::vector<usize>{valueCount});
+  }
+  for(usize index = 0; index < valueCount; ++index)
+  {
+    CHECK(outputStore.getValue(index) == unwrittenValue);
   }
 }
 
