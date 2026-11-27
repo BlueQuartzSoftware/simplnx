@@ -49,6 +49,13 @@ Result<> CreateGridMontageAction::apply(DataStructure& dataStructure, Mode /*mod
     return MakeErrorResult(-5905, fmt::format("{}Failed to create GridMontage:'{}'", k_Prefix, getCreatedPath().toString()));
   }
 
+  // Check Dimensions
+  if(m_Dims.size() != 3)
+  {
+    return MakeErrorResult(-5906, fmt::format("GridMontage requires three dimensions. '{}' is not supported.", m_Dims.size()));
+  }
+  gridMontage->resizeTileDims(m_Dims[0], m_Dims[1], m_Dims[2]);
+
   return {};
 }
 
