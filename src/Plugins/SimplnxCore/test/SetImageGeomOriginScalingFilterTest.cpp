@@ -106,7 +106,7 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: 0,0,0 Central Origin", 
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(kImageGeomPath);
-  REQUIRE(imageGeom.getBoundingBoxf().center() == Point3Df{0.0f, 0.0f, 0.0f});
+  REQUIRE(imageGeom.getBoundingBoxf().center() == FloatVec3{0.0f, 0.0f, 0.0f});
   REQUIRE(imageGeom.getSpacing() == FloatVec3{2, 2, 2});
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -140,7 +140,7 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScalingFilter: Custom Central Origin",
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
 
   auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(kImageGeomPath);
-  REQUIRE(imageGeom.getBoundingBoxf().center() == Point3Df{7.0, 6.0, 5.0});
+  REQUIRE(imageGeom.getBoundingBoxf().center() == FloatVec3{7.0, 6.0, 5.0});
   REQUIRE(imageGeom.getSpacing() == FloatVec3{2, 2, 2});
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
@@ -294,7 +294,7 @@ TEST_CASE("SimplnxCore::SetImageGeomOriginScaling: Centered result regression", 
     SIMPLNX_RESULT_REQUIRE_VALID(result.result);
     CHECK(preflightGeom.getOrigin() == FloatVec3{-15, 4, -4});
     CHECK(geomPtr->getOrigin() == FloatVec3{-15, 4, -4});
-    CHECK(geomPtr->getBoundingBoxf().center() == Point3Df{-10, 5, -2});
+    CHECK(geomPtr->getBoundingBoxf().center() == FloatVec3{-10, 5, -2});
   }
   else
   {

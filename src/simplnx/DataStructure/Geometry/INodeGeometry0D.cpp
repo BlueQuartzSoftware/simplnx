@@ -190,7 +190,7 @@ Result<bool> INodeGeometry0D::isXZPlane() const
   return isPlane(1);
 }
 
-void INodeGeometry0D::setVertexCoordinate(usize vertId, const Point3D<float32>& coordinate)
+void INodeGeometry0D::setVertexCoordinate(usize vertId, const Vec3<float32>& coordinate)
 {
   auto& vertices = getVerticesRef();
   const usize offset = vertId * 3;
@@ -200,11 +200,11 @@ void INodeGeometry0D::setVertexCoordinate(usize vertId, const Point3D<float32>& 
   }
 }
 
-Point3D<float32> INodeGeometry0D::getVertexCoordinate(usize vertId) const
+Vec3<float32> INodeGeometry0D::getVertexCoordinate(usize vertId) const
 {
   const auto& vertices = getVerticesRef();
   const usize offset = vertId * 3;
-  Point3D<float32> coordinate;
+  Vec3<float32> coordinate;
   for(usize i = 0; i < 3; i++)
   {
     coordinate[i] = vertices.at(offset + i);

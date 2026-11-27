@@ -302,7 +302,7 @@ inline std::vector<std::string> specific_split(std::string_view str, nonstd::spa
   return {};
 }
 
-inline std::vector<std::string> split(std::string_view str, nonstd::span<const char> delimiters, bool keepEmptyTokens)
+inline std::vector<std::string> Split(std::string_view str, nonstd::span<const char> delimiters, bool keepEmptyTokens)
 {
   if(keepEmptyTokens)
   {
@@ -313,7 +313,7 @@ inline std::vector<std::string> split(std::string_view str, nonstd::span<const c
   return detail::optimized_split<detail::SplitIgnoreEmpty>(str, delimiters);
 }
 
-inline std::vector<std::string> split(std::string_view str, char delim)
+inline std::vector<std::string> Split(std::string_view str, char delim)
 {
   std::array<char, 1> delimiters = {delim};
   return detail::optimized_split<detail::SplitIgnoreEmpty>(str, delimiters);

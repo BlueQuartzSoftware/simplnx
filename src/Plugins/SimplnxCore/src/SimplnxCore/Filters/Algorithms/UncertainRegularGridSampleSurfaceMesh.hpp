@@ -102,7 +102,7 @@ protected:
    *
    * This method does not inspect cancellation during the slice draw sequence.
    */
-  void generateSlicePoints(usize zSlice, std::vector<Point3Df>& slicePoints) override;
+  void generateSlicePoints(usize zSlice, std::vector<FloatVec3>& slicePoints) override;
 
 private:
   DataStructure& m_DataStructure;

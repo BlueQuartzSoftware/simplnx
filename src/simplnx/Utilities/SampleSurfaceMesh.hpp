@@ -92,7 +92,7 @@ public:
    * Fill by index and do not resize the vector. A stateful random generator must
    * continue its sequence across calls. This preserves the full-volume draw order.
    */
-  virtual void generateSlicePoints(usize zSlice, std::vector<Point3Df>& slicePoints) = 0;
+  virtual void generateSlicePoints(usize zSlice, std::vector<FloatVec3>& slicePoints) = 0;
 
   /**
    * @brief Returns the message handler so the type-dispatch functor can send status text.

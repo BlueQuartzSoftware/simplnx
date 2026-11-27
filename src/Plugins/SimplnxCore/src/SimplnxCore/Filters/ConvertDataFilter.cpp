@@ -155,7 +155,7 @@ struct LinkedPathCreationFilterParameterConverter
   using ParameterType = DataObjectNameParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json)
+  static Result<ValueType> Convert(const nlohmann::json& json)
   {
     if(!json.is_string())
     {

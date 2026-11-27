@@ -85,7 +85,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Default", "[SimplnxCore][SurfaceN
   DataPath vertexGroupDataPath = computedTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
   DataPath faceGroupDataPath = computedTriangleGeomPath.createChildPath(k_FaceDataGroupName);
-  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
+  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_FaceLabelsWithSpaces);
 
   DataPath exemplarTriangleGeomPath({"Exemplar SurfaceNets"});
   DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
@@ -128,7 +128,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Default", "[SimplnxCore][SurfaceN
     args.insertOrAssign(SurfaceNetsFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
     args.insertOrAssign(SurfaceNetsFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
     args.insertOrAssign(SurfaceNetsFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -190,7 +190,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Smoothing", "[SimplnxCore][Surfac
   DataPath vertexGroupDataPath = computedTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
   DataPath faceGroupDataPath = computedTriangleGeomPath.createChildPath(k_FaceDataGroupName);
-  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
+  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_FaceLabelsWithSpaces);
 
   DataPath exemplarTriangleGeomPath({"Exemplar SurfaceNets Smoothing"});
   DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
@@ -231,7 +231,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Smoothing", "[SimplnxCore][Surfac
     args.insertOrAssign(SurfaceNetsFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
     args.insertOrAssign(SurfaceNetsFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
     args.insertOrAssign(SurfaceNetsFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -294,7 +294,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Winding", "[SimplnxCore][SurfaceN
   DataPath vertexGroupDataPath = computedTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
   DataPath faceGroupDataPath = computedTriangleGeomPath.createChildPath(k_FaceDataGroupName);
-  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
+  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_FaceLabelsWithSpaces);
 
   DataPath exemplarTriangleGeomPath({"Exemplar SurfaceNets Winding"});
   DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
@@ -335,7 +335,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Winding", "[SimplnxCore][SurfaceN
     args.insertOrAssign(SurfaceNetsFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
     args.insertOrAssign(SurfaceNetsFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
     args.insertOrAssign(SurfaceNetsFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);
@@ -397,7 +397,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Winding Smoothing", "[SimplnxCore
   DataPath vertexGroupDataPath = computedTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
   DataPath faceGroupDataPath = computedTriangleGeomPath.createChildPath(k_FaceDataGroupName);
-  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
+  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_FaceLabelsWithSpaces);
 
   DataPath exemplarTriangleGeomPath({"Exemplar SurfaceNets Winding Smoothing"});
   DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
@@ -438,7 +438,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter V&V: Winding Smoothing", "[SimplnxCore
     args.insertOrAssign(SurfaceNetsFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
     args.insertOrAssign(SurfaceNetsFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
     args.insertOrAssign(SurfaceNetsFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     // Preflight the filter and check result
     auto preflightResult = filter.preflight(dataStructure, args);

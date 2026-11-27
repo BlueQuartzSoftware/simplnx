@@ -72,10 +72,10 @@ IFilter::PreflightResult ZeroCrossingImageFilter::preflightImpl(const DataStruct
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   // requireScalar=true: zero crossings are defined on scalar images. The output is a FIXED uint8 (matching the
-  // legacy ITK FilterOutputType), so AlwaysUInt8 maps every input type to a uint8 output array. SignedScalar admits
+  // legacy ITK FilterOutputType), so AlwaysUInt8Type maps every input type to a uint8 output array. SignedScalar admits
   // only the signed scalar types (int8/int16/int32/int64/float32/float64) -- zero crossings are undefined for
   // unsigned types (matching the legacy SignedScalarPixelIdTypeList). There is no minimum-dimension requirement.
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::SignedScalar, ImageProcessing::AlwaysUInt8>(
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::SignedScalar, ImageProcessing::AlwaysUInt8Type>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   return {.outputActions = std::move(resultOutputActions)};
 }

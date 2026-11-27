@@ -108,7 +108,7 @@ public:
    * @param edgeId The index of the edge to query
    * @param coords Output span to store the vertex coordinates
    */
-  void getEdgeCoordinates(usize edgeId, nonstd::span<Point3Df> coords) const;
+  void getEdgeCoordinates(usize edgeId, nonstd::span<FloatVec3> coords) const;
 
   /**
    * @brief Pure-Virtual

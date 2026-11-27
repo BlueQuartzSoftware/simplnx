@@ -218,7 +218,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: Fro
 // ITK-sourced real-image golden -- "default" case. Duplicates ITKGradientMagnitudeRecursiveGaussianImageTest.cpp on
 // our ITK-free filter: the test reads RA-Float.nrrd (float32) and runs our filter with the ITK case's parameters (all
 // defaults; Sigma 1.0, NormalizeAcrossScale false). The durable golden compares the output with the committed baseline
-// at a tolerance of 0.0001 via ip_golden::CompareImages. The output is a fixed float32 (AlwaysFloat32). The helper pins
+// at a tolerance of 0.0001 via ip_golden::CompareImages. The output is a fixed float32 (AlwaysFloat32Type). The helper pins
 // ForceInCore.
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::GradientMagnitudeRecursiveGaussianImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][GradientMagnitudeRecursiveGaussianImageFilter]")

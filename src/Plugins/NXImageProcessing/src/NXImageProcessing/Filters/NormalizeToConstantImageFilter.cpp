@@ -104,7 +104,7 @@ IFilter::PreflightResult NormalizeToConstantImageFilter::preflightImpl(const Dat
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions =
-      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64Type>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   return {.outputActions = std::move(resultOutputActions)};
 }
 Result<> NormalizeToConstantImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
@@ -117,7 +117,7 @@ Result<> NormalizeToConstantImageFilter::executeImpl(DataStructure& dataStructur
   auto constant = filterArgs.value<float64>(k_Constant_Key);
 
   const NormalizeToConstantOperation operation{constant};
-  return ImageProcessing::ExecuteTwoPassImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel,
+  return ImageProcessing::ExecuteTwoPassImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64Type>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel,
                                                                                                                  messageHandler);
 }
 } // namespace nx::core

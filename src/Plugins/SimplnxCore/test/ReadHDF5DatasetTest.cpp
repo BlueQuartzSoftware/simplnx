@@ -339,7 +339,7 @@ void DatasetTest(ReadHDF5DatasetFilter& filter, const std::list<ReadHDF5DatasetP
     {
       // Calculate the total number of tuples
       std::string tDimsStr = info.tupleDimensions;
-      std::vector<std::string> tDims = StringUtilities::split(tDimsStr, ',');
+      std::vector<std::string> tDims = StringUtilities::Split(tDimsStr, ',');
       usize tDimsProduct = 1;
       for(const auto& tDim : tDims)
       {
@@ -348,7 +348,7 @@ void DatasetTest(ReadHDF5DatasetFilter& filter, const std::list<ReadHDF5DatasetP
       }
 
       std::string cDimsStr = info.componentDimensions;
-      std::vector<std::string> tokens = StringUtilities::split(cDimsStr, ',');
+      std::vector<std::string> tokens = StringUtilities::Split(cDimsStr, ',');
       ShapeType cDims;
       cDims.reserve(tokens.size());
       for(const auto& token : tokens)

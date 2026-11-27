@@ -206,13 +206,13 @@ Result<> ComputeTriangleAreasFilter::executeImpl(DataStructure& dataStructure, c
           const usize o1 = static_cast<usize>(triBufPtr[i * 3 + 1] - baseVertIdx) * 3;
           const usize o2 = static_cast<usize>(triBufPtr[i * 3 + 2] - baseVertIdx) * 3;
 
-          const Point3Df p0{vertBufPtr[o0], vertBufPtr[o0 + 1], vertBufPtr[o0 + 2]};
-          const Point3Df p1{vertBufPtr[o1], vertBufPtr[o1 + 1], vertBufPtr[o1 + 2]};
-          const Point3Df p2{vertBufPtr[o2], vertBufPtr[o2 + 1], vertBufPtr[o2 + 2]};
+          const FloatVec3 p0{vertBufPtr[o0], vertBufPtr[o0 + 1], vertBufPtr[o0 + 2]};
+          const FloatVec3 p1{vertBufPtr[o1], vertBufPtr[o1 + 1], vertBufPtr[o1 + 2]};
+          const FloatVec3 p2{vertBufPtr[o2], vertBufPtr[o2 + 1], vertBufPtr[o2 + 2]};
 
-          const Point3Df vecA = (p0 - p1).toArray();
-          const Point3Df vecB = (p0 - p2).toArray();
-          const Point3Df cross = vecA.cross(vecB);
+          const FloatVec3 vecA = (p0 - p1).toArray();
+          const FloatVec3 vecB = (p0 - p2).toArray();
+          const FloatVec3 cross = vecA.cross(vecB);
           areaBufPtr[i] = 0.5F * cross.magnitude();
         }
       });
@@ -247,12 +247,12 @@ Result<> ComputeTriangleAreasFilter::executeImpl(DataStructure& dataStructure, c
         {
           return addIoContext(std::move(ioResult), vertexPath, v2 * 3, 3, "Bulk read failed");
         }
-        const Point3Df p0{v0Buf[0], v0Buf[1], v0Buf[2]};
-        const Point3Df p1{v1Buf[0], v1Buf[1], v1Buf[2]};
-        const Point3Df p2{v2Buf[0], v2Buf[1], v2Buf[2]};
-        const Point3Df vecA = (p0 - p1).toArray();
-        const Point3Df vecB = (p0 - p2).toArray();
-        const Point3Df cross = vecA.cross(vecB);
+        const FloatVec3 p0{v0Buf[0], v0Buf[1], v0Buf[2]};
+        const FloatVec3 p1{v1Buf[0], v1Buf[1], v1Buf[2]};
+        const FloatVec3 p2{v2Buf[0], v2Buf[1], v2Buf[2]};
+        const FloatVec3 vecA = (p0 - p1).toArray();
+        const FloatVec3 vecB = (p0 - p2).toArray();
+        const FloatVec3 cross = vecA.cross(vecB);
         areaBuf[i] = 0.5F * cross.magnitude();
       }
     }

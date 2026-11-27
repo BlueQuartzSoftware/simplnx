@@ -348,7 +348,7 @@ T ReadValue(const DataArray<T>& array, usize index)
 
 void VerifySyntheticChannel5Output(const DataStructure& dataStructure, bool compatibleArrays)
 {
-  const DataPath cellDataPath = k_DataContainerPath.createChildPath(k_Cell_Data);
+  const DataPath cellDataPath = k_DataContainerPath.createChildPath(k_CellDataWithSpaces);
   const auto& imageGeometry = dataStructure.getDataRefAs<ImageGeom>(k_DataContainerPath);
   REQUIRE(imageGeometry.getNumberOfCells() == k_SyntheticXCells * k_SyntheticYCells);
 
@@ -442,7 +442,7 @@ Arguments SyntheticChannel5Arguments(const fs::path& cprPath, bool compatibleArr
   args.insertOrAssign(ReadChannel5DataFilter::k_CreateCompatibleArrays_Key, std::make_any<bool>(compatibleArrays));
   args.insertOrAssign(ReadChannel5DataFilter::k_EdaxHexagonalAlignment_Key, std::make_any<bool>(false));
   args.insertOrAssign(ReadChannel5DataFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
-  args.insertOrAssign(ReadChannel5DataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Data));
+  args.insertOrAssign(ReadChannel5DataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellDataWithSpaces));
   args.insertOrAssign(ReadChannel5DataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_EnsembleAttributeMatrix));
   return args;
 }
@@ -452,7 +452,7 @@ ReadChannel5DataInputValues SyntheticChannel5InputValues(const fs::path& cprPath
   ReadChannel5DataInputValues inputValues;
   inputValues.InputFile = cprPath;
   inputValues.DataContainerName = k_DataContainerPath;
-  inputValues.CellAttributeMatrixName = k_Cell_Data;
+  inputValues.CellAttributeMatrixName = k_CellDataWithSpaces;
   inputValues.CellEnsembleAttributeMatrixName = k_EnsembleAttributeMatrix;
   inputValues.EdaxHexagonalAlignment = false;
   inputValues.CreateCompatibleArrays = true;
@@ -489,7 +489,7 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Native_Data", "[OrientationAnal
   args.insertOrAssign(ReadChannel5DataFilter::k_CreateCompatibleArrays_Key, std::make_any<bool>(false));
   args.insertOrAssign(ReadChannel5DataFilter::k_EdaxHexagonalAlignment_Key, std::make_any<bool>(false));
   args.insertOrAssign(ReadChannel5DataFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
-  args.insertOrAssign(ReadChannel5DataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Data));
+  args.insertOrAssign(ReadChannel5DataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellDataWithSpaces));
   args.insertOrAssign(ReadChannel5DataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_EnsembleAttributeMatrix));
 
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -500,7 +500,7 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Native_Data", "[OrientationAnal
 
   {
     DataPath exemplarAttributeMatrixPath({"Exemplar-No-Options", "Cell Data"});
-    DataPath computedAttributeNatrixPath = k_DataContainerPath.createChildPath(k_Cell_Data);
+    DataPath computedAttributeNatrixPath = k_DataContainerPath.createChildPath(k_CellDataWithSpaces);
     CompareExemplarToGenerateAttributeMatrix(exemplarDataStructure, exemplarAttributeMatrixPath, dataStructure, computedAttributeNatrixPath);
   }
   {
@@ -542,7 +542,7 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Synthetic_BatchBoundaries", "[O
     args.insertOrAssign(ReadChannel5DataFilter::k_CreateCompatibleArrays_Key, std::make_any<bool>(compatibleArrays));
     args.insertOrAssign(ReadChannel5DataFilter::k_EdaxHexagonalAlignment_Key, std::make_any<bool>(false));
     args.insertOrAssign(ReadChannel5DataFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
-    args.insertOrAssign(ReadChannel5DataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Data));
+    args.insertOrAssign(ReadChannel5DataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellDataWithSpaces));
     args.insertOrAssign(ReadChannel5DataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_EnsembleAttributeMatrix));
 
     auto preflightResult2 = filter.preflight(dataStructure, args).outputActions;
@@ -586,7 +586,7 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Synthetic_EdaxHexagonalAlignmen
   const auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const DataPath cellDataPath = k_DataContainerPath.createChildPath(k_Cell_Data);
+  const DataPath cellDataPath = k_DataContainerPath.createChildPath(k_CellDataWithSpaces);
   const auto& crystalStructuresRef = RequireDataArray<uint32>(dataStructure, k_DataContainerPath.createChildPath(k_EnsembleAttributeMatrix).createChildPath(ebsdlib::CtfFile::CrystalStructures));
   REQUIRE(ReadValue(crystalStructuresRef, 1) == ebsdlib::CrystalStructure::Cubic_High);
   REQUIRE(ReadValue(crystalStructuresRef, 2) == ebsdlib::CrystalStructure::Hexagonal_High);
@@ -654,7 +654,7 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:Synthetic_CompatibleOutputFailu
   });
   REQUIRE(WriteSyntheticChannel5Files(cprPath, crcPath, k_SyntheticXCells, k_SyntheticYCells));
 
-  const DataPath cellDataPath = k_DataContainerPath.createChildPath(k_Cell_Data);
+  const DataPath cellDataPath = k_DataContainerPath.createChildPath(k_CellDataWithSpaces);
 
   SECTION("The compatible Phases second-page write propagates its error and leaves EulerAngles untouched")
   {
@@ -735,7 +735,7 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:SIMPLNX_Data", "[OrientationAna
   args.insertOrAssign(ReadChannel5DataFilter::k_CreateCompatibleArrays_Key, std::make_any<bool>(true));
   args.insertOrAssign(ReadChannel5DataFilter::k_EdaxHexagonalAlignment_Key, std::make_any<bool>(false));
   args.insertOrAssign(ReadChannel5DataFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(k_DataContainerPath));
-  args.insertOrAssign(ReadChannel5DataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Data));
+  args.insertOrAssign(ReadChannel5DataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellDataWithSpaces));
   args.insertOrAssign(ReadChannel5DataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_EnsembleAttributeMatrix));
 
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -746,7 +746,7 @@ TEST_CASE("OrientationAnalysis::ReadChannel5Data:SIMPLNX_Data", "[OrientationAna
 
   {
     DataPath exemplarAttributeMatrixPath({"Exemplar-All-Options", "Cell Data"});
-    DataPath computedAttributeNatrixPath = k_DataContainerPath.createChildPath(k_Cell_Data);
+    DataPath computedAttributeNatrixPath = k_DataContainerPath.createChildPath(k_CellDataWithSpaces);
     CompareExemplarToGenerateAttributeMatrix(exemplarDataStructure, exemplarAttributeMatrixPath, dataStructure, computedAttributeNatrixPath);
   }
   {

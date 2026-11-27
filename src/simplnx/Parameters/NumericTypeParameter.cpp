@@ -123,7 +123,7 @@ Result<> NumericTypeParameter::validate(const std::any& value) const
 
 namespace SIMPLConversion
 {
-Result<NumericTypeParameterConverter::ValueType> NumericTypeParameterConverter::convert(const nlohmann::json& json)
+Result<NumericTypeParameterConverter::ValueType> NumericTypeParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_number_integer())
   {
@@ -146,9 +146,9 @@ Result<NumericTypeParameterConverter::ValueType> NumericTypeParameterConverter::
   return {static_cast<NumericType>(value)};
 }
 
-Result<ScalarTypeParameterToNumericTypeConverter::ValueType> ScalarTypeParameterToNumericTypeConverter::convert(const nlohmann::json& json)
+Result<ScalarTypeParameterToNumericTypeConverter::ValueType> ScalarTypeParameterToNumericTypeConverter::Convert(const nlohmann::json& json)
 {
-  auto dataTypeResult = SIMPLConversion::ScalarTypeParameterConverter::convert(json);
+  auto dataTypeResult = SIMPLConversion::ScalarTypeParameterConverter::Convert(json);
   if(dataTypeResult.invalid())
   {
     return ConvertInvalidResult<ValueType>(std::move(dataTypeResult));

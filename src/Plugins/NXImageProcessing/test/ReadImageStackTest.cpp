@@ -65,8 +65,8 @@ const ChoicesParameter::ValueType k_FlipAboutYAxis = 2;
 const fs::path k_ImageFlipStackDir = fs::path(fmt::format("{}/import_image_stack_test_v3/{}", unit_test::k_TestFilesDir, k_FlippedImageStackSubDirName));
 
 // Exemplar Array Paths
-const DataPath k_XFlippedImageDataPath = k_XFlipImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
-const DataPath k_YFlippedImageDataPath = k_YFlipImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
+const DataPath k_XFlippedImageDataPath = k_XFlipImageGeomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(::k_ImageDataName);
+const DataPath k_YFlippedImageDataPath = k_YFlipImageGeomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(::k_ImageDataName);
 
 void ExecuteImportImageStackXY(DataStructure& dataStructure, const std::string& filePrefix)
 {
@@ -167,8 +167,8 @@ void CompareXYFlippedGeometries(DataStructure& dataStructure)
   UnitTest::CompareImageGeometry(dataStructure, ::k_YFlipImageGeomPath, k_YGeneratedImageGeomPath);
 
   // Processed
-  DataPath kXGeneratedImageDataPath = k_XGeneratedImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
-  DataPath kYGeneratedImageDataPath = k_YGeneratedImageGeomPath.createChildPath(Constants::k_Cell_Data).createChildPath(::k_ImageDataName);
+  DataPath kXGeneratedImageDataPath = k_XGeneratedImageGeomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(::k_ImageDataName);
+  DataPath kYGeneratedImageDataPath = k_YGeneratedImageGeomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(::k_ImageDataName);
   const auto& xGeneratedImageData = dataStructure.getDataRefAs<UInt8Array>(kXGeneratedImageDataPath);
   const auto& yGeneratedImageData = dataStructure.getDataRefAs<UInt8Array>(kYGeneratedImageDataPath);
 
@@ -587,8 +587,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Baseline_NoProcessing", "[NX
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Baseline_Geometry"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Baseline_Geometry", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Baseline_Geometry", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -618,8 +618,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_XOnly", "[NXImage
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_X"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_Voxel_X", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Voxel_X", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -645,8 +645,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_YOnly", "[NXImage
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_Y"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_Voxel_Y", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Voxel_Y", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -672,8 +672,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_ZOnly", "[NXImage
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_Z"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_Voxel_Z", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Voxel_Z", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -699,8 +699,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_XY", "[NXImagePro
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_XY"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_Voxel_XY", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Voxel_XY", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -726,8 +726,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Voxel_XYZ", "[NXImagePr
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Voxel_XYZ"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_Voxel_XYZ", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Voxel_XYZ", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -753,8 +753,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_XY", "[NXImage
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Physical_XY"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_Physical_XY", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Physical_XY", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -780,8 +780,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Crop_Physical_Z", "[NXImageP
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_Physical_Z"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_Physical_Z", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_Physical_Z", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -811,8 +811,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Resample_ScalingFactor", "[N
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_Scaling_50"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Resample_Scaling_50", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Resample_Scaling_50", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -838,8 +838,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Resample_ExactDimensions", "
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_Exact_128x128"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Resample_Exact_128x128", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Resample_Exact_128x128", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -864,7 +864,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Grayscale_Conversion", "[NXI
 
   VerifyGeometryDimensions(dataStructure, geomPath, 200, 200, 3);
 
-  DataPath grayscalePath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath grayscalePath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(grayscalePath));
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
@@ -872,8 +872,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Grayscale_Conversion", "[NXI
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Grayscale_Conversion"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Grayscale_Conversion", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Grayscale_Conversion", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -903,8 +903,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::FlipY", "[NXImageProcessing]
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"FlipY_Test"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"FlipY_Test", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"FlipY_Test", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -935,8 +935,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Preprocessed",
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Preprocessed"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"OriginSpacing_Preprocessed", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"OriginSpacing_Preprocessed", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -963,8 +963,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Postprocessed"
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Postprocessed"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"OriginSpacing_Postprocessed", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"OriginSpacing_Postprocessed", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -991,8 +991,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Preprocessed_W
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Preprocessed_WithZCrop"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"OriginSpacing_Preprocessed_WithZCrop", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"OriginSpacing_Preprocessed_WithZCrop", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -1019,8 +1019,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::OriginSpacing_Postprocessed_
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"OriginSpacing_Postprocessed_WithZCrop"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"OriginSpacing_Postprocessed_WithZCrop", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"OriginSpacing_Postprocessed_WithZCrop", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -1050,8 +1050,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Crop_Resample", 
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_And_Resample"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_And_Resample", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_And_Resample", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -1077,8 +1077,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Crop_Flip", "[NX
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_And_FlipX"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_And_FlipX", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_And_FlipX", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -1104,8 +1104,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Resample_Flip", 
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_And_FlipX"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Resample_And_FlipX", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Resample_And_FlipX", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -1126,7 +1126,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Crop_Grayscale",
 
   VerifyGeometryDimensions(dataStructure, geomPath, 101, 101, 3);
 
-  DataPath grayscalePath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath grayscalePath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(grayscalePath));
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
@@ -1134,8 +1134,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Crop_Grayscale",
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Crop_And_Grayscale"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Crop_And_Grayscale", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Crop_And_Grayscale", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -1156,7 +1156,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Resample_Graysca
 
   VerifyGeometryDimensions(dataStructure, geomPath, 128, 128, 3);
 
-  DataPath grayscalePath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath grayscalePath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(grayscalePath));
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
@@ -1164,8 +1164,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Resample_Graysca
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Resample_And_Grayscale"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Resample_And_Grayscale", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Resample_And_Grayscale", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -1186,7 +1186,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Grayscale_Flip",
 
   VerifyGeometryDimensions(dataStructure, geomPath, 200, 200, 3);
 
-  DataPath grayscalePath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath grayscalePath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(grayscalePath));
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
@@ -1194,8 +1194,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_Grayscale_Flip",
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Grayscale_And_FlipX"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Grayscale_And_FlipX", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Grayscale_And_FlipX", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -1216,7 +1216,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_FullPipeline", "
 
   VerifyGeometryDimensions(dataStructure, geomPath, 50, 50, 3);
 
-  DataPath grayscalePath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  DataPath grayscalePath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(grayscalePath));
 
   DataStructure exemplarDS = UnitTest::LoadDataStructure(k_ExemplarFile);
@@ -1224,8 +1224,8 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::Interaction_FullPipeline", "
   const auto* exemplarGeomPtr = exemplarDS.getDataAs<ImageGeom>(DataPath({"Full_Pipeline"}));
   UnitTest::CompareImageGeometry(exemplarGeomPtr, generatedGeomPtr);
 
-  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Full_Pipeline", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath generatedDataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
+  DataPath exemplarDataPath = DataPath({"Full_Pipeline", Constants::k_CellDataWithSpaces, k_ImageDataName});
   const auto& generatedArray = dataStructure.getDataRefAs<UInt8Array>(generatedDataPath);
   const auto& exemplarArray = exemplarDS.getDataRefAs<UInt8Array>(exemplarDataPath);
   UnitTest::CompareDataArrays<uint8_t>(exemplarArray, generatedArray);
@@ -1479,7 +1479,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter::MultiPage_FirstPagePerFile",
   VerifyGeometryDimensions(dataStructure, geomPath, k_Width, k_Height, k_NumFiles);
 
   // (b) Each slice equals the FIRST page of the corresponding file.
-  const DataPath dataPath = geomPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_ImageDataName);
+  const DataPath dataPath = geomPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_ImageDataName);
   const auto& store = dataStructure.getDataRefAs<UInt8Array>(dataPath).getDataStoreRef();
   REQUIRE(store.getNumberOfTuples() == k_SliceElems * k_NumFiles);
   for(usize f = 0; f < k_NumFiles; ++f)

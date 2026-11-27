@@ -76,7 +76,7 @@ IFilter::PreflightResult BoundedReciprocalImageFilter::preflightImpl(const DataS
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   Result<OutputActions> resultOutputActions =
-      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64Type>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   return {.outputActions = std::move(resultOutputActions)};
 }
 Result<> BoundedReciprocalImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
@@ -87,6 +87,6 @@ Result<> BoundedReciprocalImageFilter::executeImpl(DataStructure& dataStructure,
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   const BoundedReciprocalOperation operation{};
-  return ImageProcessing::ExecuteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
+  return ImageProcessing::ExecuteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64Type>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 } // namespace nx::core

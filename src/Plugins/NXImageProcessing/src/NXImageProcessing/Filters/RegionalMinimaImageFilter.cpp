@@ -96,9 +96,9 @@ IFilter::PreflightResult RegionalMinimaImageFilter::preflightImpl(const DataStru
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   // requireScalar=true: the regional-extrema engine is defined on scalar images. The binary label output is a
-  // FIXED uint32 (matching the legacy ITK RegionalMinima FilterOutputType), so AlwaysUInt32 maps every input type
+  // FIXED uint32 (matching the legacy ITK RegionalMinima FilterOutputType), so AlwaysUInt32Type maps every input type
   // to a uint32 output array.
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt32>(
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt32Type>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   if(resultOutputActions.invalid())
   {

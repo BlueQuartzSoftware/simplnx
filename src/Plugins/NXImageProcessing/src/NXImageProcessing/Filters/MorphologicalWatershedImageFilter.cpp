@@ -84,10 +84,10 @@ IFilter::PreflightResult MorphologicalWatershedImageFilter::preflightImpl(const 
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   // requireScalar=true: watershed segmentation is defined on scalar images. The output is a FIXED uint32 label image
-  // (matching the legacy ITK FilterOutputType), so AlwaysUInt32 maps every input type to a uint32 output array.
+  // (matching the legacy ITK FilterOutputType), so AlwaysUInt32Type maps every input type to a uint32 output array.
   // AllNumeric admits every scalar type (the legacy ScalarPixelIdTypeList, incl. float32/float64). There is no
   // minimum-dimension requirement (no dim guard follows).
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt32>(
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt32Type>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   if(resultOutputActions.invalid())
   {

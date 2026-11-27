@@ -139,16 +139,16 @@ public:
 
   /**
    * @brief Returns the parametric center of the geometry element.
-   * @return Point3D<float64> The parametric center coordinates
+   * @return Vec3<float64> The parametric center coordinates
    */
-  virtual Point3D<float64> getParametricCenter() const = 0;
+  virtual Vec3<float64> getParametricCenter() const = 0;
 
   /**
    * @brief Calculates shape functions at the given parametric coordinates.
    * @param pCoords The parametric coordinates
    * @param shape Output array to store the calculated shape function values
    */
-  virtual void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const = 0;
+  virtual void getShapeFunctions(const Vec3<float64>& pCoords, float64* shape) const = 0;
 
   /**
    * @brief Returns the dimensionality of the units used by the geometry.

@@ -113,7 +113,7 @@ struct SIMPLNX_EXPORT SingleToMultiDataPathSelectionFilterParameterConverter
   using ParameterType = MultiPathSelectionParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT DataArraysToRemoveConverter
@@ -121,7 +121,7 @@ struct SIMPLNX_EXPORT DataArraysToRemoveConverter
   using ParameterType = MultiPathSelectionParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 } // namespace SIMPLConversion
 } // namespace nx::core

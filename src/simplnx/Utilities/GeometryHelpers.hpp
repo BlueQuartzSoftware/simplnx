@@ -1278,7 +1278,7 @@ void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertic
     return;
   }
   auto& elemAreas = *areas;
-  std::vector<Point3Df> coords;
+  std::vector<FloatVec3> coords;
   coords.reserve(numVertsPerElem);
   std::vector<float32> coordinate(3 * numVertsPerElem, 0.0f);
 
@@ -1306,9 +1306,9 @@ void Find2DElementAreas(const DataArray<T>* elemList, const Float32Array* vertic
     float* coordinatesPtr = coordinate.data();
     for(int64 j = 0; j < numVertsPerElem; j++)
     {
-      Point3D<float32> vert0(coordinatesPtr + (3 * j));
-      Point3D<float32> vert1(coordinatesPtr + (3 * ((j + 1) % numVertsPerElem)));
-      Point3D<float32> vert2(coordinatesPtr + (3 * ((j + 2) % numVertsPerElem)));
+      Vec3<float32> vert0(coordinatesPtr + (3 * j));
+      Vec3<float32> vert1(coordinatesPtr + (3 * ((j + 1) % numVertsPerElem)));
+      Vec3<float32> vert2(coordinatesPtr + (3 * ((j + 2) % numVertsPerElem)));
 
       switch(projection)
       {

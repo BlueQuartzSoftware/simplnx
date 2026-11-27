@@ -219,12 +219,12 @@ Result<> HexahedralGeom::findElementCentroids(bool recalculate)
   return {};
 }
 
-Point3D<float64> HexahedralGeom::getParametricCenter() const
+Vec3<float64> HexahedralGeom::getParametricCenter() const
 {
   return {0.5, 0.5, 0.5};
 }
 
-void HexahedralGeom::getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const
+void HexahedralGeom::getShapeFunctions(const Vec3<float64>& pCoords, float64* shape) const
 {
   float64 rm = 1.0 - pCoords[0];
   float64 sm = 1.0 - pCoords[1];

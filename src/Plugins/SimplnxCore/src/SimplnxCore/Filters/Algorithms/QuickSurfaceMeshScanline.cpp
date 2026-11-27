@@ -185,7 +185,7 @@ public:
    *
    * The adapter captures cache errors for the caller to return after generation.
    */
-  void setCoordinates(uint64 nodeId, const Point3D<float64>& coordinates)
+  void setCoordinates(uint64 nodeId, const Vec3<float64>& coordinates)
   {
     if(m_ShouldCancel || m_Result.invalid())
     {
@@ -465,7 +465,7 @@ Result<> QuickSurfaceMeshScanline::operator()()
     }
   }
 
-  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && triangleCount == 0)
+  if(m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly && triangleCount == 0)
   {
     return MeshingUtilities::MakeEmptyMeshWarning(m_InputValues->TriangleGeometryPath, featureIdsStore.getNumberOfTuples(), static_cast<usize>(nodeCount));
   }
@@ -525,7 +525,7 @@ Result<> QuickSurfaceMeshScanline::operator()()
     }
   }
 
-  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && windingResult.valid())
+  if(m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly && windingResult.valid())
   {
     if(triangleGeom.getNumberOfFaces() == 0)
     {
@@ -1005,7 +1005,7 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
         MeshIndexType localIdx = j * xP + i;
         int32 curFeature = curSlice[localIdx];
 
-        if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && curFeature == 0)
+        if(m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly && curFeature == 0)
         {
           suppressedFaceCount += static_cast<MeshIndexType>(i == 0) + static_cast<MeshIndexType>(i == xP - 1) + static_cast<MeshIndexType>(j == 0) + static_cast<MeshIndexType>(j == yP - 1) +
                                  static_cast<MeshIndexType>(k == 0) + static_cast<MeshIndexType>(k == zP - 1);
@@ -1016,7 +1016,7 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
 
         // A dual-grid node at (ni, nj) has offset nj * (xP + 1) + ni.
 
-        if(i == 0 && (m_InputValues->BoundingBoxSkinMode != BoundingBoxSkinMode::k_BackgroundBackedWallsOnly || curFeature != 0))
+        if(i == 0 && (m_InputValues->BoundingBoxSkinMode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           countNode(nodePlane0, j * (xP + 1) + i);
           countNode(nodePlane0, (j + 1) * (xP + 1) + i);
@@ -1024,7 +1024,7 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
           countNode(nodePlane1, (j + 1) * (xP + 1) + i);
           triangleCount += 2;
         }
-        if(j == 0 && (m_InputValues->BoundingBoxSkinMode != BoundingBoxSkinMode::k_BackgroundBackedWallsOnly || curFeature != 0))
+        if(j == 0 && (m_InputValues->BoundingBoxSkinMode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           countNode(nodePlane0, j * (xP + 1) + i);
           countNode(nodePlane0, j * (xP + 1) + (i + 1));
@@ -1032,7 +1032,7 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
           countNode(nodePlane1, j * (xP + 1) + (i + 1));
           triangleCount += 2;
         }
-        if(k == 0 && (m_InputValues->BoundingBoxSkinMode != BoundingBoxSkinMode::k_BackgroundBackedWallsOnly || curFeature != 0))
+        if(k == 0 && (m_InputValues->BoundingBoxSkinMode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           countNode(nodePlane0, j * (xP + 1) + i);
           countNode(nodePlane0, j * (xP + 1) + (i + 1));
@@ -1040,7 +1040,7 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
           countNode(nodePlane0, (j + 1) * (xP + 1) + (i + 1));
           triangleCount += 2;
         }
-        if(i == (xP - 1) && (m_InputValues->BoundingBoxSkinMode != BoundingBoxSkinMode::k_BackgroundBackedWallsOnly || curFeature != 0))
+        if(i == (xP - 1) && (m_InputValues->BoundingBoxSkinMode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           countNode(nodePlane0, j * (xP + 1) + (i + 1));
           countNode(nodePlane0, (j + 1) * (xP + 1) + (i + 1));
@@ -1056,7 +1056,7 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
           countNode(nodePlane1, (j + 1) * (xP + 1) + (i + 1));
           triangleCount += 2;
         }
-        if(j == (yP - 1) && (m_InputValues->BoundingBoxSkinMode != BoundingBoxSkinMode::k_BackgroundBackedWallsOnly || curFeature != 0))
+        if(j == (yP - 1) && (m_InputValues->BoundingBoxSkinMode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           countNode(nodePlane0, (j + 1) * (xP + 1) + (i + 1));
           countNode(nodePlane0, (j + 1) * (xP + 1) + i);
@@ -1072,7 +1072,7 @@ Result<> QuickSurfaceMeshScanline::countActiveNodesAndTriangles(MeshIndexType& n
           countNode(nodePlane1, (j + 1) * (xP + 1) + i);
           triangleCount += 2;
         }
-        if(k == (zP - 1) && (m_InputValues->BoundingBoxSkinMode != BoundingBoxSkinMode::k_BackgroundBackedWallsOnly || curFeature != 0))
+        if(k == (zP - 1) && (m_InputValues->BoundingBoxSkinMode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           countNode(nodePlane1, j * (xP + 1) + (i + 1));
           countNode(nodePlane1, j * (xP + 1) + i);
@@ -1210,7 +1210,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
       plane[offset] = assignedNodeCount;
       assignedNodeCount++;
     }
-    nx::core::Point3D<float64> tmpCoords = gridPtr->getPlaneCoords(coordX, coordY, coordZ);
+    nx::core::Vec3<float64> tmpCoords = gridPtr->getPlaneCoords(coordX, coordY, coordZ);
     ownerLists.setCoordinates(plane[offset], tmpCoords);
   };
 
@@ -1258,7 +1258,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
 
         // A dual-grid node at (ni, nj) has offset nj * (xP + 1) + ni.
 
-        if(i == 0 && (m_InputValues->BoundingBoxSkinMode != BoundingBoxSkinMode::k_BackgroundBackedWallsOnly || curFeature != 0))
+        if(i == 0 && (m_InputValues->BoundingBoxSkinMode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           MeshIndexType n1Off = j * (xP + 1) + i;
           MeshIndexType n2Off = (j + 1) * (xP + 1) + i;
@@ -1299,7 +1299,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
           ownerLists[nid4].insert(curFeature);
           ownerLists[nid4].insert(-1);
         }
-        if(j == 0 && (m_InputValues->BoundingBoxSkinMode != BoundingBoxSkinMode::k_BackgroundBackedWallsOnly || curFeature != 0))
+        if(j == 0 && (m_InputValues->BoundingBoxSkinMode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           MeshIndexType n1Off = j * (xP + 1) + i;
           MeshIndexType n2Off = j * (xP + 1) + (i + 1);
@@ -1340,7 +1340,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
           ownerLists[nid4].insert(curFeature);
           ownerLists[nid4].insert(-1);
         }
-        if(k == 0 && (m_InputValues->BoundingBoxSkinMode != BoundingBoxSkinMode::k_BackgroundBackedWallsOnly || curFeature != 0))
+        if(k == 0 && (m_InputValues->BoundingBoxSkinMode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           MeshIndexType n1Off = j * (xP + 1) + i;
           MeshIndexType n2Off = j * (xP + 1) + (i + 1);
@@ -1381,7 +1381,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
           ownerLists[nid4].insert(curFeature);
           ownerLists[nid4].insert(-1);
         }
-        if(i == (xP - 1) && (m_InputValues->BoundingBoxSkinMode != BoundingBoxSkinMode::k_BackgroundBackedWallsOnly || curFeature != 0))
+        if(i == (xP - 1) && (m_InputValues->BoundingBoxSkinMode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           MeshIndexType n1Off = j * (xP + 1) + (i + 1);
           MeshIndexType n2Off = (j + 1) * (xP + 1) + (i + 1);
@@ -1488,7 +1488,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
           ownerLists[nid4].insert(curFeature);
           ownerLists[nid4].insert(neigh1Feature);
         }
-        if(j == (yP - 1) && (m_InputValues->BoundingBoxSkinMode != BoundingBoxSkinMode::k_BackgroundBackedWallsOnly || curFeature != 0))
+        if(j == (yP - 1) && (m_InputValues->BoundingBoxSkinMode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           MeshIndexType n1Off = (j + 1) * (xP + 1) + (i + 1);
           MeshIndexType n2Off = (j + 1) * (xP + 1) + i;
@@ -1595,7 +1595,7 @@ Result<> QuickSurfaceMeshScanline::createNodesAndTriangles(MeshIndexType nodeCou
           ownerLists[nid4].insert(curFeature);
           ownerLists[nid4].insert(neigh2Feature);
         }
-        if(k == (zP - 1) && (m_InputValues->BoundingBoxSkinMode != BoundingBoxSkinMode::k_BackgroundBackedWallsOnly || curFeature != 0))
+        if(k == (zP - 1) && (m_InputValues->BoundingBoxSkinMode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly || curFeature != 0))
         {
           MeshIndexType n1Off = j * (xP + 1) + (i + 1);
           MeshIndexType n2Off = j * (xP + 1) + i;

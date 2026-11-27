@@ -172,7 +172,7 @@ struct SurfaceNetsFixture
     args.insertOrAssign(SurfaceNetsFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
     args.insertOrAssign(SurfaceNetsFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
     args.insertOrAssign(SurfaceNetsFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
     return args;
   }
 };
@@ -186,7 +186,7 @@ void CompareSmallOutputs(const DataStructure& expected, const DataStructure& act
   CompareDataArrays<float32>(expected.getDataRefAs<IDataArray>(k_SmallOutputPath.createChildPath(INodeGeometry0D::k_SharedVertexListName)),
                              actual.getDataRefAs<IDataArray>(k_SmallOutputPath.createChildPath(INodeGeometry0D::k_SharedVertexListName)));
   CompareDataArrays<int8>(expected.getDataRefAs<IDataArray>(vertexPath.createChildPath(k_NodeTypeArrayName)), actual.getDataRefAs<IDataArray>(vertexPath.createChildPath(k_NodeTypeArrayName)));
-  CompareDataArrays<int32>(expected.getDataRefAs<IDataArray>(facePath.createChildPath(k_Face_Labels)), actual.getDataRefAs<IDataArray>(facePath.createChildPath(k_Face_Labels)));
+  CompareDataArrays<int32>(expected.getDataRefAs<IDataArray>(facePath.createChildPath(k_FaceLabelsWithSpaces)), actual.getDataRefAs<IDataArray>(facePath.createChildPath(k_FaceLabelsWithSpaces)));
   CompareDataArrays<int32>(expected.getDataRefAs<IDataArray>(facePath.createChildPath("CellInt")), actual.getDataRefAs<IDataArray>(facePath.createChildPath("CellInt")));
   CompareDataArrays<float32>(expected.getDataRefAs<IDataArray>(facePath.createChildPath("CellFloat")), actual.getDataRefAs<IDataArray>(facePath.createChildPath("CellFloat")));
   CompareDataArrays<bool>(expected.getDataRefAs<IDataArray>(facePath.createChildPath("CellBool")), actual.getDataRefAs<IDataArray>(facePath.createChildPath("CellBool")));
@@ -204,14 +204,14 @@ void RequireSmallOutputValues(const DataStructure& dataStructure)
   const auto verticesPath = k_SmallOutputPath.createChildPath(INodeGeometry0D::k_SharedVertexListName);
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<DataArray<IGeometry::MeshIndexType>>(facesPath));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(verticesPath));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath(k_Face_Labels)));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath(k_FaceLabelsWithSpaces)));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath("CellInt")));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(facePath.createChildPath("CellFloat")));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<BoolArray>(facePath.createChildPath("CellBool")));
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(facePath.createChildPath("FeatureVector")));
   const auto& faces = dataStructure.getDataRefAs<DataArray<IGeometry::MeshIndexType>>(facesPath);
   const auto& vertices = dataStructure.getDataRefAs<Float32Array>(verticesPath);
-  const auto& labels = dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath(k_Face_Labels));
+  const auto& labels = dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath(k_FaceLabelsWithSpaces));
   const auto& ints = dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath("CellInt"));
   const auto& floats = dataStructure.getDataRefAs<Float32Array>(facePath.createChildPath("CellFloat"));
   const auto& bools = dataStructure.getDataRefAs<BoolArray>(facePath.createChildPath("CellBool"));
@@ -345,7 +345,7 @@ void RequireSmallOutputStores(const DataStructure& dataStructure, const bool exp
       k_SmallOutputPath.createChildPath(INodeGeometry0D::k_SharedVertexListName),
       k_SmallOutputPath.createChildPath(TriangleGeom::k_SharedFacesListName),
       vertexDataPath.createChildPath(k_NodeTypeArrayName),
-      faceDataPath.createChildPath(k_Face_Labels),
+      faceDataPath.createChildPath(k_FaceLabelsWithSpaces),
       faceDataPath.createChildPath("CellInt"),
       faceDataPath.createChildPath("CellFloat"),
       faceDataPath.createChildPath("CellBool"),
@@ -675,8 +675,8 @@ TEST_CASE("SimplnxCore::TupleTransfer: large-component direct fallback", "[Simpl
   SIMPLNX_RESULT_REQUIRE_VALID(sourceWriteResult);
 
   const std::array<SurfaceNetsTransferData, 2> records = {
-      SurfaceNetsTransferData{.faceIndex = 0, .quadNxArrayIndices = {0, 1}},
-      SurfaceNetsTransferData{.faceIndex = 1, .quadNxArrayIndices = {2, std::numeric_limits<usize>::max()}},
+      SurfaceNetsTransferData{.face_index = 0, .quadNxArrayIndices = {0, 1}},
+      SurfaceNetsTransferData{.face_index = 1, .quadNxArrayIndices = {2, std::numeric_limits<usize>::max()}},
   };
   TransferTuple<int32> transfer(dataStructure, sourcePath, destinationPath);
   auto surfaceNetsTransferResult = transfer.surfaceNetsTransferBatch(nonstd::span<const SurfaceNetsTransferData>(records.data(), records.size()));
@@ -721,8 +721,8 @@ TEST_CASE("SimplnxCore::TupleTransfer: large-component feature fallback", "[Simp
   SIMPLNX_RESULT_REQUIRE_VALID(sourceWriteResult);
 
   const std::array<SurfaceNetsTransferData, 2> records = {
-      SurfaceNetsTransferData{.faceIndex = 0, .quadNxArrayIndices = {0, 1}},
-      SurfaceNetsTransferData{.faceIndex = 1, .quadNxArrayIndices = {2, std::numeric_limits<usize>::max()}},
+      SurfaceNetsTransferData{.face_index = 0, .quadNxArrayIndices = {0, 1}},
+      SurfaceNetsTransferData{.face_index = 1, .quadNxArrayIndices = {2, std::numeric_limits<usize>::max()}},
   };
   TransferFeatureTuple<int32, int32> transfer(dataStructure, sourcePath, destinationPath, featureIdsPath);
   auto surfaceNetsTransferResult = transfer.surfaceNetsTransferBatch(nonstd::span<const SurfaceNetsTransferData>(records.data(), records.size()));
@@ -762,7 +762,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Default", "[SimplnxCore][SurfaceNetsF
   DataPath vertexGroupDataPath = computedTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
   DataPath faceGroupDataPath = computedTriangleGeomPath.createChildPath(k_FaceDataGroupName);
-  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
+  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_FaceLabelsWithSpaces);
 
   DataPath exemplarTriangleGeomPath({"Exemplar SurfaceNets"});
   DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
@@ -805,7 +805,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Default", "[SimplnxCore][SurfaceNetsF
     args.insertOrAssign(SurfaceNetsFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
     args.insertOrAssign(SurfaceNetsFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
     args.insertOrAssign(SurfaceNetsFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -870,7 +870,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing", "[SimplnxCore][SurfaceNet
   DataPath vertexGroupDataPath = computedTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
   DataPath faceGroupDataPath = computedTriangleGeomPath.createChildPath(k_FaceDataGroupName);
-  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
+  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_FaceLabelsWithSpaces);
 
   DataPath exemplarTriangleGeomPath({"Exemplar SurfaceNets Smoothing"});
   scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(featureIdsDataPath));
@@ -912,7 +912,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Smoothing", "[SimplnxCore][SurfaceNet
     args.insertOrAssign(SurfaceNetsFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
     args.insertOrAssign(SurfaceNetsFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
     args.insertOrAssign(SurfaceNetsFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -979,7 +979,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding", "[SimplnxCore][SurfaceNetsF
   DataPath vertexGroupDataPath = computedTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
   DataPath faceGroupDataPath = computedTriangleGeomPath.createChildPath(k_FaceDataGroupName);
-  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
+  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_FaceLabelsWithSpaces);
 
   DataPath exemplarTriangleGeomPath({"Exemplar SurfaceNets Winding"});
   scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(featureIdsDataPath));
@@ -1021,7 +1021,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding", "[SimplnxCore][SurfaceNetsF
     args.insertOrAssign(SurfaceNetsFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
     args.insertOrAssign(SurfaceNetsFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
     args.insertOrAssign(SurfaceNetsFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -1087,7 +1087,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding Smoothing", "[SimplnxCore][Su
   DataPath vertexGroupDataPath = computedTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
   DataPath faceGroupDataPath = computedTriangleGeomPath.createChildPath(k_FaceDataGroupName);
-  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
+  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_FaceLabelsWithSpaces);
 
   DataPath exemplarTriangleGeomPath({"Exemplar SurfaceNets Winding Smoothing"});
   scope.requireExpectedStore(dataStructure.getDataRefAs<IDataArray>(featureIdsDataPath));
@@ -1129,7 +1129,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Winding Smoothing", "[SimplnxCore][Su
     args.insertOrAssign(SurfaceNetsFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
     args.insertOrAssign(SurfaceNetsFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
     args.insertOrAssign(SurfaceNetsFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+    args.insertOrAssign(SurfaceNetsFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

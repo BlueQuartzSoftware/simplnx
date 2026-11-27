@@ -127,7 +127,7 @@ Result<std::any> DataGroupSelectionParameter::resolve(DataStructure& dataStructu
 
 namespace SIMPLConversion
 {
-Result<DataContainerSelectionFilterParameterConverter::ValueType> DataContainerSelectionFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataContainerSelectionFilterParameterConverter::ValueType> DataContainerSelectionFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   // 6.5 stored as a string
   if(json.is_string())
@@ -146,7 +146,7 @@ Result<DataContainerSelectionFilterParameterConverter::ValueType> DataContainerS
   return {std::move(dataPath)};
 }
 
-Result<DataContainerFromMultiSelectionFilterParameterConverter::ValueType> DataContainerFromMultiSelectionFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataContainerFromMultiSelectionFilterParameterConverter::ValueType> DataContainerFromMultiSelectionFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_array())
   {

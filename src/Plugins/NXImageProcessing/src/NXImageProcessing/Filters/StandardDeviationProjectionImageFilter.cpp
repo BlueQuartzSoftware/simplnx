@@ -95,10 +95,10 @@ IFilter::PreflightResult StandardDeviationProjectionImageFilter::preflightImpl(c
 
   // The standard deviation is a real-valued statistic, so the legacy ITK filter emits a double (Float64)
   // output regardless of input type. The façade is therefore instantiated with the AllNumeric input policy
-  // (any scalar numeric input) and the AlwaysFloat64 OutTypeMap (Float64 output); the execute façade below
+  // (any scalar numeric input) and the AlwaysFloat64Type OutTypeMap (Float64 output); the execute façade below
   // MUST use the same pair, or the allocated and written output types disagree. The scalar
   // (single-component) and tuple-consistency checks are performed inside PreflightAxisProjection.
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightAxisProjection<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightAxisProjection<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64Type>(
       dataStructure, imageGeomPath, selectedInputArray, static_cast<usize>(projectionDimension), performInPlace, outputGeomName, outputArrayName);
 
   return {.outputActions = std::move(resultOutputActions)};
@@ -121,7 +121,7 @@ Result<> StandardDeviationProjectionImageFilter::executeImpl(DataStructure& data
   const DataPath outputArrayPath = ImageProcessing::ProjectionOutputArrayPath(dataStructure, imageGeomPath, performInPlace, outputGeomName, outputArrayName);
 
   const ImageProcessing::StdDevReduce reduce{};
-  return ImageProcessing::ExecuteAxisProjectionImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath,
+  return ImageProcessing::ExecuteAxisProjectionImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64Type>(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath,
                                                                                                                         static_cast<usize>(projectionDimension), reduce, shouldCancel, messageHandler);
 }
 } // namespace nx::core

@@ -86,7 +86,7 @@ Result<> PointSampleTriangleGeometry::operator()()
   progressThrottle.reset(m_Inputs->pNumberOfSamples, "Sampling Triangles");
   int64_t counter = 0;
 
-  std::vector<Point3Df> faceVerts = {{0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}};
+  std::vector<FloatVec3> faceVerts = {{0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}, {0.0F, 0.0F, 0.0F}};
 
   // We get the pointer to the Array instead of a reference because it might not have been set because
   // the bool "use_mask" might have been false, but we do NOT want to try to get the array

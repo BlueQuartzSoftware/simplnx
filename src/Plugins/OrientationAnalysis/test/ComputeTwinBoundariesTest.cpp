@@ -25,11 +25,11 @@ const float32 k_AxisToleranceValue = 1.0f;
 const float32 k_AngleToleranceValue = 1.0f;
 
 // Feature Level Data
-const DataPath k_AvgQuatsPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_AvgQuats});
-const DataPath k_PhasesPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_Phases});
+const DataPath k_AvgQuatsPath({Constants::k_SmallIN100, Constants::k_GrainDataWithSpaces, Constants::k_AvgQuats});
+const DataPath k_PhasesPath({Constants::k_SmallIN100, Constants::k_GrainDataWithSpaces, Constants::k_Phases});
 
 // Ensemble Level Data
-const DataPath k_CrystalStructuresPath({Constants::k_SmallIN100, Constants::k_Phase_Data, Constants::k_CrystalStructures});
+const DataPath k_CrystalStructuresPath({Constants::k_SmallIN100, Constants::k_PhaseData, Constants::k_CrystalStructures});
 
 // Face Level Data
 const StringLiteral k_TriangleContainerName = "TriangleDataContainer";

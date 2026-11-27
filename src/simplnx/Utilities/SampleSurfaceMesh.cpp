@@ -45,8 +45,8 @@ class SliceSampleSurfaceMeshImpl
 {
 public:
   SliceSampleSurfaceMeshImpl(const TriangleGeom& faces, const std::vector<std::vector<FaceLabelsT>>& faceLists, const std::vector<BoundingBox3Df>& faceBBs,
-                             const std::vector<FeatureBoundingVolume>& featureBounds, const std::vector<Point3Df>& slicePoints, nonstd::span<OutputT> sliceOutput, const std::atomic_bool& shouldCancel,
-                             std::atomic_bool& overflowHit)
+                             const std::vector<FeatureBoundingVolume>& featureBounds, const std::vector<FloatVec3>& slicePoints, nonstd::span<OutputT> sliceOutput,
+                             const std::atomic_bool& shouldCancel, std::atomic_bool& overflowHit)
   : m_Faces(faces)
   , m_FaceLists(faceLists)
   , m_FaceBBs(faceBBs)
@@ -80,7 +80,7 @@ public:
         return;
       }
 
-      const Point3Df point = m_SlicePoints[i];
+      const FloatVec3 point = m_SlicePoints[i];
       OutputT assignedFeature = 0;
       for(usize featureId = 0; featureId < numFeatures; featureId++)
       {
@@ -101,7 +101,7 @@ private:
   const std::vector<std::vector<FaceLabelsT>>& m_FaceLists;
   const std::vector<BoundingBox3Df>& m_FaceBBs;
   const std::vector<FeatureBoundingVolume>& m_FeatureBounds;
-  const std::vector<Point3Df>& m_SlicePoints;
+  const std::vector<FloatVec3>& m_SlicePoints;
   nonstd::span<OutputT> m_SliceOutput;
   const std::atomic_bool& m_ShouldCancel;
   std::atomic_bool& m_OverflowHit;
@@ -153,7 +153,7 @@ struct SampleSlicesFunctor
     algorithm->resetProgress(numSlices, "Sampling triangle geometry");
 
     // Reuse point and output buffers whose size is proportional to one XY slice.
-    std::vector<Point3Df> slicePoints(cellsPerSlice);
+    std::vector<FloatVec3> slicePoints(cellsPerSlice);
     auto sliceOutput = std::make_unique<OutputT[]>(cellsPerSlice);
 
     for(usize zSlice = 0; zSlice < numSlices; zSlice++)

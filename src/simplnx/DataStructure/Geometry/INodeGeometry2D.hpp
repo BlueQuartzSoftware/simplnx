@@ -112,7 +112,7 @@ public:
    * @param faceId The index of the face to query
    * @param coords The coordinates of each vertex
    */
-  void getFaceCoordinates(usize faceId, nonstd::span<Point3Df> coords) const;
+  void getFaceCoordinates(usize faceId, nonstd::span<FloatVec3> coords) const;
 
   /**
    * @brief Pure-Virtual intended to find the shared edges of each element

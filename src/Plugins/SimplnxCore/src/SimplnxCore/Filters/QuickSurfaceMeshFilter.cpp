@@ -71,7 +71,7 @@ Parameters QuickSurfaceMeshFilter::parameters() const
                                                    "wall as normal. 'Background-Backed Walls Only' omits wall faces where the wall borders the "
                                                    "background (Feature Id 0); faces where the wall caps a real Feature ARE still generated, so "
                                                    "Features flush with the box stay closed.",
-                                                   BoundingBoxSkinMode::k_Off, ChoicesParameter::Choices{"Off", "Background-Backed Walls Only"}));
+                                                   bounding_box_skin_mode::k_Off, ChoicesParameter::Choices{"Off", "Background-Backed Walls Only"}));
 
   params.insert(std::make_unique<GeometrySelectionParameter>(k_GridGeometryDataPath_Key, "Grid Geometry", "The complete path to the Grid Geometry from which to create a Triangle Geometry", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypes{IGeometry::Type::Image, IGeometry::Type::RectGrid}));

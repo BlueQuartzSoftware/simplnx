@@ -196,7 +196,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Read_Basic", "[NXImageProcessing]
   UnitTest::CompareImageGeometry(&exemplarGeom, &generatedGeom);
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Read_Basic", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath exemplarDataPath = DataPath({"Read_Basic", Constants::k_CellDataWithSpaces, k_ImageDataName});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
@@ -242,7 +242,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Override_Origin", "[NXImageProces
   UnitTest::CompareImageGeometry(&exemplarGeom, &generatedGeom);
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Override_Origin", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath exemplarDataPath = DataPath({"Override_Origin", Constants::k_CellDataWithSpaces, k_ImageDataName});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
@@ -286,7 +286,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Centering_Origin", "[NXImageProce
   UnitTest::CompareImageGeometry(&exemplarGeom, &generatedGeom);
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Centering_Origin", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath exemplarDataPath = DataPath({"Centering_Origin", Constants::k_CellDataWithSpaces, k_ImageDataName});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
@@ -332,7 +332,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Override_Spacing", "[NXImageProce
   UnitTest::CompareImageGeometry(&exemplarGeom, &generatedGeom);
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Override_Spacing", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath exemplarDataPath = DataPath({"Override_Spacing", Constants::k_CellDataWithSpaces, k_ImageDataName});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
@@ -390,7 +390,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: OriginSpacing_Preprocessed", "[NX
   UnitTest::CompareImageGeometry(&exemplarGeom, &generatedGeom);
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"OriginSpacing_Preprocessed", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath exemplarDataPath = DataPath({"OriginSpacing_Preprocessed", Constants::k_CellDataWithSpaces, k_ImageDataName});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
@@ -448,7 +448,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: OriginSpacing_Postprocessed", "[N
   UnitTest::CompareImageGeometry(&exemplarGeom, &generatedGeom);
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"OriginSpacing_Postprocessed", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath exemplarDataPath = DataPath({"OriginSpacing_Postprocessed", Constants::k_CellDataWithSpaces, k_ImageDataName});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
@@ -495,7 +495,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: DataType_Conversion", "[NXImagePr
   UnitTest::CompareImageGeometry(&exemplarGeom, &generatedGeom);
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"DataType_Conversion", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath exemplarDataPath = DataPath({"DataType_Conversion", Constants::k_CellDataWithSpaces, k_ImageDataName});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
@@ -551,7 +551,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Interaction_Crop_DataType", "[NXI
   UnitTest::CompareImageGeometry(&exemplarGeom, &generatedGeom);
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Interaction_Crop_DataType", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath exemplarDataPath = DataPath({"Interaction_Crop_DataType", Constants::k_CellDataWithSpaces, k_ImageDataName});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));
@@ -612,7 +612,7 @@ TEST_CASE("NXImageProcessing::ReadImageFilter: Interaction_All", "[NXImageProces
   UnitTest::CompareImageGeometry(&exemplarGeom, &generatedGeom);
 
   DataPath generatedDataPath = inputGeometryPath.createChildPath(k_ImageCellDataName).createChildPath(k_ImageDataName);
-  DataPath exemplarDataPath = DataPath({"Interaction_Crop_OriginSpacing_Preprocessed_DataType", Constants::k_Cell_Data, k_ImageDataName});
+  DataPath exemplarDataPath = DataPath({"Interaction_Crop_OriginSpacing_Preprocessed_DataType", Constants::k_CellDataWithSpaces, k_ImageDataName});
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<IDataArray>(generatedDataPath));
   const auto& generatedArray = dataStructure.getDataRefAs<IDataArray>(generatedDataPath);
   REQUIRE_NOTHROW(exemplarDS.getDataRefAs<IDataArray>(exemplarDataPath));

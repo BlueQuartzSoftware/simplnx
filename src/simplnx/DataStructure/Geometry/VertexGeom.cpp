@@ -116,12 +116,12 @@ Result<> VertexGeom::findElementSizes(bool recalculate)
   return {};
 }
 
-Point3D<float64> VertexGeom::getParametricCenter() const
+Vec3<float64> VertexGeom::getParametricCenter() const
 {
   return {0.0, 0.0, 0.0};
 }
 
-void VertexGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>& pCoords, float64* shape) const
+void VertexGeom::getShapeFunctions([[maybe_unused]] const Vec3<float64>& pCoords, float64* shape) const
 {
   shape[0] = 0.0;
   shape[1] = 0.0;

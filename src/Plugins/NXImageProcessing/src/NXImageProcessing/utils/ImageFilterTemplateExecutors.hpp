@@ -148,7 +148,7 @@ struct HistogramExecuteFn
   template <class T>
   Result<> operator()() const
   {
-    using U = OutTypeMap<T>; // Otsu uses AlwaysUInt8 (a uint8 label image); generalized like the other façade helpers.
+    using U = OutTypeMap<T>; // Otsu uses AlwaysUInt8Type (a uint8 label image); generalized like the other façade helpers.
     const auto& inStore = dataStructure.getDataRefAs<DataArray<T>>(inputArrayPath).getDataStoreRef();
     auto& outStore = dataStructure.getDataRefAs<DataArray<U>>(outputArrayPath).getDataStoreRef();
 
@@ -338,7 +338,7 @@ Result<> ExecuteContourImageFilter(DataStructure& dataStructure, const DataPath&
 /// The same bounded implementation serves in-core and out-of-core stores.
 /// @tparam OutTypeMap Maps each input type to the output type. The default creates a uint8 label image.
 /// @tparam OperationT Exposes the histogram and threshold settings plus a typed classification-operation factory.
-template <class TypeSetPolicy = AllNumeric, template <class> class OutTypeMap = AlwaysUInt8, class OperationT>
+template <class TypeSetPolicy = AllNumeric, template <class> class OutTypeMap = AlwaysUInt8Type, class OperationT>
 Result<> ExecuteHistogramImageFilter(DataStructure& dataStructure, const DataPath& inputArrayPath, const DataPath& outputArrayPath, const OperationT& operation, const std::atomic_bool& shouldCancel,
                                      const IFilter::MessageHandler& messageHandler)
 {

@@ -100,7 +100,7 @@ struct NumberToStringFilterParameterConverter
    * an exponent, so integer consumers parse the integer prefix. A Float64 value that lies exactly halfway between two
    * Float32 values is written as its exact decimal value, so a Float32 consumer rounds it the same way.
    */
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 extern template struct NumberToStringFilterParameterConverter<int8>;
@@ -125,7 +125,7 @@ struct SIMPLNX_EXPORT StringFilterParameterConverter
   using ParameterType = StringParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 } // namespace SIMPLConversion
 } // namespace nx::core

@@ -35,9 +35,9 @@ const DataPath k_FaceAreasPath = k_FaceDataPath.createChildPath(k_FaceAreas);
 
 const DataPath k_FeatureFaceLabelsPath = k_TriangleDataContainerPath.createChildPath(k_FaceFeatureData).createChildPath(k_FaceLabels);
 
-const DataPath k_AvgEulerAnglesPath = k_SmallIN100Path.createChildPath(k_Grain_Data).createChildPath(k_AvgEulerAngles);
-const DataPath k_PhasesPath = k_SmallIN100Path.createChildPath(k_Grain_Data).createChildPath(k_Phases);
-const DataPath k_CrystalStructuresPath = k_SmallIN100Path.createChildPath(k_Phase_Data).createChildPath(k_CrystalStructures);
+const DataPath k_AvgEulerAnglesPath = k_SmallIN100Path.createChildPath(k_GrainDataWithSpaces).createChildPath(k_AvgEulerAngles);
+const DataPath k_PhasesPath = k_SmallIN100Path.createChildPath(k_GrainDataWithSpaces).createChildPath(k_Phases);
+const DataPath k_CrystalStructuresPath = k_SmallIN100Path.createChildPath(k_PhaseData).createChildPath(k_CrystalStructures);
 
 const DataPath k_ExemplarDistributionPath({"6_6_distribution"});
 const DataPath k_ExemplarErrorPath({"6_6_errors"});

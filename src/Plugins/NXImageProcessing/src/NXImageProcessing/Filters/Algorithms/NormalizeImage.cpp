@@ -46,6 +46,6 @@ NormalizeImage::NormalizeImage(DataStructure& dataStructure, const IFilter::Mess
 Result<> NormalizeImage::operator()()
 {
   const NormalizeOperation operation{};
-  return ImageProcessing::ExecuteTwoPassImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(m_DataStructure, m_InputValues->InputArrayPath, m_InputValues->OutputArrayPath,
+  return ImageProcessing::ExecuteTwoPassImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64Type>(m_DataStructure, m_InputValues->InputArrayPath, m_InputValues->OutputArrayPath,
                                                                                                                  operation, m_ShouldCancel, m_MessageHandler);
 }

@@ -26,7 +26,7 @@ SizeVec3 UncertainRegularGridSampleSurfaceMesh::getGridDimensions() const
   return {static_cast<usize>(dims[0]), static_cast<usize>(dims[1]), static_cast<usize>(dims[2])};
 }
 
-void UncertainRegularGridSampleSurfaceMesh::generateSlicePoints(usize zSlice, std::vector<Point3Df>& slicePoints)
+void UncertainRegularGridSampleSurfaceMesh::generateSlicePoints(usize zSlice, std::vector<FloatVec3>& slicePoints)
 {
   const auto& dims = m_InputValues->Dimensions;
   const auto& spacing = m_InputValues->Spacing;
@@ -50,7 +50,7 @@ void UncertainRegularGridSampleSurfaceMesh::generateSlicePoints(usize zSlice, st
     {
       const float32 randomX = 2.0f * m_Distribution(m_Generator) - 1.0f;
       const float32 xCoord = ((static_cast<float32>(i) + 0.5f) * spacing[0]) + (uncertainty[0] * randomX) + origin[0];
-      slicePoints[outIdx++] = Point3Df(xCoord, yCoord, zCoord);
+      slicePoints[outIdx++] = FloatVec3(xCoord, yCoord, zCoord);
     }
   }
 }

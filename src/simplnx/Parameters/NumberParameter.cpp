@@ -103,7 +103,7 @@ template class SIMPLNX_TEMPLATE_EXPORT NumberParameter<float64>;
 namespace SIMPLConversion
 {
 template <typename T>
-Result<typename IntFilterParameterConverter<T>::ValueType> IntFilterParameterConverter<T>::convert(const nlohmann::json& json)
+Result<typename IntFilterParameterConverter<T>::ValueType> IntFilterParameterConverter<T>::Convert(const nlohmann::json& json)
 {
   T value;
 
@@ -173,7 +173,7 @@ template struct SIMPLNX_TEMPLATE_EXPORT IntFilterParameterConverter<int64>;
 template struct SIMPLNX_TEMPLATE_EXPORT IntFilterParameterConverter<uint64>;
 
 template <typename T>
-Result<typename StringToIntFilterParameterConverter<T>::ValueType> StringToIntFilterParameterConverter<T>::convert(const nlohmann::json& json)
+Result<typename StringToIntFilterParameterConverter<T>::ValueType> StringToIntFilterParameterConverter<T>::Convert(const nlohmann::json& json)
 {
   if(!json.is_string())
   {
@@ -197,7 +197,7 @@ template struct SIMPLNX_TEMPLATE_EXPORT StringToIntFilterParameterConverter<int6
 template struct SIMPLNX_TEMPLATE_EXPORT StringToIntFilterParameterConverter<uint64>;
 
 template <class T>
-Result<typename FloatFilterParameterConverter<T>::ValueType> FloatFilterParameterConverter<T>::convert(const nlohmann::json& json)
+Result<typename FloatFilterParameterConverter<T>::ValueType> FloatFilterParameterConverter<T>::Convert(const nlohmann::json& json)
 {
   if(!json.is_number())
   {

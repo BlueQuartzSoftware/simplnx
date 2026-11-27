@@ -40,7 +40,7 @@ TEST_CASE("NXImageProcessing::BoundedReciprocalImageFilter: Correctness", "[NXIm
 
 // -----------------------------------------------------------------------------
 // ITK-sourced real-image golden (plan Sec.3/Sec.6). Mirrors ITKBoundedReciprocalImageTest.cpp(defaults): read
-// Ramp-Zero-One-Float.nrrd (float32) through OUR reader, run OUR BoundedReciprocalImageFilter (AlwaysFloat64 output,
+// Ramp-Zero-One-Float.nrrd (float32) through OUR reader, run OUR BoundedReciprocalImageFilter (AlwaysFloat64Type output,
 // no params), then:
 //   (A) DURABLE golden -- compare our float64 output to ITK's committed baseline .nrrd (type: double, read through
 //       the SAME reader) at the ITK test's tolerance 0.01 via ip_golden::CompareImages.
@@ -69,7 +69,7 @@ TEST_CASE("NXImageProcessing::BoundedReciprocalImageFilter: ITK real-image golde
   auto executeResult = filter.execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  // (A) DURABLE golden: baseline compare @ 0.01 (our AlwaysFloat64 output matches the baseline's `type: double`).
+  // (A) DURABLE golden: baseline compare @ 0.01 (our AlwaysFloat64Type output matches the baseline's `type: double`).
   const DataPath bGeom({"Baseline Geometry"});
   const auto readBaseline = ip_golden::ReadInputImage(dataStructure, ip_golden::BaselinePath("BasicFilters_BoundedReciprocalImageFilter_defaults.nrrd"), bGeom, "CellData", "Baseline");
   SIMPLNX_RESULT_REQUIRE_VALID(readBaseline);

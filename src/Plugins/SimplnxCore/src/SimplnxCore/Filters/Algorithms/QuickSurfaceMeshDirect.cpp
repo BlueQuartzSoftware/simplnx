@@ -53,7 +53,7 @@ std::uniform_real_distribution<> Distribution(k_RangeMin, k_RangeMax);
  */
 void GetGridCoordinates(const IGridGeometry* grid, usize x, usize y, usize z, QuickSurfaceMeshDirect::VertexStore& verts, IGeometry::MeshIndexType nodeIndex)
 {
-  nx::core::Point3D<float64> tmpCoords = grid->getPlaneCoords(x, y, z);
+  nx::core::Vec3<float64> tmpCoords = grid->getPlaneCoords(x, y, z);
   verts[nodeIndex] = static_cast<QuickSurfaceMeshDirect::VertexStore::value_type>(tmpCoords[0]);
   verts[nodeIndex + 1] = static_cast<QuickSurfaceMeshDirect::VertexStore::value_type>(tmpCoords[1]);
   verts[nodeIndex + 2] = static_cast<QuickSurfaceMeshDirect::VertexStore::value_type>(tmpCoords[2]);
@@ -62,7 +62,7 @@ void GetGridCoordinates(const IGridGeometry* grid, usize x, usize y, usize z, Qu
 /** @brief Returns true when the selected mode omits a background-backed wall face. */
 bool SkipWallFace(ChoicesParameter::ValueType mode, const Int32AbstractDataStore& featureIds, usize point)
 {
-  return mode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && featureIds[point] == 0;
+  return mode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly && featureIds[point] == 0;
 }
 
 // -----------------------------------------------------------------------------
@@ -298,7 +298,7 @@ Result<> QuickSurfaceMeshDirect::operator()()
     m_DataStructure.removeData(triangleGeom.getElementNeighborsId().value());
   }
 
-  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && windingResult.valid())
+  if(m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly && windingResult.valid())
   {
     if(triangleGeom.getNumberOfFaces() == 0)
     {
@@ -537,7 +537,7 @@ void QuickSurfaceMeshDirect::determineActiveNodes(std::vector<MeshIndexType>& no
   MeshIndexType yP = udims[1];
   MeshIndexType zP = udims[2];
 
-  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+  if(m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
   {
     for(MeshIndexType k = 0; k < zP; k++)
     {

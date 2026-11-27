@@ -89,9 +89,9 @@ IFilter::PreflightResult DoubleThresholdImageFilter::preflightImpl(const DataStr
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   // requireScalar=true: double thresholding is defined on scalar images. The output is a FIXED uint8 (matching the
-  // legacy ITK FilterOutputType), so AlwaysUInt8 maps every input type to a uint8 output array. AllNumeric admits
+  // legacy ITK FilterOutputType), so AlwaysUInt8Type maps every input type to a uint8 output array. AllNumeric admits
   // all 10 scalar types (matching the legacy ScalarPixelIdTypeList). There is no minimum-dimension requirement.
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8>(
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8Type>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   return {.outputActions = std::move(resultOutputActions)};
 }

@@ -116,7 +116,7 @@ struct SIMPLNX_EXPORT DataArrayCreationToAMFilterParameterConverter
   using ParameterType = AttributeMatrixSelectionParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT AttributeMatrixSelectionFilterParameterConverter
@@ -124,7 +124,7 @@ struct SIMPLNX_EXPORT AttributeMatrixSelectionFilterParameterConverter
   using ParameterType = AttributeMatrixSelectionParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 } // namespace SIMPLConversion
 } // namespace nx::core

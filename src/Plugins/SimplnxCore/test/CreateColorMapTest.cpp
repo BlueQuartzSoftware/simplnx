@@ -117,7 +117,7 @@ TEST_CASE("SimplnxCore::CreateColorMapFilter: Valid filter execution")
     args.insertOrAssign(ReadTextDataArrayFilter::k_ScalarType_Key, std::make_any<NumericType>(NumericType::float32));
     args.insertOrAssign(ReadTextDataArrayFilter::k_NComp_Key, std::make_any<uint64>(1));
     args.insertOrAssign(ReadTextDataArrayFilter::k_NTuples_Key, std::make_any<DynamicTableParameter::ValueType>(DynamicTableInfo::TableDataType{{static_cast<double>(37989)}}));
-    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath{{Constants::k_Confidence_Index.str()}}));
+    args.insertOrAssign(ReadTextDataArrayFilter::k_DataArrayPath_Key, std::make_any<DataPath>(DataPath{{Constants::k_ConfidenceIndexWithSpaces.str()}}));
 
     IFilter::ExecuteResult executeResult = filter.execute(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
@@ -220,7 +220,7 @@ TEST_CASE("SimplnxCore::CreateColorMapFilter: Valid filter execution")
   }
 
   {
-    args.insertOrAssign(CreateColorMapFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(DataPath{{Constants::k_Confidence_Index.str()}}));
+    args.insertOrAssign(CreateColorMapFilter::k_SelectedDataArrayPath_Key, std::make_any<DataPath>(DataPath{{Constants::k_ConfidenceIndexWithSpaces.str()}}));
     args.insertOrAssign(CreateColorMapFilter::k_RgbArrayPath_Key, std::make_any<std::string>("CI_RGB"));
 
     IFilter::ExecuteResult executeResult = scope.executeFilter(filter, dataStructure, args);
@@ -237,7 +237,7 @@ TEST_CASE("SimplnxCore::CreateColorMapFilter: Valid filter execution")
     while(!inStream.eof())
     {
       std::getline(inStream, buf);
-      std::vector<std::string> list = StringUtilities::split(buf, ',');
+      std::vector<std::string> list = StringUtilities::Split(buf, ',');
       for(int i = 0; i < list.size(); i++)
       {
         REQUIRE_NOTHROW(std::stoi(list[i]));

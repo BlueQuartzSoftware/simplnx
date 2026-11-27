@@ -79,7 +79,7 @@ std::vector<T> MakeBlobField(usize dimX, usize dimY, usize dimZ)
 
 // -----------------------------------------------------------------------------
 // (1) Preflight guards: a multi-component input is rejected (requireScalar); a non-integer (float32) input is
-//     rejected (IntegerOnly); a valid integer scalar input produces a FIXED uint32 output array (AlwaysUInt32).
+//     rejected (IntegerOnly); a valid integer scalar input produces a FIXED uint32 output array (AlwaysUInt32Type).
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: preflight guards", "[NXImageProcessing][ConnectedComponentImageFilter]")
 {
@@ -133,7 +133,7 @@ TEST_CASE("NXImageProcessing::ConnectedComponentImageFilter: preflight guards", 
 
 // -----------------------------------------------------------------------------
 // ITK-sourced real-image golden -- duplicates ITKConnectedComponentImageTest.cpp on our ITK-free filter. The output is
-// a fixed uint32 label image (AlwaysUInt32). The durable golden is an md5 pin. The helper pins ForceInCore.
+// a fixed uint32 label image (AlwaysUInt32Type). The durable golden is an md5 pin. The helper pins ForceInCore.
 //
 // NOTE (recorded): the simplnx ITK test has THREE real-image cases, and NONE uses an actual mask/second-input array --
 // the case named "(mask)" is simply 2th_cthead1.png run with defaults (the mask/second-input variant the plan alluded

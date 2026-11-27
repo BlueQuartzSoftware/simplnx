@@ -41,9 +41,9 @@ struct GeometryStoreCache
 };
 
 template <std::floating_point FloatT>
-std::array<Point3D<FloatT>, 3> GetFaceCoordinates(const GeometryStoreCache& cache, usize faceId, std::vector<usize>& verts)
+std::array<Vec3<FloatT>, 3> GetFaceCoordinates(const GeometryStoreCache& cache, usize faceId, std::vector<usize>& verts)
 {
-  std::array<Point3D<FloatT>, 3> points;
+  std::array<Vec3<FloatT>, 3> points;
   {
     const usize offset = faceId * cache.NumVertsPerFace;
     if(offset + cache.NumVertsPerFace <= cache.FacesStoreRef.getSize())
@@ -85,7 +85,7 @@ T CosThetaBetweenVectors(const T a[3], const T b[3])
  * @return T
  */
 template <typename T>
-T CosThetaBetweenVectors(const nx::core::Point3D<T>& a, const nx::core::Point3D<T>& b)
+T CosThetaBetweenVectors(const nx::core::Vec3<T>& a, const nx::core::Vec3<T>& b)
 {
   T norm1 = a.magnitude();
   T norm2 = b.magnitude();
@@ -130,7 +130,7 @@ float32 SIMPLNX_EXPORT AngleBetweenVectors(const nx::core::ZXZEuler& a, const nx
  * @return T
  */
 template <typename T>
-inline T FindDistanceBetweenPoints(const nx::core::Point3D<T>& a, const nx::core::Point3D<T>& b)
+inline T FindDistanceBetweenPoints(const nx::core::Vec3<T>& a, const nx::core::Vec3<T>& b)
 {
   return std::sqrt((b - a).sumOfSquares());
 }
@@ -142,7 +142,7 @@ inline T FindDistanceBetweenPoints(const nx::core::Point3D<T>& a, const nx::core
  * @return T
  */
 template <typename T>
-inline T FindDistanceBetweenPoints(const nx::core::Point2D<T>& a, const nx::core::Point2D<T>& b)
+inline T FindDistanceBetweenPoints(const nx::core::Vec2<T>& a, const nx::core::Vec2<T>& b)
 {
   return std::sqrt((b - a).sumOfSquares());
 }
@@ -155,7 +155,7 @@ inline T FindDistanceBetweenPoints(const nx::core::Point2D<T>& a, const nx::core
  * @return T
  */
 template <typename T>
-inline T FindTriangleArea(const nx::core::Point3D<T>& a, const nx::core::Point3D<T>& b, const nx::core::Point3D<T>& c)
+inline T FindTriangleArea(const nx::core::Vec3<T>& a, const nx::core::Vec3<T>& b, const nx::core::Vec3<T>& c)
 {
   return ((b[0] - a[0]) * (c[1] - a[1])) - ((c[0] - a[0]) * (b[1] - a[1]));
 }
@@ -169,7 +169,7 @@ inline T FindTriangleArea(const nx::core::Point3D<T>& a, const nx::core::Point3D
  * @return float
  */
 template <typename T>
-T FindTetrahedronVolume(const nx::core::Point3D<T>& p0, const nx::core::Point3D<T>& p1, const nx::core::Point3D<T>& p2, const nx::core::Point3D<T>& p3)
+T FindTetrahedronVolume(const nx::core::Vec3<T>& p0, const nx::core::Vec3<T>& p1, const nx::core::Vec3<T>& p2, const nx::core::Vec3<T>& p3)
 {
   auto diffA = p0 - p3;
   auto diffB = p1 - p3;
@@ -186,7 +186,7 @@ T FindTetrahedronVolume(const nx::core::Point3D<T>& p0, const nx::core::Point3D<
  * @return nx::core::Vec3<T>
  */
 template <typename T>
-inline nx::core::Vec3<T> FindPlaneNormalVector(const nx::core::Point3D<T>& p0, const nx::core::Point3D<T>& p1, const nx::core::Point3D<T>& p2)
+inline nx::core::Vec3<T> FindPlaneNormalVector(const nx::core::Vec3<T>& p0, const nx::core::Vec3<T>& p1, const nx::core::Vec3<T>& p2)
 {
   return (p1 - p0).cross(p2 - p0);
 }
@@ -195,10 +195,10 @@ inline nx::core::Vec3<T> FindPlaneNormalVector(const nx::core::Point3D<T>& p0, c
  * @brief Returns the normal angle for an arbitrary polygon defined by an array
  * of vertices.
  * @param points must be greater than 2 in size
- * @return Point3D<T>
+ * @return Vec3<T>
  */
 template <typename T>
-Point3D<T> FindPolygonNormal(nonstd::span<Point3D<T>> points)
+Vec3<T> FindPolygonNormal(nonstd::span<Vec3<T>> points)
 {
   if(points.size() < 3)
   {
@@ -210,7 +210,7 @@ Point3D<T> FindPolygonNormal(nonstd::span<Point3D<T>> points)
     return FindPlaneNormalVector(points[0], points[1], points[2]);
   }
 
-  Point3D<T> normal = {0, 0, 0};
+  Vec3<T> normal = {0, 0, 0};
   for(usize i = 0; i < points.size() - 3; i++)
   {
     std::transform(normal.begin(), normal.end(), ((points[i + 2] - points[i + 1]).cross(points[i] - points[i + 1])).begin(), normal.begin(), std::plus<T>());
@@ -226,7 +226,7 @@ Point3D<T> FindPolygonNormal(nonstd::span<Point3D<T>> points)
  * @return T - the coefficients for the plane
  */
 template <typename T>
-inline T FindPlaneCoefficients(const nx::core::Point3D<T>& p0, const nx::core::Vec3<T>& normal)
+inline T FindPlaneCoefficients(const nx::core::Vec3<T>& p0, const nx::core::Vec3<T>& normal)
 {
   return p0.dot(normal);
 }
@@ -241,7 +241,7 @@ inline T FindPlaneCoefficients(const nx::core::Point3D<T>& p0, const nx::core::V
  * @return T
  */
 template <typename T>
-T FindDistanceToTriangleCentroid(const nx::core::Point3D<T>& p0, const nx::core::Point3D<T>& p1, const nx::core::Point3D<T>& p2, const nx::core::Point3D<T>& point)
+T FindDistanceToTriangleCentroid(const nx::core::Vec3<T>& p0, const nx::core::Vec3<T>& p1, const nx::core::Vec3<T>& p2, const nx::core::Vec3<T>& point)
 {
   return FindDistanceBetweenPoints((p0 + p1 + p2) / static_cast<T>(3.0), point);
 }
@@ -256,7 +256,7 @@ T FindDistanceToTriangleCentroid(const nx::core::Point3D<T>& p0, const nx::core:
  * @return float
  */
 template <typename T>
-T FindDistanceFromPlane(const nx::core::Point3D<T>& p0, const nx::core::Point3D<T>& p1, const nx::core::Point3D<T>& p2, const nx::core::Point3D<T>& pos)
+T FindDistanceFromPlane(const nx::core::Vec3<T>& p0, const nx::core::Vec3<T>& p1, const nx::core::Vec3<T>& p2, const nx::core::Vec3<T>& pos)
 {
   auto normal = FindPlaneNormalVector(p0, p1, p2);
   return (pos.dot(normal) - FindPlaneCoefficients(p0, normal)) /= sqrt(normal.sumOfSquares());
@@ -269,7 +269,7 @@ T FindDistanceFromPlane(const nx::core::Point3D<T>& p0, const nx::core::Point3D<
  * @return bool
  */
 template <typename T>
-inline bool IsPointInBox(const nx::core::Point3D<T>& point, const nx::core::BoundingBox3D<T>& box)
+inline bool IsPointInBox(const nx::core::Vec3<T>& point, const nx::core::BoundingBox3D<T>& box)
 {
   const auto& min = box.getMinPoint();
   const auto& max = box.getMaxPoint();
@@ -331,7 +331,7 @@ bool DoesRayIntersectBox(const nx::core::CachedRay<T>& ray, const nx::core::Boun
  * @return bool
  */
 template <typename T>
-bool IsPointInTriangle3D(const nx::core::Point3D<T>& /*p0*/, const nx::core::Point3D<T>& /*p1*/, const nx::core::Point3D<T>& /*p2*/, const nx::core::Point3D<T>& /*point*/)
+bool IsPointInTriangle3D(const nx::core::Vec3<T>& /*p0*/, const nx::core::Vec3<T>& /*p1*/, const nx::core::Vec3<T>& /*p2*/, const nx::core::Vec3<T>& /*point*/)
 {
   throw std::runtime_error("GeometryMath::IsPointInTriangle3D() is not implemented");
 }
@@ -347,7 +347,7 @@ bool IsPointInTriangle3D(const nx::core::Point3D<T>& /*p0*/, const nx::core::Poi
  * @return char
  */
 template <typename T>
-char IsPointInTriangle(const nx::core::Point3D<T>& p0, const nx::core::Point3D<T>& p1, const nx::core::Point3D<T>& p2, const nx::core::Point3D<T>& point)
+char IsPointInTriangle(const nx::core::Vec3<T>& p0, const nx::core::Vec3<T>& p1, const nx::core::Vec3<T>& p2, const nx::core::Vec3<T>& point)
 {
   T area0 = FindTriangleArea(point, p0, p1);
   T area1 = FindTriangleArea(point, p1, p2);
@@ -392,7 +392,7 @@ char IsPointInTriangle(const nx::core::Point3D<T>& p0, const nx::core::Point3D<T
  * @return bool
  */
 template <typename T>
-uint8 FindRayIntersectionsWithSphere(const nx::core::Ray<T>& /*ray*/, const nx::core::Point3D<T>& /*origin*/, T /*radius*/, std::vector<Point3D<T>>& /*intersections*/)
+uint8 FindRayIntersectionsWithSphere(const nx::core::Ray<T>& /*ray*/, const nx::core::Vec3<T>& /*origin*/, T /*radius*/, std::vector<Vec3<T>>& /*intersections*/)
 {
   throw std::runtime_error("GeometryMath::FindRayIntersectionsWithSphere() is not implemented");
 }
@@ -434,10 +434,10 @@ nx::core::BoundingBox3Df FindBoundingBoxOfFace(const detail::GeometryStoreCache&
   {
     verts = std::vector<usize>(cache.NumVertsPerFace);
   }
-  std::array<Point3Df, 3> points = GeometryMath::detail::GetFaceCoordinates<float32>(cache, faceId, verts);
+  std::array<FloatVec3, 3> points = GeometryMath::detail::GetFaceCoordinates<float32>(cache, faceId, verts);
 
-  Point3Df ll = points[0];
-  Point3Df ur = points[0];
+  FloatVec3 ll = points[0];
+  FloatVec3 ur = points[0];
 
   ll[0] = std::min(points[1][0], ll[0]);
   ur[0] = std::max(points[1][0], ur[0]);
@@ -463,8 +463,8 @@ nx::core::BoundingBox3Df FindBoundingBoxOfFace(const detail::GeometryStoreCache&
 template <typename T>
 nx::core::BoundingBox3Df FindBoundingBoxOfFaces(const nx::core::TriangleGeom& triangleGeom, const std::vector<T>& faceIds)
 {
-  Point3Df ll(0, 0, 0);
-  Point3Df ur(0, 0, 0);
+  FloatVec3 ll(0, 0, 0);
+  FloatVec3 ur(0, 0, 0);
 
   if(faceIds.empty())
   {
@@ -479,8 +479,8 @@ nx::core::BoundingBox3Df FindBoundingBoxOfFaces(const nx::core::TriangleGeom& tr
   for(const auto& id : faceIds)
   {
     auto bounds = FindBoundingBoxOfFace(cache, triangleGeom, id, verts);
-    const Point3Df& min = bounds.getMinPoint();
-    const Point3Df& max = bounds.getMaxPoint();
+    const FloatVec3& min = bounds.getMinPoint();
+    const FloatVec3& max = bounds.getMaxPoint();
 
     ll[0] = std::min(min[0], ll[0]);
     ll[1] = std::min(min[1], ll[1]);
@@ -506,7 +506,7 @@ nx::core::BoundingBox3Df FindBoundingBoxOfFaces(const nx::core::TriangleGeom& tr
  * @return bool
  */
 template <typename T>
-char RayCrossesTriangle(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
+char RayCrossesTriangle(const Ray<T>& ray, const Vec3<T>& p0, const Vec3<T>& p1, const Vec3<T>& p2)
 {
   T vol0 = FindTetrahedronVolume(ray.getOrigin(), p0, p1, ray.getEndPoint());
   T vol1 = FindTetrahedronVolume(ray.getOrigin(), p1, p2, ray.getEndPoint());
@@ -552,7 +552,7 @@ char RayCrossesTriangle(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T
  * @return bool
  */
 template <typename T>
-char RayCrossesTriangle(const CachedRay<T>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
+char RayCrossesTriangle(const CachedRay<T>& ray, const Vec3<T>& p0, const Vec3<T>& p1, const Vec3<T>& p2)
 {
   T vol0 = FindTetrahedronVolume(ray.getOrigin(), p0, p1, ray.getEndPointRef());
   T vol1 = FindTetrahedronVolume(ray.getOrigin(), p1, p2, ray.getEndPointRef());
@@ -595,14 +595,14 @@ char RayCrossesTriangle(const CachedRay<T>& ray, const Point3D<T>& p0, const Poi
  * @return bool
  */
 template <typename T>
-char RayIntersectsPlane(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
+char RayIntersectsPlane(const Ray<T>& ray, const Vec3<T>& p0, const Vec3<T>& p1, const Vec3<T>& p2)
 {
   Vec3<T> normal = FindPlaneNormalVector(p0, p1, p2);
   T d = FindPlaneCoefficients(p0, normal);
 
   T numerator = d - ray.getOrigin().dot(normal);
 
-  Point3D<T> rq = ray.getEndPoint() - ray.getOrigin();
+  Vec3<T> rq = ray.getEndPoint() - ray.getOrigin();
   T denominator = rq.dot(normal);
 
   if(denominator == 0.0)
@@ -642,14 +642,14 @@ char RayIntersectsPlane(const Ray<T>& ray, const Point3D<T>& p0, const Point3D<T
  * @return bool
  */
 template <typename T>
-char RayIntersectsPlane(const CachedRay<T>& ray, const Point3D<T>& p0, const Point3D<T>& p1, const Point3D<T>& p2)
+char RayIntersectsPlane(const CachedRay<T>& ray, const Vec3<T>& p0, const Vec3<T>& p1, const Vec3<T>& p2)
 {
   Vec3<T> normal = FindPlaneNormalVector(p0, p1, p2);
   T d = FindPlaneCoefficients(p0, normal);
 
   T numerator = d - ray.getOrigin().dot(normal);
 
-  Point3D<T> rq = ray.getEndPoint() - ray.getOrigin();
+  Vec3<T> rq = ray.getEndPoint() - ray.getOrigin();
   T denominator = rq.dot(normal);
 
   if(denominator == 0.0)
@@ -692,7 +692,7 @@ char RayIntersectsPlane(const CachedRay<T>& ray, const Point3D<T>& p0, const Poi
  * @return char
  */
 template <typename T>
-char RayIntersectsTriangle(const Ray<T>& ray, const nx::core::Point3D<T>& p0, const nx::core::Point3D<T>& p1, const nx::core::Point3D<T>& p2)
+char RayIntersectsTriangle(const Ray<T>& ray, const nx::core::Vec3<T>& p0, const nx::core::Vec3<T>& p1, const nx::core::Vec3<T>& p2)
 {
   char code = RayIntersectsPlane(ray, p0, p1, p2);
 
@@ -729,7 +729,7 @@ char RayIntersectsTriangle(const Ray<T>& ray, const nx::core::Point3D<T>& p0, co
  * @return char
  */
 template <typename T>
-char RayIntersectsTriangle(const CachedRay<T>& ray, const nx::core::Point3D<T>& p0, const nx::core::Point3D<T>& p1, const nx::core::Point3D<T>& p2)
+char RayIntersectsTriangle(const CachedRay<T>& ray, const nx::core::Vec3<T>& p0, const nx::core::Vec3<T>& p1, const nx::core::Vec3<T>& p2)
 {
   char code = RayIntersectsPlane(ray, p0, p1, p2);
 
@@ -765,7 +765,7 @@ char RayIntersectsTriangle(const CachedRay<T>& ray, const nx::core::Point3D<T>& 
  * @return bool
  */
 template <typename T, typename FaceIdsT = int32>
-char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const std::vector<FaceIdsT>& faceIds, const std::vector<BoundingBox3D<T>>& faceBBs, const Point3D<T>& point,
+char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const std::vector<FaceIdsT>& faceIds, const std::vector<BoundingBox3D<T>>& faceBBs, const Vec3<T>& point,
                          const nx::core::BoundingBox3D<T>& bounds, T radius)
 {
   usize iter = 0;
@@ -816,7 +816,7 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
       }
       else
       {
-        std::array<Point3D<T>, 3> coords = detail::GetFaceCoordinates<T>(cache, faceIds[face], verts);
+        std::array<Vec3<T>, 3> coords = detail::GetFaceCoordinates<T>(cache, faceIds[face], verts);
         code = RayIntersectsTriangle(ray, coords[0], coords[1], coords[2]);
       }
 

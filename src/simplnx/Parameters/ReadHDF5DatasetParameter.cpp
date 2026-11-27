@@ -222,7 +222,7 @@ constexpr StringLiteral k_ComponentDimensionsKey = "component_dimensions";
 constexpr StringLiteral k_TupleDimensionsKey = "tuple_dimensions";
 } // namespace
 
-Result<ImportHDF5DatasetFilterParameterConverter::ValueType> ImportHDF5DatasetFilterParameterConverter::convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3)
+Result<ImportHDF5DatasetFilterParameterConverter::ValueType> ImportHDF5DatasetFilterParameterConverter::Convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3)
 {
   if(!json1.is_array())
   {

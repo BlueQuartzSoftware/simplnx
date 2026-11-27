@@ -96,7 +96,7 @@ struct SIMPLNX_EXPORT CreateColorMapFilterParameterConverter
   using ParameterType = CreateColorMapParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2);
+  static Result<ValueType> Convert(const nlohmann::json& json1, const nlohmann::json& json2);
 };
 } // namespace SIMPLConversion
 } // namespace nx::core

@@ -34,7 +34,7 @@ public:
         break;
       }
 
-      std::array<Point3Df, 3> vertCoords;
+      std::array<FloatVec3, 3> vertCoords;
       m_TriangleGeom->getFaceCoordinates(triangleIndex, vertCoords);
 
       m_Centroids[triangleIndex * 3] = (vertCoords[0].getX() + vertCoords[1].getX() + vertCoords[2].getX()) / 3.0F;

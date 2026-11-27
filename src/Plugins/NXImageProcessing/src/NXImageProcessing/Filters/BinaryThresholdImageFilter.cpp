@@ -109,7 +109,7 @@ IFilter::PreflightResult BinaryThresholdImageFilter::preflightImpl(const DataStr
   }
 
   Result<OutputActions> resultOutputActions =
-      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
+      ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8Type>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);
   return {.outputActions = std::move(resultOutputActions)};
 }
 Result<> BinaryThresholdImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
@@ -125,7 +125,7 @@ Result<> BinaryThresholdImageFilter::executeImpl(DataStructure& dataStructure, c
   auto outsideValue = filterArgs.value<uint8>(k_OutsideValue_Key);
 
   const BinaryThresholdOperation operation{.lower_threshold = lowerThreshold, .upper_threshold = upperThreshold, .inside_value = insideValue, .outside_value = outsideValue};
-  return ImageProcessing::ExecuteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
+  return ImageProcessing::ExecuteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8Type>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
 }
 
 namespace

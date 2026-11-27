@@ -223,7 +223,7 @@ constexpr StringLiteral k_DataArrayProxyKey = "Data Arrays";
 constexpr StringLiteral k_DataObjectNameKey = "Name";
 } // namespace
 
-Result<DataContainerReaderFilterParameterConverter::ValueType> DataContainerReaderFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataContainerReaderFilterParameterConverter::ValueType> DataContainerReaderFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json[k_InputFileKey].is_string())
   {

@@ -239,7 +239,7 @@ struct MorphologicalWatershedFromMarkersExecuteFn
  *        WatershedFromMarkers(input, label). Dispatches on the GRAYSCALE element type T only (the flood key); every
  *        intermediate is a scratch store that inherits the input's storage format, so an OOC input keeps the whole
  *        pipeline OOC-bounded. The output is a FIXED uint32 label image (matching the legacy ITK FilterOutputType), so
- *        the preflight must have created it via the AlwaysUInt32 map.
+ *        the preflight must have created it via the AlwaysUInt32Type map.
  */
 struct MorphologicalWatershedExecuteFn
 {

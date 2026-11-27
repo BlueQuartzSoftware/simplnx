@@ -34,7 +34,7 @@ using LabelType = int32;
 /** @brief Returns true when the selected mode omits a padding-to-background quad. */
 bool SkipPaddingQuad(ChoicesParameter::ValueType mode, const std::array<LabelType, 2>& quadLabels)
 {
-  if(mode != BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+  if(mode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
   {
     return false;
   }
@@ -217,7 +217,7 @@ Result<> SurfaceNetsDirect::operator()()
   }
 
   // Transform local cell positions and assign junction-count node types.
-  Point3Df position = {0.0f, 0.0f, 0.0f};
+  FloatVec3 position = {0.0f, 0.0f, 0.0f};
 
   std::array<int, 3> vertCellIndex = {0, 0, 0};
   for(usize vertIndex = 0; vertIndex < nodeCount; vertIndex++)
@@ -228,7 +228,7 @@ Result<> SurfaceNetsDirect::operator()()
     }
     cellMapPtr->getVertexPosition(vertIndex, position.data());
     // Relocate the vertex correctly based on the origin of the ImageGeometry
-    position = position + origin - Point3Df(0.5f * voxelSize[0], 0.5f * voxelSize[1], 0.5f * voxelSize[2]);
+    position = position + origin - FloatVec3(0.5f * voxelSize[0], 0.5f * voxelSize[1], 0.5f * voxelSize[2]);
 
     triangleGeom.setVertexCoordinate(vertIndex, position);
     cellMapPtr->getVertexCellIndex(vertIndex, vertCellIndex.data());
@@ -511,7 +511,7 @@ Result<> SurfaceNetsDirect::operator()()
     }
   }
 
-  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+  if(m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
   {
     auto& facesRef = triangleGeom.getFaces()->getDataStoreRef();
     const usize numFaceIndices = triangleCount * 3;
@@ -588,7 +588,7 @@ Result<> SurfaceNetsDirect::operator()()
     m_DataStructure.removeData(triangleGeom.getElementNeighborsId().value());
   }
 
-  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && windingResult.valid())
+  if(m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly && windingResult.valid())
   {
     if(triangleGeom.getNumberOfFaces() == 0)
     {

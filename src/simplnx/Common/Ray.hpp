@@ -20,7 +20,7 @@ template <typename T>
 class Ray
 {
 public:
-  using PointType = Point3D<T>;
+  using PointType = Vec3<T>;
   using ZXZEulerType = ZXZEuler;
   using LengthType = T;
 
@@ -145,7 +145,7 @@ public:
   }
 
   /**
-   * @brief Returns a Point3D at the specified length from the origin point.
+   * @brief Returns a Vec3 at the specified length from the origin point.
    * @param length
    * @return PointType
    */

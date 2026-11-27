@@ -342,7 +342,7 @@ constexpr static T Square(T value) noexcept
  * @param coord The coordinate that will be interpolated.
  * @return
  */
-size_t FindOctant(const RotateArgs& params, const Point3Df& centerPoint, const Eigen::Array4f& coord)
+size_t FindOctant(const RotateArgs& params, const FloatVec3& centerPoint, const Eigen::Array4f& coord)
 {
   const float xResHalf = params.xRes * 0.5F;
   const float yResHalf = params.yRes * 0.5F;

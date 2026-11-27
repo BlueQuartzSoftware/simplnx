@@ -678,7 +678,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
   line = std::string(buf.data());
 
-  auto words = StringUtilities::split(line, ' ');
+  auto words = StringUtilities::Split(line, ' ');
 
   if(words.size() != 2)
   {
@@ -707,7 +707,7 @@ Result<> ReadVtkStructuredPoints::readFile()
   }
   // Read point dimensions before deriving cell dimensions.
   line = std::string(buf.data());
-  auto tokens = StringUtilities::split(line, ' ');
+  auto tokens = StringUtilities::Split(line, ' ');
   if(tokens.size() != 4)
   {
     std::string ss = fmt::format("Error reading the dataset dimensions. Was expecting 4 tokens but got '{}'.", std::string(buf.data()));
@@ -758,7 +758,7 @@ Result<> ReadVtkStructuredPoints::readFile()
     return result;
   }
   line = std::string(buf.data());
-  tokens = StringUtilities::split(line, ' ');
+  tokens = StringUtilities::Split(line, ' ');
   if(tokens.size() != 4)
   {
     std::string ss = fmt::format("Error reading the dataset spacing. Was expecting 4 tokens but got '{}'.", std::string(buf.data()));
@@ -793,7 +793,7 @@ Result<> ReadVtkStructuredPoints::readFile()
     return result;
   }
   line = std::string(buf.data());
-  tokens = StringUtilities::split(line, ' ');
+  tokens = StringUtilities::Split(line, ' ');
   if(tokens.size() != 4)
   {
     std::string ss = fmt::format("Error reading the dataset origin. Was expecting 4 tokens but got '{}'.", std::string(buf.data()));
@@ -852,7 +852,7 @@ Result<> ReadVtkStructuredPoints::readFile()
     return result;
   }
   line = std::string(buf.data());
-  tokens = StringUtilities::split(line, ' ');
+  tokens = StringUtilities::Split(line, ' ');
   if(tokens.size() != 2)
   {
     std::string ss = fmt::format("Error reading the dataset type. Was expecting 2 tokens but got '{}'.", std::string(buf.data()));
@@ -1036,7 +1036,7 @@ Result<int32> ReadVtkStructuredPoints::readDataTypeSection(std::istream& in, int
     else if(strncmp(buf.data(), nextKeyWord.c_str(), 9) == 0)
     {
       std::string line(buf.data());
-      std::vector<std::string> tokens = StringUtilities::split(line, ' ');
+      std::vector<std::string> tokens = StringUtilities::Split(line, ' ');
       std::string sectionType = std::string(tokens[0]);
       std::fill(buf.begin(), buf.end(), '\0');
       ReadString(in, buf.data(), k_BufferSize);
@@ -1112,7 +1112,7 @@ Result<> ReadVtkStructuredPoints::readScalarData(std::istream& in, int32 numPts)
   {
     return MakeErrorResult(to_underlying(ErrorCodes::ReadScalarHeaderLineErr), fmt::format("Cannot read scalar header for file: {}", m_InputValues->InputFile.string()));
   }
-  std::vector<std::string> tokens = StringUtilities::split({line.data()}, ' ');
+  std::vector<std::string> tokens = StringUtilities::Split({line.data()}, ' ');
 
   if(tokens.size() < 2)
   {
@@ -1133,7 +1133,7 @@ Result<> ReadVtkStructuredPoints::readScalarData(std::istream& in, int32 numPts)
   {
     return MakeErrorResult(to_underlying(ErrorCodes::ReadLookupTableLineErr), fmt::format("Cannot read LOOKUP_TABLE line for file: {}", m_InputValues->InputFile.string()));
   }
-  tokens = StringUtilities::split({line.data()}, ' ');
+  tokens = StringUtilities::Split({line.data()}, ' ');
   if(tokens.size() != 2)
   {
     return MakeErrorResult(to_underlying(ErrorCodes::ReadLookupTableWordCountErr), "Error reading SCALARS LOOKUP_TABLE header section. Not enough tokens.");
@@ -1157,7 +1157,7 @@ Result<> ReadVtkStructuredPoints::readVectorData(std::istream& in, int32 numPts)
     return MakeErrorResult(to_underlying(ErrorCodes::ReadScalarHeaderLineErr), fmt::format("Cannot read vector header for file '{}'.", m_InputValues->InputFile.string()));
   }
 
-  const std::vector<std::string> tokens = StringUtilities::split({line.data()}, ' ');
+  const std::vector<std::string> tokens = StringUtilities::Split({line.data()}, ' ');
   if(tokens.size() < 2)
   {
     return MakeErrorResult(to_underlying(ErrorCodes::ReadScalarHeaderWordCountErr), "Error reading VECTORS header section. Not enough tokens.");

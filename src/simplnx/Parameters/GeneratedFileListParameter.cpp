@@ -214,7 +214,7 @@ constexpr StringLiteral k_PaddingDigits = "PaddingDigits";
 constexpr StringLiteral k_StartIndex = "StartIndex";
 } // namespace
 
-Result<FileListInfoFilterParameterConverter::ValueType> FileListInfoFilterParameterConverter::convert(const nlohmann::json& json)
+Result<FileListInfoFilterParameterConverter::ValueType> FileListInfoFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.contains(k_EndIndex))
   {

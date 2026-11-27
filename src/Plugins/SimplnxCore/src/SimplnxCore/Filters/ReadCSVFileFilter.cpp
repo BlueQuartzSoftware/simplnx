@@ -121,7 +121,7 @@ Result<> CacheHeaders(int32 instanceId, const ReadCSVData& readCsvData)
 
     if(currentLine == readCsvData.headersLine)
     {
-      auto headers = StringUtilities::split(line, readCsvData.delimiters, !readCsvData.consecutiveDelimiters);
+      auto headers = StringUtilities::Split(line, readCsvData.delimiters, !readCsvData.consecutiveDelimiters);
       SHeaderCache[instanceId].Headers = headers;
       SHeaderCache[instanceId].headers_line = readCsvData.headersLine;
       SHeaderCache[instanceId].Delimiters = readCsvData.delimiters;
@@ -177,7 +177,7 @@ std::optional<usize> FindLineWithEmptyField(const ReadCSVData& readCsvData, cons
   {
     return std::nullopt;
   }
-  const std::vector<std::string> tokens = StringUtilities::split(line, readCsvData.delimiters, true);
+  const std::vector<std::string> tokens = StringUtilities::Split(line, readCsvData.delimiters, true);
   if(std::any_of(tokens.begin(), tokens.end(), isEmpty))
   {
     return readCsvData.startImportRow;
@@ -607,7 +607,7 @@ Result<Arguments> ReadCSVFileFilter::FromSIMPLJson(const nlohmann::json& json)
 
   // Convert the wizard data
   {
-    auto result = SIMPLConversion::ReadASCIIWizardDataFilterParameterConverter::convert(json);
+    auto result = SIMPLConversion::ReadASCIIWizardDataFilterParameterConverter::Convert(json);
     if(result.valid())
     {
       args.insertOrAssign(k_ReadCSVData_Key, std::make_any<typename SIMPLConversion::ReadASCIIWizardDataFilterParameterConverter::ValueType>(std::move(result.value())));
@@ -617,7 +617,7 @@ Result<Arguments> ReadCSVFileFilter::FromSIMPLJson(const nlohmann::json& json)
 
   // Convert the existing attr matrix boolean
   {
-    auto result = SIMPLConversion::BooleanFilterParameterConverter::convert(json[simpl::k_AutomaticAttrMatrixKey]);
+    auto result = SIMPLConversion::BooleanFilterParameterConverter::Convert(json[simpl::k_AutomaticAttrMatrixKey]);
     if(result.invalid())
     {
       results.push_back(SIMPLConversion::ConvertParameter<SIMPLConversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_SelectedPathKey, k_CreatedDataGroup_Key));

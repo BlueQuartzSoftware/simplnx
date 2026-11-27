@@ -77,7 +77,7 @@ bool BoolParameter::checkActive(const std::any& parameterValue, const std::any& 
 
 namespace SIMPLConversion
 {
-Result<BooleanFilterParameterConverter::ValueType> BooleanFilterParameterConverter::convert(const nlohmann::json& json)
+Result<BooleanFilterParameterConverter::ValueType> BooleanFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_number_integer() && !json.is_number_unsigned() && !json.is_boolean())
   {
@@ -89,7 +89,7 @@ Result<BooleanFilterParameterConverter::ValueType> BooleanFilterParameterConvert
   return {std::move(value)};
 }
 
-Result<InvertedBooleanFilterParameterConverter::ValueType> InvertedBooleanFilterParameterConverter::convert(const nlohmann::json& json)
+Result<InvertedBooleanFilterParameterConverter::ValueType> InvertedBooleanFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_number_integer() || !json.is_number_unsigned())
   {
@@ -101,7 +101,7 @@ Result<InvertedBooleanFilterParameterConverter::ValueType> InvertedBooleanFilter
   return {std::move(value)};
 }
 
-Result<LinkedBooleanFilterParameterConverter::ValueType> LinkedBooleanFilterParameterConverter::convert(const nlohmann::json& json)
+Result<LinkedBooleanFilterParameterConverter::ValueType> LinkedBooleanFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_number_integer())
   {

@@ -248,7 +248,7 @@ Result<std::any> ArraySelectionParameter::resolve(DataStructure& dataStructure, 
 
 namespace SIMPLConversion
 {
-Result<DataArraySelectionFilterParameterConverter::ValueType> DataArraySelectionFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataArraySelectionFilterParameterConverter::ValueType> DataArraySelectionFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   auto dataContainerNameResult = ReadDataContainerName(json, "DataArraySelectionFilterParameter");
   if(dataContainerNameResult.invalid())

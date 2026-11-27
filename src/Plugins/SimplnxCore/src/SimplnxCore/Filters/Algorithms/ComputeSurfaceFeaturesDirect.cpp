@@ -19,7 +19,7 @@ namespace
  * @param featureIds Provides in-memory Feature Id values.
  * @return True when the voxel marks its feature as surface.
  */
-bool IsPointASurfaceFeature(const Point2D<usize>& point, usize xPoints, usize yPoints, bool markFeature0Neighbors, const Int32AbstractDataStore& featureIds)
+bool IsPointASurfaceFeature(const Vec2<usize>& point, usize xPoints, usize yPoints, bool markFeature0Neighbors, const Int32AbstractDataStore& featureIds)
 {
   const usize yStride = point.getY() * xPoints;
 
@@ -65,7 +65,7 @@ bool IsPointASurfaceFeature(const Point2D<usize>& point, usize xPoints, usize yP
  * @param featureIds Provides in-memory Feature Id values.
  * @return True when the voxel marks its feature as surface.
  */
-bool IsPointASurfaceFeature(const Point3D<usize>& point, usize xPoints, usize yPoints, usize zPoints, bool markFeature0Neighbors, const Int32AbstractDataStore& featureIds)
+bool IsPointASurfaceFeature(const Vec3<usize>& point, usize xPoints, usize yPoints, usize zPoints, bool markFeature0Neighbors, const Int32AbstractDataStore& featureIds)
 {
   usize yStride = point.getY() * xPoints;
   usize zStride = point.getZ() * xPoints * yPoints;
@@ -152,7 +152,7 @@ void FindSurfaceFeatures3D(DataStructure& dataStructure, const DataPath& feature
         // Feature 0 is background. A marked feature needs no further checks.
         if(gNum != 0 && (surfaceFeatures[gNum] == 0u))
         {
-          if(IsPointASurfaceFeature(Point3D<usize>{x, y, z}, xPoints, yPoints, zPoints, markFeature0Neighbors, featureIds))
+          if(IsPointASurfaceFeature(Vec3<usize>{x, y, z}, xPoints, yPoints, zPoints, markFeature0Neighbors, featureIds))
           {
             surfaceFeatures[gNum] = 1;
           }
@@ -214,7 +214,7 @@ void FindSurfaceFeatures2D(DataStructure& dataStructure, const DataPath& feature
       // Feature 0 is background. A marked feature needs no further checks.
       if(gNum != 0 && surfaceFeatures[gNum] == 0)
       {
-        if(IsPointASurfaceFeature(Point2D<usize>{x, y}, xPoints, yPoints, markFeature0Neighbors, featureIds))
+        if(IsPointASurfaceFeature(Vec2<usize>{x, y}, xPoints, yPoints, markFeature0Neighbors, featureIds))
         {
           surfaceFeatures[gNum] = 1;
         }

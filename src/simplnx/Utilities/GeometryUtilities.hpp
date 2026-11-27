@@ -124,15 +124,13 @@ SIMPLNX_EXPORT Result<FloatVec3> CalculatePartitionLengthsOfBoundingBox(const Bo
  * @return
  */
 template <typename T>
-T ComputeTetrahedronVolume(const std::array<nx::core::Point3Df, 3>& verts, const std::array<T, 3>& v4)
+T ComputeTetrahedronVolume(const std::array<nx::core::FloatVec3, 3>& verts, const std::array<T, 3>& v4)
 {
-  using Point3DType = Point3D<T>;
-
   // Create the 4 Vertices of the tetrahedron
-  const Point3DType& a = verts[0];
-  const Point3DType& b = verts[1];
-  const Point3DType& c = verts[2];
-  const Point3DType& d = v4;
+  const Vec3<T>& a = verts[0];
+  const Vec3<T>& b = verts[1];
+  const Vec3<T>& c = verts[2];
+  const Vec3<T>& d = v4;
 
   // The volume of the tetrahedron can be calculated through V= 1/6 |M| (where M is the volume matrix)
   // v1 = b-a, v2 = c-a, v3 = d-a

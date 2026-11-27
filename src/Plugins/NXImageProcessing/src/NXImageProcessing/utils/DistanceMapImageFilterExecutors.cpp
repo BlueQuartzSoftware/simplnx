@@ -26,7 +26,7 @@ namespace
 /**
  * @brief Dispatched execute body for the Signed Maurer Distance Map filter. The input is the T-typed (integer scalar)
  *        image; the output is a FIXED float32 signed distance image (matching the legacy ITK SignedMaurerDistanceMap
- *        FilterOutputType), so the preflight must have created it via the AlwaysFloat32 map. The Float64 BackgroundValue
+ *        FilterOutputType), so the preflight must have created it via the AlwaysFloat32Type map. The Float64 BackgroundValue
  *        is cast to the input element type T here; the caller's preflight has enforced an integer scalar input.
  */
 struct SignedMaurerDistanceMapExecuteFn
@@ -59,7 +59,7 @@ struct SignedMaurerDistanceMapExecuteFn
 /**
  * @brief Dispatched execute body for the (unsigned) Danielsson Distance Map filter. The input is the T-typed (integer
  *        scalar) image; the output is a FIXED float32 distance image (matching the legacy ITK Danielsson
- *        FilterOutputType), so the preflight must have created it via the AlwaysFloat32 map. @p inputIsBinary is
+ *        FilterOutputType), so the preflight must have created it via the AlwaysFloat32Type map. @p inputIsBinary is
  *        carried for interface/SIMPL parity but does not affect the distance output.
  */
 struct DanielssonDistanceMapExecuteFn
@@ -163,7 +163,7 @@ struct SignedDanielssonDistanceMapExecuteFn
 /**
  * @brief Dispatched execute body for the IsoContourDistance filter. Input is the T-typed (any scalar) image; output is
  *        a FIXED float32 narrow-band signed distance image (matching the legacy ITK FilterOutputType), so the
- *        preflight must have created it via the AlwaysFloat32 map.
+ *        preflight must have created it via the AlwaysFloat32Type map.
  */
 struct IsoContourDistanceExecuteFn
 {

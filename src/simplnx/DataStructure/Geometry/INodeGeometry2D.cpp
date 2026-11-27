@@ -138,7 +138,7 @@ void INodeGeometry2D::getFacePointIds(usize faceId, nonstd::span<usize> vertexId
   }
 }
 
-void INodeGeometry2D::getFaceCoordinates(usize faceId, nonstd::span<Point3Df> coords) const
+void INodeGeometry2D::getFaceCoordinates(usize faceId, nonstd::span<FloatVec3> coords) const
 {
   std::vector<usize> verts(getNumberOfVerticesPerFace());
   getFacePointIds(faceId, verts);

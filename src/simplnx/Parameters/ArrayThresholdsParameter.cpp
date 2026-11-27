@@ -162,7 +162,7 @@ constexpr StringLiteral k_ThresholdsKey = "Thresholds";
 constexpr StringLiteral k_InvertedKey = "Invert Comparison";
 } // namespace
 
-Result<ComparisonSelectionFilterParameterConverter::ValueType> ComparisonSelectionFilterParameterConverter::convert(const nlohmann::json& json)
+Result<ComparisonSelectionFilterParameterConverter::ValueType> ComparisonSelectionFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_array())
   {
@@ -265,7 +265,7 @@ std::shared_ptr<ArrayThresholdSet> ConvertSetThreshold(const DataPath& amPath, c
 }
 } // namespace
 
-Result<ComparisonSelectionAdvancedFilterParameterConverter::ValueType> ComparisonSelectionAdvancedFilterParameterConverter::convert(const nlohmann::json& json)
+Result<ComparisonSelectionAdvancedFilterParameterConverter::ValueType> ComparisonSelectionAdvancedFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_object())
   {

@@ -228,7 +228,7 @@ T inline GetSourceArrayValue(const RotateArgs& params, Vector3i64 xyzIndex, cons
  * @param coord Specifies the inverse-transformed coordinate.
  * @return Octant index from 0 through 7.
  */
-SIMPLNX_EXPORT usize FindOctant(const RotateArgs& params, const Point3Df& centerPoint, const Eigen::Array4f& coord);
+SIMPLNX_EXPORT usize FindOctant(const RotateArgs& params, const FloatVec3& centerPoint, const Eigen::Array4f& coord);
 
 using OctantOffsetArrayType = std::array<Vector3i64, 8>;
 
@@ -276,7 +276,7 @@ using AccumulationValueType = std::conditional_t<std::is_floating_point_v<T>, fl
  */
 template <typename T>
 inline void FindInterpolationValues(const RotateArgs& params, usize octant, SizeVec3 oldIndicesU, Eigen::Array4f& oldCoords, const DataArray<T>& sourceArray,
-                                    std::vector<AccumulationValueType<T>>& pValues, Eigen::Vector3f& uvw, Point3Df& /*hitVoxelCenterPoint*/)
+                                    std::vector<AccumulationValueType<T>>& pValues, Eigen::Vector3f& uvw, FloatVec3& /*hitVoxelCenterPoint*/)
 {
   const std::array<Vector3i64, 8>& indexOffset = k_AllOctantOffsets[octant];
 
@@ -833,7 +833,7 @@ public:
           int64 cx = ci == 0 ? 0 : static_cast<int64>(m_Params.outputDims[0] - 1);
           int64 cy = cj == 0 ? 0 : static_cast<int64>(m_Params.outputDims[1] - 1);
           int64 cornerFlatIdx = cx + cy * static_cast<int64>(m_Params.outputDims[0]) + k * static_cast<int64>(m_Params.outputDims[0] * m_Params.outputDims[1]);
-          Point3Df cornerPt = destImageGeomPtr->getCoordsf(cornerFlatIdx);
+          FloatVec3 cornerPt = destImageGeomPtr->getCoordsf(cornerFlatIdx);
           Eigen::Vector4f cornerNew(cornerPt.getX(), cornerPt.getY(), cornerPt.getZ(), 1.0f);
           Eigen::Array4f cornerOld = inverseTransform * cornerNew;
           float32 srcPhysZ = cornerOld[2];
@@ -909,7 +909,7 @@ public:
             }
             const int64 destIndex = destSliceBaseIdx + outDimX * j + i;
             const usize outBufIdx = static_cast<usize>(j * outDimX + i);
-            Point3Df destPoint = destImageGeomPtr->getCoordsf(destIndex);
+            FloatVec3 destPoint = destImageGeomPtr->getCoordsf(destIndex);
             Eigen::Vector4f coordsNew(destPoint.getX(), destPoint.getY(), destPoint.getZ(), 1.0f);
             Eigen::Array4f coordsOld = inverseTransform * coordsNew;
 
@@ -1142,7 +1142,7 @@ public:
             int64 cx = ci == 0 ? 0 : static_cast<int64>(m_Params.outputDims[0] - 1);
             int64 cy = cj == 0 ? 0 : static_cast<int64>(m_Params.outputDims[1] - 1);
             int64 cornerFlatIdx = cx + cy * static_cast<int64>(m_Params.outputDims[0]) + k * static_cast<int64>(m_Params.outputDims[0] * m_Params.outputDims[1]);
-            Point3Df cornerPt = destImageGeomPtr->getCoordsf(cornerFlatIdx);
+            FloatVec3 cornerPt = destImageGeomPtr->getCoordsf(cornerFlatIdx);
             Eigen::Vector4f cornerNew(cornerPt.getX(), cornerPt.getY(), cornerPt.getZ(), 1.0f);
             Eigen::Array4f cornerOld = inverseTransform * cornerNew;
             // Convert physical Z to its containing source cell.
@@ -1213,7 +1213,7 @@ public:
             }
             const int64 destIndex = destSliceBaseIdx + outDimX * j + i;
             const usize outBufIdx = static_cast<usize>(j * outDimX + i);
-            Point3Df destPoint = destImageGeomPtr->getCoordsf(destIndex);
+            FloatVec3 destPoint = destImageGeomPtr->getCoordsf(destIndex);
             Eigen::Vector4f coordsNew(destPoint.getX(), destPoint.getY(), destPoint.getZ(), 1.0f);
             Eigen::Array4f coordsOld = inverseTransform * coordsNew;
 

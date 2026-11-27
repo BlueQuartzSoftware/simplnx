@@ -46,7 +46,7 @@ struct SliceBufferedTransferFunctor
    * @return Pointer to the first element.
    */
   template <typename T>
-  static T* bufPtr(std::vector<T>& v)
+  static T* BufPtr(std::vector<T>& v)
   {
     return v.data();
   }
@@ -58,7 +58,7 @@ struct SliceBufferedTransferFunctor
    * @return Pointer to the first element.
    */
   template <typename T>
-  static T* bufPtr(std::unique_ptr<T[]>& p)
+  static T* BufPtr(std::unique_ptr<T[]>& p)
   {
     return p.get();
   }
@@ -70,7 +70,7 @@ struct SliceBufferedTransferFunctor
    * @return Pointer to the first element.
    */
   template <typename T>
-  static const T* bufPtr(const std::vector<T>& v)
+  static const T* BufPtr(const std::vector<T>& v)
   {
     return v.data();
   }
@@ -82,7 +82,7 @@ struct SliceBufferedTransferFunctor
    * @return Pointer to the first element.
    */
   template <typename T>
-  static const T* bufPtr(const std::unique_ptr<T[]>& p)
+  static const T* BufPtr(const std::unique_ptr<T[]>& p)
   {
     return p.get();
   }
@@ -138,7 +138,7 @@ struct SliceBufferedTransferFunctor
     }
     auto destSlice = makeBuf<T>(sliceValues);
 
-    auto readSlice = [&](usize z, usize slot) { return store.copyIntoBuffer(z * sliceValues, nonstd::span<T>(bufPtr(srcSlices[slot]), sliceValues)); };
+    auto readSlice = [&](usize z, usize slot) { return store.copyIntoBuffer(z * sliceValues, nonstd::span<T>(BufPtr(srcSlices[slot]), sliceValues)); };
 
     // Prime the current and next slots.
     auto readResult = readSlice(0, 1);
@@ -172,7 +172,7 @@ struct SliceBufferedTransferFunctor
       }
 
       // Preserve tuples that have no selected source.
-      readResult = store.copyIntoBuffer(zIdx * sliceValues, nonstd::span<T>(bufPtr(destSlice), sliceValues));
+      readResult = store.copyIntoBuffer(zIdx * sliceValues, nonstd::span<T>(BufPtr(destSlice), sliceValues));
       if(readResult.invalid())
       {
         return readResult;
@@ -199,7 +199,7 @@ struct SliceBufferedTransferFunctor
 
           for(usize c = 0; c < numComp; c++)
           {
-            bufPtr(destSlice)[inSlice * numComp + c] = bufPtr(srcSlices[srcSlot])[srcInSlice * numComp + c];
+            BufPtr(destSlice)[inSlice * numComp + c] = BufPtr(srcSlices[srcSlot])[srcInSlice * numComp + c];
           }
           modified = true;
         }
@@ -208,7 +208,7 @@ struct SliceBufferedTransferFunctor
       // Avoid a disk-backed write when the destination slice did not change.
       if(modified)
       {
-        auto writeResult = store.copyFromBuffer(zIdx * sliceValues, nonstd::span<const T>(bufPtr(destSlice), sliceValues));
+        auto writeResult = store.copyFromBuffer(zIdx * sliceValues, nonstd::span<const T>(BufPtr(destSlice), sliceValues));
         if(writeResult.invalid())
         {
           return writeResult;
@@ -272,7 +272,7 @@ struct SliceTransferOneZFunctor
 
     // Preserve destination tuples that have no source mark.
     auto destBuf = SliceBufferedTransferFunctor::makeBuf<T>(sliceValues);
-    auto readResult = store.copyIntoBuffer(destZ * sliceValues, nonstd::span<T>(SliceBufferedTransferFunctor::bufPtr(destBuf), sliceValues));
+    auto readResult = store.copyIntoBuffer(destZ * sliceValues, nonstd::span<T>(SliceBufferedTransferFunctor::BufPtr(destBuf), sliceValues));
     if(readResult.invalid())
     {
       return readResult;
@@ -287,7 +287,7 @@ struct SliceTransferOneZFunctor
       if(!srcLoaded[slot] && srcZ < dimZ)
       {
         srcBufs[slot] = SliceBufferedTransferFunctor::makeBuf<T>(sliceValues);
-        auto sourceReadResult = store.copyIntoBuffer(srcZ * sliceValues, nonstd::span<T>(SliceBufferedTransferFunctor::bufPtr(srcBufs[slot]), sliceValues));
+        auto sourceReadResult = store.copyIntoBuffer(srcZ * sliceValues, nonstd::span<T>(SliceBufferedTransferFunctor::BufPtr(srcBufs[slot]), sliceValues));
         if(sourceReadResult.invalid())
         {
           return sourceReadResult;
@@ -327,7 +327,7 @@ struct SliceTransferOneZFunctor
 
       for(usize c = 0; c < numComp; c++)
       {
-        SliceBufferedTransferFunctor::bufPtr(destBuf)[inSlice * numComp + c] = SliceBufferedTransferFunctor::bufPtr(srcBufs[srcSlot])[srcInSlice * numComp + c];
+        SliceBufferedTransferFunctor::BufPtr(destBuf)[inSlice * numComp + c] = SliceBufferedTransferFunctor::BufPtr(srcBufs[srcSlot])[srcInSlice * numComp + c];
       }
       modified = true;
     }
@@ -335,7 +335,7 @@ struct SliceTransferOneZFunctor
     // Avoid a disk-backed write when the destination slice did not change.
     if(modified)
     {
-      auto writeResult = store.copyFromBuffer(destZ * sliceValues, nonstd::span<const T>(SliceBufferedTransferFunctor::bufPtr(destBuf), sliceValues));
+      auto writeResult = store.copyFromBuffer(destZ * sliceValues, nonstd::span<const T>(SliceBufferedTransferFunctor::BufPtr(destBuf), sliceValues));
       if(writeResult.invalid())
       {
         return writeResult;

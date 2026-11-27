@@ -41,17 +41,17 @@ template <class T>
 using SameAsInput = T;
 
 template <class T>
-using AlwaysFloat64 = float64;
+using AlwaysFloat64Type = float64;
 
 template <class T>
-using AlwaysUInt8 = uint8;
+using AlwaysUInt8Type = uint8;
 
 template <class T>
-using AlwaysUInt32 = uint32;
+using AlwaysUInt32Type = uint32;
 
 // @brief Output pixel type is always float32 (e.g. the signed distance transform), regardless of input type.
 template <class T>
-using AlwaysFloat32 = float32;
+using AlwaysFloat32Type = float32;
 
 /**
  * @brief The 10 scalar numeric DataTypes an image filter operates on (no bool).

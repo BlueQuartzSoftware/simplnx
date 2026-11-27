@@ -25,7 +25,7 @@ namespace
 {
 const std::string k_BCFName = "Boundary Cell Fractions";
 
-const DataPath k_FeatureDataAMPath = DataPath({Constants::k_SmallIN100, Constants::k_Grain_Data});
+const DataPath k_FeatureDataAMPath = DataPath({Constants::k_SmallIN100, Constants::k_GrainDataWithSpaces});
 
 const DataPath k_ExemplarBCFPath = k_FeatureDataAMPath.createChildPath(" Surface Element Fractions");
 const DataPath k_GeneratedBCFPath = k_FeatureDataAMPath.createChildPath(k_BCFName);

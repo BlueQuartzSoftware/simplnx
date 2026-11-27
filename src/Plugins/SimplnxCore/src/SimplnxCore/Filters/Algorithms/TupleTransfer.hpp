@@ -90,7 +90,7 @@ Result<> TransferBoundedCellTuples(AbstractDataStore<T>& source, AbstractDataSto
       return MakeErrorResult(-62061, "Tuple transfer failed to allocate its bounded component buffer.");
     }
 
-    const usize firstFace = records.front().faceIndex;
+    const usize firstFace = records.front().face_index;
     if(firstFace > destinationTuples || records.size() > destinationTuples - firstFace)
     {
       return MakeErrorResult(-62065, "Tuple transfer destination face range exceeds its destination array.");
@@ -98,12 +98,12 @@ Result<> TransferBoundedCellTuples(AbstractDataStore<T>& source, AbstractDataSto
     for(usize localRecord = 0; localRecord < records.size(); localRecord++)
     {
       const auto& record = records[localRecord];
-      if(record.faceIndex != firstFace + localRecord || record.faceIndex > std::numeric_limits<usize>::max() / valuesPerFace)
+      if(record.face_index != firstFace + localRecord || record.face_index > std::numeric_limits<usize>::max() / valuesPerFace)
       {
         return MakeErrorResult(-62063, "Tuple transfer records must be contiguous in destination face order.");
       }
       const auto indices = sourceIndices(record);
-      const usize destinationFaceOffset = record.faceIndex * valuesPerFace;
+      const usize destinationFaceOffset = record.face_index * valuesPerFace;
       for(usize side = 0; side < 2; side++)
       {
         const usize sourceTuple = indices[side];
@@ -204,7 +204,7 @@ Result<> TransferBoundedCellTuples(AbstractDataStore<T>& source, AbstractDataSto
   for(usize recordStart = 0; recordStart < records.size(); recordStart += facesPerRun)
   {
     const usize recordCount = std::min(facesPerRun, records.size() - recordStart);
-    const usize firstFace = records[recordStart].faceIndex;
+    const usize firstFace = records[recordStart].face_index;
     if(recordCount > std::numeric_limits<usize>::max() / valuesPerFace || firstFace > std::numeric_limits<usize>::max() / valuesPerFace ||
        firstFace > std::numeric_limits<usize>::max() - recordCount || firstFace + recordCount > destinationTuples)
     {
@@ -217,7 +217,7 @@ Result<> TransferBoundedCellTuples(AbstractDataStore<T>& source, AbstractDataSto
       for(usize localRecord = 0; localRecord < recordCount; localRecord++)
       {
         const auto& record = records[recordStart + localRecord];
-        if(record.faceIndex != firstFace + localRecord)
+        if(record.face_index != firstFace + localRecord)
         {
           return MakeErrorResult(-62063, "Tuple transfer records must be contiguous in destination face order.");
         }
@@ -339,7 +339,7 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
       return {idPage[cell - pageStart]};
     };
 
-    const usize firstFace = records.front().faceIndex;
+    const usize firstFace = records.front().face_index;
     if(firstFace > destination.getNumberOfTuples() || records.size() > destination.getNumberOfTuples() - firstFace)
     {
       return MakeErrorResult(-62074, "Feature tuple transfer destination range is invalid.");
@@ -347,12 +347,12 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
     for(usize localRecord = 0; localRecord < records.size(); localRecord++)
     {
       const auto& record = records[localRecord];
-      if(record.faceIndex != firstFace + localRecord || record.faceIndex > std::numeric_limits<usize>::max() / valuesPerFace)
+      if(record.face_index != firstFace + localRecord || record.face_index > std::numeric_limits<usize>::max() / valuesPerFace)
       {
         return MakeErrorResult(-62075, "Feature tuple transfer records must be contiguous.");
       }
       const auto cells = sourceIndices(record);
-      const usize destinationFaceOffset = record.faceIndex * valuesPerFace;
+      const usize destinationFaceOffset = record.face_index * valuesPerFace;
       for(usize side = 0; side < 2; side++)
       {
         usize feature = k_Invalid;
@@ -500,7 +500,7 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
   for(usize begin = 0; begin < records.size(); begin += facesPerRun)
   {
     const usize count = std::min(facesPerRun, records.size() - begin);
-    const usize first = records[begin].faceIndex;
+    const usize first = records[begin].face_index;
     if(count > std::numeric_limits<usize>::max() / valuesPerFace || first > std::numeric_limits<usize>::max() / valuesPerFace || first > destination.getNumberOfTuples() ||
        count > destination.getNumberOfTuples() - first)
     {
@@ -521,7 +521,7 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
     for(usize n = 0; n < count; n++)
     {
       const auto& rec = records[begin + n];
-      if(rec.faceIndex != first + n)
+      if(rec.face_index != first + n)
       {
         return MakeErrorResult(-62075, "Feature tuple transfer records must be contiguous.");
       }
@@ -566,11 +566,11 @@ Result<> TransferBoundedFeatureTuples(AbstractDataStore<K>& featureIds, Abstract
  * @brief Stores one QuickSurfaceMesh face transfer.
  *
  * A -1 label marks an exterior side. Batch calls require ascending contiguous
- * faceIndex values so one destination run can publish all records.
+ * face_index values so one destination run can publish all records.
  */
 struct QuickSurfaceTransferData
 {
-  usize faceIndex = 0;
+  usize face_index = 0;
   usize firstcIndex = 0;
   usize secondcIndex = 0;
   int32 faceLabel0 = 0;
@@ -582,11 +582,11 @@ struct QuickSurfaceTransferData
  * @brief Stores one Surface Nets face transfer.
  *
  * usize max marks an exterior side. Batch calls require ascending contiguous
- * faceIndex values so one destination run can publish all records.
+ * face_index values so one destination run can publish all records.
  */
 struct SurfaceNetsTransferData
 {
-  usize faceIndex = 0;
+  usize face_index = 0;
   std::array<usize, 2> quadNxArrayIndices = {std::numeric_limits<usize>::max(), std::numeric_limits<usize>::max()};
 };
 

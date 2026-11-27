@@ -98,7 +98,7 @@ struct SIMPLNX_EXPORT BooleanFilterParameterConverter
   using ParameterType = BoolParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT InvertedBooleanFilterParameterConverter
@@ -106,7 +106,7 @@ struct SIMPLNX_EXPORT InvertedBooleanFilterParameterConverter
   using ParameterType = BoolParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT LinkedBooleanFilterParameterConverter
@@ -114,7 +114,7 @@ struct SIMPLNX_EXPORT LinkedBooleanFilterParameterConverter
   using ParameterType = BoolParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 } // namespace SIMPLConversion
 } // namespace nx::core

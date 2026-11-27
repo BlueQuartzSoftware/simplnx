@@ -165,7 +165,7 @@ struct SIMPLNX_EXPORT RangeFilterParameterConverter
   using ParameterType = VectorParameter<float64>;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 template <typename T>
@@ -174,7 +174,7 @@ struct MultiToVec3FilterParameterConverter
   using ParameterType = VectorParameter<T>;
   using ValueType = typename ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3);
+  static Result<ValueType> Convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3);
 };
 
 extern template struct MultiToVec3FilterParameterConverter<int8>;
@@ -202,7 +202,7 @@ struct Vec2FilterParameterConverter
   using ParameterType = VectorParameter<T>;
   using ValueType = typename ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 extern template struct Vec2FilterParameterConverter<int8>;
@@ -232,7 +232,7 @@ struct Vec3FilterParameterConverter
   using ParameterType = VectorParameter<T>;
   using ValueType = typename ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 extern template struct Vec3FilterParameterConverter<int8>;
@@ -262,7 +262,7 @@ struct Vec4FilterParameterConverter
   using ParameterType = VectorParameter<T>;
   using ValueType = typename ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 extern template struct Vec4FilterParameterConverter<int8>;
@@ -288,7 +288,7 @@ struct AxisAngleFilterParameterConverter
   using ParameterType = VectorParameter<T>;
   using ValueType = typename ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 extern template struct AxisAngleFilterParameterConverter<int8>;
@@ -312,7 +312,7 @@ struct Vec3p1FilterParameterConverter
   using ParameterType = VectorParameter<T>;
   using ValueType = typename ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2);
+  static Result<ValueType> Convert(const nlohmann::json& json1, const nlohmann::json& json2);
 };
 
 extern template struct Vec3p1FilterParameterConverter<int8>;
@@ -334,22 +334,22 @@ using FloatVec3p1FilterParameterConverter = Vec3p1FilterParameterConverter<float
 } // namespace SIMPLConversion
 } // namespace nx::core
 
-SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::VectorInt8Parameter, "9f5f9683-e492-4a79-8378-79d727b2356a");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorInt8Parameter, "nx::core::VectorInt8Parameter", "9f5f9683-e492-4a79-8378-79d727b2356a");
 
-SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::VectorUInt8Parameter, "bff78ff3-35ef-482a-b3b1-df8806e7f7ef");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorUInt8Parameter, "nx::core::VectorUInt8Parameter", "bff78ff3-35ef-482a-b3b1-df8806e7f7ef");
 
-SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::VectorInt16Parameter, "43810a29-1a5f-4472-bec6-41de9ffe27f7");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorInt16Parameter, "nx::core::VectorInt16Parameter", "43810a29-1a5f-4472-bec6-41de9ffe27f7");
 
-SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::VectorUInt16Parameter, "2f1ba2f4-c5d5-403c-8b90-0bf60d2bde9b");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorUInt16Parameter, "nx::core::VectorUInt16Parameter", "2f1ba2f4-c5d5-403c-8b90-0bf60d2bde9b");
 
-SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::VectorInt32Parameter, "d3188e18-e383-4727-ab32-88b5fda56ae8");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorInt32Parameter, "nx::core::VectorInt32Parameter", "d3188e18-e383-4727-ab32-88b5fda56ae8");
 
-SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::VectorUInt32Parameter, "37322aa6-1a2f-4ecb-9aa1-8922d7ac1e49");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorUInt32Parameter, "nx::core::VectorUInt32Parameter", "37322aa6-1a2f-4ecb-9aa1-8922d7ac1e49");
 
-SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::VectorInt64Parameter, "4ceaffc1-7326-4f65-a33a-eae263dc22d1");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorInt64Parameter, "nx::core::VectorInt64Parameter", "4ceaffc1-7326-4f65-a33a-eae263dc22d1");
 
-SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::VectorUInt64Parameter, "17309744-c4e8-4d1e-807e-e7012387f1ec");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorUInt64Parameter, "nx::core::VectorUInt64Parameter", "17309744-c4e8-4d1e-807e-e7012387f1ec");
 
-SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::VectorFloat32Parameter, "88f231a1-7956-41f5-98b7-4471705d2805");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorFloat32Parameter, "nx::core::VectorFloat32Parameter", "88f231a1-7956-41f5-98b7-4471705d2805");
 
-SIMPLNX_DEF_PARAMETER_TRAITS(nx::core::VectorFloat64Parameter, "57cbdfdf-9d1a-4de8-95d7-71d0c01c5c96");
+SIMPLNX_DEF_PARAMETER_TRAITS_NAMED(nx::core::VectorFloat64Parameter, "nx::core::VectorFloat64Parameter", "57cbdfdf-9d1a-4de8-95d7-71d0c01c5c96");

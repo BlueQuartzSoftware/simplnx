@@ -15,7 +15,7 @@ struct OEMEbsdScanSelectionFilterParameterConverter
   using ParameterType = OEMEbsdScanSelectionParameter;
   using ValueType = typename ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2)
+  static Result<ValueType> Convert(const nlohmann::json& json1, const nlohmann::json& json2)
   {
     static const std::string x = "x";
     static const std::string y = "y";

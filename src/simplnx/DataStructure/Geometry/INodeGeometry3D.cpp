@@ -140,7 +140,7 @@ void INodeGeometry3D::getCellPointIds(usize polyhedraId, nonstd::span<usize> ver
   }
 }
 
-void INodeGeometry3D::getCellCoordinates(usize hexId, nonstd::span<Point3Df> coords) const
+void INodeGeometry3D::getCellCoordinates(usize hexId, nonstd::span<FloatVec3> coords) const
 {
   usize numVerts = getNumberOfVerticesPerCell();
   std::vector<usize> vertIds(numVerts, 0);

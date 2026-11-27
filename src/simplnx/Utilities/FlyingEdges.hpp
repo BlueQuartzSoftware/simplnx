@@ -678,7 +678,7 @@ public:
       for(usize j = 0; j != m_NY; ++j)
       {
         GridEdge& curGridEdge = m_GridEdges[k * m_NY + j];
-        curGridEdge.xl = m_NX;
+        curGridEdge.x_left = m_NX;
         const usize rowOffset = j * m_NX;
         const usize nextRowOffset = (j + 1) * m_NX;
         for(usize i = 0; i + 1 < m_NX; ++i)
@@ -689,11 +689,11 @@ public:
           const bool zEdgeCut = k + 1 < m_NZ && originSign != (nextKSlice[rowOffset + i] >= m_IsoVal);
           if(xEdgeCut || yEdgeCut || zEdgeCut)
           {
-            if(curGridEdge.xl == m_NX)
+            if(curGridEdge.x_left == m_NX)
             {
-              curGridEdge.xl = i;
+              curGridEdge.x_left = i;
             }
-            curGridEdge.xr = i + 1;
+            curGridEdge.x_right = i + 1;
           }
         }
       }
@@ -1102,8 +1102,8 @@ private:
   struct GridEdge
   {
     GridEdge()
-    : xl(0)
-    , xr(0)
+    : x_left(0)
+    , x_right(0)
     , xstart(0)
     , ystart(0)
     , zstart(0)
@@ -1111,8 +1111,8 @@ private:
     }
 
     // Pass 1 sets row trim bounds.
-    usize xl;
-    usize xr;
+    usize x_left;
+    usize x_right;
 
     // Pass 2 counts cuts. Pass 3 converts counts to offsets.
     usize xstart;
@@ -1229,8 +1229,8 @@ private:
     GridEdge const& ge2 = m_GridEdges[(k + 1) * m_NY + j];
     GridEdge const& ge3 = m_GridEdges[(k + 1) * m_NY + j + 1];
 
-    xl = usize(std::min({ge0.xl, ge1.xl, ge2.xl, ge3.xl}));
-    xr = usize(std::max({ge0.xr, ge1.xr, ge2.xr, ge3.xr}));
+    xl = usize(std::min({ge0.x_left, ge1.x_left, ge2.x_left, ge3.x_left}));
+    xr = usize(std::max({ge0.x_right, ge1.x_right, ge2.x_right, ge3.x_right}));
 
     xl = std::min(xl, xr);
   }

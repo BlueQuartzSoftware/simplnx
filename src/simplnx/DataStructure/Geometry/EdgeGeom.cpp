@@ -104,7 +104,7 @@ Result<> EdgeGeom::findElementSizes(bool recalculate)
 
   m_ElementSizesId = sizesPtr->getId();
 
-  std::array<Point3Df, 2> verts = {Point3Df(0.0f, 0.0f, 0.0f), Point3Df(0.0f, 0.0f, 0.0f)};
+  std::array<FloatVec3, 2> verts = {FloatVec3(0.0f, 0.0f, 0.0f), FloatVec3(0.0f, 0.0f, 0.0f)};
 
   for(usize i = 0; i < INodeGeometry1D::getNumberOfCells(); i++)
   {
@@ -215,12 +215,12 @@ Result<> EdgeGeom::findElementCentroids(bool recalculate)
   return {};
 }
 
-Point3D<float64> EdgeGeom::getParametricCenter() const
+Vec3<float64> EdgeGeom::getParametricCenter() const
 {
   return {0.5, 0.0, 0.0};
 }
 
-void EdgeGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>& pCoords, float64* shape) const
+void EdgeGeom::getShapeFunctions([[maybe_unused]] const Vec3<float64>& pCoords, float64* shape) const
 {
   shape[0] = -1.0;
   shape[1] = 1.0;

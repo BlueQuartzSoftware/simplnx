@@ -48,7 +48,7 @@ float64 SumExpectedForSlot(uint32 projDim, usize slot, usize dim)
 //     ProjectionDimension in {0,1,2} x Perform-In-Place in {true,false}. A ramp input (value == flat index)
 //     makes the per-axis sum differ by axis, so a wrong axis mapping or a wrong in-place/new-geometry output
 //     shape is caught, and BOTH output modes of the shared façade are exercised. The output element type is
-//     Float64. This is the correctness gate for the axis-projection façade (AllNumeric + AlwaysFloat64) +
+//     Float64. This is the correctness gate for the axis-projection façade (AllNumeric + AlwaysFloat64Type) +
 //     engine + SumReduce.
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::SumProjectionImageFilter: Computed-expected grid (3D)", "[NXImageProcessing][SumProjectionImageFilter]")

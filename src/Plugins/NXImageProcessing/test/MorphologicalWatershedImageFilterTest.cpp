@@ -55,7 +55,7 @@ void RunWatershed(IFilter& filter, DataStructure& dataStructure, const DataPath&
 
 // -----------------------------------------------------------------------------
 // (2) Preflight guards: a multi-component input is rejected (requireScalar); a valid scalar input (of ANY numeric
-//     type, incl. float) produces a FIXED uint32 output array (AlwaysUInt32).
+//     type, incl. float) produces a FIXED uint32 output array (AlwaysUInt32Type).
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: preflight guards", "[NXImageProcessing][MorphologicalWatershedImageFilter]")
 {
@@ -149,7 +149,7 @@ TEST_CASE("NXImageProcessing::MorphologicalWatershedImageFilter: FromSIMPLJson",
 
 // -----------------------------------------------------------------------------
 // ITK-sourced real-image golden -- duplicates ITKMorphologicalWatershedImageTest.cpp on OUR ITK-free filter
-// (cthead1-grad-mag.nrrd input). Output is a FIXED uint32 label image (AlwaysUInt32); the DURABLE golden is
+// (cthead1-grad-mag.nrrd input). Output is a FIXED uint32 label image (AlwaysUInt32Type); the DURABLE golden is
 // md5-validity-first (plan Sec.4). The helper pins ForceInCore.
 //   defaults: filter defaults (Level 0.0, MarkWatershedLine true, FullyConnected false -- identical vs legacy ITK).
 //   level_1:  Level = 1.0, MarkWatershedLine = false.

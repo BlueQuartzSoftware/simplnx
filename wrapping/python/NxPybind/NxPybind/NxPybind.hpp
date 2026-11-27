@@ -30,9 +30,10 @@
 #include <unordered_map>
 #include <vector>
 
-#define SIMPLNX_PY_BIND_CLASS(scope, className) pybind11::class_<className>(scope, #className)
-#define SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, ...) pybind11::class_<className, __VA_ARGS__>(scope, #className)
-#define SIMPLNX_PY_BIND_PARAMETER(scope, className) SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, nx::core::IParameter)
+// Keep Python class names explicit so C++ renames preserve the exported names.
+#define SIMPLNX_PY_BIND_CLASS(scope, className, pyName) pybind11::class_<className>(scope, pyName)
+#define SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, pyName, ...) pybind11::class_<className, __VA_ARGS__>(scope, pyName)
+#define SIMPLNX_PY_BIND_PARAMETER(scope, className, pyName) SIMPLNX_PY_BIND_CLASS_VARIADIC(scope, className, pyName, nx::core::IParameter)
 
 namespace pybind11::detail
 {

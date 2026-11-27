@@ -49,12 +49,12 @@ const DataPath k_TriGeomPath({k_TriGeomName});
 const DataPath k_FaceDataPath = k_TriGeomPath.createChildPath(Constants::k_FaceData);
 const DataPath k_FaceLabelsPath = k_FaceDataPath.createChildPath(Constants::k_FaceLabels);
 
-const DataPath k_FeatureDataPath = k_TriGeomPath.createChildPath(Constants::k_Grain_Data);
+const DataPath k_FeatureDataPath = k_TriGeomPath.createChildPath(Constants::k_GrainDataWithSpaces);
 const DataPath k_AvgEulerAnglesPath = k_FeatureDataPath.createChildPath(Constants::k_AvgEulerAngles);
 const DataPath k_FeaturePhasesPath = k_FeatureDataPath.createChildPath(Constants::k_Phases);
 const DataPath k_AvgQuatsPath = k_FeatureDataPath.createChildPath(k_AvgQuats);
 
-const DataPath k_PhaseDataPath = k_TriGeomPath.createChildPath(Constants::k_Phase_Data);
+const DataPath k_PhaseDataPath = k_TriGeomPath.createChildPath(Constants::k_PhaseData);
 const DataPath k_CrystalStructurePath = k_PhaseDataPath.createChildPath(Constants::k_CrystalStructures);
 
 /**

@@ -83,7 +83,7 @@ IFilter::PreflightResult NormalizeImageFilter::preflightImpl(const DataStructure
                 k_InvalidInputArrayError, fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.", inputValues.InputArrayPath.toString()))};
   }
 
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64>(
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64Type>(
       dataStructure, inputValues.InputArrayPath, imageGeomPath, inputValues.OutputArrayPath);
   return {.outputActions = std::move(resultOutputActions)};
 }

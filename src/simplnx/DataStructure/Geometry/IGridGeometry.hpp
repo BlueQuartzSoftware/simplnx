@@ -55,94 +55,94 @@ public:
   /**
    * @brief Returns the plane coordinates at the specified index array as float32.
    * @param idx Array of indices [x, y, z]
-   * @return Point3D<float32> The plane coordinates
+   * @return Vec3<float32> The plane coordinates
    */
-  virtual Point3D<float32> getPlaneCoordsf(usize idx[3]) const = 0;
+  virtual Vec3<float32> getPlaneCoordsf(usize idx[3]) const = 0;
 
   /**
    * @brief Returns the plane coordinates at the specified X, Y, Z indices as float32.
    * @param x The X index
    * @param y The Y index
    * @param z The Z index
-   * @return Point3D<float32> The plane coordinates
+   * @return Vec3<float32> The plane coordinates
    */
-  virtual Point3D<float32> getPlaneCoordsf(usize x, usize y, usize z) const = 0;
+  virtual Vec3<float32> getPlaneCoordsf(usize x, usize y, usize z) const = 0;
 
   /**
    * @brief Returns the plane coordinates at the specified flat index as float32.
    * @param idx The flat index
-   * @return Point3D<float32> The plane coordinates
+   * @return Vec3<float32> The plane coordinates
    */
-  virtual Point3D<float32> getPlaneCoordsf(usize idx) const = 0;
+  virtual Vec3<float32> getPlaneCoordsf(usize idx) const = 0;
 
   /**
    * @brief Returns the plane coordinates at the specified index array as float64.
    * @param idx Array of indices [x, y, z]
-   * @return Point3D<float64> The plane coordinates
+   * @return Vec3<float64> The plane coordinates
    */
-  virtual Point3D<float64> getPlaneCoords(usize idx[3]) const = 0;
+  virtual Vec3<float64> getPlaneCoords(usize idx[3]) const = 0;
 
   /**
    * @brief Returns the plane coordinates at the specified X, Y, Z indices as float64.
    * @param x The X index
    * @param y The Y index
    * @param z The Z index
-   * @return Point3D<float64> The plane coordinates
+   * @return Vec3<float64> The plane coordinates
    */
-  virtual Point3D<float64> getPlaneCoords(usize x, usize y, usize z) const = 0;
+  virtual Vec3<float64> getPlaneCoords(usize x, usize y, usize z) const = 0;
 
   /**
    * @brief Returns the plane coordinates at the specified flat index as float64.
    * @param idx The flat index
-   * @return Point3D<float64> The plane coordinates
+   * @return Vec3<float64> The plane coordinates
    */
-  virtual Point3D<float64> getPlaneCoords(usize idx) const = 0;
+  virtual Vec3<float64> getPlaneCoords(usize idx) const = 0;
 
   /**
    * @brief Returns the cell center coordinates at the specified index array as float32.
    * @param idx Array of indices [x, y, z]
-   * @return Point3D<float32> The cell center coordinates
+   * @return Vec3<float32> The cell center coordinates
    */
-  virtual Point3D<float32> getCoordsf(usize idx[3]) const = 0;
+  virtual Vec3<float32> getCoordsf(usize idx[3]) const = 0;
 
   /**
    * @brief Returns the cell center coordinates at the specified X, Y, Z indices as float32.
    * @param x The X index
    * @param y The Y index
    * @param z The Z index
-   * @return Point3D<float32> The cell center coordinates
+   * @return Vec3<float32> The cell center coordinates
    */
-  virtual Point3D<float32> getCoordsf(usize x, usize y, usize z) const = 0;
+  virtual Vec3<float32> getCoordsf(usize x, usize y, usize z) const = 0;
 
   /**
    * @brief Returns the cell center coordinates at the specified flat index as float32.
    * @param idx The flat index
-   * @return Point3D<float32> The cell center coordinates
+   * @return Vec3<float32> The cell center coordinates
    */
-  virtual Point3D<float32> getCoordsf(usize idx) const = 0;
+  virtual Vec3<float32> getCoordsf(usize idx) const = 0;
 
   /**
    * @brief Returns the cell center coordinates at the specified index array as float64.
    * @param idx Array of indices [x, y, z]
-   * @return Point3D<float64> The cell center coordinates
+   * @return Vec3<float64> The cell center coordinates
    */
-  virtual Point3D<float64> getCoords(usize idx[3]) const = 0;
+  virtual Vec3<float64> getCoords(usize idx[3]) const = 0;
 
   /**
    * @brief Returns the cell center coordinates at the specified X, Y, Z indices as float64.
    * @param x The X index
    * @param y The Y index
    * @param z The Z index
-   * @return Point3D<float64> The cell center coordinates
+   * @return Vec3<float64> The cell center coordinates
    */
-  virtual Point3D<float64> getCoords(usize x, usize y, usize z) const = 0;
+  virtual Vec3<float64> getCoords(usize x, usize y, usize z) const = 0;
 
   /**
    * @brief Returns the cell center coordinates at the specified flat index as float64.
    * @param idx The flat index
-   * @return Point3D<float64> The cell center coordinates
+   * @return Vec3<float64> The cell center coordinates
    */
-  virtual Point3D<float64> getCoords(usize idx) const = 0;
+  virtual Vec3<float64> getCoords(usize idx) const = 0;
 
   /**
    * @brief Returns the flat index for the cell containing the specified coordinates (float32).

@@ -154,7 +154,7 @@ struct SIMPLNX_EXPORT ImportHDF5DatasetFilterParameterConverter
   using ParameterType = ReadHDF5DatasetParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3);
+  static Result<ValueType> Convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3);
 };
 } // namespace SIMPLConversion
 } // namespace nx::core

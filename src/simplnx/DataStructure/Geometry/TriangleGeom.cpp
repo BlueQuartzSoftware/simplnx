@@ -216,12 +216,12 @@ Result<> TriangleGeom::findElementCentroids(bool recalculate)
   return {};
 }
 
-Point3D<float64> TriangleGeom::getParametricCenter() const
+Vec3<float64> TriangleGeom::getParametricCenter() const
 {
   return {1.0 / 3.0, 1.0 / 3.0, 0.0};
 }
 
-void TriangleGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>& pCoords, float64* shape) const
+void TriangleGeom::getShapeFunctions([[maybe_unused]] const Vec3<float64>& pCoords, float64* shape) const
 {
   // r derivatives
   shape[0] = -1.0;

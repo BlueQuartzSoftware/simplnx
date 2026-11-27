@@ -202,7 +202,7 @@ Result<Arguments> ResampleImageGeomFilter::FromSIMPLJson(const nlohmann::json& j
   bool renumberDisabled = false;
   if(json.contains(simpl::k_RenumberFeaturesKey))
   {
-    const auto renumber = SIMPLConversion::LinkedBooleanFilterParameterConverter::convert(json[simpl::k_RenumberFeaturesKey]);
+    const auto renumber = SIMPLConversion::LinkedBooleanFilterParameterConverter::Convert(json[simpl::k_RenumberFeaturesKey]);
     renumberDisabled = renumber.valid() && !renumber.value();
   }
   if(!renumberDisabled || json.contains(simpl::k_CellFeatureAttributeMatrixPathKey))

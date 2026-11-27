@@ -76,9 +76,9 @@ IFilter::PreflightResult GradientMagnitudeRecursiveGaussianImageFilter::prefligh
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   // requireScalar=true: the recursive Gaussian is defined on scalar images. The gradient-magnitude output is a FIXED
-  // float32 (matching the legacy ITK FilterOutputType), so AlwaysFloat32 maps every input type to a float32 output
+  // float32 (matching the legacy ITK FilterOutputType), so AlwaysFloat32Type maps every input type to a float32 output
   // array. AllNumeric admits ALL scalar types INCLUDING floating point (the legacy ScalarPixelIdTypeList).
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat32>(
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat32Type>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   if(resultOutputActions.invalid())
   {

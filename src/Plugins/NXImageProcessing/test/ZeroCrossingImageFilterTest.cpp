@@ -77,7 +77,7 @@ std::vector<T> MakeZeroCrossingField(usize dimX, usize dimY, usize dimZ)
 
 // -----------------------------------------------------------------------------
 // (1) Preflight guards: an unsigned input is rejected (SignedScalar); a multi-component input is rejected
-//     (requireScalar); a valid signed scalar input produces a FIXED uint8 output array (AlwaysUInt8).
+//     (requireScalar); a valid signed scalar input produces a FIXED uint8 output array (AlwaysUInt8Type).
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ZeroCrossingImageFilter: preflight guards", "[NXImageProcessing][ZeroCrossingImageFilter]")
 {
@@ -133,7 +133,7 @@ TEST_CASE("NXImageProcessing::ZeroCrossingImageFilter: preflight guards", "[NXIm
 
 // -----------------------------------------------------------------------------
 // ITK-sourced real-image golden -- duplicates ITKZeroCrossingImageTest.cpp on our ITK-free filter (2th_cthead1_distance
-// .nrrd input). The output is a fixed uint8 image (AlwaysUInt8). The durable golden is an md5 pin. The helper pins
+// .nrrd input). The output is a fixed uint8 image (AlwaysUInt8Type). The durable golden is an md5 pin. The helper pins
 // ForceInCore.
 //   defaults: the filter defaults (ForegroundValue 1, BackgroundValue 0). They agree with the ITK defaults.
 //   inverted: ForegroundValue = 0, BackgroundValue = 2.

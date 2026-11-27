@@ -90,7 +90,7 @@ Result<> DataObjectNameParameter::validateName(const std::string& value) const
 
 namespace SIMPLConversion
 {
-Result<LinkedPathCreationFilterParameterConverter::ValueType> LinkedPathCreationFilterParameterConverter::convert(const nlohmann::json& json)
+Result<LinkedPathCreationFilterParameterConverter::ValueType> LinkedPathCreationFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_string())
   {
@@ -102,7 +102,7 @@ Result<LinkedPathCreationFilterParameterConverter::ValueType> LinkedPathCreation
   return {std::move(value)};
 }
 
-Result<DataArrayCreationToDataObjectNameFilterParameterConverter::ValueType> DataArrayCreationToDataObjectNameFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataArrayCreationToDataObjectNameFilterParameterConverter::ValueType> DataArrayCreationToDataObjectNameFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   auto dataArrayNameResult = ReadDataArrayName(json, "DataArrayCreationFilterParameter");
   if(dataArrayNameResult.invalid())
@@ -113,7 +113,7 @@ Result<DataArrayCreationToDataObjectNameFilterParameterConverter::ValueType> Dat
   return {std::move(dataArrayNameResult.value())};
 }
 
-Result<DataContainerNameFilterParameterConverter::ValueType> DataContainerNameFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataContainerNameFilterParameterConverter::ValueType> DataContainerNameFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   // 6.5 compatibility
   if(json.is_string())
@@ -130,7 +130,7 @@ Result<DataContainerNameFilterParameterConverter::ValueType> DataContainerNameFi
   return {std::move(dataContainerNameResult.value())};
 }
 
-Result<AttributeMatrixNameFilterParameterConverter::ValueType> AttributeMatrixNameFilterParameterConverter::convert(const nlohmann::json& json)
+Result<AttributeMatrixNameFilterParameterConverter::ValueType> AttributeMatrixNameFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_string())
   {
@@ -142,7 +142,7 @@ Result<AttributeMatrixNameFilterParameterConverter::ValueType> AttributeMatrixNa
   return {attributeMatrixName};
 }
 
-Result<DataArrayNameFilterParameterConverter::ValueType> DataArrayNameFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataArrayNameFilterParameterConverter::ValueType> DataArrayNameFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_string())
   {

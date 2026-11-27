@@ -134,7 +134,7 @@ constexpr StringLiteral k_UnitsKey = "Units";
 constexpr StringLiteral k_SelectedAttributeMatrixKey = "SelectedAttributeMatrix";
 } // namespace
 
-Result<CalculatorFilterParameterConverter::ValueType> CalculatorFilterParameterConverter::convert(const nlohmann::json& json)
+Result<CalculatorFilterParameterConverter::ValueType> CalculatorFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.contains(k_InfixEquationKey))
   {

@@ -27,9 +27,9 @@ namespace
 {
 DataPath FaceDataPath = DataPath({Constants::k_TriangleDataContainerName, Constants::k_FaceData});
 DataPath FaceLabelsPath = FaceDataPath.createChildPath(Constants::k_FaceLabels);
-DataPath AvgQuatsPath = DataPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_AvgQuats});
-DataPath FeaturePhasesPath = DataPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_Phases});
-DataPath CrystalStructuresPath = DataPath({Constants::k_SmallIN100, Constants::k_Phase_Data, Constants::k_CrystalStructures});
+DataPath AvgQuatsPath = DataPath({Constants::k_SmallIN100, Constants::k_GrainDataWithSpaces, Constants::k_AvgQuats});
+DataPath FeaturePhasesPath = DataPath({Constants::k_SmallIN100, Constants::k_GrainDataWithSpaces, Constants::k_Phases});
+DataPath CrystalStructuresPath = DataPath({Constants::k_SmallIN100, Constants::k_PhaseData, Constants::k_CrystalStructures});
 
 const std::string k_F1s = "F1List_COMPUTED";
 const std::string k_F1spts = "F1sptList_COMPUTED";

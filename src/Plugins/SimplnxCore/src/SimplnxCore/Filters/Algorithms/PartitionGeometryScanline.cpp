@@ -149,7 +149,7 @@ Result<> PartitionGeometryScanline::partitionCellBasedGeometry(const IGridGeomet
     const usize count = std::min(k_ChunkTuples, numTuples - offset);
     for(usize chunkIndex = 0; chunkIndex < count; chunkIndex++)
     {
-      const Point3D<float64> coord = inputGeometry.getCoords(offset + chunkIndex);
+      const Vec3<float64> coord = inputGeometry.getCoords(offset + chunkIndex);
       const auto partitionIndexResult = psImageGeom.getIndex(coord[0], coord[1], coord[2]);
       partitionIdsBuffer[chunkIndex] = partitionIndexResult.has_value() ? static_cast<int32>(*partitionIndexResult) + m_InputValues->StartingFeatureID : outOfBoundsValue;
     }

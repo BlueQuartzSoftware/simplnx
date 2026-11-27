@@ -136,8 +136,8 @@ TEST_CASE("NXImageProcessing::ReadZeissTxmFileFilter:Read_Sub_Volume", "[NXImage
 
     UnitTest::CompareImageGeometry(dataStructure, DataPath({exemplaryGeomName}), DataPath({k_CreatedImageGeometryPath}));
 
-    auto exemplaryAttrMatrixPath = DataPath({exemplaryGeomName}).createChildPath(Constants::k_Cell_Data);
-    auto computedAttrMatrixPath = DataPath({k_CreatedImageGeometryPath}).createChildPath(Constants::k_Cell_Data);
+    auto exemplaryAttrMatrixPath = DataPath({exemplaryGeomName}).createChildPath(Constants::k_CellDataWithSpaces);
+    auto computedAttrMatrixPath = DataPath({k_CreatedImageGeometryPath}).createChildPath(Constants::k_CellDataWithSpaces);
     UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplaryAttrMatrixPath, dataStructure, computedAttrMatrixPath, true);
   }
 

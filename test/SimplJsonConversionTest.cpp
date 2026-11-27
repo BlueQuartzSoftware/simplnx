@@ -82,20 +82,20 @@ TEST_CASE("nx::core::SIMPL Json Conversion 64 Bit Integer Bounds", "[simplnx][Pa
 
   SECTION("IntFilterParameterConverter rejects a float64 that overflows the target type")
   {
-    Result<int64> int64Result = SIMPLConversion::IntFilterParameterConverter<int64>::convert(nlohmann::json(k_TwoToThe63));
+    Result<int64> int64Result = SIMPLConversion::IntFilterParameterConverter<int64>::Convert(nlohmann::json(k_TwoToThe63));
     SIMPLNX_RESULT_REQUIRE_INVALID(int64Result);
 
-    Result<uint64> uint64Result = SIMPLConversion::IntFilterParameterConverter<uint64>::convert(nlohmann::json(k_TwoToThe64));
+    Result<uint64> uint64Result = SIMPLConversion::IntFilterParameterConverter<uint64>::Convert(nlohmann::json(k_TwoToThe64));
     SIMPLNX_RESULT_REQUIRE_INVALID(uint64Result);
   }
 
   SECTION("IntFilterParameterConverter accepts a float64 at the edge of the target type")
   {
-    Result<int64> int64Result = SIMPLConversion::IntFilterParameterConverter<int64>::convert(nlohmann::json(k_LargestInt64Double));
+    Result<int64> int64Result = SIMPLConversion::IntFilterParameterConverter<int64>::Convert(nlohmann::json(k_LargestInt64Double));
     SIMPLNX_RESULT_REQUIRE_VALID(int64Result);
     REQUIRE(int64Result.value() == static_cast<int64>(k_LargestInt64Double));
 
-    Result<uint64> uint64Result = SIMPLConversion::IntFilterParameterConverter<uint64>::convert(nlohmann::json(k_LargestUInt64Double));
+    Result<uint64> uint64Result = SIMPLConversion::IntFilterParameterConverter<uint64>::Convert(nlohmann::json(k_LargestUInt64Double));
     SIMPLNX_RESULT_REQUIRE_VALID(uint64Result);
     REQUIRE(uint64Result.value() == static_cast<uint64>(k_LargestUInt64Double));
   }
@@ -103,18 +103,18 @@ TEST_CASE("nx::core::SIMPL Json Conversion 64 Bit Integer Bounds", "[simplnx][Pa
   SECTION("Vec3FilterParameterConverter rejects a float64 that overflows the target type")
   {
     nlohmann::json overflowJson = {{"x", 0.0}, {"y", 0.0}, {"z", k_TwoToThe63}};
-    Result<std::vector<int64>> int64Result = SIMPLConversion::Vec3FilterParameterConverter<int64>::convert(overflowJson);
+    Result<std::vector<int64>> int64Result = SIMPLConversion::Vec3FilterParameterConverter<int64>::Convert(overflowJson);
     SIMPLNX_RESULT_REQUIRE_INVALID(int64Result);
 
     nlohmann::json unsignedOverflowJson = {{"x", 0.0}, {"y", 0.0}, {"z", k_TwoToThe64}};
-    Result<std::vector<uint64>> uint64Result = SIMPLConversion::Vec3FilterParameterConverter<uint64>::convert(unsignedOverflowJson);
+    Result<std::vector<uint64>> uint64Result = SIMPLConversion::Vec3FilterParameterConverter<uint64>::Convert(unsignedOverflowJson);
     SIMPLNX_RESULT_REQUIRE_INVALID(uint64Result);
   }
 
   SECTION("Vec3FilterParameterConverter accepts a float64 at the edge of the target type")
   {
     nlohmann::json edgeJson = {{"x", 0.0}, {"y", 0.0}, {"z", k_LargestInt64Double}};
-    Result<std::vector<int64>> int64Result = SIMPLConversion::Vec3FilterParameterConverter<int64>::convert(edgeJson);
+    Result<std::vector<int64>> int64Result = SIMPLConversion::Vec3FilterParameterConverter<int64>::Convert(edgeJson);
     SIMPLNX_RESULT_REQUIRE_VALID(int64Result);
     REQUIRE(int64Result.value()[2] == static_cast<int64>(k_LargestInt64Double));
   }

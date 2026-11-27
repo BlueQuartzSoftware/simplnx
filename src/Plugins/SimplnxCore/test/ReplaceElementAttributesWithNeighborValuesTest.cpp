@@ -275,7 +275,7 @@ usize CountVoxelsAboveThreshold(const DataStructure& dataStructure, float32 thre
   return count;
 }
 
-const DataPath k_ConfidenceIndexPath = k_CellAttributeMatrix.createChildPath(Constants::k_Confidence_Index);
+const DataPath k_ConfidenceIndexPath = k_CellAttributeMatrix.createChildPath(Constants::k_ConfidenceIndexWithSpaces);
 const std::string k_ExemplarDataContainer2("DataContainer");
 
 const std::string k_SyntheticImageGeomName("Image3D");

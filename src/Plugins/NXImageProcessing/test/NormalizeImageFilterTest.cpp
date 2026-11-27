@@ -80,7 +80,7 @@ TEST_CASE("NXImageProcessing::NormalizeImage component contract", "[NXImageProce
 
 // -----------------------------------------------------------------------------
 // ITK-sourced real-image golden (plan Sec.3/Sec.6). Mirrors ITKNormalizeImageTest.cpp(defaults): read
-// Ramp-Up-Short.nrrd (int16) through OUR reader, run OUR NormalizeImageFilter (AlwaysFloat64 output, no params),
+// Ramp-Up-Short.nrrd (int16) through OUR reader, run OUR NormalizeImageFilter (AlwaysFloat64Type output, no params),
 // then compare our float64 output to ITK's committed baseline .nrrd (type: double, SAME reader) at the ITK test's
 // tolerance 0.0001 via ip_golden::CompareImages. The ITK `vector` case (VM1111Shrink-RGB.png) is SKIPPED as an
 // RGB/vector input (plan Sec.5; it is also disabled in the ITK source).

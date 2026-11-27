@@ -34,7 +34,7 @@ constexpr StringLiteral k_DataName = "data";
 constexpr StringLiteral k_VertexListName = "SharedVertexList";
 
 const DataPath k_VertexGeomPath({"VertexGeometry"});
-const DataPath k_MaskPath = k_VertexGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath(Constants::k_Mask);
+const DataPath k_MaskPath = k_VertexGeomPath.createChildPath(Constants::k_VertexDataWithSpaces).createChildPath(Constants::k_Mask);
 const DataPath k_ReducedGeomPath({"ReducedGeometry"});
 const DataPath k_ExemplarReducedGeomPath({"ExemplarReducedGeometry"});
 
@@ -240,7 +240,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: From Scratch", "[SimplnxCor
 
   for(size_t i = 0; i < reducedTupleCount; i++)
   {
-    Point3D<float> coord = reducedVertexGeomPtr->getVertexCoordinate(i);
+    Vec3<float> coord = reducedVertexGeomPtr->getVertexCoordinate(i);
     float compValue = static_cast<float>(i) + 25.0F;
     REQUIRE(((coord[0] == compValue) && (coord[1] == compValue) && (coord[2] == compValue)));
 
@@ -301,7 +301,7 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVerticesFilter: Test Algorithm", "[SimplnxC
 
   {
     DataPath generated = ::k_ReducedGeomPath.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(::k_CopyTestName);
-    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath(::k_CopyTestName);
+    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_VertexDataWithSpaces).createChildPath(::k_CopyTestName);
 
     UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
   }

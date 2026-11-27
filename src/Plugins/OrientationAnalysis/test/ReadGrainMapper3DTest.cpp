@@ -31,8 +31,8 @@ const std::string k_LabDCTGeometryName("LabDCT");
 const std::string k_AbsorptionCTGeometryName("AbsorptionCT");
 const std::string k_CellAttributeMatrixName("Cell Data");
 const std::string k_CellEnsembleAttributeMatrixName("Cell Ensemble Data");
-const std::array<std::string, 3> k_IpfDatasetNames = {GrainMapper3DUtilities::Constants::k_IPF001Name, GrainMapper3DUtilities::Constants::k_IPF010Name,
-                                                      GrainMapper3DUtilities::Constants::k_IPF100Name};
+const std::array<std::string, 3> k_IpfDatasetNames = {GrainMapper3DUtilities::constants::k_IPF001Name, GrainMapper3DUtilities::constants::k_IPF010Name,
+                                                      GrainMapper3DUtilities::constants::k_IPF100Name};
 
 enum class IpfStorage
 {
@@ -347,15 +347,15 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Default_Parameters", "[Orienta
     args.insertOrAssign(ReadGrainMapper3DFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputGM3DFilePath)));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ReadLabDCT_Key, std::make_any<bool>(true));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_CreatedDCTImageGeometryPath_Key, std::make_any<DataPath>(computedDCTGeometryPath));
-    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Data));
-    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Ensemble_Data));
+    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellDataWithSpaces));
+    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_CellEnsembleDataWithSpaces));
 
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ConvertPhaseToInt32_Key, std::make_any<bool>(true));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ConvertOrientationData_Key, std::make_any<bool>(true));
 
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ReadAbsorptionCT_Key, std::make_any<bool>(true));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_CreatedAbsorptionGeometryPath_Key, std::make_any<DataPath>(computedAbsorptionCTGeometryPath));
-    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellAbsorptionAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Data));
+    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellAbsorptionAttributeMatrixName_Key, std::make_any<std::string>(k_CellDataWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     auto assertionResult2 = preflightResult.outputActions;
@@ -373,11 +373,11 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Default_Parameters", "[Orienta
   UnitTest::CompareImageGeometry(dataStructure, exemplarDCTGeometryPath, computedDCTGeometryPath);
   UnitTest::CompareImageGeometry(dataStructure, exemplarAbsorptionCTGeometryPath, computedAbsorptionCTGeometryPath);
 
-  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_Cell_Data), dataStructure, computedDCTGeometryPath.createChildPath(k_Cell_Data));
-  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAbsorptionCTGeometryPath.createChildPath(k_Cell_Data), dataStructure,
-                                                     computedAbsorptionCTGeometryPath.createChildPath(k_Cell_Data));
-  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_Cell_Ensemble_Data), dataStructure,
-                                                     computedDCTGeometryPath.createChildPath(k_Cell_Ensemble_Data));
+  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_CellDataWithSpaces), dataStructure, computedDCTGeometryPath.createChildPath(k_CellDataWithSpaces));
+  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAbsorptionCTGeometryPath.createChildPath(k_CellDataWithSpaces), dataStructure,
+                                                     computedAbsorptionCTGeometryPath.createChildPath(k_CellDataWithSpaces));
+  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_CellEnsembleDataWithSpaces), dataStructure,
+                                                     computedDCTGeometryPath.createChildPath(k_CellEnsembleDataWithSpaces));
 
   // The exemplar predates UniversalHermannMauguin and cannot validate that
   // array. Compare parsed values with known phase metadata. Index zero is the
@@ -386,7 +386,7 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Default_Parameters", "[Orienta
     const std::vector<std::string> expectedHermannMauguin = {
         "Invalid Phase",    "F d -3 m :2 (a-1/8,b-1/8,c-1/8)", "F d -3 m :2 (a-1/8,b-1/8,c-1/8)", "P 63/m m c", "P 42/m n m", "R -3 c :H (-y+z,x+z,-x+y+z)", "P 32 2 1", "P b c n", "C 1 2/m 1",
         "P -1 (a+b,a-b,-c)"};
-    const DataPath hermannMauguinPath = computedDCTGeometryPath.createChildPath(k_Cell_Ensemble_Data).createChildPath("UniversalHermannMauguin");
+    const DataPath hermannMauguinPath = computedDCTGeometryPath.createChildPath(k_CellEnsembleDataWithSpaces).createChildPath("UniversalHermannMauguin");
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<StringArray>(hermannMauguinPath));
     const auto& hermannMauguinArray = dataStructure.getDataRefAs<StringArray>(hermannMauguinPath);
     REQUIRE(hermannMauguinArray.getNumberOfTuples() == expectedHermannMauguin.size());
@@ -423,15 +423,15 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:NonCompatible_Parameters", "[O
     args.insertOrAssign(ReadGrainMapper3DFilter::k_InputFile_Key, std::make_any<FileSystemPathParameter::ValueType>(fs::path(inputGM3DFilePath)));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ReadLabDCT_Key, std::make_any<bool>(true));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_CreatedDCTImageGeometryPath_Key, std::make_any<DataPath>(computedDCTGeometryPath));
-    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Data));
-    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Ensemble_Data));
+    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellDataWithSpaces));
+    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_CellEnsembleDataWithSpaces));
 
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ConvertPhaseToInt32_Key, std::make_any<bool>(false));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ConvertOrientationData_Key, std::make_any<bool>(false));
 
     args.insertOrAssign(ReadGrainMapper3DFilter::k_ReadAbsorptionCT_Key, std::make_any<bool>(true));
     args.insertOrAssign(ReadGrainMapper3DFilter::k_CreatedAbsorptionGeometryPath_Key, std::make_any<DataPath>(computedAbsorptionCTGeometryPath));
-    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellAbsorptionAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Data));
+    args.insertOrAssign(ReadGrainMapper3DFilter::k_CellAbsorptionAttributeMatrixName_Key, std::make_any<std::string>(k_CellDataWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     auto assertionResult4 = preflightResult.outputActions;
@@ -448,11 +448,11 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:NonCompatible_Parameters", "[O
   UnitTest::CompareImageGeometry(dataStructure, exemplarDCTGeometryPath, computedDCTGeometryPath);
   UnitTest::CompareImageGeometry(dataStructure, exemplarAbsorptionCTGeometryPath, computedAbsorptionCTGeometryPath);
 
-  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_Cell_Data), dataStructure, computedDCTGeometryPath.createChildPath(k_Cell_Data));
-  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAbsorptionCTGeometryPath.createChildPath(k_Cell_Data), dataStructure,
-                                                     computedAbsorptionCTGeometryPath.createChildPath(k_Cell_Data));
-  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_Cell_Ensemble_Data), dataStructure,
-                                                     computedDCTGeometryPath.createChildPath(k_Cell_Ensemble_Data));
+  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_CellDataWithSpaces), dataStructure, computedDCTGeometryPath.createChildPath(k_CellDataWithSpaces));
+  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAbsorptionCTGeometryPath.createChildPath(k_CellDataWithSpaces), dataStructure,
+                                                     computedAbsorptionCTGeometryPath.createChildPath(k_CellDataWithSpaces));
+  UnitTest::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_CellEnsembleDataWithSpaces), dataStructure,
+                                                     computedDCTGeometryPath.createChildPath(k_CellEnsembleDataWithSpaces));
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

@@ -65,7 +65,7 @@ void CompareResults() // compare hash of both file strings
 }
 
 const DataPath k_VertexGeom = DataPath({"LAMMPS Geometry"});
-const DataPath k_AtomLabelsGeom = k_VertexGeom.createChildPath(Constants::k_Vertex_Data).createChildPath("AtomFeature");
+const DataPath k_AtomLabelsGeom = k_VertexGeom.createChildPath(Constants::k_VertexDataWithSpaces).createChildPath("AtomFeature");
 } // namespace
 
 TEST_CASE("SimplnxCore::WriteLAMMPSFileFilter: Valid Filter Execution", "[SimplnxCore][WriteLAMMPSFileFilter]")
@@ -105,7 +105,7 @@ TEST_CASE("SimplnxCore::WriteLAMMPSFileFilter: Eight Vertices", "[SimplnxCore][W
   UnitTest::LoadPlugins();
 
   DataStructure dataStructure;
-  CreateVertexGeometryAction createGeometry(k_VertexGeom, 8, Constants::k_Vertex_Data, VertexGeom::k_SharedVertexListName);
+  CreateVertexGeometryAction createGeometry(k_VertexGeom, 8, Constants::k_VertexDataWithSpaces, VertexGeom::k_SharedVertexListName);
   auto geometryResult = createGeometry.apply(dataStructure, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(geometryResult);
   CreateArrayAction createLabels(DataType::int32, {8}, {1}, k_AtomLabelsGeom);

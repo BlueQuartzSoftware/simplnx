@@ -205,7 +205,7 @@ MeshingUtilities::SortedVerticesList MeshingUtilities::OrderSharedVertices(const
 {
   const BoundingBox3Df& bounds = geom.getBoundingBox();
 
-  const Point3Df diff = bounds.sideLengths();
+  const FloatVec3 diff = bounds.sideLengths();
 
   // Inverse of to_underlying
   const AxialAlignment axis = static_cast<AxialAlignment>(std::distance(diff.begin(), std::max_element(diff.begin(), diff.end())));

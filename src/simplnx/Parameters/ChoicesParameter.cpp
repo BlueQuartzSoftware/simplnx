@@ -119,12 +119,12 @@ bool ChoicesParameter::checkActive(const std::any& parameterValue, const std::an
 
 namespace SIMPLConversion
 {
-Result<LinkedChoicesFilterParameterConverter::ValueType> LinkedChoicesFilterParameterConverter::convert(const nlohmann::json& json)
+Result<LinkedChoicesFilterParameterConverter::ValueType> LinkedChoicesFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   return ConvertChoicesParameter(json, "LinkedChoicesFilterParameter");
 }
 
-Result<ChoiceFilterParameterConverter::ValueType> ChoiceFilterParameterConverter::convert(const nlohmann::json& json)
+Result<ChoiceFilterParameterConverter::ValueType> ChoiceFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   return ConvertChoicesParameter(json, "ChoiceFilterParameter");
 }

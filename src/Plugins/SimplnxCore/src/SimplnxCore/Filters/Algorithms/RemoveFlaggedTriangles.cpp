@@ -160,7 +160,7 @@ Result<> RemoveFlaggedTriangles::operator()()
   }
 
   // load reduced Geometry Vertex list according to used vertices
-  Point3Df coords = {0.0f, 0.0f, 0.0f};
+  FloatVec3 coords = {0.0f, 0.0f, 0.0f};
   for(usize i = 0; i < size; i++)
   {
     coords = originalTriangle.getVertexCoordinate(vertexListIndices[i]);

@@ -113,7 +113,7 @@ struct SIMPLNX_EXPORT DataContainerCreationFilterParameterConverter
   using ParameterType = DataGroupCreationParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT StringToDataPathFilterParameterConverter
@@ -121,7 +121,7 @@ struct SIMPLNX_EXPORT StringToDataPathFilterParameterConverter
   using ParameterType = DataGroupCreationParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT StringsToDataPathFilterParameterConverter
@@ -129,7 +129,7 @@ struct SIMPLNX_EXPORT StringsToDataPathFilterParameterConverter
   using ParameterType = DataGroupCreationParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2);
+  static Result<ValueType> Convert(const nlohmann::json& json1, const nlohmann::json& json2);
 };
 
 struct SIMPLNX_EXPORT AMPathBuilderFilterParameterConverter
@@ -137,7 +137,7 @@ struct SIMPLNX_EXPORT AMPathBuilderFilterParameterConverter
   using ParameterType = DataGroupCreationParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2);
+  static Result<ValueType> Convert(const nlohmann::json& json1, const nlohmann::json& json2);
 };
 
 struct SIMPLNX_EXPORT DAPathBuilderFilterParameterConverter
@@ -145,7 +145,7 @@ struct SIMPLNX_EXPORT DAPathBuilderFilterParameterConverter
   using ParameterType = DataGroupCreationParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3);
+  static Result<ValueType> Convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3);
 };
 
 struct SIMPLNX_EXPORT DCPathBuilderFilterParameterConverter
@@ -153,7 +153,7 @@ struct SIMPLNX_EXPORT DCPathBuilderFilterParameterConverter
   using ParameterType = DataGroupCreationParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT AttributeMatrixCreationFilterParameterConverter
@@ -161,7 +161,7 @@ struct SIMPLNX_EXPORT AttributeMatrixCreationFilterParameterConverter
   using ParameterType = DataGroupCreationParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 } // namespace SIMPLConversion
 } // namespace nx::core

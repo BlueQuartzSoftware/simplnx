@@ -67,7 +67,7 @@ Parameters SurfaceNetsFilter::parameters() const
                                                    "wall as normal. 'Background-Backed Walls Only' omits wall faces where the wall borders the "
                                                    "background (Feature Id 0); faces where the wall caps a real Feature ARE still generated, so "
                                                    "Features flush with the box stay closed.",
-                                                   BoundingBoxSkinMode::k_Off, ChoicesParameter::Choices{"Off", "Background-Backed Walls Only"}));
+                                                   bounding_box_skin_mode::k_Off, ChoicesParameter::Choices{"Off", "Background-Backed Walls Only"}));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ApplySmoothing_Key, "Apply smoothing operations", "Use the built in smoothing operation.", false));
   params.insert(std::make_unique<Int32Parameter>(k_SmoothingIterations_Key, "Relaxation Iterations", "Number of relaxation iterations to perform. More iterations causes more smoothing.", 20));

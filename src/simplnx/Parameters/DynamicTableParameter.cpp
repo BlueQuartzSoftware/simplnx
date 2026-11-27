@@ -92,7 +92,7 @@ namespace
 constexpr StringLiteral k_TableDataKey = "Table Data";
 } // namespace
 
-Result<DynamicTableFilterParameterConverter::ValueType> DynamicTableFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DynamicTableFilterParameterConverter::ValueType> DynamicTableFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.contains(k_TableDataKey))
   {
@@ -138,7 +138,7 @@ Result<DynamicTableFilterParameterConverter::ValueType> DynamicTableFilterParame
   return {std::move(table)};
 }
 
-Result<ArrayToDynamicTableFilterParameterConverter::ValueType> ArrayToDynamicTableFilterParameterConverter::convert(const nlohmann::json& json)
+Result<ArrayToDynamicTableFilterParameterConverter::ValueType> ArrayToDynamicTableFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   const auto& tableDataJson = json;
   if(!tableDataJson.is_array())

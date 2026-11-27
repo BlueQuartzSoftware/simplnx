@@ -55,7 +55,7 @@ Result<std::vector<FijiTile>> ParseTileConfiguration(const std::filesystem::path
     {
       continue;
     }
-    std::vector<std::string> tokens = StringUtilities::split(line, ';');
+    std::vector<std::string> tokens = StringUtilities::Split(line, ';');
     if(tokens.size() != 3)
     {
       continue; // malformed line (token count != 3): silently skipped, matching legacy leniency
@@ -64,7 +64,7 @@ Result<std::vector<FijiTile>> ParseTileConfiguration(const std::filesystem::path
     std::string coords = StringUtilities::trimmed(tokens[2]);
     coords = StringUtilities::replace(coords, "(", "");
     coords = StringUtilities::replace(coords, ")", "");
-    std::vector<std::string> coordTokens = StringUtilities::split(coords, ',');
+    std::vector<std::string> coordTokens = StringUtilities::Split(coords, ',');
     if(coordTokens.size() != 2)
     {
       continue; // only 2D configs are supported

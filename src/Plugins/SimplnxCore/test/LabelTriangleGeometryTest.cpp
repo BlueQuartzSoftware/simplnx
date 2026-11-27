@@ -36,7 +36,7 @@ constexpr StringLiteral k_NumTrianglesName = "NumTriangles";
 constexpr StringLiteral k_RegionIdsName = "Region Ids";
 
 const DataPath k_TriangleGeomPath({"TriangleGeometry"});
-const DataPath k_CreatedRegionIdsPath = k_TriangleGeomPath.createChildPath(Constants::k_Face_Data).createChildPath(k_RegionIdsName);
+const DataPath k_CreatedRegionIdsPath = k_TriangleGeomPath.createChildPath(Constants::k_FaceDataWithSpaces).createChildPath(k_RegionIdsName);
 const DataPath k_CellFeatureAMPath = k_TriangleGeomPath.createChildPath(k_CreatedAMName);
 const DataPath k_NumTrianglesPath = k_CellFeatureAMPath.createChildPath(k_NumTrianglesName);
 } // namespace
@@ -78,7 +78,7 @@ TEST_CASE("SimplnxCore::LabelTriangleGeometryFilter: Valid Filter Execution", "[
   DataStructure exemplarDataStructure = UnitTest::LoadDataStructure(KExemplarDataFilePath);
 
   UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, ::k_CellFeatureAMPath, ::k_TriangleGeomPath.toString());
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, ::k_TriangleGeomPath.createChildPath(Constants::k_Face_Data), ::k_TriangleGeomPath.toString());
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, ::k_TriangleGeomPath.createChildPath(Constants::k_FaceDataWithSpaces), ::k_TriangleGeomPath.toString());
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

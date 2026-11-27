@@ -1533,19 +1533,6 @@ using IntVec6 = Vec6<int32>;
 using FloatVec7 = Vec7<float32>;
 using IntVec7 = Vec7<int32>;
 
-// type aliasing to protect deprecated API
-template <typename T>
-using Point3D = Vec3<T>;
-
-using Point3Df = Vec3<float32>;
-using Point3Dd = Vec3<float64>;
-
-template <typename T>
-using Point2D = Vec2<T>;
-
-using Point2Df = Vec2<float32>;
-using Point2Dd = Vec2<float64>;
-
 // type aliasing from Vec3<T> to Matrix3x1 so that existing code keeps working
 template <typename T>
 using Matrix3X1 = Vec3<T>;

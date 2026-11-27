@@ -61,7 +61,7 @@ public:
       {
         break;
       }
-      std::array<Point3Df, 3> vertCoords;
+      std::array<FloatVec3, 3> vertCoords;
       m_TriangleGeom->getFaceCoordinates(triangleIndex, vertCoords);
 
       for(usize i = 0; i < 3; i++)
@@ -259,12 +259,12 @@ Result<> CalculateDihedralAnglesInBlocks(const TriangleGeom& triangleGeom, Float
       nx::core::Vec3<float64> vecBC = {0.0f, 0.0f, 0.0f};
       for(usize triangleIndex = 0; triangleIndex < count; triangleIndex++)
       {
-        std::array<Point3Df, 3> vertCoords;
+        std::array<FloatVec3, 3> vertCoords;
         for(usize vertex = 0; vertex < 3; ++vertex)
         {
           const usize offset = cacheVertices ? triangleBuffer[(triangleIndex * 3) + vertex] * 3 : (triangleIndex * 9) + (vertex * 3);
           const auto& coordinates = cacheVertices ? vertices : gathered;
-          vertCoords.at(vertex) = Point3Df{coordinates[offset], coordinates[offset + 1], coordinates[offset + 2]};
+          vertCoords.at(vertex) = FloatVec3{coordinates[offset], coordinates[offset + 1], coordinates[offset + 2]};
         }
         // Keep float coordinate subtraction and the exact in-core operation order.
         for(usize i = 0; i < 3; i++)

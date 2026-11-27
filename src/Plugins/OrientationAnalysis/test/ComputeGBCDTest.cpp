@@ -68,8 +68,8 @@ GbcdBoundaryFixture CreateGbcdBoundaryFixture(const usize faceCount, const std::
   GbcdBoundaryFixture fixture;
   fixture.triangle_geometry_path = DataPath({"GBCD Triangle Geometry"});
   const DataPath faceDataPath = fixture.triangle_geometry_path.createChildPath(Constants::k_FaceData);
-  const DataPath featureDataPath = fixture.triangle_geometry_path.createChildPath(Constants::k_Grain_Data);
-  const DataPath phaseDataPath = fixture.triangle_geometry_path.createChildPath(Constants::k_Phase_Data);
+  const DataPath featureDataPath = fixture.triangle_geometry_path.createChildPath(Constants::k_GrainDataWithSpaces);
+  const DataPath phaseDataPath = fixture.triangle_geometry_path.createChildPath(Constants::k_PhaseData);
   fixture.face_labels_path = faceDataPath.createChildPath(Constants::k_FaceLabels);
   fixture.face_normals_path = faceDataPath.createChildPath(Constants::k_FaceNormals);
   fixture.face_areas_path = faceDataPath.createChildPath(Constants::k_FaceAreas);
@@ -220,11 +220,11 @@ TEST_CASE("OrientationAnalysis::ComputeGBCD", "[OrientationAnalysis][ComputeGBCD
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   DataPath smallIn100Group({nx::core::Constants::k_SmallIN100});
-  DataPath featureDataPath = smallIn100Group.createChildPath(Constants::k_Grain_Data);
+  DataPath featureDataPath = smallIn100Group.createChildPath(Constants::k_GrainDataWithSpaces);
   DataPath avgEulerAnglesPath = featureDataPath.createChildPath(Constants::k_AvgEulerAngles);
   DataPath featurePhasesPath = featureDataPath.createChildPath(Constants::k_Phases);
 
-  DataPath ensembleDataPath = smallIn100Group.createChildPath(Constants::k_Phase_Data);
+  DataPath ensembleDataPath = smallIn100Group.createChildPath(Constants::k_PhaseData);
   DataPath crystalStructurePath = ensembleDataPath.createChildPath(Constants::k_CrystalStructures);
 
   DataPath triangleDataContainerPath({Constants::k_TriangleDataContainerName});
@@ -363,10 +363,10 @@ TEST_CASE("OrientationAnalysis::ComputeGBCDFilter: Phase and Laue Index Bounds",
   const fs::path inputFile = fs::path(unit_test::k_TestFilesDir.view()) / "6_6_Small_IN100_GBCD" / "6_6_Small_IN100_GBCD.dream3d";
   DataStructure dataStructure = UnitTest::LoadDataStructure(inputFile);
 
-  const DataPath featureDataPath = DataPath({Constants::k_SmallIN100}).createChildPath(Constants::k_Grain_Data);
+  const DataPath featureDataPath = DataPath({Constants::k_SmallIN100}).createChildPath(Constants::k_GrainDataWithSpaces);
   const DataPath avgEulerAnglesPath = featureDataPath.createChildPath(Constants::k_AvgEulerAngles);
   const DataPath featurePhasesPath = featureDataPath.createChildPath(Constants::k_Phases);
-  const DataPath crystalStructuresPath = DataPath({Constants::k_SmallIN100}).createChildPath(Constants::k_Phase_Data).createChildPath(Constants::k_CrystalStructures);
+  const DataPath crystalStructuresPath = DataPath({Constants::k_SmallIN100}).createChildPath(Constants::k_PhaseData).createChildPath(Constants::k_CrystalStructures);
   const DataPath triangleGeometryPath({Constants::k_TriangleDataContainerName});
   const DataPath faceDataPath = triangleGeometryPath.createChildPath(Constants::k_FaceData);
 

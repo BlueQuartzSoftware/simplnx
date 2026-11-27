@@ -108,7 +108,7 @@ struct SIMPLNX_EXPORT DynamicTableFilterParameterConverter
   using ParameterType = DynamicTableParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT ArrayToDynamicTableFilterParameterConverter
@@ -116,7 +116,7 @@ struct SIMPLNX_EXPORT ArrayToDynamicTableFilterParameterConverter
   using ParameterType = DynamicTableParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 } // namespace SIMPLConversion
 } // namespace nx::core

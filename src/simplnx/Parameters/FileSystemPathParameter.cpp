@@ -308,7 +308,7 @@ Result<> FileSystemPathParameter::validatePath(const ValueType& path) const
 
 namespace SIMPLConversion
 {
-Result<InputFileFilterParameterConverter::ValueType> InputFileFilterParameterConverter::convert(const nlohmann::json& json)
+Result<InputFileFilterParameterConverter::ValueType> InputFileFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   auto filePathReult = ReadInputFilePath(json, "InputFileFilterParameter");
   if(filePathReult.invalid())
@@ -319,7 +319,7 @@ Result<InputFileFilterParameterConverter::ValueType> InputFileFilterParameterCon
   return {filePathReult.value()};
 }
 
-Result<OutputFileFilterParameterConverter::ValueType> OutputFileFilterParameterConverter::convert(const nlohmann::json& json)
+Result<OutputFileFilterParameterConverter::ValueType> OutputFileFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   auto filePathReult = ReadInputFilePath(json, "OutputFileFilterParameter");
   if(filePathReult.invalid())

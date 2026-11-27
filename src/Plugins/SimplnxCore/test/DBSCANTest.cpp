@@ -54,17 +54,17 @@ const std::string k_VariedArrayName = "varied";
 const DataPath k_VariedArrayPath = DataPath({k_VariedArrayName});
 
 const DataPath k_AnisoGeomPath = DataPath({"AnisoGeometry"});
-const DataPath k_AnsioClusterArrayPath = k_AnisoGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath("Aniso Cluster Ids");
+const DataPath k_AnsioClusterArrayPath = k_AnisoGeomPath.createChildPath(Constants::k_VertexDataWithSpaces).createChildPath("Aniso Cluster Ids");
 const DataPath k_BlobsGeomPath = DataPath({"BlobsGeometry"});
-const DataPath k_BlobsClusterArrayPath = k_BlobsGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath("Blobs Cluster Ids");
+const DataPath k_BlobsClusterArrayPath = k_BlobsGeomPath.createChildPath(Constants::k_VertexDataWithSpaces).createChildPath("Blobs Cluster Ids");
 const DataPath k_CirclesGeomPath = DataPath({"CirclesGeometry"});
-const DataPath k_CirclesClusterArrayPath = k_CirclesGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath("Circles Cluster Ids");
+const DataPath k_CirclesClusterArrayPath = k_CirclesGeomPath.createChildPath(Constants::k_VertexDataWithSpaces).createChildPath("Circles Cluster Ids");
 const DataPath k_MoonsGeomPath = DataPath({"MoonsGeometry"});
-const DataPath k_MoonsClusterArrayPath = k_MoonsGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath("Moons Cluster Ids");
+const DataPath k_MoonsClusterArrayPath = k_MoonsGeomPath.createChildPath(Constants::k_VertexDataWithSpaces).createChildPath("Moons Cluster Ids");
 const DataPath k_NoStructureGeomPath = DataPath({"NoStructureGeometry"});
-const DataPath k_NoStructureClusterArrayPath = k_NoStructureGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath("No Structure Cluster Ids");
+const DataPath k_NoStructureClusterArrayPath = k_NoStructureGeomPath.createChildPath(Constants::k_VertexDataWithSpaces).createChildPath("No Structure Cluster Ids");
 const DataPath k_VariedGeomPath = DataPath({"VariedGeometry"});
-const DataPath k_VariedClusterArrayPath = k_VariedGeomPath.createChildPath(Constants::k_Vertex_Data).createChildPath("Varied Cluster Ids");
+const DataPath k_VariedClusterArrayPath = k_VariedGeomPath.createChildPath(Constants::k_VertexDataWithSpaces).createChildPath("Varied Cluster Ids");
 
 const std::string k_IdsPostFix = " Ids";
 const std::string k_AMPostFix = " AM";

@@ -116,7 +116,7 @@ struct SIMPLNX_EXPORT LinkedChoicesFilterParameterConverter
   using ParameterType = ChoicesParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT ChoiceFilterParameterConverter
@@ -124,7 +124,7 @@ struct SIMPLNX_EXPORT ChoiceFilterParameterConverter
   using ParameterType = ChoicesParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 } // namespace SIMPLConversion
 } // namespace nx::core

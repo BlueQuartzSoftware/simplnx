@@ -296,7 +296,7 @@ Result<> ExtractVertexGeometry::operator()()
       {
         if(flagBuffer[i])
         {
-          const Point3D<float32> coords = inputGeometry.getCoordsf(chunkStart + i);
+          const Vec3<float32> coords = inputGeometry.getCoordsf(chunkStart + i);
           verticesDataStore.setTuple(vertIdx, coords.toArray());
           vertIdx++;
         }
@@ -307,7 +307,7 @@ Result<> ExtractVertexGeometry::operator()()
   {
     for(usize idx = 0; idx < totalCells; idx++)
     {
-      const Point3D<float32> coords = inputGeometry.getCoordsf(idx);
+      const Vec3<float32> coords = inputGeometry.getCoordsf(idx);
       verticesDataStore.setTuple(idx, coords.toArray());
     }
   }

@@ -9,7 +9,7 @@ namespace
 {
 // -----------------------------------------------------------------------------
 // Shared body for the two ITK-sourced real-image md5 golden cases below. Mirrors ITKBinaryThresholdImageTest.cpp:
-// read RA-Short.nrrd (int16) through OUR ITK-free reader, run OUR BinaryThresholdImageFilter (AlwaysUInt8 output)
+// read RA-Short.nrrd (int16) through OUR ITK-free reader, run OUR BinaryThresholdImageFilter (AlwaysUInt8Type output)
 // with the ITK case's params, then compare the output md5 with ITK's committed hash (plan Sec.4).
 // -----------------------------------------------------------------------------
 void RunBinaryThresholdItkGolden(const std::function<void(Arguments&)>& setParams, const std::string& committedMd5)

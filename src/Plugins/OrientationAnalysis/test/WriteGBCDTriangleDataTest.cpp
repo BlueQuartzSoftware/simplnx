@@ -86,7 +86,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Valid filter execut
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   DataPath smallIn100Group({Constants::k_SmallIN100});
-  DataPath featureDataPath = smallIn100Group.createChildPath(Constants::k_Grain_Data);
+  DataPath featureDataPath = smallIn100Group.createChildPath(Constants::k_GrainDataWithSpaces);
   DataPath avgEulerAnglesPath = featureDataPath.createChildPath(Constants::k_AvgEulerAngles);
   DataPath triangleDataContainerPath({Constants::k_TriangleDataContainerName});
   DataPath faceDataGroup = triangleDataContainerPath.createChildPath(Constants::k_FaceData);
@@ -231,7 +231,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Cancellation before
 
   const fs::path sourcePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
   const DataPath smallIn100Group({Constants::k_SmallIN100});
-  const DataPath featureEulerAnglesPath = smallIn100Group.createChildPath(Constants::k_Grain_Data).createChildPath(Constants::k_AvgEulerAngles);
+  const DataPath featureEulerAnglesPath = smallIn100Group.createChildPath(Constants::k_GrainDataWithSpaces).createChildPath(Constants::k_AvgEulerAngles);
   const DataPath faceDataPath = DataPath({Constants::k_TriangleDataContainerName}).createChildPath(Constants::k_FaceData);
   const DataPath faceLabelsPath = faceDataPath.createChildPath(Constants::k_FaceLabels);
   const DataPath faceNormalsPath = faceDataPath.createChildPath(Constants::k_FaceNormals);
@@ -314,7 +314,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: InValid filter exec
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
 
   DataPath smallIn100Group({Constants::k_SmallIN100});
-  DataPath featureDataPath = smallIn100Group.createChildPath(Constants::k_Grain_Data);
+  DataPath featureDataPath = smallIn100Group.createChildPath(Constants::k_GrainDataWithSpaces);
   DataPath avgEulerAnglesPath = featureDataPath.createChildPath(Constants::k_AvgEulerAngles);
   DataPath triangleDataContainerPath({Constants::k_TriangleDataContainerName});
   DataPath faceDataGroup = triangleDataContainerPath.createChildPath(Constants::k_FaceData);

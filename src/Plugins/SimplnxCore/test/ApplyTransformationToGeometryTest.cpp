@@ -295,8 +295,8 @@ static void CompareImageGeometries(const DataStructure& dataStructure, const Ima
   const auto& calculatedAM = calculatedGeom.getCellDataRef();
   REQUIRE(exemplaryAM.getShape() == calculatedAM.getShape());
 
-  const DataPath exemplarPath({exemplaryGeom.getName(), k_Cell_Data, exemplaryDataName});
-  const DataPath calculatedPath({calculatedGeom.getName(), k_Cell_Data, "Data"});
+  const DataPath exemplarPath({exemplaryGeom.getName(), k_CellDataWithSpaces, exemplaryDataName});
+  const DataPath calculatedPath({calculatedGeom.getName(), k_CellDataWithSpaces, "Data"});
   const auto& exemplarData = dataStructure.getDataRefAs<IDataArray>(exemplarPath);
   const auto& calculatedData = dataStructure.getDataRefAs<IDataArray>(calculatedPath);
   UnitTest::CompareDataArrays<int32>(exemplarData, calculatedData);
@@ -787,7 +787,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Translation_Image", 
   DYNAMIC_SECTION(fmt::format("Geometry Name = {}, Interpolation Type = {}, Translate To Global Origin = {}", exemplaryGeomName, interpolationTypeStr, translateGeomToGlobalOrigin))
   {
     const DataPath inputGeometryPath({apply_transformation_to_geometry::k_InputGeometryName});
-    const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_Cell_Data);
+    const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_CellDataWithSpaces);
 
     {
       const ApplyTransformationToGeometryFilter filter;
@@ -835,7 +835,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Rotation_Image", "[S
   auto baseDataFilePath = fs::path(fmt::format("{}/apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath inputGeometryPath({apply_transformation_to_geometry::k_InputGeometryName});
-  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_Cell_Data);
+  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_CellDataWithSpaces);
 
   VectorFloat32Parameter::ValueType rotation45X = {1.0F, 0.0F, 0.0F, 45.0F};
   VectorFloat32Parameter::ValueType rotation45Y = {0.0F, 1.0F, 0.0F, 45.0F};
@@ -938,7 +938,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Scale_Image", "[Simp
   auto baseDataFilePath = fs::path(fmt::format("{}/apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath inputGeometryPath({apply_transformation_to_geometry::k_InputGeometryName});
-  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_Cell_Data);
+  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_CellDataWithSpaces);
 
   auto [translateGeomToGlobalOrigin, exemplaryGeomName, interpolationIdx] =
       GENERATE_REF(std::make_tuple(false, apply_transformation_to_geometry::k_ScaleGeometryName, apply_transformation_to_geometry::k_LinearInterpolationIdx),
@@ -1009,7 +1009,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Manual_Image", "[Sim
   auto baseDataFilePath = fs::path(fmt::format("{}/apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath inputGeometryPath({apply_transformation_to_geometry::k_InputGeometryName});
-  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_Cell_Data);
+  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_CellDataWithSpaces);
 
   auto [translateGeomToGlobalOrigin, exemplaryGeomName, interpolationIdx] =
       GENERATE_REF(std::make_tuple(false, apply_transformation_to_geometry::k_ManualGeometryName, apply_transformation_to_geometry::k_LinearInterpolationIdx),
@@ -1078,13 +1078,13 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter: Uneven scaling keep
 
   DataStructure dataStructure;
   const DataPath inputGeometryPath({"Input"});
-  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_Cell_Data);
+  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_CellDataWithSpaces);
   auto* imagePtr = ImageGeom::Create(dataStructure, "Input");
   REQUIRE(imagePtr != nullptr);
   imagePtr->setDimensions({2, 2, 2});
   REQUIRE(imagePtr->setSpacing({2.0F, 3.0F, 5.0F}).valid());
   REQUIRE(imagePtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
-  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_Cell_Data, {2, 2, 2}, imagePtr->getId());
+  auto* cellAmPtr = AttributeMatrix::Create(dataStructure, k_CellDataWithSpaces, {2, 2, 2}, imagePtr->getId());
   REQUIRE(cellAmPtr != nullptr);
   imagePtr->setCellData(*cellAmPtr);
   auto* valuesPtr = Int32Array::CreateWithStore<Int32DataStore>(dataStructure, "Data", {2, 2, 2}, {1}, cellAmPtr->getId());
@@ -1138,7 +1138,7 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometryFilter:Precomputed_Image", 
   auto baseDataFilePath = fs::path(fmt::format("{}/apply_transformation_to_geometry.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath inputGeometryPath({apply_transformation_to_geometry::k_InputGeometryName});
-  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_Cell_Data);
+  const DataPath inputCellAMPath = inputGeometryPath.createChildPath(k_CellDataWithSpaces);
 
   auto [translateGeomToGlobalOrigin, exemplaryGeomName, interpolationIdx] =
       GENERATE_REF(std::make_tuple(false, apply_transformation_to_geometry::k_PrecomputedGeometryName, apply_transformation_to_geometry::k_LinearInterpolationIdx),

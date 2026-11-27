@@ -245,12 +245,12 @@ void RunM3C(bool repairWinding, [[maybe_unused]] const std::string& outputName)
     args.insertOrAssign(M3CSurfaceMeshingFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
     args.insertOrAssign(M3CSurfaceMeshingFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
     args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-    args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+    args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
     UnitTest::RequireAutomaticCreateArrayActions(preflightResult.outputActions, 2 + selectedCellArrayPaths.size() + selectedFeatureArrayPaths.size());
-    std::vector<DataPath> expectedArrayPaths = {vertexGroupDataPath.createChildPath(k_NodeTypeArrayName), faceGroupDataPath.createChildPath(k_Face_Labels)};
+    std::vector<DataPath> expectedArrayPaths = {vertexGroupDataPath.createChildPath(k_NodeTypeArrayName), faceGroupDataPath.createChildPath(k_FaceLabelsWithSpaces)};
     for(const auto& path : selectedCellArrayPaths)
     {
       expectedArrayPaths.push_back(faceGroupDataPath.createChildPath(path.getTargetName()));
@@ -280,7 +280,7 @@ void RunM3C(bool repairWinding, [[maybe_unused]] const std::string& outputName)
   REQUIRE(numVertices > 0);
 
   // FaceLabels and NodeTypes must use the triangle and vertex tuple counts.
-  const auto& faceLabels = dataStructure.getDataRefAs<Int32Array>(faceGroupDataPath.createChildPath(k_Face_Labels));
+  const auto& faceLabels = dataStructure.getDataRefAs<Int32Array>(faceGroupDataPath.createChildPath(k_FaceLabelsWithSpaces));
   const auto& nodeTypes = dataStructure.getDataRefAs<Int8Array>(vertexGroupDataPath.createChildPath(k_NodeTypeArrayName));
   REQUIRE(faceLabels.getNumberOfTuples() == numTriangles);
   REQUIRE(faceLabels.getNumberOfComponents() == 2);
@@ -387,7 +387,7 @@ void RunM3COnToy(usize xDim, usize yDim, usize zDim, LabelFuncT&& labeler, [[may
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -422,7 +422,7 @@ void RunM3COnToy(usize xDim, usize yDim, usize zDim, LabelFuncT&& labeler, [[may
     }
   }
 
-  CheckMeshIntegrity(dataStructure, computedTriangleGeomPath, computedTriangleGeomPath.createChildPath(k_FaceDataGroupName).createChildPath(k_Face_Labels),
+  CheckMeshIntegrity(dataStructure, computedTriangleGeomPath, computedTriangleGeomPath.createChildPath(k_FaceDataGroupName).createChildPath(k_FaceLabelsWithSpaces),
                      computedTriangleGeomPath.createChildPath(k_VertexDataGroupName).createChildPath(k_NodeTypeArrayName));
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
@@ -479,7 +479,7 @@ const DataPath k_ParityMeshPath({"Parity Mesh"});
 const DataPath k_ParityFacesPath = k_ParityMeshPath.createChildPath(TriangleGeom::k_SharedFacesListName);
 const DataPath k_ParityVerticesPath = k_ParityMeshPath.createChildPath(TriangleGeom::k_SharedVertexListName);
 const DataPath k_ParityNodeTypesPath = k_ParityMeshPath.createChildPath(k_VertexDataGroupName).createChildPath(k_NodeTypeArrayName);
-const DataPath k_ParityFaceLabelsPath = k_ParityMeshPath.createChildPath(k_FaceDataGroupName).createChildPath(k_Face_Labels);
+const DataPath k_ParityFaceLabelsPath = k_ParityMeshPath.createChildPath(k_FaceDataGroupName).createChildPath(k_FaceLabelsWithSpaces);
 const DataPath k_ParityCellOutputPath = k_ParityMeshPath.createChildPath(k_FaceDataGroupName).createChildPath("CellVectors");
 const DataPath k_ParityFeatureOutputPath = k_ParityMeshPath.createChildPath(k_FaceDataGroupName).createChildPath("FeatureValues");
 
@@ -567,7 +567,7 @@ Arguments CreateM3CParityArguments()
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
   return args;
 }
 
@@ -644,7 +644,7 @@ void RunM3COnSmallIn100(DataStructure& dataStructure)
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -786,7 +786,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Small IN100 structural validati
   DataStructure dataStructure = LoadSmallIn100Input();
   RunM3COnSmallIn100(dataStructure);
 
-  const DataPath faceLabelsPath = k_ExemplarMeshPath.createChildPath(k_FaceDataGroupName).createChildPath(k_Face_Labels);
+  const DataPath faceLabelsPath = k_ExemplarMeshPath.createChildPath(k_FaceDataGroupName).createChildPath(k_FaceLabelsWithSpaces);
   const DataPath nodeTypesPath = k_ExemplarMeshPath.createChildPath(k_VertexDataGroupName).createChildPath(k_NodeTypeArrayName);
 
   // Validated against first-principles invariants rather than a stored golden mesh.
@@ -844,14 +844,14 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Mesh lies within the source vol
     args.insertOrAssign(M3CSurfaceMeshingFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
     args.insertOrAssign(M3CSurfaceMeshingFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
     args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-    args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+    args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
     auto executeResult = ExecuteDispatchedFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-    const DataPath faceLabelsPath = k_ExemplarMeshPath.createChildPath(k_FaceDataGroupName).createChildPath(k_Face_Labels);
+    const DataPath faceLabelsPath = k_ExemplarMeshPath.createChildPath(k_FaceDataGroupName).createChildPath(k_FaceLabelsWithSpaces);
     const DataPath nodeTypesPath = k_ExemplarMeshPath.createChildPath(k_VertexDataGroupName).createChildPath(k_NodeTypeArrayName);
 
     CheckMeshIntegrity(dataStructure, k_ExemplarMeshPath, faceLabelsPath, nodeTypesPath);
@@ -922,14 +922,14 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Single feature meshes exactly t
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
   auto executeResult = ExecuteDispatchedFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 
-  const DataPath faceLabelsPath = k_ExemplarMeshPath.createChildPath(k_FaceDataGroupName).createChildPath(k_Face_Labels);
+  const DataPath faceLabelsPath = k_ExemplarMeshPath.createChildPath(k_FaceDataGroupName).createChildPath(k_FaceLabelsWithSpaces);
   const auto& tri = dataStructure.getDataRefAs<TriangleGeom>(k_ExemplarMeshPath);
   const auto& vertStore = tri.getVertices()->getDataStoreRef();
   const auto& faceLabelStore = dataStructure.getDataRefAs<Int32Array>(faceLabelsPath).getDataStoreRef();
@@ -1090,7 +1090,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Bounding Box Skin agrees across
   UnitTest::CompareArrays<IGeometry::MeshIndexType>(wholeVolumeGeom.getFaces(), serialWindowedGeom.getFaces());
 
   // RunM3COmitSkinOnPath (via SurfaceMeshingTest::RunMesher) creates "FaceLabels" and "NodeTypes" --
-  // NOT the nx::core::UnitTest::k_Face_Labels ("Face Labels") / k_NodeTypeArrayName ("Node Type")
+  // NOT the nx::core::UnitTest::k_FaceLabelsWithSpaces ("Face Labels") / k_NodeTypeArrayName ("Node Type")
   // constants used elsewhere in this file for the SIMPL-compatibility/exemplar tests.
   const DataPath faceLabelsPath = wholeVolumeResult.FaceLabelsPath;
   const DataPath nodeTypesPath = k_SweepPathTriGeomPath.createChildPath("Vertex Data").createChildPath("NodeTypes");
@@ -1113,7 +1113,7 @@ namespace
 const DataPath k_SharpEdgesTriGeomPath({"M3CSharpEdgesMesh"});
 const DataPath k_SharpEdgesImageGeomPath({"ImageGeometry"});
 const DataPath k_SharpEdgesFeatureIdsPath({"ImageGeometry", "Cell Data", "FeatureIds"});
-const DataPath k_SharpEdgesFaceLabelsPath = k_SharpEdgesTriGeomPath.createChildPath(k_FaceDataGroupName).createChildPath(k_Face_Labels);
+const DataPath k_SharpEdgesFaceLabelsPath = k_SharpEdgesTriGeomPath.createChildPath(k_FaceDataGroupName).createChildPath(k_FaceLabelsWithSpaces);
 const DataPath k_SharpEdgesNodeTypesPath = k_SharpEdgesTriGeomPath.createChildPath(k_VertexDataGroupName).createChildPath(k_NodeTypeArrayName);
 
 // Builds an in-memory ImageGeom + FeatureIds volume from a labeling functor. Unlike RunM3COnToy this takes
@@ -1161,7 +1161,7 @@ void RunM3CSharpEdges(DataStructure& dataStructure, bool sharpEdges)
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
   args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+  args.insertOrAssign(M3CSurfaceMeshingFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
   auto preflightResult = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
@@ -1387,7 +1387,7 @@ TEST_CASE("SimplnxCore::M3CSurfaceMeshingFilter: Sharp bounding box edges on Sma
   DataStructure dataStructure = LoadSmallIn100Input();
   RunM3COnSmallIn100(dataStructure);
 
-  const DataPath faceLabelsPath = k_ExemplarMeshPath.createChildPath(k_FaceDataGroupName).createChildPath(k_Face_Labels);
+  const DataPath faceLabelsPath = k_ExemplarMeshPath.createChildPath(k_FaceDataGroupName).createChildPath(k_FaceLabelsWithSpaces);
   const DataPath imageGeomPath({k_DataContainer});
   const usize numBridging = CountWallBridgingTriangles(dataStructure, k_ExemplarMeshPath, faceLabelsPath, imageGeomPath);
   INFO(numBridging << " exterior triangles still bridge two bounding planes");

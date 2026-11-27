@@ -67,7 +67,7 @@ Parameters M3CSurfaceMeshingFilter::parameters() const
                                                    "wall as normal. 'Background-Backed Walls Only' omits wall faces where the wall borders the "
                                                    "background (Feature Id 0); faces where the wall caps a real Feature ARE still generated, so "
                                                    "Features flush with the box stay closed.",
-                                                   BoundingBoxSkinMode::k_Off, ChoicesParameter::Choices{"Off", "Background-Backed Walls Only"}));
+                                                   bounding_box_skin_mode::k_Off, ChoicesParameter::Choices{"Off", "Background-Backed Walls Only"}));
   params.insert(std::make_unique<BoolParameter>(k_SharpBoundingBoxEdges_Key, "Sharp Bounding Box Edges",
                                                 "M3C places mesh vertices on cell edges, so on its own it bevels the edges and corners of the bounding box by half a cell (a 45 "
                                                 "degree chamfer). If true, the wall vertices along each box edge are moved onto the edge and merged, and the chamfer "

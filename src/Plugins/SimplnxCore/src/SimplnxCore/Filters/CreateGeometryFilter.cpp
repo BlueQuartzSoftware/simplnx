@@ -391,7 +391,7 @@ Result<Arguments> CreateGeometryFilter::FromSIMPLJson(const nlohmann::json& json
 
   // This section is done this way so that we can get access to the geometry
   // type and convert other parameters based on the geometry type
-  auto result = SIMPLConversion::ChoiceFilterParameterConverter::convert(json[simpl::k_GeometryTypeKey]);
+  auto result = SIMPLConversion::ChoiceFilterParameterConverter::Convert(json[simpl::k_GeometryTypeKey]);
   if(result.valid())
   {
     auto geometryType = static_cast<IGeometry::Type>(result.value());

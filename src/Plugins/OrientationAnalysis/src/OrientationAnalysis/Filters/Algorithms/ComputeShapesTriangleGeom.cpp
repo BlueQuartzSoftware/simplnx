@@ -144,13 +144,13 @@ namespace
  * @param triangleList Provides triangle vertex indices.
  * @return The three face coordinates.
  */
-inline std::array<nx::core::Point3Df, 3> GetFaceCoordinates(usize triangleId, const VertsStoreType& verts, const TriStoreType& triangleList)
+inline std::array<nx::core::FloatVec3, 3> GetFaceCoordinates(usize triangleId, const VertsStoreType& verts, const TriStoreType& triangleList)
 {
   const usize v0Idx = triangleList[triangleId * 3];
   const usize v1Idx = triangleList[(triangleId * 3) + 1];
   const usize v2Idx = triangleList[(triangleId * 3) + 2];
-  return {Point3Df{verts[v0Idx * 3], verts[(v0Idx * 3) + 1], verts[(v0Idx * 3) + 2]}, Point3Df{verts[v1Idx * 3], verts[(v1Idx * 3) + 1], verts[(v1Idx * 3) + 2]},
-          Point3Df{verts[v2Idx * 3], verts[(v2Idx * 3) + 1], verts[(v2Idx * 3) + 2]}};
+  return {FloatVec3{verts[v0Idx * 3], verts[(v0Idx * 3) + 1], verts[(v0Idx * 3) + 2]}, FloatVec3{verts[v1Idx * 3], verts[(v1Idx * 3) + 1], verts[(v1Idx * 3) + 2]},
+          FloatVec3{verts[v2Idx * 3], verts[(v2Idx * 3) + 1], verts[(v2Idx * 3) + 2]}};
 }
 
 /**
@@ -263,7 +263,7 @@ public:
     const VertsStoreType& verts = m_TriangleGeom.getVerticesRef().getDataStoreRef();
 
     Matrix3x3Type cinertia;
-    nx::core::Point3Df centroid = {0.0F, 0.0F, 0.0F};
+    nx::core::FloatVec3 centroid = {0.0F, 0.0F, 0.0F};
 
     // Theoretical perfect Sphere value of Omega-3. Each calculated Omega-3
     // will be normalized using this value;
@@ -315,11 +315,11 @@ public:
       for(const usize i : featureFaces)
       {
         const usize compIndex = (m_FaceLabels[2 * i] == featureId ? 0 : 1);
-        std::array<nx::core::Point3Df, 3> vertCoords = GetFaceCoordinates(i, verts, triangleList);
+        std::array<nx::core::FloatVec3, 3> vertCoords = GetFaceCoordinates(i, verts, triangleList);
 
-        const nx::core::Point3Df& aVert = vertCoords[0] - centroid;
-        const nx::core::Point3Df& bVert = (compIndex == 0 ? vertCoords[1] : vertCoords[2]) - centroid;
-        const nx::core::Point3Df& cVert = (compIndex == 0 ? vertCoords[2] : vertCoords[1]) - centroid;
+        const nx::core::FloatVec3& aVert = vertCoords[0] - centroid;
+        const nx::core::FloatVec3& bVert = (compIndex == 0 ? vertCoords[1] : vertCoords[2]) - centroid;
+        const nx::core::FloatVec3& cVert = (compIndex == 0 ? vertCoords[2] : vertCoords[1]) - centroid;
 
         Matrix3x3Type aMat;
         aMat << aVert[0], bVert[0], cVert[0], aVert[1], bVert[1], cVert[1], aVert[2], bVert[2], cVert[2];

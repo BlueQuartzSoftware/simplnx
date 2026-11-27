@@ -68,7 +68,7 @@ static void TestGeom2D(INodeGeometry2D* geom)
   SECTION("abstract geometry 2D")
   {
     const usize vertId = 2;
-    const Point3D<float32> coord = {0.5f, 0.0f, 2.0f};
+    const Vec3<float32> coord = {0.5f, 0.0f, 2.0f};
 
     // Vertices
     {
@@ -96,7 +96,7 @@ static void TestGeom2D(INodeGeometry2D* geom)
       std::array<usize, 2> verts = {vertId, vertId + 1};
       geom->setEdgePointIds(edgeId, verts);
 
-      std::array<Point3Df, 2> edgeVerts;
+      std::array<FloatVec3, 2> edgeVerts;
       std::array<usize, 2> vertsOut = {0, 0};
       geom->getEdgePointIds(edgeId, vertsOut);
       for(usize i = 0; i < 2; i++)
@@ -118,7 +118,7 @@ static void TestGeom3D(INodeGeometry3D* geom)
   SECTION("abstract geometry 3D")
   {
     const usize vertId = 2;
-    const Point3D<float32> coord = {0.5f, 0.0f, 2.0f};
+    const Vec3<float32> coord = {0.5f, 0.0f, 2.0f};
 
     // vertices
     {
@@ -149,7 +149,7 @@ static void TestGeom3D(INodeGeometry3D* geom)
       {
         REQUIRE(verts[i] == vertsOut[i]);
       }
-      std::array<Point3Df, 2> edgeVerts;
+      std::array<FloatVec3, 2> edgeVerts;
 
       geom->getEdgeCoordinates(edgeId, edgeVerts);
       REQUIRE(edgeVerts[0] == coord);
@@ -191,7 +191,7 @@ static void TestGeomGrid(IGridGeometry* geom)
  * @param expectedMax Expected maximum point.
  */
 template <typename T>
-static void CheckBoundingBox(const BoundingBox3D<T>& bbox, const Point3D<T>& expectedMin, const Point3D<T>& expectedMax)
+static void CheckBoundingBox(const BoundingBox3D<T>& bbox, const Vec3<T>& expectedMin, const Vec3<T>& expectedMax)
 {
   REQUIRE(bbox.isValid());
   REQUIRE(bbox.getMinPoint()[0] == Approx(expectedMin[0]));
@@ -218,28 +218,28 @@ static void TestNodeGeometryBoundingBox()
   // Negative coordinates require the upper corner to start below every input value.
   {
     REQUIRE(geomPtr->resizeVertexList(4).valid());
-    geomPtr->setVertexCoordinate(0, Point3Df{-3.0f, -4.0f, -5.0f});
-    geomPtr->setVertexCoordinate(1, Point3Df{-1.0f, -8.0f, -2.0f});
-    geomPtr->setVertexCoordinate(2, Point3Df{-6.0f, -2.0f, -9.0f});
-    geomPtr->setVertexCoordinate(3, Point3Df{-4.0f, -5.0f, -7.0f});
-    CheckBoundingBox<float32>(geomPtr->getBoundingBox(), Point3Df{-6.0f, -8.0f, -9.0f}, Point3Df{-1.0f, -2.0f, -2.0f});
+    geomPtr->setVertexCoordinate(0, FloatVec3{-3.0f, -4.0f, -5.0f});
+    geomPtr->setVertexCoordinate(1, FloatVec3{-1.0f, -8.0f, -2.0f});
+    geomPtr->setVertexCoordinate(2, FloatVec3{-6.0f, -2.0f, -9.0f});
+    geomPtr->setVertexCoordinate(3, FloatVec3{-4.0f, -5.0f, -7.0f});
+    CheckBoundingBox<float32>(geomPtr->getBoundingBox(), FloatVec3{-6.0f, -8.0f, -9.0f}, FloatVec3{-1.0f, -2.0f, -2.0f});
   }
 
   // Mixed-sign coordinates include zero on every axis.
   {
     REQUIRE(geomPtr->resizeVertexList(3).valid());
-    geomPtr->setVertexCoordinate(0, Point3Df{-2.0f, 3.0f, -4.0f});
-    geomPtr->setVertexCoordinate(1, Point3Df{5.0f, -6.0f, 1.0f});
-    geomPtr->setVertexCoordinate(2, Point3Df{0.0f, 0.0f, 0.0f});
-    CheckBoundingBox<float32>(geomPtr->getBoundingBox(), Point3Df{-2.0f, -6.0f, -4.0f}, Point3Df{5.0f, 3.0f, 1.0f});
+    geomPtr->setVertexCoordinate(0, FloatVec3{-2.0f, 3.0f, -4.0f});
+    geomPtr->setVertexCoordinate(1, FloatVec3{5.0f, -6.0f, 1.0f});
+    geomPtr->setVertexCoordinate(2, FloatVec3{0.0f, 0.0f, 0.0f});
+    CheckBoundingBox<float32>(geomPtr->getBoundingBox(), FloatVec3{-2.0f, -6.0f, -4.0f}, FloatVec3{5.0f, 3.0f, 1.0f});
   }
 
   // Positive coordinates verify the common case remains correct.
   {
     REQUIRE(geomPtr->resizeVertexList(2).valid());
-    geomPtr->setVertexCoordinate(0, Point3Df{2.0f, 4.0f, 6.0f});
-    geomPtr->setVertexCoordinate(1, Point3Df{8.0f, 1.0f, 3.0f});
-    CheckBoundingBox<float32>(geomPtr->getBoundingBox(), Point3Df{2.0f, 1.0f, 3.0f}, Point3Df{8.0f, 4.0f, 6.0f});
+    geomPtr->setVertexCoordinate(0, FloatVec3{2.0f, 4.0f, 6.0f});
+    geomPtr->setVertexCoordinate(1, FloatVec3{8.0f, 1.0f, 3.0f});
+    CheckBoundingBox<float32>(geomPtr->getBoundingBox(), FloatVec3{2.0f, 1.0f, 3.0f}, FloatVec3{8.0f, 4.0f, 6.0f});
   }
 }
 
@@ -1091,6 +1091,6 @@ TEST_CASE("ImageGeom getBoundingBox handles a negative origin")
   //   x: -3 + 4 * 0.5  = -1
   //   y: -10 + 5 * 2.0 =  0
   //   z: -1 + 6 * 1.5  =  8
-  CheckBoundingBox<float64>(geomPtr->getBoundingBox(), Point3Dd{-3.0, -10.0, -1.0}, Point3Dd{-1.0, 0.0, 8.0});
-  CheckBoundingBox<float32>(geomPtr->getBoundingBoxf(), Point3Df{-3.0f, -10.0f, -1.0f}, Point3Df{-1.0f, 0.0f, 8.0f});
+  CheckBoundingBox<float64>(geomPtr->getBoundingBox(), Float64Vec3{-3.0, -10.0, -1.0}, Float64Vec3{-1.0, 0.0, 8.0});
+  CheckBoundingBox<float32>(geomPtr->getBoundingBoxf(), FloatVec3{-3.0f, -10.0f, -1.0f}, FloatVec3{-1.0f, 0.0f, 8.0f});
 }

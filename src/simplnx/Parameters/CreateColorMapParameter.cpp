@@ -80,7 +80,7 @@ constexpr StringLiteral k_PresetNameKey = "Name";
 constexpr StringLiteral k_RGBPointsKey = "RGBPoints";
 } // namespace
 
-Result<CreateColorMapFilterParameterConverter::ValueType> CreateColorMapFilterParameterConverter::convert(const nlohmann::json& json1, const nlohmann::json& json2)
+Result<CreateColorMapFilterParameterConverter::ValueType> CreateColorMapFilterParameterConverter::Convert(const nlohmann::json& json1, const nlohmann::json& json2)
 {
   if(!json1.is_string())
   {

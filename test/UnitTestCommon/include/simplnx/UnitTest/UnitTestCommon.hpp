@@ -127,23 +127,22 @@ namespace Constants
 {
 inline constexpr StringLiteral k_DataContainer("DataContainer");
 inline constexpr StringLiteral k_CellData("CellData");
-inline constexpr StringLiteral k_Cell_Data("Cell Data");
+inline constexpr StringLiteral k_CellDataWithSpaces("Cell Data");
 inline constexpr StringLiteral k_GrainData("GrainData");
-inline constexpr StringLiteral k_Grain_Data("Grain Data");
+inline constexpr StringLiteral k_GrainDataWithSpaces("Grain Data");
 inline constexpr StringLiteral k_FeatureData("FeatureData");
 inline constexpr StringLiteral k_CellFeatureData("CellFeatureData");
 inline constexpr StringLiteral k_CellEnsembleData("CellEnsembleData");
-inline constexpr StringLiteral k_Cell_Ensemble_Data("Cell Ensemble Data");
-inline constexpr StringLiteral k_Phase_Data("Phase Data");
+inline constexpr StringLiteral k_CellEnsembleDataWithSpaces("Cell Ensemble Data");
 
 inline constexpr StringLiteral k_TriangleDataContainerName("TriangleDataContainer");
 inline constexpr StringLiteral k_VertexDataContainerName("VertexDataContainer");
 inline constexpr StringLiteral k_PointCloudContainerName("Point Cloud");
 inline constexpr StringLiteral k_FaceData("FaceData");
-inline constexpr StringLiteral k_Face_Data("Face Data");
+inline constexpr StringLiteral k_FaceDataWithSpaces("Face Data");
 inline constexpr StringLiteral k_FaceFeatureData("FaceFeatureData");
 inline constexpr StringLiteral k_VertexData("VertexData");
-inline constexpr StringLiteral k_Vertex_Data("Vertex Data");
+inline constexpr StringLiteral k_VertexDataWithSpaces("Vertex Data");
 inline constexpr StringLiteral k_Edge_Data("Edge Data");
 inline constexpr StringLiteral k_GBCD_Name("GBCD");
 
@@ -159,7 +158,7 @@ inline constexpr StringLiteral k_SmallIN100("Small IN100");
 inline constexpr StringLiteral k_EbsdScanData("EBSD Scan Data");
 inline constexpr StringLiteral k_ImageGeometry("Image Geometry");
 inline constexpr StringLiteral k_VertexGeometry("Vertex Geometry");
-inline constexpr StringLiteral k_Confidence_Index("Confidence Index");
+inline constexpr StringLiteral k_ConfidenceIndexWithSpaces("Confidence Index");
 inline constexpr StringLiteral k_ConfidenceIndex("ConfidenceIndex");
 inline constexpr StringLiteral k_CalculatedShifts("Calculated Shifts");
 inline constexpr StringLiteral k_FaceLabels("FaceLabels");
@@ -184,7 +183,7 @@ inline constexpr StringLiteral k_Omega2("Omega2");
 inline constexpr StringLiteral k_CentralMoments("CentralMoments");
 
 inline constexpr StringLiteral k_FeatureIds("FeatureIds");
-inline constexpr StringLiteral k_Image_Quality("Image Quality");
+inline constexpr StringLiteral k_ImageQualityWithSpaces("Image Quality");
 inline constexpr StringLiteral k_ImageQuality("ImageQuality");
 inline constexpr StringLiteral k_Phases("Phases");
 inline constexpr StringLiteral k_Ipf_Colors("IPF Colors");
@@ -197,7 +196,7 @@ inline constexpr StringLiteral k_TriangleGeometryName("[Triangle Geometry]");
 inline constexpr StringLiteral k_VertexDataGroupName("Vertex Data");
 inline constexpr StringLiteral k_NodeTypeArrayName("Node Type");
 inline constexpr StringLiteral k_FaceDataGroupName("Face Data");
-inline constexpr StringLiteral k_Face_Labels("Face Labels");
+inline constexpr StringLiteral k_FaceLabelsWithSpaces("Face Labels");
 inline constexpr StringLiteral k_NormalsLabels("Normals");
 inline constexpr StringLiteral k_TriangleAreas("Triangle Areas");
 inline constexpr StringLiteral k_VoxelIndices = "VoxelIndices";
@@ -252,8 +251,8 @@ inline const DataPath k_EulersArrayPath = k_CellAttributeMatrix.createChildPath(
 inline const DataPath k_QuatsArrayPath = k_CellAttributeMatrix.createChildPath(k_Quats);
 inline const DataPath k_PhasesArrayPath = k_CellAttributeMatrix.createChildPath(k_Phases);
 inline const DataPath k_FeatureIdsArrayPath = k_CellAttributeMatrix.createChildPath(k_FeatureIds);
-inline const DataPath k_ConfidenceIndexArrayPath = k_CellAttributeMatrix.createChildPath(k_Confidence_Index);
-inline const DataPath k_ImageQualityArrayPath = k_CellAttributeMatrix.createChildPath(k_Image_Quality);
+inline const DataPath k_ConfidenceIndexArrayPath = k_CellAttributeMatrix.createChildPath(k_ConfidenceIndexWithSpaces);
+inline const DataPath k_ImageQualityArrayPath = k_CellAttributeMatrix.createChildPath(k_ImageQualityWithSpaces);
 inline const DataPath k_MaskArrayPath = k_CellAttributeMatrix.createChildPath(k_Mask);
 inline const DataPath k_FitArrayPath = k_CellAttributeMatrix.createChildPath(k_Fit);
 inline const DataPath k_SEMSignalArrayPath = k_CellAttributeMatrix.createChildPath(k_SEMSignal);
@@ -261,7 +260,7 @@ inline const DataPath k_SEMSignalArrayPath = k_CellAttributeMatrix.createChildPa
 inline const DataPath k_CellEnsembleAttributeMatrixPath = k_DataContainerPath.createChildPath(k_EnsembleAttributeMatrix);
 inline const DataPath k_CrystalStructuresArrayPath = k_CellEnsembleAttributeMatrixPath.createChildPath(k_CrystalStructures);
 
-inline const DataPath k_CellFeatureAttributeMatrix = k_DataContainerPath.createChildPath(k_Grain_Data);
+inline const DataPath k_CellFeatureAttributeMatrix = k_DataContainerPath.createChildPath(k_GrainDataWithSpaces);
 inline const DataPath k_NumCellsPath = k_CellFeatureAttributeMatrix.createChildPath(k_NumElements);
 inline const DataPath k_FeaturePhasesPath = k_CellFeatureAttributeMatrix.createChildPath(k_Phases);
 

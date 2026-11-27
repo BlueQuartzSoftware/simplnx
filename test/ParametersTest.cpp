@@ -29,7 +29,7 @@ constexpr StringLiteral k_BizParamKey = "BizParam";
 template <typename T>
 void RequireLegacyFloatRoundTrip(T expected)
 {
-  const auto result = SIMPLConversion::NumberToStringFilterParameterConverter<T>::convert(nlohmann::json(expected));
+  const auto result = SIMPLConversion::NumberToStringFilterParameterConverter<T>::Convert(nlohmann::json(expected));
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   CAPTURE(expected, result.value());
 
@@ -51,7 +51,7 @@ void RequireLegacyFloatRoundTrip(T expected)
 template <typename T>
 void RequireLegacyIntegerText(T value, const std::string& expected)
 {
-  const auto result = SIMPLConversion::NumberToStringFilterParameterConverter<T>::convert(nlohmann::json(value));
+  const auto result = SIMPLConversion::NumberToStringFilterParameterConverter<T>::Convert(nlohmann::json(value));
   SIMPLNX_RESULT_REQUIRE_VALID(result);
   CHECK((result.value() == expected));
 }
@@ -119,7 +119,7 @@ TEST_CASE("simplnx::StringParameter: Legacy numeric conversion preserves precisi
     for(const auto& json : std::array<nlohmann::json, 5>{nlohmann::json("1e-7"), nlohmann::json(true), nlohmann::json(nullptr), nlohmann::json::array(), nlohmann::json::object()})
     {
       CAPTURE(json.dump());
-      const auto result = SIMPLConversion::DoubleToStringFilterParameterConverter::convert(json);
+      const auto result = SIMPLConversion::DoubleToStringFilterParameterConverter::Convert(json);
       SIMPLNX_RESULT_REQUIRE_INVALID(result);
       REQUIRE((result.errors().size() == 1));
       CHECK((result.errors().front().code == -1));

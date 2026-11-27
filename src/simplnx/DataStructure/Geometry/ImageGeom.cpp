@@ -215,12 +215,12 @@ Result<> ImageGeom::findElementSizes(bool recalculate)
   return {};
 }
 
-Point3D<float64> ImageGeom::getParametricCenter() const
+Vec3<float64> ImageGeom::getParametricCenter() const
 {
   return {0.5, 0.5, 0.5};
 }
 
-void ImageGeom::getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const
+void ImageGeom::getShapeFunctions(const Vec3<float64>& pCoords, float64* shape) const
 {
   float64 rm = 0.0;
   float64 sm = 0.0;
@@ -304,124 +304,124 @@ usize ImageGeom::getNumZCells() const
   return m_Dimensions.getZ();
 }
 
-Point3D<float32> ImageGeom::getPlaneCoordsf(usize idx[3]) const
+Vec3<float32> ImageGeom::getPlaneCoordsf(usize idx[3]) const
 {
-  Point3D<float32> coords;
+  Vec3<float32> coords;
   coords[0] = idx[0] * m_Spacing[0] + m_Origin[0];
   coords[1] = idx[1] * m_Spacing[1] + m_Origin[1];
   coords[2] = idx[2] * m_Spacing[2] + m_Origin[2];
   return coords;
 }
 
-Point3D<float32> ImageGeom::getPlaneCoordsf(usize x, usize y, usize z) const
+Vec3<float32> ImageGeom::getPlaneCoordsf(usize x, usize y, usize z) const
 {
-  Point3D<float32> coords;
+  Vec3<float32> coords;
   coords[0] = x * m_Spacing[0] + m_Origin[0];
   coords[1] = y * m_Spacing[1] + m_Origin[1];
   coords[2] = z * m_Spacing[2] + m_Origin[2];
   return coords;
 }
 
-Point3D<float32> ImageGeom::getPlaneCoordsf(usize idx) const
+Vec3<float32> ImageGeom::getPlaneCoordsf(usize idx) const
 {
   usize column = idx % m_Dimensions[0];
   usize row = (idx / m_Dimensions[0]) % m_Dimensions[1];
   usize plane = idx / (m_Dimensions[0] * m_Dimensions[1]);
 
-  Point3D<float32> coords;
+  Vec3<float32> coords;
   coords[0] = column * m_Spacing[0] + m_Origin[0];
   coords[1] = row * m_Spacing[1] + m_Origin[1];
   coords[2] = plane * m_Spacing[2] + m_Origin[2];
   return coords;
 }
 
-Point3D<float64> ImageGeom::getPlaneCoords(usize idx[3]) const
+Vec3<float64> ImageGeom::getPlaneCoords(usize idx[3]) const
 {
-  Point3D<float64> coords;
+  Vec3<float64> coords;
   coords[0] = static_cast<float64>(idx[0]) * m_Spacing[0] + m_Origin[0];
   coords[1] = static_cast<float64>(idx[1]) * m_Spacing[1] + m_Origin[1];
   coords[2] = static_cast<float64>(idx[2]) * m_Spacing[2] + m_Origin[2];
   return coords;
 }
 
-Point3D<float64> ImageGeom::getPlaneCoords(usize x, usize y, usize z) const
+Vec3<float64> ImageGeom::getPlaneCoords(usize x, usize y, usize z) const
 {
-  Point3D<float64> coords;
+  Vec3<float64> coords;
   coords[0] = static_cast<float64>(x) * m_Spacing[0] + m_Origin[0];
   coords[1] = static_cast<float64>(y) * m_Spacing[1] + m_Origin[1];
   coords[2] = static_cast<float64>(z) * m_Spacing[2] + m_Origin[2];
   return coords;
 }
 
-Point3D<float64> ImageGeom::getPlaneCoords(usize idx) const
+Vec3<float64> ImageGeom::getPlaneCoords(usize idx) const
 {
   usize column = idx % m_Dimensions[0];
   usize row = (idx / m_Dimensions[0]) % m_Dimensions[1];
   usize plane = idx / (m_Dimensions[0] * m_Dimensions[1]);
 
-  Point3D<float64> coords;
+  Vec3<float64> coords;
   coords[0] = static_cast<float64>(column) * m_Spacing[0] + m_Origin[0];
   coords[1] = static_cast<float64>(row) * m_Spacing[1] + m_Origin[1];
   coords[2] = static_cast<float64>(plane) * m_Spacing[2] + m_Origin[2];
   return coords;
 }
 
-Point3D<float32> ImageGeom::getCoordsf(usize idx[3]) const
+Vec3<float32> ImageGeom::getCoordsf(usize idx[3]) const
 {
-  Point3D<float32> coords;
+  Vec3<float32> coords;
   coords[0] = idx[0] * m_Spacing[0] + m_Origin[0] + (0.5f * m_Spacing[0]);
   coords[1] = idx[1] * m_Spacing[1] + m_Origin[1] + (0.5f * m_Spacing[1]);
   coords[2] = idx[2] * m_Spacing[2] + m_Origin[2] + (0.5f * m_Spacing[2]);
   return coords;
 }
 
-Point3D<float32> ImageGeom::getCoordsf(usize x, usize y, usize z) const
+Vec3<float32> ImageGeom::getCoordsf(usize x, usize y, usize z) const
 {
-  Point3D<float32> coords;
+  Vec3<float32> coords;
   coords[0] = x * m_Spacing[0] + m_Origin[0] + (0.5f * m_Spacing[0]);
   coords[1] = y * m_Spacing[1] + m_Origin[1] + (0.5f * m_Spacing[1]);
   coords[2] = z * m_Spacing[2] + m_Origin[2] + (0.5f * m_Spacing[2]);
   return coords;
 }
 
-Point3D<float32> ImageGeom::getCoordsf(usize idx) const
+Vec3<float32> ImageGeom::getCoordsf(usize idx) const
 {
   usize column = idx % m_Dimensions[0];
   usize row = (idx / m_Dimensions[0]) % m_Dimensions[1];
   usize plane = idx / (m_Dimensions[0] * m_Dimensions[1]);
 
-  Point3D<float32> coords;
+  Vec3<float32> coords;
   coords[0] = column * m_Spacing[0] + m_Origin[0] + (0.5f * m_Spacing[0]);
   coords[1] = row * m_Spacing[1] + m_Origin[1] + (0.5f * m_Spacing[1]);
   coords[2] = plane * m_Spacing[2] + m_Origin[2] + (0.5f * m_Spacing[2]);
   return coords;
 }
 
-Point3D<float64> ImageGeom::getCoords(usize idx[3]) const
+Vec3<float64> ImageGeom::getCoords(usize idx[3]) const
 {
-  Point3D<float64> coords;
+  Vec3<float64> coords;
   coords[0] = static_cast<float64>(idx[0]) * m_Spacing[0] + m_Origin[0] + (0.5 * m_Spacing[0]);
   coords[1] = static_cast<float64>(idx[1]) * m_Spacing[1] + m_Origin[1] + (0.5 * m_Spacing[1]);
   coords[2] = static_cast<float64>(idx[2]) * m_Spacing[2] + m_Origin[2] + (0.5 * m_Spacing[2]);
   return coords;
 }
 
-Point3D<float64> ImageGeom::getCoords(usize x, usize y, usize z) const
+Vec3<float64> ImageGeom::getCoords(usize x, usize y, usize z) const
 {
-  Point3D<float64> coords;
+  Vec3<float64> coords;
   coords[0] = static_cast<float64>(x) * m_Spacing[0] + m_Origin[0] + (0.5 * m_Spacing[0]);
   coords[1] = static_cast<float64>(y) * m_Spacing[1] + m_Origin[1] + (0.5 * m_Spacing[1]);
   coords[2] = static_cast<float64>(z) * m_Spacing[2] + m_Origin[2] + (0.5 * m_Spacing[2]);
   return coords;
 }
 
-Point3D<float64> ImageGeom::getCoords(usize idx) const
+Vec3<float64> ImageGeom::getCoords(usize idx) const
 {
   usize column = idx % m_Dimensions[0];
   usize row = (idx / m_Dimensions[0]) % m_Dimensions[1];
   usize plane = idx / (m_Dimensions[0] * m_Dimensions[1]);
 
-  Point3D<float64> coords;
+  Vec3<float64> coords;
   coords[0] = static_cast<float64>(column) * m_Spacing[0] + m_Origin[0] + (0.5 * m_Spacing[0]);
   coords[1] = static_cast<float64>(row) * m_Spacing[1] + m_Origin[1] + (0.5 * m_Spacing[1]);
   coords[2] = static_cast<float64>(plane) * m_Spacing[2] + m_Origin[2] + (0.5 * m_Spacing[2]);
@@ -504,7 +504,7 @@ std::optional<usize> ImageGeom::getIndex(float64 xCoord, float64 yCoord, float64
   return (m_Dimensions[1] * m_Dimensions[0] * z) + (m_Dimensions[0] * y) + x;
 }
 
-ImageGeom::ErrorType ImageGeom::computeCellIndex(const Point3D<float32>& coords, SizeVec3& index) const
+ImageGeom::ErrorType ImageGeom::computeCellIndex(const Vec3<float32>& coords, SizeVec3& index) const
 {
   ImageGeom::ErrorType err = ImageGeom::ErrorType::NoError;
   for(usize i = 0; i < 3; i++)

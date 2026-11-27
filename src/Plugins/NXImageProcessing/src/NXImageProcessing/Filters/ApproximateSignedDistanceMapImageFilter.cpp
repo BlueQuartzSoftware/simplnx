@@ -72,9 +72,9 @@ IFilter::PreflightResult ApproximateSignedDistanceMapImageFilter::preflightImpl(
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   // requireScalar=true: the distance transform is defined on scalar images. The distance output is a FIXED float32
-  // (matching the legacy ITK FilterOutputType), so AlwaysFloat32 maps every input type to a float32 output array.
+  // (matching the legacy ITK FilterOutputType), so AlwaysFloat32Type maps every input type to a float32 output array.
   // IntegerOnly restricts the input to the integer scalar types (this mask filter does not accept float input).
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::IntegerOnly, ImageProcessing::AlwaysFloat32>(
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::IntegerOnly, ImageProcessing::AlwaysFloat32Type>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   return {.outputActions = std::move(resultOutputActions)};
 }

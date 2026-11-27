@@ -73,21 +73,21 @@ nx::core::Result<> LoadInfo(const nx::core::ReadH5EbsdInputValues* mInputValues,
 
   nx::core::DataPath cellEnsembleMatrixPath = mInputValues->cellEnsembleMatrixPath;
 
-  nx::core::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(ebsdlib::EnsembleData::CrystalStructures);
+  nx::core::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(nx::core::h5_ebsd_ensemble_data::k_CrystalStructures);
   auto& xtalData = mDataStructure.getDataRefAs<nx::core::UInt32Array>(xtalDataPath);
   if(nx::core::Result<> resizeResult = xtalData.getIDataStore()->resizeTuples(tDims); resizeResult.invalid())
   {
     return nx::core::ConvertResult(std::move(resizeResult));
   }
 
-  nx::core::DataPath latticeDataPath = cellEnsembleMatrixPath.createChildPath(ebsdlib::EnsembleData::LatticeConstants);
+  nx::core::DataPath latticeDataPath = cellEnsembleMatrixPath.createChildPath(nx::core::h5_ebsd_ensemble_data::k_LatticeConstants);
   auto& latticData = mDataStructure.getDataRefAs<nx::core::Float32Array>(latticeDataPath);
   if(nx::core::Result<> resizeResult = latticData.getIDataStore()->resizeTuples(tDims); resizeResult.invalid())
   {
     return nx::core::ConvertResult(std::move(resizeResult));
   }
 
-  nx::core::DataPath matNamesDataath = cellEnsembleMatrixPath.createChildPath(ebsdlib::EnsembleData::MaterialName);
+  nx::core::DataPath matNamesDataath = cellEnsembleMatrixPath.createChildPath(nx::core::h5_ebsd_ensemble_data::k_MaterialName);
   auto& matNameData = mDataStructure.getDataRefAs<nx::core::StringArray>(matNamesDataath);
   if(nx::core::Result<> resizeResult = matNameData.resizeTuples(tDims); resizeResult.invalid())
   {
@@ -237,7 +237,7 @@ nx::core::Result<> LoadEbsdData(const nx::core::ReadH5EbsdInputValues* mInputVal
 
   // Oxford correction uses the ensemble crystal structure for each cell phase.
   nx::core::DataPath cellEnsembleMatrixPath = mInputValues->cellEnsembleMatrixPath;
-  nx::core::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(ebsdlib::EnsembleData::CrystalStructures);
+  nx::core::DataPath xtalDataPath = cellEnsembleMatrixPath.createChildPath(nx::core::h5_ebsd_ensemble_data::k_CrystalStructures);
   auto& xtalData = dataStructure.getDataRefAs<nx::core::UInt32Array>(xtalDataPath);
 
   auto* phasePtr = reinterpret_cast<int32*>(ebsdReader->getPointerByName(eulerNames[3]));

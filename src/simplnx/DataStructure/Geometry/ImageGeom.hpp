@@ -195,16 +195,16 @@ public:
 
   /**
    * @brief Returns the parametric center of the image geometry.
-   * @return Point3D<float64> representing the parametric center coordinates
+   * @return Vec3<float64> representing the parametric center coordinates
    */
-  Point3D<float64> getParametricCenter() const override;
+  Vec3<float64> getParametricCenter() const override;
 
   /**
    * @brief Calculates shape functions at the given parametric coordinates.
    * @param pCoords The parametric coordinates where shape functions are evaluated
    * @param shape Output array to store the calculated shape function values
    */
-  void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
+  void getShapeFunctions(const Vec3<float64>& pCoords, float64* shape) const override;
 
   /**
    * @brief Determines the dimensionality of the geometry and returns either 1, 2, or 3.
@@ -250,94 +250,94 @@ public:
   /**
    * @brief Gets the planar coordinates at the specified cell indices using 32-bit floats.
    * @param idx Array of 3 indices [x, y, z] specifying the cell location
-   * @return Point3D<float32> representing the planar coordinates
+   * @return Vec3<float32> representing the planar coordinates
    */
-  Point3D<float32> getPlaneCoordsf(usize idx[3]) const override;
+  Vec3<float32> getPlaneCoordsf(usize idx[3]) const override;
 
   /**
    * @brief Gets the planar coordinates at the specified cell indices using 32-bit floats.
    * @param x Cell index in the X dimension
    * @param y Cell index in the Y dimension
    * @param z Cell index in the Z dimension
-   * @return Point3D<float32> representing the planar coordinates
+   * @return Vec3<float32> representing the planar coordinates
    */
-  Point3D<float32> getPlaneCoordsf(usize x, usize y, usize z) const override;
+  Vec3<float32> getPlaneCoordsf(usize x, usize y, usize z) const override;
 
   /**
    * @brief Gets the planar coordinates for a flat cell index using 32-bit floats.
    * @param idx Flat (linearized) cell index
-   * @return Point3D<float32> representing the planar coordinates
+   * @return Vec3<float32> representing the planar coordinates
    */
-  Point3D<float32> getPlaneCoordsf(usize idx) const override;
+  Vec3<float32> getPlaneCoordsf(usize idx) const override;
 
   /**
    * @brief Gets the planar coordinates at the specified cell indices using 64-bit floats.
    * @param idx Array of 3 indices [x, y, z] specifying the cell location
-   * @return Point3D<float64> representing the planar coordinates
+   * @return Vec3<float64> representing the planar coordinates
    */
-  Point3D<float64> getPlaneCoords(usize idx[3]) const override;
+  Vec3<float64> getPlaneCoords(usize idx[3]) const override;
 
   /**
    * @brief Gets the planar coordinates at the specified cell indices using 64-bit floats.
    * @param x Cell index in the X dimension
    * @param y Cell index in the Y dimension
    * @param z Cell index in the Z dimension
-   * @return Point3D<float64> representing the planar coordinates
+   * @return Vec3<float64> representing the planar coordinates
    */
-  Point3D<float64> getPlaneCoords(usize x, usize y, usize z) const override;
+  Vec3<float64> getPlaneCoords(usize x, usize y, usize z) const override;
 
   /**
    * @brief Gets the planar coordinates for a flat cell index using 64-bit floats.
    * @param idx Flat (linearized) cell index
-   * @return Point3D<float64> representing the planar coordinates
+   * @return Vec3<float64> representing the planar coordinates
    */
-  Point3D<float64> getPlaneCoords(usize idx) const override;
+  Vec3<float64> getPlaneCoords(usize idx) const override;
 
   /**
    * @brief Gets the cell center coordinates at the specified cell indices using 32-bit floats.
    * @param idx Array of 3 indices [x, y, z] specifying the cell location
-   * @return Point3D<float32> representing the cell center coordinates
+   * @return Vec3<float32> representing the cell center coordinates
    */
-  Point3D<float32> getCoordsf(usize idx[3]) const override;
+  Vec3<float32> getCoordsf(usize idx[3]) const override;
 
   /**
    * @brief Gets the cell center coordinates at the specified cell indices using 32-bit floats.
    * @param x Cell index in the X dimension
    * @param y Cell index in the Y dimension
    * @param z Cell index in the Z dimension
-   * @return Point3D<float32> representing the cell center coordinates
+   * @return Vec3<float32> representing the cell center coordinates
    */
-  Point3D<float32> getCoordsf(usize x, usize y, usize z) const override;
+  Vec3<float32> getCoordsf(usize x, usize y, usize z) const override;
 
   /**
    * @brief Gets the cell center coordinates for a flat cell index using 32-bit floats.
    * @param idx Flat (linearized) cell index
-   * @return Point3D<float32> representing the cell center coordinates
+   * @return Vec3<float32> representing the cell center coordinates
    */
-  Point3D<float32> getCoordsf(usize idx) const override;
+  Vec3<float32> getCoordsf(usize idx) const override;
 
   /**
    * @brief Gets the cell center coordinates at the specified cell indices using 64-bit floats.
    * @param idx Array of 3 indices [x, y, z] specifying the cell location
-   * @return Point3D<float64> representing the cell center coordinates
+   * @return Vec3<float64> representing the cell center coordinates
    */
-  Point3D<float64> getCoords(usize idx[3]) const override;
+  Vec3<float64> getCoords(usize idx[3]) const override;
 
   /**
    * @brief Gets the cell center coordinates at the specified cell indices using 64-bit floats.
    * @param x Cell index in the X dimension
    * @param y Cell index in the Y dimension
    * @param z Cell index in the Z dimension
-   * @return Point3D<float64> representing the cell center coordinates
+   * @return Vec3<float64> representing the cell center coordinates
    */
-  Point3D<float64> getCoords(usize x, usize y, usize z) const override;
+  Vec3<float64> getCoords(usize x, usize y, usize z) const override;
 
   /**
    * @brief Gets the cell center coordinates for a flat cell index using 64-bit floats.
    * @param idx Flat (linearized) cell index
-   * @return Point3D<float64> representing the cell center coordinates
+   * @return Vec3<float64> representing the cell center coordinates
    */
-  Point3D<float64> getCoords(usize idx) const override;
+  Vec3<float64> getCoords(usize idx) const override;
 
   /**
    * @brief Computes the flat cell index from 3D coordinates using 32-bit floats.
@@ -359,11 +359,11 @@ public:
 
   /**
    * @brief Computes the 3D cell index from physical coordinates.
-   * @param coords Physical coordinates as a Point3D
+   * @param coords Physical coordinates as a Vec3
    * @param index Output parameter to store the computed 3D cell indices [x, y, z]
    * @return ErrorType indicating success or the type of out-of-bounds error if any
    */
-  ErrorType computeCellIndex(const Point3D<float32>& coords, SizeVec3& index) const;
+  ErrorType computeCellIndex(const Vec3<float32>& coords, SizeVec3& index) const;
 
 protected:
   /**

@@ -119,7 +119,7 @@ struct SIMPLNXCORE_EXPORT ValidateMultiInputFunctor
   template <typename T>
   IFilter::PreflightResult operator()(const usize expectedComp, const std::string& unfilteredStr, const usize singleCompSize = 0)
   {
-    std::vector<std::string> splitVals = StringUtilities::split(StringUtilities::trimmed(unfilteredStr), k_DelimiterChar);
+    std::vector<std::string> splitVals = StringUtilities::Split(StringUtilities::trimmed(unfilteredStr), k_DelimiterChar);
 
     if(splitVals.empty())
     {
@@ -181,8 +181,8 @@ struct SIMPLNXCORE_EXPORT ValidateRangeOrderFunctor
   template <typename T>
   IFilter::PreflightResult operator()(usize numComponents, const std::string& startRange, const std::string& endRange)
   {
-    const auto startValues = StringUtilities::split(StringUtilities::trimmed(startRange), k_DelimiterChar);
-    const auto endValues = StringUtilities::split(StringUtilities::trimmed(endRange), k_DelimiterChar);
+    const auto startValues = StringUtilities::Split(StringUtilities::trimmed(startRange), k_DelimiterChar);
+    const auto endValues = StringUtilities::Split(StringUtilities::trimmed(endRange), k_DelimiterChar);
     for(usize compIdx = 0; compIdx < numComponents; compIdx++)
     {
       const auto& start = startValues[startValues.size() == 1 ? 0 : compIdx];

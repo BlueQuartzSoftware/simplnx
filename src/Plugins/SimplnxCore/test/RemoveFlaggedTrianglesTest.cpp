@@ -23,9 +23,9 @@ constexpr StringLiteral k_VertexListName = "SharedVertexList";
 constexpr StringLiteral k_TriangleListName = "SharedTriList";
 
 const DataPath k_TriangleGeomPath({"TriangleGeometry"});
-const DataPath k_MaskPath = k_TriangleGeomPath.createChildPath(Constants::k_Face_Data).createChildPath(Constants::k_Mask);
-const DataPath k_RegionIdsPath = k_TriangleGeomPath.createChildPath(Constants::k_Face_Data).createChildPath(k_RegionIdsName);
-const DataPath k_FaceNormalsPath = k_TriangleGeomPath.createChildPath(Constants::k_Face_Data).createChildPath(k_FaceNormalsName);
+const DataPath k_MaskPath = k_TriangleGeomPath.createChildPath(Constants::k_FaceDataWithSpaces).createChildPath(Constants::k_Mask);
+const DataPath k_RegionIdsPath = k_TriangleGeomPath.createChildPath(Constants::k_FaceDataWithSpaces).createChildPath(k_RegionIdsName);
+const DataPath k_FaceNormalsPath = k_TriangleGeomPath.createChildPath(Constants::k_FaceDataWithSpaces).createChildPath(k_FaceNormalsName);
 const DataPath k_ReducedGeomPath({"ReducedGeometry"});
 const DataPath k_ExemplarReducedGeomPath({"ExemplarReducedGeometry"});
 } // namespace
@@ -62,15 +62,15 @@ TEST_CASE("SimplnxCore::RemoveFlaggedTrianglesFilter: Test Algorithm", "[Simplnx
   }
 
   {
-    DataPath generated = ::k_ReducedGeomPath.createChildPath(Constants::k_Face_Data).createChildPath(::k_RegionIdsName);
-    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_Face_Data).createChildPath(::k_RegionIdsName);
+    DataPath generated = ::k_ReducedGeomPath.createChildPath(Constants::k_FaceDataWithSpaces).createChildPath(::k_RegionIdsName);
+    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_FaceDataWithSpaces).createChildPath(::k_RegionIdsName);
 
     UnitTest::CompareDataArrays<int32>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
   }
 
   {
-    DataPath generated = ::k_ReducedGeomPath.createChildPath(Constants::k_Face_Data).createChildPath(::k_FaceNormalsName);
-    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_Face_Data).createChildPath(::k_FaceNormalsName);
+    DataPath generated = ::k_ReducedGeomPath.createChildPath(Constants::k_FaceDataWithSpaces).createChildPath(::k_FaceNormalsName);
+    DataPath exemplar = ::k_ExemplarReducedGeomPath.createChildPath(Constants::k_FaceDataWithSpaces).createChildPath(::k_FaceNormalsName);
 
     UnitTest::CompareDataArrays<float64>(dataStructure.getDataRefAs<IDataArray>(generated), dataStructure.getDataRefAs<IDataArray>(exemplar));
   }

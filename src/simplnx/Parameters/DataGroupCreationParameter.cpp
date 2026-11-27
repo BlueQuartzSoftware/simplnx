@@ -104,7 +104,7 @@ Result<std::any> DataGroupCreationParameter::resolve(DataStructure& dataStructur
 
 namespace SIMPLConversion
 {
-Result<DataContainerCreationFilterParameterConverter::ValueType> DataContainerCreationFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataContainerCreationFilterParameterConverter::ValueType> DataContainerCreationFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_string())
   {
@@ -116,7 +116,7 @@ Result<DataContainerCreationFilterParameterConverter::ValueType> DataContainerCr
   return {std::move(dataPath)};
 }
 
-Result<StringToDataPathFilterParameterConverter::ValueType> StringToDataPathFilterParameterConverter::convert(const nlohmann::json& json)
+Result<StringToDataPathFilterParameterConverter::ValueType> StringToDataPathFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_string())
   {
@@ -128,7 +128,7 @@ Result<StringToDataPathFilterParameterConverter::ValueType> StringToDataPathFilt
   return {std::move(dataPath)};
 }
 
-Result<StringsToDataPathFilterParameterConverter::ValueType> StringsToDataPathFilterParameterConverter::convert(const nlohmann::json& json1, const nlohmann::json& json2)
+Result<StringsToDataPathFilterParameterConverter::ValueType> StringsToDataPathFilterParameterConverter::Convert(const nlohmann::json& json1, const nlohmann::json& json2)
 {
   if(!json1.is_string())
   {
@@ -144,7 +144,7 @@ Result<StringsToDataPathFilterParameterConverter::ValueType> StringsToDataPathFi
   return {std::move(dataPath)};
 }
 
-Result<AMPathBuilderFilterParameterConverter::ValueType> AMPathBuilderFilterParameterConverter::convert(const nlohmann::json& json1, const nlohmann::json& json2)
+Result<AMPathBuilderFilterParameterConverter::ValueType> AMPathBuilderFilterParameterConverter::Convert(const nlohmann::json& json1, const nlohmann::json& json2)
 {
   std::string dcName;
   std::string amName;
@@ -182,7 +182,7 @@ Result<AMPathBuilderFilterParameterConverter::ValueType> AMPathBuilderFilterPara
   return {std::move(dataPath)};
 }
 
-Result<DAPathBuilderFilterParameterConverter::ValueType> DAPathBuilderFilterParameterConverter::convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3)
+Result<DAPathBuilderFilterParameterConverter::ValueType> DAPathBuilderFilterParameterConverter::Convert(const nlohmann::json& json1, const nlohmann::json& json2, const nlohmann::json& json3)
 {
   std::string dcName;
   std::string amName;
@@ -235,7 +235,7 @@ Result<DAPathBuilderFilterParameterConverter::ValueType> DAPathBuilderFilterPara
   return {std::move(dataPath)};
 }
 
-Result<DCPathBuilderFilterParameterConverter::ValueType> DCPathBuilderFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DCPathBuilderFilterParameterConverter::ValueType> DCPathBuilderFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   std::string dcName;
 
@@ -258,7 +258,7 @@ Result<DCPathBuilderFilterParameterConverter::ValueType> DCPathBuilderFilterPara
   return {std::move(dataPath)};
 }
 
-Result<AttributeMatrixCreationFilterParameterConverter::ValueType> AttributeMatrixCreationFilterParameterConverter::convert(const nlohmann::json& json)
+Result<AttributeMatrixCreationFilterParameterConverter::ValueType> AttributeMatrixCreationFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   auto dataContainerNameResult = ReadDataContainerName(json, "AttributeMatrixCreationFilterParameter");
   if(dataContainerNameResult.invalid())

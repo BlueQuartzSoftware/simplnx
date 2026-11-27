@@ -103,7 +103,7 @@ Result<std::any> ArrayCreationParameter::resolve(DataStructure& dataStructure, c
 
 namespace SIMPLConversion
 {
-Result<DataArrayCreationFilterParameterConverter::ValueType> DataArrayCreationFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataArrayCreationFilterParameterConverter::ValueType> DataArrayCreationFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   auto dataContainerNameResult = ReadDataContainerName(json, "DataArrayCreationFilterParameter");
   if(dataContainerNameResult.invalid())

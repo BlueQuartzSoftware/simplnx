@@ -21,16 +21,16 @@ const std::string k_ComputedBiasedFeaturesName = "ComputedBiasedFeatures";
 const std::string k_ExemplarBiasedFeaturesName = "BiasedFeatures";
 const DataPath k_GeometryPath({Constants::k_SmallIN100});
 const DataPath k_Geometry2DPath({Constants::k_SmallIN1002});
-const DataPath k_CentroidsPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_Centroids});
-const DataPath k_SurfaceFeaturesPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_SurfaceFeatures});
-const DataPath k_PhasesPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_Phases});
-const DataPath k_Centroids2DPath({Constants::k_SmallIN1002, Constants::k_Grain_Data, Constants::k_Centroids});
-const DataPath k_SurfaceFeatures2DPath({Constants::k_SmallIN1002, Constants::k_Grain_Data, Constants::k_SurfaceFeatures});
-const DataPath k_Phases2DPath({Constants::k_SmallIN1002, Constants::k_Grain_Data, Constants::k_Phases});
-const DataPath k_ExemplarBiasedFeaturesPath({Constants::k_SmallIN100, Constants::k_Grain_Data, k_ExemplarBiasedFeaturesName});
-const DataPath k_ComputedBiasedFeaturesPath({Constants::k_SmallIN100, Constants::k_Grain_Data, k_ComputedBiasedFeaturesName});
-const DataPath k_ExemplarBiasedFeatures2DPath({Constants::k_SmallIN1002, Constants::k_Grain_Data, k_ExemplarBiasedFeaturesName});
-const DataPath k_ComputedBiasedFeatures2DPath({Constants::k_SmallIN1002, Constants::k_Grain_Data, k_ComputedBiasedFeaturesName});
+const DataPath k_CentroidsPath({Constants::k_SmallIN100, Constants::k_GrainDataWithSpaces, Constants::k_Centroids});
+const DataPath k_SurfaceFeaturesPath({Constants::k_SmallIN100, Constants::k_GrainDataWithSpaces, Constants::k_SurfaceFeatures});
+const DataPath k_PhasesPath({Constants::k_SmallIN100, Constants::k_GrainDataWithSpaces, Constants::k_Phases});
+const DataPath k_Centroids2DPath({Constants::k_SmallIN1002, Constants::k_GrainDataWithSpaces, Constants::k_Centroids});
+const DataPath k_SurfaceFeatures2DPath({Constants::k_SmallIN1002, Constants::k_GrainDataWithSpaces, Constants::k_SurfaceFeatures});
+const DataPath k_Phases2DPath({Constants::k_SmallIN1002, Constants::k_GrainDataWithSpaces, Constants::k_Phases});
+const DataPath k_ExemplarBiasedFeaturesPath({Constants::k_SmallIN100, Constants::k_GrainDataWithSpaces, k_ExemplarBiasedFeaturesName});
+const DataPath k_ComputedBiasedFeaturesPath({Constants::k_SmallIN100, Constants::k_GrainDataWithSpaces, k_ComputedBiasedFeaturesName});
+const DataPath k_ExemplarBiasedFeatures2DPath({Constants::k_SmallIN1002, Constants::k_GrainDataWithSpaces, k_ExemplarBiasedFeaturesName});
+const DataPath k_ComputedBiasedFeatures2DPath({Constants::k_SmallIN1002, Constants::k_GrainDataWithSpaces, k_ComputedBiasedFeaturesName});
 const DataPath k_WrongSurfaceFeaturePath({Constants::k_SmallIN100, Constants::k_EbsdScanData, Constants::k_FeatureIds});
 } // namespace
 

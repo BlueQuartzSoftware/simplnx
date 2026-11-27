@@ -2838,7 +2838,7 @@ Result<> FinalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
   // internal representation that is one negative ghost label paired with maxGrainId, which
   // is the renumbered zero-feature (see toFaceLabel below). Pruning the scratch vectors here
   // means the output TriangleGeom is sized from the surviving count and never over-allocated.
-  if(inputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+  if(inputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
   {
     messageHandler.sendInfoMessage("Omitting bounding box skin faces...");
 
@@ -3137,7 +3137,7 @@ Result<> FinalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     }
   }
 
-  if(inputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+  if(inputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
   {
     // An entirely-background volume has nothing but {-1, 0} faces, so omitting the skin
     // legitimately produces an empty mesh. Report it rather than returning silently. nNodes is
@@ -3687,7 +3687,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
       }
       maximumTrianglesPerCube = std::max(maximumTrianglesPerCube, static_cast<uint64>(count));
 
-      if((m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly || (m_InputValues->SharpBoundingBoxEdges && cubeTouchesBoxEdge(cube))) && count > 0)
+      if((m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly || (m_InputValues->SharpBoundingBoxEdges && cubeTouchesBoxEdge(cube))) && count > 0)
       {
         std::vector<Triangle> countTriangles(static_cast<usize>(count));
         std::vector<SiteIdType> countCubes(static_cast<usize>(count));
@@ -3720,7 +3720,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
         int64 survivingCount = 0;
         for(const Triangle& triangle : countTriangles)
         {
-          const bool dropTriangle = m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && skipBackgroundSkinFace(triangle);
+          const bool dropTriangle = m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly && skipBackgroundSkinFace(triangle);
           const uint8 referenceFlag = dropTriangle ? uint8{1} : uint8{2};
           for(const SiteIdType nodeId : triangle.node_id)
           {
@@ -3893,7 +3893,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
     }
     auto node = nodeResult.value();
     bool nodeChanged = false;
-    if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && node.prune_references == uint8{1} && node.type > 0)
+    if(m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly && node.prune_references == uint8{1} && node.type > 0)
     {
       node.type = m3_c_node_type::k_Unused;
       nodeChanged = true;
@@ -4064,7 +4064,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
       }
       generated = static_cast<usize>(end);
     }
-    if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+    if(m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
     {
       usize survivingCount = 0;
       for(usize index = 0; index < generated; index++)
@@ -4144,7 +4144,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
           return first.invalid() ? ConvertResult(std::move(first)) : ConvertResult(std::move(second));
         }
         transferValues[local] = {
-            .faceIndex = destination + start + local, .firstcIndex = first.value(), .secondcIndex = second.value(), .faceLabel0 = labelValues[local * 2], .faceLabel1 = labelValues[local * 2 + 1]};
+            .face_index = destination + start + local, .firstcIndex = first.value(), .secondcIndex = second.value(), .faceLabel0 = labelValues[local * 2], .faceLabel1 = labelValues[local * 2 + 1]};
       }
       auto faceWrite = faceStore.copyFromBuffer((destination + start) * 3, nonstd::span<const IGeometry::MeshIndexType>(faceValues.data(), count * 3));
       auto labelWrite = faceLabelsStore.copyFromBuffer((destination + start) * 2, nonstd::span<const int32>(labelValues.data(), count * 2));
@@ -4246,7 +4246,7 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
       }
     }
   }
-  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+  if(m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
   {
     if(triangleTotal == 0)
     {

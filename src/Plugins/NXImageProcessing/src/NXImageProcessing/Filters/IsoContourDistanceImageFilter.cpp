@@ -73,9 +73,9 @@ IFilter::PreflightResult IsoContourDistanceImageFilter::preflightImpl(const Data
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   // requireScalar=true: IsoContourDistance is defined on scalar images. The distance output is a FIXED float32
-  // (matching the legacy ITK FilterOutputType), so AlwaysFloat32 maps every input type to a float32 output array.
+  // (matching the legacy ITK FilterOutputType), so AlwaysFloat32Type maps every input type to a float32 output array.
   // AllNumeric admits ALL scalar types INCLUDING floating point (the legacy ScalarPixelIdTypeList).
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat32>(
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat32Type>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   return {.outputActions = std::move(resultOutputActions)};
 }

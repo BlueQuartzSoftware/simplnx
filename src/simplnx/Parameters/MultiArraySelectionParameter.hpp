@@ -139,7 +139,7 @@ struct SIMPLNX_EXPORT MultiDataArraySelectionFilterParameterConverter
   using ParameterType = MultiArraySelectionParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 } // namespace SIMPLConversion
 } // namespace nx::core

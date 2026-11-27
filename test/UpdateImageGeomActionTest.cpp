@@ -44,7 +44,7 @@ TEST_CASE("simplnx::UpdateImageGeomAction: copied actions preserve centering", "
     CHECK(geometryPtr->getDimensions() == SizeVec3(4, 2, 6));
     if(centerOrigin)
     {
-      CHECK(geometryPtr->getBoundingBoxf().center() == Point3Df(-2.0f, 7.0f, -5.0f));
+      CHECK(geometryPtr->getBoundingBoxf().center() == FloatVec3(-2.0f, 7.0f, -5.0f));
     }
     UnitTest::CheckArraysInheritTupleDims(dataStructure);
   }

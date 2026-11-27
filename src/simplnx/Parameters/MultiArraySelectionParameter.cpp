@@ -204,7 +204,7 @@ Result<std::any> MultiArraySelectionParameter::resolve(DataStructure& dataStruct
 
 namespace SIMPLConversion
 {
-Result<MultiDataArraySelectionFilterParameterConverter::ValueType> MultiDataArraySelectionFilterParameterConverter::convert(const nlohmann::json& json)
+Result<MultiDataArraySelectionFilterParameterConverter::ValueType> MultiDataArraySelectionFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_array())
   {

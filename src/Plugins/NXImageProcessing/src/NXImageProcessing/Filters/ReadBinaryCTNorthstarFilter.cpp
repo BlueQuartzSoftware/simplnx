@@ -52,7 +52,7 @@ std::string GetNextLine(std::ifstream& inStream, usize& lineCount)
 std::vector<std::string> ParseNextLine(std::ifstream& inStream, char delimiter, usize& lineCount)
 {
   std::string line = GetNextLine(inStream, lineCount);
-  return StringUtilities::split(line, delimiter);
+  return StringUtilities::Split(line, delimiter);
 }
 
 // -----------------------------------------------------------------------------

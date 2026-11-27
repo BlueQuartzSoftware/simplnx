@@ -93,9 +93,9 @@ IFilter::PreflightResult ThresholdMaximumConnectedComponentsImageFilter::preflig
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   // requireScalar=true: the bisection search operates on a scalar image. The output is a FIXED uint8 binary image
-  // (matching the legacy ITK FilterOutputType), so AlwaysUInt8 maps every input type to a uint8 output array.
+  // (matching the legacy ITK FilterOutputType), so AlwaysUInt8Type maps every input type to a uint8 output array.
   // AllNumeric admits every scalar numeric type (the legacy ScalarPixelIdTypeList), incl. float32/float64.
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8>(
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8Type>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   return {.outputActions = std::move(resultOutputActions)};
 }

@@ -140,11 +140,11 @@ IFilter::PreflightResult SignedMaurerDistanceMapImageFilter::preflightImpl(const
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   // requireScalar=true: the Maurer distance transform is defined on scalar images. The distance output is a FIXED
-  // float32 (matching the legacy ITK SignedMaurerDistanceMap FilterOutputType), so AlwaysFloat32 maps every integer
+  // float32 (matching the legacy ITK SignedMaurerDistanceMap FilterOutputType), so AlwaysFloat32Type maps every integer
   // input type to a float32 output array. IntegerOnly restricts the input to the integer scalar types.
   const auto& imageGeom = dataStructure.getDataRefAs<ImageGeom>(imageGeomPath);
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::IntegerOnly, ImageProcessing::AlwaysFloat32>(
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::IntegerOnly, ImageProcessing::AlwaysFloat32Type>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true, PredictMaurerChunkHint(inputArray, imageGeom.getDimensions()));
   if(resultOutputActions.invalid())
   {

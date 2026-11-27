@@ -341,9 +341,6 @@ public:
     usize m_Index = 0;
   };
 
-  using iterator = Iterator;
-  using const_iterator = ConstIterator;
-
   virtual ~AbstractStringStore() = default;
 
   /**

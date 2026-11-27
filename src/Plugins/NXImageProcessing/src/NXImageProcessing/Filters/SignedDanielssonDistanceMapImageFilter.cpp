@@ -76,9 +76,9 @@ IFilter::PreflightResult SignedDanielssonDistanceMapImageFilter::preflightImpl(c
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   // requireScalar=true: the distance transform is defined on scalar images. The distance output is a FIXED float32
-  // (matching the legacy ITK Signed Danielsson FilterOutputType), so AlwaysFloat32 maps every integer input type to a
+  // (matching the legacy ITK Signed Danielsson FilterOutputType), so AlwaysFloat32Type maps every integer input type to a
   // float32 output array. IntegerOnly restricts the input to the integer scalar types.
-  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::IntegerOnly, ImageProcessing::AlwaysFloat32>(
+  Result<OutputActions> resultOutputActions = ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::IntegerOnly, ImageProcessing::AlwaysFloat32Type>(
       dataStructure, selectedInputArray, imageGeomPath, outputArrayPath, /*requireScalar=*/true);
   return {.outputActions = std::move(resultOutputActions)};
 }

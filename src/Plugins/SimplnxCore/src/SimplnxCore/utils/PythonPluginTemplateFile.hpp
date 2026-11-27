@@ -40,7 +40,7 @@ inline Result<std::vector<std::string>> ParsePythonFilterNames(const std::string
     return {std::vector<std::string>{}};
   }
   constexpr std::array<char, 1> k_NameDelimiters = {','};
-  auto names = StringUtilities::split(filterNames, k_NameDelimiters, true);
+  auto names = StringUtilities::Split(filterNames, k_NameDelimiters, true);
   if(!names.empty() && StringUtilities::trimmed(names.back()).empty())
   {
     names.pop_back();
@@ -144,7 +144,7 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
     buffer << file.rdbuf();
     const std::string content = buffer.str();
     file.close();
-    std::vector<std::string> lines = nx::core::StringUtilities::split(content, "\n", true);
+    std::vector<std::string> lines = nx::core::StringUtilities::Split(content, "\n", true);
     if(lines.back().empty())
     {
       lines.pop_back();
@@ -183,7 +183,7 @@ inline Result<> InsertFilterNameInPluginFiles(const std::filesystem::path& plugi
     buffer << file.rdbuf();
     const std::string content = buffer.str();
     file.close();
-    std::vector<std::string> lines = nx::core::StringUtilities::split(content, "\n", true);
+    std::vector<std::string> lines = nx::core::StringUtilities::Split(content, "\n", true);
     if(lines.back().empty())
     {
       lines.pop_back();

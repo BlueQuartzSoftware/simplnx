@@ -109,7 +109,7 @@ std::optional<int32> Float32MidpointPrecision(float64 value)
 } // namespace
 
 template <typename T>
-Result<typename NumberToStringFilterParameterConverter<T>::ValueType> NumberToStringFilterParameterConverter<T>::convert(const nlohmann::json& json)
+Result<typename NumberToStringFilterParameterConverter<T>::ValueType> NumberToStringFilterParameterConverter<T>::Convert(const nlohmann::json& json)
 {
   if(!json.is_number())
   {
@@ -163,7 +163,7 @@ template struct SIMPLNX_TEMPLATE_EXPORT NumberToStringFilterParameterConverter<u
 template struct SIMPLNX_TEMPLATE_EXPORT NumberToStringFilterParameterConverter<float32>;
 template struct SIMPLNX_TEMPLATE_EXPORT NumberToStringFilterParameterConverter<float64>;
 
-Result<StringFilterParameterConverter::ValueType> StringFilterParameterConverter::convert(const nlohmann::json& json)
+Result<StringFilterParameterConverter::ValueType> StringFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_string())
   {

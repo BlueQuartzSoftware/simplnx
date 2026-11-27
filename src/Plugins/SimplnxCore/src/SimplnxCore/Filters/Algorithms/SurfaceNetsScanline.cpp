@@ -53,7 +53,7 @@ inline uint64 CellRecordIndex(int32 i, int32 j, int32 k, int32 paddedX, int32 pa
 /** @brief Returns true when the selected mode omits a padding-to-background quad. */
 bool SkipPaddingQuad(ChoicesParameter::ValueType mode, const std::array<LabelType, 2>& quadLabels)
 {
-  if(mode != BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+  if(mode != bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
   {
     return false;
   }
@@ -792,7 +792,7 @@ Result<> SurfaceNetsScanline::operator()()
     }
   }
 
-  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly)
+  if(m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly)
   {
     usize survivingVertexCount = 0;
     for(int32 k = 0; k < paddedZ - 1; k++)
@@ -854,7 +854,7 @@ Result<> SurfaceNetsScanline::operator()()
   // Stream vertices and node types in 4,096-vertex batches by vertex ID.
   auto voxelSize = imageGeom.getSpacing();
   auto origin = imageGeom.getOrigin();
-  const Point3Df halfVoxelOffset(0.5f * voxelSize[0], 0.5f * voxelSize[1], 0.5f * voxelSize[2]);
+  const FloatVec3 halfVoxelOffset(0.5f * voxelSize[0], 0.5f * voxelSize[1], 0.5f * voxelSize[2]);
   constexpr usize k_OutputChunkSize = 4096;
   std::vector<float32> vertexBuffer;
   std::vector<int8> nodeBuffer;
@@ -1171,7 +1171,7 @@ Result<> SurfaceNetsScanline::operator()()
     }
   }
 
-  if(m_InputValues->BoundingBoxSkinMode == BoundingBoxSkinMode::k_BackgroundBackedWallsOnly && windingResult.valid())
+  if(m_InputValues->BoundingBoxSkinMode == bounding_box_skin_mode::k_BackgroundBackedWallsOnly && windingResult.valid())
   {
     if(triangleGeom.getNumberOfFaces() == 0)
     {

@@ -19,7 +19,7 @@ namespace
 constexpr uint64 k_FullRange = 0;
 constexpr uint64 k_UserDefinedRange = 1;
 constexpr float32 k_PartitionEdgePadding = 0.000001;
-const Point3Df k_Padding(k_PartitionEdgePadding, k_PartitionEdgePadding, k_PartitionEdgePadding);
+const FloatVec3 k_Padding(k_PartitionEdgePadding, k_PartitionEdgePadding, k_PartitionEdgePadding);
 
 } // namespace
 
@@ -187,7 +187,7 @@ public:
       {
         break;
       }
-      std::array<Point3Df, 3> vertCoords;
+      std::array<FloatVec3, 3> vertCoords;
       m_TriangleGeom->getFaceCoordinates(triangleIndex, vertCoords);
       m_Areas[triangleIndex] = 0.5F * (vertCoords[0] - vertCoords[1]).cross(vertCoords[0] - vertCoords[2]).magnitude();
     }
@@ -237,7 +237,7 @@ public:
       {
         break;
       }
-      std::array<Point3Df, 3> vertCoords;
+      std::array<FloatVec3, 3> vertCoords;
       m_TriangleGeom->getFaceCoordinates(triangleIndex, vertCoords);
 
       auto normal = (vertCoords[1] - vertCoords[0]).cross(vertCoords[2] - vertCoords[0]);
@@ -270,7 +270,7 @@ Result<> GeometryUtilities::ComputeTriangleNormals(const nx::core::TriangleGeom*
     // Preserve this utility's float arithmetic, which differs from the Eigen double path.
     return MeshingUtilities::detail::CalculateNormalsInBlocks(triangleGeom->getFaces()->getDataStoreRef(), triangleGeom->getVertices()->getDataStoreRef(), normals, shouldCancel,
                                                               [](const float32* a, const float32* b, const float32* c) -> std::array<float64, 3> {
-                                                                const std::array<Point3Df, 3> vertCoords = {Point3Df{a[0], a[1], a[2]}, Point3Df{b[0], b[1], b[2]}, Point3Df{c[0], c[1], c[2]}};
+                                                                const std::array<FloatVec3, 3> vertCoords = {FloatVec3{a[0], a[1], a[2]}, FloatVec3{b[0], b[1], b[2]}, FloatVec3{c[0], c[1], c[2]}};
                                                                 auto normal = (vertCoords[1] - vertCoords[0]).cross(vertCoords[2] - vertCoords[0]);
                                                                 normal = normal / normal.magnitude();
                                                                 return {static_cast<float64>(normal[0]), static_cast<float64>(normal[1]), static_cast<float64>(normal[2])};
@@ -292,8 +292,8 @@ const float EPSILON = 1e-6f;
 // Edge Structure: Pair of points representing a line segment
 struct Edge
 {
-  Point3Df start;
-  Point3Df end;
+  FloatVec3 start;
+  FloatVec3 end;
   bool valid;
   int32 region_id;
   uint8 positive_count = 0;
@@ -306,7 +306,7 @@ struct Edge
   , region_id(0)
   {
   }
-  Edge(Point3Df start_, Point3Df end_)
+  Edge(FloatVec3 start_, FloatVec3 end_)
   : start(std::move(start_))
   , end(std::move(end_))
   , valid(true)
@@ -331,18 +331,18 @@ struct Edge
 // Plane Structure: Defined by a normal vector and a distance from the origin (plane constant)
 struct Plane
 {
-  Point3Df normal; // Should be normalized
-  float d;         // Plane constant
+  FloatVec3 normal; // Should be normalized
+  float d;          // Plane constant
 
   // Construct a plane from a normal and a point on the plane
-  Plane(const Point3Df& normal_, const Point3Df& point)
+  Plane(const FloatVec3& normal_, const FloatVec3& point)
   {
     normal = normal_;
     d = -normal.dot(point);
   }
 
   // Compute signed distance from a point to the plane
-  float signedDistance(const Point3Df& point) const
+  float signedDistance(const FloatVec3& point) const
   {
     return normal.dot(point) + d;
   }
@@ -390,7 +390,7 @@ struct PointInfo
 
 // ----------------------------------------------------------------------------
 // Function to compute the intersection between a triangle and a plane
-static Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, const Point3Df& v2, const Plane& plane, float zPlane)
+static Edge IntersectTriangleWithPlane(const FloatVec3& v0, const FloatVec3& v1, const FloatVec3& v2, const Plane& plane, float zPlane)
 {
   PointInfo p0{plane.signedDistance(v0)};
   PointInfo p1{plane.signedDistance(v1)};
@@ -419,16 +419,16 @@ static Edge IntersectTriangleWithPlane(const Point3Df& v0, const Point3Df& v1, c
   intersectionEdge.zeroCount = zeroCount;
 
   // Interpolate from the lower-z endpoint so shared edges produce identical points.
-  auto computeIntersection = [](const Edge& e, float d1, float d2, float planeZ) -> Point3Df {
-    Point3Df s = e.start;
-    Point3Df en = e.end;
+  auto computeIntersection = [](const Edge& e, float d1, float d2, float planeZ) -> FloatVec3 {
+    FloatVec3 s = e.start;
+    FloatVec3 en = e.end;
     if(s[2] > en[2])
     {
       std::swap(s, en);
       std::swap(d1, d2);
     }
     const float t = d1 / (d1 - d2);
-    Point3Df p = s + (en - s) * t;
+    FloatVec3 p = s + (en - s) * t;
     p[2] = planeZ;
     return p;
   };
@@ -586,13 +586,13 @@ usize GeometryUtilities::determineBoundsAndNumSlices(float32& minDim, float32& m
 using TriStore = AbstractDataStore<INodeGeometry2D::SharedFaceList::value_type>;
 using VertsStore = AbstractDataStore<INodeGeometry0D::SharedVertexList::value_type>;
 
-inline static std::array<nx::core::Point3Df, 3> GetFaceCoordinates(usize triangleId, VertsStore& verts, TriStore& triangleList)
+inline static std::array<nx::core::FloatVec3, 3> GetFaceCoordinates(usize triangleId, VertsStore& verts, TriStore& triangleList)
 {
   usize v0Idx = triangleList[triangleId * 3];
   usize v1Idx = triangleList[triangleId * 3 + 1];
   usize v2Idx = triangleList[triangleId * 3 + 2];
-  return {Point3Df{verts[v0Idx * 3], verts[v0Idx * 3 + 1], verts[v0Idx * 3 + 2]}, Point3Df{verts[v1Idx * 3], verts[v1Idx * 3 + 1], verts[v1Idx * 3 + 2]},
-          Point3Df{verts[v2Idx * 3], verts[v2Idx * 3 + 1], verts[v2Idx * 3 + 2]}};
+  return {FloatVec3{verts[v0Idx * 3], verts[v0Idx * 3 + 1], verts[v0Idx * 3 + 2]}, FloatVec3{verts[v1Idx * 3], verts[v1Idx * 3 + 1], verts[v1Idx * 3 + 2]},
+          FloatVec3{verts[v2Idx * 3], verts[v2Idx * 3 + 1], verts[v2Idx * 3 + 2]}};
 }
 
 // ----------------------------------------------------------------------------
@@ -633,8 +633,8 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
     d = zValue;
 
     // Define a plane with a normal vector and a point on the plane
-    Point3Df planeNormal(0.0f, 0.0f, 1.0f); // Plane normal pointing along +Z
-    Point3Df pointOnPlane(0.0f, 0.0f, d);   // Plane passes through current Z Plane
+    FloatVec3 planeNormal(0.0f, 0.0f, 1.0f); // Plane normal pointing along +Z
+    FloatVec3 pointOnPlane(0.0f, 0.0f, d);   // Plane passes through current Z Plane
 
     // Create the plane
     slice_helper::Plane plane(planeNormal, pointOnPlane);
@@ -648,7 +648,7 @@ GeometryUtilities::SliceTriangleReturnType GeometryUtilities::SliceTriangleGeome
       {
         regionId = triRegionIdPtr->operator[](triIdx);
       }
-      std::array<nx::core::Point3Df, 3> faceVertices = GetFaceCoordinates(triIdx, triVertStore, triEdgeStore);
+      std::array<nx::core::FloatVec3, 3> faceVertices = GetFaceCoordinates(triIdx, triVertStore, triEdgeStore);
 
       // Compute the intersection
       slice_helper::Edge intersectionEdge = IntersectTriangleWithPlane(faceVertices[0], faceVertices[1], faceVertices[2], plane, zValue);

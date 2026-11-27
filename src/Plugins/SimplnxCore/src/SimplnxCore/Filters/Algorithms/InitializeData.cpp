@@ -463,7 +463,7 @@ void CreateFillPreflightVals(const std::string& initFillValueStr, usize numComps
 
   std::stringstream updatedValStrm;
 
-  auto initFillTokens = StringUtilities::split(initFillValueStr, std::vector<char>{';'}, false);
+  auto initFillTokens = StringUtilities::Split(initFillValueStr, std::vector<char>{';'}, false);
   if(initFillTokens.size() == 1)
   {
     updatedValStrm << "Each tuple will contain the same values for all components: ";
@@ -483,8 +483,8 @@ void CreateIncrementalPreflightVals(const std::string& initFillValueStr, usize s
 {
   std::stringstream ss;
 
-  auto initFillTokens = StringUtilities::split(initFillValueStr, std::vector<char>{';'}, false);
-  auto stepValueTokens = StringUtilities::split(stepValueStr, ";", false);
+  auto initFillTokens = StringUtilities::Split(initFillValueStr, std::vector<char>{';'}, false);
+  auto stepValueTokens = StringUtilities::Split(stepValueStr, ";", false);
 
   if(numComps > 1)
   {
@@ -584,10 +584,10 @@ void CreateRandomPreflightVals(bool standardizeSeed, InitializeType initType, co
     else if(initType == InitializeType::RangedRandom)
     {
       ss << fmt::format("All {} components in each of the {} tuples will be filled with random values ranging from these starting values:", numComps, numTuples);
-      auto startRangeTokens = StringUtilities::split(initStartRange, ";", false);
+      auto startRangeTokens = StringUtilities::Split(initStartRange, ";", false);
       ss << "\n" << CreateCompValsStr(startRangeTokens, numComps);
       ss << "\nto these ending values:";
-      auto endRangeTokens = StringUtilities::split(initEndRange, ";", false);
+      auto endRangeTokens = StringUtilities::Split(initEndRange, ";", false);
       ss << "\n" << CreateCompValsStr(endRangeTokens, numComps);
     }
 

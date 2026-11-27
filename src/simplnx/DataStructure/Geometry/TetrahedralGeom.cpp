@@ -221,12 +221,12 @@ Result<> TetrahedralGeom::findElementCentroids(bool recalculate)
   return {};
 }
 
-Point3D<float64> TetrahedralGeom::getParametricCenter() const
+Vec3<float64> TetrahedralGeom::getParametricCenter() const
 {
   return {0.25, 0.25, 0.25};
 }
 
-void TetrahedralGeom::getShapeFunctions([[maybe_unused]] const Point3D<float64>& pCoords, double* shape) const
+void TetrahedralGeom::getShapeFunctions([[maybe_unused]] const Vec3<float64>& pCoords, double* shape) const
 {
   // r-derivatives
   shape[0] = -1.0;

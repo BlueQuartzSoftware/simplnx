@@ -34,10 +34,10 @@ constexpr StringLiteral k_FirstNXFaceIPFColors("NXFaceIPFColors 0");
 constexpr StringLiteral k_SecondNXFaceIPFColors("NXFaceIPFColors 1");
 
 DataPath SmallIn100Group({nx::core::Constants::k_SmallIN100});
-DataPath FeatureDataPath = SmallIn100Group.createChildPath(nx::core::Constants::k_Grain_Data);
+DataPath FeatureDataPath = SmallIn100Group.createChildPath(nx::core::Constants::k_GrainDataWithSpaces);
 DataPath AvgEulerAnglesPath = FeatureDataPath.createChildPath(nx::core::Constants::k_AvgEulerAngles);
 DataPath FeaturePhasesPath = FeatureDataPath.createChildPath(nx::core::Constants::k_Phases);
-DataPath CrystalStructurePath = SmallIn100Group.createChildPath(nx::core::Constants::k_Phase_Data).createChildPath(nx::core::Constants::k_CrystalStructures);
+DataPath CrystalStructurePath = SmallIn100Group.createChildPath(nx::core::Constants::k_PhaseData).createChildPath(nx::core::Constants::k_CrystalStructures);
 DataPath AvgQuatsPath = FeatureDataPath.createChildPath("AvgQuats");
 
 DataPath TriangleDataContainerPath({nx::core::Constants::k_TriangleDataContainerName});

@@ -143,7 +143,7 @@ enum class Type : int32_t
 };
 */
 
-Result<ScalarTypeParameterConverter::ValueType> ScalarTypeParameterConverter::convert(const nlohmann::json& json)
+Result<ScalarTypeParameterConverter::ValueType> ScalarTypeParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_number_integer())
   {

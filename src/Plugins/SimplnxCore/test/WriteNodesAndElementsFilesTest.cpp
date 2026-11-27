@@ -66,7 +66,7 @@ void ValidateFile(const fs::path& filePath, const std::vector<std::string>& expe
   REQUIRE(file.is_open());
 
   auto validateTokens = [&](const std::string& line, const std::vector<std::string>& expectedTokens) {
-    auto tokens = StringUtilities::split(line, ' ');
+    auto tokens = StringUtilities::Split(line, ' ');
     REQUIRE(tokens == expectedTokens);
   };
 

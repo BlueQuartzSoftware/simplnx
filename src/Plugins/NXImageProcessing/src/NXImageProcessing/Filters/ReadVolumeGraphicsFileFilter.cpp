@@ -144,7 +144,7 @@ Result<FileBlock> ParseFileBlock(std::ifstream& inputFile, usize& lineCount)
 
   while(buf[0] != '[' && !inputFile.eof())
   {
-    std::vector<std::string> tokens = StringUtilities::split(buf, ' ');
+    std::vector<std::string> tokens = StringUtilities::Split(buf, ' ');
     if(tokens[0] == k_FileFormat)
     {
       fileBlock.file_format = tokens[2];
@@ -222,7 +222,7 @@ Result<GeometryBlock> ParseGeometryBlock(std::ifstream& inputFile, const fs::pat
 
   while(buf[0] != '[' && !inputFile.eof())
   {
-    tokens = StringUtilities::split(buf, ' ');
+    tokens = StringUtilities::Split(buf, ' ');
     if(tokens[0] == k_Status)
     {
       block.status = tokens[2];

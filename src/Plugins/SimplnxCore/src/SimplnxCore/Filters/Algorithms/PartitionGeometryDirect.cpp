@@ -212,7 +212,7 @@ public:
 
           const usize index = (z * dims[1] * dims[0]) + (y * dims[0]) + x;
 
-          Point3D<float64> coord = m_InputGeometry.getCoords(x, y, z);
+          Vec3<float64> coord = m_InputGeometry.getCoords(x, y, z);
           auto partitionIndexResult = m_PSImageGeom.getIndex(coord[0], coord[1], coord[2]);
           if(partitionIndexResult.has_value())
           {

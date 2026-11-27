@@ -293,12 +293,12 @@ Result<> InitializeDataFilter::executeImpl(DataStructure& dataStructure, const A
   inputValues.InputArrayPath = filterArgs.value<DataPath>(k_ArrayPath_Key);
   inputValues.initType = initType;
   inputValues.stepType = static_cast<StepType>(filterArgs.value<uint64>(k_StepOperation_Key));
-  inputValues.stringValues = StringUtilities::split(StringUtilities::trimmed(filterArgs.value<std::string>(k_InitValue_Key)), k_DelimiterChar);
-  inputValues.startValues = StringUtilities::split(StringUtilities::trimmed(filterArgs.value<std::string>(k_StartingFillValue_Key)), k_DelimiterChar);
-  inputValues.stepValues = StringUtilities::split(StringUtilities::trimmed(filterArgs.value<std::string>(k_StepValue_Key)), k_DelimiterChar);
+  inputValues.stringValues = StringUtilities::Split(StringUtilities::trimmed(filterArgs.value<std::string>(k_InitValue_Key)), k_DelimiterChar);
+  inputValues.startValues = StringUtilities::Split(StringUtilities::trimmed(filterArgs.value<std::string>(k_StartingFillValue_Key)), k_DelimiterChar);
+  inputValues.stepValues = StringUtilities::Split(StringUtilities::trimmed(filterArgs.value<std::string>(k_StepValue_Key)), k_DelimiterChar);
   inputValues.seed = seed;
-  inputValues.randBegin = StringUtilities::split(StringUtilities::trimmed(filterArgs.value<std::string>(k_InitStartRange_Key)), k_DelimiterChar);
-  inputValues.randEnd = StringUtilities::split(StringUtilities::trimmed(filterArgs.value<std::string>(k_InitEndRange_Key)), k_DelimiterChar);
+  inputValues.randBegin = StringUtilities::Split(StringUtilities::trimmed(filterArgs.value<std::string>(k_InitStartRange_Key)), k_DelimiterChar);
+  inputValues.randEnd = StringUtilities::Split(StringUtilities::trimmed(filterArgs.value<std::string>(k_InitEndRange_Key)), k_DelimiterChar);
   inputValues.standardizeSeed = filterArgs.value<bool>(k_StandardizeSeed_Key);
 
   return InitializeData(dataStructure, messageHandler, shouldCancel, &inputValues)();

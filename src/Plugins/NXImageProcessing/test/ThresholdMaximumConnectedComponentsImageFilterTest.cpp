@@ -45,7 +45,7 @@ void RunTMCC(IFilter& filter, DataStructure& dataStructure, const DataPath& inpu
 
 // -----------------------------------------------------------------------------
 // (1) Preflight guards: a multi-component input is rejected (requireScalar); a valid scalar input (of ANY numeric
-//     type, incl. float) produces a FIXED uint8 output array (AlwaysUInt8).
+//     type, incl. float) produces a FIXED uint8 output array (AlwaysUInt8Type).
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: preflight guards", "[NXImageProcessing][ThresholdMaximumConnectedComponentsImageFilter]")
 {
@@ -88,7 +88,7 @@ TEST_CASE("NXImageProcessing::ThresholdMaximumConnectedComponentsImageFilter: pr
 
 // -----------------------------------------------------------------------------
 // ITK-sourced real-image golden -- duplicates ITKThresholdMaximumConnectedComponentsImageTest.cpp on our ITK-free
-// filter. The output is a fixed uint8 binary image (AlwaysUInt8). The durable golden is an md5 pin. The helper pins
+// filter. The output is a fixed uint8 binary image (AlwaysUInt8Type). The durable golden is an md5 pin. The helper pins
 // ForceInCore.
 //   default:    cthead1.png, defaults (MinimumObjectSizeInPixels 0, UpperBoundary 65536, Inside 1, Outside 0).
 //   parameters: cthead1.png, MinimumObjectSizeInPixels = 40 AND UpperBoundary = 150.

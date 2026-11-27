@@ -64,7 +64,7 @@ struct TriangleZRange
  *
  * The half-open vertex classification prevents duplicate crossings at shared vertices.
  */
-bool SliceTriangleAtZ(const std::array<Point3Df, 3>& verts, float32 zPlane, float32& outX1, float32& outY1, float32& outX2, float32& outY2)
+bool SliceTriangleAtZ(const std::array<FloatVec3, 3>& verts, float32 zPlane, float32& outX1, float32& outY1, float32& outX2, float32& outY2)
 {
   // Vertices on the plane belong to the upper half-space.
   std::array<bool, 3> above = {verts[0][2] >= zPlane, verts[1][2] >= zPlane, verts[2][2] >= zPlane};
@@ -185,9 +185,9 @@ public:
       usize v0Idx = m_FacesBuffer[t * 3];
       usize v1Idx = m_FacesBuffer[t * 3 + 1];
       usize v2Idx = m_FacesBuffer[t * 3 + 2];
-      std::array<Point3Df, 3> verts = {Point3Df{m_VerticesBuffer[v0Idx * 3], m_VerticesBuffer[v0Idx * 3 + 1], m_VerticesBuffer[v0Idx * 3 + 2]},
-                                       Point3Df{m_VerticesBuffer[v1Idx * 3], m_VerticesBuffer[v1Idx * 3 + 1], m_VerticesBuffer[v1Idx * 3 + 2]},
-                                       Point3Df{m_VerticesBuffer[v2Idx * 3], m_VerticesBuffer[v2Idx * 3 + 1], m_VerticesBuffer[v2Idx * 3 + 2]}};
+      std::array<FloatVec3, 3> verts = {FloatVec3{m_VerticesBuffer[v0Idx * 3], m_VerticesBuffer[v0Idx * 3 + 1], m_VerticesBuffer[v0Idx * 3 + 2]},
+                                       FloatVec3{m_VerticesBuffer[v1Idx * 3], m_VerticesBuffer[v1Idx * 3 + 1], m_VerticesBuffer[v1Idx * 3 + 2]},
+                                       FloatVec3{m_VerticesBuffer[v2Idx * 3], m_VerticesBuffer[v2Idx * 3 + 1], m_VerticesBuffer[v2Idx * 3 + 2]}};
 
       float32 ex1 = NAN;
       float32 ey1 = NAN;

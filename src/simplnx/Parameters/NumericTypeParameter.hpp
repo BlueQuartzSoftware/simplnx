@@ -91,7 +91,7 @@ struct SIMPLNX_EXPORT NumericTypeParameterConverter
   using ParameterType = NumericTypeParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT ScalarTypeParameterToNumericTypeConverter
@@ -99,7 +99,7 @@ struct SIMPLNX_EXPORT ScalarTypeParameterToNumericTypeConverter
   using ParameterType = NumericTypeParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 } // namespace SIMPLConversion
 } // namespace nx::core

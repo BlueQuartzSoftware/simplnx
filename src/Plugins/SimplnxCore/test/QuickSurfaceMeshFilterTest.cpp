@@ -139,9 +139,9 @@ void CorrectLegacyExemplarTransferOrder(DataStructure& dataStructure, const Data
   // The legacy exemplar transferred FeatureIds record the source side of every transferred tuple.
   // Use those IDs, independently of the computed mesh, to align all exemplar tuples with Face Labels.
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath(k_FeatureIds)));
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath(k_Face_Labels)));
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath(k_FaceLabelsWithSpaces)));
   const auto& ids = dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath(k_FeatureIds));
-  const auto& labels = dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath(k_Face_Labels));
+  const auto& labels = dataStructure.getDataRefAs<Int32Array>(facePath.createChildPath(k_FaceLabelsWithSpaces));
   auto& faces = dataStructure.getDataRefAs<AttributeMatrix>(facePath);
   for(usize face = 0; face < labels.getNumberOfTuples(); face++)
   {
@@ -151,7 +151,7 @@ void CorrectLegacyExemplarTransferOrder(DataStructure& dataStructure, const Data
       REQUIRE(ids[2 * face + 1] == labels[2 * face]);
       for(const auto& [id, object] : faces)
       {
-        if(object->getName() != k_Face_Labels)
+        if(object->getName() != k_FaceLabelsWithSpaces)
         {
           auto* arrayPtr = dynamic_cast<IDataArray*>(object.get());
           REQUIRE(arrayPtr != nullptr);
@@ -363,7 +363,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMesh
   DataPath vertexGroupDataPath = computedTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
   DataPath faceGroupDataPath = computedTriangleGeomPath.createChildPath(k_FaceDataGroupName);
-  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
+  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_FaceLabelsWithSpaces);
 
   DataPath exemplarTriangleGeomPath({"Exemplar QuickMesh"});
   DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
@@ -401,12 +401,12 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter", "[SimplnxCore][QuickSurfaceMesh
     args.insertOrAssign(QuickSurfaceMeshFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
     args.insertOrAssign(QuickSurfaceMeshFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
     args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-    args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+    args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
     UnitTest::RequireAutomaticCreateArrayActions(preflightResult.outputActions, 2 + selectedCellArrayPaths.size() + selectedFeatureArrayPaths.size());
-    std::vector<DataPath> expectedArrayPaths = {vertexGroupDataPath.createChildPath(k_NodeTypeArrayName), faceGroupDataPath.createChildPath(k_Face_Labels)};
+    std::vector<DataPath> expectedArrayPaths = {vertexGroupDataPath.createChildPath(k_NodeTypeArrayName), faceGroupDataPath.createChildPath(k_FaceLabelsWithSpaces)};
     for(const auto& path : selectedCellArrayPaths)
     {
       expectedArrayPaths.push_back(faceGroupDataPath.createChildPath(path.getTargetName()));
@@ -472,7 +472,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding", "[SimplnxCore][QuickSu
   DataPath vertexGroupDataPath = computedTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
   DataPath faceGroupDataPath = computedTriangleGeomPath.createChildPath(k_FaceDataGroupName);
-  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
+  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_FaceLabelsWithSpaces);
 
   DataPath exemplarTriangleGeomPath({"Exemplar QuickMesh Winding"});
   DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
@@ -510,7 +510,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding", "[SimplnxCore][QuickSu
     args.insertOrAssign(QuickSurfaceMeshFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
     args.insertOrAssign(QuickSurfaceMeshFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
     args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-    args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+    args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -570,7 +570,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Problem Voxels", "[SimplnxCore][
   DataPath vertexGroupDataPath = computedTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
   DataPath faceGroupDataPath = computedTriangleGeomPath.createChildPath(k_FaceDataGroupName);
-  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
+  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_FaceLabelsWithSpaces);
 
   DataPath exemplarTriangleGeomPath({"Exemplar QuickMesh Problem Voxels"});
   DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
@@ -608,7 +608,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Problem Voxels", "[SimplnxCore][
     args.insertOrAssign(QuickSurfaceMeshFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
     args.insertOrAssign(QuickSurfaceMeshFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
     args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-    args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+    args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)
@@ -668,7 +668,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding and Problem Voxels", "[S
   DataPath vertexGroupDataPath = computedTriangleGeomPath.createChildPath(k_VertexDataGroupName);
   DataPath nodeTypeDataPath = vertexGroupDataPath.createChildPath(k_NodeTypeArrayName);
   DataPath faceGroupDataPath = computedTriangleGeomPath.createChildPath(k_FaceDataGroupName);
-  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_Face_Labels);
+  DataPath faceLabelsDataPath = faceGroupDataPath.createChildPath(k_FaceLabelsWithSpaces);
 
   DataPath exemplarTriangleGeomPath({"Exemplar QuickMesh Problem Voxel Winding"});
   DataPath exemplarSharedTriPath = exemplarTriangleGeomPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
@@ -706,7 +706,7 @@ TEST_CASE("SimplnxCore::QuickSurfaceMeshFilter: Winding and Problem Voxels", "[S
     args.insertOrAssign(QuickSurfaceMeshFilter::k_VertexDataGroupName_Key, std::make_any<std::string>(k_VertexDataGroupName));
     args.insertOrAssign(QuickSurfaceMeshFilter::k_NodeTypesArrayName_Key, std::make_any<std::string>(k_NodeTypeArrayName));
     args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceDataGroupName_Key, std::make_any<std::string>(k_FaceDataGroupName));
-    args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_Face_Labels));
+    args.insertOrAssign(QuickSurfaceMeshFilter::k_FaceLabelsArrayName_Key, std::make_any<std::string>(k_FaceLabelsWithSpaces));
 
     auto preflightResult = filter.preflight(dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions)

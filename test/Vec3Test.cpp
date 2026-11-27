@@ -561,7 +561,6 @@ TEST_CASE("Vec3 Type Aliases")
   STATIC_REQUIRE(std::is_same_v<Float64Vec3::value_type, float64>);
   STATIC_REQUIRE(std::is_same_v<IntVec3::value_type, int32>);
   STATIC_REQUIRE(std::is_same_v<SizeVec3::value_type, usize>);
-  STATIC_REQUIRE(std::is_same_v<Point3Df::value_type, float32>);
   STATIC_REQUIRE(std::is_same_v<Matrix3X1f::value_type, float32>);
   STATIC_REQUIRE(std::is_same_v<Matrix3X1d::value_type, float64>);
 
@@ -587,12 +586,6 @@ TEST_CASE("Vec3 Type Aliases")
   {
     SizeVec3 v(1, 2, 3);
     REQUIRE(v[0] == 1);
-  }
-
-  SECTION("Point3D alias")
-  {
-    Point3Df v(1.0f, 2.0f, 3.0f);
-    REQUIRE(v[0] == 1.0f);
   }
 
   SECTION("Matrix3X1 alias")

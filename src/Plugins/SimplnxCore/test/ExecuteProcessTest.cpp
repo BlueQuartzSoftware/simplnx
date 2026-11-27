@@ -78,7 +78,7 @@ TEST_CASE("SimplnxCore::ExecuteProcessFilter: Valid filter execution")
   buffer << processOutputFile.rdbuf();
 
   std::string firstLine;
-  std::vector<std::string> outputLines = nx::core::StringUtilities::split(buffer.str(), '\n');
+  std::vector<std::string> outputLines = nx::core::StringUtilities::Split(buffer.str(), '\n');
   firstLine = StringUtilities::trimmed(outputLines[0]);
   const std::string correctOutput = fmt::format("nxrunner: Version {} Build Date:{}", nx::core::Version::Package(), nx::core::Version::BuildDate());
   REQUIRE(firstLine == correctOutput);

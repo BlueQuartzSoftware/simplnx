@@ -148,8 +148,8 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
     }
 
     auto boundingBox = srcImageGeomPtr->getBoundingBoxf();
-    const Point3Df& minPoint = boundingBox.getMinPoint();
-    const Point3Df& maxPoint = boundingBox.getMaxPoint();
+    const FloatVec3& minPoint = boundingBox.getMinPoint();
+    const FloatVec3& maxPoint = boundingBox.getMaxPoint();
 
     for(uint8 i = 0; i < 3; i++)
     {

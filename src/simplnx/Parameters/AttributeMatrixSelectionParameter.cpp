@@ -112,7 +112,7 @@ Result<std::any> AttributeMatrixSelectionParameter::resolve(DataStructure& dataS
 
 namespace SIMPLConversion
 {
-Result<DataArrayCreationToAMFilterParameterConverter::ValueType> DataArrayCreationToAMFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataArrayCreationToAMFilterParameterConverter::ValueType> DataArrayCreationToAMFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   auto dataContainerNameResult = ReadDataContainerName(json, "DataArrayCreationFilterParameter");
   if(dataContainerNameResult.invalid())
@@ -131,7 +131,7 @@ Result<DataArrayCreationToAMFilterParameterConverter::ValueType> DataArrayCreati
   return {std::move(dataPath)};
 }
 
-Result<AttributeMatrixSelectionFilterParameterConverter::ValueType> AttributeMatrixSelectionFilterParameterConverter::convert(const nlohmann::json& json)
+Result<AttributeMatrixSelectionFilterParameterConverter::ValueType> AttributeMatrixSelectionFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   auto dataContainerNameResult = ReadDataContainerName(json, "AttributeMatrixSelectionFilterParameter");
   if(dataContainerNameResult.invalid())

@@ -141,7 +141,7 @@ TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: large-offs
 //     A ramp input makes each column an arithmetic sequence with a per-axis common difference, so the
 //     per-axis standard deviation differs by axis, and BOTH output modes of the shared façade are exercised.
 //     The output element type is Float64. This is the correctness gate for the axis-projection façade
-//     (AllNumeric + AlwaysFloat64) + engine + StdDevReduce, including its SAMPLE (divide-by-(N-1)) variance
+//     (AllNumeric + AlwaysFloat64Type) + engine + StdDevReduce, including its SAMPLE (divide-by-(N-1)) variance
 //     convention lifted from itkStandardDeviationProjectionImageFilter.h.
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::StandardDeviationProjectionImageFilter: Computed-expected grid (3D)", "[NXImageProcessing][StandardDeviationProjectionImageFilter]")

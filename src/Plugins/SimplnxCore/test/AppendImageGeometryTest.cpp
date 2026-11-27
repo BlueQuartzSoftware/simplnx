@@ -292,7 +292,7 @@ TEST_CASE("SimplnxCore::AppendImageGeometryFilter: Valid Filter Execution", "[Si
       if(testMissingArrays)
       {
         // Remove arrays
-        RemoveArray(dataStructure, topPath.createChildPath(k_CellData).createChildPath(k_Confidence_Index));
+        RemoveArray(dataStructure, topPath.createChildPath(k_CellData).createChildPath(k_ConfidenceIndexWithSpaces));
         RemoveArray(dataStructure, topPath.createChildPath(k_CellData).createChildPath(k_Phases));
       }
 

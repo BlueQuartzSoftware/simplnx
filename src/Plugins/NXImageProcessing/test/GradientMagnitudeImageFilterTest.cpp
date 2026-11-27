@@ -62,7 +62,7 @@ std::vector<T> MakeRamp(usize dx, usize dy, usize dz)
 
 // -----------------------------------------------------------------------------
 // (1) Preflight guards: a multi-component input is rejected (requireScalar); a valid scalar input produces a FIXED
-//     float32 output array (AlwaysFloat32), regardless of the input element type.
+//     float32 output array (AlwaysFloat32Type), regardless of the input element type.
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::GradientMagnitudeImageFilter: preflight guards", "[NXImageProcessing][GradientMagnitudeImageFilter]")
 {
@@ -138,7 +138,7 @@ TEST_CASE("NXImageProcessing::GradientMagnitudeImageFilter: FromSIMPLJson", "[NX
 // ITK-free filter: the test reads RA-Float.nrrd (float32) through our reader and runs our filter with the ITK case's
 // parameters (all defaults; UseImageSpacing defaults to true). The durable golden compares the output with ITK's
 // committed baseline BasicFilters_GradientMagnitudeImageFilter_default.nrrd at the ITK test's tolerance of 1e-05 via
-// ip_golden::CompareImages. The output is a fixed float32 (AlwaysFloat32). The helper pins ForceInCore.
+// ip_golden::CompareImages. The output is a fixed float32 (AlwaysFloat32Type). The helper pins ForceInCore.
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::GradientMagnitudeImageFilter: ITK real-image golden (default)", "[NXImageProcessing][ItkGolden][GradientMagnitudeImageFilter]")
 {

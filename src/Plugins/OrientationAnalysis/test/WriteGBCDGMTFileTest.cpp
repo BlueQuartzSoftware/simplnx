@@ -83,11 +83,11 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter", "[OrientationAnalysis][
   auto baseDataFilePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
   DataStructure dataStructure = UnitTest::LoadDataStructure(baseDataFilePath);
   const DataPath smallIn100Group({nx::core::Constants::k_SmallIN100});
-  const DataPath featureDataPath = smallIn100Group.createChildPath(Constants::k_Grain_Data);
+  const DataPath featureDataPath = smallIn100Group.createChildPath(Constants::k_GrainDataWithSpaces);
   const DataPath avgEulerAnglesPath = featureDataPath.createChildPath(Constants::k_AvgEulerAngles);
   const DataPath featurePhasesPath = featureDataPath.createChildPath(Constants::k_Phases);
 
-  const DataPath ensembleDataPath = smallIn100Group.createChildPath(Constants::k_Phase_Data);
+  const DataPath ensembleDataPath = smallIn100Group.createChildPath(Constants::k_PhaseData);
   const DataPath crystalStructurePath = ensembleDataPath.createChildPath(Constants::k_CrystalStructures);
 
   const DataPath triangleDataContainerPath({Constants::k_TriangleDataContainerName});
@@ -373,7 +373,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDGMTFileFilter: Cancellation before publ
 
   const fs::path sourcePath = fs::path(fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD.dream3d", unit_test::k_TestFilesDir));
   const DataPath smallIn100Group({nx::core::Constants::k_SmallIN100});
-  const DataPath crystalStructurePath = smallIn100Group.createChildPath(Constants::k_Phase_Data).createChildPath(Constants::k_CrystalStructures);
+  const DataPath crystalStructurePath = smallIn100Group.createChildPath(Constants::k_PhaseData).createChildPath(Constants::k_CrystalStructures);
   const DataPath gbcdArrayPath = DataPath({Constants::k_TriangleDataContainerName}).createChildPath("FaceEnsembleData").createChildPath(Constants::k_GBCD_Name);
   const fs::path outputPath = fs::path(unit_test::k_BinaryTestOutputDir.view()) / "gbcd_gmt_cancellation.dat";
   const std::string sentinel = "existing GMT bytes";

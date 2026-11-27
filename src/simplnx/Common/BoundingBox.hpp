@@ -20,7 +20,7 @@ namespace nx::core
  * Template Type: Point - Point is a parameter for the type of (simplnx) Point used
  * by the BoundingBox based on the templated value type.
  */
-template <typename T, template <typename> class Point = Point3D>
+template <typename T, template <typename> class Point = Vec3>
 class BoundingBox
 {
 public:
@@ -43,7 +43,7 @@ public:
 
   /**
    * @brief ValueType is an alias for the value type describing bounds along
-   * each axis. The ValueType describes the type of Point3D, std::arrays, or
+   * each axis. The ValueType describes the type of Vec3, std::arrays, or
    * pointers used for BoundingBox.
    */
   using ValueType = T;
@@ -71,11 +71,11 @@ public:
    * The format is min X, min Y, min Z, max X, max Y, max Z.
    * @param arr
    */
-  template <class PointT = PointType>
+  template <class PointArgType = PointType>
   explicit BoundingBox(nonstd::span<const ValueType, 6> arr)
-  requires(std::is_same_v<PointT, Point3D<ValueType>>)
-  : m_Lower(Point3D<ValueType>(arr[0], arr[1], arr[2]))
-  , m_Upper(Point3D<ValueType>(arr[3], arr[4], arr[5]))
+  requires(std::is_same_v<PointArgType, Vec3<ValueType>>)
+  : m_Lower(Vec3<ValueType>(arr[0], arr[1], arr[2]))
+  , m_Upper(Vec3<ValueType>(arr[3], arr[4], arr[5]))
   {
   }
 
@@ -84,11 +84,11 @@ public:
    * The format is min X, min Y, max X, max Y.
    * @param arr
    */
-  template <class PointT = PointType>
+  template <class PointArgType = PointType>
   explicit BoundingBox(nonstd::span<const ValueType, 4> arr)
-  requires(std::is_same_v<PointT, Point2D<ValueType>>)
-  : m_Lower(Point2D<ValueType>(arr[0], arr[1]))
-  , m_Upper(Point2D<ValueType>(arr[2], arr[3]))
+  requires(std::is_same_v<PointArgType, Vec2<ValueType>>)
+  : m_Lower(Vec2<ValueType>(arr[0], arr[1]))
+  , m_Upper(Vec2<ValueType>(arr[2], arr[3]))
   {
   }
 
@@ -194,12 +194,12 @@ protected:
 };
 
 template <typename T>
-using BoundingBox3D = BoundingBox<T, Point3D>;
-using BoundingBox3Df = BoundingBox<float32, Point3D>;
-using BoundingBox3Dd = BoundingBox<float64, Point3D>;
+using BoundingBox3D = BoundingBox<T, Vec3>;
+using BoundingBox3Df = BoundingBox<float32, Vec3>;
+using BoundingBox3Dd = BoundingBox<float64, Vec3>;
 
 template <typename T>
-using BoundingBox2D = BoundingBox<T, Point2D>;
-using BoundingBox2Df = BoundingBox<float32, Point2D>;
-using BoundingBox2Dd = BoundingBox<float64, Point2D>;
+using BoundingBox2D = BoundingBox<T, Vec2>;
+using BoundingBox2Df = BoundingBox<float32, Vec2>;
+using BoundingBox2Dd = BoundingBox<float64, Vec2>;
 } // namespace nx::core

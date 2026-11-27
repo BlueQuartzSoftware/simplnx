@@ -73,8 +73,8 @@ Result<> ProcessVertices(const IFilter::MessageHandler& messageHandler, const Ve
       if constexpr(OutOfBoundsType::k_UsingError)
       {
         BoundingBox3Df imageBounds = image.getBoundingBoxf();
-        const Point3Df& minPoint = imageBounds.getMinPoint();
-        const Point3Df& maxPoint = imageBounds.getMaxPoint();
+        const FloatVec3& minPoint = imageBounds.getMinPoint();
+        const FloatVec3& maxPoint = imageBounds.getMaxPoint();
         return MakeErrorResult(
             k_ErrorOutOfBounds,
             fmt::format("Out of bounds value encountered.\nVertex Index: {}\nVertex Coordinates [X,Y,Z]: [{},{},{}]\nImage Coordinate Bounds:\nX: {} to {}\nY: {} to {}\nZ: {} to {}", i, coords[0],

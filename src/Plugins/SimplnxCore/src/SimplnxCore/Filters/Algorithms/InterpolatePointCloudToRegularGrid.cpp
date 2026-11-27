@@ -564,7 +564,7 @@ Result<> InterpolatePointCloudToRegularGrid::operator()()
       continue;
     }
 
-    const Point3D<float32> coords = verticesPtr->getVertexCoordinate(i);
+    const Vec3<float32> coords = verticesPtr->getVertexCoordinate(i);
     const std::optional<usize> optIndex = imagePtr->getIndex(coords[0], coords[1], coords[2]);
     if(!optIndex.has_value())
     {

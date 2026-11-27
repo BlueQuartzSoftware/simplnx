@@ -186,7 +186,7 @@ struct SIMPLNX_EXPORT InputFileFilterParameterConverter
   using ParameterType = FileSystemPathParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT OutputFileFilterParameterConverter
@@ -194,7 +194,7 @@ struct SIMPLNX_EXPORT OutputFileFilterParameterConverter
   using ParameterType = FileSystemPathParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 } // namespace SIMPLConversion
 } // namespace nx::core

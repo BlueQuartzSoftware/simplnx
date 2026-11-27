@@ -237,20 +237,20 @@ IFilter::PreflightResult ReadH5EbsdFilter::preflightImpl(const DataStructure& /*
   }
 
   {
-    const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(ebsdlib::EnsembleData::CrystalStructures);
+    const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(nx::core::h5_ebsd_ensemble_data::k_CrystalStructures);
     auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::uint32, tupleDims, cDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
 
   {
-    const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(ebsdlib::EnsembleData::MaterialName);
+    const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(nx::core::h5_ebsd_ensemble_data::k_MaterialName);
     auto action = std::make_unique<CreateStringArrayAction>(tupleDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
 
   cDims[0] = 6;
   {
-    const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(ebsdlib::EnsembleData::LatticeConstants);
+    const DataPath dataArrayPath = pCellEnsembleAttributeMatrixNameValue.createChildPath(nx::core::h5_ebsd_ensemble_data::k_LatticeConstants);
     auto action = std::make_unique<CreateArrayAction>(nx::core::DataType::float32, tupleDims, cDims, dataArrayPath);
     resultOutputActions.value().appendAction(std::move(action));
   }
@@ -331,7 +331,7 @@ struct ReadH5EbsdFilterParameterConverter
   static constexpr StringLiteral k_RefFrameZDirKey = "RefFrameZDir";
   static constexpr StringLiteral k_UseTransformationsKey = "UseTransformations";
 
-  static Result<ValueType> convert(const nlohmann::json& json)
+  static Result<ValueType> Convert(const nlohmann::json& json)
   {
     static constexpr std::array<StringLiteral, 6> k_RequiredKeys = {k_InputFileKey, k_SelectedArrayNamesKey, k_ZStartIndexKey, k_ZEndIndexKey, k_RefFrameZDirKey, k_UseTransformationsKey};
     for(const auto& key : k_RequiredKeys)

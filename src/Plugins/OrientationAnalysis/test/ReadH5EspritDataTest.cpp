@@ -55,8 +55,8 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Single Scan", "[Orientat
   args.insertOrAssign(ReadH5EspritDataFilter::k_DegreesToRadians_Key, std::make_any<bool>(true));
   args.insertOrAssign(ReadH5EspritDataFilter::k_ReadPatternData_Key, std::make_any<bool>(false));
   args.insertOrAssign(ReadH5EspritDataFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({ImageGeom::k_TypeName})));
-  args.insertOrAssign(ReadH5EspritDataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Data));
-  args.insertOrAssign(ReadH5EspritDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Ensemble_Data));
+  args.insertOrAssign(ReadH5EspritDataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellDataWithSpaces));
+  args.insertOrAssign(ReadH5EspritDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_CellEnsembleDataWithSpaces));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -82,8 +82,8 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Single Scan", "[Orientat
 
   // Independent oracle (simplnx #1804): every generated cell must hold the measurement whose beam coordinates name that cell.
   {
-    const DataPath xBeamPath = generatedImageGeomPath.createChildPath(k_Cell_Data).createChildPath(ebsdlib::H5Esprit::XBEAM);
-    const DataPath yBeamPath = generatedImageGeomPath.createChildPath(k_Cell_Data).createChildPath(ebsdlib::H5Esprit::YBEAM);
+    const DataPath xBeamPath = generatedImageGeomPath.createChildPath(k_CellDataWithSpaces).createChildPath(ebsdlib::H5Esprit::XBEAM);
+    const DataPath yBeamPath = generatedImageGeomPath.createChildPath(k_CellDataWithSpaces).createChildPath(ebsdlib::H5Esprit::YBEAM);
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(xBeamPath));
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(yBeamPath));
     const auto& xBeam = dataStructure.getDataRefAs<Int32Array>(xBeamPath);
@@ -105,9 +105,9 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Single Scan", "[Orientat
     REQUIRE(misplaced == 0);
   }
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, generatedImageGeomPath.createChildPath(k_Cell_Data), exemplarImageGeomPath.getTargetName());
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, generatedImageGeomPath.createChildPath(k_CellDataWithSpaces), exemplarImageGeomPath.getTargetName());
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, generatedImageGeomPath.createChildPath(k_Cell_Ensemble_Data), exemplarImageGeomPath.getTargetName());
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, generatedImageGeomPath.createChildPath(k_CellEnsembleDataWithSpaces), exemplarImageGeomPath.getTargetName());
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }
@@ -137,8 +137,8 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Multi Scan", "[Orientati
   args.insertOrAssign(ReadH5EspritDataFilter::k_DegreesToRadians_Key, std::make_any<bool>(true));
   args.insertOrAssign(ReadH5EspritDataFilter::k_ReadPatternData_Key, std::make_any<bool>(false));
   args.insertOrAssign(ReadH5EspritDataFilter::k_CreatedImageGeometryPath_Key, std::make_any<DataPath>(DataPath({ImageGeom::k_TypeName})));
-  args.insertOrAssign(ReadH5EspritDataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Data));
-  args.insertOrAssign(ReadH5EspritDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_Cell_Ensemble_Data));
+  args.insertOrAssign(ReadH5EspritDataFilter::k_CellAttributeMatrixName_Key, std::make_any<std::string>(k_CellDataWithSpaces));
+  args.insertOrAssign(ReadH5EspritDataFilter::k_CellEnsembleAttributeMatrixName_Key, std::make_any<std::string>(k_CellEnsembleDataWithSpaces));
 
   // Preflight the filter and check result
   auto preflightResult = filter.preflight(dataStructure, args);
@@ -164,8 +164,8 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Multi Scan", "[Orientati
 
   // Independent oracle (simplnx #1804): every generated cell must hold the measurement whose beam coordinates name that cell.
   {
-    const DataPath xBeamPath = generatedImageGeomPath.createChildPath(k_Cell_Data).createChildPath(ebsdlib::H5Esprit::XBEAM);
-    const DataPath yBeamPath = generatedImageGeomPath.createChildPath(k_Cell_Data).createChildPath(ebsdlib::H5Esprit::YBEAM);
+    const DataPath xBeamPath = generatedImageGeomPath.createChildPath(k_CellDataWithSpaces).createChildPath(ebsdlib::H5Esprit::XBEAM);
+    const DataPath yBeamPath = generatedImageGeomPath.createChildPath(k_CellDataWithSpaces).createChildPath(ebsdlib::H5Esprit::YBEAM);
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(xBeamPath));
     REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(yBeamPath));
     const auto& xBeam = dataStructure.getDataRefAs<Int32Array>(xBeamPath);
@@ -187,9 +187,9 @@ TEST_CASE("OrientationAnalysis::ReadH5EspritDataFilter: Multi Scan", "[Orientati
     REQUIRE(misplaced == 0);
   }
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, generatedImageGeomPath.createChildPath(k_Cell_Data), exemplarImageGeomPath.getTargetName());
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, generatedImageGeomPath.createChildPath(k_CellDataWithSpaces), exemplarImageGeomPath.getTargetName());
 
-  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, generatedImageGeomPath.createChildPath(k_Cell_Ensemble_Data), exemplarImageGeomPath.getTargetName());
+  UnitTest::CompareExemplarToGeneratedData(dataStructure, dataStructure, generatedImageGeomPath.createChildPath(k_CellEnsembleDataWithSpaces), exemplarImageGeomPath.getTargetName());
 
   UnitTest::CheckArraysInheritTupleDims(dataStructure);
 }

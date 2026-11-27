@@ -18,11 +18,11 @@ namespace fs = std::filesystem;
 
 namespace
 {
-DataPath GrainDataPath = DataPath({Constants::k_SmallIN100, Constants::k_Grain_Data});
+DataPath GrainDataPath = DataPath({Constants::k_SmallIN100, Constants::k_GrainDataWithSpaces});
 DataPath NeighborListPath = GrainDataPath.createChildPath("NeighborList");
-DataPath AvgQuatsPath = DataPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_AvgQuats});
-DataPath FeaturePhasesPath = DataPath({Constants::k_SmallIN100, Constants::k_Grain_Data, Constants::k_Phases});
-DataPath CrystalStructuresPath = DataPath({Constants::k_SmallIN100, Constants::k_Phase_Data, Constants::k_CrystalStructures});
+DataPath AvgQuatsPath = DataPath({Constants::k_SmallIN100, Constants::k_GrainDataWithSpaces, Constants::k_AvgQuats});
+DataPath FeaturePhasesPath = DataPath({Constants::k_SmallIN100, Constants::k_GrainDataWithSpaces, Constants::k_Phases});
+DataPath CrystalStructuresPath = DataPath({Constants::k_SmallIN100, Constants::k_PhaseData, Constants::k_CrystalStructures});
 
 const std::string k_F1s = "F1List_COMPUTED";
 const std::string k_F1spts = "F1sptList_COMPUTED";

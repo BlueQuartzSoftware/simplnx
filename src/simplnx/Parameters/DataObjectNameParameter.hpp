@@ -99,7 +99,7 @@ struct SIMPLNX_EXPORT LinkedPathCreationFilterParameterConverter
   using ParameterType = DataObjectNameParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT DataArrayCreationToDataObjectNameFilterParameterConverter
@@ -107,7 +107,7 @@ struct SIMPLNX_EXPORT DataArrayCreationToDataObjectNameFilterParameterConverter
   using ParameterType = DataObjectNameParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT DataContainerNameFilterParameterConverter
@@ -115,7 +115,7 @@ struct SIMPLNX_EXPORT DataContainerNameFilterParameterConverter
   using ParameterType = DataObjectNameParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT AttributeMatrixNameFilterParameterConverter
@@ -123,7 +123,7 @@ struct SIMPLNX_EXPORT AttributeMatrixNameFilterParameterConverter
   using ParameterType = DataObjectNameParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 
 struct SIMPLNX_EXPORT DataArrayNameFilterParameterConverter
@@ -131,7 +131,7 @@ struct SIMPLNX_EXPORT DataArrayNameFilterParameterConverter
   using ParameterType = DataObjectNameParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 } // namespace SIMPLConversion
 } // namespace nx::core

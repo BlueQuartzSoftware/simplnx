@@ -339,7 +339,7 @@ TEST_CASE("SimplnxCore::ScalarSegmentFeatures: Neighbor Scheme", "[Reconstructio
     ScalarSegmentFeaturesFilter filter;
 
     DataPath smallIn100Group({k_SmallIn100ImageGeom});
-    DataPath ebsdScanDataPath = smallIn100Group.createChildPath(k_Cell_Data);
+    DataPath ebsdScanDataPath = smallIn100Group.createChildPath(k_CellDataWithSpaces);
     std::string outputFeatureIdsName = "Output_Feature_Ids";
     std::string computedCellDataName = "Computed_CellData";
     DataPath outputFeatureIdsPath = ebsdScanDataPath.createChildPath(outputFeatureIdsName);

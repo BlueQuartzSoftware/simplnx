@@ -146,7 +146,7 @@ public:
    * @param tetId The index of the cell to query
    * @param coords The coordinates of each vertex
    */
-  void getCellCoordinates(usize tetId, nonstd::span<Point3Df> coords) const;
+  void getCellCoordinates(usize tetId, nonstd::span<FloatVec3> coords) const;
 
   /**
    * @brief Returns the DataStructure unique ID of the polyhedron list array.

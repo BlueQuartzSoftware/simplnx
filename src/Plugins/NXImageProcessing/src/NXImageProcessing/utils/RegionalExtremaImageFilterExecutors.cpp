@@ -75,7 +75,7 @@ struct RegionalExtremaExecuteFn
   Result<> operator()() const
   {
     // Input is the T-typed image; the output is a FIXED uint32 binary label image (matching the legacy ITK
-    // RegionalMaxima/Minima FilterOutputType), so the preflight must have created it via the AlwaysUInt32 map.
+    // RegionalMaxima/Minima FilterOutputType), so the preflight must have created it via the AlwaysUInt32Type map.
     const auto& inArray = data_structure.getDataRefAs<DataArray<T>>(input_array_path);
     auto& outArray = data_structure.getDataRefAs<DataArray<uint32>>(output_array_path);
     const AbstractDataStore<T>& inStore = inArray.getDataStoreRef();

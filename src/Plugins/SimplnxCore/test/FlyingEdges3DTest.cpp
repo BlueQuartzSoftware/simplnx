@@ -28,7 +28,7 @@ const std::string k_DataName = "Data";
 const std::string k_VertexNormals = "VertexNormals";
 
 const DataPath k_GeometryPath = DataPath({k_ImageGeometryName});
-const DataPath k_DataPath = k_GeometryPath.createChildPath(Constants::k_Cell_Data).createChildPath(k_DataName);
+const DataPath k_DataPath = k_GeometryPath.createChildPath(Constants::k_CellDataWithSpaces).createChildPath(k_DataName);
 
 const std::string k_NewTriangleContourName = "Contouring Test";
 const std::string k_ExemplarTriangleContourName = "Contouring Geometry";

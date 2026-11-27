@@ -271,7 +271,7 @@ namespace
 {
 // -----------------------------------------------------------------------------
 // Shared body for the four ITK-sourced real-image md5 golden cases below. Mirrors ITKOtsuMultipleThresholdsImageTest.cpp:
-// read the ITK case's input through OUR ITK-free reader, run OUR OtsuMultipleThresholdsImageFilter (AlwaysUInt8 label
+// read the ITK case's input through OUR ITK-free reader, run OUR OtsuMultipleThresholdsImageFilter (AlwaysUInt8Type label
 // output) with the ITK case's params, then apply the (A) md5-validity-first golden (plan Sec.4). Pinned ForceInCore.
 // -----------------------------------------------------------------------------
 void RunOtsuItkGolden(const std::string& inputFile, const std::function<void(Arguments&)>& setParams, const std::string& committedMd5)

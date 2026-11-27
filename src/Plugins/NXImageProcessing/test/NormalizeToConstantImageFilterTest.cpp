@@ -52,7 +52,7 @@ TEST_CASE("NXImageProcessing::NormalizeToConstantImageFilter: Zero-sum error", "
 
 // -----------------------------------------------------------------------------
 // ITK-sourced real-image golden (plan Sec.3/Sec.6). Mirrors ITKNormalizeToConstantImageTest.cpp(defaults): read
-// Ramp-Up-Short.nrrd (int16) through OUR reader, run OUR NormalizeToConstantImageFilter (AlwaysFloat64 output, no
+// Ramp-Up-Short.nrrd (int16) through OUR reader, run OUR NormalizeToConstantImageFilter (AlwaysFloat64Type output, no
 // params -- Constant default 1.0, shared with the legacy filter), then:
 //   (A) DURABLE golden -- compare our float64 output to ITK's committed baseline .nrrd (type: double, SAME reader) at
 //       the ITK test's tolerance 0.0001 via ip_golden::CompareImages.

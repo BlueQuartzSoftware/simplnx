@@ -383,7 +383,7 @@ Result<std::vector<T>> SpacialVectorConvert(const nlohmann::json& json)
 "Min": 0
 */
 
-Result<RangeFilterParameterConverter::ValueType> RangeFilterParameterConverter::convert(const nlohmann::json& json)
+Result<RangeFilterParameterConverter::ValueType> RangeFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   constexpr StringLiteral k_MaxKey = "Max";
   constexpr StringLiteral k_MinKey = "Min";
@@ -405,7 +405,7 @@ Result<RangeFilterParameterConverter::ValueType> RangeFilterParameterConverter::
 }
 
 template <typename T>
-Result<typename MultiToVec3FilterParameterConverter<T>::ValueType> MultiToVec3FilterParameterConverter<T>::convert(const nlohmann::json& json1, const nlohmann::json& json2,
+Result<typename MultiToVec3FilterParameterConverter<T>::ValueType> MultiToVec3FilterParameterConverter<T>::Convert(const nlohmann::json& json1, const nlohmann::json& json2,
                                                                                                                    const nlohmann::json& json3)
 {
   using OutputTType = std::vector<T>;
@@ -452,7 +452,7 @@ template struct SIMPLNX_TEMPLATE_EXPORT MultiToVec3FilterParameterConverter<floa
 template struct SIMPLNX_TEMPLATE_EXPORT MultiToVec3FilterParameterConverter<float64>;
 
 template <typename T>
-Result<typename Vec2FilterParameterConverter<T>::ValueType> Vec2FilterParameterConverter<T>::convert(const nlohmann::json& json)
+Result<typename Vec2FilterParameterConverter<T>::ValueType> Vec2FilterParameterConverter<T>::Convert(const nlohmann::json& json)
 {
   return SpacialVectorConvert<2, T>(json);
 }
@@ -473,7 +473,7 @@ template struct SIMPLNX_TEMPLATE_EXPORT Vec2FilterParameterConverter<float32>;
 template struct SIMPLNX_TEMPLATE_EXPORT Vec2FilterParameterConverter<float64>;
 
 template <typename T>
-Result<typename Vec3FilterParameterConverter<T>::ValueType> Vec3FilterParameterConverter<T>::convert(const nlohmann::json& json)
+Result<typename Vec3FilterParameterConverter<T>::ValueType> Vec3FilterParameterConverter<T>::Convert(const nlohmann::json& json)
 {
   return SpacialVectorConvert<3, T>(json);
 }
@@ -494,7 +494,7 @@ template struct SIMPLNX_TEMPLATE_EXPORT Vec3FilterParameterConverter<float32>;
 template struct SIMPLNX_TEMPLATE_EXPORT Vec3FilterParameterConverter<float64>;
 
 template <typename T>
-Result<typename Vec4FilterParameterConverter<T>::ValueType> Vec4FilterParameterConverter<T>::convert(const nlohmann::json& json)
+Result<typename Vec4FilterParameterConverter<T>::ValueType> Vec4FilterParameterConverter<T>::Convert(const nlohmann::json& json)
 {
   return SpacialVectorConvert<4, T>(json);
 }
@@ -515,7 +515,7 @@ template struct SIMPLNX_TEMPLATE_EXPORT Vec4FilterParameterConverter<float32>;
 template struct SIMPLNX_TEMPLATE_EXPORT Vec4FilterParameterConverter<float64>;
 
 template <typename T>
-Result<typename AxisAngleFilterParameterConverter<T>::ValueType> AxisAngleFilterParameterConverter<T>::convert(const nlohmann::json& json)
+Result<typename AxisAngleFilterParameterConverter<T>::ValueType> AxisAngleFilterParameterConverter<T>::Convert(const nlohmann::json& json)
 {
   using OutputTType = std::vector<T>;
 
@@ -574,7 +574,7 @@ template struct SIMPLNX_TEMPLATE_EXPORT AxisAngleFilterParameterConverter<float3
 template struct SIMPLNX_TEMPLATE_EXPORT AxisAngleFilterParameterConverter<float64>;
 
 template <typename T>
-Result<typename Vec3p1FilterParameterConverter<T>::ValueType> Vec3p1FilterParameterConverter<T>::convert(const nlohmann::json& json1, const nlohmann::json& json2)
+Result<typename Vec3p1FilterParameterConverter<T>::ValueType> Vec3p1FilterParameterConverter<T>::Convert(const nlohmann::json& json1, const nlohmann::json& json2)
 {
   Result<Vec3p1FilterParameterConverter<T>::ValueType> result = SpacialVectorConvert<3, T>(json1);
   if(result.invalid())

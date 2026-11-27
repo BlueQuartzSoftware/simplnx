@@ -145,7 +145,7 @@ Result<std::any> MultiPathSelectionParameter::resolve(DataStructure& dataStructu
 
 namespace SIMPLConversion
 {
-Result<SingleToMultiDataPathSelectionFilterParameterConverter::ValueType> SingleToMultiDataPathSelectionFilterParameterConverter::convert(const nlohmann::json& json)
+Result<SingleToMultiDataPathSelectionFilterParameterConverter::ValueType> SingleToMultiDataPathSelectionFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   static constexpr StringLiteral k_AttributeMatrixNameKey = "Attribute Matrix Name";
   static constexpr StringLiteral k_DataArrayNameKey = "Data Array Name";
@@ -234,7 +234,7 @@ bool IsFlagged(const nlohmann::json& json)
 }
 } // namespace
 
-Result<DataArraysToRemoveConverter::ValueType> DataArraysToRemoveConverter::convert(const nlohmann::json& json)
+Result<DataArraysToRemoveConverter::ValueType> DataArraysToRemoveConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_object())
   {

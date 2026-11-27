@@ -74,7 +74,7 @@ IFilter::VersionType @FILTER_NAME@::parametersVersion() const
 }
 
 //------------------------------------------------------------------------------
-IFilter::UniquePointer @FILTER_NAME@::clone() const
+IFilter::UniquePointerType @FILTER_NAME@::clone() const
 {
   return std::make_unique<@FILTER_NAME@>();
 }

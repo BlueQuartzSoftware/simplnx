@@ -246,7 +246,7 @@ private:
     std::getline(m_InStream, buf);
     buf = StringUtilities::trimmed(buf);
     buf = StringUtilities::simplified(buf);
-    tokens = StringUtilities::split(buf, ' ');
+    tokens = StringUtilities::Split(buf, ' ');
     m_LineCount++;
 
     return tokens;
@@ -313,7 +313,7 @@ private:
     std::getline(m_InStream, buf);
     buf = StringUtilities::trimmed(buf);
     buf = StringUtilities::simplified(buf);
-    auto tokens = StringUtilities::split(buf, ' ');
+    auto tokens = StringUtilities::Split(buf, ' ');
     m_LineCount++;
 
     if(tokens.size() != 3)
@@ -379,7 +379,7 @@ private:
       {
         line = StringUtilities::trimmed(line);
         line = StringUtilities::simplified(line);
-        std::vector<std::string> tempTokens = StringUtilities::split(line, ' ');
+        std::vector<std::string> tempTokens = StringUtilities::Split(line, ' ');
         tokens.insert(tokens.end(), tempTokens.begin(), tempTokens.end());
       }
 
@@ -408,7 +408,7 @@ private:
           // We have replaced all the first 8 chars with spaces, so now tokenize and save the tokens
           line = StringUtilities::trimmed(line);
           line = StringUtilities::simplified(line);
-          std::vector<std::string> tempTokens = StringUtilities::split(line, ' ');
+          std::vector<std::string> tempTokens = StringUtilities::Split(line, ' ');
           tokens.insert(tokens.end(), tempTokens.begin(), tempTokens.end());
         }
       }
@@ -499,7 +499,7 @@ private:
           usize offset = (compLine == 0 ? 1 : 0);
           compLineData = StringUtilities::trimmed(compLineData);
           compLineData = StringUtilities::simplified(compLineData);
-          auto subTokens = StringUtilities::split(compLineData, ' ');
+          auto subTokens = StringUtilities::Split(compLineData, ' ');
           tokens.insert(tokens.end(), subTokens.begin() + static_cast<int64>(offset), subTokens.end());
         }
 
@@ -650,7 +650,7 @@ private:
         isWord = (buf[0] > 64 /*@ character */ && buf[0] < 91);
         buf = StringUtilities::trimmed(buf);
         buf = StringUtilities::simplified(buf);
-        tokens = StringUtilities::split(buf, ' ');
+        tokens = StringUtilities::Split(buf, ' ');
         m_LineCount++;
       }
 

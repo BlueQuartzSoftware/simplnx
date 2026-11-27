@@ -50,7 +50,7 @@ struct OrderedCoordinationSliceTransfer
     const usize componentCount = storeRef.getNumberOfComponents();
     const usize sliceValueCount = sliceSize * componentCount;
     auto destinationBuffer = SliceBufferedTransferFunctor::makeBuf<T>(sliceValueCount);
-    auto* destinationPtr = SliceBufferedTransferFunctor::bufPtr(destinationBuffer);
+    auto* destinationPtr = SliceBufferedTransferFunctor::BufPtr(destinationBuffer);
     auto readResult = storeRef.copyIntoBuffer(destZ * sliceValueCount, nonstd::span<T>(destinationPtr, sliceValueCount));
     if(readResult.invalid())
     {
@@ -77,14 +77,14 @@ struct OrderedCoordinationSliceTransfer
         if(!isAdjacentLoaded[sourceSlot] && sourceZ < dimZ)
         {
           adjacentBuffers[sourceSlot] = SliceBufferedTransferFunctor::makeBuf<T>(sliceValueCount);
-          readResult = storeRef.copyIntoBuffer(sourceZ * sliceValueCount, nonstd::span<T>(SliceBufferedTransferFunctor::bufPtr(adjacentBuffers[sourceSlot]), sliceValueCount));
+          readResult = storeRef.copyIntoBuffer(sourceZ * sliceValueCount, nonstd::span<T>(SliceBufferedTransferFunctor::BufPtr(adjacentBuffers[sourceSlot]), sliceValueCount));
           if(readResult.invalid())
           {
             return readResult;
           }
           isAdjacentLoaded[sourceSlot] = true;
         }
-        sourcePtr = SliceBufferedTransferFunctor::bufPtr(adjacentBuffers[sourceSlot]);
+        sourcePtr = SliceBufferedTransferFunctor::BufPtr(adjacentBuffers[sourceSlot]);
       }
 
       for(usize componentIdx = 0; componentIdx < componentCount; componentIdx++)

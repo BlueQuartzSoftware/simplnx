@@ -143,7 +143,7 @@ std::vector<char> ConvertToChars(const std::string& string)
 }
 } // namespace
 
-Result<ReadASCIIWizardDataFilterParameterConverter::ValueType> ReadASCIIWizardDataFilterParameterConverter::convert(const nlohmann::json& json)
+Result<ReadASCIIWizardDataFilterParameterConverter::ValueType> ReadASCIIWizardDataFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   std::vector<std::string> dataTypeStrings = json[k_DataTypesKey].get<std::vector<std::string>>();
   auto result = SIMPLConversion::ConvertDataTypeStrings(dataTypeStrings);

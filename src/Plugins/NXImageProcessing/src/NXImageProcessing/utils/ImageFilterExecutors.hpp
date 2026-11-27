@@ -446,7 +446,7 @@ NXIMAGEPROCESSING_EXPORT Result<> ExecuteMorphologicalWatershedFromMarkersImageF
  *        MorphologicalWatershedExecuteFn), reproducing legacy ITK's MorphologicalWatershedImageFilter output EXACTLY
  *        (label values included; see the Parity model and the live-ITK test).
  *        Dispatches the grayscale input over the 10 numeric scalar types in @c AllNumeric. The output is a FIXED
- *        uint32 label image created by the filter's preflight (AlwaysUInt32). The caller's preflight must have
+ *        uint32 label image created by the filter's preflight (AlwaysUInt32Type). The caller's preflight must have
  *        validated the input (scalar, allowed type, tuple==cells).
  */
 NXIMAGEPROCESSING_EXPORT Result<> ExecuteMorphologicalWatershedImageFilter(DataStructure& dataStructure, const DataPath& imageGeomPath, const DataPath& inputArrayPath, const DataPath& outputArrayPath,

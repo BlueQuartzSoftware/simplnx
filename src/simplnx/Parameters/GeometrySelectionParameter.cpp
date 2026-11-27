@@ -126,7 +126,7 @@ Result<std::any> GeometrySelectionParameter::resolve(DataStructure& dataStructur
 
 namespace SIMPLConversion
 {
-Result<DataArraySelectionToGeometrySelectionFilterParameterConverter::ValueType> DataArraySelectionToGeometrySelectionFilterParameterConverter::convert(const nlohmann::json& json)
+Result<DataArraySelectionToGeometrySelectionFilterParameterConverter::ValueType> DataArraySelectionToGeometrySelectionFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   // 6.5 compatibility
   if(json.is_string())

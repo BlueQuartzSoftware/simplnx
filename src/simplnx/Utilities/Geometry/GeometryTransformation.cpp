@@ -880,7 +880,7 @@ Result<> ApplyTransformationToGeometry::operator()()
   if(m_InputValues->TranslateGeometryToGlobalOrigin)
   {
     auto boundingBox = (imageGeometryPtr != nullptr) ? imageGeometryPtr->getBoundingBoxf() : nodeGeometry0DPtr->getBoundingBox();
-    Point3Df minPoint = boundingBox.getMinPoint();
+    FloatVec3 minPoint = boundingBox.getMinPoint();
     const ImageRotationUtilities::Matrix4fR translationToGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({-minPoint[0], -minPoint[1], -minPoint[2]});
     const ImageRotationUtilities::Matrix4fR translationFromGlobalOriginMat = ImageRotationUtilities::GenerateTranslationTransformationMatrix({minPoint[0], minPoint[1], minPoint[2]});
     m_TransformationMatrix = translationFromGlobalOriginMat * m_TransformationMatrix * translationToGlobalOriginMat;

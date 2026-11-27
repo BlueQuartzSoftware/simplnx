@@ -141,7 +141,7 @@ struct MeanReduce
  *        accumulator (itkSumProjectionImageFilter.h, Functor::SumAccumulator: m_Sum = m_Sum + input;
  *        GetValue() returns m_Sum), but the running sum is Kahan-compensated (as in MeanReduce /
  *        StreamingStatistics.hpp) so long pencils do not lose precision. The output type is Float64
- *        (the façade's AlwaysFloat64 OutTypeMap), matching the legacy filter's double FilterOutputType.
+ *        (the façade's AlwaysFloat64Type OutTypeMap), matching the legacy filter's double FilterOutputType.
  */
 struct SumReduce
 {

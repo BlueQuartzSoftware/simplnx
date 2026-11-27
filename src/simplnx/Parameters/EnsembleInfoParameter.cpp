@@ -161,7 +161,7 @@ constexpr StringLiteral k_PhaseNameKey = "PhaseName";
 constexpr StringLiteral k_PhaseTypeKey = "PhaseType";
 } // namespace
 
-Result<EnsembleInfoFilterParameterConverter::ValueType> EnsembleInfoFilterParameterConverter::convert(const nlohmann::json& json)
+Result<EnsembleInfoFilterParameterConverter::ValueType> EnsembleInfoFilterParameterConverter::Convert(const nlohmann::json& json)
 {
   if(!json.is_array())
   {

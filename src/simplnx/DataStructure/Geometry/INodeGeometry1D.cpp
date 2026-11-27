@@ -143,7 +143,7 @@ void INodeGeometry1D::getEdgePointIds(usize edgeId, nonstd::span<usize> vertexId
   }
 }
 
-void INodeGeometry1D::getEdgeCoordinates(usize edgeId, nonstd::span<Point3Df> coords) const
+void INodeGeometry1D::getEdgeCoordinates(usize edgeId, nonstd::span<FloatVec3> coords) const
 {
   std::array<usize, k_NumEdgeVerts> verts = {0, 0};
   getEdgePointIds(edgeId, verts);

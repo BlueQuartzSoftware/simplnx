@@ -112,7 +112,7 @@ TEST_CASE("NXImageProcessing::MeanProjectionImageFilter: Independent oracle (in-
 // -----------------------------------------------------------------------------
 // ITK-sourced real-image golden test (plan Task 5) -- duplicates ITKMeanProjectionImageTest.cpp(z_projection):
 // RA-Float.nrrd, projection dimension 2 (Z), compared against the stored Float64 baseline (double, 64x64x1) at
-// tol 1e-4. Mean is a Float64 reducer (AlwaysFloat64), only ALGEBRAICALLY equal to ITK's two-pass, hence the
+// tol 1e-4. Mean is a Float64 reducer (AlwaysFloat64Type), only ALGEBRAICALLY equal to ITK's two-pass, hence the
 // tolerant baseline comparator rather than md5/bit-exact.
 // The projection collapses Z, so the OUTPUT (in-place, in the collapsed "Image Geometry") owns the reduced
 // 64x64x1 array that matches the baseline's dims -- the geometry resolution for risk #2.

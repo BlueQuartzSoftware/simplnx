@@ -141,8 +141,8 @@ IFilter::PreflightResult ComputeCoordinateThresholdFilter::preflightImpl(const D
       const auto& imageGeom = dynamic_cast<const ImageGeom&>(geom);
 
       BoundingBox3Df bounds = imageGeom.getBoundingBoxf();
-      const Point3Df& minBound = bounds.getMinPoint();
-      const Point3Df& maxBound = bounds.getMaxPoint();
+      const FloatVec3& minBound = bounds.getMinPoint();
+      const FloatVec3& maxBound = bounds.getMaxPoint();
 
       if(pMaxPoint[0] < minBound[0] || pMaxPoint[1] < minBound[1] || pMaxPoint[2] < minBound[2])
       {
@@ -172,8 +172,8 @@ IFilter::PreflightResult ComputeCoordinateThresholdFilter::preflightImpl(const D
       const auto& imageGeom = dynamic_cast<const ImageGeom&>(geom);
 
       BoundingBox3Df bounds = imageGeom.getBoundingBoxf();
-      const Point3Df& minBound = bounds.getMinPoint();
-      const Point3Df& maxBound = bounds.getMaxPoint();
+      const FloatVec3& minBound = bounds.getMinPoint();
+      const FloatVec3& maxBound = bounds.getMaxPoint();
 
       bool doesIntersect = IntersectionUtilities::SphereIntersectsRectangularPrism({pSphereInfo[0], pSphereInfo[1], pSphereInfo[2]}, pSphereInfo[3], minBound.toArray(), maxBound.toArray());
 

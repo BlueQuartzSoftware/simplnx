@@ -120,14 +120,14 @@ public:
    * @param vertId
    * @return
    */
-  Point3D<float32> getVertexCoordinate(usize vertId) const;
+  Vec3<float32> getVertexCoordinate(usize vertId) const;
 
   /**
    * @brief Sets the coordinates for the specified vertex ID.
    * @param vertId
    * @param coords
    */
-  void setVertexCoordinate(usize vertId, const Point3D<float32>& coords);
+  void setVertexCoordinate(usize vertId, const Vec3<float32>& coords);
 
   /**
    * @brief Returns the DataStructure unique ID of the vertex coordinate array

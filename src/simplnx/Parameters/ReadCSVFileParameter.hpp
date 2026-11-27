@@ -128,7 +128,7 @@ struct SIMPLNX_EXPORT ReadASCIIWizardDataFilterParameterConverter
   using ParameterType = ReadCSVFileParameter;
   using ValueType = ParameterType::ValueType;
 
-  static Result<ValueType> convert(const nlohmann::json& json);
+  static Result<ValueType> Convert(const nlohmann::json& json);
 };
 } // namespace SIMPLConversion
 } // namespace nx::core

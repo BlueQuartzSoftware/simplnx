@@ -117,7 +117,7 @@ std::vector<T> MakeDoubleThresholdField(usize dimX, usize dimY, usize dimZ)
 
 // -----------------------------------------------------------------------------
 // (1) Preflight guards: a multi-component input is rejected (requireScalar); a valid scalar input (of any scalar
-//     type, incl. unsigned and float -- AllNumeric) produces a FIXED uint8 output array (AlwaysUInt8).
+//     type, incl. unsigned and float -- AllNumeric) produces a FIXED uint8 output array (AlwaysUInt8Type).
 // -----------------------------------------------------------------------------
 TEST_CASE("NXImageProcessing::DoubleThresholdImageFilter: preflight guards", "[NXImageProcessing][DoubleThresholdImageFilter]")
 {
@@ -163,7 +163,7 @@ TEST_CASE("NXImageProcessing::DoubleThresholdImageFilter: preflight guards", "[N
 
 // -----------------------------------------------------------------------------
 // ITK-sourced real-image golden -- duplicates ITKDoubleThresholdImageTest.cpp on our ITK-free filter. The output is a
-// fixed uint8 image (AlwaysUInt8). The durable golden is an md5 pin. The helper pins ForceInCore.
+// fixed uint8 image (AlwaysUInt8Type). The durable golden is an md5 pin. The helper pins ForceInCore.
 //   DoubleThreshold1: RA-Short.nrrd, filter defaults (T1..T4 = 0/1/254/255, Inside 1, Outside 0, FullyConnected false).
 //   DoubleThreshold2: RA-Slice-Short.png, thresholds 0/0/3000/2700 (passed verbatim -- non-monotone by design).
 // -----------------------------------------------------------------------------

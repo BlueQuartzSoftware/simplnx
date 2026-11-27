@@ -150,16 +150,16 @@ public:
 
   /**
    * @brief Returns the parametric center of a quadrilateral element.
-   * @return Point3D<float64> The parametric center coordinates
+   * @return Vec3<float64> The parametric center coordinates
    */
-  Point3D<float64> getParametricCenter() const override;
+  Vec3<float64> getParametricCenter() const override;
 
   /**
    * @brief Calculates shape functions at the given parametric coordinates.
    * @param pCoords The parametric coordinates
    * @param shape Output array to store the calculated shape function values
    */
-  void getShapeFunctions(const Point3D<float64>& pCoords, float64* shape) const override;
+  void getShapeFunctions(const Vec3<float64>& pCoords, float64* shape) const override;
 
   /**
    * @brief finds the shared edges (no duplicates) of each quad in the

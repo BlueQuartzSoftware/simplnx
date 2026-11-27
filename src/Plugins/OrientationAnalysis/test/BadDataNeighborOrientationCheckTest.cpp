@@ -27,8 +27,8 @@ namespace verification_constants
 const std::string k_ImageName = "Image Geometry";
 const DataPath k_ImagePath = DataPath({k_ImageName});
 
-const DataPath k_CellDataPath = k_ImagePath.createChildPath(Constants::k_Cell_Data);
-const DataPath k_CellEnsembleDataPath = k_ImagePath.createChildPath(Constants::k_Cell_Ensemble_Data);
+const DataPath k_CellDataPath = k_ImagePath.createChildPath(Constants::k_CellDataWithSpaces);
+const DataPath k_CellEnsembleDataPath = k_ImagePath.createChildPath(Constants::k_CellEnsembleDataWithSpaces);
 
 const std::string k_QuatsName = "Quats";
 const DataPath k_QuatsArrayPath = k_CellDataPath.createChildPath(k_QuatsName);
@@ -1658,8 +1658,8 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: 2D Image 
   REQUIRE(imageGeomPtr->setOrigin({0.0f, 0.0f, 0.0f}).valid());
   imageGeomPtr->setDimensions({3, 3, 1});
 
-  AttributeMatrix* cellDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_Cell_Data, ShapeType{1, 3, 3}, imageGeomPtr->getId());
-  AttributeMatrix* cellEnsemblePtr = AttributeMatrix::Create(dataStructure, Constants::k_Cell_Ensemble_Data, ShapeType{2}, imageGeomPtr->getId());
+  AttributeMatrix* cellDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_CellDataWithSpaces, ShapeType{1, 3, 3}, imageGeomPtr->getId());
+  AttributeMatrix* cellEnsemblePtr = AttributeMatrix::Create(dataStructure, Constants::k_CellEnsembleDataWithSpaces, ShapeType{2}, imageGeomPtr->getId());
 
   UInt8Array* maskArrayPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, verification_constants::k_MaskName, {1, 3, 3}, {1}, cellDataPtr->getId());
   const std::array<uint8, 9> inputMask = {0, 1, 0, 1, 0, 1, 0, 1, 0};
@@ -1724,8 +1724,8 @@ TEMPLATE_TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: 
   imageGeomPtr->setDimensions({3, 3, 5});
   REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
   REQUIRE(imageGeomPtr->setSpacing({1.0F, 1.0F, 1.0F}).valid());
-  auto* cellsPtr = AttributeMatrix::Create(dataStructure, Constants::k_Cell_Data, {5, 3, 3}, imageGeomPtr->getId());
-  auto* ensemblesPtr = AttributeMatrix::Create(dataStructure, Constants::k_Cell_Ensemble_Data, {2}, imageGeomPtr->getId());
+  auto* cellsPtr = AttributeMatrix::Create(dataStructure, Constants::k_CellDataWithSpaces, {5, 3, 3}, imageGeomPtr->getId());
+  auto* ensemblesPtr = AttributeMatrix::Create(dataStructure, Constants::k_CellEnsembleDataWithSpaces, {2}, imageGeomPtr->getId());
   REQUIRE(cellsPtr != nullptr);
   REQUIRE(ensemblesPtr != nullptr);
   imageGeomPtr->setCellData(*cellsPtr);
@@ -1803,9 +1803,9 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Phase Ind
   REQUIRE(imageGeomPtr->setOrigin({0.0F, 0.0F, 0.0F}).valid());
   imageGeomPtr->setDimensions({3, 3, 1});
 
-  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_Cell_Data, ShapeType{1, 3, 3}, imageGeomPtr->getId());
+  auto* cellDataPtr = AttributeMatrix::Create(dataStructure, Constants::k_CellDataWithSpaces, ShapeType{1, 3, 3}, imageGeomPtr->getId());
   imageGeomPtr->setCellData(*cellDataPtr);
-  auto* cellEnsemblePtr = AttributeMatrix::Create(dataStructure, Constants::k_Cell_Ensemble_Data, ShapeType{2}, imageGeomPtr->getId());
+  auto* cellEnsemblePtr = AttributeMatrix::Create(dataStructure, Constants::k_CellEnsembleDataWithSpaces, ShapeType{2}, imageGeomPtr->getId());
 
   auto* maskArrayPtr = UnitTest::CreateTestDataArray<uint8>(dataStructure, verification_constants::k_MaskName, {1, 3, 3}, {1}, cellDataPtr->getId());
   maskArrayPtr->fill(1);
