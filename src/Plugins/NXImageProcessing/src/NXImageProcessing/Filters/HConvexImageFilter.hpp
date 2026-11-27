@@ -12,12 +12,11 @@ namespace nx::core
  * @brief ITK-free, out-of-core-capable h-convex transform: each regional maximum is replaced by its own height,
  *        capped at the Height parameter (its "dome"), and everything else becomes zero.
  *
- * HConvex(f, h) = f - HMaxima(f, h). A regional maximum of contrast c maps to min(c, h); the background maps to 0.
- * It is implemented by reconstruction-by-dilation of the (input - Height) marker under the input mask (the HMaxima
- * result) followed by an elementwise subtraction of that result from the input. Output type == input type; the
- * input must be single-component (scalar). This matches the legacy ITK H Convex Image Filter exactly for integer
- * and float types, and is out-of-core capable: the reconstruction result never exceeds the input, so the
- * difference never underflows.
+ * Reconstructs the input minus Height by dilation under the input mask, then subtracts the reconstruction from the input.
+ * The output has the input's scalar type and shape. Height must be finite and nonnegative. Integer images require a whole
+ * Height and use native marker subtraction that saturates at the type minimum. Height 0 gives zero integer contrast.
+ * Height uses float64 precision, which cannot distinguish every consecutive integer above 2^53. Floating images allow fractional Height.
+ * An execution error identifies the first tuple where contrast exceeds the signed output type's maximum.
  */
 class NXIMAGEPROCESSING_EXPORT HConvexImageFilter : public IFilter
 {

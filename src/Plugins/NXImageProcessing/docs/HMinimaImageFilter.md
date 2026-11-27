@@ -8,20 +8,23 @@ NXImageProcessing (Morphology)
 
 ## Description
 
-Applies the **H-Minima transform** to a grayscale image. The transform removes every *regional minimum* whose **depth** -- its contrast below the surrounding level -- is less than the **Height** parameter, and raises each surviving minimum by exactly **Height**. Shallow dark features (whose contrast is below **Height**) are filled up to their surrounding background, while deeper dark features are preserved but raised in intensity by **Height**.
+Applies the **H-Minima transform** to a grayscale image. A **regional minimum** is a connected region below its surrounding intensities. Its **depth** is the intensity difference to that surrounding level. The transform suppresses minima whose depth is less than **Height**. Deeper minima rise by Height, subject to the input type's maximum.
 
 The H-Minima transform is commonly used to remove insignificant intensity valleys caused by noise prior to a minima-detection or watershed step, so that only sufficiently prominent minima remain. It is the erosion counterpart of the H-Maxima transform.
 
-Internally the filter performs a **reconstruction-by-erosion** of a marker image equal to the saturating sum `input + Height`, using the input image as the mask. Because the marker is formed with a *saturating* cast, a sum that overflows the element type's range is **clamped** to the type maximum (rather than wrapping), matching the legacy ITK behavior exactly.
+The filter performs **reconstruction by erosion** of the raised marker `input + Height`, with the original input as its lower mask. Erosion lowers marker values through connected neighbors, but cannot lower them below the input mask. Output contains these reconstructed intensities. For example, an isolated minimum *30* in background *50* becomes *40* at Height *10*. It does not become a contrast value of *10*. A one-pixel image has no neighbor to lower its marker, so its output is the raised marker.
 
-The input array must be single-component (scalar); the output element type matches the input element type. This is an ITK-free, out-of-core-capable reimplementation of the legacy ITK H Minima Image Filter. When all data is resident it uses a fast in-core hybrid reconstruction; when the arrays are out-of-core it streams the computation so memory use stays bounded regardless of image size. Both paths produce bit-identical output, and the result matches the legacy ITK filter exactly.
+The input array must have one component per tuple (a **scalar image**). The output has the same type and dimensions as the input.
 
 ### Height
 
-The *Height* parameter sets the contrast threshold in the same units as the image intensities:
+**Height** is in the intensity units of the input. It must be finite and not negative.
 
-- Regional minima with a contrast **less than** *Height* are removed (filled up to the surrounding level).
-- Regional minima with a contrast **greater than or equal to** *Height* survive but are raised by exactly *Height*.
+- An integer image needs a whole-number Height. A fractional value, such as *0.5* or *2.5*, fails preflight. To use a fractional Height, first convert the image to a floating-point type.
+- A floating-point image accepts a fractional Height.
+- Height *0* gives an output equal to the input.
+- For an integer image, `input + Height` stops at the maximum of the input type and does not wrap around.
+- Height is a float64 value, so it cannot represent every whole number above *2^53*.
 
 ### Fully Connected
 
@@ -34,11 +37,17 @@ Geodesic morphology and grayscale reconstruction are described in Chapter 6 of P
 
 ## Algorithm
 
-The filter raises the input by **Height** and reconstructs that marker under the input by erosion. Resident arrays use the Vincent hybrid reconstruction, whose raster, anti-raster, and fold-to-convergence sweeps run as dependency-exact, block-wavefront parallel plane sweeps when the reconstruction uses face connectivity (**Fully Connected** off); with full connectivity it falls back to the exact serial sweeps, since a same-row diagonal read can land in the horizontally adjacent block, which no rectangular block schedule can order. Disk-backed reconstruction iterates a forward raster sweep followed by a reverse anti-raster sweep over consecutive Z-plane slabs until stable, skipping any slab whose planes are already proven unchanged since that direction's last visit. Within a plane, the raster/anti-raster sweep is tiled into independent blocks that run in parallel; under face connectivity every voxel still sees exactly the values the un-blocked sweep would produce, and under full connectivity the iterated forward/reverse passes still converge to the identical final result. Each work and mask slab targets 16 MiB, plus one boundary plane. At least one plane is processed, so a single plane wider than the target can make the buffers exceed 16 MiB. Update order and output are unchanged, preserving exact storage-path parity.
+The filter raises the input by **Height** and reconstructs that marker under the input by erosion.
+
+Arrays in memory and out-of-core arrays give the same result. The filter reads and writes out-of-core arrays in blocks, so it does not need a second complete image in memory.
+
+If the filter stops with an error or is cancelled, the output array can hold partial results.
 
 % Auto generated parameter table will be inserted here
 
 ## Example Pipelines
+
+The **Powder Particle Watershed Segmentation** bookmark suppresses shallow minima before it creates watershed markers. [Example pipeline guide](https://github.com/BlueQuartzSoftware/simplnx/blob/develop/src/Plugins/NXImageProcessing/pipelines/08_Powder_Particle_Watershed_Segmentation/08_Powder_Particle_Watershed_Segmentation.md)
 
 ## License & Copyright
 
