@@ -5,6 +5,7 @@
 #include "simplnx/DataStructure/AbstractDataStore.hpp"
 #include "simplnx/DataStructure/DataStore.hpp"
 #include "simplnx/Filter/IFilter.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageTransferResult.hpp"
 #include "simplnx/Utilities/ImageProcessing/WorkingMemory.hpp"
 #include "simplnx/Utilities/ParallelDataAlgorithm.hpp"
 
@@ -453,11 +454,11 @@ void MergeArrayMinMaxBlock(ArrayMinMax<T>& result, const ArrayMinMaxBlock<T>& bl
  * @brief Computes count, minimum, and maximum values.
  * @tparam T Specifies the scalar value type.
  * @param store Provides the input values.
- * @param shouldCancel Stops processing before a partial-batch merge.
+ * @param shouldCancel Requests cancellation. Discard the extrema if cancellation occurs.
  * @param executionDetails Optionally receives fixed-block execution details.
- * @return Statistics or an input-read error.
+ * @return The input value count and extrema, or the first planning or read error. Buffered reads retain their warnings in execution order.
  *
- * In-memory DataStore inputs use a parallel contiguous reduction. Other stores use serial bulk reads.
+ * In-memory DataStore inputs use a contiguous reduction, parallel when multicore support is enabled. Other stores use serial bulk reads.
  * Out-of-core workers reduce only resident blocks. A leading NaN propagates. Later NaNs are ignored.
  */
 template <class T>
@@ -559,22 +560,24 @@ Result<ArrayMinMax<T>> ComputeArrayMinMax(const AbstractDataStore<T>& store, con
   T maxValue{};
   // Keep merged extrema private until the complete scan succeeds.
   ArrayMinMax<T> mergedMinMax;
+  Result<> readStatus;
   bool first = true;
   bool leadingNaN = false;
   for(usize start = 0; start < total; start += chunkValues)
   {
     if(shouldCancel)
     {
-      return {result};
+      return ConvertResultTo(std::move(readStatus), std::move(result));
     }
     const usize count = std::min(chunkValues, total - start);
-    if(Result<> readResult = store.copyIntoBuffer(start, nonstd::span<T>(buffer.get(), count)); readResult.invalid())
+    AccumulateTransferResult(readStatus, store.copyIntoBuffer(start, nonstd::span<T>(buffer.get(), count)));
+    if(readStatus.invalid())
     {
-      return {nonstd::make_unexpected(std::move(readResult.errors()))};
+      return ConvertInvalidResult<ArrayMinMax<T>>(std::move(readStatus));
     }
     if(shouldCancel)
     {
-      return {result};
+      return ConvertResultTo(std::move(readStatus), std::move(result));
     }
     usize reduceStart = 0;
     if(first)
@@ -613,7 +616,7 @@ Result<ArrayMinMax<T>> ComputeArrayMinMax(const AbstractDataStore<T>& store, con
       algorithm.execute(reduce);
       if(shouldCancel)
       {
-        return {result};
+        return ConvertResultTo(std::move(readStatus), std::move(result));
       }
       for(usize blockIndex = 0; blockIndex < blockCount; ++blockIndex)
       {
@@ -628,7 +631,7 @@ Result<ArrayMinMax<T>> ComputeArrayMinMax(const AbstractDataStore<T>& store, con
     {
       if(shouldCancel)
       {
-        return {result};
+        return ConvertResultTo(std::move(readStatus), std::move(result));
       }
       const usize blockEnd = blockStart + std::min(k_CancelCheckValues, count - blockStart);
       for(usize i = blockStart; i < blockEnd; ++i)
@@ -647,7 +650,7 @@ Result<ArrayMinMax<T>> ComputeArrayMinMax(const AbstractDataStore<T>& store, con
   }
   result.min = minValue;
   result.max = maxValue;
-  return {result};
+  return ConvertResultTo(std::move(readStatus), std::move(result));
 }
 
 /**
