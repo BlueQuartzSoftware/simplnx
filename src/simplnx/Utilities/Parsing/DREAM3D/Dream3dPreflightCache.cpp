@@ -26,6 +26,7 @@
 #include <algorithm>
 #include <iterator>
 #include <optional>
+#include <stdexcept>
 #include <system_error>
 #include <unordered_set>
 
@@ -277,7 +278,15 @@ Result<> Dream3dPreflightCache::RefreshStores(DataStructure& dataStructure)
       }
       else
       {
-        stringArrayPtr->setStore(std::make_shared<StringStore>(stringArrayPtr->values(), stringArrayPtr->getTupleShape()));
+        try
+        {
+          stringArrayPtr->setStore(std::make_shared<StringStore>(stringArrayPtr->values(), stringArrayPtr->getTupleShape()));
+        } catch(const std::invalid_argument& error)
+        {
+          auto refreshResult = MakeErrorResult(-94131, fmt::format("Cannot refresh strings at '{}': {}. Reload the source with consistent tuple dimensions.", path.toString(), error.what()));
+          refreshResult.warnings().insert(refreshResult.warnings().begin(), std::make_move_iterator(result.warnings().begin()), std::make_move_iterator(result.warnings().end()));
+          return refreshResult;
+        }
       }
     }
     else if(auto* neighborListPtr = dynamic_cast<INeighborList*>(objectPtr); neighborListPtr != nullptr)

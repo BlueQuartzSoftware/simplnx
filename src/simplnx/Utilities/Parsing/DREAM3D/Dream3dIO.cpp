@@ -5,6 +5,7 @@
 #include <fmt/format.h>
 
 #include "simplnx/Common/Aliases.hpp"
+#include "simplnx/Common/Result.hpp"
 #include "simplnx/Core/Application.hpp"
 #include "simplnx/DataStructure/AttributeMatrix.hpp"
 #include "simplnx/DataStructure/BaseGroup.hpp"
@@ -41,6 +42,7 @@
 #include "simplnx/Utilities/FilterUtilities.hpp"
 #include "simplnx/Utilities/Parsing/HDF5/IO/FileIO.hpp"
 
+#include <fmt/format.h>
 #include <nlohmann/json.hpp>
 
 #include <fstream>
@@ -896,6 +898,27 @@ static Result<> ReadLegacyDataArrayDims(const nx::core::hdf5::DatasetIO& dataArr
   return {};
 }
 
+namespace
+{
+/**
+ * @brief Checks the string count against the parent Attribute Matrix.
+ * @param attributeMatrix Parent Attribute Matrix, or nullptr for other parent types.
+ * @param arrayName Identifies the legacy string array.
+ * @param stringCount Number of strings read from the file.
+ * @return Error -4210430 if the counts differ. Otherwise, a valid result.
+ */
+Result<> validateLegacyStringCount(const AttributeMatrix* attributeMatrix, const std::string& arrayName, usize stringCount)
+{
+  if(attributeMatrix != nullptr && stringCount != attributeMatrix->getNumberOfTuples())
+  {
+    return MakeErrorResult(-4210430, fmt::format("Cannot import legacy string array '{}'. The file has {} strings, but the Attribute Matrix has {} tuples. "
+                                                 "Correct the file so the string count equals the Attribute Matrix tuple count.",
+                                                 arrayName, stringCount, attributeMatrix->getNumberOfTuples()));
+  }
+  return {};
+}
+} // namespace
+
 static Result<> ReadLegacyStringArray(DataStructure& dataStructure, const nx::core::hdf5::DatasetIO& dataArrayReader, DataObject::IdType parentId, bool preflight = false)
 {
   const std::string daName = dataArrayReader.getName();
@@ -910,17 +933,25 @@ static Result<> ReadLegacyStringArray(DataStructure& dataStructure, const nx::co
       return result;
     }
 
-    auto* stringArrayPtr = StringArray::CreateWithValues(dataStructure, daName, tDims, {}, parentId);
+    auto* stringArrayPtr = StringArray::CreateWithStore(dataStructure, daName, std::make_shared<EmptyStringStore>(tDims), parentId);
     if(stringArrayPtr == nullptr)
     {
       return MakeErrorResult(-4210429, fmt::format("Failed to create legacy StringArray '{}' during metadata import.", daName));
     }
-    stringArrayPtr->setStore(std::make_shared<EmptyStringStore>(tDims));
   }
   else
   {
     const std::vector<std::string> strings = dataArrayReader.readAsVectorOfStrings();
-    StringArray::CreateWithValues(dataStructure, daName, ShapeType{strings.size()}, strings, parentId);
+    auto countResult = validateLegacyStringCount(dataStructure.getDataAs<AttributeMatrix>(parentId), daName, strings.size());
+    if(countResult.invalid())
+    {
+      return countResult;
+    }
+    if(StringArray::CreateWithValues(dataStructure, daName, ShapeType{strings.size()}, strings, parentId) == nullptr)
+    {
+      return MakeErrorResult(-4210431,
+                             fmt::format("Cannot import legacy string array '{}' with {} strings. Check that its name is unique and its parent allows string arrays.", daName, strings.size()));
+    }
   }
   return {};
 }
@@ -934,7 +965,14 @@ static Result<> FinishImportingLegacyStringArray(DataStructure& dataStructure, c
   }
 
   const std::vector<std::string> strings = dataArrayReader.readAsVectorOfStrings();
+  auto countResult = validateLegacyStringCount(dataStructure.getDataAs<AttributeMatrix>(dataPath.getParent()), existingArrayPtr->getName(), strings.size());
+  if(countResult.invalid())
+  {
+    return countResult;
+  }
   ShapeType tupShape = existingArrayPtr->getTupleShape();
+  // Outside an Attribute Matrix, legacy string counts can differ from TupleDimensions.
+  // These arrays retain the string count when their metadata differs.
   if(existingArrayPtr->getNumberOfTuples() != strings.size())
   {
     tupShape = ShapeType{strings.size()};
