@@ -1,7 +1,19 @@
 #pragma once
 
+#include "simplnx/Common/Types.hpp"
+
 namespace nx::core::ImageProcessing
 {
+/**
+ * @enum ConnectedComponentLabelLimitHandling
+ * @brief Only Connected Component exposes the explicit legacy wrap policy. Other callers keep Error.
+ */
+enum class ConnectedComponentLabelLimitHandling : uint8
+{
+  Error = 0,                ///< Stops before assigning a provisional ID above UINT32_MAX.
+  WarnAndContinueLegacy = 1 ///< Warns on the first overflow and allows IDs to wrap to zero and repeat.
+};
+
 /**
  * @brief The grayscale morphology operation to apply through a flat structuring element.
  *

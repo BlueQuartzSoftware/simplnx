@@ -2,13 +2,20 @@
 
 #include "NXImageProcessing/utils/ImageFilterExecutors.hpp"
 
+#include "simplnx/Common/Result.hpp"
+#include "simplnx/Common/TypeTraits.hpp"
 #include "simplnx/DataStructure/IDataArray.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
+#include "simplnx/Parameters/ChoicesParameter.hpp"
 #include "simplnx/Parameters/DataObjectNameParameter.hpp"
 #include "simplnx/Parameters/GeometrySelectionParameter.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingConstants.hpp"
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
+#include "simplnx/Utilities/ImageProcessing/ImageProcessingOperationTypes.hpp"
+
+#include <memory>
+#include <utility>
 
 using namespace nx::core;
 
@@ -43,6 +50,10 @@ Parameters ConnectedComponentImageFilter::parameters() const
                                                 "Set/Get whether the connected components are defined strictly by face connectivity or by face+edge+vertex connectivity. Default is FullyConnectedOff. "
                                                 "For objects that are 1 pixel wide, use FullyConnectedOn.",
                                                 false));
+  params.insert(std::make_unique<ChoicesParameter>(
+      k_ProvisionalLabelLimitHandling_Key, "Provisional Label Limit Handling",
+      "Error (default) stops if a provisional label would exceed 4,294,967,295. Warn and Continue allows labels to wrap, which can remove foreground or merge objects and make counts incorrect.",
+      to_underlying(ImageProcessing::ConnectedComponentLabelLimitHandling::Error), ChoicesParameter::ChoicesType{"Error", "Warn and Continue (Legacy Behavior)"}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
@@ -58,7 +69,7 @@ Parameters ConnectedComponentImageFilter::parameters() const
 
 IFilter::VersionType ConnectedComponentImageFilter::parametersVersion() const
 {
-  return 1;
+  return 2;
 }
 IFilter::UniquePointerType ConnectedComponentImageFilter::clone() const
 {
@@ -91,7 +102,8 @@ Result<> ConnectedComponentImageFilter::executeImpl(DataStructure& dataStructure
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   auto fullyConnected = filterArgs.value<bool>(k_FullyConnected_Key);
+  const auto labelLimitHandling = static_cast<ImageProcessing::ConnectedComponentLabelLimitHandling>(filterArgs.value<ChoicesParameter::ValueType>(k_ProvisionalLabelLimitHandling_Key));
 
-  return ImageProcessing::ExecuteConnectedComponentImageFilter(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, fullyConnected, shouldCancel, messageHandler);
+  return ImageProcessing::ExecuteConnectedComponentImageFilter(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, fullyConnected, shouldCancel, messageHandler, labelLimitHandling);
 }
 } // namespace nx::core

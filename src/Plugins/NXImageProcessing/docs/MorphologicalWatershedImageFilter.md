@@ -29,8 +29,8 @@ Internally this is the ITK morphological-watershed composite:
 
 ### Notes / Limitations
 
-- The output reproduces the legacy ITK `MorphologicalWatershedImageFilter` exactly, including the label *values*.
-- The number of basins is unbounded on a noisy image; increasing **Level** merges shallow basins. To reorder the output labels by object size, pass the result to a Relabel Component Image Filter.
+- The filter always stops if the regional-minimum mask used to generate the markers requires more than 4,294,967,295 uninterrupted foreground runs along X, even when those runs form fewer markers. Within this limit, the output reproduces the legacy ITK `MorphologicalWatershedImageFilter` exactly, including the label *values*.
+- A noisy image can produce many basins. Increasing **Level** merges shallow basins. To reorder the output labels by object size, pass the result to a Relabel Component Image Filter.
 
 This is an ITK-free, out-of-core-capable reimplementation of the legacy ITK Morphological Watershed Image Filter.
 

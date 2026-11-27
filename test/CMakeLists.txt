@@ -38,6 +38,7 @@ set(SIMPLNX_TEST_SRCS
   ChunkIndexTest.cpp
   ChunkShapePolicyTest.cpp
   ClusteringUtilitiesTest.cpp
+  ConnectedComponentLabelCapacityTest.cpp
   DimensionConversionTest.cpp
   DataArrayTest.cpp
   DataStoreBulkTest.cpp
