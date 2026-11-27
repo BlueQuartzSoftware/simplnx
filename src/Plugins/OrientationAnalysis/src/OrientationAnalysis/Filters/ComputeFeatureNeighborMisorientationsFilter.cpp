@@ -60,7 +60,8 @@ Parameters ComputeFeatureNeighborMisorientationsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<NeighborListSelectionParameter>(k_NeighborListArrayPath_Key, "Feature Neighbor List", "List of the contiguous neighboring Features for a given Feature",
-                                                                 DataPath({"DataContainer", "Feature Data", "NeighborList"}), NeighborListSelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}));
+                                                                 DataPath({"DataContainer", "Feature Data", "NeighborList"}),
+                                                                 NeighborListSelectionParameter::AllowedTypeSetType{nx::core::DataType::int32}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Feature Average Quaternions", "Defines the average orientation of the Feature in quaternion representation",
                                                           DataPath({"DataContainer", "Feature Data", "AvgQuats"}), ArraySelectionParameter::AllowedTypeSetType{nx::core::DataType::float32},
                                                           ArraySelectionParameter::AllowedComponentShapesType{{4}}));

@@ -57,8 +57,9 @@ class SIMPLNXCORE_EXPORT CalculateTriangleGroupCurvatures
 public:
   CalculateTriangleGroupCurvatures(FeatureFaceCurvature* filter, int64_t nring, std::vector<int64_t> triangleIds, bool useNormalsForCurveFitting, Float64ArrayType* principleCurvature1,
                                    Float64ArrayType* principleCurvature2, Float64ArrayType* principleDirection1, Float64ArrayType* principleDirection2, Float64ArrayType* gaussianCurvature,
-                                   Float64ArrayType* meanCurvature, Float64ArrayType* weingartenMatrix, TriangleGeom* trianglesGeom, Int32ArrayType* surfaceMeshFaceLabels, Float64ArrayType* surfaceMeshFaceNormals,
-                                   Float64ArrayType* surfaceMeshTriangleCentroids, const IFilter::MessageHandler& messageHandler, const std::atomic_bool& shouldCancel);
+                                   Float64ArrayType* meanCurvature, Float64ArrayType* weingartenMatrix, TriangleGeom* trianglesGeom, Int32ArrayType* surfaceMeshFaceLabels,
+                                   Float64ArrayType* surfaceMeshFaceNormals, Float64ArrayType* surfaceMeshTriangleCentroids, const IFilter::MessageHandler& messageHandler,
+                                   const std::atomic_bool& shouldCancel);
 
   virtual ~CalculateTriangleGroupCurvatures();
 

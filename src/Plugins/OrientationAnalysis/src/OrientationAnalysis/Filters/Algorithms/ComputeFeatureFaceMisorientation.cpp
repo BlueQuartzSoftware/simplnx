@@ -97,8 +97,8 @@ class ComputeFeatureMisorientationPerTriangleImpl
   LaueOpsContainerType m_LaueOrientationOps;
 
 public:
-  ComputeFeatureMisorientationPerTriangleImpl(const Int32ArrayType& labels, const Int32ArrayType& phases, const Float32ArrayType& quats, const UInt32ArrayType& crystalStructures, const std::atomic_bool& shouldCancel,
-                                              Float32ArrayType& output)
+  ComputeFeatureMisorientationPerTriangleImpl(const Int32ArrayType& labels, const Int32ArrayType& phases, const Float32ArrayType& quats, const UInt32ArrayType& crystalStructures,
+                                              const std::atomic_bool& shouldCancel, Float32ArrayType& output)
   : m_FaceLabels(labels)
   , m_FeaturePhases(phases)
   , m_FeatureAvgQuats(quats)
@@ -182,8 +182,8 @@ public:
 
 namespace
 {
-Result<> ComputeFeatureMisorientationInBlocks(const Int32ArrayType& faceLabels, const Int32ArrayType& phases, const Float32ArrayType& quats, const UInt32ArrayType& structures, Float32ArrayType& misorientations,
-                                              const ComputeFeatureFaceMisorientationInputValues& inputValues, const std::atomic_bool& shouldCancel)
+Result<> ComputeFeatureMisorientationInBlocks(const Int32ArrayType& faceLabels, const Int32ArrayType& phases, const Float32ArrayType& quats, const UInt32ArrayType& structures,
+                                              Float32ArrayType& misorientations, const ComputeFeatureFaceMisorientationInputValues& inputValues, const std::atomic_bool& shouldCancel)
 {
   const usize numTriangles = faceLabels.getNumberOfTuples();
   if(shouldCancel || numTriangles == 0)

@@ -373,11 +373,12 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:Default_Parameters", "[Orienta
   unit_test::CompareImageGeometry(dataStructure, exemplarDCTGeometryPath, computedDCTGeometryPath);
   unit_test::CompareImageGeometry(dataStructure, exemplarAbsorptionCTGeometryPath, computedAbsorptionCTGeometryPath);
 
-  unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_CellDataWithSpaces), dataStructure, computedDCTGeometryPath.createChildPath(k_CellDataWithSpaces));
+  unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_CellDataWithSpaces), dataStructure,
+                                                      computedDCTGeometryPath.createChildPath(k_CellDataWithSpaces));
   unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAbsorptionCTGeometryPath.createChildPath(k_CellDataWithSpaces), dataStructure,
-                                                     computedAbsorptionCTGeometryPath.createChildPath(k_CellDataWithSpaces));
+                                                      computedAbsorptionCTGeometryPath.createChildPath(k_CellDataWithSpaces));
   unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_CellEnsembleDataWithSpaces), dataStructure,
-                                                     computedDCTGeometryPath.createChildPath(k_CellEnsembleDataWithSpaces));
+                                                      computedDCTGeometryPath.createChildPath(k_CellEnsembleDataWithSpaces));
 
   // The exemplar predates UniversalHermannMauguin and cannot validate that
   // array. Compare parsed values with known phase metadata. Index zero is the
@@ -448,11 +449,12 @@ TEST_CASE("OrientationAnalysis::ReadGrainMapper3D:NonCompatible_Parameters", "[O
   unit_test::CompareImageGeometry(dataStructure, exemplarDCTGeometryPath, computedDCTGeometryPath);
   unit_test::CompareImageGeometry(dataStructure, exemplarAbsorptionCTGeometryPath, computedAbsorptionCTGeometryPath);
 
-  unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_CellDataWithSpaces), dataStructure, computedDCTGeometryPath.createChildPath(k_CellDataWithSpaces));
+  unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_CellDataWithSpaces), dataStructure,
+                                                      computedDCTGeometryPath.createChildPath(k_CellDataWithSpaces));
   unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarAbsorptionCTGeometryPath.createChildPath(k_CellDataWithSpaces), dataStructure,
-                                                     computedAbsorptionCTGeometryPath.createChildPath(k_CellDataWithSpaces));
+                                                      computedAbsorptionCTGeometryPath.createChildPath(k_CellDataWithSpaces));
   unit_test::CompareExemplarToGenerateAttributeMatrix(dataStructure, exemplarDCTGeometryPath.createChildPath(k_CellEnsembleDataWithSpaces), dataStructure,
-                                                     computedDCTGeometryPath.createChildPath(k_CellEnsembleDataWithSpaces));
+                                                      computedDCTGeometryPath.createChildPath(k_CellEnsembleDataWithSpaces));
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

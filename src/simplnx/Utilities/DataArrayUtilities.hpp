@@ -75,7 +75,7 @@ inline constexpr int32 k_ComponentCapacity = -79006;
 inline constexpr int32 k_StringTupleOverflow = -79007;
 inline constexpr int32 k_StringCapacity = -79008;
 inline constexpr int32 k_ZeroDimension = -79009;
-} // namespace DimensionConversion
+} // namespace dimension_conversion
 
 /**
  * @brief Checks a shape product before multiplication. A zero factor gives zero in every order.
@@ -635,8 +635,8 @@ SIMPLNX_EXPORT bool CheckArraysHaveSameTupleCount(const DataStructure& dataStruc
  * @param messageHandler Receives validation progress.
  * @return Error for negative, out-of-range, or unreadable identifiers.
  */
-SIMPLNX_EXPORT Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& sourceDataPath, const Int32ArrayType& featureIds, bool ignoreNegativeValues,
-                                                                           const IFilter::MessageHandler& messageHandler);
+SIMPLNX_EXPORT Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& sourceDataPath, const Int32ArrayType& featureIds,
+                                                                           bool ignoreNegativeValues, const IFilter::MessageHandler& messageHandler);
 /**
  * @brief Validates feature identifiers with cancellation.
  * @param dataStructure Data structure that owns the source.
@@ -650,8 +650,8 @@ SIMPLNX_EXPORT Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const
  * The routine checks cancellation between bounded batches and does not modify output.
  * Cancellation returns a valid result without completing validation.
  */
-SIMPLNX_EXPORT Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& sourceDataPath, const Int32ArrayType& featureIds, bool ignoreNegativeValues,
-                                                                           const IFilter::MessageHandler& messageHandler, const std::atomic_bool* shouldCancel);
+SIMPLNX_EXPORT Result<> ValidateFeatureIdsToFeatureAttributeMatrixIndexing(const DataStructure& dataStructure, const DataPath& sourceDataPath, const Int32ArrayType& featureIds,
+                                                                           bool ignoreNegativeValues, const IFilter::MessageHandler& messageHandler, const std::atomic_bool* shouldCancel);
 
 /**
  * @brief Ensures NeighborList storage reaches its declared tuple count.
@@ -830,7 +830,7 @@ inline void IncrementLikeOdometer(std::vector<usize>& idx, const std::vector<usi
     idx[d] = 0;
   }
 }
-} // namespace Indexing
+} // namespace indexing
 
 /**
  * @brief Creates an initialized array that matches another array type.
@@ -2226,8 +2226,9 @@ public:
    * @pre Source and destination arrays and grid-value arrays outlive this mapper.
    * @pre xGridValues, yGridValues, and zGridValues are not null.
    */
-  MapRectGridDataToImageData(IArray& destCellArray, ParallelTaskResult& taskResult, const IArray& inputCellArray, FloatVec3Type origin, SizeVec3Type imageGeoDims, const std::vector<float32>& imageGeoSpacing,
-                             SizeVec3Type rectGridDims, const Float32ArrayType* xGridValues, const Float32ArrayType* yGridValues, const Float32ArrayType* zGridValues)
+  MapRectGridDataToImageData(IArray& destCellArray, ParallelTaskResult& taskResult, const IArray& inputCellArray, FloatVec3Type origin, SizeVec3Type imageGeoDims,
+                             const std::vector<float32>& imageGeoSpacing, SizeVec3Type rectGridDims, const Float32ArrayType* xGridValues, const Float32ArrayType* yGridValues,
+                             const Float32ArrayType* zGridValues)
   : m_ArrayType(destCellArray.getArrayType())
   , m_TaskResult(taskResult)
   , m_InputCellArray(&inputCellArray)
@@ -2667,7 +2668,7 @@ void RunParallelMapRectToImage(IArray& destArray, ParallelRunnerT&& runner, Para
   ExecuteParallelFunction<MapRectGridDataToImageData, NoBooleanType>(dataType, std::forward<ParallelRunnerT>(runner), destArray, taskResult, std::forward<ArgsT>(args)...);
 }
 
-} // namespace CopyFromArray
+} // namespace copy_from_array
 
 /**
  * @namespace TransferGeometryElementData
@@ -2777,5 +2778,5 @@ SIMPLNX_EXPORT void TransferElementData(DataStructure& m_DataStructure, Attribut
  */
 SIMPLNX_EXPORT void CreateDataArrayActions(const DataStructure& dataStructure, const AttributeMatrix* sourceAttrMatPtr, const MultiArraySelectionParameter::ValueType& selectedArrayPaths,
                                            const DataPath& reducedGeometryPathAttrMatPath, Result<OutputActions>& resultOutputActions);
-} // namespace TransferGeometryElementData
+} // namespace transfer_geometry_element_data
 } // namespace nx::core

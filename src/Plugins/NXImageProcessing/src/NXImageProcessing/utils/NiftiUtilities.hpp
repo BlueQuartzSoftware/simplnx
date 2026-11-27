@@ -177,7 +177,7 @@ struct NXIMAGEPROCESSING_EXPORT NiftiMetadata
   /** @name Datatype */
   /** @{ */
   int16 nifti_datatype{0};             ///< Raw `datatype` code from the header (`NIFTI_TYPE_*`).
-  int16 bitpix{0};                    ///< Bits per voxel, cross-validated against the datatype.
+  int16 bitpix{0};                     ///< Bits per voxel, cross-validated against the datatype.
   DataType data_type{DataType::uint8}; ///< simplnx element type for the DataArray.
   usize component_count{1};            ///< Components per tuple (1 for scalars, 3 for RGB24, 4 for RGBA32).
   /** @} */
@@ -185,13 +185,13 @@ struct NXIMAGEPROCESSING_EXPORT NiftiMetadata
   /** @name Data placement + byte order */
   /** @{ */
   usize vox_offset{k_MinVoxOffset}; ///< Byte offset where voxel data starts.
-  bool byte_swap_required{false};    ///< True if the file is in the opposite byte order from the host.
+  bool byte_swap_required{false};   ///< True if the file is in the opposite byte order from the host.
   /** @} */
 
   /** @name Optional data scaling (`y = slope * x + inter`) */
   /** @{ */
-  float32 scl_slope{0.0f};           ///< `scl_slope` from the header; 0 means "no scaling" per spec.
-  float32 scl_inter{0.0f};           ///< `scl_inter` from the header.
+  float32 scl_slope{0.0f};            ///< `scl_slope` from the header; 0 means "no scaling" per spec.
+  float32 scl_inter{0.0f};            ///< `scl_inter` from the header.
   bool has_nontrivial_scaling{false}; ///< True for finite nonzero slope and non-identity scaling, treating a non-finite intercept as 0; always false for RGB24/RGBA32.
   /** @} */
 
@@ -200,15 +200,15 @@ struct NXIMAGEPROCESSING_EXPORT NiftiMetadata
   int16 qform_code{0};                                  ///< NIFTI_XFORM_* code for the qform; 0 = not set.
   int16 sform_code{0};                                  ///< NIFTI_XFORM_* code for the sform; 0 = not set.
   std::array<std::array<float32, 4>, 3> sform_matrix{}; ///< 3x4 affine `[srow_x; srow_y; srow_z]` when sformCode > 0.
-  bool affine_has_flip{false};                           ///< True when the used sform, qfac or pixdim[1..3] has a negative axis direction that the reader ignores.
-  bool affine_has_rotation{false};                       ///< True if the selected transform has non-trivial rotation.
+  bool affine_has_flip{false};                          ///< True when the used sform, qfac or pixdim[1..3] has a negative axis direction that the reader ignores.
+  bool affine_has_rotation{false};                      ///< True if the selected transform has non-trivial rotation.
   /** @} */
 
   /** @name Other */
   /** @{ */
   int16 intent_code{0};    ///< NIFTI_INTENT_* code, if any.
   std::string intent_name; ///< Free-form intent name from the header.
-  std::string descrip;    ///< 80-character description field from the header.
+  std::string descrip;     ///< 80-character description field from the header.
   std::string file_path;   ///< Path the header was read from; kept for diagnostics.
   /** @} */
 };

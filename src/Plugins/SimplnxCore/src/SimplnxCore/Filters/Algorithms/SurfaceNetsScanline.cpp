@@ -273,7 +273,8 @@ Result<> SurfaceNetsScanline::operator()()
   auto& featureIdsStore = featureIdsArrayPtr->getDataStoreRef();
   const auto anyDispatchTargetOutOfCore = [&]() {
     const auto isOoc = [](const IDataArray* array) { return array != nullptr && IsOutOfCore(*array); };
-    if(isOoc(featureIdsArrayPtr) || isOoc(m_DataStructure.getDataAs<IDataArray>(m_InputValues->node_types_data_path)) || isOoc(m_DataStructure.getDataAs<IDataArray>(m_InputValues->face_labels_data_path)))
+    if(isOoc(featureIdsArrayPtr) || isOoc(m_DataStructure.getDataAs<IDataArray>(m_InputValues->node_types_data_path)) ||
+       isOoc(m_DataStructure.getDataAs<IDataArray>(m_InputValues->face_labels_data_path)))
     {
       return true;
     }
@@ -1144,8 +1145,8 @@ Result<> SurfaceNetsScanline::operator()()
     auto& ioCollection = data_store_utilities::GetIOCollection();
     if(ioCollection.hasExternalSortCapability() && ioCollection.hasTemporaryRecordStoreCapability())
     {
-      windingResult = meshing_utilities::RepairTriangleWindingExternal(triangleGeom.getFaces()->getDataStoreRef(),
-                                                                      m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->face_labels_data_path)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
+      windingResult = meshing_utilities::RepairTriangleWindingExternal(
+          triangleGeom.getFaces()->getDataStoreRef(), m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->face_labels_data_path)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
     }
     else
     {
@@ -1165,7 +1166,7 @@ Result<> SurfaceNetsScanline::operator()()
       const auto& connectivity = m_DataStructure.getDataRefAs<IGeometry::ElementDynamicListType>(optionalId.value());
       m_MessageHandler.sendInfoMessage("Repairing Windings...");
       windingResult = meshing_utilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
-                                                              m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->face_labels_data_path)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
+                                                               m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->face_labels_data_path)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
       m_DataStructure.removeData(triangleGeom.getElementContainingVertId().value());
       m_DataStructure.removeData(triangleGeom.getElementNeighborsId().value());
     }
@@ -1176,7 +1177,7 @@ Result<> SurfaceNetsScanline::operator()()
     if(triangleGeom.getNumberOfFaces() == 0)
     {
       return meshing_utilities::MakeEmptyMeshWarning(m_InputValues->triangle_geometry_path, m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getNumberOfTuples(),
-                                                    triangleGeom.getNumberOfVertices());
+                                                     triangleGeom.getNumberOfVertices());
     }
     if(suppressedFaceCount == 0)
     {

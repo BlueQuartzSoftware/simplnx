@@ -1049,7 +1049,7 @@ surface_meshing_test::MeshResult RunM3COmitSkinOnPath(bool wholeVolume, bool ser
   const ScopedEnvVar wholeVolumeVar("M3C_WHOLE_VOLUME", wholeVolume ? "1" : nullptr);
   const ScopedEnvVar serialVar("M3C_SERIAL", serial ? "1" : nullptr);
   return surface_meshing_test::RunMesher<M3CSurfaceMeshingFilter>(surface_meshing_test::CreateCylinderInBox(true), k_SweepPathTriGeomPath, bounding_box_skin_mode::k_BackgroundBackedWallsOnly,
-                                                                [](Arguments&) {});
+                                                                  [](Arguments&) {});
 }
 } // namespace
 

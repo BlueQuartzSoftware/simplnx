@@ -139,7 +139,7 @@ Result<Arguments> CreateFeatureArrayFromElementArrayFilter::FromSIMPLJson(const 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedCellArrayPathKey, k_SelectedCellArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_CellFeatureAttributeMatrixNameKey,
-                                                                                                                         k_CellFeatureAttributeMatrixPath_Key));
+                                                                                                                           k_CellFeatureAttributeMatrixPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CreatedArrayNameKey, k_CreatedArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

@@ -2099,7 +2099,8 @@ static Result<DataObject*> ReadLegacyEdgeGeom(DataStructure& dataStructure, cons
   return result;
 }
 
-static Result<DataObject*> ReadLegacyImageGeom(DataStructure& dataStructure, const nx::core::hdf5::GroupIO& geomGroup, const std::string& name, dream3d::DeferredImageMetadataType* deferredImageMetadata)
+static Result<DataObject*> ReadLegacyImageGeom(DataStructure& dataStructure, const nx::core::hdf5::GroupIO& geomGroup, const std::string& name,
+                                               dream3d::DeferredImageMetadataType* deferredImageMetadata)
 {
   auto* geomPtr = ImageGeom::Create(dataStructure, name);
   if(geomPtr == nullptr)
@@ -2521,7 +2522,8 @@ static Result<DataStructure> ImportLegacyDataStructure(const nx::core::hdf5::Fil
   return ImportLegacyDataStructure(fileReader, preflight, {});
 }
 
-Result<DataStructure> dream3d::detail::ImportMetadata(const nx::core::hdf5::FileIO& fileReader, std::shared_ptr<const IDataStoreFormatResolver> resolver, DeferredImageMetadataType& deferredImageMetadata)
+Result<DataStructure> dream3d::detail::ImportMetadata(const nx::core::hdf5::FileIO& fileReader, std::shared_ptr<const IDataStoreFormatResolver> resolver,
+                                                      DeferredImageMetadataType& deferredImageMetadata)
 {
   const auto version = GetFileVersion(fileReader);
   if(version == k_CurrentFileVersion)

@@ -95,7 +95,7 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
   if(inputType == outputType)
   {
     return {.output_actions = MakeErrorResult<OutputActions>(convert_orientations_constants::k_MatchingTypesError,
-                                                            fmt::format("The Input Representation Type and the Output Representation Type cannot be the same!", fmt::underlying(outputType)))};
+                                                             fmt::format("The Input Representation Type and the Output Representation Type cannot be the same!", fmt::underlying(outputType)))};
   }
 
   auto pInputArrayPath = filterArgs.value<DataPath>(k_InputOrientationArrayPath_Key);
@@ -105,7 +105,7 @@ IFilter::PreflightResult ConvertOrientationsFilter::preflightImpl(const DataStru
   if(inputCompShape.size() > 1)
   {
     return {.output_actions = MakeErrorResult<OutputActions>(convert_orientations_constants::k_InputComponentDimensionError,
-                                                            fmt::format("Input Component Shape has multiple dimensions. It can only have 1 dimension. '{}'", inputCompShape.size()))};
+                                                             fmt::format("Input Component Shape has multiple dimensions. It can only have 1 dimension. '{}'", inputCompShape.size()))};
   }
   using OrientationConverterType = ebsdlib::OrientationConverter<EbsdDataArray<float>, float>;
   auto representationNames = OrientationConverterType::GetOrientationTypeStrings<std::vector<std::string>>();
@@ -168,7 +168,8 @@ Result<Arguments> ConvertOrientationsFilter::FromSIMPLJson(const nlohmann::json&
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_InputTypeKey, k_InputType_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_OutputTypeKey, k_OutputType_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_InputOrientationArrayPathKey, k_InputOrientationArrayPath_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_InputOrientationArrayPathKey, k_InputOrientationArrayPath_Key));
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_OutputOrientationArrayNameKey, k_OutputOrientationArrayName_Key));
 

@@ -274,7 +274,8 @@ Result<Arguments> MultiThresholdObjectsFilter::FromSIMPLJson(const nlohmann::jso
   }
   if(isAdvanced)
   {
-    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ComparisonSelectionAdvancedFilterParameterConverter>(args, json, simpl::k_SelectedThresholdsKey, k_ArrayThresholdsObject_Key));
+    results.push_back(
+        simpl_conversion::ConvertParameter<simpl_conversion::ComparisonSelectionAdvancedFilterParameterConverter>(args, json, simpl::k_SelectedThresholdsKey, k_ArrayThresholdsObject_Key));
   }
   else
   {

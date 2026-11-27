@@ -678,7 +678,7 @@ TEST_CASE("NXImageProcessing::AxisProjectionEngine: projection preflight defers 
     const DataPath inputPath = buildInput(dataStructure);
     const DataPath actionPath({k_ProjectionTempGeomName, "CellData", "Float Output"});
     auto preflightResult = PreflightAxisProjection<ProjectionScalar, AlwaysFloat64Type>(dataStructure, DataPath({"Image Geometry"}), inputPath, /*projDim=*/1,
-                                                                                    /*performInPlace=*/true, "Ignored Projected Geometry", "Float Output");
+                                                                                        /*performInPlace=*/true, "Ignored Projected Geometry", "Float Output");
     requireOutputAction(preflightResult, actionPath);
 
     const Result<> applyResult = preflightResult.value().applyAll(dataStructure, IDataAction::Mode::Execute);

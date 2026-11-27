@@ -81,9 +81,9 @@ Parameters WriteASCIIDataFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_Includes_Key, "Header and Index Options", "Default Include is Headers only", to_underlying(Includes::Headers),
                                                    ChoicesParameter::ChoicesType{"Neither", "Headers", "Index", "Both"})); // sequence dependent DO NOT REORDER
   params.insertSeparator(Parameters::Separator{"Input Data Objects"});
-  params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Export", "Data Arrays to be written to disk",
-                                                               MultiArraySelectionParameter::ValueType{},
-                                                               MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray, IArray::ArrayType::StringArray}, nx::core::GetAllDataTypes()));
+  params.insert(
+      std::make_unique<MultiArraySelectionParameter>(k_SelectedDataArrayPaths_Key, "Attribute Arrays to Export", "Data Arrays to be written to disk", MultiArraySelectionParameter::ValueType{},
+                                                     MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray, IArray::ArrayType::StringArray}, nx::core::GetAllDataTypes()));
 
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_OutputStyle_Key, k_MaxTuplePerLine_Key, std::make_any<uint64>(to_underlying(OutputStyle::MultipleFiles)));
@@ -195,7 +195,8 @@ Result<Arguments> WriteASCIIDataFilter::FromSIMPLJson(const nlohmann::json& json
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntFilterParameterConverter<int32>>(args, json, simpl::k_MaxValPerLineKey, k_MaxTuplePerLine_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputFilePathKey, k_OutputPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_DelimiterKey, k_Delimiter_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

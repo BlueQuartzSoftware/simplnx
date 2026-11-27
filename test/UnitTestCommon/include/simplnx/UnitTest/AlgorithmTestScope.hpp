@@ -188,4 +188,4 @@ private:
   AlgorithmTestScenario m_Scenario;
   std::unique_ptr<PreferencesSentinel> m_PreferencesSentinel;
 };
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test

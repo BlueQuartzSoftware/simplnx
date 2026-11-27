@@ -52,13 +52,13 @@ enum class Encoding
 struct NXIMAGEPROCESSING_EXPORT NrrdMetadata
 {
   std::string file_path; ///< Path the header was read from (diagnostics).
-  int version{0};       ///< NRRD version digit (4 for NRRD0004).
+  int version{0};        ///< NRRD version digit (4 for NRRD0004).
 
   // Canonicalized geometry (drives the ImageGeom + DataArray).
   std::array<usize, 3> dimensions{1, 1, 1};         ///< X, Y, Z voxel counts (Z=1 for 2D).
   std::array<float32, 3> spacing{1.0f, 1.0f, 1.0f}; ///< Per-axis spacing.
   std::array<float32, 3> origin{0.0f, 0.0f, 0.0f};  ///< World-space origin.
-  usize spatial_dim{3};                              ///< 2 or 3.
+  usize spatial_dim{3};                             ///< 2 or 3.
 
   // Datatype.
   DataType data_type{DataType::uint8}; ///< simplnx element type.
@@ -66,11 +66,11 @@ struct NXIMAGEPROCESSING_EXPORT NrrdMetadata
   usize element_size{1};               ///< Bytes per component (for byteswap).
 
   // Data placement + decode.
-  Encoding encoding{Encoding::Raw};   ///< raw or gzip.
+  Encoding encoding{Encoding::Raw};     ///< raw or gzip.
   bool byte_swap_required{false};       ///< File endian differs from host (multi-byte only).
   usize data_start_offset{0};           ///< Byte offset of data within dataFilePath.
   std::filesystem::path data_file_path; ///< Header path (attached) or sibling (detached).
-  bool detached{false};               ///< True for .nhdr + external data file.
+  bool detached{false};                 ///< True for .nhdr + external data file.
 
   // Orientation.
   bool affine_has_rotation{false}; ///< True if space directions are non-axis-aligned.

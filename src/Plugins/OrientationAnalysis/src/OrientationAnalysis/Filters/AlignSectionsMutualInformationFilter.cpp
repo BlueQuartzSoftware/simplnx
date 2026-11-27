@@ -61,9 +61,9 @@ Parameters AlignSectionsMutualInformationFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float32ParameterType>(k_MisorientationTolerance_Key, "Misorientation Tolerance (Degrees)",
-                                                   "Tolerance used to decide if Cells above/below one another should be considered to be the same. The value selected should be similar to the "
-                                                   "tolerance one would use to define Features (i.e., 2-10 degrees).",
-                                                   5.0f));
+                                                       "Tolerance used to decide if Cells above/below one another should be considered to be the same. The value selected should be similar to the "
+                                                       "tolerance one would use to define Features (i.e., 2-10 degrees).",
+                                                       5.0f));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Whether to remove some Cells from consideration in the alignment process.", false));

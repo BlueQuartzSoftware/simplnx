@@ -388,7 +388,8 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryResample(const DataStru
     for(const auto& childPath : childPaths.value())
     {
       const DataPath copiedChildPath = childPath.rebase(srcImagePath, destImagePath).value();
-      AppendCopyDataObjectAction(dataStructure, resultOutputActions.value(), childPath, copiedChildPath, inputValues.clear_feature_attribute_matrix ? inputValues.cell_feature_attribute_matrix : DataPath{});
+      AppendCopyDataObjectAction(dataStructure, resultOutputActions.value(), childPath, copiedChildPath,
+                                 inputValues.clear_feature_attribute_matrix ? inputValues.cell_feature_attribute_matrix : DataPath{});
     }
   }
 

@@ -75,8 +75,8 @@ Result<> ComputeFeatureNeighborMisorientations::operator()()
       if(neighborFeaturePhaseIdx < 0 || static_cast<usize>(neighborFeaturePhaseIdx) >= numCrystalStructures)
       {
         return MakeErrorResult(-34502, fmt::format("Feature Phases array '{}' has value {} at feature index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in [0, {}).",
-                                                   m_InputValues->feature_phases_array_path.toString(), neighborFeaturePhaseIdx, neighborFeatureIdx, m_InputValues->crystal_structures_array_path.toString(),
-                                                   numCrystalStructures, numCrystalStructures));
+                                                   m_InputValues->feature_phases_array_path.toString(), neighborFeaturePhaseIdx, neighborFeatureIdx,
+                                                   m_InputValues->crystal_structures_array_path.toString(), numCrystalStructures, numCrystalStructures));
       }
       const uint32 neighborLaueIndex = crystalStructuresArrayRef[neighborFeaturePhaseIdx];
       if(currentLaueIndex == neighborLaueIndex && currentLaueIndex < orientationOps.size())

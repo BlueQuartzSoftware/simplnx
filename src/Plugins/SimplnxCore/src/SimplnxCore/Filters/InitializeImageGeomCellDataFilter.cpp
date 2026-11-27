@@ -125,14 +125,14 @@ Parameters InitializeImageGeomCellDataFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<VectorUInt64ParameterType>(k_MinPoint_Key, "Min Point", "The minimum x, y, z bound in cells", std::vector<uint64>{0, 0, 0},
-                                                        std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
+                                                            std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
   params.insert(std::make_unique<VectorUInt64ParameterType>(k_MaxPoint_Key, "Max Point", "The maximum x, y, z bound in cells", std::vector<uint64>{0, 0, 0},
-                                                        std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
+                                                            std::vector<std::string>{"X (Column)", "Y (Row)", "Z (Plane)"}));
   params.insertLinkableParameter(
       std::make_unique<ChoicesParameter>(k_InitType_Key, "Initialization Type", "Tells how to initialize the data", 0, ChoicesParameter::ChoicesType{"Manual", "Random", "Random With Range"}));
   params.insert(std::make_unique<Float64ParameterType>(k_InitValue_Key, "Initialization Value", "The initialization value if Manual Initialization Type is selected", 0.0f));
   params.insert(std::make_unique<VectorFloat64ParameterType>(k_InitRange_Key, "Initialization Range", "The initialization range if Random With Range Initialization Type is selected",
-                                                         VectorFloat64ParameterType::ValueType{0.0, 0.0}));
+                                                             VectorFloat64ParameterType::ValueType{0.0, 0.0}));
   params.linkParameters(k_InitType_Key, k_InitValue_Key, std::make_any<ChoicesParameter::ValueType>(0));
   params.linkParameters(k_InitType_Key, k_InitRange_Key, std::make_any<ChoicesParameter::ValueType>(2));
 

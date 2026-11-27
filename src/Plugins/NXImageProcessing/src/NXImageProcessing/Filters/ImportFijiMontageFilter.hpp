@@ -79,7 +79,7 @@ private:
     std::filesystem::path input_file;
     std::filesystem::file_time_type time_stamp;
     std::vector<fiji::FijiTile> raw_tiles; ///< Parsed straight from the config (no prefix, no rebase).
-    std::vector<ImageMetadata> metadata;  ///< Parallel to rawTiles; populated only when metadataValid.
+    std::vector<ImageMetadata> metadata;   ///< Parallel to rawTiles; populated only when metadataValid.
     bool tiles_valid = false;
     bool metadata_valid = false;
   };

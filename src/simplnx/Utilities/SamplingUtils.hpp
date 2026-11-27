@@ -124,4 +124,4 @@ inline Result<> RenumberFeatures(DataStructure& dataStructure, const DataPath& n
   }
   return RenumberFeatures(dataStructure, destCellFeatAttributeMatrixPath, featureIdsArrayPath, destFeatureIdsArrayPath, messageHandler, shouldCancel);
 }
-} // namespace nx::core::Sampling
+} // namespace nx::core::sampling

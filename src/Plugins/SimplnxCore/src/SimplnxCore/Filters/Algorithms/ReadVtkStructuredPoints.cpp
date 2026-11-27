@@ -780,7 +780,7 @@ Result<> ReadVtkStructuredPoints::readFile()
       {
         const auto& error = value.errors().front();
         return MakeErrorResult(error.code, image_io::FormatReaderValueError(m_InputValues->input_file, fmt::format("{} spacing", k_AxisNames[axis]),
-                                                                           fmt::format("Value '{}' could not be converted to float32.", tokens[axis + 1]), image_io::k_SetSpacingLabel));
+                                                                            fmt::format("Value '{}' could not be converted to float32.", tokens[axis + 1]), image_io::k_SetSpacingLabel));
       }
       spacing[axis] = value.value();
     }
@@ -815,7 +815,7 @@ Result<> ReadVtkStructuredPoints::readFile()
       {
         const auto& error = value.errors().front();
         return MakeErrorResult(error.code, image_io::FormatReaderValueError(m_InputValues->input_file, fmt::format("{} origin", k_AxisNames[axis]),
-                                                                           fmt::format("Value '{}' could not be converted to float32.", tokens[axis + 1]), image_io::k_SetOriginLabel));
+                                                                            fmt::format("Value '{}' could not be converted to float32.", tokens[axis + 1]), image_io::k_SetOriginLabel));
       }
       origin[axis] = value.value();
     }

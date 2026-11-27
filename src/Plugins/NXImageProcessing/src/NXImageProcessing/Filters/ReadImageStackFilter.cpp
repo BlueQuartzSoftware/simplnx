@@ -111,10 +111,10 @@ Parameters ReadImageStackFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Geometry Metadata Overrides"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Set Origin", "Specifies if the origin should be changed", false));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Origin (Physical Units)", "The origin of the 3D volume", std::vector<float32>{0.0F, 0.0F, 0.0F},
-                                                         std::vector<std::string>{"X", "Y", "Z"}));
+                                                             std::vector<std::string>{"X", "Y", "Z"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeSpacing_Key, "Set Spacing", "Specifies if the spacing should be changed", false));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_Spacing_Key, "Spacing (Physical Units)", "The spacing of the 3D volume", std::vector<float32>{1.0F, 1.0F, 1.0F},
-                                                         std::vector<std::string>{"X", "Y", "Z"}));
+                                                             std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<ChoicesParameter>(k_OriginSpacingProcessing_Key, "Origin & Spacing Processing", "Whether the origin & spacing should be preprocessed or postprocessed.", 1,
                                                    ChoicesParameter::ChoicesType{"Preprocessed", "Postprocessed"}));
 
@@ -127,15 +127,16 @@ Parameters ReadImageStackFilter::parameters() const
       "The scaling of the 3D volume, in percentages. Percentage must be greater than or equal to 1.0f. Larger percentages will cause more voxels, smaller percentages "
       "will cause less voxels. For example, 10.0 is one-tenth the original number of pixels.  200.0 is double the number of pixels.",
       100.0f));
-  params.insert(std::make_unique<VectorUInt64ParameterType>(k_ExactXYDimensions_Key, "Exact 2D Dimensions (Pixels)",
-                                                        "The supplied dimensions will be used to determine the resampled output geometry size. See associated Filter documentation for further detail.",
-                                                        std::vector<uint64>{100, 100}, std::vector<std::string>({"X", "Y"})));
+  params.insert(
+      std::make_unique<VectorUInt64ParameterType>(k_ExactXYDimensions_Key, "Exact 2D Dimensions (Pixels)",
+                                                  "The supplied dimensions will be used to determine the resampled output geometry size. See associated Filter documentation for further detail.",
+                                                  std::vector<uint64>{100, 100}, std::vector<std::string>({"X", "Y"})));
 
   params.insertSeparator(Parameters::Separator{"Other Slice Options"});
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_ConvertToGrayScale_Key, "Convert To GrayScale", "The filter will show an error if the images are already in grayscale format", false));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_ColorWeights_Key, "Color Weighting", "RGB weights for the grayscale conversion using the luminosity algorithm.",
-                                                         std::vector<float32>{0.2125f, 0.7154f, 0.0721f}, std::vector<std::string>({"Red", "Green", "Blue"})));
+                                                             std::vector<float32>{0.2125f, 0.7154f, 0.0721f}, std::vector<std::string>({"Red", "Green", "Blue"})));
   params.insertLinkableParameter(
       std::make_unique<ChoicesParameter>(k_ImageTransformChoice_Key, "Flip Slice", "Operation that is performed on each slice. 0=None, 1=Flip about X, 2=Flip about Y", 0, k_SliceOperationChoices));
 

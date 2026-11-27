@@ -93,7 +93,8 @@ struct DecoderQuota
     auto& quota = *static_cast<DecoderQuota*>(opaque);
     uint64 payload = 0;
     uint64 bytes = 0;
-    if(!bounded_read::Multiply(count, size, payload) || !bounded_read::Add(payload, sizeof(DecoderHeader), bytes) || payload > quota.allowance - quota.live || bytes > std::numeric_limits<usize>::max())
+    if(!bounded_read::Multiply(count, size, payload) || !bounded_read::Add(payload, sizeof(DecoderHeader), bytes) || payload > quota.allowance - quota.live ||
+       bytes > std::numeric_limits<usize>::max())
     {
       quota.quota_failed = true;
       return nullptr;
@@ -630,7 +631,7 @@ bounded_read::Status ParallelChunkCodec::readExtentIntoBufferBoundedState(const 
 }
 
 bounded_read::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const Extent& extent, nonstd::span<std::byte> destination, uint64 payloadBudgetBytes, Result<>& diagnostic,
-                                                                        std::unique_ptr<std::byte[]>* selectedOutput) const
+                                                                         std::unique_ptr<std::byte[]>* selectedOutput) const
 {
   const BoundedIdentity identity{.file = m_FilePath, .Dataset = m_DatasetPath};
 #if SIMPLNX_BUILD_TESTS
@@ -744,7 +745,7 @@ bounded_read::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const E
       {
         diagnostic =
             MakeWarningVoidResult(bounded_read::UnsupportedFilter, fmt::format("Bounded chunk pipeline is not a supported single deflate filter; filter={}, parameter count={}, first parameter={}",
-                                                                              static_cast<uint64>(filter), count, values[0]));
+                                                                               static_cast<uint64>(filter), count, values[0]));
         return Status::Unavailable;
       }
       metadata.has_deflate = true;
@@ -893,7 +894,7 @@ bounded_read::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const E
   {
     diagnostic =
         MakeWarningVoidResult(bounded_read::Insufficient, fmt::format("Bounded read data scratch exceeds the allowance. Request a smaller extent or increase the allowance.; required={}, available={}",
-                                                                     requiredBytes, payloadBudgetBytes));
+                                                                      requiredBytes, payloadBudgetBytes));
     return Status::Unavailable;
   }
   metadata.quota.allowance = decoderWorkspace;
@@ -913,8 +914,8 @@ bounded_read::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const E
     initialized = status == Z_OK;
     if(!initialized)
     {
-      diagnostic =
-          MakeErrorResult<>(metadata.quota.quota_failed ? bounded_read::DecoderQuotaFailure : bounded_read::AllocationFailure, fmt::format("Bounded zlib initialization cannot acquire its workspace."));
+      diagnostic = MakeErrorResult<>(metadata.quota.quota_failed ? bounded_read::DecoderQuotaFailure : bounded_read::AllocationFailure,
+                                     fmt::format("Bounded zlib initialization cannot acquire its workspace."));
       return Status::Failed;
     }
   }
@@ -1033,8 +1034,8 @@ bounded_read::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const E
 #if SIMPLNX_BUILD_TESTS
       ObserveCodecIoForTesting(m_FilePath, m_DatasetPath,
                                got == static_cast<std::ptrdiff_t>(metadata.Record.stored_size) ? CodecIoEventForTesting::StoredRead :
-                               got < 0                                                        ? CodecIoEventForTesting::StoredReadFailed :
-                                                                                                CodecIoEventForTesting::StoredReadShort,
+                               got < 0                                                         ? CodecIoEventForTesting::StoredReadFailed :
+                                                                                                 CodecIoEventForTesting::StoredReadShort,
                                got >= 0 ? static_cast<uint64>(got) : metadata.Record.stored_size, metadata.Record.stored_size);
 #endif
       return got;

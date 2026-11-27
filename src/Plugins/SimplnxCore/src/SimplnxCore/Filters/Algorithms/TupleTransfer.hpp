@@ -798,7 +798,8 @@ public:
   Result<> quickSurfaceTransferBatch(nonstd::span<const QuickSurfaceTransferData> records) override
   {
     return detail::TransferBoundedCellTuples(m_CellRef, m_FaceRef, m_NumComps, records, [](const QuickSurfaceTransferData& record) {
-      return std::array<usize, 2>{record.face_label0 == -1 ? std::numeric_limits<usize>::max() : record.firstc_index, record.face_label1 == -1 ? std::numeric_limits<usize>::max() : record.secondc_index};
+      return std::array<usize, 2>{record.face_label0 == -1 ? std::numeric_limits<usize>::max() : record.firstc_index,
+                                  record.face_label1 == -1 ? std::numeric_limits<usize>::max() : record.secondc_index};
     });
   }
 

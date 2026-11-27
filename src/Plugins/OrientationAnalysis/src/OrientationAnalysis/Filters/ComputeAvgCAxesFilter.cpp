@@ -50,8 +50,8 @@ Parameters ComputeAvgCAxesFilter::parameters() const
   Parameters params;
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
-  params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Cell Quaternions", "Input quaternion array", DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::float32},
-                                                          ArraySelectionParameter::AllowedComponentShapesType{{4}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Cell Quaternions", "Input quaternion array", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{4}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeatureIdsArrayPath_Key, "Cell Feature Ids", "Data Array that specifies to which Feature each Element belongs", DataPath{},
                                                           ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "Specifies to which Ensemble each Cell belongs", DataPath{},
@@ -152,7 +152,8 @@ Result<Arguments> ComputeAvgCAxesFilter::FromSIMPLJson(const nlohmann::json& jso
   // not from the cell-level Quats/FeatureIds arrays (e.g. "CellData").
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_AvgCAxesArrayPathKey, k_CellFeatureAttributeMatrixPath_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_AvgCAxesArrayPathKey, k_AvgCAxesArrayName_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_AvgCAxesArrayPathKey, k_AvgCAxesArrayName_Key));
 
   // The legacy filter had no phase or crystal-structure inputs.
   // Derive their conventional paths from the legacy FeatureIds path.

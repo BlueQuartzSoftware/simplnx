@@ -195,7 +195,7 @@ Result<> RemoveFlaggedEdges::operator()()
   if(m_InputValues->edge_data_handling == detail::k_CopySelectedEdgeArraysIdx)
   {
     transfer_geometry_element_data::TransferElementData(m_DataStructure, reducedEdgeGeom.getEdgeAttributeMatrixRef(), m_InputValues->selected_edge_data, newEdgesIndexList, m_ShouldCancel,
-                                                     m_MessageHandler);
+                                                        m_MessageHandler);
   }
   else if(m_InputValues->edge_data_handling == detail::k_CopyAllEdgeArraysIdx)
   {
@@ -211,7 +211,7 @@ Result<> RemoveFlaggedEdges::operator()()
   if(m_InputValues->vertex_data_handling == detail::k_CopySelectedVertexArraysIdx)
   {
     transfer_geometry_element_data::TransferElementData(m_DataStructure, reducedEdgeGeom.getVertexAttributeMatrixRef(), m_InputValues->selected_vertex_data, vertexListIndices, m_ShouldCancel,
-                                                     m_MessageHandler);
+                                                        m_MessageHandler);
   }
   else if(m_InputValues->vertex_data_handling == detail::k_CopyAllVertexArraysIdx)
   {
@@ -219,7 +219,8 @@ Result<> RemoveFlaggedEdges::operator()()
     auto getChildrenResult = GetAllChildArrayDataPaths(m_DataStructure, m_InputValues->vertex_attribute_matrix_path, ignorePaths);
     if(getChildrenResult.has_value())
     {
-      transfer_geometry_element_data::TransferElementData(m_DataStructure, reducedEdgeGeom.getVertexAttributeMatrixRef(), getChildrenResult.value(), vertexListIndices, m_ShouldCancel, m_MessageHandler);
+      transfer_geometry_element_data::TransferElementData(m_DataStructure, reducedEdgeGeom.getVertexAttributeMatrixRef(), getChildrenResult.value(), vertexListIndices, m_ShouldCancel,
+                                                          m_MessageHandler);
     }
   }
 

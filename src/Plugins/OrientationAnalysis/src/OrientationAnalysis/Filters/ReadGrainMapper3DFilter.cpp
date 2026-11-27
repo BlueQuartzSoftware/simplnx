@@ -213,11 +213,13 @@ IFilter::PreflightResult ReadGrainMapper3DFilter::preflightImpl(const DataStruct
 
     // create the cell ensemble arrays
     {
-      auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::uint32, ensembleTupleDims, std::vector<usize>{1}, cellEnsembleAMPath.createChildPath(gm_3d_constants::k_CrystalStructures));
+      auto createArrayAction =
+          std::make_unique<CreateArrayAction>(DataType::uint32, ensembleTupleDims, std::vector<usize>{1}, cellEnsembleAMPath.createChildPath(gm_3d_constants::k_CrystalStructures));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
     {
-      auto createArrayAction = std::make_unique<CreateArrayAction>(DataType::float32, ensembleTupleDims, std::vector<usize>{6}, cellEnsembleAMPath.createChildPath(gm_3d_constants::k_LatticeConstants));
+      auto createArrayAction =
+          std::make_unique<CreateArrayAction>(DataType::float32, ensembleTupleDims, std::vector<usize>{6}, cellEnsembleAMPath.createChildPath(gm_3d_constants::k_LatticeConstants));
       resultOutputActions.value().appendAction(std::move(createArrayAction));
     }
     {

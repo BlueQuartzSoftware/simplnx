@@ -1352,7 +1352,7 @@ private:
           for(uint64 rightIndex = 0; rightIndex < rightCount; ++rightIndex)
           {
             const float64 distance = cluster_utilities::GetDistance(m_LeftMergeBuffer[static_cast<usize>(leftIndex)].coordinates, 0, m_RightMergeBuffer[static_cast<usize>(rightIndex)].coordinates, 0,
-                                                                   m_Dimensions, m_InputValues.distance_metric);
+                                                                    m_Dimensions, m_InputValues.distance_metric);
             if(distance < m_InputValues.epsilon)
             {
               return {true};

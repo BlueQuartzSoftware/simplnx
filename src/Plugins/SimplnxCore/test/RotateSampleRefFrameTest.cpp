@@ -773,15 +773,15 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Child names containing the geometr
   auto* elementAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 2, 2}, geomPtr->getId());
   REQUIRE(elementAmPtr != nullptr);
   geomPtr->setCellData(*elementAmPtr);
-  auto* dataPtr =
-      Int32ArrayType::Create(dataStructure, "Data", data_store_utilities::CreateDataStore<int32>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Data"), elementAmPtr->getShape(), {1}),
-                         elementAmPtr->getId());
+  auto* dataPtr = Int32ArrayType::Create(dataStructure, "Data",
+                                         data_store_utilities::CreateDataStore<int32>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Data"), elementAmPtr->getShape(), {1}),
+                                         elementAmPtr->getId());
   REQUIRE(dataPtr != nullptr);
   dataPtr->fill(7);
   auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "Geom Feature Data", {2}, geomPtr->getId());
   REQUIRE(featureAmPtr != nullptr);
-  auto* valuesPtr = Int32ArrayType::Create(dataStructure, "Geom Values",
-                                       data_store_utilities::CreateDataStore<int32>(dataStructure, featureAmPtr->getDataPaths().front().createChildPath("Geom Values"), {2}, {1}), featureAmPtr->getId());
+  auto* valuesPtr = Int32ArrayType::Create(
+      dataStructure, "Geom Values", data_store_utilities::CreateDataStore<int32>(dataStructure, featureAmPtr->getDataPaths().front().createChildPath("Geom Values"), {2}, {1}), featureAmPtr->getId());
   REQUIRE(valuesPtr != nullptr);
   valuesPtr->fill(42);
   RotateSampleRefFrameFilter filter;
@@ -869,8 +869,8 @@ TEST_CASE("SimplnxCore::RotateSampleRefFrame: Axis domain regression", "[Simplnx
   CAPTURE(row);
   DataStructure dataStructure;
   CreateSequentialImageGeom(dataStructure, "Input", {3, 2, 1});
-  auto args =
-      MakeAxisAngleArgs(k_InputPath, k_OutputPath, row == 0 ? VectorFloat32ParameterType::ValueType{0, 0, 0, 90} : VectorFloat32ParameterType::ValueType{0, 0, 1, std::numeric_limits<float32>::quiet_NaN()});
+  auto args = MakeAxisAngleArgs(k_InputPath, k_OutputPath,
+                                row == 0 ? VectorFloat32ParameterType::ValueType{0, 0, 0, 90} : VectorFloat32ParameterType::ValueType{0, 0, 1, std::numeric_limits<float32>::quiet_NaN()});
   RotateSampleRefFrameFilter filter;
   auto pre = filter.preflight(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_INVALID(pre.output_actions);

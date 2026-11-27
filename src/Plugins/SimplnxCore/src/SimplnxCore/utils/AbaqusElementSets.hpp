@@ -69,4 +69,4 @@ SIMPLNXCORE_EXPORT Result<> ValidateOutputTargets(const std::filesystem::path& o
  * @return Error when either count exceeds the Abaqus label limit.
  */
 SIMPLNXCORE_EXPORT Result<> ValidateMeshSize(const SizeVec3Type& dimensions);
-} // namespace nx::core::AbaqusElementSets
+} // namespace nx::core::abaqus_element_sets

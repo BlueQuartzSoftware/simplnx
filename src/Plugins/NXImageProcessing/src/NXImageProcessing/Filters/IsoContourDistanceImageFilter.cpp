@@ -42,8 +42,8 @@ Parameters IsoContourDistanceImageFilter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float64ParameterType>(k_LevelSetValue_Key, "Level Set Value", "The value of the level set (iso-contour) whose distance is computed. Default is 0.", 0.0));
-  params.insert(std::make_unique<Float64ParameterType>(k_FarValue_Key, "Far Value",
-                                                   "The signed value written to voxels not adjacent to the iso-contour: +Far Value above the level set, -Far Value below it. Default is 10.", 10.0));
+  params.insert(std::make_unique<Float64ParameterType>(
+      k_FarValue_Key, "Far Value", "The signed value written to voxels not adjacent to the iso-contour: +Far Value above the level set, -Far Value below it. Default is 10.", 10.0));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

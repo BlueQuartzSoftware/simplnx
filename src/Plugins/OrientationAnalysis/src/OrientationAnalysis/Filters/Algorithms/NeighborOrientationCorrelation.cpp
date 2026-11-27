@@ -279,8 +279,8 @@ Result<> NeighborOrientationCorrelation::operator()()
                         -580096,
                         fmt::format(
                             "Cell Phases array '{}' has value {} at neighbor voxel index {}, but Crystal Structures array '{}' contains {} tuples. Valid positive Phase indices are in [1, {}).",
-                            m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, voxelIndex + neighborVoxelIndexOffsets[faceIndexK], m_InputValues->crystal_structures_array_path.toString(),
-                            numCrystalStructures, numCrystalStructures));
+                            m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, voxelIndex + neighborVoxelIndexOffsets[faceIndexK],
+                            m_InputValues->crystal_structures_array_path.toString(), numCrystalStructures, numCrystalStructures));
                   }
                   const uint32 currentLaueIndex = crystalStructuresCache[currentPhaseIdx];
                   if(currentLaueIndex >= orientationOps.size())

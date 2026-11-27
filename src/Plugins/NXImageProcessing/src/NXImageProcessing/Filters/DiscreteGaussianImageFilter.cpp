@@ -50,7 +50,7 @@ Parameters DiscreteGaussianImageFilter::parameters() const
       "UseImageSpacing is true, the units are the physical units of your image. If UseImageSpacing is false then the units are pixels.",
       std::vector<float64>(3, 1.0), std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<UInt32ParameterType>(k_MaximumKernelWidth_Key, "MaximumKernelWidth",
-                                                  "Set the kernel to be no wider than MaximumKernelWidth pixels, even if MaximumError demands it. The default is 32 pixels.", 32u));
+                                                      "Set the kernel to be no wider than MaximumKernelWidth pixels, even if MaximumError demands it. The default is 32 pixels.", 32u));
   params.insert(std::make_unique<VectorFloat64ParameterType>(
       k_MaximumError_Key, "MaximumError",
       "The algorithm will size the discrete kernel so that the error resulting from truncation of the kernel is no greater than MaximumError. The default is 0.01 in each dimension.",

@@ -243,8 +243,8 @@ std::vector<LineSegment> FillPolygonWithParallelLines(const std::vector<float>& 
  * Pre-bucketed indexes avoid scanning the complete CAD edge list for each
  * region-slice pair.
  */
-void ExtractRegion(const INodeGeometry0D::SharedVertexListType& vertices, const INodeGeometry1D::SharedEdgeListType& edges, nonstd::span<const usize> regionSliceEdgeIndices, std::vector<float>& outVertices,
-                   std::vector<usize>& outEdges)
+void ExtractRegion(const INodeGeometry0D::SharedVertexListType& vertices, const INodeGeometry1D::SharedEdgeListType& edges, nonstd::span<const usize> regionSliceEdgeIndices,
+                   std::vector<float>& outVertices, std::vector<usize>& outEdges)
 {
   outVertices.clear();
   outVertices.reserve(750);

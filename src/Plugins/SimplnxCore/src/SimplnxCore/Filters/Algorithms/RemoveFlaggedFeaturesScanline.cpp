@@ -202,8 +202,8 @@ Result<> TransferMarkedSliceForArray(IDataArray& dataArray, const std::vector<in
  * Face neighbors use the direct algorithm's order. The first feature to exceed
  * the current vote count wins. A later tie does not replace that feature.
  */
-Result<bool> IdentifyAndFillNeighborsScanline(const ImageGeom& imageGeom, Int32AbstractDataStoreType& featureIdsStore, const std::vector<std::shared_ptr<IDataArray>>& voxelArrays, usize& replacementCount,
-                                              usize& unresolvedCount, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+Result<bool> IdentifyAndFillNeighborsScanline(const ImageGeom& imageGeom, Int32AbstractDataStoreType& featureIdsStore, const std::vector<std::shared_ptr<IDataArray>>& voxelArrays,
+                                              usize& replacementCount, usize& unresolvedCount, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   ThrottledMessageHandler progressThrottle(messageHandler);
   replacementCount = 0;

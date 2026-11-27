@@ -1272,14 +1272,14 @@ Result<> ComputeAvgOrientations::computeVmfWatsonAverageScanline()
     return WriteFloatOutput(m_DataStructure, kappaPath, m_NumberOfFeatures, 1, kappas);
   };
 
-  Result<> writeResult = writeOutput(m_InputValues->use_von_mises_average, m_InputValues->vmf_quats_array_path, m_InputValues->vmf_euler_angles_array_path, m_InputValues->vmf_kappa_array_path, outputs.vmf_quats,
-                                     outputs.vmf_euler, outputs.vmf_kappa);
+  Result<> writeResult = writeOutput(m_InputValues->use_von_mises_average, m_InputValues->vmf_quats_array_path, m_InputValues->vmf_euler_angles_array_path, m_InputValues->vmf_kappa_array_path,
+                                     outputs.vmf_quats, outputs.vmf_euler, outputs.vmf_kappa);
   if(writeResult.invalid() || m_ShouldCancel)
   {
     return writeResult;
   }
-  writeResult = writeOutput(m_InputValues->use_watson_average, m_InputValues->watson_quats_array_path, m_InputValues->watson_euler_angles_array_path, m_InputValues->watson_kappa_array_path, outputs.watson_quats,
-                            outputs.watson_euler, outputs.watson_kappa);
+  writeResult = writeOutput(m_InputValues->use_watson_average, m_InputValues->watson_quats_array_path, m_InputValues->watson_euler_angles_array_path, m_InputValues->watson_kappa_array_path,
+                            outputs.watson_quats, outputs.watson_euler, outputs.watson_kappa);
   if(writeResult.invalid() || m_ShouldCancel)
   {
     return writeResult;

@@ -361,10 +361,10 @@ Parameters ReadBinaryCTNorthstarFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputHeaderFile_Key, "Input Header File", "The path to the .nsihdr file", fs::path("DefaultInputFileName"),
                                                           FileSystemPathParameter::ExtensionsType{".nsihdr"}, FileSystemPathParameter::PathType::InputFile));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ImportSubvolume_Key, "Import Subvolume", "Import a subvolume instead of the entire volume", false));
-  params.insert(
-      std::make_unique<VectorInt32ParameterType>(k_StartVoxelCoord_Key, "Starting XYZ Voxel for Subvolume", "The starting subvolume voxel", std::vector<int32>({0, 0, 0}), std::vector<std::string>(3)));
+  params.insert(std::make_unique<VectorInt32ParameterType>(k_StartVoxelCoord_Key, "Starting XYZ Voxel for Subvolume", "The starting subvolume voxel", std::vector<int32>({0, 0, 0}),
+                                                           std::vector<std::string>(3)));
   params.insert(std::make_unique<VectorInt32ParameterType>(k_EndVoxelCoord_Key, "Ending XYZ Voxel for Subvolume", "The ending subvolume voxel (inclusive)", std::vector<int32>({1, 1, 1}),
-                                                       std::vector<std::string>(3)));
+                                                           std::vector<std::string>(3)));
 
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "The length unit that will be set into the created image geometry", 0, IGeometry::GetAllLengthUnitStrings()));
 

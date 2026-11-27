@@ -269,7 +269,7 @@ inline const DataPath k_CellFeatureDataPath = k_DataContainerPath.createChildPat
 // This path selects the top-level exemplar data container.
 inline const DataPath k_ExemplarDataContainerPath({k_ExemplarDataContainer});
 
-} // namespace Constants
+} // namespace constants
 
 /**
  * @namespace nx::core::UnitTest
@@ -861,7 +861,7 @@ Result<FloatArrayComparison<T>> EvaluateFloatArraysWithNans(const DataArray<T>& 
   comparison.matches = !comparison.first_nan_mismatch_index.has_value() && comparison.maximum_difference < epsilon;
   return result;
 }
-} // namespace FloatArrayComparisonDetail
+} // namespace float_array_comparison_detail
 
 /**
  * @brief Compares two floating-point DataArray objects and reports their largest difference.
@@ -887,8 +887,8 @@ void CompareFloatArraysWithNans(const DataStructure& dataStructure, const DataPa
   INFO(fmt::format("Maximum difference of {} occurs at index {} (epsilon = {})", comparison.maximum_difference, comparison.maximum_difference_index, epsilon));
   if(comparison.first_nan_mismatch_index.has_value())
   {
-    UNSCOPED_INFO(
-        fmt::format("NaN positions differ at index {}: exemplar {}, computed {}.", *comparison.first_nan_mismatch_index, comparison.exemplary_nan_mismatch_value, comparison.generated_nan_mismatch_value));
+    UNSCOPED_INFO(fmt::format("NaN positions differ at index {}: exemplar {}, computed {}.", *comparison.first_nan_mismatch_index, comparison.exemplary_nan_mismatch_value,
+                              comparison.generated_nan_mismatch_value));
   }
   REQUIRE(comparison.matches);
 }
@@ -1362,9 +1362,9 @@ struct AxisBoundsChoices
  * @return Crop values in deterministic flag and bounds order.
  */
 std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBoundsChoices& C, bool is2D = false);
-} // namespace Cropping
+} // namespace cropping
 
-} // namespace UnitTest
+} // namespace unit_test
 
 /**
  * @var k_SimplnxCorePluginId
@@ -1450,4 +1450,4 @@ void ExecuteMultiThresholdObjects(DataStructure& dataStructure, const FilterList
  * @param filterList Creates the filter instance.
  */
 void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList& filterList);
-} // namespace SmallIn100
+} // namespace small_in100

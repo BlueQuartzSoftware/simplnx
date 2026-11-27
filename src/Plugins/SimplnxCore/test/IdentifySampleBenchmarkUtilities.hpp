@@ -407,7 +407,7 @@ struct LogicalCounters
       break;
     case IdentifySampleSliceEventForTesting::ExtraPlanesAllocated:
       counts.invalid_extra_accounting = counts.invalid_extra_accounting || !success || counts.m_ExtraPhase != ExtraPhase::Retained || counts.m_ExtraOwnerObserved || counts.m_BatchWidthObserved ||
-                                      counts.extra_live_bytes != 0 || bytes == 0 || bytes != counts.extra_retained_bytes;
+                                        counts.extra_live_bytes != 0 || bytes == 0 || bytes != counts.extra_retained_bytes;
       counts.m_ExtraOwnerObserved = true;
       counts.extra_live_bytes = bytes;
       counts.extra_peak_bytes = std::max(counts.extra_peak_bytes, bytes);
@@ -416,14 +416,14 @@ struct LogicalCounters
       break;
     case IdentifySampleSliceEventForTesting::ExtraPlanesReleased:
       counts.invalid_extra_accounting = counts.invalid_extra_accounting || !success || counts.m_ExtraPhase != ExtraPhase::Retained || !counts.m_ExtraOwnerObserved || bytes == 0 ||
-                                      counts.extra_live_bytes != bytes || bytes > counts.extra_retained_bytes;
+                                        counts.extra_live_bytes != bytes || bytes > counts.extra_retained_bytes;
       counts.extra_live_bytes = 0;
       counts.extra_release_count++;
       break;
     case IdentifySampleSliceEventForTesting::BatchWidth: {
       const uint64 expectedWidth = counts.plane_live == 0 ? 1 : 1 + counts.extra_retained_bytes / counts.plane_live;
       counts.invalid_extra_accounting = counts.invalid_extra_accounting || elementBytes != 1 || !success || counts.m_ExtraPhase != ExtraPhase::Retained || counts.m_BatchWidthObserved || values < 1 ||
-                                      values > 8 || values != expectedWidth || counts.extra_live_bytes != counts.extra_retained_bytes;
+                                        values > 8 || values != expectedWidth || counts.extra_live_bytes != counts.extra_retained_bytes;
       counts.m_BatchWidthObserved = true;
       counts.batch_count++;
       counts.addExtraTotal(counts.batch_planes, values);
@@ -553,4 +553,4 @@ void RequireFullWidthYzBatchObservations(const LogicalCounters& counts)
   REQUIRE(counts.maximum_batch_width == 8);
 }
 
-} // namespace IdentifySampleBenchmarkTest
+} // namespace identify_sample_benchmark_test

@@ -281,4 +281,4 @@ Result<> CreateArray(DataStructure& dataStructure, const ShapeType& tupleShape, 
 
   return result;
 }
-} // namespace nx::core::ArrayCreationUtilities
+} // namespace nx::core::array_creation_utilities

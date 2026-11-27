@@ -187,4 +187,4 @@ void CheckSecondBlockFailure(bool writeBinary, bool existingDestination,
   CHECK_FALSE(fs::exists(outputRoot));
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
-} // namespace nx::core::UnitTest::AvizoWriterFailure
+} // namespace nx::core::unit_test::avizo_writer_failure

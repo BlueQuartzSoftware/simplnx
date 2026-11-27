@@ -44,7 +44,7 @@ namespace description
  */
 SIMPLNX_EXPORT std::string GenerateGeometryInfo(const nx::core::SizeVec3Type& dims, const nx::core::FloatVec3Type& spacing, const nx::core::FloatVec3Type& origin, IGeometry::LengthUnit units);
 
-} // namespace Description
+} // namespace description
 
 /**
  * @namespace Connectivity
@@ -1077,7 +1077,7 @@ template <typename T>
   }
   return {};
 }
-} // namespace Connectivity
+} // namespace connectivity
 
 /**
  * @namespace Topology
@@ -1348,5 +1348,5 @@ void Find2DElementAreas(const DataArray<T>* elemList, const Float32ArrayType* ve
     elemAreas[i] = fabsf(area);
   }
 }
-} // namespace Topology
-} // namespace nx::core::GeometryHelpers
+} // namespace topology
+} // namespace nx::core::geometry_helpers

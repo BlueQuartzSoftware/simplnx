@@ -240,7 +240,7 @@ IFilter::PreflightResult RegularizeZSpacingFilter::preflightImpl(const DataStruc
     }
 
     preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(srcImageGeom.getDimensions(), srcImageGeom.getSpacing(),
-                                                                                                                          srcImageGeom.getOrigin(), srcImageGeom.getUnits())});
+                                                                                                                           srcImageGeom.getOrigin(), srcImageGeom.getUnits())});
     preflightUpdatedValues.push_back({"Regularized Image Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(geomDims, destSpacing, srcOrigin, srcImageGeom.getUnits())});
   }
 
@@ -379,7 +379,7 @@ Result<Arguments> RegularizeZSpacingFilter::FromSIMPLJson(const nlohmann::json& 
   std::vector<Result<>> results;
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey,
-                                                                                                                                      k_SelectedImageGeometryPath_Key));
+                                                                                                                                        k_SelectedImageGeometryPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::InputFileFilterParameterConverter>(args, json, simpl::k_InputFileKey, k_InputFile_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_NewZResKey, k_NewZRes_Key));
 

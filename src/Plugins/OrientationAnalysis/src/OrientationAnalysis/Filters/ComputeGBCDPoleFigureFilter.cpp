@@ -62,8 +62,8 @@ Parameters ComputeGBCDPoleFigureFilter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Int32ParameterType>(k_PhaseOfInterest_Key, "Phase of Interest", "Index of the Ensemble for which to plot the pole figure", 1));
-  params.insert(std::make_unique<VectorFloat32ParameterType>(k_MisorientationRotation_Key, "Misorientation Angle-Axis", "Angle-Axis values for drawing GBCD", std::vector<float32>{60.0F, 1.0F, 1.0F, 1.0F},
-                                                         std::vector<std::string>{"Angle (Deg)", "h", "k", "l"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_MisorientationRotation_Key, "Misorientation Angle-Axis", "Angle-Axis values for drawing GBCD",
+                                                             std::vector<float32>{60.0F, 1.0F, 1.0F, 1.0F}, std::vector<std::string>{"Angle (Deg)", "h", "k", "l"}));
   params.insert(std::make_unique<Int32ParameterType>(k_OutputImageDimension_Key, "Output Image Dimension", "The value to use for the dimensions for the image geometry", 100));
   params.insertSeparator(Parameters::Separator{"Input Triangle Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_GBCDArrayPath_Key, "Input GBCD",

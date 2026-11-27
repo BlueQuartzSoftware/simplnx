@@ -101,9 +101,9 @@ Parameters CropEdgeGeometryFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_CropYDim_Key, "Crop Y Dimension", "Enable cropping in the Y dimension.", false));
   params.insert(std::make_unique<BoolParameter>(k_CropZDim_Key, "Crop Z Dimension", "Enable cropping in the Z dimension.", false));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_MinCoord_Key, "Min Coordinate", "Lower bound of the edge geometry to crop.", std::vector<float32>{0.0, 0.0, 0.0},
-                                                         std::vector<std::string>{"X", "Y", "Z"}));
+                                                             std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_MaxCoord_Key, "Max Coordinate [Inclusive]", "Upper bound of the edge geometry to crop.", std::vector<float32>{0.0, 0.0, 0.0},
-                                                         std::vector<std::string>{"X", "Y", "Z"}));
+                                                             std::vector<std::string>{"X", "Y", "Z"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In Place", "Replaces the original Edge Geometry after filter is completed", true));
   params.insert(std::make_unique<ChoicesParameter>(k_BoundaryIntersectionBehavior_Key, "Boundary Intersection Behavior",
                                                    "The behavior to implement if an edge intersects a bound (one vertex is inside, one vertex is outside).\n\n\"Interpolate Outside Vertex\" will move "

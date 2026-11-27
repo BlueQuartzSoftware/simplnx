@@ -197,7 +197,7 @@ template <class T, class ReduceFnT>
 struct BoxPlaneBody
 {
   const T* slab; // read-only slab covering Z in [zLo, zHi], laid out [slabZ][y][x]
-  T* out_plane;   // output plane, sizeX*sizeY
+  T* out_plane;  // output plane, sizeX*sizeY
   usize dim_x;
   usize dim_y;
   usize dim_z;
@@ -205,7 +205,7 @@ struct BoxPlaneBody
   usize ry;
   usize rz;
   usize z_lo; // slab's first Z index
-  usize z;   // output plane's Z index
+  usize z;    // output plane's Z index
   usize neighborhood_size;
   const ReduceFnT& reduce_fn;
 

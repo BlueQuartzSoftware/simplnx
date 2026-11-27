@@ -106,8 +106,8 @@ protected:
    *
    * Cancellation or a storage failure can leave earlier Feature ID chunks compacted.
    */
-  Result<std::vector<bool>> removeSmallFeatures(Int32AbstractDataStoreType& featureIdsStoreRef, const Int32AbstractDataStoreType& featureNumCellsStoreRef, const Int32AbstractDataStoreType* featurePhases,
-                                                int32_t phaseNumber, bool applyToSinglePhase, int64 minAllowedFeatureSize, Error& errorReturn);
+  Result<std::vector<bool>> removeSmallFeatures(Int32AbstractDataStoreType& featureIdsStoreRef, const Int32AbstractDataStoreType& featureNumCellsStoreRef,
+                                                const Int32AbstractDataStoreType* featurePhases, int32_t phaseNumber, bool applyToSinglePhase, int64 minAllowedFeatureSize, Error& errorReturn);
 
 private:
   DataStructure& m_DataStructure;

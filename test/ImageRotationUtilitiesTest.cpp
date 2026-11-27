@@ -215,7 +215,7 @@ TEST_CASE("ImageRotationUtilities: Scaled axis regression", "[simplnx][ImageRota
   const auto row = GENERATE(0, 1, 2, 3, 4, 5, 6);
   CAPTURE(row);
   const std::vector<VectorFloat32ParameterType::ValueType> inputs = {{0, 0, 1e20f, 90}, {1e-22f, 0, 0, 90}, {1e-40f, 0, 0, 90}, {3e38f, 3e38f, 3e38f, 120},
-                                                                 {0, 0, 2, 90},     {1, 1, 1, 120},     {1, 1, 1, 36000}};
+                                                                     {0, 0, 2, 90},     {1, 1, 1, 120},     {1, 1, 1, 36000}};
   auto matrix = image_rotation_utilities::GenerateRotationTransformationMatrix(inputs[row]);
   Eigen::Matrix3f expected;
   if(row == 0 || row == 4)
@@ -254,7 +254,7 @@ TEST_CASE("ImageRotationUtilities: Axis-angle input validation", "[simplnx][Imag
   const float32 nan = std::numeric_limits<float32>::quiet_NaN();
   const float32 inf = std::numeric_limits<float32>::infinity();
   const std::vector<VectorFloat32ParameterType::ValueType> values = {{0, 0, 1},      {nan, 0, 1, 90}, {0, inf, 1, 90},  {0, 0, -inf, 90}, {0, 0, 0, 90},
-                                                                 {0, 0, 1, nan}, {0, 0, 1, inf},  {nan, 0, 1, nan}, {0, 0, 1, 90}};
+                                                                     {0, 0, 1, nan}, {0, 0, 1, inf},  {nan, 0, 1, nan}, {0, 0, 1, 90}};
   auto result = image_rotation_utilities::ValidateRotationAxisAngle(values[row], "Rotation");
   const std::array<int32, 9> codes = {-86050, -86051, -86051, -86051, -86052, -86053, -86053, -86051, 0};
   if(row == 8)

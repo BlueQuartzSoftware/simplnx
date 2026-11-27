@@ -259,14 +259,14 @@ template <class T, class PredicateT>
 struct ContourPlaneBody
 {
   const T* slab;           // read-only slab or volume beginning at zLo, laid out [slabZ][y][x]
-  T* out_plane;             // output plane, dimX*dimY
+  T* out_plane;            // output plane, dimX*dimY
   const SEOffset* offsets; // neighbor offsets (center {0,0,0} already excluded by the caller)
   usize num_offsets;
   usize dim_x;
   usize dim_y;
   usize dim_z;
   usize z_lo; // slab's first Z index
-  usize z;   // output plane's Z index
+  usize z;    // output plane's Z index
   const PredicateT& predicate;
 
   void operator()(const Range& range) const

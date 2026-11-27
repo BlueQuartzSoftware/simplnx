@@ -135,4 +135,4 @@ void CheckGrant(ScopeT& scope, DataStructure& data, usize width, usize partialBy
   }
   identify_sample_batch_test::RequireOutput<T>(data, 2, fillHoles, fixedCount);
 }
-} // namespace IdentifySampleBatchControlTest
+} // namespace identify_sample_batch_control_test

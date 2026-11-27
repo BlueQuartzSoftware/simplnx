@@ -254,19 +254,23 @@ TEST_CASE("OrientationAnalysis::AlgorithmDispatch force state crosses the plugin
       {.force_in_core = false,
        .force_ooc = false,
        .expected_path = PathType::Direct,
-       .expected_counts = {.in_core = 1, .out_of_core = 0, .in_core_on_in_memory_store = 1, .in_core_on_out_of_core_store = 0, .out_of_core_on_in_memory_store = 0, .out_of_core_on_out_of_core_store = 0}},
+       .expected_counts =
+           {.in_core = 1, .out_of_core = 0, .in_core_on_in_memory_store = 1, .in_core_on_out_of_core_store = 0, .out_of_core_on_in_memory_store = 0, .out_of_core_on_out_of_core_store = 0}},
       {.force_in_core = false,
        .force_ooc = true,
        .expected_path = PathType::Scanline,
-       .expected_counts = {.in_core = 0, .out_of_core = 1, .in_core_on_in_memory_store = 0, .in_core_on_out_of_core_store = 0, .out_of_core_on_in_memory_store = 1, .out_of_core_on_out_of_core_store = 0}},
+       .expected_counts =
+           {.in_core = 0, .out_of_core = 1, .in_core_on_in_memory_store = 0, .in_core_on_out_of_core_store = 0, .out_of_core_on_in_memory_store = 1, .out_of_core_on_out_of_core_store = 0}},
       {.force_in_core = true,
        .force_ooc = false,
        .expected_path = PathType::Direct,
-       .expected_counts = {.in_core = 1, .out_of_core = 0, .in_core_on_in_memory_store = 1, .in_core_on_out_of_core_store = 0, .out_of_core_on_in_memory_store = 0, .out_of_core_on_out_of_core_store = 0}},
+       .expected_counts =
+           {.in_core = 1, .out_of_core = 0, .in_core_on_in_memory_store = 1, .in_core_on_out_of_core_store = 0, .out_of_core_on_in_memory_store = 0, .out_of_core_on_out_of_core_store = 0}},
       {.force_in_core = true,
        .force_ooc = true,
        .expected_path = PathType::Direct,
-       .expected_counts = {.in_core = 1, .out_of_core = 0, .in_core_on_in_memory_store = 1, .in_core_on_out_of_core_store = 0, .out_of_core_on_in_memory_store = 0, .out_of_core_on_out_of_core_store = 0}},
+       .expected_counts =
+           {.in_core = 1, .out_of_core = 0, .in_core_on_in_memory_store = 1, .in_core_on_out_of_core_store = 0, .out_of_core_on_in_memory_store = 0, .out_of_core_on_out_of_core_store = 0}},
   }};
   const bool originalInCore = ForceInCoreAlgorithm();
   const bool originalOoc = ForceOocAlgorithm();

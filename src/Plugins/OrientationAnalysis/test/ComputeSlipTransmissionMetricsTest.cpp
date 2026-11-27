@@ -35,7 +35,7 @@ TEST_CASE("OrientationAnalysis::ComputeSlipTransmissionMetricsFilter: Valid Filt
   unit_test::LoadPlugins();
 
   const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "feature_boundary_neighbor_slip_transmission_1.tar.gz",
-                                                              "feature_boundary_neighbor_slip_transmission_1");
+                                                               "feature_boundary_neighbor_slip_transmission_1");
 
   DataStructure dataStructure =
       unit_test::LoadDataStructure(fs::path(fmt::format("{}/feature_boundary_neighbor_slip_transmission_1/6_6_feature_boundary_neighbor_slip_transmission.dream3d", unit_test::k_TestFilesDir)));

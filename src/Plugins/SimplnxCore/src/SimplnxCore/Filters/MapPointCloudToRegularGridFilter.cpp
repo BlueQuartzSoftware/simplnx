@@ -253,8 +253,8 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_OutOfBoundsHandlingType_Key, "Out of Bounds Handling",
                                                    "Specifies how data outside the image bounds is handled, see documentation for specification", k_SilentModeIndex, k_OutOfBoundsHandlingChoices));
   params.insert(std::make_unique<UInt64ParameterType>(k_OutOfBoundsValue_Key, "Out of Bounds Value",
-                                                  "The value to be put in voxel indices slots, occurs when the vertex geometry's coordinate point falls outside the image geometry's bounds",
-                                                  std::numeric_limits<UInt64ParameterType::ValueType>::max()));
+                                                      "The value to be put in voxel indices slots, occurs when the vertex geometry's coordinate point falls outside the image geometry's bounds",
+                                                      std::numeric_limits<UInt64ParameterType::ValueType>::max()));
 
   params.insertSeparator(Parameters::Separator{"Input Vertex Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedVertexGeometryPath_Key, "Vertex Geometry", "Path to the target Vertex Geometry", DataPath{},
@@ -263,7 +263,8 @@ Parameters MapPointCloudToRegularGridFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputMaskPath_Key, "Mask", "DataPath to the boolean/uint8 mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath(), ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          DataPath(), ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Output Data Object(s)"});
   params.insert(std::make_unique<DataObjectNameParameter>(k_VoxelIndicesName_Key, "Created Voxel Indices", "Path to the created Voxel Indices array", "Voxel Indices"));

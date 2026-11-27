@@ -200,7 +200,7 @@ Result<> ComputeCAxisReferenceMisalignments::ValidateInputs(const DataStructure&
   }
 
   return ValidateArray<UInt32ArrayType>(dataStructure, inputValues.crystal_structures_array_path, "Crystal Structures", "'uint32'", ShapeType{1}, k_InvalidCrystalStructuresArrayError,
-                                    k_CrystalStructuresComponentShapeError);
+                                        k_CrystalStructuresComponentShapeError);
 }
 
 // -----------------------------------------------------------------------------

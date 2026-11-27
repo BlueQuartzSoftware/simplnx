@@ -67,7 +67,8 @@ Parameters ComputeArrayHistogramByFeatureFilter::parameters() const
       std::make_unique<BoolParameter>(k_CalculateModalBinRanges_Key, "Calculate Modal Bin Ranges", "Whether to compute the histogram bin ranges that contain the mode values.", false));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_SelectedArrayPaths_Key, "Input Data Arrays", "The list of arrays to calculate histogram(s) for",
@@ -178,8 +179,8 @@ IFilter::PreflightResult ComputeArrayHistogramByFeatureFilter::preflightImpl(con
     if((maskArrayPtr != nullptr) && maskArrayPtr->getNumberOfTuples() != dataArrayPtr->getNumberOfTuples())
     {
       return {.output_actions = MakeErrorResult<OutputActions>(-57207, fmt::format("Mask array '{}' has tuple count {} and input array '{}' has tuple count {}. These tuple counts MUST match.",
-                                                                                  pMaskArrayPathValue.toString(), maskArrayPtr->getNumberOfTuples(), selectedArrayPath.toString(),
-                                                                                  dataArrayPtr->getNumberOfTuples())),
+                                                                                   pMaskArrayPathValue.toString(), maskArrayPtr->getNumberOfTuples(), selectedArrayPath.toString(),
+                                                                                   dataArrayPtr->getNumberOfTuples())),
               .output_values = {}};
     }
 

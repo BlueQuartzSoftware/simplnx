@@ -1196,9 +1196,10 @@ Result<> RecursiveGaussian2DYAxisToSink(const SrcStoreT& sourceStore, const Size
             detail::ComputeFourRecursiveGaussianCausalBlocks<SrcT>(nonstd::span<const SrcT>(source.data(), source.size()), rowCount, columnCount, firstColumn, blockIndex == 0, coefficients,
                                                                    nonstd::span<detail::RecursiveGaussian2DCheckpoint>(causalStates.data(), causalStates.size()),
                                                                    nonstd::span<double>(causal.data(), causal.size()));
-            detail::ComputeFourRecursiveGaussianAntiCausalBlocks<SrcT>(
-                nonstd::span<const SrcT>(source.data(), source.size()), nonstd::span<const double>(causal.data(), causal.size()), rowCount, columnCount, firstColumn, blockIndex + 1 == plan.block_count,
-                coefficients, nonstd::span<std::array<double, 4>>(antiCausalStates.data(), antiCausalStates.size()), nonstd::span<float32>(filtered.data(), filtered.size()));
+            detail::ComputeFourRecursiveGaussianAntiCausalBlocks<SrcT>(nonstd::span<const SrcT>(source.data(), source.size()), nonstd::span<const double>(causal.data(), causal.size()), rowCount,
+                                                                       columnCount, firstColumn, blockIndex + 1 == plan.block_count, coefficients,
+                                                                       nonstd::span<std::array<double, 4>>(antiCausalStates.data(), antiCausalStates.size()),
+                                                                       nonstd::span<float32>(filtered.data(), filtered.size()));
           }
           else
           {
@@ -1395,9 +1396,9 @@ Result<> RecursiveGaussian2DXAxisToSink(const SrcStoreT& sourceStore, const Size
 }
 
 template <class SrcT, class SrcStoreT, class WorkStoreT, class CheckpointStoreT, class SinkT>
-Result<> RecursiveGaussian2DXYCascadeToSink(const SrcStoreT& sourceStore, WorkStoreT& workStore, CheckpointStoreT& checkpointStore, const SizeVec3Type& dims, const RecursiveGaussianPlaneAxis& firstPass,
-                                            const RecursiveGaussianPlaneAxis& secondPass, const detail::RecursiveGaussian2DBufferPlan& plan, const std::atomic_bool& shouldCancel,
-                                            const IFilter::MessageHandler& messageHandler, SinkT&& sink)
+Result<> RecursiveGaussian2DXYCascadeToSink(const SrcStoreT& sourceStore, WorkStoreT& workStore, CheckpointStoreT& checkpointStore, const SizeVec3Type& dims,
+                                            const RecursiveGaussianPlaneAxis& firstPass, const RecursiveGaussianPlaneAxis& secondPass, const detail::RecursiveGaussian2DBufferPlan& plan,
+                                            const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, SinkT&& sink)
 {
   if(firstPass.axis != 0 || secondPass.axis != 1)
   {
@@ -1414,9 +1415,9 @@ Result<> RecursiveGaussian2DXYCascadeToSink(const SrcStoreT& sourceStore, WorkSt
 }
 
 template <class SrcT, class SrcStoreT, class WorkStoreT, class CheckpointStoreT, class SinkT>
-Result<> RecursiveGaussian2DYXCascadeToSink(const SrcStoreT& sourceStore, WorkStoreT& workStore, CheckpointStoreT& checkpointStore, const SizeVec3Type& dims, const RecursiveGaussianPlaneAxis& firstPass,
-                                            const RecursiveGaussianPlaneAxis& secondPass, const detail::RecursiveGaussian2DBufferPlan& plan, const std::atomic_bool& shouldCancel,
-                                            const IFilter::MessageHandler& messageHandler, SinkT&& sink)
+Result<> RecursiveGaussian2DYXCascadeToSink(const SrcStoreT& sourceStore, WorkStoreT& workStore, CheckpointStoreT& checkpointStore, const SizeVec3Type& dims,
+                                            const RecursiveGaussianPlaneAxis& firstPass, const RecursiveGaussianPlaneAxis& secondPass, const detail::RecursiveGaussian2DBufferPlan& plan,
+                                            const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, SinkT&& sink)
 {
   if(firstPass.axis != 1 || secondPass.axis != 0)
   {

@@ -107,7 +107,7 @@ IFilter::PreflightResult CreateAMScanPathsFilter::preflightImpl(const DataStruct
 
   {
     auto createGeometryAction = std::make_unique<CreateEdgeGeometryActionType>(pHatchDataContainerNameValue, 1, 2, pVertexAttributeMatrixNameValue, pHatchAttributeMatrixNameValue,
-                                                                           EdgeGeom::k_SharedVertexListName, EdgeGeom::k_SharedEdgeListName);
+                                                                               EdgeGeom::k_SharedVertexListName, EdgeGeom::k_SharedEdgeListName);
     resultOutputActions.value().appendAction(std::move(createGeometryAction));
   }
   const DataPath hatchAttributeMatrixPath = pHatchDataContainerNameValue.createChildPath(pHatchAttributeMatrixNameValue);
@@ -179,7 +179,8 @@ Result<Arguments> CreateAMScanPathsFilter::FromSIMPLJson(const nlohmann::json& j
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_HatchDataContainerName_Key, k_HatchDataContainerPath_Key));
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixName_Key, k_VertexAttributeMatrixName_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_HatchAttributeMatrixName_Key, k_HatchAttributeMatrixName_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_HatchAttributeMatrixName_Key, k_HatchAttributeMatrixName_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_RegionIdsArrayName_Key, k_RegionIdsArrayName_Key));
   Result<> conversionResult = MergeResults(std::move(results));
 

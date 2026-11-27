@@ -72,8 +72,8 @@ public:
   // Surface smoothing (relaxation)
   struct RelaxAttrs
   {
-    int num_relax_iterations;      // More iterations --> smoother and slower
-    float relax_factor;           // Range (0.0, 1.0); larger --> faster but less stable
+    int num_relax_iterations;        // More iterations --> smoother and slower
+    float relax_factor;              // Range (0.0, 1.0); larger --> faster but less stable
     float max_dist_from_cell_center; // Maximun displacement of relaxed surface in voxel units
   };
   void relax(const RelaxAttrs& relaxAttrs) const;

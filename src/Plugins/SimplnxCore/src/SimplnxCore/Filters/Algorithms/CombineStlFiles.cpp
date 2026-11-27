@@ -19,8 +19,8 @@ namespace
 class CombineStlImpl
 {
 public:
-  CombineStlImpl(UInt64ArrayType& destTriArray, Float32ArrayType& destVerticesArray, Float64ArrayType& destFaceNormalsArray, const UInt64ArrayType& inputTriArray, const Float32ArrayType& inputVerticesArray,
-                 const Float64ArrayType& inputFaceNormalsArray, usize triTupleOffset, usize vertexTupleOffset, usize faceNormalsTupleOffset)
+  CombineStlImpl(UInt64ArrayType& destTriArray, Float32ArrayType& destVerticesArray, Float64ArrayType& destFaceNormalsArray, const UInt64ArrayType& inputTriArray,
+                 const Float32ArrayType& inputVerticesArray, const Float64ArrayType& inputFaceNormalsArray, usize triTupleOffset, usize vertexTupleOffset, usize faceNormalsTupleOffset)
   : m_DestTriangles(destTriArray.getDataStoreRef())
   , m_DestVertices(destVerticesArray.getDataStoreRef())
   , m_DestFaceNormals(destFaceNormalsArray.getDataStoreRef())

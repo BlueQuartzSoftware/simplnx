@@ -184,8 +184,8 @@ Result<> ComputeMisorientationChunks(DataStructure& dataStructure, const Compute
         {
           return MakeErrorResult(
               -68064, fmt::format("Cell Phases array '{}' has value {} at tuple index {}, but Crystal Structures array '{}' contains {} tuples. Valid positive Phase indices are in [1, {}).",
-                                  inputValues.input_phases_array_path.toString(), currentPhaseIdx, tupleOffset + tupleIdx, inputValues.input_crystal_structures_array_path.toString(), numCrystalStructures,
-                                  numCrystalStructures));
+                                  inputValues.input_phases_array_path.toString(), currentPhaseIdx, tupleOffset + tupleIdx, inputValues.input_crystal_structures_array_path.toString(),
+                                  numCrystalStructures, numCrystalStructures));
         }
         const usize eulerOffset = tupleIdx * k_EulerComponents;
         const ebsdlib::QuatD q1 = ebsdlib::EulerDType(inputOrientationsBuffer[eulerOffset], inputOrientationsBuffer[eulerOffset + 1], inputOrientationsBuffer[eulerOffset + 2]).toQuaternion();

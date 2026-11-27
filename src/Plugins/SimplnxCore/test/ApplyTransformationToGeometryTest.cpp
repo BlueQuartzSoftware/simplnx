@@ -1467,7 +1467,8 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Execute rejects vector le
     REQUIRE(samplesPtr != nullptr);
     samplesPtr->fill(99);
     auto invalidArgs = ValidationTransformArgs(3, true);
-    for(const auto& values : std::vector<VectorFloat32ParameterType::ValueType>{{0, 0, 0, 90}, {std::numeric_limits<float32>::quiet_NaN(), 0, 1, 90}, {0, 0, 1, std::numeric_limits<float32>::infinity()}})
+    for(const auto& values :
+        std::vector<VectorFloat32ParameterType::ValueType>{{0, 0, 0, 90}, {std::numeric_limits<float32>::quiet_NaN(), 0, 1, 90}, {0, 0, 1, std::numeric_limits<float32>::infinity()}})
     {
       invalidArgs.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, values);
       auto rejected = filter.preflight(dataStructure, invalidArgs);
@@ -1527,10 +1528,10 @@ TEST_CASE("SimplnxCore::ApplyTransformationToGeometry: Finite extremes and inact
   auto args = ValidationTransformArgs(row == 2 || row == 5 ? 4 : 5, image);
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Rotation_Key, VectorFloat32ParameterType::ValueType{0, 0, 0, 90});
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Scale_Key, VectorFloat32ParameterType::ValueType{row == 0 ? std::numeric_limits<float32>::denorm_min() :
-                                                                                                          row == 1 ? 1e20f :
-                                                                                                          row == 3 ? -1.0f :
-                                                                                                                     0.0f,
-                                                                                                          1, 1});
+                                                                                                              row == 1 ? 1e20f :
+                                                                                                              row == 3 ? -1.0f :
+                                                                                                                         0.0f,
+                                                                                                              1, 1});
   args.insertOrAssign(ApplyTransformationToGeometryFilter::k_Translation_Key, VectorFloat32ParameterType::ValueType{row == 2 ? 2e38f : 1.0f, 0, 0});
   ApplyTransformationToGeometryFilter filter;
   auto pre = filter.preflight(dataStructure, args);

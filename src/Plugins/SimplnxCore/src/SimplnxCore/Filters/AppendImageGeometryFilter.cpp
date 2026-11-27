@@ -378,7 +378,8 @@ Result<Arguments> AppendImageGeometryFilter::FromSIMPLJson(const nlohmann::json&
   std::vector<Result<>> results;
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_InputAttributeMatrixKey, k_InputGeometries_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DestinationAttributeMatrixKey, k_DestinationGeometry_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DestinationAttributeMatrixKey, k_DestinationGeometry_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_CheckResolutionKey, k_CheckResolution_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

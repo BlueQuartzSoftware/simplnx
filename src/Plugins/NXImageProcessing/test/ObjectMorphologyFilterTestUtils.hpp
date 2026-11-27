@@ -429,8 +429,8 @@ inline void RunObjectMorphologyComputedExpected(const std::function<DataPath(Dat
  *       @p tolerance (0.01). Storage is pinned ForceInCore for consistency with the rest of the golden suite.
  */
 template <class FilterT, class T>
-inline void RunObjectMorphologyItkGoldenBaseline(const std::string& inputFile, const std::string& baselineFile, ObjectMorphOp op, T objectValue, T backgroundValue, const ObjectParamSetterType& setParams,
-                                                 float64 tolerance)
+inline void RunObjectMorphologyItkGoldenBaseline(const std::string& inputFile, const std::string& baselineFile, ObjectMorphOp op, T objectValue, T backgroundValue,
+                                                 const ObjectParamSetterType& setParams, float64 tolerance)
 {
   unit_test::LoadPlugins();
   const unit_test::PreferencesSentinel prefsSentinel(nx::core::DataStorageMode::ForceInCore, 0);

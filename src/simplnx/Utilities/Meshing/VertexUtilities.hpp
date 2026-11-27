@@ -83,4 +83,4 @@ SIMPLNX_EXPORT std::vector<IGeometry::MeshIndexType> OrderSharedVerticesAlongAxi
  * @returns bool false means vertices are unique
  */
 SIMPLNX_EXPORT bool HasDuplicateVertices(const IGeometry::SharedVertexListType::StoreType& verts, const SortedVerticesList& sortedVertices);
-} // namespace nx::core::MeshingUtilities
+} // namespace nx::core::meshing_utilities

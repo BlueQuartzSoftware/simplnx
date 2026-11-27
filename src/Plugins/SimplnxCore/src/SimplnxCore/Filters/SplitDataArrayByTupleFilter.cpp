@@ -175,8 +175,9 @@ Result<> PreflightDataGroupOutput(SplitDataArrayByTuple::OutputContainer outputC
     const usize splitCount = splitDimensionCountsUSize[index];
     if(splitCount > std::numeric_limits<usize>::max() - splitCountsTotal)
     {
-      return MakeErrorResult(dimension_conversion::k_SplitSumOverflow, fmt::format("Split count {} at row {} plus preceding count {} exceeds {}. Use split counts whose sum equals the input extent {}.",
-                                                                                  splitCount, index, splitCountsTotal, std::numeric_limits<usize>::max(), inputArrayTupleShape[splitDimension]));
+      return MakeErrorResult(dimension_conversion::k_SplitSumOverflow,
+                             fmt::format("Split count {} at row {} plus preceding count {} exceeds {}. Use split counts whose sum equals the input extent {}.", splitCount, index, splitCountsTotal,
+                                         std::numeric_limits<usize>::max(), inputArrayTupleShape[splitDimension]));
     }
     splitCountsTotal += splitCount;
   }

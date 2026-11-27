@@ -162,4 +162,4 @@ void CheckAsciiOutput(ScopeT& scope, const std::string& expectedFormat)
   REQUIRE(imageGeomPtr->getSpacing() == expectedSpacing);
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
-} // namespace WriteVtkStructuredPointsTest
+} // namespace write_vtk_structured_points_test

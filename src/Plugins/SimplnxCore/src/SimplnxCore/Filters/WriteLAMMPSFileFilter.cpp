@@ -148,7 +148,8 @@ Result<Arguments> WriteLAMMPSFileFilter::FromSIMPLJson(const nlohmann::json& jso
   std::vector<Result<>> results;
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_LammpsFileKey, k_OutputFile_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_AtomFeatureLabelsPathKey, k_VertexGeomPath));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_AtomFeatureLabelsPathKey, k_VertexGeomPath));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_AtomFeatureLabelsPathKey, k_AtomLabelsPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

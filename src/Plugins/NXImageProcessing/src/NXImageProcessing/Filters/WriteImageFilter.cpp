@@ -106,13 +106,13 @@ Parameters WriteImageFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   std::vector<uint8> defaultMask(3, 0);
   params.insert(std::make_unique<VectorUInt8ParameterType>(k_InvalidColorValue_Key, "Masked Color (RGB)", "The color to assign to voxels that have a mask value of FALSE", defaultMask,
-                                                       std::vector<std::string>{"Red", "Green", "Blue"}));
+                                                           std::vector<std::string>{"Red", "Green", "Blue"}));
 
   params.insertSeparator(Parameters::Separator{"Color Table (Optional)"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_CreateColorTable_Key, "Create Color Table",
                                                                  "When enabled, the single-component input array is converted to RGB using the selected preset before writing.", false));
-  params.insert(
-      std::make_unique<CreateColorMapParameter>(k_SelectedPreset_Key, "Select Preset...", "Select a preset color scheme to apply to the input array", color_table_utilities::GetDefaultRGBPresetName()));
+  params.insert(std::make_unique<CreateColorMapParameter>(k_SelectedPreset_Key, "Select Preset...", "Select a preset color scheme to apply to the input array",
+                                                          color_table_utilities::GetDefaultRGBPresetName()));
 
   params.insertSeparator(Parameters::Separator{"Scale Bar (Optional)"});
   params.insert(std::make_unique<BoolParameter>(k_AddScaleBar_Key, "Add Physical Scale Bar",
@@ -240,7 +240,7 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
     if(imageArray.getNumberOfComponents() != 1)
     {
       return {.output_actions = MakeErrorResult<OutputActions>(-27012, fmt::format("When 'Create Color Table' is enabled the input array must have a single component, but '{}' has {} components.",
-                                                                                  imageArrayPath.toString(), imageArray.getNumberOfComponents()))};
+                                                                                   imageArrayPath.toString(), imageArray.getNumberOfComponents()))};
     }
 
     // Validate the selected preset now so an unknown/empty/degenerate preset fails during preflight
@@ -267,8 +267,8 @@ IFilter::PreflightResult WriteImageFilter::preflightImpl(const DataStructure& da
   if(!nx::core::DoDimensionsMatch(imageArrayStore, imageGeom))
   {
     return {.output_actions = MakeErrorResult<OutputActions>(-25600, fmt::format("Image array '{}' dimensions ({}) do not match image geometry '{}' dimensions ({}).", imageArrayPath.toString(),
-                                                                                string_utilities::FormatTupleShape3D(imageArray.getTupleShape()), imageGeomPath.toString(),
-                                                                                string_utilities::FormatDimensions3D(imageGeom.getDimensions())))};
+                                                                                 string_utilities::FormatTupleShape3D(imageArray.getTupleShape()), imageGeomPath.toString(),
+                                                                                 string_utilities::FormatDimensions3D(imageGeom.getDimensions())))};
   }
 
   // Compute slice count based on plane and geometry dims

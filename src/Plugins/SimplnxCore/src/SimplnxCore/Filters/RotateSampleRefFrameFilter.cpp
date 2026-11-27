@@ -138,7 +138,7 @@ Parameters RotateSampleRefFrameFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_RotationRepresentation_Key, "Rotation Representation", "Which form used to represent rotation (axis angle or rotation matrix)",
                                                                     to_underlying(RotationRepresentationType::AxisAngle), ChoicesParameter::ChoicesType{"Axis Angle", "Rotation Matrix"}));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_RotationAxisAngle_Key, "Rotation Axis-Angle [<ijk>w]", "Axis-Angle in sample reference frame to rotate about.",
-                                                         VectorFloat32ParameterType::ValueType{0.0f, 0.0f, 1.0f, 90.0F}, std::vector<std::string>{"i", "j", "k", "w (Deg)"}));
+                                                             VectorFloat32ParameterType::ValueType{0.0f, 0.0f, 1.0f, 90.0F}, std::vector<std::string>{"i", "j", "k", "w (Deg)"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In-Place Rotation", "Performs the rotation in-place for the given Image Geometry", true));
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_KeepInputGeometryOrigin_Key, "Keep Input Geometry's Origin", "The input geometry's origin is kept instead of the origin resulting from the transform", false));
@@ -313,7 +313,7 @@ IFilter::PreflightResult RotateSampleRefFrameFilter::preflightImpl(const DataStr
     const auto* srcImageGeomPtr = dataStructure.getDataAs<ImageGeom>(srcImagePath);
 
     preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), srcImageGeomPtr->getSpacing(),
-                                                                                                                          srcImageGeomPtr->getOrigin(), srcImageGeomPtr->getUnits())});
+                                                                                                                           srcImageGeomPtr->getOrigin(), srcImageGeomPtr->getUnits())});
     preflightUpdatedValues.push_back({"Rotated Image Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(
                                                                          dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, origin, srcImageGeomPtr->getUnits())});
   }
@@ -437,7 +437,8 @@ Result<Arguments> RotateSampleRefFrameFilter::FromSIMPLJson(const nlohmann::json
 
   std::vector<Result<>> results;
 
-  Result<> rotateResult = simpl_conversion::ConvertParameter<simpl_conversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_RotationRepresentationChoiceKey, k_RotationRepresentation_Key);
+  Result<> rotateResult =
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedChoicesFilterParameterConverter>(args, json, simpl::k_RotationRepresentationChoiceKey, k_RotationRepresentation_Key);
   if(rotateResult.valid())
   {
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid

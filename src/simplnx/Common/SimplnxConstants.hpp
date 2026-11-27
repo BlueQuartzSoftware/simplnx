@@ -17,6 +17,6 @@ inline constexpr SIMPLNX_DEF_STRING_CONSTANT(UInt64);
 inline constexpr SIMPLNX_DEF_STRING_CONSTANT(Float32);
 inline constexpr SIMPLNX_DEF_STRING_CONSTANT(Float64);
 inline constexpr SIMPLNX_DEF_STRING_CONSTANT(USize);
-} // namespace nx::core::Constants
+} // namespace nx::core::constants
 
 #undef SIMPLNX_DEF_STRING_CONSTANT

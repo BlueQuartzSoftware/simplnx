@@ -369,8 +369,8 @@ Result<> ConvertHexGridToSquareGrid::operator()()
   // Now generate all the file names the user is asking for and populate the table
   std::vector<std::string> fileList =
       file_path_generator::GenerateFileList(m_InputValues->input_file_list_info.start_index, m_InputValues->input_file_list_info.end_index, m_InputValues->input_file_list_info.increment_index,
-                                          m_InputValues->input_file_list_info.ordering, m_InputValues->input_path.string(), m_InputValues->input_file_list_info.file_prefix,
-                                          m_InputValues->input_file_list_info.file_suffix, m_InputValues->input_file_list_info.file_extension, m_InputValues->input_file_list_info.padding_digits);
+                                            m_InputValues->input_file_list_info.ordering, m_InputValues->input_path.string(), m_InputValues->input_file_list_info.file_prefix,
+                                            m_InputValues->input_file_list_info.file_suffix, m_InputValues->input_file_list_info.file_extension, m_InputValues->input_file_list_info.padding_digits);
 
   /* There is a frailness about the z index and the file list. The programmer
    * using this code MUST ensure that the list of files that is sent into this

@@ -173,7 +173,7 @@ IFilter::PreflightResult NeighborOrientationCorrelationFilter::preflightImpl(con
   if(!tupleValidityCheck)
   {
     return {.output_actions = MakeErrorResult<OutputActions>(k_InvalidNumTuples,
-                                                            fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+                                                             fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   if(auto tupleResult = ValidateCellTupleCount(dataStructure, pImageGeomPathValue, {pConfidenceIndexArrayPathValue, pCellPhasesArrayPathValue, pQuatsArrayPathValue}, -580098); tupleResult.invalid())
@@ -240,7 +240,8 @@ Result<Arguments> NeighborOrientationCorrelationFilter::FromSIMPLJson(const nloh
   // IgnoredDataArrayPaths was added to the legacy filter after 6.5.49; older pipelines omit the key.
   if(json.contains(simpl::k_IgnoredDataArrayPathsKey))
   {
-    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_IgnoredDataArrayPathsKey, k_IgnoredDataArrayPaths_Key));
+    results.push_back(
+        simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_IgnoredDataArrayPathsKey, k_IgnoredDataArrayPaths_Key));
   }
 
   Result<> conversionResult = MergeResults(std::move(results));

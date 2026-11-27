@@ -185,7 +185,8 @@ TEST_CASE("SimplnxCore::LaplacianSmoothingFilter: Smoothing preserves input edge
   auto* geometryPtr = TriangleGeom::Create(dataStructure, "Mesh");
   REQUIRE(geometryPtr != nullptr);
   const DataPath verticesPath = geometryPath.createChildPath(INodeGeometry0D::k_SharedVertexListName);
-  auto* verticesPtr = Float32ArrayType::Create(dataStructure, verticesPath.getTargetName(), data_store_utilities::CreateDataStore<float32>(dataStructure, verticesPath, {3}, {3}), geometryPtr->getId());
+  auto* verticesPtr =
+      Float32ArrayType::Create(dataStructure, verticesPath.getTargetName(), data_store_utilities::CreateDataStore<float32>(dataStructure, verticesPath, {3}, {3}), geometryPtr->getId());
   const DataPath facesPath = geometryPath.createChildPath(INodeGeometry2D::k_SharedFacesListName);
   auto* facesPtr = UInt64ArrayType::Create(dataStructure, facesPath.getTargetName(), data_store_utilities::CreateDataStore<uint64>(dataStructure, facesPath, {1}, {3}), geometryPtr->getId());
   REQUIRE(verticesPtr != nullptr);

@@ -64,9 +64,9 @@ Parameters MergeTwinsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float32ParameterType>(k_AxisTolerance_Key, "Axis Tolerance (Degrees)",
-                                                   "Tolerance allowed when comparing the axis part of the axis-angle representation of the misorientation", 3.0F));
+                                                       "Tolerance allowed when comparing the axis part of the axis-angle representation of the misorientation", 3.0F));
   params.insert(std::make_unique<Float32ParameterType>(k_AngleTolerance_Key, "Angle Tolerance (Degrees)",
-                                                   "Tolerance allowed when comparing the angle part of the axis-angle representation of the misorientation", 2.0F));
+                                                       "Tolerance allowed when comparing the angle part of the axis-angle representation of the misorientation", 2.0F));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellFeatureIdsArrayPath_Key, "Cell Feature Ids", "Specifies to which feature each cell belongs.", DataPath({"Cell Data", "FeatureIds"}),
@@ -79,7 +79,8 @@ Parameters MergeTwinsFilter::parameters() const
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies to which Ensemble each cell belongs", DataPath({"Phases"}),
                                                           ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_AvgQuatsArrayPath_Key, "Average Quaternions", "Specifies the average orientation of each Feature in quaternion representation",
-                                                          DataPath({"Quats"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{4}}));
+                                                          DataPath({"Quats"}), ArraySelectionParameter::AllowedTypeSetType{DataType::float32},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{4}}));
 
   params.insertSeparator(Parameters::Separator{"Input Ensemble Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_CrystalStructuresArrayPath_Key, "Crystal Structures", "Enumeration representing the crystal structure for each Ensemble",
@@ -245,8 +246,9 @@ Result<Arguments> MergeTwinsFilter::FromSIMPLJson(const nlohmann::json& json)
       simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellParentIdsArrayNameKey, k_CellParentIdsArrayName_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NewCellFeatureAttributeMatrixNameKey,
-                                                                                                                   k_CreatedFeatureAttributeMatrixName_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureParentIdsArrayNameKey, k_FeatureParentIdsArrayName_Key));
+                                                                                                                     k_CreatedFeatureAttributeMatrixName_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureParentIdsArrayNameKey, k_FeatureParentIdsArrayName_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ActiveArrayNameKey, k_ActiveArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

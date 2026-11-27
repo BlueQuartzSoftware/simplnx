@@ -241,9 +241,9 @@ public:
    * @param reportSkipped Reports a feature that is not strictly 2D.
    * @param shouldCancel Stops later feature work when true.
    */
-  ComputeMomentInvariants2DImpl(const Int32AbstractDataStoreType& featureIds, const UInt32AbstractDataStoreType& featureRect, Float32AbstractDataStoreType& omega1, Float32AbstractDataStoreType& omega2,
-                                Float32ArrayType* centralMoments, const SizeVec3Type& volDims, const bool normalizeMomentInvariants, const std::function<void(usize)>& reportProgress,
-                                const std::function<void(usize)>& reportSkipped, const std::atomic_bool& shouldCancel)
+  ComputeMomentInvariants2DImpl(const Int32AbstractDataStoreType& featureIds, const UInt32AbstractDataStoreType& featureRect, Float32AbstractDataStoreType& omega1,
+                                Float32AbstractDataStoreType& omega2, Float32ArrayType* centralMoments, const SizeVec3Type& volDims, const bool normalizeMomentInvariants,
+                                const std::function<void(usize)>& reportProgress, const std::function<void(usize)>& reportSkipped, const std::atomic_bool& shouldCancel)
   : m_FeatureIds(featureIds)
   , m_FeatureRect(featureRect)
   , m_Omega1(omega1)
@@ -500,9 +500,9 @@ public:
    * @param reportSkipped Reports a feature that is not strictly 2D.
    * @param shouldCancel Stops later feature work when true.
    */
-  ComputeMomentInvariants2DScanline(const Int32AbstractDataStoreType& featureIds, const UInt32AbstractDataStoreType& featureRect, Float32AbstractDataStoreType& omega1, Float32AbstractDataStoreType& omega2,
-                                    Float32ArrayType* centralMoments, const SizeVec3Type& volDims, const bool normalizeMomentInvariants, const std::function<void(usize)>& reportProgress,
-                                    const std::function<void(usize)>& reportSkipped, const std::atomic_bool& shouldCancel)
+  ComputeMomentInvariants2DScanline(const Int32AbstractDataStoreType& featureIds, const UInt32AbstractDataStoreType& featureRect, Float32AbstractDataStoreType& omega1,
+                                    Float32AbstractDataStoreType& omega2, Float32ArrayType* centralMoments, const SizeVec3Type& volDims, const bool normalizeMomentInvariants,
+                                    const std::function<void(usize)>& reportProgress, const std::function<void(usize)>& reportSkipped, const std::atomic_bool& shouldCancel)
   : m_FeatureIds(featureIds)
   , m_FeatureRect(featureRect)
   , m_Omega1(omega1)

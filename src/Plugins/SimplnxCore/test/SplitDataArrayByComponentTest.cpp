@@ -66,7 +66,8 @@ DataStructure CreateDataStructure()
   DataStructure dataStructure;
   AttributeMatrix* am1Ptr = AttributeMatrix::Create(dataStructure, "AttributeMatrix", {10});
 
-  UInt32ArrayType* mcArray1Ptr = UInt32ArrayType::CreateWithStore<DataStore<uint32>>(dataStructure, "MultiComponent Array uint32", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  UInt32ArrayType* mcArray1Ptr =
+      UInt32ArrayType::CreateWithStore<DataStore<uint32>>(dataStructure, "MultiComponent Array uint32", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
   FillDataArray<uint32>(mcArray1Ptr);
 
   BoolArrayType* mcArray2Ptr = BoolArrayType::CreateWithStore<DataStore<bool>>(dataStructure, "MultiComponent Array bool", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
@@ -81,7 +82,8 @@ DataStructure CreateDataStructure()
   Int16ArrayType* mcArray6Ptr = Int16ArrayType::CreateWithStore<DataStore<int16>>(dataStructure, "MultiComponent Array int16", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
   FillDataArray<int16>(mcArray6Ptr);
 
-  UInt16ArrayType* mcArray7Ptr = UInt16ArrayType::CreateWithStore<DataStore<uint16>>(dataStructure, "MultiComponent Array uint16", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  UInt16ArrayType* mcArray7Ptr =
+      UInt16ArrayType::CreateWithStore<DataStore<uint16>>(dataStructure, "MultiComponent Array uint16", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
   FillDataArray<uint16>(mcArray7Ptr);
 
   Int32ArrayType* mcArray8Ptr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, "MultiComponent Array int32", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
@@ -90,13 +92,16 @@ DataStructure CreateDataStructure()
   Int64ArrayType* mcArray9Ptr = Int64ArrayType::CreateWithStore<DataStore<int64>>(dataStructure, "MultiComponent Array int64", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
   FillDataArray<int64>(mcArray9Ptr);
 
-  UInt64ArrayType* mcArray10Ptr = UInt64ArrayType::CreateWithStore<DataStore<uint64>>(dataStructure, "MultiComponent Array uint64", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  UInt64ArrayType* mcArray10Ptr =
+      UInt64ArrayType::CreateWithStore<DataStore<uint64>>(dataStructure, "MultiComponent Array uint64", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
   FillDataArray<uint64>(mcArray10Ptr);
 
-  Float32ArrayType* mcArray11Ptr = Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "MultiComponent Array float", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  Float32ArrayType* mcArray11Ptr =
+      Float32ArrayType::CreateWithStore<DataStore<float32>>(dataStructure, "MultiComponent Array float", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
   FillDataArray<float32>(mcArray11Ptr);
 
-  Float64ArrayType* mcArray12Ptr = Float64ArrayType::CreateWithStore<DataStore<float64>>(dataStructure, "MultiComponent Array double", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
+  Float64ArrayType* mcArray12Ptr =
+      Float64ArrayType::CreateWithStore<DataStore<float64>>(dataStructure, "MultiComponent Array double", std::vector<size_t>(1, 10), std::vector<size_t>(1, 5), am1Ptr->getId());
   FillDataArray<float64>(mcArray12Ptr);
 
   return dataStructure;

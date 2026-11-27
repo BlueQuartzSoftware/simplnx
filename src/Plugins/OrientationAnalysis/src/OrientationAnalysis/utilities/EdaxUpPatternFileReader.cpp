@@ -265,7 +265,8 @@ Result<EbsdPatternFileInfo> EdaxUpPatternFileReader::readFileInfo() const
     }
     const uint64 oppositeBytesPerPixel = fileInfo.bytes_per_pixel == 1 ? 2 : 1;
     bool matchesOppositePixelWidth = false;
-    auto oppositeStrideResult = ebsd_pattern_file_utilities::CheckedMultiply(fileInfo.pattern_width * fileInfo.pattern_height, oppositeBytesPerPixel, "the opposite pixel-width pattern stride", m_FilePath);
+    auto oppositeStrideResult =
+        ebsd_pattern_file_utilities::CheckedMultiply(fileInfo.pattern_width * fileInfo.pattern_height, oppositeBytesPerPixel, "the opposite pixel-width pattern stride", m_FilePath);
     if(oppositeStrideResult.valid())
     {
       auto oppositePayloadResult = ebsd_pattern_file_utilities::CheckedMultiply(fileInfo.number_of_patterns, oppositeStrideResult.value(), "the opposite pixel-width grid payload", m_FilePath);

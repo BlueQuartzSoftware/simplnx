@@ -120,10 +120,11 @@ Parameters BinaryProjectionImageFilter::parameters() const
       k_ForegroundValue_Key, "Foreground Value",
       "The value a projected column is set to when ANY voxel along the projection axis equals this value. For an integer input image the value must be finite and within the image type's range.",
       1.0));
-  params.insert(std::make_unique<Float64ParameterType>(k_BackgroundValue_Key, "Background Value",
-                                                   "The value a projected column is set to when NO voxel along the projection axis equals the Foreground Value. For an integer input image the value "
-                                                   "must be finite and within the image type's range.",
-                                                   0.0));
+  params.insert(
+      std::make_unique<Float64ParameterType>(k_BackgroundValue_Key, "Background Value",
+                                             "The value a projected column is set to when NO voxel along the projection axis equals the Foreground Value. For an integer input image the value "
+                                             "must be finite and within the image type's range.",
+                                             0.0));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

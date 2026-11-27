@@ -334,9 +334,9 @@ Result<> ComputeKMeansDirect::operator()()
     return MakeErrorResult(-54063, "Compute K Means cannot initialize clusters because the mask contains no selected tuples.");
   }
 
-  RunTemplateClass<ComputeKMeansTemplate, types::NoBooleanType>(clusteringArrayPtr->getDataType(), this, clusteringArrayPtr, m_DataStructure.getDataAs<IDataArray>(m_InputValues->means_array_path),
-                                                                maskCompare, m_InputValues->init_clusters, m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path)->getDataStoreRef(),
-                                                                m_InputValues->distance_metric, m_InputValues->seed);
+  RunTemplateClass<ComputeKMeansTemplate, types::NoBooleanType>(
+      clusteringArrayPtr->getDataType(), this, clusteringArrayPtr, m_DataStructure.getDataAs<IDataArray>(m_InputValues->means_array_path), maskCompare, m_InputValues->init_clusters,
+      m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path)->getDataStoreRef(), m_InputValues->distance_metric, m_InputValues->seed);
 
   return {};
 }

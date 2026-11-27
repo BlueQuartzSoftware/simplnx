@@ -35,8 +35,10 @@ ImageGeometryCropOptions CreateCropOptions(const DataPath& inputGeometryPath, co
   options.crop_z = croppingOptions.crop_z;
   options.min_voxel = {static_cast<uint64>(croppingOptions.x_bound_voxels[0]), static_cast<uint64>(croppingOptions.y_bound_voxels[0]), static_cast<uint64>(croppingOptions.z_bound_voxels[0])};
   options.max_voxel = {static_cast<uint64>(croppingOptions.x_bound_voxels[1]), static_cast<uint64>(croppingOptions.y_bound_voxels[1]), static_cast<uint64>(croppingOptions.z_bound_voxels[1])};
-  options.min_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[0]), static_cast<float64>(croppingOptions.y_bound_physical[0]), static_cast<float64>(croppingOptions.z_bound_physical[0])};
-  options.max_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[1]), static_cast<float64>(croppingOptions.y_bound_physical[1]), static_cast<float64>(croppingOptions.z_bound_physical[1])};
+  options.min_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[0]), static_cast<float64>(croppingOptions.y_bound_physical[0]),
+                            static_cast<float64>(croppingOptions.z_bound_physical[0])};
+  options.max_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[1]), static_cast<float64>(croppingOptions.y_bound_physical[1]),
+                            static_cast<float64>(croppingOptions.z_bound_physical[1])};
   return options;
 }
 

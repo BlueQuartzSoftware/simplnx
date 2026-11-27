@@ -650,4 +650,4 @@ inline std::string FormatTupleShape3D(const ContainerT& shape, bool reverseDims 
   return FormatDimensions(shape, reverseDims);
 }
 
-} // namespace nx::core::StringUtilities
+} // namespace nx::core::string_utilities

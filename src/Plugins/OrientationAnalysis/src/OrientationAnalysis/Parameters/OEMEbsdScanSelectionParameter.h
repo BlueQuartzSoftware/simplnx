@@ -22,7 +22,7 @@ namespace ref_frame_z_dir
 inline constexpr uint32_t k_LowtoHigh = 0;
 inline constexpr uint32_t k_HightoLow = 1;
 inline constexpr uint32_t k_UnknownRefFrameZDirection = 2;
-} // namespace RefFrameZDir
+} // namespace ref_frame_z_dir
 
 class SIMPLNX_EXPORT OEMEbsdScanSelectionParameter : public ValueParameter
 {

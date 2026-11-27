@@ -29,7 +29,7 @@ std::string GenerateGeometryInfo(const nx::core::SizeVec3Type& dims, const nx::c
 
   return description.str();
 }
-} // namespace nx::core::GeometryHelpers::Description
+} // namespace nx::core::geometry_helpers::description
 
 namespace nx::core::geometry_helpers::connectivity
 {
@@ -169,7 +169,7 @@ std::vector<int32> FindEulerCharacteristicValues(const TriangleGeom& triangleGeo
     m_MessageHandler.sendInfoMessage(message);
   } // End Region Loop
 #endif
-} // namespace nx::core::GeometryHelpers::Connectivity
+} // namespace nx::core::geometry_helpers::connectivity
 
 namespace nx::core::geometry_helpers::topology
 {
@@ -314,17 +314,17 @@ float32 PeriodicMean1D(const std::vector<float32>& coords, float32 domainMin, fl
 }
 } // namespace
 
-bool AdjustCentroidsForPeriodicFaces(const BoundingBox3DfType& boundingBox, const BoundingBoxFacesType& faces, const Float32AbstractDataStoreType& vertices, const std::set<IGeometry::MeshIndexType>& vertexSet,
-                                     Float32AbstractDataStoreType& centroids, IGeometry::MeshIndexType featureId)
+bool AdjustCentroidsForPeriodicFaces(const BoundingBox3DfType& boundingBox, const BoundingBoxFacesType& faces, const Float32AbstractDataStoreType& vertices,
+                                     const std::set<IGeometry::MeshIndexType>& vertexSet, Float32AbstractDataStoreType& centroids, IGeometry::MeshIndexType featureId)
 {
   bool isPeriodic = false;
   const auto& minPoint = boundingBox.getMinPoint();
   const auto& maxPoint = boundingBox.getMaxPoint();
 
   // left/right => X (axis 0), top/bottom => Y (axis 1), front/back => Z (axis 2)
-  const std::array<std::pair<BoundingBox3DfType::faces_enum, BoundingBox3DfType::faces_enum>, 3> axisFaces = {std::make_pair(BoundingBox3DfType::faces_enum::left, BoundingBox3DfType::faces_enum::right),
-                                                                                                      std::make_pair(BoundingBox3DfType::faces_enum::top, BoundingBox3DfType::faces_enum::bottom),
-                                                                                                      std::make_pair(BoundingBox3DfType::faces_enum::front, BoundingBox3DfType::faces_enum::back)};
+  const std::array<std::pair<BoundingBox3DfType::faces_enum, BoundingBox3DfType::faces_enum>, 3> axisFaces = {
+      std::make_pair(BoundingBox3DfType::faces_enum::left, BoundingBox3DfType::faces_enum::right), std::make_pair(BoundingBox3DfType::faces_enum::top, BoundingBox3DfType::faces_enum::bottom),
+      std::make_pair(BoundingBox3DfType::faces_enum::front, BoundingBox3DfType::faces_enum::back)};
 
   // For each axis on which the feature touches both opposing periodic faces, the naive arithmetic centroid
   // lands in the empty middle of the wrapped feature. Replace that component with the minimum-image mean
@@ -348,4 +348,4 @@ bool AdjustCentroidsForPeriodicFaces(const BoundingBox3DfType& boundingBox, cons
 
   return isPeriodic;
 }
-} // namespace nx::core::GeometryHelpers::Topology
+} // namespace nx::core::geometry_helpers::topology

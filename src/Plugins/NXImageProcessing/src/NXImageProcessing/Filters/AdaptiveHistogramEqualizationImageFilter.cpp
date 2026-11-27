@@ -56,8 +56,8 @@ Parameters AdaptiveHistogramEqualizationImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<VectorParameter<uint32>>(k_Radius_Key, "Radius", "Radius of the box window per axis (X, Y, Z). The window is (2*radius+1) per axis.", std::vector<uint32>(3, 5),
                                                           std::vector<std::string>{"X", "Y", "Z"}));
-  params.insert(
-      std::make_unique<Float32ParameterType>(k_Alpha_Key, "Alpha", "Alpha = 0 produces the adaptive histogram equalization (provided beta=0). Alpha = 1 produces an unsharp mask. Default is 0.3.", 0.3f));
+  params.insert(std::make_unique<Float32ParameterType>(k_Alpha_Key, "Alpha",
+                                                       "Alpha = 0 produces the adaptive histogram equalization (provided beta=0). Alpha = 1 produces an unsharp mask. Default is 0.3.", 0.3f));
   params.insert(std::make_unique<Float32ParameterType>(
       k_Beta_Key, "Beta", "If beta = 1 (and alpha = 1) the output image matches the input image. As beta approaches 0, the filter behaves as an unsharp mask. Default is 0.3.", 0.3f));
 

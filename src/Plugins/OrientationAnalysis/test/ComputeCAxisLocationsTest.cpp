@@ -101,7 +101,7 @@ void CheckUndefinedCAxisDirections(bool requireOutOfCore)
   auto* quatsPtr = Float32ArrayType::Create(dataStructure, quatsPath.getTargetName(), data_store_utilities::CreateDataStore<float32>(dataStructure, quatsPath, {cellCount}, {4}));
   auto* phasesPtr = Int32ArrayType::Create(dataStructure, phasesPath.getTargetName(), data_store_utilities::CreateDataStore<int32>(dataStructure, phasesPath, {cellCount}, {1}));
   auto* crystalStructuresPtr = UInt32ArrayType::Create(dataStructure, crystalStructuresPath.getTargetName(),
-                                                   data_store_utilities::CreateDataStore<uint32>(dataStructure, crystalStructuresPath, {crystalStructureValues.size()}, {1}));
+                                                       data_store_utilities::CreateDataStore<uint32>(dataStructure, crystalStructuresPath, {crystalStructureValues.size()}, {1}));
   REQUIRE((quatsPtr != nullptr));
   REQUIRE((phasesPtr != nullptr));
   REQUIRE((crystalStructuresPtr != nullptr));

@@ -208,7 +208,7 @@ Result<> CalculateDihedralAnglesInBlocks(const TriangleGeom& triangleGeom, Float
       if(result.invalid())
       {
         return meshing_utilities::detail::WithTransferFailureContext(std::move(result),
-                                                                    [&] { return MakeErrorResult(-65820, "Error reading vertex coordinates for triangle dihedral angle calculation."); });
+                                                                     [&] { return MakeErrorResult(-65820, "Error reading vertex coordinates for triangle dihedral angle calculation."); });
       }
     }
     std::vector<usize> order(cacheVertices ? 0 : bufferTriangles * 3);
@@ -297,8 +297,8 @@ Result<> CalculateDihedralAnglesInBlocks(const TriangleGeom& triangleGeom, Float
       result = meshing_utilities::detail::MergeTransferResult(result, dihedralAngles.copyFromBuffer(start, nonstd::span<const float64>(angleBuffer.data(), count)));
       if(result.invalid())
       {
-        return meshing_utilities::detail::WithTransferFailureContext(std::move(result),
-                                                                    [&] { return MakeErrorResult(-65822, fmt::format("Error writing dihedral angles at triangle {} ({} triangles).", start, count)); });
+        return meshing_utilities::detail::WithTransferFailureContext(
+            std::move(result), [&] { return MakeErrorResult(-65822, fmt::format("Error writing dihedral angles at triangle {} ({} triangles).", start, count)); });
       }
       start += count;
     }

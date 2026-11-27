@@ -82,4 +82,4 @@ inline CatchSessionResult RunCatchSession(int argc, char* argv[])
   }
   return result;
 }
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test

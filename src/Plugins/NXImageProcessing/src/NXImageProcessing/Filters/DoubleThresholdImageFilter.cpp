@@ -18,7 +18,7 @@ namespace
 // The four thresholds share ONE help string (transcribed verbatim from the legacy ITKDoubleThresholdImageFilter),
 // differing only in default value.
 constexpr StringLiteralType k_ThresholdHelp = "Set the thresholds. Four thresholds should be specified. The two lower thresholds default to NumericTraits<InputPixelType>::NonpositiveMin() . The "
-                                          "two upper thresholds default NumericTraits<InputPixelType>::max . Threshold1 <= Threshold2 <= Threshold3 <= Threshold4.";
+                                              "two upper thresholds default NumericTraits<InputPixelType>::max . Threshold1 <= Threshold2 <= Threshold3 <= Threshold4.";
 } // namespace
 
 namespace nx::core

@@ -102,4 +102,4 @@ inline constexpr Uuid k_ITKValuedRegionalMinimaImageFilter = *Uuid::FromString("
 inline constexpr Uuid k_ITKWhiteTopHatImageFilter = *Uuid::FromString("2f377682-d0a8-4dea-8c68-60c2c523a074");
 inline constexpr Uuid k_ITKImageWriterFilter = *Uuid::FromString("a181ee3e-1678-4133-b9c5-a9dd7bfec62f");
 inline constexpr Uuid k_ITKZeroCrossingImageFilter = *Uuid::FromString("89a14057-776a-4e35-80b6-69361e078394");
-} // namespace nx::core::NXImageProcessingLegacyUuids
+} // namespace nx::core::nx_image_processing_legacy_uuids

@@ -190,7 +190,7 @@ IFilter::PreflightResult ReadHDF5DatasetFilter::preflightImpl(const DataStructur
     if(numOfTuples != 0 && totalComponents > std::numeric_limits<usize>::max() / numOfTuples)
     {
       return MakePreflightErrorResult(dimension_conversion::k_ElementCountOverflow, fmt::format("Tuple count {} times component count {} for dataset '{}' exceeds {} elements. Use smaller dimensions.",
-                                                                                               numOfTuples, totalComponents, datasetPath, std::numeric_limits<usize>::max()));
+                                                                                                numOfTuples, totalComponents, datasetPath, std::numeric_limits<usize>::max()));
     }
     const usize userEnteredTotalElements = numOfTuples * totalComponents;
     // The file reader supplies the dataset dimensions; user shape validation does not change that contract.
@@ -267,7 +267,7 @@ Result<Arguments> ReadHDF5DatasetFilter::FromSIMPLJson(const nlohmann::json& jso
   std::vector<Result<>> results;
 
   results.push_back(simpl_conversion::Convert3Parameters<simpl_conversion::ImportHDF5DatasetFilterParameterConverter>(args, json, simpl::k_ImportInfoArrayKey, simpl::k_HDF5FilePathKey,
-                                                                                                                    simpl::k_SelectedAttributeMatrixKey, k_ImportHDF5File_Key));
+                                                                                                                      simpl::k_SelectedAttributeMatrixKey, k_ImportHDF5File_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

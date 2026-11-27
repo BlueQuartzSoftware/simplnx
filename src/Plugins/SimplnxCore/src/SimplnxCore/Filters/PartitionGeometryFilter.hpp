@@ -198,8 +198,8 @@ protected:
    * @return First partition-count, bounds, or geometry-data error, or a valid empty result.
    */
   template <typename GeomType>
-  Result<> dataCheckBoundingBoxMode(const SizeVec3Type& numOfPartitionsPerAxis, const FloatVec3Type& llCoord, const FloatVec3Type& urCoord, const GeomType& geometryToPartition, const AttributeMatrix& attrMatrix,
-                                    const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const;
+  Result<> dataCheckBoundingBoxMode(const SizeVec3Type& numOfPartitionsPerAxis, const FloatVec3Type& llCoord, const FloatVec3Type& urCoord, const GeomType& geometryToPartition,
+                                    const AttributeMatrix& attrMatrix, const DataPath& geometryToPartitionPath, const DataPath& attrMatrixPath) const;
 
   static Result<> DataCheckExistingGeometryMode();
 

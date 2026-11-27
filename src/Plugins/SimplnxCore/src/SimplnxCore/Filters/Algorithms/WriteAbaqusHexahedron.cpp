@@ -197,8 +197,8 @@ Result<> WriteElset(ThrottledMessageHandler& progressThrottle, const std::string
   output << "** ----------------------------------------------------------------\n**\n** The element sets\n"
          << "*Elset, elset=cube, generate\n"
          << fmt::format("1, {}, 1\n", totalPoints) << "**\n** Each Grain is made up of multiple elements\n**";
-  Result<> result =
-      abaqus_element_sets::Write(progressThrottle, output, [](int32 grainId) { return fmt::format("\n*Elset, elset=Grain{}_set\n", grainId); }, featureIdsRef, maxGrainId, useOocAlgorithm, shouldCancel);
+  Result<> result = abaqus_element_sets::Write(
+      progressThrottle, output, [](int32 grainId) { return fmt::format("\n*Elset, elset=Grain{}_set\n", grainId); }, featureIdsRef, maxGrainId, useOocAlgorithm, shouldCancel);
   if(result.valid())
   {
     output << "\n**\n** ----------------------------------------------------------------\n**\n";

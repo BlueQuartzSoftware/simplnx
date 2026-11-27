@@ -42,10 +42,10 @@ Parameters CurvatureAnisotropicDiffusionImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float64ParameterType>(k_TimeStep_Key, "Time Step", "The time step to be used for each iteration.", 0.0625));
   params.insert(std::make_unique<Float64ParameterType>(k_ConductanceParameter_Key, "Conductance Parameter",
-                                                   "The conductance parameter controls the sensitivity of the conductance term in the basic anisotropic diffusion equation", 3.0));
+                                                       "The conductance parameter controls the sensitivity of the conductance term in the basic anisotropic diffusion equation", 3.0));
   params.insert(std::make_unique<UInt32ParameterType>(k_ConductanceScalingUpdateInterval_Key, "Conductance Scaling Update Interval", "The interval between conductance updates.", 1u));
   params.insert(std::make_unique<UInt32ParameterType>(k_NumberOfIterations_Key, "Number Of Iterations",
-                                                  "Specifies the number of iterations (time-step updates) that the solver will perform to produce a solution image", 5u));
+                                                      "Specifies the number of iterations (time-step updates) that the solver will perform to produce a solution image", 5u));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

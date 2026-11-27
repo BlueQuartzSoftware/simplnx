@@ -38,7 +38,7 @@ inline const std::string k_ObjectIdTag = "ObjectId";
 inline const std::string k_NextIdTag = "NextObjectId";
 
 inline const std::string k_ImportableTag = "Importable";
-} // namespace Constants
+} // namespace constants
 
 /**
  * @class DataStructure

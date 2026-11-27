@@ -253,8 +253,8 @@ public:
    * @param shouldCancel Signals cancellation between Z slices.
    * @pre All arguments outlive the worker execution.
    */
-  RectGridSummationImpl(FeatureVoxelCountsTType& voxelCounts, FeatureVolumesTType& volumes, const SizeVec3Type& dims, const Int32AbstractDataStoreType& featureIds, const Float32AbstractDataStoreType& elemSizes,
-                        const std::atomic_bool& shouldCancel)
+  RectGridSummationImpl(FeatureVoxelCountsTType& voxelCounts, FeatureVolumesTType& volumes, const SizeVec3Type& dims, const Int32AbstractDataStoreType& featureIds,
+                        const Float32AbstractDataStoreType& elemSizes, const std::atomic_bool& shouldCancel)
   : m_VoxelCounts(voxelCounts)
   , m_Volumes(volumes)
   , m_Dims(dims)

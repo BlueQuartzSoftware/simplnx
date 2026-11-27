@@ -209,7 +209,7 @@ Arguments SmallArchiveArguments(int32 endSlice, bool useRecommendedTransform)
   input.end_slice = endSlice;
   input.euler_representation = ebsdlib::AngleRepresentation::Radians;
   input.selected_array_names = {constants::k_ConfidenceIndex, constants::k_EulerAngles, constants::k_Fit,        constants::k_ImageQuality,
-                              constants::k_Phases,          constants::k_SEMSignal,   ebsdlib::Ang::XPosition, ebsdlib::Ang::YPosition};
+                                constants::k_Phases,          constants::k_SEMSignal,   ebsdlib::Ang::XPosition, ebsdlib::Ang::YPosition};
   input.use_recommended_transform = useRecommendedTransform;
   Arguments args;
   args.insertOrAssign(ReadH5EbsdFilter::k_ReadH5EbsdParameter_Key, std::make_any<ReadH5EbsdFileParameter::ValueType>(input));

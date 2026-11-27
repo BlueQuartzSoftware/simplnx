@@ -150,8 +150,8 @@ struct GeometryOverrides
  * @return Success, -1556 for invalid spacing, or -1557 for invalid origin.
  * If centering fails, the output vectors contain the effective spacing and the computed origin.
  */
-[[nodiscard]] inline Result<> ResolveCropGeometry(const std::filesystem::path& path, const GeometryOverrides& overrides, OriginSpacingProcessing processing, bool centerOrigin, const SizeVec3Type& dims,
-                                                  FloatVec3Type& origin, FloatVec3Type& spacing)
+[[nodiscard]] inline Result<> ResolveCropGeometry(const std::filesystem::path& path, const GeometryOverrides& overrides, OriginSpacingProcessing processing, bool centerOrigin,
+                                                  const SizeVec3Type& dims, FloatVec3Type& origin, FloatVec3Type& spacing)
 {
   auto cropOverrides = overrides;
   if(processing == OriginSpacingProcessing::Postprocessed)
@@ -208,4 +208,4 @@ struct GeometryOverrides
   }
   return {};
 }
-} // namespace nx::core::ImageIO
+} // namespace nx::core::image_io

@@ -187,4 +187,4 @@ inline constexpr double k_CosThreeEighthPiD = k_CosThreeEighthPi<double>;
 
 inline constexpr float k_SinThreeEighthPiF = k_SinThreeEighthPi<float>;
 inline constexpr double k_SinThreeEighthPiD = k_SinThreeEighthPi<double>;
-} // namespace nx::core::Constants
+} // namespace nx::core::constants

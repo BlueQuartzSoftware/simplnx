@@ -81,7 +81,7 @@ Result<> WriteFeatureDataCSV::operator()()
 
     // call ostream function
     o_stream_utilities::PrintDataSetsToSingleFile(fout, arrayPaths, m_DataStructure, m_MessageHandler, m_ShouldCancel, delimiter, true, true, false, "Feature_ID", neighborPaths,
-                                                m_InputValues->write_num_features_line);
+                                                  m_InputValues->write_num_features_line);
   }
 
   if(m_ShouldCancel)

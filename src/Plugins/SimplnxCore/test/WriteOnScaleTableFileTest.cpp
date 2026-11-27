@@ -61,8 +61,8 @@ const DataPath k_EnsembleDataPath = k_GeometryPath.createChildPath("Cell Ensembl
 const DataPath k_PhaseNamesPath = k_EnsembleDataPath.createChildPath("PhaseNames");
 
 template <class T>
-DataStructure CreateImageDataStructure(const SizeVec3Type& dimensions, const std::vector<T>& featureIds, const std::vector<std::string>& phaseNames, const FloatVec3Type& spacing = {0.001F, 0.002F, 0.003F},
-                                       const FloatVec3Type& origin = {0.0F, 0.0F, 0.0F})
+DataStructure CreateImageDataStructure(const SizeVec3Type& dimensions, const std::vector<T>& featureIds, const std::vector<std::string>& phaseNames,
+                                       const FloatVec3Type& spacing = {0.001F, 0.002F, 0.003F}, const FloatVec3Type& origin = {0.0F, 0.0F, 0.0F})
 {
   DataStructure dataStructure;
   auto* imageGeomPtr = ImageGeom::Create(dataStructure, k_GeometryPath.getTargetName());
@@ -90,7 +90,8 @@ DataStructure CreateImageDataStructure(const SizeVec3Type& dimensions, const std
 }
 
 template <class T>
-DataStructure CreateRectGridDataStructure(const SizeVec3Type& dimensions, const std::array<std::vector<float32>, 3>& bounds, const std::vector<T>& featureIds, const std::vector<std::string>& phaseNames)
+DataStructure CreateRectGridDataStructure(const SizeVec3Type& dimensions, const std::array<std::vector<float32>, 3>& bounds, const std::vector<T>& featureIds,
+                                          const std::vector<std::string>& phaseNames)
 {
   DataStructure dataStructure;
   auto* rectGridPtr = RectGridGeom::Create(dataStructure, k_GeometryPath.getTargetName());
@@ -764,7 +765,8 @@ TEST_CASE("SimplnxCore::WriteOnScaleTableFileFilter: Empty Phase Names Warns Dur
   SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   REQUIRE(preflightResult.output_actions.warnings().size() == 1);
   REQUIRE(preflightResult.output_actions.warnings().front().code == -12038);
-  REQUIRE(preflightResult.output_actions.warnings().front().message == "The phase names StringArray 'Geometry/Cell Ensemble Data/PhaseNames' has 0 tuples. Every name will be written as 'Phase_<id>'.");
+  REQUIRE(preflightResult.output_actions.warnings().front().message ==
+          "The phase names StringArray 'Geometry/Cell Ensemble Data/PhaseNames' has 0 tuples. Every name will be written as 'Phase_<id>'.");
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

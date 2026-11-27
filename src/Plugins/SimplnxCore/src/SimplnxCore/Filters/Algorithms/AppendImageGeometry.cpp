@@ -151,7 +151,7 @@ Result<> AppendImageGeometry::operator()()
       auto newDestGeomDimsVec = destGeometry.getDimensions().toContainer<std::vector<usize>>();
       std::reverse(newDestGeomDimsVec.begin(), newDestGeomDimsVec.end());
       copy_from_array::RunParallelAppend(*destDataArrayPtr, taskRunner, taskResult, inputDataArrays, inputTupleShapes, originalDestGeomDimsVec, newDestGeomDimsVec, m_InputValues->direction,
-                                       m_InputValues->mirror_geometry);
+                                         m_InputValues->mirror_geometry);
     }
   }
   taskRunner.wait();

@@ -54,7 +54,7 @@ Parameters ComputeBoundaryStrengthsFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<VectorFloat64ParameterType>(k_Loading_Key, "Loading Direction (XYZ)", "The loading axis for the sample", std::vector<float64>{0.0, 0.0, 0.0},
-                                                         std::vector<std::string>{"x", "y", "z"}));
+                                                             std::vector<std::string>{"x", "y", "z"}));
 
   params.insertSeparator(Parameters::Separator{"Input Triangle Face Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_SurfaceMeshFaceLabelsArrayPath_Key, "Face Labels", "Data Array that specifies which Features are on either side of each Face", DataPath{},

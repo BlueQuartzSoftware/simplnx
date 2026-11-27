@@ -57,8 +57,8 @@ Parameters EbsdToH5EbsdFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_StackingOrder_Key, "Stacking Order", "The order the files should be placed into the ", ebsd_to_h5_ebsd_input_constants::k_LowToHigh,
                                                    ebsd_to_h5_ebsd_input_constants::k_StackingChoices));
   params.insert(std::make_unique<ChoicesParameter>(k_ReferenceFrame_Key, "Reference Frame Options",
-                                                   "The reference frame transformation. 0=EDAX(.ang), 1=Oxford(.ctf), 2=No/Unknown Transformation, 3=HEDM-IceNine", ebsd_to_h5_ebsd_input_constants::k_Edax,
-                                                   ebsd_to_h5_ebsd_input_constants::k_TransformChoices));
+                                                   "The reference frame transformation. 0=EDAX(.ang), 1=Oxford(.ctf), 2=No/Unknown Transformation, 3=HEDM-IceNine",
+                                                   ebsd_to_h5_ebsd_input_constants::k_Edax, ebsd_to_h5_ebsd_input_constants::k_TransformChoices));
 
   params.insertSeparator(Parameters::Separator{"Output File"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output H5Ebsd File", "The path to the generated .h5ebsd file", fs::path(""),

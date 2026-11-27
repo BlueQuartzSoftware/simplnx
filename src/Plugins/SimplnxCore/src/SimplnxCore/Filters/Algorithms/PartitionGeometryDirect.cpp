@@ -438,8 +438,8 @@ Result<> PartitionGeometryDirect::partitionCellBasedGeometry(const IGridGeometry
     const std::vector<usize> zPartitionIndices =
         CreateImageAxisPartitionIndices(dims[2], inputOrigin[2], inputSpacing[2], partitionDimensions[2], partitionOrigin[2], partitionSpacing[2], partitionDimensions[0] * partitionDimensions[1]);
 
-    dataAlg.execute(PartitionImageGeometryImpl(dims, xPartitionIndices, yPartitionIndices, zPartitionIndices, inMemoryPartitionIdsStorePtr->data(), m_InputValues->starting_feature_id, outOfBoundsValue,
-                                               m_ShouldCancel));
+    dataAlg.execute(PartitionImageGeometryImpl(dims, xPartitionIndices, yPartitionIndices, zPartitionIndices, inMemoryPartitionIdsStorePtr->data(), m_InputValues->starting_feature_id,
+                                               outOfBoundsValue, m_ShouldCancel));
     return {};
   }
 

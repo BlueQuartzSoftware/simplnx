@@ -78,7 +78,7 @@ struct SIMPLNXCORE_EXPORT StlFileCheck
    */
   bool attribute_payload_present = false;
 };
-} // namespace StlConstants
+} // namespace stl_constants
 
 namespace stl_utilities
 {
@@ -158,5 +158,5 @@ SIMPLNXCORE_EXPORT stl_constants::StlFileCheck SanityCheckFile(const fs::path& p
  */
 SIMPLNXCORE_EXPORT void ConvertAsciiToBinaryStl(const std::filesystem::path& inputPath, const std::filesystem::path& outputPath);
 
-} // namespace StlUtilities
+} // namespace stl_utilities
 } // namespace nx::core

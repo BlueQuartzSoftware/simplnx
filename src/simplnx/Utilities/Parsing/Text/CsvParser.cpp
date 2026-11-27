@@ -83,4 +83,4 @@ char IndexToDelimiter(uint64_t index)
     throw std::runtime_error(fmt::format("CsvParser::IndexToDelimiter() - Invalid index '{}'", index));
   }
 }
-} // namespace nx::core::CsvParser
+} // namespace nx::core::csv_parser

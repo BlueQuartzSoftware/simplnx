@@ -17,12 +17,12 @@ namespace nx::core
  */
 struct SIMPLNXCORE_EXPORT SurfaceNetsInputValues
 {
-  bool apply_smoothing{};        ///< When true, run iterative relaxation smoothing on mesh vertices
+  bool apply_smoothing{};         ///< When true, run iterative relaxation smoothing on mesh vertices
   bool repair_triangle_winding{}; ///< When true, run winding repair on the output triangle mesh
   ChoicesParameter::ValueType bounding_box_skin_mode{};
-  int32 smoothing_iterations{};    ///< Number of smoothing iterations to perform
+  int32 smoothing_iterations{};      ///< Number of smoothing iterations to perform
   float32 max_distance_from_voxel{}; ///< Maximum distance a vertex can move from its voxel center during smoothing
-  float32 relaxation_factor{};     ///< Blending factor for neighbor-averaging during smoothing (0..1)
+  float32 relaxation_factor{};       ///< Blending factor for neighbor-averaging during smoothing (0..1)
 
   DataPath grid_geom_data_path;
   DataPath feature_ids_array_path;

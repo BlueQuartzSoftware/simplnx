@@ -99,4 +99,4 @@ void GetColorTable(int numColors, std::vector<float>& colorsOut)
   }
 }
 
-} // namespace nx::core::RgbColor
+} // namespace nx::core::rgb_color

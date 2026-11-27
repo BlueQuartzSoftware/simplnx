@@ -144,7 +144,7 @@ IFilter::PreflightResult SliceTriangleGeometryFilter::preflightImpl(const DataSt
   // create the edge geometry
   {
     auto createGeometryAction = std::make_unique<CreateEdgeGeometryActionType>(pSliceDataContainerNameValue, 1, 2, INodeGeometry0D::k_VertexAttributeMatrixName, pEdgeAttributeMatrixNameValue,
-                                                                           EdgeGeom::k_SharedVertexListName, EdgeGeom::k_SharedEdgeListName);
+                                                                               EdgeGeom::k_SharedVertexListName, EdgeGeom::k_SharedEdgeListName);
     resultOutputActions.value().appendAction(std::move(createGeometryAction));
   }
 
@@ -245,7 +245,8 @@ Result<Arguments> SliceTriangleGeometryFilter::FromSIMPLJson(const nlohmann::jso
       simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_TriangleGeometryDataPath_Key, k_TriangleGeometryDataPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringToDataPathFilterParameterConverter>(args, json, simpl::k_OutputEdgeGeometryPath_Key, k_OutputEdgeGeometryPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_EdgeAttributeMatrixName_Key, k_EdgeAttributeMatrixName_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SliceAttributeMatrixName_Key, k_SliceAttributeMatrixName_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SliceAttributeMatrixName_Key, k_SliceAttributeMatrixName_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SliceIdArrayName_Key, k_SliceIdArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

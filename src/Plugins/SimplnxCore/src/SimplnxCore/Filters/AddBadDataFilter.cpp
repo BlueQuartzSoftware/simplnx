@@ -93,7 +93,8 @@ Parameters AddBadDataFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Optional Parameters"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_PoissonNoise_Key, "Add Random Noise", "If true the user may set the poisson volume fraction", false));
-  params.insert(std::make_unique<Float32ParameterType>(k_PoissonVolFraction_Key, "Volume Fraction of Random Noise", "A value between 0 and 1 inclusive that is compared against random generation", 0.0f));
+  params.insert(
+      std::make_unique<Float32ParameterType>(k_PoissonVolFraction_Key, "Volume Fraction of Random Noise", "A value between 0 and 1 inclusive that is compared against random generation", 0.0f));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_BoundaryNoise_Key, "Add Boundary Noise", "If true the user may set the boundary volume fraction", false));
   params.insert(
       std::make_unique<Float32ParameterType>(k_BoundaryVolFraction_Key, "Volume Fraction of Boundary Noise", "A value between 0 and 1 inclusive that is compared against random generation", 0.0f));
@@ -141,7 +142,7 @@ IFilter::PreflightResult AddBadDataFilter::preflightImpl(const DataStructure& da
   if(dataStructure.getDataAs<IDataArray>(pGBEuclideanDistancesArrayPathValue) == nullptr)
   {
     return {.output_actions = MakeErrorResult<OutputActions>(k_InvalidInputArrayError, fmt::format("Input path '{}' is missing or is not a numeric data array. Select an existing numeric data array.",
-                                                                                                  pGBEuclideanDistancesArrayPathValue.toString()))};
+                                                                                                   pGBEuclideanDistancesArrayPathValue.toString()))};
   }
 
   auto tupleCountResult = ValidateCellTupleCount(dataStructure, pImageGeometryPathValue, {pGBEuclideanDistancesArrayPathValue}, k_CellTupleCountError);
@@ -247,7 +248,8 @@ Result<Arguments> AddBadDataFilter::FromSIMPLJson(const nlohmann::json& json)
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_PoissonVolFractionKey, k_PoissonVolFraction_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_BoundaryNoiseKey, k_BoundaryNoise_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_BoundaryVolFractionKey, k_BoundaryVolFraction_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_GBEuclideanDistancesArrayPathKey, k_ImageGeometryPath_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_GBEuclideanDistancesArrayPathKey, k_ImageGeometryPath_Key));
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GBEuclideanDistancesArrayPathKey, k_GBEuclideanDistancesArrayPath_Key));
 

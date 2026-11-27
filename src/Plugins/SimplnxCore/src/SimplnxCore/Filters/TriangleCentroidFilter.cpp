@@ -91,7 +91,7 @@ IFilter::PreflightResult TriangleCentroidFilter::preflightImpl(const DataStructu
   if(faceAttributeMatrixPtr == nullptr)
   {
     return {.output_actions = MakeErrorResult<OutputActions>(k_MissingFeatureAttributeMatrix,
-                                                            fmt::format("Could not find Triangle Face Attribute Matrix with in the Triangle Geometry '{}'", pTriangleGeometryDataPath.toString()))};
+                                                             fmt::format("Could not find Triangle Face Attribute Matrix with in the Triangle Geometry '{}'", pTriangleGeometryDataPath.toString()))};
   }
   // Instantiate and move the action that will create the output array
   {
@@ -132,9 +132,9 @@ Result<Arguments> TriangleCentroidFilter::FromSIMPLJson(const nlohmann::json& js
   std::vector<Result<>> results;
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleCentroidsArrayPathKey,
-                                                                                                                                  k_CentroidsArrayName_Key));
+                                                                                                                                    k_CentroidsArrayName_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleCentroidsArrayPathKey,
-                                                                                                                                      k_TriGeometryDataPath_Key));
+                                                                                                                                        k_TriGeometryDataPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

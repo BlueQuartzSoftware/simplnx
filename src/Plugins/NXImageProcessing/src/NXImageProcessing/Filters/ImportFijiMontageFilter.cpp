@@ -141,10 +141,11 @@ Parameters ImportFijiMontageFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Unit", "The length unit that will be set into every created image geometry.",
                                                    to_underlying(IGeometry::LengthUnit::Micrometer), IGeometry::GetAllLengthUnitStrings()));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeOrigin_Key, "Change Origin", "Rebase the montage so its minimum corner sits at a user-defined origin.", false));
-  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Origin", "The new origin of the montage's minimum corner.", std::vector<float32>(3), std::vector<std::string>{"X", "Y", "Z"}));
+  params.insert(
+      std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Origin", "The new origin of the montage's minimum corner.", std::vector<float32>(3), std::vector<std::string>{"X", "Y", "Z"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ConvertToGrayScale_Key, "Convert To GrayScale", "Convert each imported RGB tile to a single-channel grayscale image.", false));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_ColorWeights_Key, "Color Weighting", "The luminosity weights used for the grayscale conversion.",
-                                                         std::vector<float32>{0.2125f, 0.7154f, 0.0721f}, std::vector<std::string>{"R", "G", "B"}));
+                                                             std::vector<float32>{0.2125f, 0.7154f, 0.0721f}, std::vector<std::string>{"R", "G", "B"}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeDataType_Key, "Set Image Data Type", "Cast every imported tile array to a chosen data type.", false));
   params.insert(std::make_unique<ChoicesParameter>(k_ImageDataType_Key, "Output Data Type", "Numeric type of the created image arrays.", 0ULL,
                                                    ChoicesParameter::ChoicesType{"uint8", "uint16", "uint32"})); // Sequence Dependent DO NOT REORDER

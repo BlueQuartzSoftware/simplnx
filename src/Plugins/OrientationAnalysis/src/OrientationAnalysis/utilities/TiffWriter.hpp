@@ -17,4 +17,4 @@ namespace tiff_writer
  */
 std::pair<int32_t, std::string> WriteImage(const std::string& filepath, int32_t width, int32_t height, uint16_t samplesPerPixel, const uint8_t* data);
 
-} // namespace TiffWriter
+} // namespace tiff_writer

@@ -159,8 +159,8 @@ IFilter::PreflightResult ReadStlFileFilter::preflightImpl(const DataStructure& /
 
   // Create the Triangle Geometry action and store it
   {
-    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryActionType>(pTriangleGeometryPath, numTriangles, 1, vertexMatrixName, faceMatrixName, TriangleGeom::k_SharedVertexListName,
-                                                                                       TriangleGeom::k_SharedFacesListName);
+    auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryActionType>(pTriangleGeometryPath, numTriangles, 1, vertexMatrixName, faceMatrixName,
+                                                                                           TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
     auto faceNormalsPath = createTriangleGeometryAction->getFaceDataPath().createChildPath(faceNormalsName);
     resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
     // Create the face Normals DataArray action and store it
@@ -256,7 +256,8 @@ Result<Arguments> ReadStlFileFilter::FromSIMPLJson(const nlohmann::json& json)
     results.push_back(std::move(factorResult));
   }
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::InputFileFilterParameterConverter>(args, json, simpl::k_StlFilePathKey, k_StlFilePath_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_SurfaceMeshDataContainerNameKey, k_CreatedTriangleGeometryPath_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_SurfaceMeshDataContainerNameKey, k_CreatedTriangleGeometryPath_Key));
   Result<> vertAMResult =
       simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_VertexAttributeMatrixNameKey, k_VertexAttributeMatrixName_Key);
   if(vertAMResult.valid())

@@ -118,6 +118,6 @@ Result<> NormalizeToConstantImageFilter::executeImpl(DataStructure& dataStructur
 
   const NormalizeToConstantOperation operation{constant};
   return ImageProcessing::ExecuteTwoPassImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64Type>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel,
-                                                                                                                 messageHandler);
+                                                                                                                     messageHandler);
 }
 } // namespace nx::core

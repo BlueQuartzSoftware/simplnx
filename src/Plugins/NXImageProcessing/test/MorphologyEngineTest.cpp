@@ -1757,7 +1757,8 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: BinaryMorphScanline reads each 2
 
   std::atomic_bool shouldCancel{false};
   IFilter::MessageHandler messageHandler{};
-  BinaryMorphScanline<int32> algorithm{inputStore, outputStore, SizeVec3Type{k_DimX, k_DimY, k_DimZ}, se, MorphOp::Dilate, k_Foreground, k_Background, false, shouldCancel, messageHandler, k_TargetBytes};
+  BinaryMorphScanline<int32> algorithm{inputStore,     outputStore,  SizeVec3Type{k_DimX, k_DimY, k_DimZ}, se, MorphOp::Dilate, k_Foreground, k_Background, false, shouldCancel,
+                                       messageHandler, k_TargetBytes};
   auto algorithmResult = algorithm();
   SIMPLNX_RESULT_REQUIRE_VALID(algorithmResult);
 
@@ -2049,7 +2050,8 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: slab planner bounds normal batch
   DataStore<int32> shallowInput({k_LargeRadiusDimZ, k_DimY, k_DimX}, {1}, 0);
   DataStore<int32> shallowOutput({k_LargeRadiusDimZ, k_DimY, k_DimX}, {1}, 0);
   constexpr usize k_LargeRadiusTargetBytes = 3 * k_PlaneBytes;
-  auto makeMorphologySlabPlanResult4 = ImageProcessing::detail::MakeMorphologySlabPlan(shallowInput, shallowOutput, SizeVec3Type{k_DimX, k_DimY, k_LargeRadiusDimZ}, 10, k_LargeRadiusTargetBytes, plan);
+  auto makeMorphologySlabPlanResult4 =
+      ImageProcessing::detail::MakeMorphologySlabPlan(shallowInput, shallowOutput, SizeVec3Type{k_DimX, k_DimY, k_LargeRadiusDimZ}, 10, k_LargeRadiusTargetBytes, plan);
   SIMPLNX_RESULT_REQUIRE_VALID(makeMorphologySlabPlanResult4);
   REQUIRE(plan.output_batch_depth == 1);
   REQUIRE(plan.max_input_depth == k_LargeRadiusDimZ);
@@ -2224,8 +2226,8 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: flat-fold blocks map staged slab
 TEST_CASE("NXImageProcessing::MorphologyEngine: packed binary blocks match complete-volume independent oracles", "[NXImageProcessing][MorphologyEngine]")
 {
   const std::array<bool, 2> boundaryModes = {false, true};
-  const auto checkBothOperations = [&](const SizeVec3Type& boundDims, usize stagedZLo, usize stagedDepth, const SizeVec3Type& outputDims, const SizeVec3Type& outputOrigin, const StructuringElement& se,
-                                       bool boundaryToForeground, const char* caseName) {
+  const auto checkBothOperations = [&](const SizeVec3Type& boundDims, usize stagedZLo, usize stagedDepth, const SizeVec3Type& outputDims, const SizeVec3Type& outputOrigin,
+                                       const StructuringElement& se, bool boundaryToForeground, const char* caseName) {
     CheckPackedBinaryMorphologyBlock<true>(boundDims, stagedZLo, stagedDepth, outputDims, outputOrigin, se, boundaryToForeground, caseName);
     CheckPackedBinaryMorphologyBlock<false>(boundDims, stagedZLo, stagedDepth, outputDims, outputOrigin, se, boundaryToForeground, caseName);
   };
@@ -2352,8 +2354,8 @@ TEST_CASE("NXImageProcessing::MorphologyEngine: packed binary rings retain logic
   std::vector<uint8> rawOutput(65 * 2, uint8{0xA5});
   std::vector<BinaryMorphWord> packedOutput(layout.plane_words, BinaryMorphWord{0xDEADBEEFDEADBEEF});
   std::atomic_bool shouldCancel{true};
-  const bool rawCompleted = ImageProcessing::detail::RunPrepackedBinaryMorphologyBlock<uint8, true>(wrappedView, rawOutput.data(), kBoundDims, SizeVec3Type{65, 2, 1}, SizeVec3Type{0, 0, 6}, boxRadiusOne,
-                                                                                                    uint8{1}, uint8{0}, false, shouldCancel);
+  const bool rawCompleted = ImageProcessing::detail::RunPrepackedBinaryMorphologyBlock<uint8, true>(wrappedView, rawOutput.data(), kBoundDims, SizeVec3Type{65, 2, 1}, SizeVec3Type{0, 0, 6},
+                                                                                                    boxRadiusOne, uint8{1}, uint8{0}, false, shouldCancel);
   const bool packedCompleted = ImageProcessing::detail::RunPrepackedBinaryMorphologyPlane<true>(wrappedView, packedOutput.data(), kBoundDims, SizeVec3Type{0, 0, 6}, boxRadiusOne, false, shouldCancel);
   REQUIRE_FALSE(rawCompleted);
   REQUIRE_FALSE(packedCompleted);

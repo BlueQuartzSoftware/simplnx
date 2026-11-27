@@ -65,7 +65,7 @@ template <class T>
 struct AdaptiveHistogramEqualizationPlaneBody
 {
   const T* slab; // read-only slab covering Z in [zLo, zHi], laid out [slabZ][y][x]
-  T* out_plane;   // output plane, dimX*dimY
+  T* out_plane;  // output plane, dimX*dimY
   usize dim_x;
   usize dim_y;
   usize dim_z;
@@ -73,9 +73,9 @@ struct AdaptiveHistogramEqualizationPlaneBody
   usize ry;
   usize rz;
   usize z_lo;        // slab's first Z index
-  usize z;          // output plane's Z index
+  usize z;           // output plane's Z index
   float64 min_value; // global image minimum (as double)
-  float64 iscale;   // global (max - min) as double, > 0
+  float64 iscale;    // global (max - min) as double, > 0
   float32 alpha;
   float32 beta;
 
@@ -161,7 +161,7 @@ template <class T>
 struct AdaptiveHistogramEqualizationLutPlaneBody
 {
   const T* slab; // read-only slab covering Z in [zLo, zHi], laid out [slabZ][y][x]
-  T* out_plane;   // output plane, dimX*dimY
+  T* out_plane;  // output plane, dimX*dimY
   usize dim_x;
   usize dim_y;
   usize dim_z;
@@ -169,10 +169,10 @@ struct AdaptiveHistogramEqualizationLutPlaneBody
   usize ry;
   usize rz;
   usize z_lo;         // slab's first Z index
-  usize z;           // output plane's Z index
+  usize z;            // output plane's Z index
   float64 min_value;  // global image minimum (as double)
-  float64 iscale;    // global (max - min) as double, > 0
-  float32 beta;      // alpha is baked into gLut; only beta's per-voxel term survives here
+  float64 iscale;     // global (max - min) as double, > 0
+  float32 beta;       // alpha is baked into gLut; only beta's per-voxel term survives here
   const float* g_lut; // difference-keyed neighbor term g(d), read-only, shared across the plane
   int64 d_min;        // = -span; the LUT index for difference d is (d - dMin), in [0, 2*span]
   usize lut_size;     // gLut length (2*span + 1); used only by the bounds assert
@@ -377,7 +377,8 @@ Result<usize> CalculateAdaptiveHistogramEqualizationResidentWorkingMemoryBytes(c
 }
 
 template <class T>
-Result<AdaptiveHistogramEqualizationResidentMemoryAllocation> ReserveAdaptiveHistogramEqualizationResidentWorkingMemory(const SizeVec3Type& dims, const std::array<usize, 3>& radius, bool useLinearUint8)
+Result<AdaptiveHistogramEqualizationResidentMemoryAllocation> ReserveAdaptiveHistogramEqualizationResidentWorkingMemory(const SizeVec3Type& dims, const std::array<usize, 3>& radius,
+                                                                                                                        bool useLinearUint8)
 {
   auto requiredResult = CalculateAdaptiveHistogramEqualizationResidentWorkingMemoryBytes<T>(dims, radius, useLinearUint8);
   if(requiredResult.invalid())
@@ -397,7 +398,7 @@ Result<AdaptiveHistogramEqualizationResidentMemoryAllocation> ReserveAdaptiveHis
 struct AdaptiveHistogramEqualizationRingBandPlan
 {
   CacheMemoryBudgetManager::WorkingMemoryReservation reservation; // kept alive for the ring's lifetime; backs planesPerBand's extra buffers
-  usize planes_per_band = 1;                                        // consecutive Z-planes per band read/write
+  usize planes_per_band = 1;                                      // consecutive Z-planes per band read/write
 };
 
 /**
@@ -555,8 +556,8 @@ inline Result<AdaptiveHistogramEqualization2DPlan> CreateAdaptiveHistogramEquali
       return false;
     }
     plan.output_buffer_values = fixedOutput ? fixedOutputValues : outputValues;
-    return TryComputeAdaptiveHistogramEqualization2DLayout(plan.maximum_input_rows, plan.maximum_input_columns, plan.core_columns, valueBytes, plan.output_buffer_values, fixedScratchBytes, useHorizontalSums,
-                                                           plan.input_buffer_values, plan.horizontal_buffer_values, plan.resident_bytes);
+    return TryComputeAdaptiveHistogramEqualization2DLayout(plan.maximum_input_rows, plan.maximum_input_columns, plan.core_columns, valueBytes, plan.output_buffer_values, fixedScratchBytes,
+                                                           useHorizontalSums, plan.input_buffer_values, plan.horizontal_buffer_values, plan.resident_bytes);
   };
 
   const bool fixedOutputEligible = preferFixedOutput && targetBytes == k_AdaptiveHistogramEqualization2DTargetBytes && plan.total_values <= fixedOutputCapacityValues;

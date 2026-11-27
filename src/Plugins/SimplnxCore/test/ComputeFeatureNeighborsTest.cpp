@@ -83,10 +83,12 @@ DataStructure CreateSingleVoxelDataStructure()
   Int8ArrayType* exemplarBoundaryCellsPtr = Int8ArrayType::CreateWithStore<Int8DataStoreType>(dataStructure, k_ExemplarBoundaryCellsName, cellDataPtr->getShape(), ShapeType{1}, cellDataPtr->getId());
   exemplarBoundaryCellsPtr->setValue(0, 0);
 
-  BoolArrayType* exemplarSurfaceFeaturesPtr = BoolArrayType::CreateWithStore<BoolDataStoreType>(dataStructure, k_ExemplarSurfaceFeaturesName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  BoolArrayType* exemplarSurfaceFeaturesPtr =
+      BoolArrayType::CreateWithStore<BoolDataStoreType>(dataStructure, k_ExemplarSurfaceFeaturesName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
   exemplarSurfaceFeaturesPtr->setValue(1, true);
 
-  Int32ArrayType* exemplarNumNeighborsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_ExemplarNumNeighborsName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  Int32ArrayType* exemplarNumNeighborsPtr =
+      Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_ExemplarNumNeighborsName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
   exemplarNumNeighborsPtr->setValue(1, 0);
 
   Int32NeighborListType* exemplarNeighborsListPtr = Int32NeighborListType::Create(dataStructure, k_ExemplarNeighborsListName, featureDataPtr->getShape(), featureDataPtr->getId());
@@ -135,13 +137,15 @@ void Fill1DImage(DataStructure& dataStructure, const ShapeType& imageShape)
   exemplarBoundaryCellsPtr->setValue(5, 0);
   exemplarBoundaryCellsPtr->setValue(6, 0);
 
-  BoolArrayType* exemplarSurfaceFeaturesPtr = BoolArrayType::CreateWithStore<BoolDataStoreType>(dataStructure, k_ExemplarSurfaceFeaturesName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  BoolArrayType* exemplarSurfaceFeaturesPtr =
+      BoolArrayType::CreateWithStore<BoolDataStoreType>(dataStructure, k_ExemplarSurfaceFeaturesName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
   exemplarSurfaceFeaturesPtr->setValue(1, true);
   exemplarSurfaceFeaturesPtr->setValue(2, false);
   exemplarSurfaceFeaturesPtr->setValue(3, false);
   exemplarSurfaceFeaturesPtr->setValue(4, true);
 
-  Int32ArrayType* exemplarNumNeighborsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_ExemplarNumNeighborsName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  Int32ArrayType* exemplarNumNeighborsPtr =
+      Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_ExemplarNumNeighborsName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
   exemplarNumNeighborsPtr->setValue(1, 1);
   exemplarNumNeighborsPtr->setValue(2, 2);
   exemplarNumNeighborsPtr->setValue(3, 1);
@@ -270,14 +274,16 @@ void Fill2DImage(DataStructure& dataStructure, const ShapeType& imageShape)
   exemplarBoundaryCellsPtr->setValue(23, 0);
   exemplarBoundaryCellsPtr->setValue(24, 0);
 
-  BoolArrayType* exemplarSurfaceFeaturesPtr = BoolArrayType::CreateWithStore<BoolDataStoreType>(dataStructure, k_ExemplarSurfaceFeaturesName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  BoolArrayType* exemplarSurfaceFeaturesPtr =
+      BoolArrayType::CreateWithStore<BoolDataStoreType>(dataStructure, k_ExemplarSurfaceFeaturesName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
   exemplarSurfaceFeaturesPtr->setValue(1, true);
   exemplarSurfaceFeaturesPtr->setValue(2, true);
   exemplarSurfaceFeaturesPtr->setValue(3, false);
   exemplarSurfaceFeaturesPtr->setValue(4, false);
   exemplarSurfaceFeaturesPtr->setValue(5, true);
 
-  Int32ArrayType* exemplarNumNeighborsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_ExemplarNumNeighborsName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  Int32ArrayType* exemplarNumNeighborsPtr =
+      Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_ExemplarNumNeighborsName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
   exemplarNumNeighborsPtr->setValue(1, 1);
   exemplarNumNeighborsPtr->setValue(2, 3);
   exemplarNumNeighborsPtr->setValue(3, 1);
@@ -389,11 +395,13 @@ void FillNonSquare2DFeatures(DataStructure& dataStructure, const ShapeType& imag
   }
 
   // Both features touch the image boundary and are surface features.
-  BoolArrayType* exemplarSurfaceFeaturesPtr = BoolArrayType::CreateWithStore<BoolDataStoreType>(dataStructure, k_ExemplarSurfaceFeaturesName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  BoolArrayType* exemplarSurfaceFeaturesPtr =
+      BoolArrayType::CreateWithStore<BoolDataStoreType>(dataStructure, k_ExemplarSurfaceFeaturesName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
   exemplarSurfaceFeaturesPtr->setValue(1, true);
   exemplarSurfaceFeaturesPtr->setValue(2, true);
 
-  Int32ArrayType* exemplarNumNeighborsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_ExemplarNumNeighborsName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  Int32ArrayType* exemplarNumNeighborsPtr =
+      Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_ExemplarNumNeighborsName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
   exemplarNumNeighborsPtr->setValue(1, 1);
   exemplarNumNeighborsPtr->setValue(2, 1);
 
@@ -558,7 +566,8 @@ DataStructure Create3DDataStructure()
     exemplarBoundaryCellsPtr->setValue(i, boundaryCellsArray[i]);
   }
 
-  BoolArrayType* exemplarSurfaceFeaturesPtr = BoolArrayType::CreateWithStore<BoolDataStoreType>(dataStructure, k_ExemplarSurfaceFeaturesName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  BoolArrayType* exemplarSurfaceFeaturesPtr =
+      BoolArrayType::CreateWithStore<BoolDataStoreType>(dataStructure, k_ExemplarSurfaceFeaturesName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
   exemplarSurfaceFeaturesPtr->setValue(1, true);
   exemplarSurfaceFeaturesPtr->setValue(2, true);
   exemplarSurfaceFeaturesPtr->setValue(3, true);
@@ -566,7 +575,8 @@ DataStructure Create3DDataStructure()
   exemplarSurfaceFeaturesPtr->setValue(5, true);
   exemplarSurfaceFeaturesPtr->setValue(6, false);
 
-  Int32ArrayType* exemplarNumNeighborsPtr = Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_ExemplarNumNeighborsName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
+  Int32ArrayType* exemplarNumNeighborsPtr =
+      Int32ArrayType::CreateWithStore<Int32DataStoreType>(dataStructure, k_ExemplarNumNeighborsName, featureDataPtr->getShape(), ShapeType{1}, featureDataPtr->getId());
   exemplarNumNeighborsPtr->setValue(1, 4);
   exemplarNumNeighborsPtr->setValue(2, 4);
   exemplarNumNeighborsPtr->setValue(3, 4);

@@ -57,9 +57,9 @@ Parameters HMinimaImageFilter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float64ParameterType>(k_Height_Key, "Height",
-                                                   "The height (contrast) below which a regional minimum is suppressed. Every regional minimum whose depth is less than Height is removed; each "
-                                                   "surviving minimum is raised by exactly Height. Must be finite.",
-                                                   2.0));
+                                                       "The height (contrast) below which a regional minimum is suppressed. Every regional minimum whose depth is less than Height is removed; each "
+                                                       "surviving minimum is raised by exactly Height. Must be finite.",
+                                                       2.0));
   params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "Fully Connected",
                                                 "Whether the connected components are defined strictly by face connectivity (Off) or by face+edge+vertex connectivity (On). Default is Off. For "
                                                 "minima that are 1 pixel wide, use On.",

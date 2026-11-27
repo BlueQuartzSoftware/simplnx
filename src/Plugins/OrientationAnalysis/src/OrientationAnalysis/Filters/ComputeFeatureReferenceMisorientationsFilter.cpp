@@ -206,8 +206,8 @@ Result<> ComputeFeatureReferenceMisorientationsFilter::executeImpl(DataStructure
   inputValues.feature_reference_misorientations_array_name = inputValues.feature_ids_array_path.replaceName(filterArgs.value<std::string>(k_CellMisorientationsArrayName_Key));
   auto pCellFeatAttributeMatrixArrayPathValue = filterArgs.value<DataPath>(k_CellFeatureAttributeMatrixPath_Key);
   auto featAvgMisorientationName = filterArgs.value<std::string>(k_FeatureAvgMisorientationsArrayName_Key);
-  inputValues.feature_avg_misorientations_array_name =
-      inputValues.reference_orientation == 0 ? inputValues.avg_quats_array_path.replaceName(featAvgMisorientationName) : pCellFeatAttributeMatrixArrayPathValue.createChildPath(featAvgMisorientationName);
+  inputValues.feature_avg_misorientations_array_name = inputValues.reference_orientation == 0 ? inputValues.avg_quats_array_path.replaceName(featAvgMisorientationName) :
+                                                                                                pCellFeatAttributeMatrixArrayPathValue.createChildPath(featAvgMisorientationName);
   inputValues.feature_euclidean_centers_path = pCellFeatAttributeMatrixArrayPathValue.createChildPath(filterArgs.value<std::string>(k_FeatureEuclideanCenterArrayName_Key));
 
   return ComputeFeatureReferenceMisorientations(dataStructure, messageHandler, shouldCancel, &inputValues)();
@@ -249,10 +249,10 @@ Result<Arguments> ComputeFeatureReferenceMisorientationsFilter::FromSIMPLJson(co
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureReferenceMisorientationsArrayNameKey,
-                                                                                                                   k_CellMisorientationsArrayName_Key));
+                                                                                                                     k_CellMisorientationsArrayName_Key));
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_FeatureAvgMisorientationsArrayNameKey,
-                                                                                                                   k_FeatureAvgMisorientationsArrayName_Key));
+                                                                                                                     k_FeatureAvgMisorientationsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

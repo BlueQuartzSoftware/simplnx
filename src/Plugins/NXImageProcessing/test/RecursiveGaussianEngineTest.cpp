@@ -389,7 +389,8 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: working storage selection
               .use_temporary_record_store);
   REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianStoragePlan(IDataStore::StoreType::OutOfCore, k_InputOocFormat, IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore)
               .use_temporary_record_store);
-  REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianStoragePlan(IDataStore::StoreType::OutOfCore, k_InputOocFormat, IDataStore::StoreType::OutOfCore, k_OutputOocFormat).use_temporary_record_store);
+  REQUIRE(
+      ImageProcessing::detail::SelectRecursiveGaussianStoragePlan(IDataStore::StoreType::OutOfCore, k_InputOocFormat, IDataStore::StoreType::OutOfCore, k_OutputOocFormat).use_temporary_record_store);
   REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianWorkingDataFormat(IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore, IDataStore::StoreType::InMemory, "Alternate-DataStore") ==
           DataStore<float32>::k_DataStore);
   REQUIRE(ImageProcessing::detail::SelectRecursiveGaussianWorkingDataFormat(IDataStore::StoreType::InMemory, DataStore<float32>::k_DataStore, IDataStore::StoreType::OutOfCore, k_OutputOocFormat) ==
@@ -460,8 +461,8 @@ TEMPLATE_TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: XY plane cascade
   IFilter::MessageHandler messageHandler{};
   RecursiveGaussianPassOptions streamedOptions;
   streamedOptions.use_in_memory_fast_path = false;
-  REQUIRE(
-      RecursiveGaussianAxisPass<T>(source, intermediate, dims, first.axis, first.sigma, first.spacing, first.order, first.normalize_across_scale, shouldCancel, messageHandler, streamedOptions).valid());
+  REQUIRE(RecursiveGaussianAxisPass<T>(source, intermediate, dims, first.axis, first.sigma, first.spacing, first.order, first.normalize_across_scale, shouldCancel, messageHandler, streamedOptions)
+              .valid());
   REQUIRE(RecursiveGaussianAxisPass<float32>(intermediate, expectedStore, dims, second.axis, second.sigma, second.spacing, second.order, second.normalize_across_scale, shouldCancel, messageHandler,
                                              streamedOptions)
               .valid());
@@ -585,10 +586,14 @@ TEST_CASE("NXImageProcessing::RecursiveGaussianEngine: postprocessing planner al
 
   SECTION("one float32 buffer")
   {
-    const Result<ImageProcessing::detail::PointwiseBatchPlan> result = ImageProcessing::detail::MakeRecursiveGaussianPostprocessingPlan(
-        k_TotalValues, sizeof(float32), ImageProcessing::detail::k_PointwiseTargetScratchBytes,
-        {{.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = tupleShape, .num_components = 1, .name = "input"},
-         {.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = tupleShape, .num_components = 1, .name = "output", .access = ImageProcessing::detail::PointwiseEndpointLayout::Access::Write}});
+    const Result<ImageProcessing::detail::PointwiseBatchPlan> result =
+        ImageProcessing::detail::MakeRecursiveGaussianPostprocessingPlan(k_TotalValues, sizeof(float32), ImageProcessing::detail::k_PointwiseTargetScratchBytes,
+                                                                         {{.store_type = IDataStore::StoreType::OutOfCore, .tuple_shape = tupleShape, .num_components = 1, .name = "input"},
+                                                                          {.store_type = IDataStore::StoreType::OutOfCore,
+                                                                           .tuple_shape = tupleShape,
+                                                                           .num_components = 1,
+                                                                           .name = "output",
+                                                                           .access = ImageProcessing::detail::PointwiseEndpointLayout::Access::Write}});
     REQUIRE(result.valid());
     REQUIRE(result.value().alignment_values == k_PlaneValues);
     REQUIRE(result.value().batch_values == 62 * k_PlaneValues);

@@ -171,7 +171,7 @@ Result<Arguments> ComputeFeatureFaceMisorientationFilter::FromSIMPLJson(const nl
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceMisorientationColorsArrayNameKey,
-                                                                                                                   k_MisorientationArrayName_Key));
+                                                                                                                     k_MisorientationArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

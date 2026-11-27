@@ -339,8 +339,8 @@ Result<> ComputeGBPDMetricBased::operator()()
 
   if(crystalStructuresCache[m_InputValues->phase_of_interest] > 10)
   {
-    return MakeErrorResult(
-        -8325, fmt::format("Unsupported CrystalStructure value {} for phase index {}.", static_cast<uint32>(crystalStructuresCache[m_InputValues->phase_of_interest]), m_InputValues->phase_of_interest));
+    return MakeErrorResult(-8325, fmt::format("Unsupported CrystalStructure value {} for phase index {}.", static_cast<uint32>(crystalStructuresCache[m_InputValues->phase_of_interest]),
+                                              m_InputValues->phase_of_interest));
   }
 
   // GMT scripts require the _1 filename suffix.

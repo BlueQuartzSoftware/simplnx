@@ -817,8 +817,8 @@ template <class T>
 class ObjectMorphScatter
 {
 public:
-  ObjectMorphScatter(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3Type dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets, ObjectMorphOp op, T objectValue,
-                     T backgroundValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+  ObjectMorphScatter(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3Type dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets, ObjectMorphOp op,
+                     T objectValue, T backgroundValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(in)
   , m_Out(out)
   , m_Dims(std::move(dims))
@@ -934,8 +934,8 @@ template <class T>
 class ObjectMorphGather
 {
 public:
-  ObjectMorphGather(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3Type dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets, ObjectMorphOp op, T objectValue,
-                    T backgroundValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize targetBufferBytes = 64ULL * 1024ULL * 1024ULL)
+  ObjectMorphGather(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3Type dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets, ObjectMorphOp op,
+                    T objectValue, T backgroundValue, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler, usize targetBufferBytes = 64ULL * 1024ULL * 1024ULL)
   : m_In(in)
   , m_Out(out)
   , m_Dims(std::move(dims))
@@ -1225,8 +1225,8 @@ private:
  * @tparam T scalar voxel type.
  */
 template <class T>
-Result<> ApplyObjectMorphology(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3Type& dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets, ObjectMorphOp op,
-                               T objectValue, T backgroundValue, const IDataArray& inArray, const IDataArray& outArray, const std::atomic_bool& shouldCancel,
+Result<> ApplyObjectMorphology(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3Type& dims, const StructuringElement& se, const std::vector<SEOffset>& boxOffsets,
+                               ObjectMorphOp op, T objectValue, T backgroundValue, const IDataArray& inArray, const IDataArray& outArray, const std::atomic_bool& shouldCancel,
                                const IFilter::MessageHandler& messageHandler)
 {
   if(auto layout = ValidateMorphologyLayout(dims, se, false, sizeof(T)); layout.invalid())

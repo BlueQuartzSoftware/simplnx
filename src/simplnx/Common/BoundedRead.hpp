@@ -276,4 +276,4 @@ Status ValidateExtent(const Extent& extent, const Shape& shape, uint64 component
   }
   return Status::Complete;
 }
-} // namespace nx::core::BoundedRead
+} // namespace nx::core::bounded_read

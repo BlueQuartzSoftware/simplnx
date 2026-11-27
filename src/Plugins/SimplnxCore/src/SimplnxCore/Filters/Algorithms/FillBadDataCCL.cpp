@@ -495,7 +495,8 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStoreType& feat
   std::vector<int32> featureNumber(numFeatures + 1, 0);
 
   // Get cell arrays that need updating during filling
-  std::optional<std::vector<DataPath>> allChildArrays = GetAllChildDataPaths(m_DataStructure, selectedImageGeom.getCellDataPath(), DataObject::Type::DataArray, m_InputValues->ignored_data_array_paths);
+  std::optional<std::vector<DataPath>> allChildArrays =
+      GetAllChildDataPaths(m_DataStructure, selectedImageGeom.getCellDataPath(), DataObject::Type::DataArray, m_InputValues->ignored_data_array_paths);
   std::vector<DataPath> voxelArrayNames;
   if(allChildArrays.has_value())
   {
@@ -762,8 +763,9 @@ Result<> FillBadDataCCL::phaseFourIterativeFill(Int32AbstractDataStoreType& feat
     // Three slices and one 4,096-record batch remain resident per replay.
     const int64 sliceStride = dims[0] * dims[1];
     const usize sliceTuples = sliceSize;
-    auto featureIdsResult = ExecuteDataFunction(SliceBufferedCopyFunctor{}, m_DataStructure.getDataAs<IDataArray>(m_InputValues->feature_ids_array_path)->getDataType(),
-                                                m_DataStructure.getDataAs<IDataArray>(m_InputValues->feature_ids_array_path), pairStore, pairsWritten, sliceTuples, sliceStride, dims[2], m_ShouldCancel);
+    auto featureIdsResult =
+        ExecuteDataFunction(SliceBufferedCopyFunctor{}, m_DataStructure.getDataAs<IDataArray>(m_InputValues->feature_ids_array_path)->getDataType(),
+                            m_DataStructure.getDataAs<IDataArray>(m_InputValues->feature_ids_array_path), pairStore, pairsWritten, sliceTuples, sliceStride, dims[2], m_ShouldCancel);
     if(featureIdsResult.invalid())
     {
       return featureIdsResult;

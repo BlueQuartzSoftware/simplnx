@@ -54,8 +54,8 @@ Parameters ComputeIPFColorsFilter::parameters() const
   Parameters params;
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<VectorFloat32ParameterType>(k_ReferenceDir_Key, "Reference Direction", "The reference axis with respect to compute the IPF colors", std::vector<float32>{0.0F, 0.0F, 1.0F},
-                                                         std::vector<std::string>(3)));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_ReferenceDir_Key, "Reference Direction", "The reference axis with respect to compute the IPF colors",
+                                                             std::vector<float32>{0.0F, 0.0F, 1.0F}, std::vector<std::string>(3)));
   params.insert(std::make_unique<ChoicesParameter>(k_ColorKey_Key, "Color Key",
                                                    "Which IPF color scheme to use:\n"
                                                    "  TSL: Legacy primary-corner SST coloring (EDAX/OIM Analysis default).\n"

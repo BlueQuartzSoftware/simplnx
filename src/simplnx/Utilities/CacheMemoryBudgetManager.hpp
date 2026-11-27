@@ -187,7 +187,7 @@ public:
    * @note An all-pinned cache can exceed the budget after this registration.
    */
   std::pair<AllocationHandleType, std::vector<AllocationHandleType>> allocate(const std::string& subsystem, const std::string& key, uint64 sizeBytes, EvictionCallbackType onEvict,
-                                                                      const AllocationOptions& options);
+                                                                              const AllocationOptions& options);
 
   /**
    * @brief Registers a temporary pinned allocation if unique pinned bytes remain within the budget.

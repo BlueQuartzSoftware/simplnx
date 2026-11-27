@@ -163,4 +163,4 @@ Result<std::array<usize, N>> ComputeGridDimensions(const DataPath& arrayPath, co
   }
   return {dims};
 }
-} // namespace nx::core::DBSCANCommon
+} // namespace nx::core::dbscan_common

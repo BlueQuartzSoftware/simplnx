@@ -65,7 +65,8 @@ Parameters ExtractVertexGeometryFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether or not to use a mask array when extracting cell centers.", false));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "DataPath to the boolean mask array. Values that are true will mark that cell/point as usable.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Cell Arrays to Move/Copy"});
   params.insert(std::make_unique<ChoicesParameter>(k_ArrayHandling_Key, "Array Handling", "[0] Move or [1] Copy input data arrays", to_underlying(ArrayHandlingType::Move),
@@ -148,8 +149,8 @@ IFilter::PreflightResult ExtractVertexGeometryFilter::preflightImpl(const DataSt
     if(dataArray.getNumberOfTuples() != geomElementCount)
     {
       return {.output_actions = MakeErrorResult<OutputActions>(-2006, fmt::format("The selected DataArrays do not have the correct number of tuples. The Input Geometry ({}) has {} tuples but the "
-                                                                                 " selected DataArrays have {} tuples.)",
-                                                                                 pInputGeometryPathValue.toString(), geomElementCount, dataArray.getNumberOfTuples()))};
+                                                                                  " selected DataArrays have {} tuples.)",
+                                                                                  pInputGeometryPathValue.toString(), geomElementCount, dataArray.getNumberOfTuples()))};
     }
   }
 
@@ -213,7 +214,8 @@ Result<Arguments> ExtractVertexGeometryFilter::FromSIMPLJson(const nlohmann::jso
 
   std::vector<Result<>> results;
 
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_IncludedDataArrayPathsKey, k_IncludedDataArrayPaths_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_IncludedDataArrayPathsKey, k_IncludedDataArrayPaths_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_SelectedDataContainerNameKey, k_InputGeometryPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DCPathBuilderFilterParameterConverter>(args, json, simpl::k_VertexDataContainerNameKey, k_VertexGeometryPath_Key));
   Result<> useMaskResult = simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_UseMaskKey, k_UseMask_Key);

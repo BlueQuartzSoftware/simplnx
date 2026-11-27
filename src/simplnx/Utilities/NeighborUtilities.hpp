@@ -628,5 +628,5 @@ void ProcessFaces(const FunctionT& processFaceFunction, const std::array<int64, 
     }
   }
 }
-} // namespace ImageDimensionalUtilities
+} // namespace image_dimensional_utilities
 } // namespace nx::core

@@ -487,7 +487,8 @@ TEST_CASE("SimplnxCore::MultiThresholdObjects: Direct and Scanline evaluate the 
   const DataPath directOutputPath = k_ImageCellDataName.createChildPath("Direct Custom Mask");
   const DataPath scanlineOutputPath = k_ImageCellDataName.createChildPath("Scanline Custom Mask");
   REQUIRE(UInt8ArrayType::CreateWithStore<UInt8DataStoreType>(directDataStructure, directOutputPath.getTargetName(), directCellData.getShape(), ShapeType{1}, directCellData.getId()) != nullptr);
-  REQUIRE(UInt8ArrayType::CreateWithStore<UInt8DataStoreType>(scanlineDataStructure, scanlineOutputPath.getTargetName(), scanlineCellData.getShape(), ShapeType{1}, scanlineCellData.getId()) != nullptr);
+  REQUIRE(UInt8ArrayType::CreateWithStore<UInt8DataStoreType>(scanlineDataStructure, scanlineOutputPath.getTargetName(), scanlineCellData.getShape(), ShapeType{1}, scanlineCellData.getId()) !=
+          nullptr);
   MultiThresholdObjectsInputValues directValues;
   directValues.array_thresholds_object = thresholdSet;
   directValues.created_mask_type = DataType::uint8;

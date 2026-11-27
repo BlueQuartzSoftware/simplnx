@@ -98,7 +98,8 @@ public:
    *
    * This compatibility method does not inspect cancellation or output stream state.
    */
-  Result<> writeOutputFile(std::ofstream& out, const Int32ArrayType& cellPhases, const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, int32 lineCount, usize totalPoints, int32 phase) const;
+  Result<> writeOutputFile(std::ofstream& out, const Int32ArrayType& cellPhases, const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, int32 lineCount, usize totalPoints,
+                           int32 phase) const;
 
 private:
   DataStructure& m_DataStructure;

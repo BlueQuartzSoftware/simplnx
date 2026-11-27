@@ -132,9 +132,9 @@ Result<Arguments> TriangleNormalFilter::FromSIMPLJson(const nlohmann::json& json
   std::vector<Result<>> results;
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleNormalsArrayPathKey,
-                                                                                                                                      k_TriGeometryDataPath_Key));
+                                                                                                                                        k_TriGeometryDataPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleNormalsArrayPathKey,
-                                                                                                                                  k_SurfaceMeshTriangleNormalsArrayName_Key));
+                                                                                                                                    k_SurfaceMeshTriangleNormalsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

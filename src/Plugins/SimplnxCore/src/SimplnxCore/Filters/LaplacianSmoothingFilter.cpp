@@ -55,10 +55,10 @@ Parameters LaplacianSmoothingFilter::parameters() const
       k_IterationSteps_Key, "Iteration Steps",
       "Number of iteration steps to perform. More steps causes more smoothing but will also cause the volume to shrink more. Increasing this number too high may cause collapse of points!", 25));
   params.insert(std::make_unique<Float32ParameterType>(k_Lambda_Key, "Default Lambda",
-                                                   "Value of λ to apply to general internal nodes that are not triple lines, quadruple points or on the surface of the volume", 0.2F));
+                                                       "Value of λ to apply to general internal nodes that are not triple lines, quadruple points or on the surface of the volume", 0.2F));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseTaubinSmoothing_Key, "Use Taubin Smoothing", "Use Taubin's Lambda-Mu algorithm.", false));
   params.insert(std::make_unique<Float32ParameterType>(k_MuFactor_Key, "Mu Factor",
-                                                   "A value that is multiplied by Lambda the result of which is the mu in Taubin's paper. The value should be a negative value.", 0.2F));
+                                                       "A value that is multiplied by Lambda the result of which is the mu in Taubin's paper. The value should be a negative value.", 0.2F));
   params.insert(std::make_unique<Float32ParameterType>(k_TripleLineLambda_Key, "Triple Line Lambda", "Value of λ to apply to nodes designated as triple line nodes.", 0.1f));
   params.insert(std::make_unique<Float32ParameterType>(k_QuadPointLambda_Key, "Quadruple Points Lambda", "Value of λ to apply to nodes designated as quadruple points.", 0.1f));
   params.insert(std::make_unique<Float32ParameterType>(k_SurfacePointLambda_Key, "Outer Points Lambda", "The value of λ to apply to nodes that lie on the outer surface of the volume", 0.0f));
@@ -163,7 +163,7 @@ Result<Arguments> LaplacianSmoothingFilter::FromSIMPLJson(const nlohmann::json& 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_SurfaceTripleLineLambdaKey, k_SurfaceTripleLineLambda_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_SurfaceQuadPointLambdaKey, k_SurfaceQuadPointLambda_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey,
-                                                                                                                                      k_TriangleGeometryDataPath_Key));
+                                                                                                                                        k_TriangleGeometryDataPath_Key));
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshNodeTypeArrayPathKey, k_SurfaceMeshNodeTypeArrayPath_Key));
   results.push_back(

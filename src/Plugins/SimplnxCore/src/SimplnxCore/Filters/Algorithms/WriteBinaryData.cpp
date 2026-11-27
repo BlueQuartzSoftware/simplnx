@@ -36,5 +36,5 @@ Result<> WriteBinaryData::operator()()
   const bool swapEndian = endian::native != endianess;
   // Swap byte order only in the shared writer's page buffer.
   return o_stream_utilities::PrintDataSetsToMultipleFiles(selectedDataArrayPaths, m_DataStructure, dirPath.string(), m_MessageHandler, m_ShouldCancel, m_InputValues->file_extension, true, "", false,
-                                                        false, 0, swapEndian);
+                                                          false, 0, swapEndian);
 }

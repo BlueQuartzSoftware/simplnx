@@ -57,8 +57,9 @@ Parameters WriteStlFileFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_GroupingType_Key, "File Grouping Type", "How to partition the stl files", to_underlying(GroupingType::Features),
-                                                                    ChoicesParameter::ChoicesType{"Features", "Phases and Features", "Single File", "Part Index"})); // sequence dependent DO NOT REORDER
+  params.insertLinkableParameter(
+      std::make_unique<ChoicesParameter>(k_GroupingType_Key, "File Grouping Type", "How to partition the stl files", to_underlying(GroupingType::Features),
+                                         ChoicesParameter::ChoicesType{"Features", "Phases and Features", "Single File", "Part Index"})); // sequence dependent DO NOT REORDER
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputStlDirectory_Key, "Output STL Directory", "Directory to dump the STL file(s) to", fs::path(),
                                                           FileSystemPathParameter::ExtensionsType{}, FileSystemPathParameter::PathType::OutputDir, true));
   params.insert(std::make_unique<StringParameter>(k_OutputStlPrefix_Key, "Output STL File Prefix",
@@ -232,7 +233,8 @@ Result<Arguments> WriteStlFileFilter::FromSIMPLJson(const nlohmann::json& json)
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::OutputFileFilterParameterConverter>(args, json, simpl::k_OutputStlDirectoryKey, k_OutputStlDirectory_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_OutputStlPrefixKey, k_OutputStlPrefix_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_TriangleGeomPath_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_TriangleGeomPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_FeatureIdsPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

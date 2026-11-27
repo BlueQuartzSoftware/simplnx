@@ -67,7 +67,7 @@ DataStructure CreateDualImageGeomDataStructure(CreateImageGeometryAction::Dimens
   }
 
   auto* sampleMultiComponentArrayPtr = unit_test::CreateTestDataArray<int32>(dataStructure, k_SampleMultiComponentArrayPath.getTargetName(), attrMatrixDims, {3},
-                                                                            dataStructure.getDataRefAs<AttributeMatrix>(k_SampleCellDataPath).getId());
+                                                                             dataStructure.getDataRefAs<AttributeMatrix>(k_SampleCellDataPath).getId());
   REQUIRE(sampleMultiComponentArrayPtr != nullptr);
   for(usize index = 0; index < sampleMultiComponentArrayPtr->getNumberOfTuples(); index++)
   {

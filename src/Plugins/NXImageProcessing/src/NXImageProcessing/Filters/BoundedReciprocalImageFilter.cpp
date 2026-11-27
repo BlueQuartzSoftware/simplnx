@@ -87,6 +87,7 @@ Result<> BoundedReciprocalImageFilter::executeImpl(DataStructure& dataStructure,
   const DataPath outputArrayPath = selectedInputArray.replaceName(outputArrayName);
 
   const BoundedReciprocalOperation operation{};
-  return ImageProcessing::ExecuteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64Type>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
+  return ImageProcessing::ExecuteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64Type>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel,
+                                                                                                              messageHandler);
 }
 } // namespace nx::core

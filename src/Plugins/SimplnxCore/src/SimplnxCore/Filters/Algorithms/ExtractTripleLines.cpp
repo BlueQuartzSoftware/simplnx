@@ -477,12 +477,12 @@ Result<> ExtractTripleLines::operator()()
   auto& destVertsRef = tripleLineGeom.getVertices()->getDataStoreRef();
   const bool copyVerticesInBlocks = sourceVertsRef.getStoreType() == IDataStore::StoreType::OutOfCore || destVertsRef.getStoreType() == IDataStore::StoreType::OutOfCore ||
                                     (m_InputValues->source_node_types != nullptr && (m_InputValues->source_node_types->getStoreType() == IDataStore::StoreType::OutOfCore ||
-                                                                                   m_InputValues->destination_node_types->getStoreType() == IDataStore::StoreType::OutOfCore));
+                                                                                     m_InputValues->destination_node_types->getStoreType() == IDataStore::StoreType::OutOfCore));
   Result<> publicationResult;
   if(copyVerticesInBlocks)
   {
-    publicationResult = CopyTripleLineVertices(sourceVertsRef, destVertsRef, {compactToOriginal.data(), compactToOriginal.size()}, m_InputValues->source_node_types, m_InputValues->destination_node_types,
-                                               m_ShouldCancel, progressThrottle);
+    publicationResult = CopyTripleLineVertices(sourceVertsRef, destVertsRef, {compactToOriginal.data(), compactToOriginal.size()}, m_InputValues->source_node_types,
+                                               m_InputValues->destination_node_types, m_ShouldCancel, progressThrottle);
     if(publicationResult.invalid() || m_ShouldCancel)
     {
       return publicationResult;

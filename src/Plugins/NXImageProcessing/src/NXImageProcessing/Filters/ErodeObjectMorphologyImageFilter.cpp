@@ -63,13 +63,14 @@ Parameters ErodeObjectMorphologyImageFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_KernelType_Key, "Kernel Type", "Set the kernel or structuring element used for the morphology.",
                                                    static_cast<uint64>(ImageProcessing::KernelType::Ball), ChoicesParameter::ChoicesType{"Annulus", "Ball", "Box", "Cross"}));
   params.insert(std::make_unique<Float64ParameterType>(k_ObjectValue_Key, "Object Value",
-                                                   "The pixel value of the 'Object' to be eroded. Voxels equal to this value are the object; every other value is background. For an integer input "
-                                                   "image the value must be finite and within the image type's range.",
-                                                   1.0));
-  params.insert(std::make_unique<Float64ParameterType>(k_BackgroundValue_Key, "Background Value",
-                                                   "The value assigned to eroded pixels (painted over the border of the object). For an integer input image the value must be finite and within the "
-                                                   "image type's range.",
-                                                   0.0));
+                                                       "The pixel value of the 'Object' to be eroded. Voxels equal to this value are the object; every other value is background. For an integer input "
+                                                       "image the value must be finite and within the image type's range.",
+                                                       1.0));
+  params.insert(
+      std::make_unique<Float64ParameterType>(k_BackgroundValue_Key, "Background Value",
+                                             "The value assigned to eroded pixels (painted over the border of the object). For an integer input image the value must be finite and within the "
+                                             "image type's range.",
+                                             0.0));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
@@ -116,7 +117,7 @@ IFilter::PreflightResult ErodeObjectMorphologyImageFilter::preflightImpl(const D
   if(inputArray.getNumberOfComponents() != 1)
   {
     return {.output_actions = MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Erode Object Morphology requires a single-component (scalar) input array, but '{}' has {} components.",
-                                                                                          selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
+                                                                                           selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
   }
 
   Result<OutputActions> resultOutputActions =

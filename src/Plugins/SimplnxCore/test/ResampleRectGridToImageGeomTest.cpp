@@ -57,8 +57,8 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Noncubic cell arrays 
   for(usize axisIdx = 0; axisIdx < bounds.size(); ++axisIdx)
   {
     const DataPath boundsPath = k_RectGridGeomPath.createChildPath(boundsNames[axisIdx]);
-    bounds[axisIdx] =
-        Float32ArrayType::Create(dataStructure, boundsNames[axisIdx], data_store_utilities::CreateDataStore<float32>(dataStructure, boundsPath, {dimensions[axisIdx] + 1}, {1}), rectGridGeomPtr->getId());
+    bounds[axisIdx] = Float32ArrayType::Create(dataStructure, boundsNames[axisIdx], data_store_utilities::CreateDataStore<float32>(dataStructure, boundsPath, {dimensions[axisIdx] + 1}, {1}),
+                                               rectGridGeomPtr->getId());
     REQUIRE(bounds[axisIdx] != nullptr);
     for(usize boundIdx = 0; boundIdx <= dimensions[axisIdx]; ++boundIdx)
     {
@@ -68,7 +68,8 @@ TEST_CASE("SimplnxCore::ResampleRectGridToImageGeomFilter: Noncubic cell arrays 
   auto boundsResult = rectGridGeomPtr->setBounds(bounds[0], bounds[1], bounds[2]);
   SIMPLNX_RESULT_REQUIRE_VALID(boundsResult);
 
-  auto* numericPtr = Int32ArrayType::Create(dataStructure, numericPath.getTargetName(), data_store_utilities::CreateDataStore<int32>(dataStructure, numericPath, cellTupleShape, {1}), cellDataPtr->getId());
+  auto* numericPtr =
+      Int32ArrayType::Create(dataStructure, numericPath.getTargetName(), data_store_utilities::CreateDataStore<int32>(dataStructure, numericPath, cellTupleShape, {1}), cellDataPtr->getId());
   REQUIRE(numericPtr != nullptr);
   auto* neighborListPtr = NeighborList<int32>::Create(dataStructure, k_NeighborListArrayName, cellTupleShape, cellDataPtr->getId());
   REQUIRE(neighborListPtr != nullptr);

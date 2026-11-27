@@ -58,15 +58,15 @@ Parameters ComputeSchmidsFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_LoadingDirection_Key, "Loading Direction", "A non-zero loading direction in the sample reference frame",
-                                                         std::vector<float32>({1.0F, 1.0F, 1.0F}), std::vector<std::string>({"X", "Y", "Z"})));
+                                                             std::vector<float32>({1.0F, 1.0F, 1.0F}), std::vector<std::string>({"X", "Y", "Z"})));
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_StoreAngleComponents_Key, "Store Angle Components of Schmid Factor", "Whether to store the angle components for each Feature", false));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_OverrideSystem_Key, "Override Default Slip System", "Allows the user to manually input the slip plane and slip direction", false));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_SlipPlane_Key, "Slip Plane", "A non-zero vector defining the slip plane normal", std::vector<float32>({0.0F, 0.0F, 1.0F}),
-                                                         std::vector<std::string>({"X", "Y", "Z"})));
+                                                             std::vector<std::string>({"X", "Y", "Z"})));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_SlipDirection_Key, "Slip Direction", "A non-zero vector defining the slip direction", std::vector<float32>({1.0F, 0.0F, 0.0F}),
-                                                         std::vector<std::string>({"X", "Y", "Z"})));
+                                                             std::vector<std::string>({"X", "Y", "Z"})));
 
   params.insertSeparator(Parameters::Separator{"Input Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_FeaturePhasesArrayPath_Key, "Phases", "Specifies the Ensemble to which each Feature belongs", DataPath({"Cell Feature Data", "Phases"}),
@@ -141,7 +141,7 @@ IFilter::PreflightResult ComputeSchmidsFilter::preflightImpl(const DataStructure
   if(!tupleValidityCheck)
   {
     return {.output_actions = MakeErrorResult<OutputActions>(-13503, fmt::format("The Feature Phases array '{}' and Average Quaternions array '{}' must have equal tuple counts. {}",
-                                                                                pFeaturePhasesArrayPathValue.toString(), pAvgQuatsArrayPathValue.toString(), tupleValidityCheck.error()))};
+                                                                                 pFeaturePhasesArrayPathValue.toString(), pAvgQuatsArrayPathValue.toString(), tupleValidityCheck.error()))};
   }
 
   if(phasesRef.getNumberOfTuples() == 0)
@@ -164,7 +164,7 @@ IFilter::PreflightResult ComputeSchmidsFilter::preflightImpl(const DataStructure
   if(vectorMagnitude(pLoadingDirectionValue) < std::numeric_limits<float32>::epsilon())
   {
     return {.output_actions = MakeErrorResult<OutputActions>(-13506, fmt::format("Loading Direction <{}, {}, {}> has zero length. Its components must define a non-zero direction.",
-                                                                                pLoadingDirectionValue[0], pLoadingDirectionValue[1], pLoadingDirectionValue[2]))};
+                                                                                 pLoadingDirectionValue[0], pLoadingDirectionValue[1], pLoadingDirectionValue[2]))};
   }
 
   const auto tupleShape = phasesRef.getIDataStore()->getTupleShape();
@@ -212,7 +212,7 @@ IFilter::PreflightResult ComputeSchmidsFilter::preflightImpl(const DataStructure
     if(vectorMagnitude(pSlipDirectionValue) < std::numeric_limits<float32>::epsilon())
     {
       return {.output_actions = MakeErrorResult<OutputActions>(-13508, fmt::format("Slip Direction <{}, {}, {}> has zero length. Its components must define a non-zero direction.",
-                                                                                  pSlipDirectionValue[0], pSlipDirectionValue[1], pSlipDirectionValue[2]))};
+                                                                                   pSlipDirectionValue[0], pSlipDirectionValue[1], pSlipDirectionValue[2]))};
     }
 
     // make sure direction lies in plane

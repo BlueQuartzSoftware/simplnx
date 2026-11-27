@@ -120,8 +120,8 @@ Result<> WriteFeatureOutputBlock(usize featureStart, usize featureCount, const s
  */
 template <typename FeatureSizeFunctorT, typename EquivalentDiameterFunctorT>
 Result<> StoreFeatureOutputs(usize numFeatures, const std::vector<uint64>& featureVoxelCounts, FeatureSizeFunctorT&& featureSizeFunctor, EquivalentDiameterFunctorT&& equivalentDiameterFunctor,
-                             Int32AbstractDataStoreType& numElements, Float32AbstractDataStoreType& volumes, Float32AbstractDataStoreType& equivalentDiameters, ThrottledMessageHandler& progressThrottle,
-                             const std::atomic_bool& shouldCancel)
+                             Int32AbstractDataStoreType& numElements, Float32AbstractDataStoreType& volumes, Float32AbstractDataStoreType& equivalentDiameters,
+                             ThrottledMessageHandler& progressThrottle, const std::atomic_bool& shouldCancel)
 {
   std::vector<int32> numElementsBuffer(k_ChunkTuples);
   std::vector<float32> volumesBuffer(k_ChunkTuples);

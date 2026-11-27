@@ -111,4 +111,4 @@ Result<> WithTransferFailureContext(Result<>&& failure, MakeContext&& makeContex
   AppendTransferFailureContext(failure, std::forward<MakeContext>(makeContext));
   return std::move(failure);
 }
-} // namespace nx::core::MeshingUtilities::detail
+} // namespace nx::core::meshing_utilities::detail

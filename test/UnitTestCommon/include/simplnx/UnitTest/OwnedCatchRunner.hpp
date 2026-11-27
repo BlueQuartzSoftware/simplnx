@@ -66,4 +66,4 @@ inline int RunOwnedCatchSession(int argc, char* argv[])
   }
   return exitCode;
 }
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test

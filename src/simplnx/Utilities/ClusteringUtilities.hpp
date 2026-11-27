@@ -198,4 +198,4 @@ float64 GetDistance(const leftDataType& leftVector, usize leftOffset, const righ
  * tuples to their mapped IDs. Tuples at or beyond totalFeatures remain unchanged.
  */
 [[nodiscard]] SIMPLNX_EXPORT Result<> RandomizeFeatureIds(Int32AbstractDataStoreType& featureIds, usize totalFeatures, std::vector<IArray*>& featureIArrays);
-} // namespace nx::core::ClusterUtilities
+} // namespace nx::core::cluster_utilities

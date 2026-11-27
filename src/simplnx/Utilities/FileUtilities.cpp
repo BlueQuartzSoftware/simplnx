@@ -339,7 +339,7 @@ const IArray& AbstractDataParser::array() const
 }
 
 Result<ParsersVectorType> CreateParsers(const std::vector<CSVType>& dataTypes, const std::vector<bool>& skippedArrays, const DataPath& parentPath, const std::vector<std::string>& headers,
-                                    DataStructure& dataStructure)
+                                        DataStructure& dataStructure)
 {
   ParsersVectorType dataParsers(dataTypes.size());
 
@@ -432,8 +432,8 @@ Result<> FlushParsers(const ParsersVectorType& dataParsers)
   return FlushParsersImpl(dataParsers);
 }
 
-Result<> ParseLine(std::fstream& inStream, const ParsersVectorType& dataParsers, const std::vector<std::string>& headers, const std::vector<char>& delimiters, bool consecutiveDelimiters, usize lineNumber,
-                   usize beginIndex, bool& flushRequired)
+Result<> ParseLine(std::fstream& inStream, const ParsersVectorType& dataParsers, const std::vector<std::string>& headers, const std::vector<char>& delimiters, bool consecutiveDelimiters,
+                   usize lineNumber, usize beginIndex, bool& flushRequired)
 {
   std::string line;
   std::getline(inStream, line);
@@ -540,5 +540,5 @@ Result<std::vector<std::string>> ReadHeaders(const std::string& inputFilePath, u
   auto headers = string_utilities::Split(headersLine, delimiters, !consecutiveDelimiters);
   return {headers};
 }
-} // namespace CSV
-} // namespace nx::core::FileUtilities
+} // namespace csv
+} // namespace nx::core::file_utilities

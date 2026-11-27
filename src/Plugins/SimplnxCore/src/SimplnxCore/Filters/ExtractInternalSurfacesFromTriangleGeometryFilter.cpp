@@ -70,11 +70,11 @@ Parameters ExtractInternalSurfacesFromTriangleGeometryFilter::parameters() const
       "internal surface meets the bounding box. 'Face Labels' removes only the bounding box wall backed by the background (Feature Id 0), which leaves Features flush with the box closed.",
       0, ChoicesParameter::ChoicesType{"Node Type Range", "Face Labels"}));
 
-  params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesPath_Key, "Node Types Array", "Path to the Node Types array", DataPath(), ArraySelectionParameter::AllowedTypeSetType{DataType::int8},
-                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_NodeTypesPath_Key, "Node Types Array", "Path to the Node Types array", DataPath(),
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<VectorInt8ParameterType>(k_NodeTypeRange_Key, "Internal Surface Node Type Min & Max",
-                                                      "The min and max (inclusive) Node Type values that distinguish an internal surface from an external surface", std::vector<int8>{0, 8},
-                                                      std::vector<std::string>{"Min", "Max"}));
+                                                          "The min and max (inclusive) Node Type values that distinguish an internal surface from an external surface", std::vector<int8>{0, 8},
+                                                          std::vector<std::string>{"Min", "Max"}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_FaceLabelsPath_Key, "Face Labels Array", "Path to the Face Labels array", DataPath(),
                                                           ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{2}}));
 
@@ -181,7 +181,7 @@ IFilter::PreflightResult ExtractInternalSurfacesFromTriangleGeometryFilter::pref
   usize numFaces = triangleGeom.getNumberOfFaces();
   usize numVertices = triangleGeom.getNumberOfVertices();
   auto createInternalTrianglesAction = std::make_unique<CreateTriangleGeometryActionType>(internalTrianglesGeomPath, numFaces, numVertices, vertexDataName, faceDataName,
-                                                                                      TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
+                                                                                          TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
   DataPath internalVertexDataPath = createInternalTrianglesAction->getVertexDataPath();
   DataPath internalFaceDataPath = createInternalTrianglesAction->getFaceDataPath();
   actions.appendAction(std::move(createInternalTrianglesAction));

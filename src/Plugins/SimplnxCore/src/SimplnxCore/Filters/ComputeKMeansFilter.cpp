@@ -231,7 +231,7 @@ Result<Arguments> ComputeKMeansFilter::FromSIMPLJson(const nlohmann::json& json)
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_MaskArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayNameKey, k_FeatureIdsArrayName_Key));
   results.push_back(simpl_conversion::Convert2Parameters<simpl_conversion::AMPathBuilderFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, simpl::k_FeatureAttributeMatrixNameKey,
-                                                                                                                k_FeatureAMPath_Key));
+                                                                                                                  k_FeatureAMPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_MeansArrayNameKey, k_MeansArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

@@ -246,8 +246,8 @@ Result<Arguments> RemoveFlaggedTrianglesFilter::FromSIMPLJson(const nlohmann::js
 
   std::vector<Result<>> results;
 
-  results.push_back(
-      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_TriangleGeometryKey, k_SelectedTriangleGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_TriangleGeometryKey,
+                                                                                                                                        k_SelectedTriangleGeometryPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_MaskArrayPath_Key));
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::DataContainerCreationFilterParameterConverter>(args, json, simpl::k_ReducedTriangleGeometryKey, k_CreatedTriangleGeometryPath_Key));

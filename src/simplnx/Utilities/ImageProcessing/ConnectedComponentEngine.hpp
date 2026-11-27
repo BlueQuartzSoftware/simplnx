@@ -344,7 +344,8 @@ Result<ConnectedComponent2DPlan> CreateConnectedComponent2DPlan(usize dimX, usiz
   }
   plan.core_columns = std::min(dimX, (targetBytes - k_HaloBytes) / bytesPerColumn);
   usize tileColumnBytes = 0;
-  if(plan.core_columns == 0 || !ConnectedComponentCheckedMultiply(plan.core_columns, bytesPerColumn, tileColumnBytes) || !ConnectedComponentCheckedAdd(k_HaloBytes, tileColumnBytes, plan.resident_bytes))
+  if(plan.core_columns == 0 || !ConnectedComponentCheckedMultiply(plan.core_columns, bytesPerColumn, tileColumnBytes) ||
+     !ConnectedComponentCheckedAdd(k_HaloBytes, tileColumnBytes, plan.resident_bytes))
   {
     return MakeErrorResult<ConnectedComponent2DPlan>(-8374, fmt::format("Connected-component true-2-D tiled plan overflowed for dimensions {} x {} and {}-byte input values.", dimX, dimY, sizeof(T)));
   }
@@ -1135,7 +1136,8 @@ Result<> Pass1TwoDimensionalBlocks(const AbstractDataStore<T>& inStore, Connecte
 
 template <class T, class Pred>
 Result<> Pass1TwoDimensionalTiles(const AbstractDataStore<T>& inStore, ConnectedComponentProvisionalStore& provisional, const SizeVec3Type& dims, const Pred& pred, bool fullyConnected,
-                                  const std::atomic_bool& shouldCancel, CcUnionFind& uf, std::vector<uint64>* sizeByLabel, const ConnectedComponent2DPlan& plan, const ProgressCallbackType& reportProgress)
+                                  const std::atomic_bool& shouldCancel, CcUnionFind& uf, std::vector<uint64>* sizeByLabel, const ConnectedComponent2DPlan& plan,
+                                  const ProgressCallbackType& reportProgress)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
@@ -1524,8 +1526,9 @@ Result<uint32> CountConnectedComponents(const AbstractDataStore<T>& inStore, con
   }
   detail::CcUnionFind uf;
   std::vector<uint64> sizeByLabel; // sizeByLabel[provisional label] = total run length for that (pre-union) label
-  Result<> pass1Result = dims[2] == 1 ? detail::Pass1TwoDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, uf, &sizeByLabel, target2DBytes, detail::ProgressCallbackType{}) :
-                                        detail::Pass1ThreeDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, uf, &sizeByLabel, detail::ProgressCallbackType{});
+  Result<> pass1Result = dims[2] == 1 ?
+                             detail::Pass1TwoDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, uf, &sizeByLabel, target2DBytes, detail::ProgressCallbackType{}) :
+                             detail::Pass1ThreeDimensional<T, Pred>(inStore, nullptr, dims, pred, fullyConnected, shouldCancel, uf, &sizeByLabel, detail::ProgressCallbackType{});
   if(pass1Result.invalid())
   {
     return ConvertResultTo<uint32>(std::move(pass1Result), uint32{0});

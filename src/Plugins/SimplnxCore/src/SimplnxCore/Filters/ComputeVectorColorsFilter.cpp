@@ -135,7 +135,8 @@ Result<Arguments> ComputeVectorColorsFilter::FromSIMPLJson(const nlohmann::json&
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_UseGoodVoxelsKey, k_UseMask_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_VectorsArrayPathKey, k_VectorsArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellVectorColorsArrayNameKey, k_CellVectorColorsArrayName_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellVectorColorsArrayNameKey, k_CellVectorColorsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

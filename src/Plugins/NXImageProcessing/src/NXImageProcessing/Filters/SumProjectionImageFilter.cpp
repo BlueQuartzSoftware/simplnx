@@ -121,7 +121,7 @@ Result<> SumProjectionImageFilter::executeImpl(DataStructure& dataStructure, con
   const DataPath outputArrayPath = ImageProcessing::ProjectionOutputArrayPath(dataStructure, imageGeomPath, performInPlace, outputGeomName, outputArrayName);
 
   const ImageProcessing::SumReduce reduce{};
-  return ImageProcessing::ExecuteAxisProjectionImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64Type>(dataStructure, imageGeomPath, selectedInputArray, outputArrayPath,
-                                                                                                                        static_cast<usize>(projectionDimension), reduce, shouldCancel, messageHandler);
+  return ImageProcessing::ExecuteAxisProjectionImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysFloat64Type>(
+      dataStructure, imageGeomPath, selectedInputArray, outputArrayPath, static_cast<usize>(projectionDimension), reduce, shouldCancel, messageHandler);
 }
 } // namespace nx::core

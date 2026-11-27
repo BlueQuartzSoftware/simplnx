@@ -45,4 +45,4 @@ struct DatasetProbeInfo
  */
 std::optional<DatasetProbeInfo> ProbeHdf5Dataset(const std::filesystem::path& filePath, const std::string& datasetPath);
 
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test

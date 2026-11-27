@@ -105,5 +105,5 @@ std::tuple<float32, float32, float32> SIMPLNX_EXPORT FRgb(nx::core::RgbaType rgb
  */
 void SIMPLNX_EXPORT GetColorTable(int numColors, std::vector<float32>& colorsOut);
 
-} // namespace RgbColor
+} // namespace rgb_color
 } // namespace nx::core

@@ -115,7 +115,7 @@ Result<> DataGroupSelectionParameter::validatePath(const DataStructure& dataStru
   }
 
   return MakeErrorResult(filter_parameter::constants::k_ValidateAllowedTypeError, fmt::format("{}Group at path '{}' was of type '{}', but only {} are allowed", prefix, value.toString(),
-                                                                                               dataObjectPtr->getTypeName(), BaseGroup::StringListFromGroupType(m_AllowedTypes)));
+                                                                                              dataObjectPtr->getTypeName(), BaseGroup::StringListFromGroupType(m_AllowedTypes)));
 }
 
 Result<std::any> DataGroupSelectionParameter::resolve(DataStructure& dataStructure, const std::any& value) const

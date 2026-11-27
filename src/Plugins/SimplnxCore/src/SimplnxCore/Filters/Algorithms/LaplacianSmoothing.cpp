@@ -107,8 +107,8 @@ Result<> ReadSmoothingLambdas(const Int8AbstractDataStoreType& nodes, std::vecto
   const usize capacity = static_cast<usize>(std::min<uint64>(count, reservation.sizeBytes() / sizeof(int8)));
   if(capacity == 0)
   {
-    return MakeErrorResult(-564, fmt::format("Smoothing node types at '{}' requested {} working bytes and received {}. At least {} bytes are required.", input.p_surface_mesh_node_type_array_path.toString(),
-                                             count, reservation.sizeBytes(), sizeof(int8)));
+    return MakeErrorResult(-564, fmt::format("Smoothing node types at '{}' requested {} working bytes and received {}. At least {} bytes are required.",
+                                             input.p_surface_mesh_node_type_array_path.toString(), count, reservation.sizeBytes(), sizeof(int8)));
   }
   std::vector<int8> page(capacity);
   Result<> result;
@@ -269,7 +269,7 @@ Result<> AccumulateSmoothingDeltas(SmoothingWorkspace& work, const AbstractDataS
       if(result.invalid())
       {
         return meshing_utilities::detail::WithTransferFailureContext(std::move(result),
-                                                                    [&] { return MakeErrorResult(-562, fmt::format("Error reading smoothing edges at edge {} ({} edges).", first, count)); });
+                                                                     [&] { return MakeErrorResult(-562, fmt::format("Error reading smoothing edges at edge {} ({} edges).", first, count)); });
       }
     }
     const auto block = nonstd::span<const SmoothingIndexType>(work.Edges.data(), work.Edges.size()).subspan(work.cache_edges ? first * 2 : 0, count * 2);
@@ -288,7 +288,7 @@ Result<> AccumulateSmoothingDeltas(SmoothingWorkspace& work, const AbstractDataS
       if(result.invalid())
       {
         return meshing_utilities::detail::WithTransferFailureContext(std::move(result),
-                                                                    [&] { return MakeErrorResult(-571, fmt::format("Error gathering smoothing coordinates for edge {} ({} edges).", first, count)); });
+                                                                     [&] { return MakeErrorResult(-571, fmt::format("Error gathering smoothing coordinates for edge {} ({} edges).", first, count)); });
       }
     }
     for(usize edge = 0; edge < count; ++edge)
@@ -458,7 +458,7 @@ Result<> PublishSmoothedCoordinates(SmoothingWorkspace& work, Float32AbstractDat
     if(result.invalid())
     {
       return meshing_utilities::detail::WithTransferFailureContext(std::move(result),
-                                                                  [&] { return MakeErrorResult(-563, fmt::format("Error writing smoothed XYZ tuples at vertex {} ({} vertices).", first, count)); });
+                                                                   [&] { return MakeErrorResult(-563, fmt::format("Error writing smoothed XYZ tuples at vertex {} ({} vertices).", first, count)); });
     }
     first += count;
   }
@@ -671,7 +671,8 @@ Result<> LaplacianSmoothing::edgeBasedSmoothing()
       result = MergeResults(std::move(result), vertDataStoreRef.copyFromBuffer(0, nonstd::span<const float>(vertices.data(), vertices.size())));
       if(result.invalid())
       {
-        return MergeResults(std::move(result), MakeErrorResult(-563, fmt::format("Error writing smoothed vertices for geometry at path '{}'.", m_InputValues->p_triangle_geometry_data_path.toString())));
+        return MergeResults(std::move(result),
+                            MakeErrorResult(-563, fmt::format("Error writing smoothed vertices for geometry at path '{}'.", m_InputValues->p_triangle_geometry_data_path.toString())));
       }
     }
     return std::move(result);

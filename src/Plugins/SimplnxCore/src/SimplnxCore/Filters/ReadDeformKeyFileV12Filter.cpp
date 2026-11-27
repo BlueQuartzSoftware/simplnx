@@ -135,9 +135,9 @@ IFilter::PreflightResult ReadDeformKeyFileV12Filter::preflightImpl(const DataStr
 
   // Read from the cache and create objects
   {
-    auto createAction =
-        std::make_unique<CreateQuadGeometryActionType>(pQuadGeomPathValue, SHeaderCache[m_InstanceId].cell_attr_mat_tuple_count, SHeaderCache[m_InstanceId].vertex_attr_mat_tuple_count,
-                                                   vertexDataPath.getTargetName(), cellDataPath.getTargetName(), nx::core::QuadGeom::k_SharedVertexListName, nx::core::QuadGeom::k_SharedFacesListName);
+    auto createAction = std::make_unique<CreateQuadGeometryActionType>(pQuadGeomPathValue, SHeaderCache[m_InstanceId].cell_attr_mat_tuple_count, SHeaderCache[m_InstanceId].vertex_attr_mat_tuple_count,
+                                                                       vertexDataPath.getTargetName(), cellDataPath.getTargetName(), nx::core::QuadGeom::k_SharedVertexListName,
+                                                                       nx::core::QuadGeom::k_SharedFacesListName);
     resultOutputActions.value().appendAction(std::move(createAction));
   }
 

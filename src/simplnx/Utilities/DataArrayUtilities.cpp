@@ -598,7 +598,7 @@ void CreateDataArrayActions(const DataStructure& dataStructure, const AttributeM
     resultOutputActions.value().appendAction(std::make_unique<CreateArrayAction>(dataType, sourceAttrMatPtr->getShape(), std::move(componentShape), dataArrayPath));
   }
 }
-} // namespace TransferGeometryElementData
+} // namespace transfer_geometry_element_data
 } // namespace nx::core
 
 // -----------------------------------------------------------------------------
@@ -711,7 +711,7 @@ Result<ShapeType> nx::core::ConvertDimensions(const std::string& dimensions, con
     if(value == 0 && zeroPolicy == ZeroDimensionPolicy::Reject)
     {
       return MakeErrorResult<ShapeType>(dimension_conversion::k_ZeroDimension, fmt::format("{} dimension token '{}' at index {} cannot be 0. Use unsigned decimal integers in [1, {}].", name, token,
-                                                                                          index, std::numeric_limits<usize>::max()));
+                                                                                           index, std::numeric_limits<usize>::max()));
     }
     shape.push_back(static_cast<usize>(value));
     if(comma == std::string::npos)

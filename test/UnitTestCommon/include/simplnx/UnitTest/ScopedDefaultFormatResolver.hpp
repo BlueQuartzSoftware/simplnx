@@ -21,4 +21,4 @@ namespace nx::core::unit_test
   DataStructure::SetDefaultFormatResolver(std::move(resolver));
   return restoreResolver;
 }
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test

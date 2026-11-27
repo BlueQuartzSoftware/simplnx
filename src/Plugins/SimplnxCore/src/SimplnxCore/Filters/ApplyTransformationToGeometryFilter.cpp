@@ -92,11 +92,11 @@ Parameters ApplyTransformationToGeometryFilter::parameters() const
   params.insert(std::make_unique<DynamicTableParameter>(k_ManualTransformationMatrix_Key, "Transformation Matrix", "The 4x4 Transformation Matrix", defaultTable, tableInfo));
 
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_Rotation_Key, "Rotation Axis-Angle", "<xyz> w (w in degrees)", std::vector<float32>{0.0F, 0.0F, 1.0F, 90.0F},
-                                                         std::vector<std::string>{"x", "y", "z", "w (Deg)"}));
+                                                             std::vector<std::string>{"x", "y", "z", "w (Deg)"}));
   params.insert(
       std::make_unique<VectorFloat32ParameterType>(k_Translation_Key, "Translation", "A pure translation vector", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_Scale_Key, "Scale", "0>= value < 1: Shrink, value = 1: No transform, value > 1.0 enlarge", std::vector<float32>{1.0F, 1.0F, 1.0F},
-                                                         std::vector<std::string>{"X", "Y", "Z"}));
+                                                             std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_ComputedTransformationMatrix_Key, "Precomputed Transformation Matrix Path", "A precomputed 4x4 transformation matrix", DataPath{},
                                                           ArraySelectionParameter::AllowedTypeSetType{DataType::float32}));

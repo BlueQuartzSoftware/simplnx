@@ -100,8 +100,8 @@ public:
    */
   StatisticsByFeatureImpl(bool length, bool min, bool max, bool mean, bool mode, bool stdDeviation, bool summation, const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask,
                           const Int32AbstractDataStoreType& featureIds, const AbstractDataStore<T>& source, BoolArrayType* featureHasDataArray, UInt64ArrayType* lengthArray, DataArray<T>* minArray,
-                          DataArray<T>* maxArray, Float32ArrayType* meanArray, NeighborList<T>* modeArray, Float32ArrayType* stdDevArray, Float32ArrayType* summationArray, const std::atomic_bool& shouldCancel,
-                          ComputeArrayStatistics& algorithm)
+                          DataArray<T>* maxArray, Float32ArrayType* meanArray, NeighborList<T>* modeArray, Float32ArrayType* stdDevArray, Float32ArrayType* summationArray,
+                          const std::atomic_bool& shouldCancel, ComputeArrayStatistics& algorithm)
   : m_Length(length)
   , m_Min(min)
   , m_Max(max)
@@ -601,8 +601,8 @@ public:
    * @param algorithm Serializes progress and status messages.
    * @pre Referenced arrays, mask, and algorithm outlive this worker.
    */
-  MedianByFeatureImpl(const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, const Int32AbstractDataStoreType& featureIds, const AbstractDataStore<T>& source, bool findMedian, bool findNumUnique,
-                      Float32ArrayType* medianArray, Int32ArrayType* numUniqueValuesArray, DataArray<uint64>* lengthArray, ComputeArrayStatistics& algorithm)
+  MedianByFeatureImpl(const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, const Int32AbstractDataStoreType& featureIds, const AbstractDataStore<T>& source, bool findMedian,
+                      bool findNumUnique, Float32ArrayType* medianArray, Int32ArrayType* numUniqueValuesArray, DataArray<uint64>* lengthArray, ComputeArrayStatistics& algorithm)
   : m_FindMedian(findMedian)
   , m_FindNumUniqueValues(findNumUnique)
   , m_MedianArray(medianArray)
@@ -1213,9 +1213,9 @@ struct ComputeArrayStatisticsByFeatureFunctor
 
     const auto& featureIds = featureIdsPtr->getDataStoreRef();
     auto& data = inputArrayPtr->getDataStoreRef();
-    StatisticsByFeatureImpl<T> classToExecute = StatisticsByFeatureImpl<T>(inputValues->find_length, inputValues->find_min, inputValues->find_max, inputValues->find_mean, inputValues->find_mode,
-                                                                           inputValues->find_std_deviation, inputValues->find_summation, maskCompare, featureIds, data, featureHasDataPtr, lengthArrayPtr,
-                                                                           minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, shouldCancel, algorithm);
+    StatisticsByFeatureImpl<T> classToExecute = StatisticsByFeatureImpl<T>(
+        inputValues->find_length, inputValues->find_min, inputValues->find_max, inputValues->find_mean, inputValues->find_mode, inputValues->find_std_deviation, inputValues->find_summation,
+        maskCompare, featureIds, data, featureHasDataPtr, lengthArrayPtr, minArrayPtr, maxArrayPtr, meanArrayPtr, modeArrayPtr, stdDevArrayPtr, summationArrayPtr, shouldCancel, algorithm);
     // Weight tuple scans by the feature range so progress does not depend on TBB partitioning.
     const usize tuplePasses = inputValues->find_std_deviation ? 2 : 1;
     algorithm.resetProgress(numFeatures * (data.getNumberOfTuples() * tuplePasses + 1));
@@ -1597,8 +1597,8 @@ Result<StatisticsGroupLayout> ResolveGroupLayout(const ComputeArrayStatisticsInp
       }
       break;
     default:
-      return MakeErrorResult<StatisticsGroupLayout>(
-          -506670, fmt::format("ComputeArrayStatistics: unknown feature ID range control {} for observed FeatureIds [{}, {}].", inputValues.range_type, observedBounds.minimum, observedBounds.maximum));
+      return MakeErrorResult<StatisticsGroupLayout>(-506670, fmt::format("ComputeArrayStatistics: unknown feature ID range control {} for observed FeatureIds [{}, {}].", inputValues.range_type,
+                                                                         observedBounds.minimum, observedBounds.maximum));
     }
   }
 
@@ -1959,8 +1959,8 @@ Result<> GenerateScanlineStatistics(DataStructure& dataStructure, const IDataArr
       {
         for(auto& error : result.errors())
         {
-          error.message =
-              fmt::format("ComputeArrayStatistics: bulk read failed for array '{}' over tuple range [{}, {}): {}", inputValues.feature_ids_array_path.toString(), offset, offset + count, error.message);
+          error.message = fmt::format("ComputeArrayStatistics: bulk read failed for array '{}' over tuple range [{}, {}): {}", inputValues.feature_ids_array_path.toString(), offset, offset + count,
+                                      error.message);
         }
         return result;
       }

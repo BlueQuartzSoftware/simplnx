@@ -39,7 +39,7 @@ const std::vector<float32> k_NoSampleTransform = {0.0F, 0.0F, 1.0F, 0.0F};
 const std::vector<float32> k_HedmEulerTransform = {0.0F, 0.0F, 1.0F, 0.0F};
 const std::vector<float32> k_HedmSampleTransform = {0.0F, 0.0F, 1.0F, 0.0F};
 
-} // namespace EbsdToH5EbsdInputConstants
+} // namespace ebsd_to_h5_ebsd_input_constants
 
 struct ORIENTATIONANALYSIS_EXPORT EbsdToH5EbsdInputValues
 {

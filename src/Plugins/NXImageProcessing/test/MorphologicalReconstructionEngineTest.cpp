@@ -814,9 +814,21 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: adaptive persis
       DataStore<int16> maskStore = MakeStore(mask, k_DimX, k_DimY, k_DimZ);
       DataStore<int16> outputStore(tupleShape, componentShape, int16{0});
       const ReconstructionMarkerOptions options{.source = source, .height = 0.0};
-      ReconstructSweep<int16, true> sweep{
-          maskStore, maskStore, outputStore, SizeVec3Type{k_DimX, k_DimY, k_DimZ}, op, fullyConnected, shouldCancel, messageHandler, 3 * k_PlaneValues, std::numeric_limits<usize>::max(), options, 0, 0,
-          false,     0};
+      ReconstructSweep<int16, true> sweep{maskStore,
+                                          maskStore,
+                                          outputStore,
+                                          SizeVec3Type{k_DimX, k_DimY, k_DimZ},
+                                          op,
+                                          fullyConnected,
+                                          shouldCancel,
+                                          messageHandler,
+                                          3 * k_PlaneValues,
+                                          std::numeric_limits<usize>::max(),
+                                          options,
+                                          0,
+                                          0,
+                                          false,
+                                          0};
       REQUIRE(sweep().valid());
 
       std::vector<int16> actual(k_VolumeValues);
@@ -901,13 +913,15 @@ TEST_CASE("NXImageProcessing::MorphologicalReconstructionEngine: validates dimen
 
   SECTION("XY product overflow")
   {
-    const Result<> result = ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3Type{std::numeric_limits<usize>::max(), 2, 1}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
+    const Result<> result =
+        ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3Type{std::numeric_limits<usize>::max(), 2, 1}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8640);
   }
   SECTION("XYZ product overflow")
   {
-    const Result<> result = ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3Type{std::numeric_limits<usize>::max(), 1, 2}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
+    const Result<> result =
+        ReconstructSweep<int8>{markerStore, maskStore, outStore, SizeVec3Type{std::numeric_limits<usize>::max(), 1, 2}, ReconstructOp::Dilation, false, shouldCancel, messageHandler}();
     REQUIRE(result.invalid());
     REQUIRE(result.errors().front().code == -8641);
   }

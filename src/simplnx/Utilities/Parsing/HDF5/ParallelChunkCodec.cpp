@@ -1458,5 +1458,5 @@ WarningCollectionType MakeSuccessWarningsForTesting(const std::filesystem::path*
   }
   return WarningCollectionType{};
 }
-} // namespace nx::core::BoundedRead
+} // namespace nx::core::bounded_read
 #endif

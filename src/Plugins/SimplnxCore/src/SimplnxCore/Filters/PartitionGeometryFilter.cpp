@@ -133,7 +133,8 @@ std::string GenerateInputGeometryDisplayText(const SizeVec3Type& dims, const Flo
  * partitioning scheme geometry fits the input geometry or not.
  * @return The text description of the partitioning scheme geometry.
  */
-std::string GeneratePartitioningSchemeDisplayText(const SizeVec3Type& psDims, const FloatVec3Type& psOrigin, const FloatVec3Type& psSpacing, const IGeometry::LengthUnit& lengthUnits, const IGeometry& iGeom)
+std::string GeneratePartitioningSchemeDisplayText(const SizeVec3Type& psDims, const FloatVec3Type& psOrigin, const FloatVec3Type& psSpacing, const IGeometry::LengthUnit& lengthUnits,
+                                                  const IGeometry& iGeom)
 {
   const float32 xRangeMax = (psOrigin[0] + (static_cast<float32>(psDims[0]) * psSpacing[0]));
   const float32 xDelta = static_cast<float32>(psDims[0]) * psSpacing[0];
@@ -192,7 +193,7 @@ Result<PartitionGeometry::PSGeomInfo> GeneratePartitioningSchemeInfo(const Geom&
   auto pNumberOfCellsPerAxisValue = filterArgs.value<VectorInt32ParameterType::ValueType>(PartitionGeometryFilter::k_NumberOfCellsPerAxis_Key);
 
   const SizeVec3Type numOfPartitionsPerAxisValue = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]),
-                                                static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
+                                                    static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
 
   PartitionGeometry::PSGeomInfo psGeomMetadata;
 
@@ -333,18 +334,18 @@ Parameters PartitionGeometryFilter::parameters() const
                                                                     "Mode can be 'Basic (0)', 'Advanced (1)', 'Bounding Box (2)', 'Existing Partition Grid (3)'", 0, ::k_Choices));
   params.insert(std::make_unique<Int32ParameterType>(k_StartingFeatureID_Key, "Starting Feature ID", "The value to start the partition grid's feature ids at.", 1));
   params.insert(std::make_unique<Int32ParameterType>(k_OutOfBoundsFeatureID_Key, "Out-Of-Bounds Feature ID",
-                                                 "The value used as the feature id for voxels/nodes that are outside the bounds of the partition grid.", 0));
+                                                     "The value used as the feature id for voxels/nodes that are outside the bounds of the partition grid.", 0));
   params.insert(std::make_unique<VectorInt32ParameterType>(k_NumberOfCellsPerAxis_Key, "Number Of Cells Per Axis", "The number of cells along each axis of the partition grid",
-                                                       std::vector<int32>({5, 5, 5}), std::vector<std::string>({"X", "Y", "Z"})));
-  params.insert(std::make_unique<VectorFloat32ParameterType>(k_PartitionGridOrigin_Key, "Partition Grid Origin", "The origin of the generated partition geometry", std::vector<float32>({0.0F, 0.0F, 0.0F}),
-                                                         std::vector<std::string>({"X", "Y", "Z"})));
+                                                           std::vector<int32>({5, 5, 5}), std::vector<std::string>({"X", "Y", "Z"})));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_PartitionGridOrigin_Key, "Partition Grid Origin", "The origin of the generated partition geometry",
+                                                             std::vector<float32>({0.0F, 0.0F, 0.0F}), std::vector<std::string>({"X", "Y", "Z"})));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_CellLength_Key, "Cell Length (Physical Units)",
-                                                         "The length in physical units for each cell in the partition grid. The physical units are automatically set by the input geometry.",
-                                                         std::vector<float32>({1.0F, 1.0F, 1.0F}), std::vector<std::string>({"X", "Y", "Z"})));
+                                                             "The length in physical units for each cell in the partition grid. The physical units are automatically set by the input geometry.",
+                                                             std::vector<float32>({1.0F, 1.0F, 1.0F}), std::vector<std::string>({"X", "Y", "Z"})));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_MinGridCoord_Key, "Minimum Grid Coordinate", "Minimum grid coordinate used to create the partition grid",
-                                                         std::vector<float32>({0.0F, 0.0F, 0.0F}), std::vector<std::string>({"X", "Y", "Z"})));
+                                                             std::vector<float32>({0.0F, 0.0F, 0.0F}), std::vector<std::string>({"X", "Y", "Z"})));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_MaxGridCoord_Key, "Maximum Grid Coordinate", "Maximum grid coordinate used to create the partition grid",
-                                                         std::vector<float32>({10.0F, 10.0F, 10.0F}), std::vector<std::string>({"X", "Y", "Z"})));
+                                                             std::vector<float32>({10.0F, 10.0F, 10.0F}), std::vector<std::string>({"X", "Y", "Z"})));
   params.insert(std::make_unique<GeometrySelectionParameter>(k_ExistingPartitionGridPath_Key, "Existing Partition Grid",
                                                              "This is an existing Image Geometry that defines the partition grid that will be used.", DataPath{},
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
@@ -429,7 +430,8 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
   auto pPartitionIdsArrayNameValue = filterArgs.value<std::string>(k_PartitionIdsArrayName_Key);
   auto pUseVertexMask = filterArgs.value<bool>(k_UseVertexMask_Key);
 
-  const SizeVec3Type numberOfPartitionsPerAxis = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]), static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
+  const SizeVec3Type numberOfPartitionsPerAxis = {static_cast<usize>(pNumberOfCellsPerAxisValue[0]), static_cast<usize>(pNumberOfCellsPerAxisValue[1]),
+                                                  static_cast<usize>(pNumberOfCellsPerAxisValue[2])};
 
   const auto& attrMatrix = dataStructure.getDataRefAs<AttributeMatrix>(pInputGeomCellAMPathValue);
   const auto& iGeom = dataStructure.getDataRefAs<IGeometry>({pInputGeometryToPartitionValue});
@@ -583,7 +585,8 @@ IFilter::PreflightResult PartitionGeometryFilter::preflightImpl(const DataStruct
 
     dap = pPartitionGridGeomValue;
     dap = dap.createChildPath(pPartitionGridCellAMNameValue).createChildPath(pPartitionGridFeatureIDsNameValue);
-    action = std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{psMetadata.geometry_dims[2], psMetadata.geometry_dims[1], psMetadata.geometry_dims[0]}, std::vector<usize>{1}, dap);
+    action =
+        std::make_unique<CreateArrayAction>(DataType::int32, std::vector<usize>{psMetadata.geometry_dims[2], psMetadata.geometry_dims[1], psMetadata.geometry_dims[0]}, std::vector<usize>{1}, dap);
     resultOutputActions.value().appendAction(std::move(action));
   }
 

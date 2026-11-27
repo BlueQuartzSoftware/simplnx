@@ -65,9 +65,9 @@ Parameters ExtractFeatureBoundaries2DFilter::parameters() const
       ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Z Value Options"});
-  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_ZValueChoice_Key, "Z Value Source", "Select the source for the Z coordinate of the generated vertices",
-                                                                    to_underlying(ExtractFeatureBoundaries2DInputValues::ZValueChoiceType::UseMinZValue),
-                                                                    ChoicesParameter::ChoicesType{"Use min z value from Image geometry", "Use max z value from Image geometry", "Use Custom z Offset"}));
+  params.insertLinkableParameter(std::make_unique<ChoicesParameter>(
+      k_ZValueChoice_Key, "Z Value Source", "Select the source for the Z coordinate of the generated vertices", to_underlying(ExtractFeatureBoundaries2DInputValues::ZValueChoiceType::UseMinZValue),
+      ChoicesParameter::ChoicesType{"Use min z value from Image geometry", "Use max z value from Image geometry", "Use Custom z Offset"}));
   params.insert(std::make_unique<Float32ParameterType>(k_CustomZValue_Key, "Custom Z Value", "The custom Z offset value for the generated vertices", 0.0f));
 
   // Link the custom Z value parameter to only show when "Use Custom z Offset" is selected
@@ -136,8 +136,9 @@ IFilter::PreflightResult ExtractFeatureBoundaries2DFilter::preflightImpl(const D
   usize maxVertices = maxEdges * 2; // Conservative estimate. It will be reduced by deduplication
 
   // Create the Edge Geometry action
-  auto createEdgeGeomAction = std::make_unique<CreateEdgeGeometryActionType>(pOutputEdgeGeometryPathValue, maxEdges, maxVertices, INodeGeometry0D::k_VertexAttributeMatrixName,
-                                                                         INodeGeometry1D::k_EdgeAttributeMatrixName, INodeGeometry0D::k_SharedVertexListName, INodeGeometry1D::k_SharedEdgeListName);
+  auto createEdgeGeomAction =
+      std::make_unique<CreateEdgeGeometryActionType>(pOutputEdgeGeometryPathValue, maxEdges, maxVertices, INodeGeometry0D::k_VertexAttributeMatrixName, INodeGeometry1D::k_EdgeAttributeMatrixName,
+                                                     INodeGeometry0D::k_SharedVertexListName, INodeGeometry1D::k_SharedEdgeListName);
   resultOutputActions.value().appendAction(std::move(createEdgeGeomAction));
 
   return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};

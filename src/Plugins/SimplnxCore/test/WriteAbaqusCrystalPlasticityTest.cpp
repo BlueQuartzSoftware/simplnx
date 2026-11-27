@@ -166,8 +166,9 @@ public:
   static void RequireOocStoreExecution()
   {
     const AlgorithmPathExecutionCounts counts = GetAlgorithmPathExecutionCounts();
-    INFO("Dispatch counts: in-core=" << counts.in_core << ", OOC=" << counts.out_of_core << ", OOC/resident=" << counts.out_of_core_on_in_memory_store << ", OOC/OOC=" << counts.out_of_core_on_out_of_core_store
-                                     << ", in-core/resident=" << counts.in_core_on_in_memory_store << ", in-core/OOC=" << counts.in_core_on_out_of_core_store);
+    INFO("Dispatch counts: in-core=" << counts.in_core << ", OOC=" << counts.out_of_core << ", OOC/resident=" << counts.out_of_core_on_in_memory_store
+                                     << ", OOC/OOC=" << counts.out_of_core_on_out_of_core_store << ", in-core/resident=" << counts.in_core_on_in_memory_store
+                                     << ", in-core/OOC=" << counts.in_core_on_out_of_core_store);
     REQUIRE(counts.out_of_core > 0);
     REQUIRE(counts.in_core == 0);
     REQUIRE(counts.out_of_core_on_out_of_core_store > 0);

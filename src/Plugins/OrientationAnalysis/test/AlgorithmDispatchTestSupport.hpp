@@ -30,4 +30,4 @@ enum class AlgorithmDispatchPath : uint8
  * residency. The function crosses the plugin boundary for the test witness.
  */
 ORIENTATIONANALYSIS_EXPORT AlgorithmDispatchPath GetAlgorithmDispatchPathFromOrientationAnalysisPlugin();
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test

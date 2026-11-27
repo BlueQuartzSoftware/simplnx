@@ -65,7 +65,7 @@ Parameters ResampleRectGridToImageGeomFilter::parameters() const
       MultiArraySelectionParameter::AllowedTypeSetType{IArray::ArrayType::DataArray, IArray::ArrayType::StringArray, IArray::ArrayType::NeighborListArray}, GetAllDataTypes()));
   params.insertSeparator(Parameters::Separator{"Output Image Geometry"});
   params.insert(std::make_unique<VectorInt32ParameterType>(k_Dimensions_Key, "Dimensions (Voxels)", "The image geometry voxel dimensions in which to re-sample the rectilinear grid geometry",
-                                                       std::vector<int32>{128, 128, 128}, std::vector<std::string>{"x", "y", "z"}));
+                                                           std::vector<int32>{128, 128, 128}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<DataGroupCreationParameter>(k_ImageGeometryPath_Key, "Created Image Geometry", "Path to the created Image Geometry", DataPath({"Image Geometry"})));
   params.insert(std::make_unique<DataObjectNameParameter>(k_ImageGeomCellAttributeMatrixName_Key, "Cell Attribute Matrix", "The name of the cell data Attribute Matrix created with the Image Geometry",
                                                           ImageGeom::k_CellAttributeMatrixName));
@@ -234,7 +234,8 @@ Result<Arguments> ResampleRectGridToImageGeomFilter::FromSIMPLJson(const nlohman
   std::vector<Result<>> results;
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_RectilinearGridPathKey, k_RectilinearGridPath_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
   // Rect Grid Geometry description parameter is not applicable in NX
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::IntVec3FilterParameterConverterType>(args, json, simpl::k_DimensionsKey, k_Dimensions_Key));
   // Created Geometry description is not applicable in NX

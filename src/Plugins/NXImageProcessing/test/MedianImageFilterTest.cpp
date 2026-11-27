@@ -237,7 +237,8 @@ TEST_CASE("NXImageProcessing::BoxNeighborhoodEngine: bounded 2D blocks and tiles
       }
 
       std::atomic_bool shouldCancel{false};
-      Result<> applyResult = ImageProcessing::ApplyBoxNeighborhood(inputStore, outputStore, SizeVec3Type{k_MedianTestDimX, k_MedianTestDimY, 1}, k_MedianTestRadius, median, shouldCancel, {}, targetBytes);
+      Result<> applyResult =
+          ImageProcessing::ApplyBoxNeighborhood(inputStore, outputStore, SizeVec3Type{k_MedianTestDimX, k_MedianTestDimY, 1}, k_MedianTestRadius, median, shouldCancel, {}, targetBytes);
       SIMPLNX_RESULT_REQUIRE_VALID(applyResult);
 
       std::vector<int32> actual(k_MedianTestValues);

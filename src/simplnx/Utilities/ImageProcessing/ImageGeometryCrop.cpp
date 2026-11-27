@@ -70,7 +70,7 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
     preflightUpdatedValues.push_back({"Crop Dimensions", cropOptionsStr});
 
     preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(srcImageGeom.getDimensions(), srcImageGeom.getSpacing(),
-                                                                                                                          srcImageGeom.getOrigin(), srcImageGeom.getUnits())});
+                                                                                                                           srcImageGeom.getOrigin(), srcImageGeom.getUnits())});
   }
 
   if(!pCropXDim && !pCropYDim && !pCropZDim)
@@ -293,8 +293,8 @@ IFilter::PreflightResult nx::core::PreflightImageGeometryCrop(const DataStructur
     }
 
     preflightUpdatedValues.push_back(
-        {"Cropped Image Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(geomDims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, targetOrigin,
-                                                                                                     srcImageGeomPtr->getUnits())});
+        {"Cropped Image Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(geomDims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]},
+                                                                                                      targetOrigin, srcImageGeomPtr->getUnits())});
   }
   // The cleared Feature AM keeps its source shape until optional renumbering.
   if(options.clear_feature_attribute_matrix)

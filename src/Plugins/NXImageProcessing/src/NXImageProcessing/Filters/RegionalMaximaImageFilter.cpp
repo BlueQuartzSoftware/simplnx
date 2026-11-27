@@ -53,13 +53,13 @@ Parameters RegionalMaximaImageFilter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float64ParameterType>(k_ForegroundValue_Key, "Foreground Value",
-                                                   "The value written to pixels that are part of a regional maximum. For an integer input image the value "
-                                                   "must be finite and within the type's range.",
-                                                   1.0));
+                                                       "The value written to pixels that are part of a regional maximum. For an integer input image the value "
+                                                       "must be finite and within the type's range.",
+                                                       1.0));
   params.insert(std::make_unique<Float64ParameterType>(k_BackgroundValue_Key, "Background Value",
-                                                   "The value written to pixels that are not part of a regional maximum. For an integer input image the "
-                                                   "value must be finite and within the type's range.",
-                                                   0.0));
+                                                       "The value written to pixels that are not part of a regional maximum. For an integer input image the "
+                                                       "value must be finite and within the type's range.",
+                                                       0.0));
   params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "Fully Connected",
                                                 "Whether the flat zones are connected strictly by face connectivity (Off) or by face+edge+vertex connectivity (On). Default is Off.", false));
   params.insert(

@@ -52,19 +52,20 @@ IFilter::PreflightResult nx::core::PreflightColorToGrayScale(const DataStructure
     {
       if(numComponents == 0)
       {
-        return {.output_actions = MakeErrorResult<OutputActions>(-10711, fmt::format("Color channel {} is invalid for array '{}', which has no components. Select an array with at least one component.",
-                                                                                    inputValues.color_channel, inputDataArrayPath.toString()))};
+        return {.output_actions =
+                    MakeErrorResult<OutputActions>(-10711, fmt::format("Color channel {} is invalid for array '{}', which has no components. Select an array with at least one component.",
+                                                                       inputValues.color_channel, inputDataArrayPath.toString()))};
       }
       if(inputValues.color_channel < 0 || std::cmp_greater_equal(inputValues.color_channel, numComponents))
       {
         return {.output_actions = MakeErrorResult<OutputActions>(-10711, fmt::format("Color channel {} is invalid for array '{}' with {} components. Select a channel from 0 to {}.",
-                                                                                    inputValues.color_channel, inputDataArrayPath.toString(), numComponents, numComponents - 1))};
+                                                                                     inputValues.color_channel, inputDataArrayPath.toString(), numComponents, numComponents - 1))};
       }
     }
     else if(inputValues.conversion_algorithm <= to_underlying(ConvertColorToGrayScale::ConversionType::Lightness) && numComponents < 3)
     {
       return {.output_actions = MakeErrorResult<OutputActions>(-10710, fmt::format("Grayscale conversion requires at least 3 components. Array '{}' has {} components. Select an RGB or RGBA array.",
-                                                                                  inputDataArrayPath.toString(), numComponents))};
+                                                                                   inputDataArrayPath.toString(), numComponents))};
     }
     std::vector<std::string> inputPathVector = inputDataArrayPath.getPathVector();
     const std::string inputArrayName = inputDataArrayPath.getTargetName();
@@ -334,8 +335,8 @@ protected:
 class ConvertColorToGrayScaleDirect
 {
 public:
-  ConvertColorToGrayScaleDirect(const UInt8AbstractDataStoreType& inputColorData, UInt8AbstractDataStoreType& outputGrayData, ConvertColorToGrayScale::ConversionType conversionType, FloatVec3Type colorWeights,
-                                int32 colorChannel, const std::atomic_bool& /*unused*/)
+  ConvertColorToGrayScaleDirect(const UInt8AbstractDataStoreType& inputColorData, UInt8AbstractDataStoreType& outputGrayData, ConvertColorToGrayScale::ConversionType conversionType,
+                                FloatVec3Type colorWeights, int32 colorChannel, const std::atomic_bool& /*unused*/)
   : m_InputColorData(inputColorData)
   , m_OutputGrayData(outputGrayData)
   , m_ConversionType(conversionType)
@@ -466,8 +467,8 @@ public:
    * @param colorChannel Specifies the selected RGB component.
    * @param shouldCancel Stops before later chunks when true.
    */
-  ConvertColorToGrayScaleScanline(const UInt8AbstractDataStoreType& inputColorData, UInt8AbstractDataStoreType& outputGrayData, ConvertColorToGrayScale::ConversionType conversionType, FloatVec3Type colorWeights,
-                                  int32 colorChannel, const std::atomic_bool& shouldCancel)
+  ConvertColorToGrayScaleScanline(const UInt8AbstractDataStoreType& inputColorData, UInt8AbstractDataStoreType& outputGrayData, ConvertColorToGrayScale::ConversionType conversionType,
+                                  FloatVec3Type colorWeights, int32 colorChannel, const std::atomic_bool& shouldCancel)
   : m_InputColorData(inputColorData)
   , m_OutputGrayData(outputGrayData)
   , m_ConversionType(conversionType)

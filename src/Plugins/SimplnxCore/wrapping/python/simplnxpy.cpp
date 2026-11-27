@@ -1633,7 +1633,8 @@ PYBIND11_MODULE(simplnx, mod)
 
   auto cropGeometryParameterCropValues = py::class_<CropGeometryParameter::ValueType>(cropGeometryParameter, "ValueType");
   cropGeometryParameterCropValues.def(py::init<>());
-  cropGeometryParameterCropValues.def(py::init<CropGeometryParameter::ValueType::TypeEnum, bool, bool, bool, bool, SizeVec2Type, SizeVec2Type, SizeVec2Type, FloatVec2Type, FloatVec2Type, FloatVec2Type>());
+  cropGeometryParameterCropValues.def(
+      py::init<CropGeometryParameter::ValueType::TypeEnum, bool, bool, bool, bool, SizeVec2Type, SizeVec2Type, SizeVec2Type, FloatVec2Type, FloatVec2Type, FloatVec2Type>());
   cropGeometryParameterCropValues.def_readwrite("is_2d", &CropGeometryParameter::ValueType::is_2d);
   cropGeometryParameterCropValues.def_readwrite("crop_x", &CropGeometryParameter::ValueType::crop_x);
   cropGeometryParameterCropValues.def_readwrite("crop_y", &CropGeometryParameter::ValueType::crop_y);
@@ -1662,14 +1663,14 @@ PYBIND11_MODULE(simplnx, mod)
 
   BindParameterConstructor(calculatorParameter);
 
-  choicesParameter.def(py::init<const std::string&, const std::string&, const std::string&, ChoicesParameter::ValueType, const ChoicesParameter::ChoicesType&>(), "name"_a, "human_name"_a, "help_text"_a,
-                       "default_value"_a, "choices"_a);
+  choicesParameter.def(py::init<const std::string&, const std::string&, const std::string&, ChoicesParameter::ValueType, const ChoicesParameter::ChoicesType&>(), "name"_a, "human_name"_a,
+                       "help_text"_a, "default_value"_a, "choices"_a);
 
   BindParameterConstructor(dataGroupCreationParameter);
 
   dataGroupSelectionParameter.def(
-      py::init<const std::string&, const std::string&, const std::string&, const DataGroupSelectionParameter::ValueType&, const DataGroupSelectionParameter::AllowedTypeSetType&>(), "name"_a, "human_name"_a,
-      "help_text"_a, "default_value"_a, "allowed_types"_a);
+      py::init<const std::string&, const std::string&, const std::string&, const DataGroupSelectionParameter::ValueType&, const DataGroupSelectionParameter::AllowedTypeSetType&>(), "name"_a,
+      "human_name"_a, "help_text"_a, "default_value"_a, "allowed_types"_a);
 
   BindParameterConstructor(dataObjectNameParameter);
 
@@ -1695,8 +1696,9 @@ PYBIND11_MODULE(simplnx, mod)
 
   BindParameterConstructor(generatedFileListParameter);
 
-  geometrySelectionParameter.def(py::init<const std::string&, const std::string&, const std::string&, const GeometrySelectionParameter::ValueType&, const GeometrySelectionParameter::AllowedTypeSetType&>(),
-                                 "name"_a, "human_name"_a, "help_text"_a, "default_value"_a, "allowed_types"_a);
+  geometrySelectionParameter.def(
+      py::init<const std::string&, const std::string&, const std::string&, const GeometrySelectionParameter::ValueType&, const GeometrySelectionParameter::AllowedTypeSetType&>(), "name"_a,
+      "human_name"_a, "help_text"_a, "default_value"_a, "allowed_types"_a);
 
   BindParameterConstructor(importTextDataParameter);
 

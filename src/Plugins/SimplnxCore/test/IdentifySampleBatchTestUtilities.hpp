@@ -297,4 +297,4 @@ void ExecuteAndRequire(ScopeT& scope, DataStructure& dataStructure, ChoicesParam
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   RequireOutput<T>(dataStructure, plane, fillHoles, fixedCount);
 }
-} // namespace IdentifySampleBatchTest
+} // namespace identify_sample_batch_test

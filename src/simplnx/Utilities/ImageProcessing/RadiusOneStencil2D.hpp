@@ -291,8 +291,8 @@ inline Result<RadiusOneStencil2DPlan> CreateRadiusOneStencil2DPlan(usize dimX, u
 }
 
 template <class InputT, class OutputT, class BodyFactory>
-Result<> ExecuteRadiusOneStencil2D(const AbstractDataStore<InputT>& inputStore, AbstractDataStore<OutputT>& outputStore, const SizeVec3Type& dims, const std::atomic_bool& shouldCancel, usize targetBytes,
-                                   usize workerScratchBytes, usize maximumWorkers, BodyFactory&& bodyFactory)
+Result<> ExecuteRadiusOneStencil2D(const AbstractDataStore<InputT>& inputStore, AbstractDataStore<OutputT>& outputStore, const SizeVec3Type& dims, const std::atomic_bool& shouldCancel,
+                                   usize targetBytes, usize workerScratchBytes, usize maximumWorkers, BodyFactory&& bodyFactory)
 {
   if(dims[2] != 1)
   {
@@ -313,8 +313,8 @@ Result<> ExecuteRadiusOneStencil2D(const AbstractDataStore<InputT>& inputStore, 
   }
   if(outputStore.getSize() != plan.total_values)
   {
-    return MakeErrorResult(-8603, fmt::format("Radius-one 2D stencil output store size ({}) does not match the expected {} values for dimensions {} x {} x 1.", outputStore.getSize(), plan.total_values,
-                                              dims[0], dims[1]));
+    return MakeErrorResult(-8603, fmt::format("Radius-one 2D stencil output store size ({}) does not match the expected {} values for dimensions {} x {} x 1.", outputStore.getSize(),
+                                              plan.total_values, dims[0], dims[1]));
   }
   if(shouldCancel)
   {

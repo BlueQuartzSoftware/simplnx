@@ -303,8 +303,8 @@ Result<> ConvertQuaternion::operator()()
   const auto& inputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->quaternion_data_array_path);
   if(inputArray.getDataType() != DataType::float32 && inputArray.getDataType() != DataType::float64)
   {
-    return MakeErrorResult(-74836, fmt::format("The input quaternion array at path '{}' has data type '{}', but must be either Float32 or Float64.", m_InputValues->quaternion_data_array_path.toString(),
-                                               DataTypeToString(inputArray.getDataType())));
+    return MakeErrorResult(-74836, fmt::format("The input quaternion array at path '{}' has data type '{}', but must be either Float32 or Float64.",
+                                               m_InputValues->quaternion_data_array_path.toString(), DataTypeToString(inputArray.getDataType())));
   }
 
   const auto& outputArray = m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->output_data_array_path);

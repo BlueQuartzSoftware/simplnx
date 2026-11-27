@@ -92,9 +92,9 @@ Result<> WriteDREAM3D::operator()()
     if(outcome.error)
     {
       const std::string_view recoveryAdvice = outcome.retries_exhausted ? "The .xdmf file may be open in another program, or you may not have permission to replace it. "
-                                                                         "Close programs that use the .xdmf file and run the filter again." :
-                                                                         "The .xdmf file or the output folder may be read-only, or you may not have permission to replace the file. "
-                                                                         "Fix any read-only settings or permissions and run the filter again.";
+                                                                          "Close programs that use the .xdmf file and run the filter again." :
+                                                                          "The .xdmf file or the output folder may be read-only, or you may not have permission to replace the file. "
+                                                                          "Fix any read-only settings or permissions and run the filter again.";
       const auto message = fmt::format("The .dream3d file '{}' was saved. Its .xdmf file '{}' could not be saved. "
                                        "An existing .xdmf file at that path may not match the new .dream3d file. {} {}",
                                        m_InputValues->export_file_path, destinationSidecar, recoveryAdvice, DescribeFileReplacementSystemError(outcome));

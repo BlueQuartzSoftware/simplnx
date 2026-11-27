@@ -511,13 +511,13 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   if(inputGeometryPaths.empty())
   {
     return {.output_actions = MakeErrorResult<OutputActions>(to_underlying(CombineNodeBasedGeometries::ErrorCodes::FewerThanTwoPathsChosen),
-                                                            fmt::format("No input geometry paths have been chosen.  Please choose at least two input geometry paths."))};
+                                                             fmt::format("No input geometry paths have been chosen.  Please choose at least two input geometry paths."))};
   }
 
   if(inputGeometryPaths.size() == 1)
   {
     return {.output_actions = MakeErrorResult<OutputActions>(to_underlying(CombineNodeBasedGeometries::ErrorCodes::FewerThanTwoPathsChosen),
-                                                            fmt::format("Only one input geometry path has been chosen.  Please choose at least two input geometry paths."))};
+                                                             fmt::format("Only one input geometry path has been chosen.  Please choose at least two input geometry paths."))};
   }
 
   // Use an optional so that the first input geometry type sets the optional
@@ -567,7 +567,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
     {
       // There are no vertices, which means this is not a valid node geometry
       return {.output_actions = MakeErrorResult<OutputActions>(to_underlying(CombineNodeBasedGeometries::ErrorCodes::NodeGeometryHasNoVertices),
-                                                              fmt::format("The chosen node geometries do not have a shared vertex array.  All node geometries MUST have a shared vertex array."))};
+                                                               fmt::format("The chosen node geometries do not have a shared vertex array.  All node geometries MUST have a shared vertex array."))};
     }
 
     const auto& iGeom = *iGeomPtr;
@@ -893,7 +893,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   }
   case IGeometry::Type::Edge: {
     actions.appendAction(std::make_unique<CreateEdgeGeometryActionType>(outputGeometryPath, 1, 1, VertexGeom::k_VertexAttributeMatrixName, EdgeGeom::k_EdgeAttributeMatrixName,
-                                                                    VertexGeom::k_SharedVertexListName, EdgeGeom::k_SharedEdgeListName));
+                                                                        VertexGeom::k_SharedVertexListName, EdgeGeom::k_SharedEdgeListName));
     auto creationResult = CreateOtherAttrMatricesAndArrays<EdgeGeom, INodeGeometry1D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
                                                                                       facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
     if(creationResult.invalid())
@@ -904,7 +904,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   }
   case IGeometry::Type::Triangle: {
     actions.appendAction(std::make_unique<CreateTriangleGeometryActionType>(outputGeometryPath, 1, 1, VertexGeom::k_VertexAttributeMatrixName, TriangleGeom::k_FaceAttributeMatrixName,
-                                                                        VertexGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName));
+                                                                            VertexGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName));
     auto creationResult = CreateOtherAttrMatricesAndArrays<TriangleGeom, INodeGeometry2D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
                                                                                           facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
     if(creationResult.invalid())
@@ -915,7 +915,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   }
   case IGeometry::Type::Quad: {
     actions.appendAction(std::make_unique<CreateQuadGeometryActionType>(outputGeometryPath, 1, 1, VertexGeom::k_VertexAttributeMatrixName, QuadGeom::k_FaceAttributeMatrixName,
-                                                                    VertexGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName));
+                                                                        VertexGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName));
     auto creationResult = CreateOtherAttrMatricesAndArrays<QuadGeom, INodeGeometry2D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
                                                                                       facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
     if(creationResult.invalid())
@@ -926,7 +926,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   }
   case IGeometry::Type::Tetrahedral: {
     actions.appendAction(std::make_unique<CreateTetrahedralGeometryActionType>(outputGeometryPath, 1, 1, VertexGeom::k_VertexAttributeMatrixName, TetrahedralGeom::k_PolyhedronDataName,
-                                                                           VertexGeom::k_SharedVertexListName, TetrahedralGeom::k_SharedPolyhedronListName));
+                                                                               VertexGeom::k_SharedVertexListName, TetrahedralGeom::k_SharedPolyhedronListName));
     auto creationResult = CreateOtherAttrMatricesAndArrays<TetrahedralGeom, INodeGeometry3D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
                                                                                              facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
     if(creationResult.invalid())
@@ -937,7 +937,7 @@ IFilter::PreflightResult CombineNodeBasedGeometriesFilter::preflightImpl(const D
   }
   case IGeometry::Type::Hexahedral: {
     actions.appendAction(std::make_unique<CreateHexahedralGeometryActionType>(outputGeometryPath, 1, 1, VertexGeom::k_VertexAttributeMatrixName, HexahedralGeom::k_PolyhedronDataName,
-                                                                          VertexGeom::k_SharedVertexListName, HexahedralGeom::k_SharedPolyhedronListName));
+                                                                              VertexGeom::k_SharedVertexListName, HexahedralGeom::k_SharedPolyhedronListName));
     auto creationResult = CreateOtherAttrMatricesAndArrays<HexahedralGeom, INodeGeometry3D>(outputGeometryPath, vertexDataArraysInfo, edgesArrayExists, edgeAttrMatrixExists, edgeDataArraysInfo,
                                                                                             facesArrayExists, faceAttrMatrixExists, faceDataArraysInfo, polyDataArraysInfo, actions);
     if(creationResult.invalid())

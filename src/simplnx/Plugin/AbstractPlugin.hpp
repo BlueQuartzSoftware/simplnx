@@ -46,7 +46,7 @@ public:
   {
     using ConversionFunctionType = std::function<Result<Arguments>(const nlohmann::json&)>;
 
-    Uuid simplnx_uuid;               // Simplnx filter UUID that receives the converted arguments.
+    Uuid simplnx_uuid;                   // Simplnx filter UUID that receives the converted arguments.
     ConversionFunctionType convert_json; // Converts legacy JSON to simplnx Arguments.
   };
 

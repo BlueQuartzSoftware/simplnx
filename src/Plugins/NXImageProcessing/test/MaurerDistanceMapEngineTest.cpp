@@ -1076,7 +1076,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: encoded initiali
   constexpr uint32 k_PoisonBits = 0x7FC00001u;
   const float32 poison = std::bit_cast<float32>(k_PoisonBits);
   const std::array<SizeVec3Type, 12> dimensions = {SizeVec3Type{1, 1, 1}, SizeVec3Type{1, 1, 7}, SizeVec3Type{7, 1, 1}, SizeVec3Type{1, 5, 1}, SizeVec3Type{5, 1, 7}, SizeVec3Type{5, 6, 1},
-                                               SizeVec3Type{5, 6, 2}, SizeVec3Type{2, 6, 7}, SizeVec3Type{5, 2, 7}, SizeVec3Type{2, 2, 2}, SizeVec3Type{3, 3, 3}, SizeVec3Type{5, 6, 7}};
+                                                   SizeVec3Type{5, 6, 2}, SizeVec3Type{2, 6, 7}, SizeVec3Type{5, 2, 7}, SizeVec3Type{2, 2, 2}, SizeVec3Type{3, 3, 3}, SizeVec3Type{5, 6, 7}};
 
   for(const SizeVec3Type& dims : dimensions)
   {
@@ -1647,8 +1647,14 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: XY stream and Z pass tran
       RecordingInputStore<uint8> inputStore(ShapeType{testCase.dim_z, k_DimY, k_DimX}, ShapeType{1}, uint8{0}, log, shouldCancel);
       RecordingWorkStore workStore(ShapeType{testCase.dim_z, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel);
       RecordingOutputStore outputStore(ShapeType{testCase.dim_z, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel);
-      const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-          .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 3, .worker_count = 2};
+      const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{.dims = dims,
+                                                                              .background_value = uint8{0},
+                                                                              .inside_is_positive = false,
+                                                                              .squared_distance = true,
+                                                                              .use_spacing = false,
+                                                                              .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f},
+                                                                              .max_y_rows = 3,
+                                                                              .worker_count = 2};
 
       const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
       SIMPLNX_RESULT_REQUIRE_VALID(results.xy_result);
@@ -1719,8 +1725,14 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: cancellation during a pre
   RecordingInputStore<uint8> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{0}, log, shouldCancel, std::nullopt, 3);
   RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel);
   RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, k_Poison, log, shouldCancel);
-  const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-      .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 3, .worker_count = 2};
+  const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{.dims = dims,
+                                                                          .background_value = uint8{0},
+                                                                          .inside_is_positive = false,
+                                                                          .squared_distance = true,
+                                                                          .use_spacing = false,
+                                                                          .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f},
+                                                                          .max_y_rows = 3,
+                                                                          .worker_count = 2};
 
   const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_VALID(results.xy_result);
@@ -1745,8 +1757,14 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: cancellation during the f
   RecordingInputStore<uint8> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{0}, log, shouldCancel);
   RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel);
   RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel, 1);
-  const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-      .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 2, .worker_count = 2};
+  const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{.dims = dims,
+                                                                          .background_value = uint8{0},
+                                                                          .inside_is_positive = false,
+                                                                          .squared_distance = true,
+                                                                          .use_spacing = false,
+                                                                          .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f},
+                                                                          .max_y_rows = 2,
+                                                                          .worker_count = 2};
 
   const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_VALID(results.xy_result);
@@ -1770,8 +1788,14 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: cancellation during a scr
   RecordingInputStore<uint8> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{0}, log, shouldCancel);
   RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel, std::nullopt, std::nullopt, 9);
   RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel);
-  const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-      .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 3, .worker_count = 2};
+  const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{.dims = dims,
+                                                                          .background_value = uint8{0},
+                                                                          .inside_is_positive = false,
+                                                                          .squared_distance = true,
+                                                                          .use_spacing = false,
+                                                                          .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f},
+                                                                          .max_y_rows = 3,
+                                                                          .worker_count = 2};
 
   const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_VALID(results.xy_result);
@@ -1799,8 +1823,14 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: input read error stops th
   RecordingInputStore<uint8> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{0}, log, shouldCancel, 5);
   RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel);
   RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel);
-  const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-      .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 3, .worker_count = 2};
+  const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{.dims = dims,
+                                                                          .background_value = uint8{0},
+                                                                          .inside_is_positive = false,
+                                                                          .squared_distance = true,
+                                                                          .use_spacing = false,
+                                                                          .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f},
+                                                                          .max_y_rows = 3,
+                                                                          .worker_count = 2};
 
   const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_INVALID(results.xy_result);
@@ -1828,8 +1858,14 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: scratch-plane write error
   RecordingInputStore<uint8> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{0}, log, shouldCancel);
   RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel, std::nullopt, 3);
   RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel);
-  const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-      .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 3, .worker_count = 2};
+  const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{.dims = dims,
+                                                                          .background_value = uint8{0},
+                                                                          .inside_is_positive = false,
+                                                                          .squared_distance = true,
+                                                                          .use_spacing = false,
+                                                                          .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f},
+                                                                          .max_y_rows = 3,
+                                                                          .worker_count = 2};
 
   const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_INVALID(results.xy_result);
@@ -1855,8 +1891,14 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: work read error stops the
   RecordingInputStore<uint8> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{0}, log, shouldCancel);
   RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel, 9);
   RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel);
-  const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-      .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 3, .worker_count = 2};
+  const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{.dims = dims,
+                                                                          .background_value = uint8{0},
+                                                                          .inside_is_positive = false,
+                                                                          .squared_distance = true,
+                                                                          .use_spacing = false,
+                                                                          .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f},
+                                                                          .max_y_rows = 3,
+                                                                          .worker_count = 2};
 
   const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
   SIMPLNX_RESULT_REQUIRE_VALID(results.xy_result);
@@ -1888,8 +1930,14 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: store exceptions become e
     RecordingInputStore<uint8> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{0}, log, shouldCancel, std::nullopt, std::nullopt, 2);
     RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel);
     RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel);
-    const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-        .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 3, .worker_count = 2};
+    const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{.dims = dims,
+                                                                            .background_value = uint8{0},
+                                                                            .inside_is_positive = false,
+                                                                            .squared_distance = true,
+                                                                            .use_spacing = false,
+                                                                            .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f},
+                                                                            .max_y_rows = 3,
+                                                                            .worker_count = 2};
 
     const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_INVALID(results.xy_result);
@@ -1943,8 +1991,14 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: store exceptions become e
     RecordingInputStore<uint8> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{0}, log, shouldCancel);
     RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel, std::nullopt, std::nullopt, std::nullopt, 9);
     RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel);
-    const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-        .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 3, .worker_count = 2};
+    const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{.dims = dims,
+                                                                            .background_value = uint8{0},
+                                                                            .inside_is_positive = false,
+                                                                            .squared_distance = true,
+                                                                            .use_spacing = false,
+                                                                            .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f},
+                                                                            .max_y_rows = 3,
+                                                                            .worker_count = 2};
 
     const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_VALID(results.xy_result);
@@ -1964,8 +2018,14 @@ TEST_CASE("NXImageProcessing::MaurerDistanceMapEngine: store exceptions become e
     RecordingInputStore<uint8> inputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, uint8{0}, log, shouldCancel);
     RecordingWorkStore workStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, 0.0f, log, shouldCancel);
     RecordingOutputStore outputStore(ShapeType{k_DimZ, k_DimY, k_DimX}, ShapeType{1}, -999.0f, log, shouldCancel, std::nullopt, 2);
-    const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{
-        .dims = dims, .background_value = uint8{0}, .inside_is_positive = false, .squared_distance = true, .use_spacing = false, .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f}, .max_y_rows = 3, .worker_count = 2};
+    const ImageProcessing::detail::Maurer3DSlabParameters<uint8> parameters{.dims = dims,
+                                                                            .background_value = uint8{0},
+                                                                            .inside_is_positive = false,
+                                                                            .squared_distance = true,
+                                                                            .use_spacing = false,
+                                                                            .spacing = FloatVec3Type{1.0f, 1.0f, 1.0f},
+                                                                            .max_y_rows = 3,
+                                                                            .worker_count = 2};
 
     const SeamResults results = RunSeam(pattern, dims, parameters, log, inputStore, workStore, outputStore, shouldCancel);
     SIMPLNX_RESULT_REQUIRE_VALID(results.xy_result);

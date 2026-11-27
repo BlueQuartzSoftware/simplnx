@@ -58,17 +58,17 @@ Parameters BinaryOpeningByReconstructionImageFilter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<VectorUInt32ParameterType>(k_KernelRadius_Key, "Kernel Radius", "The radius of the kernel structuring element.", std::vector<uint32>(3, 1),
-                                                        std::vector<std::string>{"X", "Y", "Z"}));
+                                                            std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<ChoicesParameter>(k_KernelType_Key, "Kernel Type", "Set the kernel or structuring element used for the morphology.",
                                                    static_cast<uint64>(ImageProcessing::KernelType::Ball), ChoicesParameter::ChoicesType{"Annulus", "Ball", "Box", "Cross"}));
   params.insert(std::make_unique<Float64ParameterType>(k_ForegroundValue_Key, "Foreground Value",
-                                                   "The value identifying the objects to process. Only voxels equal to this value are foreground; all other values are background. For an integer "
-                                                   "input image the value must be finite and within the type's range.",
-                                                   1.0));
+                                                       "The value identifying the objects to process. Only voxels equal to this value are foreground; all other values are background. For an integer "
+                                                       "input image the value must be finite and within the type's range.",
+                                                       1.0));
   params.insert(std::make_unique<Float64ParameterType>(k_BackgroundValue_Key, "Background Value",
-                                                   "The value written to voxels that are not part of a surviving foreground object in the output. For an integer input image the value must be "
-                                                   "finite and within the type's range.",
-                                                   0.0));
+                                                       "The value written to voxels that are not part of a surviving foreground object in the output. For an integer input image the value must be "
+                                                       "finite and within the type's range.",
+                                                       0.0));
   params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "Fully Connected",
                                                 "Whether the connected components of the reconstruction are defined strictly by face connectivity (Off) or by face+edge+vertex connectivity (On).",
                                                 false));
@@ -120,7 +120,7 @@ IFilter::PreflightResult BinaryOpeningByReconstructionImageFilter::preflightImpl
   if(foregroundValue == backgroundValue)
   {
     return {.output_actions = MakeErrorResult<OutputActions>(k_ForegroundEqualsBackground,
-                                                            fmt::format("Binary Opening By Reconstruction requires distinct Foreground and Background values, but both were {}.", foregroundValue))};
+                                                             fmt::format("Binary Opening By Reconstruction requires distinct Foreground and Background values, but both were {}.", foregroundValue))};
   }
 
   // requireScalar=true: binary morphology + reconstruction are defined on scalar images. IntegerOnly restricts to

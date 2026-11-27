@@ -87,4 +87,4 @@ float64 DecodeFloat64LittleEndian(const uint8* bytes)
 {
   return BitCast<float64>(DecodeUInt64LittleEndian(bytes));
 }
-} // namespace nx::core::EbsdPatternFileUtilities
+} // namespace nx::core::ebsd_pattern_file_utilities

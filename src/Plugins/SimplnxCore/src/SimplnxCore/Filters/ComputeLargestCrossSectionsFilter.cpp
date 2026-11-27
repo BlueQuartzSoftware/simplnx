@@ -159,9 +159,9 @@ Result<Arguments> ComputeLargestCrossSectionsFilter::FromSIMPLJson(const nlohman
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_ImageGeometryPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_FeatureIdsArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_LargestCrossSectionsArrayPathKey,
-                                                                                                                         k_CellFeatureAttributeMatrixPath_Key));
+                                                                                                                           k_CellFeatureAttributeMatrixPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_LargestCrossSectionsArrayPathKey,
-                                                                                                                                  k_LargestCrossSectionsArrayName_Key));
+                                                                                                                                    k_LargestCrossSectionsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

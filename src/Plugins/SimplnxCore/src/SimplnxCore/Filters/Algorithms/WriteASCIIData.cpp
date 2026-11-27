@@ -131,7 +131,7 @@ Result<> WriteASCIIData::operator()()
       }
     }
     return o_stream_utilities::PrintDataSetsToMultipleFiles(selectedDataArrayPaths, m_DataStructure, directoryPath.string(), m_MessageHandler, m_ShouldCancel, fileExtension, false, delimiter,
-                                                          includeIndex, includeHeaders, maxTuplePerLine);
+                                                            includeIndex, includeHeaders, maxTuplePerLine);
   }
 
   return {};

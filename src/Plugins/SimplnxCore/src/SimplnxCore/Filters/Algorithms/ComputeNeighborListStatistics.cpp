@@ -225,8 +225,8 @@ Result<> ComputeNeighborListStatistics::operator()()
   ParallelDataAlgorithm dataAlg;
   dataAlg.setRange(0, numTuples);
   ExecuteParallelFunction<ComputeNeighborListStatisticsImpl, NoBooleanType>(type, dataAlg, this, inputINeighborList, m_InputValues->find_length, m_InputValues->find_min, m_InputValues->find_max,
-                                                                            m_InputValues->find_mean, m_InputValues->find_median, m_InputValues->find_std_deviation, m_InputValues->find_summation, arrays,
-                                                                            m_ShouldCancel);
+                                                                            m_InputValues->find_mean, m_InputValues->find_median, m_InputValues->find_std_deviation, m_InputValues->find_summation,
+                                                                            arrays, m_ShouldCancel);
 
   return {};
 }

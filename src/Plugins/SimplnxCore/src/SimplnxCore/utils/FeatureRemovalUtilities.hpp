@@ -46,4 +46,4 @@ struct SIMPLNXCORE_EXPORT RemovalArgs
  */
 SIMPLNXCORE_EXPORT Result<> RemoveFlaggedFeatures(DataStructure& dataStructure, const std::vector<bool>& flaggedFeatures, const RemovalArgs& args, const IFilter::MessageHandler& messageHandler,
                                                   const std::atomic_bool& shouldCancel);
-} // namespace nx::core::FeatureRemovalUtilities
+} // namespace nx::core::feature_removal_utilities

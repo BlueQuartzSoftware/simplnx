@@ -128,4 +128,4 @@ void AlgorithmTestScope::requireExpectedScenario() const
   REQUIRE(expectedScenarioCount > 0);
   REQUIRE(unexpectedStoreCount == 0);
 }
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test

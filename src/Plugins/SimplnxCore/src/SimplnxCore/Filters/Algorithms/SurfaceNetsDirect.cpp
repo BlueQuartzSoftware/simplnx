@@ -170,7 +170,8 @@ Result<> SurfaceNetsDirect::operator()()
   auto origin = imageGeom.getOrigin();
 
   // MMSurfaceNet classifies the complete padded grid through direct Feature ID reads.
-  MMSurfaceNet surfaceNet(triangleGeomPtr->getVerticesRef().getDataStoreRef(), m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path), gridDimensions.data(), voxelSize.data());
+  MMSurfaceNet surfaceNet(triangleGeomPtr->getVerticesRef().getDataStoreRef(), m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->feature_ids_array_path), gridDimensions.data(),
+                          voxelSize.data());
   Result<> initializationResult = surfaceNet.takeInitializationResult();
   if(initializationResult.invalid())
   {
@@ -581,7 +582,7 @@ Result<> SurfaceNetsDirect::operator()()
     m_MessageHandler.sendInfoMessage("Repairing Windings...");
 
     windingResult = meshing_utilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
-                                                            m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->face_labels_data_path)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
+                                                             m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->face_labels_data_path)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
 
     // Remove temporary connectivity after winding repair.
     m_DataStructure.removeData(triangleGeom.getElementContainingVertId().value());
@@ -593,7 +594,7 @@ Result<> SurfaceNetsDirect::operator()()
     if(triangleGeom.getNumberOfFaces() == 0)
     {
       return meshing_utilities::MakeEmptyMeshWarning(m_InputValues->triangle_geometry_path, m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getNumberOfTuples(),
-                                                    triangleGeom.getNumberOfVertices());
+                                                     triangleGeom.getNumberOfVertices());
     }
     if(suppressedFaceCount == 0)
     {

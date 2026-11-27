@@ -37,4 +37,4 @@ namespace nx::core::data_structure_export_utilities
   std::ranges::sort(sortedObjectPtrs, [](const DataObject* lhsPtr, const DataObject* rhsPtr) { return lhsPtr->getName() < rhsPtr->getName(); });
   return sortedObjectPtrs;
 }
-} // namespace nx::core::DataStructureExportUtilities
+} // namespace nx::core::data_structure_export_utilities

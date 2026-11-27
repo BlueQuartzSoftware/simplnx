@@ -120,8 +120,8 @@ Result<> ComputeFeatureNeighborCAxisMisalignments::operator()()
       if(neighborFeaturePhaseIdx < 0 || static_cast<usize>(neighborFeaturePhaseIdx) >= numCrystalStructures)
       {
         return MakeErrorResult(-1564, fmt::format("Feature Phases array '{}' has value {} at feature index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in [0, {}).",
-                                                  m_InputValues->feature_phases_array_path.toString(), neighborFeaturePhaseIdx, neighborFeatureIdx, m_InputValues->crystal_structures_array_path.toString(),
-                                                  numCrystalStructures, numCrystalStructures));
+                                                  m_InputValues->feature_phases_array_path.toString(), neighborFeaturePhaseIdx, neighborFeatureIdx,
+                                                  m_InputValues->crystal_structures_array_path.toString(), numCrystalStructures, numCrystalStructures));
       }
       const uint32 neighborCrystalStructure = crystalStructuresCache[neighborFeaturePhaseIdx];
 

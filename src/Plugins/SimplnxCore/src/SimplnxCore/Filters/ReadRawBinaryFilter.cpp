@@ -209,7 +209,7 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
   if(numTuples != 0 && numComponents > std::numeric_limits<usize>::max() / numTuples)
   {
     return MakePreflightErrorResult(dimension_conversion::k_ElementCountOverflow, fmt::format("Tuple count {} times component count {} for array '{}' exceeds {} elements. Use smaller dimensions.",
-                                                                                             numTuples, numComponents, pCreatedAttributeArrayPathValue.toString(), std::numeric_limits<usize>::max()));
+                                                                                              numTuples, numComponents, pCreatedAttributeArrayPathValue.toString(), std::numeric_limits<usize>::max()));
   }
   const usize requiredElements = numTuples * numComponents;
 
@@ -226,9 +226,9 @@ IFilter::PreflightResult ReadRawBinaryFilter::preflightImpl(const DataStructure&
     if(!allowPartialFilling)
     {
       return {.output_actions = MakeErrorResult<OutputActions>(-78708, fmt::format("The file does not contain enough data for the requested array dimensions. "
-                                                                                  "Required elements: {} (tuples: {} x components: {}). Available elements in file: {}. "
-                                                                                  "Enable 'Allow Partial Filling of Array' to read available data and default-initialize the remainder.",
-                                                                                  requiredElements, numTuples, numComponents, availableElements))};
+                                                                                   "Required elements: {} (tuples: {} x components: {}). Available elements in file: {}. "
+                                                                                   "Enable 'Allow Partial Filling of Array' to read available data and default-initialize the remainder.",
+                                                                                   requiredElements, numTuples, numComponents, availableElements))};
     }
     resultOutputActions.warnings().push_back(
         {-78710, fmt::format("The file contains only {} of the {} required elements. The remaining elements will be default-initialized to 0.", availableElements, requiredElements)});
@@ -353,7 +353,8 @@ Result<Arguments> ReadRawBinaryFilter::FromSIMPLJson(const nlohmann::json& json)
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_EndianKey, k_Endian_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringToIntFilterParameterConverter<uint64>>(args, json, simpl::k_SkipHeaderBytesKey, k_SkipHeaderBytes_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_CreatedAttributeArrayPathKey, k_CreatedAttributeArrayPath_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationFilterParameterConverter>(args, json, simpl::k_CreatedAttributeArrayPathKey, k_CreatedAttributeArrayPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

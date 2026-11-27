@@ -187,8 +187,8 @@ DataStructure CreateTestDataStructure()
     // clang-format on
 
     const TriangleGeom::SharedVertexListType* sharedVertsPtr = TriangleGeom::SharedVertexListType::Create(
-        dataStructure, TriangleGeom::k_SharedVertexListName, std::make_shared<DataStore<TriangleGeom::SharedVertexListType::value_type>>(std::move(sharedVertexListBuffer), ShapeType{111}, ShapeType{3}),
-        geomPtr->getId());
+        dataStructure, TriangleGeom::k_SharedVertexListName,
+        std::make_shared<DataStore<TriangleGeom::SharedVertexListType::value_type>>(std::move(sharedVertexListBuffer), ShapeType{111}, ShapeType{3}), geomPtr->getId());
 
     geomPtr->setVertexListId(sharedVertsPtr->getId());
   }
@@ -238,9 +238,9 @@ DataStructure CreateTestDataStructure()
     });
     // clang-format on
 
-    const TriangleGeom::SharedFaceListType* sharedFacesPtr =
-        TriangleGeom::SharedFaceListType::Create(dataStructure, TriangleGeom::k_SharedFacesListName,
-                                             std::make_shared<DataStore<TriangleGeom::SharedFaceListType::value_type>>(std::move(sharedFaceListBuffer), ShapeType{37}, ShapeType{3}), geomPtr->getId());
+    const TriangleGeom::SharedFaceListType* sharedFacesPtr = TriangleGeom::SharedFaceListType::Create(
+        dataStructure, TriangleGeom::k_SharedFacesListName, std::make_shared<DataStore<TriangleGeom::SharedFaceListType::value_type>>(std::move(sharedFaceListBuffer), ShapeType{37}, ShapeType{3}),
+        geomPtr->getId());
 
     geomPtr->setFaceListId(sharedFacesPtr->getId());
   }

@@ -36,8 +36,8 @@ protected:
    * @param useEmptyDataStore = false
    * @return Result<>
    */
-  static Result<> ReadNodeGeom1dData(DataStructureReader& dataStructureReader, INodeGeometry1D& geometry, const GroupReaderType& parentGroup, const std::string& geomName,
-                                     DataObject::IdType importId, const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false);
+  static Result<> ReadNodeGeom1dData(DataStructureReader& dataStructureReader, INodeGeometry1D& geometry, const GroupReaderType& parentGroup, const std::string& geomName, DataObject::IdType importId,
+                                     const std::optional<DataObject::IdType>& parentId, bool useEmptyDataStore = false);
 
   /**
    * @brief Attempts to write the INodeGeometry1D data to HDF5.

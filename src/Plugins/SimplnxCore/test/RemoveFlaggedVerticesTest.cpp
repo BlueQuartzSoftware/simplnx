@@ -384,29 +384,29 @@ TEST_CASE("SimplnxCore::RemoveFlaggedVertices: Child names containing the geomet
   const DataPath destGeomPath({"Geom Out"});
   auto* geomPtr = VertexGeom::Create(dataStructure, "Geom");
   REQUIRE(geomPtr != nullptr);
-  auto* verticesPtr = Float32ArrayType::Create(dataStructure, VertexGeom::k_SharedVertexListName,
-                                           data_store_utilities::CreateDataStore<float32>(dataStructure, geomPtr->getDataPaths().front().createChildPath(VertexGeom::k_SharedVertexListName), {3}, {3}),
-                                           geomPtr->getId());
+  auto* verticesPtr = Float32ArrayType::Create(
+      dataStructure, VertexGeom::k_SharedVertexListName,
+      data_store_utilities::CreateDataStore<float32>(dataStructure, geomPtr->getDataPaths().front().createChildPath(VertexGeom::k_SharedVertexListName), {3}, {3}), geomPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   verticesPtr->fill(0.0F);
   geomPtr->setVertices(*verticesPtr);
   auto* elementAmPtr = AttributeMatrix::Create(dataStructure, "Vertex Data", {3}, geomPtr->getId());
   REQUIRE(elementAmPtr != nullptr);
   geomPtr->setVertexAttributeMatrix(*elementAmPtr);
-  auto* maskPtr =
-      BoolArrayType::Create(dataStructure, "Mask", data_store_utilities::CreateDataStore<bool>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Mask"), {3}, {1}), elementAmPtr->getId());
+  auto* maskPtr = BoolArrayType::Create(dataStructure, "Mask", data_store_utilities::CreateDataStore<bool>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Mask"), {3}, {1}),
+                                        elementAmPtr->getId());
   REQUIRE(maskPtr != nullptr);
   maskPtr->fill(false);
   (*maskPtr)[0] = true;
-  auto* dataPtr =
-      Int32ArrayType::Create(dataStructure, "Data", data_store_utilities::CreateDataStore<int32>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Data"), elementAmPtr->getShape(), {1}),
-                         elementAmPtr->getId());
+  auto* dataPtr = Int32ArrayType::Create(dataStructure, "Data",
+                                         data_store_utilities::CreateDataStore<int32>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Data"), elementAmPtr->getShape(), {1}),
+                                         elementAmPtr->getId());
   REQUIRE(dataPtr != nullptr);
   dataPtr->fill(7);
   auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "Geom Feature Data", {2}, geomPtr->getId());
   REQUIRE(featureAmPtr != nullptr);
-  auto* valuesPtr = Int32ArrayType::Create(dataStructure, "Geom Values",
-                                       data_store_utilities::CreateDataStore<int32>(dataStructure, featureAmPtr->getDataPaths().front().createChildPath("Geom Values"), {2}, {1}), featureAmPtr->getId());
+  auto* valuesPtr = Int32ArrayType::Create(
+      dataStructure, "Geom Values", data_store_utilities::CreateDataStore<int32>(dataStructure, featureAmPtr->getDataPaths().front().createChildPath("Geom Values"), {2}, {1}), featureAmPtr->getId());
   REQUIRE(valuesPtr != nullptr);
   valuesPtr->fill(42);
   RemoveFlaggedVerticesFilter filter;

@@ -445,4 +445,4 @@ Result<> ValidateMeshSize(const SizeVec3Type& dimensions)
   }
   return {};
 }
-} // namespace nx::core::AbaqusElementSets
+} // namespace nx::core::abaqus_element_sets

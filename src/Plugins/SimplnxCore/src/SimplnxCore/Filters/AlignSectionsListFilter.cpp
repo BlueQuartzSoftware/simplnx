@@ -166,7 +166,7 @@ Result<Arguments> AlignSectionsListFilter::FromSIMPLJson(const nlohmann::json& j
   std::vector<Result<>> results;
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey,
-                                                                                                                                      k_SelectedImageGeometryPath_Key));
+                                                                                                                                        k_SelectedImageGeometryPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

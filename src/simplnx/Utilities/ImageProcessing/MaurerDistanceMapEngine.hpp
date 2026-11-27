@@ -2546,8 +2546,8 @@ template <class T>
 class MaurerDistanceWorkingMemory
 {
 public:
-  MaurerDistanceWorkingMemory(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, SizeVec3Type dims, T backgroundValue, bool insideIsPositive, bool squaredDistance, bool useSpacing,
-                              FloatVec3Type spacing, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+  MaurerDistanceWorkingMemory(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, SizeVec3Type dims, T backgroundValue, bool insideIsPositive, bool squaredDistance,
+                              bool useSpacing, FloatVec3Type spacing, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(inStore)
   , m_Out(outStore)
   , m_Dims(std::move(dims))
@@ -2639,8 +2639,8 @@ private:
  * Resident arrays use the in-core algorithm. Other routes require a complete memory grant or use bounded slabs.
  */
 template <class T>
-Result<> ApplySignedMaurerDistanceMap(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3Type& dims, T backgroundValue, bool insideIsPositive, bool squaredDistance,
-                                      bool useSpacing, const FloatVec3Type& spacing, const IDataArray& inArray, IDataArray& outArray, const std::atomic_bool& shouldCancel,
+Result<> ApplySignedMaurerDistanceMap(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, const SizeVec3Type& dims, T backgroundValue, bool insideIsPositive,
+                                      bool squaredDistance, bool useSpacing, const FloatVec3Type& spacing, const IDataArray& inArray, IDataArray& outArray, const std::atomic_bool& shouldCancel,
                                       const IFilter::MessageHandler& messageHandler)
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)

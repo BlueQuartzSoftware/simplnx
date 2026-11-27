@@ -104,8 +104,8 @@ TEST_CASE("NXImageProcessing::ReadZeissTxmFileFilter:Read_Sub_Volume", "[NXImage
   const int myId = geomCounter.fetch_add(1);
 
   const std::string exemplaryGeomName =
-      fmt::format("ImageGeometry {:0>3} (CroppingOptions=[{}, {}, {}, {}])", myId, unit_test::cropping::CropTypeToString(croppingOptions.type), unit_test::cropping::BoolToString(croppingOptions.crop_x),
-                  unit_test::cropping::BoolToString(croppingOptions.crop_y), unit_test::cropping::BoolToString(croppingOptions.crop_z));
+      fmt::format("ImageGeometry {:0>3} (CroppingOptions=[{}, {}, {}, {}])", myId, unit_test::cropping::CropTypeToString(croppingOptions.type),
+                  unit_test::cropping::BoolToString(croppingOptions.crop_x), unit_test::cropping::BoolToString(croppingOptions.crop_y), unit_test::cropping::BoolToString(croppingOptions.crop_z));
 
   DYNAMIC_SECTION(exemplaryGeomName)
   {

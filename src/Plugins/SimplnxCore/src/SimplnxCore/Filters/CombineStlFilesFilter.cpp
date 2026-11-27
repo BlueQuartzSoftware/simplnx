@@ -150,7 +150,7 @@ IFilter::PreflightResult CombineStlFilesFilter::preflightImpl(const DataStructur
 
   {
     auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryActionType>(pTriangleDataContainerNameValue, 1, 1, pVertexAttributeMatrixNameValue, pFaceAttributeMatrixNameValue,
-                                                                                       TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
+                                                                                           TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
     resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
   }
 
@@ -228,7 +228,8 @@ Result<> CombineStlFilesFilter::executeImpl(DataStructure& dataStructure, const 
   inputValues.face_label_index_array_path = inputValues.face_attribute_matrix_name.createChildPath(filterArgs.value<std::string>(k_FaceLabelsName_Key));
 
   inputValues.label_vertices = filterArgs.value<BoolParameter::ValueType>(k_LabelVertices_Key);
-  inputValues.vertex_file_index_array_path = inputValues.triangle_data_container_name.createChildPath(pVertexAttributeMatrixNameValue).createChildPath(filterArgs.value<std::string>(k_VertexLabelName_Key));
+  inputValues.vertex_file_index_array_path =
+      inputValues.triangle_data_container_name.createChildPath(pVertexAttributeMatrixNameValue).createChildPath(filterArgs.value<std::string>(k_VertexLabelName_Key));
 
   inputValues.cell_feature_attribute_matrix_name = filterArgs.value<std::string>(k_CellFeatureAttributeMatrixName_Key);
   inputValues.active_array_name = filterArgs.value<std::string>(k_ActiveArrayName_Key);

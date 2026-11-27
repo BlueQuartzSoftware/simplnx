@@ -287,8 +287,8 @@ Result<Arguments> ComputeAvgOrientationsFilter::FromSIMPLJson(const nlohmann::js
       simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_AvgQuatsArrayPathKey, k_RodriguesQuatsArrayName_Key));
-  results.push_back(
-      simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_AvgEulerAnglesArrayPathKey, k_RodriguesAvgEulerArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_AvgEulerAnglesArrayPathKey,
+                                                                                                                                    k_RodriguesAvgEulerArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

@@ -154,8 +154,8 @@ Result<Arguments> ComputeSurfaceFeaturesFilter::FromSIMPLJson(const nlohmann::js
       // The legacy output path supplies the feature AttributeMatrix, not the Feature IDs parent.
       simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_SurfaceFeaturesArrayPathKey, k_CellFeatureAttributeMatrixPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayPathKey, k_CellFeatureIdsArrayPath_Key));
-  results.push_back(
-      simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_SurfaceFeaturesArrayPathKey, k_SurfaceFeaturesArrayName_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_SurfaceFeaturesArrayPathKey,
+                                                                                                                                    k_SurfaceFeaturesArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

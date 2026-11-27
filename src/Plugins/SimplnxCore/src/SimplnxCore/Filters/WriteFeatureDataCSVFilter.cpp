@@ -122,7 +122,7 @@ Result<Arguments> WriteFeatureDataCSVFilter::FromSIMPLJson(const nlohmann::json&
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::BooleanFilterParameterConverter>(args, json, simpl::k_WriteNumFeaturesLineKey, k_WriteNumFeaturesLine_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::ChoiceFilterParameterConverter>(args, json, simpl::k_DelimiterChoiceIntKey, k_DelimiterChoiceInt_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_CellFeatureAttributeMatrixPathKey,
-                                                                                                                         k_CellFeatureAttributeMatrixPath_Key));
+                                                                                                                           k_CellFeatureAttributeMatrixPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

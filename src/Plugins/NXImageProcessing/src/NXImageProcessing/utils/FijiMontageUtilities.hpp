@@ -23,9 +23,9 @@ namespace nx::core::fiji
 /** @brief One montage tile: source file, world origin, and the (prefix-decorated) geometry name. */
 struct NXIMAGEPROCESSING_EXPORT FijiTile
 {
-  std::filesystem::path file_path;     ///< Absolute path to the tile image (resolved against the config dir).
+  std::filesystem::path file_path;        ///< Absolute path to the tile image (resolved against the config dir).
   FloatVec3Type origin{0.0f, 0.0f, 0.0f}; ///< Parsed tile origin (Z=0 for 2D configs).
-  std::string image_name;              ///< `<prefix><file-stem>`; filled by AssignTileNames.
+  std::string image_name;                 ///< `<prefix><file-stem>`; filled by AssignTileNames.
 };
 
 /**

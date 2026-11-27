@@ -68,10 +68,10 @@ Parameters ComputeGBCDMetricBasedFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Int32ParameterType>(k_PhaseOfInterest_Key, "Phase of Interest",
-                                                 "Index of the Ensemble for which to compute GBCD; boundaries having grains of this phase on both its sides will only be taken into account", 1));
+                                                     "Index of the Ensemble for which to compute GBCD; boundaries having grains of this phase on both its sides will only be taken into account", 1));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_MisorientationRotation_Key, "Fixed Misorientation",
-                                                         "Axis-angle representation of the misorientation of interest. Angle value should be in degrees.",
-                                                         std::vector<float32>{1.0F, 1.0F, 1.0F, 17.9F}, std::vector<std::string>{"x", "y", "z", "w"}));
+                                                             "Axis-angle representation of the misorientation of interest. Angle value should be in degrees.",
+                                                             std::vector<float32>{1.0F, 1.0F, 1.0F, 17.9F}, std::vector<std::string>{"x", "y", "z", "w"}));
   params.insert(std::make_unique<ChoicesParameter>(k_ChosenLimitDists_Key, "Limiting Distances",
                                                    "The max angles from within which boundary segments are selected for the misorientations and plane inclinations", 2, choices));
   params.insert(std::make_unique<Int32ParameterType>(k_NumSamplPts_Key, "Number of Sampling Points (on a Hemisphere)", "The approximate number of sampling directions", 3000));
@@ -259,7 +259,7 @@ Result<Arguments> ComputeGBCDMetricBasedFilter::FromSIMPLJson(const nlohmann::js
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceAreasArrayPathKey, k_SurfaceMeshFaceAreasArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFeatureFaceLabelsArrayPathKey,
-                                                                                                                   k_SurfaceMeshFeatureFaceLabelsArrayPath_Key));
+                                                                                                                     k_SurfaceMeshFeatureFaceLabelsArrayPath_Key));
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeatureEulerAnglesArrayPathKey, k_FeatureEulerAnglesArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayPath_Key));

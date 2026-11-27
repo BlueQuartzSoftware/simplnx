@@ -166,7 +166,7 @@ IFilter::PreflightResult M3CSurfaceMeshingFilter::preflightImpl(const DataStruct
   // Create the Triangle Geometry
   {
     auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryActionType>(pTriangleGeometryPath, k_NumElements, k_NumElements, pVertexGroupDataName, pFaceGroupDataName,
-                                                                                       TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
+                                                                                           TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
     resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
   }
   // NodeTypes (int8, 1 component) on the vertex AttributeMatrix

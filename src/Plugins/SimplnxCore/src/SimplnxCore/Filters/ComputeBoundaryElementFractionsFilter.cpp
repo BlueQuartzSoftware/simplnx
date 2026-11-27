@@ -136,7 +136,7 @@ Result<Arguments> ComputeBoundaryElementFractionsFilter::FromSIMPLJson(const nlo
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_BoundaryCellsArrayPathKey, k_FeatureDataAMPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_BoundaryCellsArrayPathKey, k_BoundaryCellsArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_BoundaryCellFractionsArrayPathKey,
-                                                                                                                                  k_BoundaryCellFractionsArrayName_Key));
+                                                                                                                                    k_BoundaryCellFractionsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

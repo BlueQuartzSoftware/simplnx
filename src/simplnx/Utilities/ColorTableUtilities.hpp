@@ -169,4 +169,4 @@ SIMPLNX_EXPORT std::vector<float32> NormalizeBinPoints(const std::vector<float32
  */
 SIMPLNX_EXPORT std::array<uint8, 3> ComputeRgbFromControlPoints(float32 normalizedValue, const std::vector<float32>& binPoints, const std::vector<float32>& controlPoints, usize numControlColors);
 
-} // namespace nx::core::ColorTableUtilities
+} // namespace nx::core::color_table_utilities

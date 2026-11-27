@@ -125,11 +125,11 @@ IFilter::PreflightResult ReadEbsdPatternFileFilter::preflightImpl(const DataStru
     tupleShape = parentAttributeMatrixPtr->getShape();
     if(parentAttributeMatrixPtr->getNumberOfTuples() != fileInfo.number_of_patterns)
     {
-      return {
-          .output_actions = MakeErrorResult<OutputActions>(
-              -78040, fmt::format("Output Attribute Matrix '{}' has {} tuples, but EBSD pattern file '{}' contains {} importable patterns. Select an Attribute Matrix with exactly {} tuples or create "
-                                  "the output array outside an Attribute Matrix.",
-                                  outputArrayPath.getParent().toString(), parentAttributeMatrixPtr->getNumberOfTuples(), inputFile.string(), fileInfo.number_of_patterns, fileInfo.number_of_patterns))};
+      return {.output_actions = MakeErrorResult<OutputActions>(
+                  -78040,
+                  fmt::format("Output Attribute Matrix '{}' has {} tuples, but EBSD pattern file '{}' contains {} importable patterns. Select an Attribute Matrix with exactly {} tuples or create "
+                              "the output array outside an Attribute Matrix.",
+                              outputArrayPath.getParent().toString(), parentAttributeMatrixPtr->getNumberOfTuples(), inputFile.string(), fileInfo.number_of_patterns, fileInfo.number_of_patterns))};
     }
     if(setScanDimensions)
     {

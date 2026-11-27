@@ -53,7 +53,7 @@ void CheckTransferEnrichmentAllocation()
     throw std::bad_alloc{};
   }
 }
-} // namespace nx::core::MeshingUtilities::detail
+} // namespace nx::core::meshing_utilities::detail
 #endif
 
 namespace
@@ -120,7 +120,7 @@ Result<> GatherCoordinatePages(const Store& vertices, usize vertexCount, nonstd:
       {
         auto failure = meshing_utilities::detail::PreserveTransferFailure(result, std::move(readResult));
         meshing_utilities::detail::AppendTransferFailureContext(failure,
-                                                               [&] { return MakeErrorResult(-65904, fmt::format("Error reading vertex-coordinate page at vertex {} ({} vertices).", first, count)); });
+                                                                [&] { return MakeErrorResult(-65904, fmt::format("Error reading vertex-coordinate page at vertex {} ({} vertices).", first, count)); });
         return failure;
       }
       result = MergeResults(std::move(result), std::move(readResult));
@@ -182,7 +182,7 @@ void QuickSortVertices(std::vector<IGeometry::MeshIndexType>& sorted, IGeometry:
 } // namespace
 
 Result<> meshing_utilities::detail::GatherVertexCoordinates(const Float32AbstractDataStoreType& vertices, nonstd::span<const IGeometry::MeshIndexType> indexes, nonstd::span<usize> order,
-                                                           nonstd::span<float32> gathered, nonstd::span<float32> page)
+                                                            nonstd::span<float32> gathered, nonstd::span<float32> page)
 {
   if(vertices.getNumberOfComponents() != 3)
   {
@@ -192,7 +192,7 @@ Result<> meshing_utilities::detail::GatherVertexCoordinates(const Float32Abstrac
 }
 
 Result<> meshing_utilities::detail::GatherVertexCoordinates(const ITemporaryRecordStore& vertices, nonstd::span<const IGeometry::MeshIndexType> indexes, nonstd::span<usize> order,
-                                                           nonstd::span<float32> gathered, nonstd::span<float32> page)
+                                                            nonstd::span<float32> gathered, nonstd::span<float32> page)
 {
   if(vertices.recordSize() != 3 * sizeof(float32) || vertices.recordCount() > std::numeric_limits<usize>::max() || page.size() / 3 > vertices.maxRecordsPerBatch())
   {
@@ -216,8 +216,8 @@ meshing_utilities::SortedVerticesList meshing_utilities::OrderSharedVertices(con
   return {.axis = axis, .ordering = std::move(OrderSharedVerticesAlongAxis(axis, vertexListStore, shouldCancel))};
 }
 
-std::vector<IGeometry::MeshIndexType> meshing_utilities::OrderSharedVerticesAlongAxis(nx::core::meshing_utilities::AxialAlignment axis, const INodeGeometry0D::SharedVertexListType::StoreType& vertexList,
-                                                                                     const std::atomic_bool& shouldCancel)
+std::vector<IGeometry::MeshIndexType> meshing_utilities::OrderSharedVerticesAlongAxis(nx::core::meshing_utilities::AxialAlignment axis,
+                                                                                      const INodeGeometry0D::SharedVertexListType::StoreType& vertexList, const std::atomic_bool& shouldCancel)
 {
   std::vector<IGeometry::MeshIndexType> sorted(vertexList.getNumberOfTuples());
   std::iota(sorted.begin(), sorted.end(), 0);

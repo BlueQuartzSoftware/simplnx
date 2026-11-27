@@ -71,7 +71,7 @@ Parameters CreateColorMapFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   std::vector<uint8> defaultMask(3, 0);
   params.insert(std::make_unique<VectorUInt8ParameterType>(k_InvalidColorValue_Key, "Masked Color (RGB)", "The color to assign to voxels that have a mask value of FALSE", defaultMask,
-                                                       std::vector<std::string>{"Red", "Green", "Blue"}));
+                                                           std::vector<std::string>{"Red", "Green", "Blue"}));
   // Associate the Linkable Parameter(s) to the children parameters that they control
   params.linkParameters(k_UseMask_Key, k_MaskArrayPath_Key, true);
   params.linkParameters(k_UseMask_Key, k_InvalidColorValue_Key, true);

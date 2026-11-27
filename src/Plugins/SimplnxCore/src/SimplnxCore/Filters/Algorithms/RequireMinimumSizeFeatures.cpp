@@ -52,7 +52,8 @@ Result<> RequireMinimumSizeFeatures::operator()()
 
     if(unavailablePhase)
     {
-      std::string ss = fmt::format("The phase number {} is not available in the supplied Feature phases array with path {}", m_InputValues->phase_number, m_InputValues->feature_phases_path.toString());
+      std::string ss =
+          fmt::format("The phase number {} is not available in the supplied Feature phases array with path {}", m_InputValues->phase_number, m_InputValues->feature_phases_path.toString());
       return MakeErrorResult(-5555, ss);
     }
   }

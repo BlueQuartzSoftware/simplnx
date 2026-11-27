@@ -61,9 +61,9 @@ Parameters LabelContourImageFilter::parameters() const
                                                 "For objects that are 1 pixel wide, use Fully Connected on.",
                                                 false));
   params.insert(std::make_unique<Float64ParameterType>(k_BackgroundValue_Key, "Background Value",
-                                                   "The value that identifies the background. Background voxels are never on a contour, and interior voxels of a region are set to this value. For "
-                                                   "an integer input image the value must be finite and within the image type's range.",
-                                                   0.0));
+                                                       "The value that identifies the background. Background voxels are never on a contour, and interior voxels of a region are set to this value. For "
+                                                       "an integer input image the value must be finite and within the image type's range.",
+                                                       0.0));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
@@ -97,7 +97,7 @@ IFilter::PreflightResult LabelContourImageFilter::preflightImpl(const DataStruct
   if(inputArray.getNumberOfComponents() != 1)
   {
     return {.output_actions = MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Label Contour requires a single-component (scalar) input array, but '{}' has {} components.",
-                                                                                          selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
+                                                                                           selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
   }
 
   Result<OutputActions> resultOutputActions =

@@ -437,15 +437,15 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Child names containing the geometry na
   auto* elementAmPtr = AttributeMatrix::Create(dataStructure, "Cell Data", {2, 2, 2}, geomPtr->getId());
   REQUIRE(elementAmPtr != nullptr);
   geomPtr->setCellData(*elementAmPtr);
-  auto* dataPtr =
-      Int32ArrayType::Create(dataStructure, "Data", data_store_utilities::CreateDataStore<int32>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Data"), elementAmPtr->getShape(), {1}),
-                         elementAmPtr->getId());
+  auto* dataPtr = Int32ArrayType::Create(dataStructure, "Data",
+                                         data_store_utilities::CreateDataStore<int32>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Data"), elementAmPtr->getShape(), {1}),
+                                         elementAmPtr->getId());
   REQUIRE(dataPtr != nullptr);
   dataPtr->fill(7);
   auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "Geom Feature Data", {2}, geomPtr->getId());
   REQUIRE(featureAmPtr != nullptr);
-  auto* valuesPtr = Int32ArrayType::Create(dataStructure, "Geom Values",
-                                       data_store_utilities::CreateDataStore<int32>(dataStructure, featureAmPtr->getDataPaths().front().createChildPath("Geom Values"), {2}, {1}), featureAmPtr->getId());
+  auto* valuesPtr = Int32ArrayType::Create(
+      dataStructure, "Geom Values", data_store_utilities::CreateDataStore<int32>(dataStructure, featureAmPtr->getDataPaths().front().createChildPath("Geom Values"), {2}, {1}), featureAmPtr->getId());
   REQUIRE(valuesPtr != nullptr);
   valuesPtr->fill(42);
   PadImageGeometryFilter filter;
@@ -682,7 +682,9 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Execute active vector validation", "[S
   auto* destPtr = dataStructure.getDataAs<Int32ArrayType>(DataPath({"Padded", "Cells", "Marker"}));
   REQUIRE(destPtr != nullptr);
   destPtr->fill(99);
-  args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, row == 0 ? VectorInt32ParameterType::ValueType{-1, 0} : row == 1 ? VectorInt32ParameterType::ValueType{1} : VectorInt32ParameterType::ValueType{1, 1});
+  args.insertOrAssign(PadImageGeometryFilter::k_XMinMax_Key, row == 0 ? VectorInt32ParameterType::ValueType{-1, 0} :
+                                                             row == 1 ? VectorInt32ParameterType::ValueType{1} :
+                                                                        VectorInt32ParameterType::ValueType{1, 1});
   if(row >= 3)
   {
     args.insertOrAssign(PadImageGeometryFilter::k_PadYDim_Key, row == 3);
@@ -734,7 +736,7 @@ DataStructure CreatePadFeatureFixture(bool addFeatureAm, bool addEnsembleAm)
   geomPtr->setCellData(*cellAmPtr);
   auto* featureIdsPtr =
       Int32ArrayType::Create(dataStructure, "Feature Ids",
-                         data_store_utilities::CreateDataStore<int32>(dataStructure, srcGeomPath.createChildPath("Cell Data").createChildPath("Feature Ids"), {2, 2, 2}, {1}), cellAmPtr->getId());
+                             data_store_utilities::CreateDataStore<int32>(dataStructure, srcGeomPath.createChildPath("Cell Data").createChildPath("Feature Ids"), {2, 2, 2}, {1}), cellAmPtr->getId());
   REQUIRE(featureIdsPtr != nullptr);
   featureIdsPtr->fill(1);
   if(addFeatureAm)
@@ -928,8 +930,10 @@ TEST_CASE("SimplnxCore::PadImageGeometry: Zero padding on enabled axes preserves
   REQUIRE(cellAmPtr != nullptr);
   geomPtr->setCellData(*cellAmPtr);
   const DataPath cellPath({"Geom", "Cell Data"});
-  auto* scalarPtr = Int32ArrayType::Create(dataStructure, "Scalar", data_store_utilities::CreateDataStore<int32>(dataStructure, cellPath.createChildPath("Scalar"), {1, 2, 2}, {1}), cellAmPtr->getId());
-  auto* vectorPtr = Int32ArrayType::Create(dataStructure, "Vector", data_store_utilities::CreateDataStore<int32>(dataStructure, cellPath.createChildPath("Vector"), {1, 2, 2}, {2}), cellAmPtr->getId());
+  auto* scalarPtr =
+      Int32ArrayType::Create(dataStructure, "Scalar", data_store_utilities::CreateDataStore<int32>(dataStructure, cellPath.createChildPath("Scalar"), {1, 2, 2}, {1}), cellAmPtr->getId());
+  auto* vectorPtr =
+      Int32ArrayType::Create(dataStructure, "Vector", data_store_utilities::CreateDataStore<int32>(dataStructure, cellPath.createChildPath("Vector"), {1, 2, 2}, {2}), cellAmPtr->getId());
   REQUIRE(scalarPtr != nullptr);
   REQUIRE(vectorPtr != nullptr);
   const std::vector<int32> inputScalar = {1, 2, 3, 4};

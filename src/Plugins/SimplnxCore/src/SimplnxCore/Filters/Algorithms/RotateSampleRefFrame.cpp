@@ -92,7 +92,7 @@ Result<> RotateSampleRefFrame::operator()()
     filterProgressCallback.sendThreadSafeStatusMessage(fmt::format("Rotating Volume || Copying Data Array {}", srcDataObject->getName()));
 
     ExecuteParallelFunction<image_rotation_utilities::RotateImageGeometryWithNearestNeighbor>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr, rotateArgs, rotationMatrix,
-                                                                                            m_InputValues->slice_by_slice, &filterProgressCallback);
+                                                                                              m_InputValues->slice_by_slice, &filterProgressCallback);
   }
 
   taskRunner.wait();

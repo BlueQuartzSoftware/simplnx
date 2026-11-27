@@ -78,9 +78,9 @@ Parameters ComputeNeighborhoodsFilter::parameters() const
       "neighborhoods, and the neighbor relationship can be asymmetric.",
       1.0F));
   params.insert(std::make_unique<Float32ParameterType>(k_SearchRadius_Key, "Search Radius (microns)",
-                                                   "The absolute radius (in microns) within which to search for 'neighboring' Features. A Feature is a neighbor if its centroid lies within this "
-                                                   "distance of the target Feature's centroid.",
-                                                   1.0F));
+                                                       "The absolute radius (in microns) within which to search for 'neighboring' Features. A Feature is a neighbor if its centroid lies within this "
+                                                       "distance of the target Feature's centroid.",
+                                                       1.0F));
 
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Selected Image Geometry", "The target geometry", DataPath({"Data Container"}),
                                                              GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
@@ -255,13 +255,14 @@ Result<Arguments> ComputeNeighborhoodsFilter::FromSIMPLJson(const nlohmann::json
   std::vector<Result<>> results;
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_EquivalentDiametersArrayPathKey,
-                                                                                                                                      k_SelectedImageGeometryPath_Key));
+                                                                                                                                        k_SelectedImageGeometryPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<float32>>(args, json, simpl::k_MultiplesOfAverageKey, k_MultiplesOfAverage_Key));
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_EquivalentDiametersArrayPathKey, k_EquivalentDiametersArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CentroidsArrayPathKey, k_CentroidsArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NeighborhoodsArrayNameKey, k_NeighborhoodsArrayName_Key));
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NeighborhoodListArrayNameKey, k_NeighborhoodListArrayName_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_NeighborhoodListArrayNameKey, k_NeighborhoodListArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

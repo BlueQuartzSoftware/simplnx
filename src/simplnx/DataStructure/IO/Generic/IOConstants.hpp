@@ -55,4 +55,4 @@ inline constexpr StringLiteralType k_XBoundsTag = "X Bounds ID";
 inline constexpr StringLiteralType k_YBoundsTag = "Y Bounds ID";
 inline constexpr StringLiteralType k_ZBoundsTag = "Z Bounds ID";
 inline constexpr StringLiteralType k_DimensionsTag = "Dimensions";
-} // namespace nx::core::IOConstants
+} // namespace nx::core::io_constants

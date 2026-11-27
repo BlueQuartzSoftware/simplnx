@@ -43,8 +43,10 @@ ImageGeometryCropOptions CreateCropOptions(const DataPath& inputGeometryPath, co
   options.crop_z = croppingOptions.crop_z;
   options.min_voxel = {static_cast<uint64>(croppingOptions.x_bound_voxels[0]), static_cast<uint64>(croppingOptions.y_bound_voxels[0]), static_cast<uint64>(croppingOptions.z_bound_voxels[0])};
   options.max_voxel = {static_cast<uint64>(croppingOptions.x_bound_voxels[1]), static_cast<uint64>(croppingOptions.y_bound_voxels[1]), static_cast<uint64>(croppingOptions.z_bound_voxels[1])};
-  options.min_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[0]), static_cast<float64>(croppingOptions.y_bound_physical[0]), static_cast<float64>(croppingOptions.z_bound_physical[0])};
-  options.max_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[1]), static_cast<float64>(croppingOptions.y_bound_physical[1]), static_cast<float64>(croppingOptions.z_bound_physical[1])};
+  options.min_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[0]), static_cast<float64>(croppingOptions.y_bound_physical[0]),
+                            static_cast<float64>(croppingOptions.z_bound_physical[0])};
+  options.max_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[1]), static_cast<float64>(croppingOptions.y_bound_physical[1]),
+                            static_cast<float64>(croppingOptions.z_bound_physical[1])};
   return options;
 }
 
@@ -284,8 +286,9 @@ IFilter::PreflightResult ReadNIfTIFileFilter::preflightImpl(const DataStructure&
 
   preflightUpdatedValues.push_back({"Imported Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(dims, spacing, origin, IGeometry::LengthUnit::Unspecified)});
 
-  std::string scalingSummary =
-      md.has_nontrivial_scaling ? fmt::format("slope={}, inter={}{}", md.scl_slope, std::isfinite(md.scl_inter) ? md.scl_inter : 0.0f, (pApplyScaling ? " (applied → float32)" : " (not applied)")) : "none";
+  std::string scalingSummary = md.has_nontrivial_scaling ?
+                                   fmt::format("slope={}, inter={}{}", md.scl_slope, std::isfinite(md.scl_inter) ? md.scl_inter : 0.0f, (pApplyScaling ? " (applied → float32)" : " (not applied)")) :
+                                   "none";
   preflightUpdatedValues.push_back({"NIfTI Header", fmt::format("datatype code: {}  |  components: {}  |  byte-swap: {}  |  vox_offset: {}  |  scaling: {}", md.nifti_datatype, md.component_count,
                                                                 md.byte_swap_required ? "yes" : "no", md.vox_offset, scalingSummary)});
 

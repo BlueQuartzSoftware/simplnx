@@ -113,8 +113,8 @@ Result<std::any> GeneratedFileListParameter::fromJsonImpl(const nlohmann::json& 
   if(orderingCheck != to_underlying(OrderingType::LowToHigh) && orderingCheck != to_underlying(OrderingType::HighToLow))
   {
     return MakeErrorResult<std::any>(filter_parameter::constants::k_JsonValueNotEnumeration,
-                                     fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", k_Prefix.view(), k_Ordering.view(), to_underlying(OrderingType::LowToHigh),
-                                                 to_underlying(OrderingType::HighToLow)));
+                                     fmt::format("{}JSON value for key '{}' was not a valid ordering Value. [{}|{}] allowed.", k_Prefix.view(), k_Ordering.view(),
+                                                 to_underlying(OrderingType::LowToHigh), to_underlying(OrderingType::HighToLow)));
   }
 
   if(!json[k_PaddingDigits].is_number_unsigned())

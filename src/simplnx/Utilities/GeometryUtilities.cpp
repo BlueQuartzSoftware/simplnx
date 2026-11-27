@@ -269,12 +269,13 @@ Result<> geometry_utilities::ComputeTriangleNormals(const nx::core::TriangleGeom
   {
     // Preserve this utility's float arithmetic, which differs from the Eigen double path.
     return meshing_utilities::detail::CalculateNormalsInBlocks(triangleGeom->getFaces()->getDataStoreRef(), triangleGeom->getVertices()->getDataStoreRef(), normals, shouldCancel,
-                                                              [](const float32* a, const float32* b, const float32* c) -> std::array<float64, 3> {
-                                                                const std::array<FloatVec3Type, 3> vertCoords = {FloatVec3Type{a[0], a[1], a[2]}, FloatVec3Type{b[0], b[1], b[2]}, FloatVec3Type{c[0], c[1], c[2]}};
-                                                                auto normal = (vertCoords[1] - vertCoords[0]).cross(vertCoords[2] - vertCoords[0]);
-                                                                normal = normal / normal.magnitude();
-                                                                return {static_cast<float64>(normal[0]), static_cast<float64>(normal[1]), static_cast<float64>(normal[2])};
-                                                              });
+                                                               [](const float32* a, const float32* b, const float32* c) -> std::array<float64, 3> {
+                                                                 const std::array<FloatVec3Type, 3> vertCoords = {FloatVec3Type{a[0], a[1], a[2]}, FloatVec3Type{b[0], b[1], b[2]},
+                                                                                                                  FloatVec3Type{c[0], c[1], c[2]}};
+                                                                 auto normal = (vertCoords[1] - vertCoords[0]).cross(vertCoords[2] - vertCoords[0]);
+                                                                 normal = normal / normal.magnitude();
+                                                                 return {static_cast<float64>(normal[0]), static_cast<float64>(normal[1]), static_cast<float64>(normal[2])};
+                                                               });
   }
 
   // Parallel algorithm to find duplicate nodes
@@ -332,7 +333,7 @@ struct Edge
 struct Plane
 {
   FloatVec3Type normal; // Should be normalized
-  float d;          // Plane constant
+  float d;              // Plane constant
 
   // Construct a plane from a normal and a point on the plane
   Plane(const FloatVec3Type& normal_, const FloatVec3Type& point)
@@ -549,8 +550,8 @@ static Edge IntersectTriangleWithPlane(const FloatVec3Type& v0, const FloatVec3T
 // ----------------------------------------------------------------------------
 //
 usize geometry_utilities::DetermineBoundsAndNumSlices(float32& minDim, float32& maxDim, usize numTris, AbstractDataStore<INodeGeometry2D::SharedFaceListType::value_type>& tris,
-                                                     AbstractDataStore<INodeGeometry0D::SharedVertexListType::value_type>& triVerts, uint64 sliceRange, float32 zStart, float32 zEnd,
-                                                     float32 sliceResolution)
+                                                      AbstractDataStore<INodeGeometry0D::SharedVertexListType::value_type>& triVerts, uint64 sliceRange, float32 zStart, float32 zEnd,
+                                                      float32 sliceResolution)
 {
   for(usize i = 0; i < numTris; i++)
   {
@@ -598,7 +599,7 @@ inline static std::array<nx::core::FloatVec3Type, 3> GetFaceCoordinates(usize tr
 // ----------------------------------------------------------------------------
 //
 geometry_utilities::SliceTriangleReturnType geometry_utilities::SliceTriangleGeometry(nx::core::TriangleGeom& triangle, const std::atomic_bool& shouldCancel, uint64 sliceRange, float32 zStart,
-                                                                                    float32 zEnd, float32 sliceSpacing, AbstractDataStore<int32>* triRegionIdPtr)
+                                                                                      float32 zEnd, float32 sliceSpacing, AbstractDataStore<int32>* triRegionIdPtr)
 {
   if(!(sliceSpacing > 0.0f))
   {
@@ -719,7 +720,7 @@ Result<SizeVec3Type> geometry_utilities::ComputePaddedDimensions(const SizeVec3T
       if(amount > k_Max - output[axis])
       {
         return MakeErrorResult<SizeVec3Type>(k_PaddedExtentOverflowError, fmt::format("Parameter '{} Min & Max Padding' {} value {} with dimension {} produces an extent above {}.", "XYZ"[axis],
-                                                                                  side == 0 ? "Min" : "Max", amount, output[axis], k_Max));
+                                                                                      side == 0 ? "Min" : "Max", amount, output[axis], k_Max));
       }
       output[axis] += amount;
     }
@@ -734,8 +735,8 @@ Result<SizeVec3Type> geometry_utilities::ComputePaddedDimensions(const SizeVec3T
     if(output[axis] > k_Max / product)
     {
       return MakeErrorResult<SizeVec3Type>(k_PaddedTupleOverflowError,
-                                       fmt::format("Parameter '{} Min & Max Padding' values [{}, {}] with dimension {} produce padded {} extent {} and a tuple product above {}.", "XYZ"[axis],
-                                                   padding[axis][0], padding[axis][1], dims[axis], "XYZ"[axis], output[axis], k_Max));
+                                           fmt::format("Parameter '{} Min & Max Padding' values [{}, {}] with dimension {} produce padded {} extent {} and a tuple product above {}.", "XYZ"[axis],
+                                                       padding[axis][0], padding[axis][1], dims[axis], "XYZ"[axis], output[axis], k_Max));
     }
     product *= output[axis];
   }

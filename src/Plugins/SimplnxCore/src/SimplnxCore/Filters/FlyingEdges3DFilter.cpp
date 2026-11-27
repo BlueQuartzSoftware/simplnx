@@ -133,7 +133,7 @@ IFilter::PreflightResult FlyingEdges3DFilter::preflightImpl(const DataStructure&
   // Create the Triangle Geometry action and store it
   auto createTriangleGeometryAction =
       std::make_unique<CreateTriangleGeometryActionType>(pTriangleGeomName, static_cast<usize>(1), static_cast<usize>(1), INodeGeometry0D::k_VertexAttributeMatrixName,
-                                                     INodeGeometry2D::k_FaceAttributeMatrixName, TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
+                                                         INodeGeometry2D::k_FaceAttributeMatrixName, TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
   auto vertexNormalsPath = createTriangleGeometryAction->getVertexDataPath().createChildPath(k_VertexNormals);
   resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
 

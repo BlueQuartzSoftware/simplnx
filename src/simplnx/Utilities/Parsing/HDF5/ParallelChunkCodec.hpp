@@ -530,7 +530,7 @@ public:
    */
   struct ChunkInfo
   {
-    bool allocated = false;   // A false value can represent sparse storage or a failed HDF5 metadata query.
+    bool allocated = false;    // A false value can represent sparse storage or a failed HDF5 metadata query.
     uint32 filter_mask = 0;    // HDF5 mask for filters skipped on this chunk.
     uint64 stored_address = 0; // Raw chunk file offset.
     uint64 stored_size = 0;    // Raw chunk byte count.
@@ -759,7 +759,7 @@ private:
    * @return Completion, refusal, or failure after backend cleanup.
    */
   bounded_read::Status readExtentIntoBufferBoundedImpl(const Extent& fullValueExtent, nonstd::span<std::byte> destination, uint64 payloadBudgetBytes, Result<>& diagnostic,
-                                                      std::unique_ptr<std::byte[]>* selectedOutput) const;
+                                                       std::unique_ptr<std::byte[]>* selectedOutput) const;
 
   /**
    * @struct PreparedChunkBytes

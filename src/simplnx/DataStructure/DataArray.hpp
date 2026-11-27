@@ -33,7 +33,7 @@ namespace data_array_constants
  * @brief Names the generic DataArray type.
  */
 constexpr StringLiteralType k_TypeName = "DataArray<T>";
-} // namespace DataArrayConstants
+} // namespace data_array_constants
 
 /**
  * @class DataArray
@@ -918,7 +918,7 @@ private:
   }
 
   static Result<std::shared_ptr<StoreType>> PreparePlannedStore(const DataStructure& dataStructure, const DataPath& path, const ShapeType& tupleShape, const ShapeType& componentShape,
-                                                                 const std::string& requestedFormat)
+                                                                const std::string& requestedFormat)
   {
     try
     {

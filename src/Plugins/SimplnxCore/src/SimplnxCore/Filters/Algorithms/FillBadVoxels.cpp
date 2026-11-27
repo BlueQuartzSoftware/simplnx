@@ -114,7 +114,8 @@ inline NeighborSelection SelectNeighbor(const int32* previousSlice, const int32*
   return selection;
 }
 
-Result<> ScanFeatureIds(const Int32AbstractDataStoreType& featureIds, const std::array<usize, 3>& dimensions, std::optional<usize> maxFeatureCount, const std::atomic_bool& shouldCancel, FillScan& scan)
+Result<> ScanFeatureIds(const Int32AbstractDataStoreType& featureIds, const std::array<usize, 3>& dimensions, std::optional<usize> maxFeatureCount, const std::atomic_bool& shouldCancel,
+                        FillScan& scan)
 {
   const usize sliceSize = dimensions[0] * dimensions[1];
   auto featureBuffer = std::make_unique<int32[]>(3 * sliceSize);

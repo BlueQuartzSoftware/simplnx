@@ -81,4 +81,4 @@ template <class HeaderEntry, class Reader>
   reader.getHeaderMap().at(key) = entry;
   return entry;
 }
-} // namespace nx::core::EbsdStepMetadata
+} // namespace nx::core::ebsd_step_metadata

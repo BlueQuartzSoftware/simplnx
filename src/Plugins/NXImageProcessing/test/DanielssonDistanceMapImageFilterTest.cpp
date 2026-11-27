@@ -153,7 +153,7 @@ TEST_CASE("NXImageProcessing::DanielssonDistanceMapImageFilter: InputIsBinary is
     RunDanielsson(trueFilter, trueDs, trueInput, true, true, false, &trueScope);
   }
   unit_test::CompareDataArrays<float32>(falseDs.getDataRefAs<IDataArray>(DataPath({"Image Geometry", "CellData", "Output"})),
-                                       trueDs.getDataRefAs<IDataArray>(DataPath({"Image Geometry", "CellData", "Output"})));
+                                        trueDs.getDataRefAs<IDataArray>(DataPath({"Image Geometry", "CellData", "Output"})));
 }
 
 // -----------------------------------------------------------------------------

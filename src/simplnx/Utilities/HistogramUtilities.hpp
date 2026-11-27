@@ -384,8 +384,8 @@ using FeatureHasDataStatsType = std::tuple<std::vector<uint64>, std::vector<T>, 
 
 template <typename T>
 FeatureHasDataStatsType<T> CalculateFeatureHasDataStats(const AbstractDataStore<T>& inputDataStore, const AbstractDataStore<int32>& featureIdsStore, usize startFeatureId, usize endFeatureId,
-                                                    const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, const std::function<void(usize)>& reportProgress,
-                                                    const std::atomic_bool& shouldCancel)
+                                                        const std::unique_ptr<mask_compare_utilities::MaskCompare>& mask, const std::function<void(usize)>& reportProgress,
+                                                        const std::atomic_bool& shouldCancel)
 {
   const usize numTuples = featureIdsStore.getNumberOfTuples();
   const usize numCurrentFeatures = endFeatureId - startFeatureId;
@@ -457,4 +457,4 @@ struct InstantiateHistogramImplFunctor
   }
 };
 } // namespace concurrent
-} // namespace nx::core::HistogramUtilities
+} // namespace nx::core::histogram_utilities

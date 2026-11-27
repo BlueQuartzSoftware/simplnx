@@ -77,8 +77,8 @@ public:
 #else
                     std::vector<TriAreaAndNormals>& selectedTriangles,
 #endif
-                    float64 misResolution, int32 phaseOfInterest, const Matrix3dRType& gFixedT, uint32 crystalStruct, const float32* eulerCache, const int32* phasesCache, const Int32ArrayType& faceLabels,
-                    const Float64ArrayType& faceNormals, const Float64ArrayType& faceAreas)
+                    float64 misResolution, int32 phaseOfInterest, const Matrix3dRType& gFixedT, uint32 crystalStruct, const float32* eulerCache, const int32* phasesCache,
+                    const Int32ArrayType& faceLabels, const Float64ArrayType& faceNormals, const Float64ArrayType& faceAreas)
   : m_ExcludeTripleLines(excludeTripleLines)
   , m_Triangles(triangles)
   , m_NodeTypes(nodeTypes)
@@ -434,8 +434,9 @@ Result<> ComputeGBCDMetricBased::operator()()
   const uint32 currentLaueIndex = crystalStructuresCache[m_InputValues->phase_of_interest];
   if(currentLaueIndex >= orientationOps.size())
   {
-    return MakeErrorResult(-7240, fmt::format("Crystal Structures array '{}' has value {} at Phase index {}, but only {} Laue operations are available. Valid Laue indices are in [0, {}).",
-                                              m_InputValues->crystal_structures_array_path.toString(), currentLaueIndex, m_InputValues->phase_of_interest, orientationOps.size(), orientationOps.size()));
+    return MakeErrorResult(-7240,
+                           fmt::format("Crystal Structures array '{}' has value {} at Phase index {}, but only {} Laue operations are available. Valid Laue indices are in [0, {}).",
+                                       m_InputValues->crystal_structures_array_path.toString(), currentLaueIndex, m_InputValues->phase_of_interest, orientationOps.size(), orientationOps.size()));
   }
   {
     const int32 nSym = orientationOps[currentLaueIndex]->getNumSymOps();
@@ -645,8 +646,8 @@ Result<> ComputeGBCDMetricBased::operator()()
     return MakeErrorResult(-7238, fmt::format("Error creating GBCD Metric distribution errors output file {}", errorOutput.string()));
   }
 
-  std::string outputString = fmt::format("{:.1F} {:.1F} {:.1F} {:.1F}\n", m_InputValues->misorientation_rotation[0], m_InputValues->misorientation_rotation[1], m_InputValues->misorientation_rotation[2],
-                                         m_InputValues->misorientation_rotation[3]);
+  std::string outputString = fmt::format("{:.1F} {:.1F} {:.1F} {:.1F}\n", m_InputValues->misorientation_rotation[0], m_InputValues->misorientation_rotation[1],
+                                         m_InputValues->misorientation_rotation[2], m_InputValues->misorientation_rotation[3]);
   distributionOutStream << outputString;
   errorOutStream << outputString;
 

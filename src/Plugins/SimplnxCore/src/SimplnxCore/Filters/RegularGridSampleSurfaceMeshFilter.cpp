@@ -86,11 +86,11 @@ Parameters RegularGridSampleSurfaceMeshFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_UseExistingGeometry_Key, "Use existing geometry", "Should the filter create a new geometry or use an existing one",
                                                                     to_underlying(GeometryOption::Create), ChoicesParameter::ChoicesType{"Create geometry", "Use existing geometry"}));
   params.insert(std::make_unique<VectorUInt64ParameterType>(k_Dimensions_Key, "Dimensions (Voxels)", "The dimensions of the created Image geometry", std::vector<uint64>{128, 128, 128},
-                                                        std::vector<std::string>{"x", "y", "z"}));
-  params.insert(
-      std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Origin", "The origin of the created Image geometry", std::vector<float32>{0.0F, 0.0F, 0.0F}, std::vector<std::string>{"x", "y", "z"}));
-  params.insert(
-      std::make_unique<VectorFloat32ParameterType>(k_Spacing_Key, "Spacing", "The spacing of the created Image geometry", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"x", "y", "z"}));
+                                                            std::vector<std::string>{"x", "y", "z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Origin", "The origin of the created Image geometry", std::vector<float32>{0.0F, 0.0F, 0.0F},
+                                                             std::vector<std::string>{"x", "y", "z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Spacing_Key, "Spacing", "The spacing of the created Image geometry", std::vector<float32>{1.0F, 1.0F, 1.0F},
+                                                             std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<ChoicesParameter>(k_LengthUnit_Key, "Length Units (For Description Only)", "The units to be displayed below", to_underlying(IGeometry::LengthUnit::Micrometer),
                                                    IGeometry::GetAllLengthUnitStrings()));
 
@@ -190,8 +190,8 @@ IFilter::PreflightResult RegularGridSampleSurfaceMeshFilter::preflightImpl(const
     if(!std::isfinite(pSpacingValue[0]) || pSpacingValue[0] <= 0.0F || !std::isfinite(pSpacingValue[1]) || pSpacingValue[1] <= 0.0F || !std::isfinite(pSpacingValue[2]) || pSpacingValue[2] <= 0.0F)
     {
       return {.output_actions = MakeErrorResult<OutputActions>(-11802, fmt::format("**Spacing** must be a finite value greater than zero on every axis when creating an Image Geometry. "
-                                                                                  "Received X={}, Y={}, Z={}. Set each spacing component to a finite positive value.",
-                                                                                  pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]))};
+                                                                                   "Received X={}, Y={}, Z={}. Set each spacing component to a finite positive value.",
+                                                                                   pSpacingValue[0], pSpacingValue[1], pSpacingValue[2]))};
     }
 
     tupleDims = {static_cast<usize>(pDimensionsValue[0]), static_cast<usize>(pDimensionsValue[1]), static_cast<usize>(pDimensionsValue[2])};

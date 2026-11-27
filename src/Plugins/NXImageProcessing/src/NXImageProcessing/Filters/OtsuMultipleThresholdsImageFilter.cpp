@@ -122,7 +122,7 @@ IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const 
   if(inputArray.getNumberOfComponents() != 1)
   {
     return {.output_actions = MakeErrorResult<OutputActions>(-8310, fmt::format("Otsu Multiple Thresholds requires a single-component (scalar) input array, but '{}' has {} components.",
-                                                                               selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
+                                                                                selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
   }
 
   // Output is a uint8 label image regardless of the (numeric) input element type.

@@ -307,8 +307,8 @@ inline Result<WatershedTiledRecordLayout> CreateWatershedTiledRecordLayout(const
   }
 
   layout.tile_counts = {dimensions[0] / layout.tile_dimensions[0] + static_cast<usize>(dimensions[0] % layout.tile_dimensions[0] != 0),
-                       dimensions[1] / layout.tile_dimensions[1] + static_cast<usize>(dimensions[1] % layout.tile_dimensions[1] != 0),
-                       dimensions[2] / layout.tile_dimensions[2] + static_cast<usize>(dimensions[2] % layout.tile_dimensions[2] != 0)};
+                        dimensions[1] / layout.tile_dimensions[1] + static_cast<usize>(dimensions[1] % layout.tile_dimensions[1] != 0),
+                        dimensions[2] / layout.tile_dimensions[2] + static_cast<usize>(dimensions[2] % layout.tile_dimensions[2] != 0)};
   usize logicalSlice = 0;
   usize tileCount = 0;
   if(!TryMultiplyWatershedSize(dimensions[0], dimensions[1], logicalSlice) || !TryMultiplyWatershedSize(logicalSlice, dimensions[2], layout.logical_record_count) ||
@@ -512,9 +512,9 @@ Result<WatershedExternalMemoryPlan<TInput>> CreateWatershedExternalMemoryPlan(us
   plan.use_tiled_voxel_layout = plan.use_bucket_queue && !plan.complete_primary_state_cache && !plan.use_split_bucket_state;
   plan.use_packed_combined_state = plan.use_bucket_queue && !plan.use_split_bucket_state && !plan.use_packed_resident_status_state;
   plan.voxel_record_bytes = plan.use_split_bucket_state ?
-                              sizeof(WatershedBucketVoxelRecord) :
-                              (plan.use_packed_resident_status_state ? sizeof(WatershedPackedResidentStatusVoxelRecordType<TInput>) :
-                                                                   (plan.use_packed_combined_state ? sizeof(WatershedPackedVoxelRecordType<TInput>) : sizeof(WatershedVoxelRecord<TInput>)));
+                                sizeof(WatershedBucketVoxelRecord) :
+                                (plan.use_packed_resident_status_state ? sizeof(WatershedPackedResidentStatusVoxelRecordType<TInput>) :
+                                                                         (plan.use_packed_combined_state ? sizeof(WatershedPackedVoxelRecordType<TInput>) : sizeof(WatershedVoxelRecord<TInput>)));
   plan.voxel_records_per_page = std::max<usize>(1, k_WatershedPageTargetBytes / plan.voxel_record_bytes);
   if(plan.use_tiled_voxel_layout)
   {
@@ -1144,7 +1144,7 @@ public:
     if(m_LoadedHeadBlock.value_count == 0 || m_LoadedHeadBlock.value_count > m_LoadedHeadBlock.values.size() || bucket.head_offset >= m_LoadedHeadBlock.value_count)
     {
       return MakeErrorResult<RecordType>(-79066, fmt::format("External watershed bucket block {} has invalid read metadata. Stored values: {}; head offset: {}; block capacity: {}.", bucket.head_block,
-                                                         m_LoadedHeadBlock.value_count, bucket.head_offset, m_LoadedHeadBlock.values.size()));
+                                                             m_LoadedHeadBlock.value_count, bucket.head_offset, m_LoadedHeadBlock.values.size()));
     }
     const int64 flatIndex = m_LoadedHeadBlock.values[bucket.head_offset];
     ++bucket.head_offset;

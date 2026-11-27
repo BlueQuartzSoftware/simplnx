@@ -348,4 +348,4 @@ std::optional<std::pair<T, T>> FindModalBinRange(T mode, T histMin, nx::core::fl
   }
   return std::nullopt;
 }
-} // namespace StatisticsCalculations
+} // namespace statistics_calculations

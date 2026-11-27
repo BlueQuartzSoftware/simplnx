@@ -30,4 +30,4 @@ hid_t Register();
  * so it behaves as a plain pass-through.
  */
 void SetDelayMicroseconds(nx::core::uint64 microseconds);
-} // namespace DelayVfd
+} // namespace delay_vfd

@@ -168,7 +168,7 @@ Result<> ReadNrrdBackend(DataStructure& dataStructure, const ReadImageInputValue
   nrrdInputs.image_data_array_name = inputValues.image_data_array_path.getTargetName();
   nrrdInputs.cropping_options = inputValues.cropping_options;
   nrrdInputs.geometry_overrides = {.Origin = inputValues.change_origin ? std::optional{inputValues.origin} : std::nullopt,
-                                  .Spacing = inputValues.change_spacing ? std::optional{inputValues.spacing} : std::nullopt};
+                                   .Spacing = inputValues.change_spacing ? std::optional{inputValues.spacing} : std::nullopt};
   nrrdInputs.processing = inputValues.origin_spacing_processing;
   nrrdInputs.center_origin = inputValues.center_origin;
 
@@ -240,7 +240,7 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
       FloatVec3Type srcOrigin = metadata.origin.value_or(FloatVec3Type{0.0F, 0.0F, 0.0F});
       FloatVec3Type srcSpacing = metadata.spacing.value_or(FloatVec3Type{1.0F, 1.0F, 1.0F});
       const image_io::GeometryOverrides overrides{.Origin = inputValues.change_origin ? std::optional{inputValues.origin} : std::nullopt,
-                                                 .Spacing = inputValues.change_spacing ? std::optional{inputValues.spacing} : std::nullopt};
+                                                  .Spacing = inputValues.change_spacing ? std::optional{inputValues.spacing} : std::nullopt};
       const SizeVec3Type srcDims{metadata.width, metadata.height, inputValues.read_single_page_only ? usize{1} : metadata.num_pages};
       if(auto result = image_io::ResolveCropGeometry(inputFilePath, overrides, inputValues.origin_spacing_processing, inputValues.center_origin, srcDims, srcOrigin, srcSpacing); result.invalid())
       {

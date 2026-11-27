@@ -76,7 +76,7 @@ Parameters WriteAbaqusCrystalPlasticityFilter::parameters() const
   params.insert(
       std::make_unique<BoolParameter>(k_IncludeGrainAndPhaseIds_Key, "Include Grain and Phase IDs as Constants", "When true, the grain ID and phase ID are written as constants 1 and 2.", true));
   params.insert(std::make_unique<Int32ParameterType>(k_EulerAnglesStartIndex_Key, "Euler Angles Start Index",
-                                                 "The 1-based position of the first Euler angle in the *User Material constant list. The three angles occupy this position and the next two.", 3));
+                                                     "The 1-based position of the first Euler angle in the *User Material constant list. The three angles occupy this position and the next two.", 3));
 
   DynamicTableInfo tableInfo;
   tableInfo.setRowsInfo(DynamicTableInfo::DynamicVectorInfo(1, 6, "User Constant {}"));
@@ -98,8 +98,8 @@ Parameters WriteAbaqusCrystalPlasticityFilter::parameters() const
                                                           ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<ArraySelectionParameter>(k_CellEulerAnglesArrayPath_Key, "Cell Euler Angles", "The Euler angles in radians for each cell.", DataPath{},
                                                           ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{3}}));
-  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "The phase ID for each cell.", DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::int32},
-                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+  params.insert(std::make_unique<ArraySelectionParameter>(k_CellPhasesArrayPath_Key, "Cell Phases", "The phase ID for each cell.", DataPath{},
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::int32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.linkParameters(k_UseReducedIntegration_Key, k_HourglassStiffness_Key, true);
 

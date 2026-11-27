@@ -184,7 +184,7 @@ std::array<float64, 3> RayLengths(const DataStructure& data, const FrameType& fr
   std::iota(faces.begin(), faces.end(), 0);
   const auto& centers = Output(data, "Centroids");
   const auto lengths = compute_shapes_triangle_geom_detail::FindIntersections(frame, faces, geometry.getFacesRef().getDataStoreRef(), geometry.getVerticesRef().getDataStoreRef(),
-                                                                          centers.getDataStoreRef(), 1, std::atomic_bool{false});
+                                                                              centers.getDataStoreRef(), 1, std::atomic_bool{false});
   return {lengths.x_length, lengths.y_length, lengths.z_length};
 }
 } // namespace

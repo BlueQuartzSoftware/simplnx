@@ -668,7 +668,8 @@ public:
    * @param transformationMatrix Maps source coordinates to output coordinates.
    * @param filterCallback Receives progress, cancellation, and worker errors.
    */
-  RotateImageGeometryWithTrilinearInterpolation(const IDataArray* sourceArray, IDataArray* targetArray, RotateArgs rotateArgs, Matrix4fRType transformationMatrix, FilterProgressCallback* filterCallback)
+  RotateImageGeometryWithTrilinearInterpolation(const IDataArray* sourceArray, IDataArray* targetArray, RotateArgs rotateArgs, Matrix4fRType transformationMatrix,
+                                                FilterProgressCallback* filterCallback)
   : m_SourceArray(sourceArray)
   , m_TargetArray(targetArray)
   , m_Params(std::move(rotateArgs))
@@ -1370,4 +1371,4 @@ private:
   IGeometry::SharedVertexListType& m_Vertices;
   FilterProgressCallback* m_FilterCallback = nullptr;
 };
-} // namespace nx::core::ImageRotationUtilities
+} // namespace nx::core::image_rotation_utilities

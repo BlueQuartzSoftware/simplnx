@@ -1660,8 +1660,8 @@ private:
  * @param negateOutput Selects sign inversion during final backward processing.
  * @return An error for invalid storage sizes, failed transfers, or failed allocations. Cancellation returns a valid result.
  */
-inline Result<> ApplyFastChamferDistance(AbstractDataStore<float32>& store, const SizeVec3Type& dims, float32 maxDist, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
-                                         bool negateOutput = false)
+inline Result<> ApplyFastChamferDistance(AbstractDataStore<float32>& store, const SizeVec3Type& dims, float32 maxDist, const std::atomic_bool& shouldCancel,
+                                         const IFilter::MessageHandler& messageHandler, bool negateOutput = false)
 {
   FastChamferDistance engine(store, dims, maxDist, shouldCancel, messageHandler, detail::k_Chamfer2DResidentLimit, negateOutput);
   return engine();

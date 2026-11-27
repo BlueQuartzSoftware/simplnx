@@ -70,11 +70,11 @@ struct NXIMAGEPROCESSING_EXPORT MetaImageMetadata
   usize element_size{1};               ///< Bytes per component (for byteswap).
 
   // Data placement + decode.
-  Encoding encoding{Encoding::Raw};   ///< raw or zlib-compressed.
+  Encoding encoding{Encoding::Raw};     ///< raw or zlib-compressed.
   bool byte_swap_required{false};       ///< File endian differs from host (multi-byte only).
   usize data_start_offset{0};           ///< Byte offset of data within dataFilePath.
   std::filesystem::path data_file_path; ///< Header path (attached) or sibling (detached).
-  bool detached{false};               ///< True for .mhd + external data file.
+  bool detached{false};                 ///< True for .mhd + external data file.
 
   // Transform (orthogonal to the axis-aligned base geometry; consumed by the
   // filter's transform feature). Row-major, exactly nDims*nDims values as they

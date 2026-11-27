@@ -46,4 +46,4 @@ private:
   }
   return collection.addIOManager(std::make_shared<PlaceholderPlanManager>(format));
 }
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test

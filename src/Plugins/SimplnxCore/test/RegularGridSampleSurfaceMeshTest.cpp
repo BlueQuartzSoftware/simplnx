@@ -66,7 +66,8 @@ void BuildVerticalQuads(DataStructure& dataStructure, const std::vector<float32>
   auto* faceDataPtr = AttributeMatrix::Create(dataStructure, constants::k_FaceData, ShapeType{numQuads * 2}, triangleGeomPtr->getId());
   REQUIRE(faceDataPtr != nullptr);
   triangleGeomPtr->setFaceAttributeMatrix(*faceDataPtr);
-  auto* labelsPtr = Int32ArrayType::Create(dataStructure, constants::k_FaceLabels, data_store_utilities::CreateDataStore<int32>(dataStructure, k_FaceLabelsPath, {numQuads * 2}, {2}), faceDataPtr->getId());
+  auto* labelsPtr =
+      Int32ArrayType::Create(dataStructure, constants::k_FaceLabels, data_store_utilities::CreateDataStore<int32>(dataStructure, k_FaceLabelsPath, {numQuads * 2}, {2}), faceDataPtr->getId());
   REQUIRE(labelsPtr != nullptr);
   for(usize quadIdx = 0; quadIdx < numQuads; ++quadIdx)
   {

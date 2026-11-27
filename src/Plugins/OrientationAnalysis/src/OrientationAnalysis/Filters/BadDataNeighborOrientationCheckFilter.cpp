@@ -58,11 +58,11 @@ Parameters BadDataNeighborOrientationCheckFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float32ParameterType>(k_MisorientationTolerance_Key, "Misorientation Tolerance (Degrees)", "Angular tolerance used to compare with neighboring Cells", 5.0f));
   params.insert(std::make_unique<Int32ParameterType>(k_NumberOfNeighbors_Key, "Required Number of Neighbors",
-                                                 "Minimum number of neighbor Cells that must have orientations within above tolerance to allow Cell to be changed", 6));
+                                                     "Minimum number of neighbor Cells that must have orientations within above tolerance to allow Cell to be changed", 6));
 
   params.insertSeparator(Parameters::Separator{"Input Image Geometry"});
-  params.insert(
-      std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The target geometry", DataPath{}, GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
+  params.insert(std::make_unique<GeometrySelectionParameter>(k_ImageGeometryPath_Key, "Image Geometry", "The target geometry", DataPath{},
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Image}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_QuatsArrayPath_Key, "Cell Quaternions", "Specifies the orientation of the Cell in quaternion representation", DataPath{},

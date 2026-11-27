@@ -197,8 +197,8 @@ Result<> ConvertOrientationsToVertexGeometry::operator()()
         if(currentPhaseIdx < 0 || static_cast<usize>(currentPhaseIdx) >= crystalStructuresCache.size())
         {
           return MakeErrorResult(-1005, fmt::format("Cell Phases array '{}' has value {} at tuple index {}, but Crystal Structures array '{}' contains {} tuples. Valid Phase indices are in [0, {}).",
-                                                    m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, tupleIdx + chunkTupleIdx, m_InputValues->crystal_structures_array_path.toString(),
-                                                    crystalStructuresCache.size(), crystalStructuresCache.size()));
+                                                    m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, tupleIdx + chunkTupleIdx,
+                                                    m_InputValues->crystal_structures_array_path.toString(), crystalStructuresCache.size(), crystalStructuresCache.size()));
         }
         const uint32 currentLaueIndex = crystalStructuresCache[currentPhaseIdx];
         quat = (currentLaueIndex < orientationOps.size()) ? orientationOps[currentLaueIndex]->getFZQuat(quat) : ebsdlib::QuatD(0, 0, 0, 1);

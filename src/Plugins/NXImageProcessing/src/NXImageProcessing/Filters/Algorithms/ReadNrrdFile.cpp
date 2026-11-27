@@ -239,7 +239,7 @@ Result<> ReadNrrdFile::operator()()
   FloatVec3Type origin{md.origin[0], md.origin[1], md.origin[2]};
   FloatVec3Type spacing{md.spacing[0], md.spacing[1], md.spacing[2]};
   if(auto result = image_io::ResolveCropGeometry(m_InputValues->input_file_path, m_InputValues->geometry_overrides, m_InputValues->processing, m_InputValues->center_origin,
-                                                SizeVec3Type{md.dimensions[0], md.dimensions[1], md.dimensions[2]}, origin, spacing);
+                                                 SizeVec3Type{md.dimensions[0], md.dimensions[1], md.dimensions[2]}, origin, spacing);
      result.invalid())
   {
     return result;

@@ -458,7 +458,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::IsoContourDistanceEngine: direct route ma
   constexpr float64 k_FarValue = 100.0;
   const FloatVec3Type kUnitSpacing{1.0f, 1.0f, 1.0f};
   const std::array<SizeVec3Type, 10> dimensions = {SizeVec3Type{1, 1, 1}, SizeVec3Type{1, 1, 7}, SizeVec3Type{7, 1, 1},    SizeVec3Type{1, 5, 1},  SizeVec3Type{2, 2, 2},
-                                               SizeVec3Type{3, 3, 3}, SizeVec3Type{7, 6, 5}, SizeVec3Type{17, 13, 11}, SizeVec3Type{33, 9, 7}, SizeVec3Type{5, 40, 6}};
+                                                   SizeVec3Type{3, 3, 3}, SizeVec3Type{7, 6, 5}, SizeVec3Type{17, 13, 11}, SizeVec3Type{33, 9, 7}, SizeVec3Type{5, 40, 6}};
   constexpr std::array<IsoFieldMode, 4> k_Modes = {IsoFieldMode::Dense, IsoFieldMode::Band, IsoFieldMode::Flat, IsoFieldMode::Level};
 
   for(usize dimensionsIndex = 0; dimensionsIndex < dimensions.size(); ++dimensionsIndex)

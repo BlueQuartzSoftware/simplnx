@@ -127,4 +127,4 @@ Result<> RandomizeFeatureIds(Int32AbstractDataStoreType& featureIdsStore, usize 
   }
   return {};
 }
-} // namespace nx::core::ClusterUtilities
+} // namespace nx::core::cluster_utilities

@@ -758,8 +758,9 @@ TEST_CASE("SimplnxCore::InitializeDataFilter 19: Multi Component Standardized-Ra
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
 
-  ::BoundsCheck<uint32, true>(dataStructure.getDataRefAs<UInt32ArrayType>(::k_BaselinePath), {std::numeric_limits<uint32>::min(), std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::min(),
-                                                                                          std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::min(), std::numeric_limits<uint32>::max()});
+  ::BoundsCheck<uint32, true>(dataStructure.getDataRefAs<UInt32ArrayType>(::k_BaselinePath),
+                              {std::numeric_limits<uint32>::min(), std::numeric_limits<uint32>::max(), std::numeric_limits<uint32>::min(), std::numeric_limits<uint32>::max(),
+                               std::numeric_limits<uint32>::min(), std::numeric_limits<uint32>::max()});
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

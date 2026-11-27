@@ -573,15 +573,16 @@ Result<> ApplyBinaryThinningSliceBatches(const AbstractDataStore<T>& inStore, Ab
   ThrottledMessageHandler progressThrottle(messageHandler);
   usize volumeValues = 0;
   auto expectedPlanResult = CreateBinaryThinningSliceBatchPlan<T>(dims, plan.resident_bytes, plan.worker_count);
-  const bool planMatches = expectedPlanResult.valid() && expectedPlanResult.value().slice_values == plan.slice_values && expectedPlanResult.value().marker_words_per_slice == plan.marker_words_per_slice &&
-                           expectedPlanResult.value().bytes_per_worker == plan.bytes_per_worker && expectedPlanResult.value().worker_count == plan.worker_count &&
-                           expectedPlanResult.value().resident_bytes == plan.resident_bytes;
+  const bool planMatches = expectedPlanResult.valid() && expectedPlanResult.value().slice_values == plan.slice_values &&
+                           expectedPlanResult.value().marker_words_per_slice == plan.marker_words_per_slice && expectedPlanResult.value().bytes_per_worker == plan.bytes_per_worker &&
+                           expectedPlanResult.value().worker_count == plan.worker_count && expectedPlanResult.value().resident_bytes == plan.resident_bytes;
   if(!planMatches || !BinaryThinningCheckedMultiply(plan.slice_values, dims[2], volumeValues) || inStore.getSize() != volumeValues || outStore.getSize() != volumeValues)
   {
-    return MakeErrorResult(
-        -8717, fmt::format("Binary thinning received an invalid 3D slice-batch plan for dimensions {} x {} x {}. Input values: {}; output values: {}; slice values: {}; workers: {}; "
-                           "marker words: {}; bytes per worker: {}; resident bytes: {}.",
-                           dims[0], dims[1], dims[2], inStore.getSize(), outStore.getSize(), plan.slice_values, plan.worker_count, plan.marker_words_per_slice, plan.bytes_per_worker, plan.resident_bytes));
+    return MakeErrorResult(-8717,
+                           fmt::format("Binary thinning received an invalid 3D slice-batch plan for dimensions {} x {} x {}. Input values: {}; output values: {}; slice values: {}; workers: {}; "
+                                       "marker words: {}; bytes per worker: {}; resident bytes: {}.",
+                                       dims[0], dims[1], dims[2], inStore.getSize(), outStore.getSize(), plan.slice_values, plan.worker_count, plan.marker_words_per_slice, plan.bytes_per_worker,
+                                       plan.resident_bytes));
   }
 
   usize batchCapacityValues = 0;
@@ -602,8 +603,8 @@ Result<> ApplyBinaryThinningSliceBatches(const AbstractDataStore<T>& inStore, Ab
     deletionMarkers = std::make_unique_for_overwrite<uint64[]>(batchMarkerWords);
   } catch(const std::bad_alloc&)
   {
-    return MakeErrorResult(-8717, fmt::format("Binary thinning could not allocate {} bytes for {} Z-slice workers. Slice values: {}; marker words per slice: {}.", plan.resident_bytes, plan.worker_count,
-                                              plan.slice_values, plan.marker_words_per_slice));
+    return MakeErrorResult(-8717, fmt::format("Binary thinning could not allocate {} bytes for {} Z-slice workers. Slice values: {}; marker words per slice: {}.", plan.resident_bytes,
+                                              plan.worker_count, plan.slice_values, plan.marker_words_per_slice));
   }
 
   progressThrottle.reset(dims[2], "Thinning Binary Slices");
@@ -1149,7 +1150,7 @@ Result<> ApplyBinaryThinningExternal2D(const AbstractDataStore<T>& inStore, Abst
       const std::string passLabel = fmt::format("Binary Thinning Iteration {} Pass {} Values", completedIterations + 1, step);
       progressThrottle.reset(volumeValues, passLabel);
       auto stepResult = plan.use_tiles ? ApplyBinaryThinningExternalSubstepTiles(*sourcePtr, *destinationPtr, dims[0], dims[1], step, shouldCancel, plan, &progressThrottle) :
-                                        ApplyBinaryThinningExternalSubstepBlocks(*sourcePtr, *destinationPtr, dims[0], dims[1], step, shouldCancel, plan, &progressThrottle);
+                                         ApplyBinaryThinningExternalSubstepBlocks(*sourcePtr, *destinationPtr, dims[0], dims[1], step, shouldCancel, plan, &progressThrottle);
       if(stepResult.invalid())
       {
         return ConvertResult(std::move(stepResult));

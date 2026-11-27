@@ -448,7 +448,8 @@ Result<> ComputeGBCD::operator()()
             -75000,
             fmt::format(
                 "Feature Phases array '{}' has value {} at Feature index {}, referenced by face {}, but Crystal Structures array '{}' contains {} tuples. Valid positive Phase indices are in [1, {}).",
-                m_InputValues->feature_phases_array_path.toString(), currentPhaseIdx, firstFeatureIdx, i + chunkFaceIdx, m_InputValues->crystal_structures_array_path.toString(), totalPhases, totalPhases));
+                m_InputValues->feature_phases_array_path.toString(), currentPhaseIdx, firstFeatureIdx, i + chunkFaceIdx, m_InputValues->crystal_structures_array_path.toString(), totalPhases,
+                totalPhases));
       }
       const uint32 currentLaueIndex = crystalStructuresCache[currentPhaseIdx];
       if(currentLaueIndex >= orientationOps.size())

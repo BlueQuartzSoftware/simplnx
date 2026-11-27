@@ -164,8 +164,8 @@ Result<> PartitionGeometryScanline::partitionCellBasedGeometry(const IGridGeomet
   return {};
 }
 
-Result<> PartitionGeometryScanline::partitionNodeBasedGeometry(const VertexStoreType& vertexListStore, Int32AbstractDataStoreType& partitionIdsStore, const ImageGeom& psImageGeom, int outOfBoundsValue,
-                                                               const std::optional<const BoolArrayType>& maskArrayOpt)
+Result<> PartitionGeometryScanline::partitionNodeBasedGeometry(const VertexStoreType& vertexListStore, Int32AbstractDataStoreType& partitionIdsStore, const ImageGeom& psImageGeom,
+                                                               int outOfBoundsValue, const std::optional<const BoolArrayType>& maskArrayOpt)
 {
   const usize numTuples = vertexListStore.getNumberOfTuples();
   auto verticesBuffer = std::make_unique<float32[]>(std::min(k_ChunkTuples, numTuples) * 3);

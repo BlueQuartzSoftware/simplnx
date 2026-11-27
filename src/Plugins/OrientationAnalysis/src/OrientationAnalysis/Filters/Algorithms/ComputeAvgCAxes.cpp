@@ -121,8 +121,8 @@ Result<> ComputeAvgCAxes::operator()()
         if(currentPhaseIdx < 0 || static_cast<usize>(currentPhaseIdx) >= numCrystalStructures)
         {
           return MakeErrorResult(-76404, fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in [0, {}).",
-                                                     m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, tupleIdx + chunkTupleIdx, m_InputValues->crystal_structures_array_path.toString(),
-                                                     numCrystalStructures, numCrystalStructures));
+                                                     m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, tupleIdx + chunkTupleIdx,
+                                                     m_InputValues->crystal_structures_array_path.toString(), numCrystalStructures, numCrystalStructures));
         }
         const auto crystalStructureType = crystalStructuresCache[currentPhaseIdx];
         const usize cAxesIndex = 3 * static_cast<usize>(currentFeatureIdx);

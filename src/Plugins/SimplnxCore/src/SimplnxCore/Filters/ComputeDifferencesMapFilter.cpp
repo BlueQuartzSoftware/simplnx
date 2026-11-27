@@ -173,7 +173,7 @@ IFilter::PreflightResult ComputeDifferencesMapFilter::preflightImpl(const DataSt
   if(!tupleValidityCheck)
   {
     return {.output_actions = MakeErrorResult<OutputActions>(k_InvalidNumTuples,
-                                                            fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
+                                                             fmt::format("The following DataArrays all must have equal number of tuples but this was not satisfied.\n{}", tupleValidityCheck.error()))};
   }
 
   // At this point we have two valid arrays of the same type and component dimensions, so we

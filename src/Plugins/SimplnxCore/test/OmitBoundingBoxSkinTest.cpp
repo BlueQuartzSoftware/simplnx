@@ -27,7 +27,7 @@ const DataPath k_TriangleGeomPath({"QuickMesh"});
 surface_meshing_test::MeshResult RunQuickSurfaceMesh(bool flushWithBottom, ChoicesParameter::ValueType boundingBoxSkinMode)
 {
   return surface_meshing_test::RunMesher<QuickSurfaceMeshFilter>(surface_meshing_test::CreateCylinderInBox(flushWithBottom), k_TriangleGeomPath, boundingBoxSkinMode,
-                                                               [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
+                                                                 [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
 }
 } // namespace
 
@@ -943,7 +943,7 @@ TEST_CASE("SimplnxCore::Bounding Box Skin: corner Feature stays watertight", "[S
   {
     surface_meshing_test::MeshResult meshResult =
         surface_meshing_test::RunMesher<QuickSurfaceMeshFilter>(CreateCornerFeatureInBox(), k_TriangleGeomPath, bounding_box_skin_mode::k_BackgroundBackedWallsOnly,
-                                                              [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
+                                                                [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
     const auto labelPairs = surface_meshing_test::CollectLabelPairs(meshResult);
     CHECK(labelPairs.count({-1, 1}) == 1);
     CHECK(labelPairs.count({0, 1}) == 1);

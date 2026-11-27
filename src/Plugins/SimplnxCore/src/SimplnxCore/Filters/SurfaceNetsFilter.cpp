@@ -187,7 +187,7 @@ IFilter::PreflightResult SurfaceNetsFilter::preflightImpl(const DataStructure& d
   // Create the Triangle Geometry action and store it
   {
     auto createTriangleGeometryAction = std::make_unique<CreateTriangleGeometryActionType>(pTriangleGeometryPath, k_NumElements, 1, pVertexGroupDataName, pFaceGroupDataName,
-                                                                                       TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
+                                                                                           TriangleGeom::k_SharedVertexListName, TriangleGeom::k_SharedFacesListName);
     resultOutputActions.value().appendAction(std::move(createTriangleGeometryAction));
   }
   // Create the face NodesType DataArray action and store it

@@ -113,7 +113,8 @@ bool MergeWindingTransfer(Result<>& result, WindingTransferWarnings& warnings, R
  * Cancellation discards incomplete volume sums. Completed reversal blocks remain written.
  */
 Result<> ReverseNegativeVolumesBoundedImpl(WindingTransferWarnings& warnings, AbstractDataStore<MeshIndexType>& triangles, const Float32AbstractDataStoreType& vertices,
-                                           const Int32AbstractDataStoreType& idsStore, const std::string& geometryPath, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+                                           const Int32AbstractDataStoreType& idsStore, const std::string& geometryPath, const std::atomic_bool& shouldCancel,
+                                           const IFilter::MessageHandler& messageHandler)
 {
   Result<> result;
   const usize triangleCount = triangles.getNumberOfTuples();
@@ -334,8 +335,8 @@ Result<> ReverseNegativeVolumesBoundedImpl(WindingTransferWarnings& warnings, Ab
   }
 }
 
-Result<> ReverseNegativeVolumesBounded(AbstractDataStore<MeshIndexType>& triangles, const Float32AbstractDataStoreType& vertices, const Int32AbstractDataStoreType& idsStore, const std::string& geometryPath,
-                                       const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+Result<> ReverseNegativeVolumesBounded(AbstractDataStore<MeshIndexType>& triangles, const Float32AbstractDataStoreType& vertices, const Int32AbstractDataStoreType& idsStore,
+                                       const std::string& geometryPath, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   WindingTransferWarnings warnings;
   auto result = ReverseNegativeVolumesBoundedImpl(warnings, triangles, vertices, idsStore, geometryPath, shouldCancel, messageHandler);
@@ -503,7 +504,8 @@ Result<> VerifyTriangleWinding::operator()()
   }
 
   m_MessageHandler.sendInfoMessage("Checking for duplicates - sorting vertices");
-  const meshing_utilities::SortedVerticesList sortedVerticesList = meshing_utilities::OrderSharedVertices(m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->target_geometry_path), m_ShouldCancel);
+  const meshing_utilities::SortedVerticesList sortedVerticesList =
+      meshing_utilities::OrderSharedVertices(m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->target_geometry_path), m_ShouldCancel);
 
   m_MessageHandler.sendInfoMessage("Checking for duplicates - validating");
   auto& triGeom = m_DataStructure.getDataRefAs<TriangleGeom>(m_InputValues->target_geometry_path);

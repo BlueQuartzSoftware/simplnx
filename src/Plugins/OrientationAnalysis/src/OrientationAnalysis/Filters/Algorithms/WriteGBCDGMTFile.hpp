@@ -17,7 +17,7 @@ namespace nx::core
  */
 struct ORIENTATIONANALYSIS_EXPORT WriteGBCDGMTFileInputValues
 {
-  int32 phase_of_interest{};                                  ///< One-based phase index in the GBCD array.
+  int32 phase_of_interest{};                                     ///< One-based phase index in the GBCD array.
   VectorFloat32ParameterType::ValueType misorientation_rotation; ///< Angle in degrees followed by axis x, y, and z.
   FileSystemPathParameter::ValueType output_file;
   DataPath gbcd_array_path;

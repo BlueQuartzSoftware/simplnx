@@ -169,8 +169,8 @@ Result<> SilhouetteDirect::operator()()
     const int32 clusterId = featureIds[tupleIdx];
     if(clusterId < 0)
     {
-      return MakeErrorResult(-54081, fmt::format("Cluster Ids DataArray '{}' contains negative value {} at tuple {}. Cluster Ids must be nonnegative.", m_InputValues->feature_ids_array_path.toString(),
-                                                 clusterId, tupleIdx));
+      return MakeErrorResult(-54081, fmt::format("Cluster Ids DataArray '{}' contains negative value {} at tuple {}. Cluster Ids must be nonnegative.",
+                                                 m_InputValues->feature_ids_array_path.toString(), clusterId, tupleIdx));
     }
     if(clusterId > 0)
     {

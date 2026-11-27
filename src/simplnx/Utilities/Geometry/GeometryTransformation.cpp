@@ -591,7 +591,7 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
         const auto* srcImageGeomPtr = dataStructure.getDataAs<ImageGeom>(srcImagePath);
 
         preflightUpdatedValues.push_back({"Input Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), srcImageGeomPtr->getSpacing(),
-                                                                                                                              srcImageGeomPtr->getOrigin(), srcImageGeomPtr->getUnits())});
+                                                                                                                               srcImageGeomPtr->getOrigin(), srcImageGeomPtr->getUnits())});
 
         if(pTransformationMatrixTypeValue == detail::k_PrecomputedTransformationMatrixIdx)
         {
@@ -600,8 +600,8 @@ IFilter::PreflightResult nx::core::PreflightGeometryTransformation(const DataStr
         else
         {
           preflightUpdatedValues.push_back(
-              {"Transformed Image Geometry Info",
-               nx::core::geometry_helpers::description::GenerateGeometryInfo(dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]}, originVec, srcImageGeomPtr->getUnits())});
+              {"Transformed Image Geometry Info", nx::core::geometry_helpers::description::GenerateGeometryInfo(dims, CreateImageGeometryAction::SpacingType{spacing[0], spacing[1], spacing[2]},
+                                                                                                                originVec, srcImageGeomPtr->getUnits())});
         }
       }
 
@@ -793,14 +793,14 @@ Result<> ApplyTransformationToGeometry::applyImageGeometryTransformation()
       filterProgressCallback.sendThreadSafeStatusMessage(fmt::format("Applying Transform || Nearest Neighbor Interpolation {}", srcDataObject->getName()));
 
       ExecuteParallelFunction<image_rotation_utilities::RotateImageGeometryWithNearestNeighbor>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr, rotateArgs,
-                                                                                              m_TransformationMatrix, false, &filterProgressCallback);
+                                                                                                m_TransformationMatrix, false, &filterProgressCallback);
     }
     else if(m_InputValues->interpolation_selection == detail::k_LinearInterpolationIdx)
     {
       filterProgressCallback.sendThreadSafeStatusMessage(fmt::format("Applying Transform || Trilinear Interpolation {}", srcDataObject->getName()));
 
       ExecuteParallelFunction<image_rotation_utilities::RotateImageGeometryWithTrilinearInterpolation, NoBooleanType>(srcDataArrayPtr->getDataType(), taskRunner, srcDataArrayPtr, destDataArrayPtr,
-                                                                                                                    rotateArgs, m_TransformationMatrix, &filterProgressCallback);
+                                                                                                                      rotateArgs, m_TransformationMatrix, &filterProgressCallback);
     }
 
     if(getCancel())

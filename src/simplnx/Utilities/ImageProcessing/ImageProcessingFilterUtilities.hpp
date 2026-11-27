@@ -343,7 +343,7 @@ struct ScalarValueRangeGuard
       if(value < -highest || value > highest) // float types are symmetric: lowest() == -max()
       {
         return MakeErrorResult(out_of_range_code, fmt::format("{} ({}) is outside the representable range [{}, {}] of the floating-point input image type '{}'.", label, value, -highest, highest,
-                                                           DataTypeToString(GetDataType<T>())));
+                                                              DataTypeToString(GetDataType<T>())));
       }
       return {};
     }
@@ -499,8 +499,8 @@ inline void AppendUnstableTimeStepWarning(Result<OutputActions>& actions, float6
  */
 inline Result<> ValidateScalarValueForType(DataType inputType, float64 value, const char* label, int32 nonFiniteCode, int32 outOfRangeCode, int32 truncatedWarnCode)
 {
-  return AllNumeric::Dispatch(inputType,
-                              detail::ScalarValueRangeGuard{.value = value, .label = label, .non_finite_code = nonFiniteCode, .out_of_range_code = outOfRangeCode, .truncated_warn_code = truncatedWarnCode});
+  return AllNumeric::Dispatch(
+      inputType, detail::ScalarValueRangeGuard{.value = value, .label = label, .non_finite_code = nonFiniteCode, .out_of_range_code = outOfRangeCode, .truncated_warn_code = truncatedWarnCode});
 }
 
 /**

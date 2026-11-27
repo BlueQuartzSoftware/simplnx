@@ -68,9 +68,9 @@ Parameters BinaryThresholdImageFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float64ParameterType>(k_LowerThreshold_Key, "Lower Threshold", "The lower threshold that a pixel value could be and still be considered 'Inside Value'", 0.0));
   params.insert(std::make_unique<Float64ParameterType>(k_UpperThreshold_Key, "Upper Threshold",
-                                                   "Set the thresholds. The default lower threshold is NumericTraits<InputPixelType>::NonpositiveMin() . The default upper threshold is "
-                                                   "NumericTraits<InputPixelType>::max . An exception is thrown if the lower threshold is greater than the upper threshold.",
-                                                   255.0));
+                                                       "Set the thresholds. The default lower threshold is NumericTraits<InputPixelType>::NonpositiveMin() . The default upper threshold is "
+                                                       "NumericTraits<InputPixelType>::max . An exception is thrown if the lower threshold is greater than the upper threshold.",
+                                                       255.0));
   params.insert(std::make_unique<UInt8ParameterType>(k_InsideValue_Key, "Inside Value", "Set the 'inside' pixel value. The default value NumericTraits<OutputPixelType>::max()", 1u));
   params.insert(std::make_unique<UInt8ParameterType>(k_OutsideValue_Key, "Outside Value", "Set the 'outside' pixel value. The default value NumericTraits<OutputPixelType>::ZeroValue() .", 0u));
 
@@ -125,7 +125,8 @@ Result<> BinaryThresholdImageFilter::executeImpl(DataStructure& dataStructure, c
   auto outsideValue = filterArgs.value<uint8>(k_OutsideValue_Key);
 
   const BinaryThresholdOperation operation{.lower_threshold = lowerThreshold, .upper_threshold = upperThreshold, .inside_value = insideValue, .outside_value = outsideValue};
-  return ImageProcessing::ExecuteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8Type>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel, messageHandler);
+  return ImageProcessing::ExecuteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::AlwaysUInt8Type>(dataStructure, selectedInputArray, outputArrayPath, operation, shouldCancel,
+                                                                                                            messageHandler);
 }
 
 namespace

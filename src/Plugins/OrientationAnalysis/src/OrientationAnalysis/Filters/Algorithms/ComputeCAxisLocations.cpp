@@ -103,8 +103,8 @@ Result<> ComputeCAxisLocations::operator()()
       if(currentPhaseIdx < 0 || static_cast<usize>(currentPhaseIdx) >= numCrystalStructures)
       {
         return MakeErrorResult(-3524, fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in [0, {}).",
-                                                  m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, chunkStart + chunkTupleIdx, m_InputValues->crystal_structures_array_path.toString(),
-                                                  numCrystalStructures, numCrystalStructures));
+                                                  m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, chunkStart + chunkTupleIdx,
+                                                  m_InputValues->crystal_structures_array_path.toString(), numCrystalStructures, numCrystalStructures));
       }
       const auto crystalStructureType = crystalStructuresCache[currentPhaseIdx];
       if(crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_High || crystalStructureType == ebsdlib::CrystalStructure::Hexagonal_Low)

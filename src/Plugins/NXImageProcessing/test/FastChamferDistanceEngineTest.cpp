@@ -613,7 +613,7 @@ TEST_CASE("NXImageProcessing::FastChamferDistanceEngine: row-group wavefront is 
 {
   STATIC_REQUIRE(ImageProcessing::detail::k_ChamferRowGroupRows == 8);
   const std::array<SizeVec3Type, 12> dimensions = {SizeVec3Type{1, 1, 1}, SizeVec3Type{1, 1, 5}, SizeVec3Type{5, 1, 1},    SizeVec3Type{1, 7, 1},  SizeVec3Type{2, 2, 2},  SizeVec3Type{3, 3, 3},
-                                               SizeVec3Type{7, 6, 5}, SizeVec3Type{9, 8, 1}, SizeVec3Type{17, 13, 11}, SizeVec3Type{33, 9, 7}, SizeVec3Type{5, 40, 3}, SizeVec3Type{6, 30, 20}};
+                                                   SizeVec3Type{7, 6, 5}, SizeVec3Type{9, 8, 1}, SizeVec3Type{17, 13, 11}, SizeVec3Type{33, 9, 7}, SizeVec3Type{5, 40, 3}, SizeVec3Type{6, 30, 20}};
   for(const SizeVec3Type& dims : dimensions)
   {
     const usize dx = dims[0];

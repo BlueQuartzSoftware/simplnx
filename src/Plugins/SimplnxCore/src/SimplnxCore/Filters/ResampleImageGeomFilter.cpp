@@ -68,17 +68,17 @@ Parameters ResampleImageGeomFilter::parameters() const
       std::make_unique<ChoicesParameter>(k_ResamplingMode_Key, "Resampling Mode", "Mode can be [0] Spacing, [1] Scaling as Percent, [2] Exact Dimensions as voxels", k_SpacingModeIndex, ::k_Choices));
 
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_Spacing_Key, "New Spacing",
-                                                         "The new spacing values (dx, dy, dz). Larger spacing will cause less voxels, smaller spacing will cause more voxels.",
-                                                         std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"X", "Y", "Z"}));
+                                                             "The new spacing values (dx, dy, dz). Larger spacing will cause less voxels, smaller spacing will cause more voxels.",
+                                                             std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insert(
       std::make_unique<VectorFloat32ParameterType>(k_Scaling_Key, "Scale Factor (percentages)",
-                                               "The scale factor values (dx, dy, dz) to resample the geometry, in percentages. Larger percentages will cause more voxels, smaller percentages "
-                                               "will cause less voxels.  A percentage of 100 in any dimension will not resample the geometry in that dimension. Percentages must be larger than 0.",
-                                               std::vector<float32>{100.0F, 100.0F, 100.0F}, std::vector<std::string>{"X%", "Y%", "Z%"}));
+                                                   "The scale factor values (dx, dy, dz) to resample the geometry, in percentages. Larger percentages will cause more voxels, smaller percentages "
+                                                   "will cause less voxels.  A percentage of 100 in any dimension will not resample the geometry in that dimension. Percentages must be larger than 0.",
+                                                   std::vector<float32>{100.0F, 100.0F, 100.0F}, std::vector<std::string>{"X%", "Y%", "Z%"}));
 
   params.insert(std::make_unique<VectorUInt64ParameterType>(k_ExactDimensions_Key, "Exact Dimensions (pixels)", "The exact dimension size values (dx, dy, dz) to resample the geometry, in pixels.",
-                                                        std::vector<uint64>{100, 100, 100}, std::vector<std::string>{"X", "Y", "Z"}));
+                                                            std::vector<uint64>{100, 100, 100}, std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_RemoveOriginalGeometry_Key, "Perform In Place", "Removes the original Image Geometry after filter is completed", true));
 
@@ -196,7 +196,7 @@ Result<Arguments> ResampleImageGeomFilter::FromSIMPLJson(const nlohmann::json& j
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_RenumberFeaturesKey, k_RenumberFeatures_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::InvertedBooleanFilterParameterConverter>(args, json, simpl::k_SaveAsNewDataContainerKey, k_RemoveOriginalGeometry_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_CellAttributeMatrixPathKey,
-                                                                                                                                      k_SelectedImageGeometryPath_Key));
+                                                                                                                                        k_SelectedImageGeometryPath_Key));
 
   // Legacy ChangeResolution uses these Feature paths only when RenumberFeatures is on.
   bool renumberDisabled = false;

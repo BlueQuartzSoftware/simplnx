@@ -291,7 +291,7 @@ Result<> QuickSurfaceMeshDirect::operator()()
 
     m_MessageHandler.sendMessage(IFilter::Message::Type::Info, "Repairing Windings...");
     windingResult = meshing_utilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
-                                                            m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->face_labels_data_path)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
+                                                             m_DataStructure.getDataAs<Int32ArrayType>(m_InputValues->face_labels_data_path)->getDataStoreRef(), m_ShouldCancel, m_MessageHandler);
 
     // Connectivity lists are temporary winding scratch. Remove them after repair.
     m_DataStructure.removeData(triangleGeom.getElementContainingVertId().value());
@@ -302,9 +302,9 @@ Result<> QuickSurfaceMeshDirect::operator()()
   {
     if(triangleGeom.getNumberOfFaces() == 0)
     {
-      return MergeResults(std::move(windingResult),
-                          meshing_utilities::MakeEmptyMeshWarning(m_InputValues->triangle_geometry_path, m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getNumberOfTuples(),
-                                                                 triangleGeom.getNumberOfVertices()));
+      return MergeResults(std::move(windingResult), meshing_utilities::MakeEmptyMeshWarning(m_InputValues->triangle_geometry_path,
+                                                                                            m_DataStructure.getDataRefAs<Int32ArrayType>(m_InputValues->feature_ids_array_path).getNumberOfTuples(),
+                                                                                            triangleGeom.getNumberOfVertices()));
     }
     if(suppressedFaceCount == 0)
     {
@@ -951,8 +951,8 @@ Result<> QuickSurfaceMeshDirect::createNodesAndTriangles(std::vector<MeshIndexTy
 
   for(usize i = 0; i < m_InputValues->selected_feature_data_array_paths.size(); i++)
   {
-    ::AddFeatureTupleTransferInstance(m_DataStructure, m_InputValues->selected_feature_data_array_paths[i], m_InputValues->created_data_array_paths[i + m_InputValues->selected_cell_data_array_paths.size()],
-                                      m_InputValues->feature_ids_array_path, tupleTransferFunctions);
+    ::AddFeatureTupleTransferInstance(m_DataStructure, m_InputValues->selected_feature_data_array_paths[i],
+                                      m_InputValues->created_data_array_paths[i + m_InputValues->selected_cell_data_array_paths.size()], m_InputValues->feature_ids_array_path, tupleTransferFunctions);
   }
 
   MeshIndexType triangleIndex = 0;

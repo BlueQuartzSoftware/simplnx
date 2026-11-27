@@ -66,7 +66,7 @@ struct AxialLengths
 ORIENTATIONANALYSIS_EXPORT AxialLengths FindIntersections(const Eigen::Matrix<float64, 3, 3, Eigen::RowMajor>& orientationMatrix, const std::vector<usize>& featureFaces,
                                                           const AbstractDataStore<IGeometry::MeshIndexType>& triStore, const AbstractDataStore<float32>& vertexStore,
                                                           const AbstractDataStore<float32>& centroidsStore, IGeometry::MeshIndexType featureId, const std::atomic_bool& shouldCancel);
-} // namespace ComputeShapesTriangleGeomDetail
+} // namespace compute_shapes_triangle_geom_detail
 
 struct ShapeResultValues
 {

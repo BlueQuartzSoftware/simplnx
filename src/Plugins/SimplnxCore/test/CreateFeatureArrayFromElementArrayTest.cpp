@@ -633,7 +633,8 @@ TEST_CASE("SimplnxCore::CreateFeatureArrayFromElementArrayFilter: Bulk last-valu
   auto* featureAmPtr = AttributeMatrix::Create(dataStructure, analytical_fixtures::k_FeatureAMPath.getTargetName(), ShapeType{1}, parentPtr->getId());
   REQUIRE(featureAmPtr != nullptr);
 
-  auto* featureIdsPtr = Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
+  auto* featureIdsPtr =
+      Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_FeatureIdsPath.getTargetName(), cellAmPtr->getShape(), ShapeType{1}, cellAmPtr->getId());
   auto* valuesPtr =
       Int32ArrayType::CreateWithStore<DataStore<int32>>(dataStructure, analytical_fixtures::k_InputCellPath.getTargetName(), cellAmPtr->getShape(), ShapeType{k_ComponentCount}, cellAmPtr->getId());
   REQUIRE(featureIdsPtr != nullptr);

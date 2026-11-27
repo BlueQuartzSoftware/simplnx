@@ -131,4 +131,4 @@ private:
   std::map<std::string, nx::core::DataType> m_NameToDataTypeMap;
 };
 
-}; // namespace GrainMapper3DUtilities
+}; // namespace grain_mapper_3d_utilities

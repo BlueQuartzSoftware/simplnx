@@ -151,8 +151,8 @@ Result<> ComputeIPFColorsScanline::operator()()
 
       if(calcIPF && phase < 0)
       {
-        return MakeErrorResult(-48001, fmt::format("Cell Phases array '{}' has value {} at voxel index {}. Valid enabled Phase indices are in [0, {}).", m_InputValues->cell_phases_array_path.toString(),
-                                                   phase, offset + i, numPhases));
+        return MakeErrorResult(-48001, fmt::format("Cell Phases array '{}' has value {} at voxel index {}. Valid enabled Phase indices are in [0, {}).",
+                                                   m_InputValues->cell_phases_array_path.toString(), phase, offset + i, numPhases));
       }
 
       if(phase >= numPhases)

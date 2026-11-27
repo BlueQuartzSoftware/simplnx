@@ -62,7 +62,8 @@ Parameters ConvertOrientationsToVertexGeometryFilter::parameters() const
   params.insert(std::make_unique<ChoicesParameter>(k_InputType_Key, "Input Orientation Type", "Specifies the incoming orientation representation enumeration index", 0,
                                                    OrientationConverterType::GetOrientationTypeStrings<ChoicesParameter::ChoicesType>()));
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputOrientationArrayPath_Key, "Input Orientations", "The complete path to the incoming orientation representation data array", DataPath{},
-                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32, DataType::float64}, ArraySelectionParameter::AllowedComponentShapesType{{3}, {4}, {9}}));
+                                                          ArraySelectionParameter::AllowedTypeSetType{DataType::float32, DataType::float64},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{3}, {4}, {9}}));
 
   params.insert(std::make_unique<MultiArraySelectionParameter>(k_CopyVertexPaths_Key, "Copy Vertex Arrays",
                                                                "Paths to vertex-related DataArrays that should be copied to the output rodrigues vertex geometry", std::vector<DataPath>{},

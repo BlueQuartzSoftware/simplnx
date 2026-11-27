@@ -83,10 +83,10 @@ Parameters ReadOnScaleTableFileFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<FileSystemPathParameter>(k_InputFile_Key, "Input File", "The OnScale table file to import. The file must have the .flxtbl extension.", fs::path(""),
                                                           FileSystemPathParameter::ExtensionsType{".flxtbl"}, FileSystemPathParameter::PathType::InputFile));
-  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Fallback Origin", "The origin for each axis that is absent from the file.", VectorFloat32ParameterType::ValueType{0.0F, 0.0F, 0.0F},
-                                                         VectorFloat32ParameterType::NamesType{"X", "Y", "Z"}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Fallback Origin", "The origin for each axis that is absent from the file.",
+                                                             VectorFloat32ParameterType::ValueType{0.0F, 0.0F, 0.0F}, VectorFloat32ParameterType::NamesType{"X", "Y", "Z"}));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_Spacing_Key, "Fallback Spacing", "The spacing for each axis that is absent from the file.",
-                                                         VectorFloat32ParameterType::ValueType{1.0F, 1.0F, 1.0F}, VectorFloat32ParameterType::NamesType{"X", "Y", "Z"}));
+                                                             VectorFloat32ParameterType::ValueType{1.0F, 1.0F, 1.0F}, VectorFloat32ParameterType::NamesType{"X", "Y", "Z"}));
 
   params.insertSeparator(Parameters::Separator{"Created Geometry"});
   params.insert(std::make_unique<DataGroupCreationParameter>(k_CreatedRectGridGeometryPath_Key, "Rectilinear Grid Geometry", "The path for the created Rectilinear Grid Geometry.",

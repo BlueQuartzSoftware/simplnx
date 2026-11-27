@@ -63,4 +63,4 @@ AlgorithmDispatchPath GetAlgorithmDispatchPathFromOrientationAnalysisPlugin()
   }
   return selectedPath;
 }
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test

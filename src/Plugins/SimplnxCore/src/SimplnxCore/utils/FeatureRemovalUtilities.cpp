@@ -401,4 +401,4 @@ Result<> RemoveFlaggedFeatures(DataStructure& dataStructure, const std::vector<b
 
   return result;
 }
-} // namespace nx::core::FeatureRemovalUtilities
+} // namespace nx::core::feature_removal_utilities

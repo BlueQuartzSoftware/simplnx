@@ -125,15 +125,15 @@ uint64 CacheMemoryBudgetManager::MaxBudgetBytes()
   return std::max(cap, k_MinBudget);
 }
 
-std::pair<CacheMemoryBudgetManager::AllocationHandleType, std::vector<CacheMemoryBudgetManager::AllocationHandleType>> CacheMemoryBudgetManager::allocate(const std::string& subsystem, const std::string& key,
-                                                                                                                                                  uint64 sizeBytes, EvictionCallbackType onEvict)
+std::pair<CacheMemoryBudgetManager::AllocationHandleType, std::vector<CacheMemoryBudgetManager::AllocationHandleType>> CacheMemoryBudgetManager::allocate(const std::string& subsystem,
+                                                                                                                                                          const std::string& key, uint64 sizeBytes,
+                                                                                                                                                          EvictionCallbackType onEvict)
 {
   return allocate(subsystem, key, sizeBytes, std::move(onEvict), AllocationOptions{});
 }
 
-std::pair<CacheMemoryBudgetManager::AllocationHandleType, std::vector<CacheMemoryBudgetManager::AllocationHandleType>> CacheMemoryBudgetManager::allocate(const std::string& subsystem, const std::string& key,
-                                                                                                                                                  uint64 sizeBytes, EvictionCallbackType onEvict,
-                                                                                                                                                  const AllocationOptions& options)
+std::pair<CacheMemoryBudgetManager::AllocationHandleType, std::vector<CacheMemoryBudgetManager::AllocationHandleType>>
+CacheMemoryBudgetManager::allocate(const std::string& subsystem, const std::string& key, uint64 sizeBytes, EvictionCallbackType onEvict, const AllocationOptions& options)
 {
   const std::lock_guard<std::mutex> lock(m_Mutex);
 

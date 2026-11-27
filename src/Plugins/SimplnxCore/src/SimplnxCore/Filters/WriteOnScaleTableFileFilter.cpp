@@ -66,8 +66,8 @@ Parameters WriteOnScaleTableFileFilter::parameters() const
   params.insert(std::make_unique<FileSystemPathParameter>(k_OutputPath_Key, "Output Path", "The directory for the OnScale table file.", fs::path(""), FileSystemPathParameter::ExtensionsType{},
                                                           FileSystemPathParameter::PathType::OutputDir, true));
   params.insert(std::make_unique<StringParameter>(k_FilePrefix_Key, "Output File Prefix", "The prefix for the output file.", "SomeString"));
-  params.insert(std::make_unique<VectorInt32ParameterType>(k_NumKeypoints_Key, "Number of Keypoints", "The number of keypoints along the X, Y, and Z axes.", VectorInt32ParameterType::ValueType{2, 2, 2},
-                                                       VectorInt32ParameterType::NamesType{"x", "y", "z"}));
+  params.insert(std::make_unique<VectorInt32ParameterType>(k_NumKeypoints_Key, "Number of Keypoints", "The number of keypoints along the X, Y, and Z axes.",
+                                                           VectorInt32ParameterType::ValueType{2, 2, 2}, VectorInt32ParameterType::NamesType{"x", "y", "z"}));
 
   params.insertSeparator(Parameters::Separator{"Input Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputGeometryPath_Key, "Input Geometry", "The Image or Rectilinear Grid Geometry to export.", DataPath{},

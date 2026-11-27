@@ -203,7 +203,8 @@ Result<Arguments> ComputeTwinBoundariesFilter::FromSIMPLJson(const nlohmann::jso
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::FloatFilterParameterConverter<Float32ParameterType::ValueType>>(args, json, simpl::k_AngleToleranceKey, k_AngleTolerance_Key));
 
   // Input Face Data
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_FaceLabelsArrayPath_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceLabelsArrayPathKey, k_FaceLabelsArrayPath_Key));
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshFaceNormalsArrayPathKey, k_FaceNormalsArrayPath_Key));
 
@@ -216,9 +217,10 @@ Result<Arguments> ComputeTwinBoundariesFilter::FromSIMPLJson(const nlohmann::jso
       simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
 
   // Output Face Data
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTwinBoundaryArrayNameKey, k_TwinBoundariesName_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTwinBoundaryArrayNameKey, k_TwinBoundariesName_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTwinBoundaryIncoherenceArrayNameKey,
-                                                                                                                   k_TwinBoundariesIncoherenceName_Key));
+                                                                                                                     k_TwinBoundariesIncoherenceName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

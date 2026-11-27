@@ -218,4 +218,4 @@ std::vector<uint8> RenderScaleBarBandRgb(usize imageWidthPixels, usize imageHeig
   }
   return rgb;
 }
-} // namespace nx::core::ScaleBarRenderer
+} // namespace nx::core::scale_bar_renderer

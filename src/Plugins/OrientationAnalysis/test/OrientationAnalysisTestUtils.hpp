@@ -29,7 +29,7 @@ static inline constexpr StringLiteralType k_UseReferenceSlice_Key = "use_referen
 static inline constexpr StringLiteralType k_ReferenceSlice_Key = "reference_slice";
 static inline constexpr StringLiteralType k_MaskArrayPath_Key = "mask_array_path";
 static inline constexpr StringLiteralType k_SelectedImageGeometryPath_Key = "input_image_geometry_path";
-} // namespace AlignSectionsFeatureCentroidFilter
+} // namespace align_sections_feature_centroid_filter
 
 namespace read_text_data_array_filter
 {
@@ -42,7 +42,7 @@ static inline constexpr StringLiteralType k_DelimiterChoice_Key = "delimiter_ind
 static inline constexpr StringLiteralType k_DataArrayPath_Key = "output_data_array_path";
 static inline constexpr StringLiteralType k_DataFormat_Key = "data_format";
 static inline constexpr StringLiteralType k_AdvancedOptions_Key = "set_tuple_dimensions";
-} // namespace ReadTextDataArrayFilter
+} // namespace read_text_data_array_filter
 
 namespace nx::core
 {
@@ -272,4 +272,4 @@ inline void ExecuteNeighborOrientationCorrelation(DataStructure& dataStructure, 
   auto executeResult = filter->execute(dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result)
 }
-} // namespace SmallIn100
+} // namespace small_in100

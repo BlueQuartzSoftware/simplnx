@@ -63,12 +63,12 @@ Parameters ComputeCoordinateThresholdFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Coordinate Bounds"});
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_MinCoord_Key, "Lower Bound (Physical Units)", "Specifies the lower corner of the rectangular prism (bounding box)",
-                                                         std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<std::string>{"Min X", "Min Y", "Min Z"}));
+                                                             std::vector<float32>{0.0f, 0.0f, 0.0f}, std::vector<std::string>{"Min X", "Min Y", "Min Z"}));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_MaxCoord_Key, "Upper Bound (Physical Units)", "Specifies the upper corner of the rectangular prism (bounding box)",
-                                                         std::vector<float32>{1.0f, 1.0f, 1.0f}, std::vector<std::string>{"Max X", "Max Y", "Max Z"}));
+                                                             std::vector<float32>{1.0f, 1.0f, 1.0f}, std::vector<std::string>{"Max X", "Max Y", "Max Z"}));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_SphereInfo_Key, "Sphere centroid and Radius (Physical Units)",
-                                                         "Specifies the centroid of the bounding sphere in the first 3 values (XYZ) and radius in the 4th",
-                                                         std::vector<float32>{0.0f, 0.0f, 0.0f, 1.0f}, std::vector<std::string>{"X", "Y", "Z", "Radius"}));
+                                                             "Specifies the centroid of the bounding sphere in the first 3 values (XYZ) and radius in the 4th",
+                                                             std::vector<float32>{0.0f, 0.0f, 0.0f, 1.0f}, std::vector<std::string>{"X", "Y", "Z", "Radius"}));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(

@@ -214,9 +214,9 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
     return MakeErrorResult(-79056, "External watershed voxel-record provider returned mismatched storage metadata.");
   }
   const bool bucketStoreMismatch = plan.use_bucket_queue && (queueRecordStore == nullptr || queueRecordStore->recordSize() != sizeof(detail::WatershedQueueBlock) ||
-                                                           queueRecordStore->recordCount() != plan.bucket_block_count || queueRecordStore->maxRecordsPerBatch() < plan.bucket_blocks_per_page);
+                                                             queueRecordStore->recordCount() != plan.bucket_block_count || queueRecordStore->maxRecordsPerBatch() < plan.bucket_blocks_per_page);
   const bool heapStoreMismatch = !plan.use_bucket_queue && (queueRecordStore == nullptr || queueRecordStore->recordSize() != sizeof(detail::WatershedHeapRecord<TInput>) ||
-                                                          queueRecordStore->recordCount() != valueCount || queueRecordStore->maxRecordsPerBatch() < plan.heap_records_per_page);
+                                                            queueRecordStore->recordCount() != valueCount || queueRecordStore->maxRecordsPerBatch() < plan.heap_records_per_page);
   if(bucketStoreMismatch || heapStoreMismatch)
   {
     return MakeErrorResult(
@@ -243,8 +243,8 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
       residentStatus.assign(plan.resident_status_word_count, uint64{0});
     } catch(const std::exception& exception)
     {
-      return MakeErrorResult(-79056,
-                             fmt::format("External watershed could not allocate {} resident status words ({} bytes): {}", plan.resident_status_word_count, plan.resident_status_bytes, exception.what()));
+      return MakeErrorResult(
+          -79056, fmt::format("External watershed could not allocate {} resident status words ({} bytes): {}", plan.resident_status_word_count, plan.resident_status_bytes, exception.what()));
     }
   }
 
@@ -871,7 +871,8 @@ Result<> ApplyWatershedFromMarkersExternalImpl(const AbstractDataStore<TInput>& 
             }
             if(readResult.value() != plan.voxel_records_per_page)
             {
-              return MakeErrorResult(-79061, fmt::format("External watershed final tiled voxel read for tile {} returned {} of {} records.", tileIndex, readResult.value(), plan.voxel_records_per_page));
+              return MakeErrorResult(-79061,
+                                     fmt::format("External watershed final tiled voxel read for tile {} returned {} of {} records.", tileIndex, readResult.value(), plan.voxel_records_per_page));
             }
             const usize tileStartInGroup = groupTileX * tileX;
             const usize validX = std::min(tileX, groupWidth - tileStartInGroup);

@@ -350,7 +350,7 @@ TEST_CASE("SimplnxCore::ReplaceElementAttributesWithNeighborValuesFilter", "[Sim
   unit_test::LoadPlugins();
 
   const nx::core::unit_test::TestFileSentinel testDataSentinel(nx::core::unit_test::k_TestFilesDir, "6_6_replace_element_attributes_with_neighbor.tar.gz",
-                                                              "6_6_replace_element_attributes_with_neighbor");
+                                                               "6_6_replace_element_attributes_with_neighbor");
 
   // Load the exemplar and its related input fixture.
   auto exemplarFilePath = fs::path(fmt::format("{}/TestFiles/6_6_replace_element_attributes_with_neighbor/6_6_replace_element_attributes_with_neighbor.dream3d", unit_test::k_DREAM3DDataDir));

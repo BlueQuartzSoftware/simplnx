@@ -1103,8 +1103,8 @@ template <class T>
 class DanielssonDistance2DBounded
 {
 public:
-  DanielssonDistance2DBounded(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, bool squaredDistance, bool useSpacing, FloatVec3Type spacing, const std::atomic_bool& shouldCancel,
-                              usize residentLimit, ThrottledMessageHandler* progressThrottle = nullptr)
+  DanielssonDistance2DBounded(const AbstractDataStore<T>& inStore, AbstractDataStore<float32>& outStore, bool squaredDistance, bool useSpacing, FloatVec3Type spacing,
+                              const std::atomic_bool& shouldCancel, usize residentLimit, ThrottledMessageHandler* progressThrottle = nullptr)
   : m_In(inStore)
   , m_Out(outStore)
   , m_Squared(squaredDistance)
@@ -1846,8 +1846,8 @@ public:
       }
       else
       {
-        compactVecStore =
-            data_store_utilities::CreateDataStoreWithFormat<int16>(workingDataFormat, std::vector<usize>{static_cast<usize>(nz), static_cast<usize>(ny), static_cast<usize>(nX)}, std::vector<usize>{3});
+        compactVecStore = data_store_utilities::CreateDataStoreWithFormat<int16>(workingDataFormat, std::vector<usize>{static_cast<usize>(nz), static_cast<usize>(ny), static_cast<usize>(nX)},
+                                                                                 std::vector<usize>{3});
         compactVectorPlanesCompressed.emplace(*compactVecStore, residentPrefix, compactStaging, prefixPlanes, vectorPlaneValues, m_ShouldCancel, m_TransferStats);
       }
     }

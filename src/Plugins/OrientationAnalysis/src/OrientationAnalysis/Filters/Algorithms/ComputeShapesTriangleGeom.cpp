@@ -133,7 +133,7 @@ AxialLengths FindIntersections(const Eigen::Matrix<float64, 3, 3, Eigen::RowMajo
   return {(positive[0] + negative[0]) / 2.0, (positive[1] + negative[1]) / 2.0, (positive[2] + negative[2]) / 2.0};
 }
 
-} // namespace nx::core::ComputeShapesTriangleGeomDetail
+} // namespace nx::core::compute_shapes_triangle_geom_detail
 
 namespace
 {

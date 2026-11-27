@@ -473,7 +473,8 @@ TEST_CASE("Dream3dPreflightCache: concurrent fetches are safe and consistent", "
         const fs::path& target = (t + i) % 2 == 0 ? fileA : fileB;
         const usize expectedTuples = (t + i) % 2 == 0 ? 10 : 20;
         Result<DataStructure> result = cache.fetch(target);
-        if(result.invalid() || result.value().getDataAs<Float32ArrayType>(floatsPath) == nullptr || result.value().getDataAs<Float32ArrayType>(floatsPath)->getTupleShape() != ShapeType{expectedTuples})
+        if(result.invalid() || result.value().getDataAs<Float32ArrayType>(floatsPath) == nullptr ||
+           result.value().getDataAs<Float32ArrayType>(floatsPath)->getTupleShape() != ShapeType{expectedTuples})
         {
           failures++;
         }

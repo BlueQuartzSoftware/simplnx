@@ -38,7 +38,7 @@ struct BenchmarkInputContext
  */
 struct BenchmarkFilterSpec
 {
-  std::string name;          ///< Short display name (e.g. "Abs").
+  std::string name;            ///< Short display name (e.g. "Abs").
   Uuid new_filter_uuid;        ///< UUID of the filter (from FilterTraits<...>::uuid).
   std::string real_input_file; ///< Input file name resolved via ip_golden::InputPath (its golden test's input).
 

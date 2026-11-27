@@ -44,7 +44,7 @@ Parameters SmoothingRecursiveGaussianImageFilter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<VectorFloat64ParameterType>(k_Sigma_Key, "Sigma", "The standard deviation of the Gaussian along each axis, in the units of image spacing.",
-                                                         std::vector<float64>{1.0, 1.0, 1.0}, std::vector<std::string>{"X", "Y", "Z"}));
+                                                             std::vector<float64>{1.0, 1.0, 1.0}, std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<BoolParameter>(k_NormalizeAcrossScale_Key, "Normalize Across Scale",
                                                 "Whether to normalize the Gaussian over scale-space (affects derivative magnitude; does not change 0th-order smoothing). Default is Off.", false));
 

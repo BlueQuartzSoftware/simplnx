@@ -126,11 +126,12 @@ DataStructure CreateSharedOutsideVertexData(bool cropCase = false)
   REQUIRE(edgeDataPtr != nullptr);
   geomPtr->setVertexAttributeMatrix(*vertexDataPtr);
   geomPtr->setEdgeAttributeMatrix(*edgeDataPtr);
-  auto* vertexValuesPtr =
-      Int32ArrayType::Create(dataStructure, "Values", data_store_utilities::CreateDataStore<int32>(dataStructure, geomPath.createChildPath(constants::k_VertexData).createChildPath("Values"), {3}, {1}),
-                         vertexDataPtr->getId());
+  auto* vertexValuesPtr = Int32ArrayType::Create(dataStructure, "Values",
+                                                 data_store_utilities::CreateDataStore<int32>(dataStructure, geomPath.createChildPath(constants::k_VertexData).createChildPath("Values"), {3}, {1}),
+                                                 vertexDataPtr->getId());
   auto* edgeValuesPtr = Int32ArrayType::Create(
-      dataStructure, "Values", data_store_utilities::CreateDataStore<int32>(dataStructure, geomPath.createChildPath(constants::k_EdgeDataWithSpaces).createChildPath("Values"), {2}, {1}), edgeDataPtr->getId());
+      dataStructure, "Values", data_store_utilities::CreateDataStore<int32>(dataStructure, geomPath.createChildPath(constants::k_EdgeDataWithSpaces).createChildPath("Values"), {2}, {1}),
+      edgeDataPtr->getId());
   REQUIRE(vertexValuesPtr != nullptr);
   REQUIRE(edgeValuesPtr != nullptr);
   (*vertexValuesPtr)[0] = 7;
@@ -563,14 +564,14 @@ TEST_CASE("SimplnxCore::CropEdgeGeometry: Child names containing the geometry na
   auto* geomPtr = EdgeGeom::Create(dataStructure, "Geom", sourceGroupPtr->getId());
   REQUIRE(geomPtr != nullptr);
   auto* verticesPtr = Float32ArrayType::Create(dataStructure, "Vertices",
-                                           data_store_utilities::CreateDataStore<float32>(dataStructure, geomPtr->getDataPaths().front().createChildPath("Vertices"), {3}, {3}), geomPtr->getId());
+                                               data_store_utilities::CreateDataStore<float32>(dataStructure, geomPtr->getDataPaths().front().createChildPath("Vertices"), {3}, {3}), geomPtr->getId());
   REQUIRE(verticesPtr != nullptr);
   verticesPtr->fill(0.0F);
   (*verticesPtr)[3] = 1.0F;
   (*verticesPtr)[6] = 2.0F;
   geomPtr->setVertices(*verticesPtr);
-  auto* edgesPtr =
-      UInt64ArrayType::Create(dataStructure, "Edges", data_store_utilities::CreateDataStore<uint64>(dataStructure, geomPtr->getDataPaths().front().createChildPath("Edges"), {2}, {2}), geomPtr->getId());
+  auto* edgesPtr = UInt64ArrayType::Create(dataStructure, "Edges", data_store_utilities::CreateDataStore<uint64>(dataStructure, geomPtr->getDataPaths().front().createChildPath("Edges"), {2}, {2}),
+                                           geomPtr->getId());
   REQUIRE(edgesPtr != nullptr);
   (*edgesPtr)[0] = 0;
   (*edgesPtr)[1] = 1;
@@ -583,15 +584,15 @@ TEST_CASE("SimplnxCore::CropEdgeGeometry: Child names containing the geometry na
   auto* elementAmPtr = AttributeMatrix::Create(dataStructure, "Edge Data", {2}, geomPtr->getId());
   REQUIRE(elementAmPtr != nullptr);
   geomPtr->setEdgeAttributeMatrix(*elementAmPtr);
-  auto* dataPtr =
-      Int32ArrayType::Create(dataStructure, "Data", data_store_utilities::CreateDataStore<int32>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Data"), elementAmPtr->getShape(), {1}),
-                         elementAmPtr->getId());
+  auto* dataPtr = Int32ArrayType::Create(dataStructure, "Data",
+                                         data_store_utilities::CreateDataStore<int32>(dataStructure, elementAmPtr->getDataPaths().front().createChildPath("Data"), elementAmPtr->getShape(), {1}),
+                                         elementAmPtr->getId());
   REQUIRE(dataPtr != nullptr);
   dataPtr->fill(7);
   auto* featureAmPtr = AttributeMatrix::Create(dataStructure, "Geom Feature Data", {2}, geomPtr->getId());
   REQUIRE(featureAmPtr != nullptr);
-  auto* valuesPtr = Int32ArrayType::Create(dataStructure, "Geom Values",
-                                       data_store_utilities::CreateDataStore<int32>(dataStructure, featureAmPtr->getDataPaths().front().createChildPath("Geom Values"), {2}, {1}), featureAmPtr->getId());
+  auto* valuesPtr = Int32ArrayType::Create(
+      dataStructure, "Geom Values", data_store_utilities::CreateDataStore<int32>(dataStructure, featureAmPtr->getDataPaths().front().createChildPath("Geom Values"), {2}, {1}), featureAmPtr->getId());
   REQUIRE(valuesPtr != nullptr);
   valuesPtr->fill(42);
   CropEdgeGeometryFilter filter;

@@ -357,7 +357,8 @@ TEST_CASE("SimplnxCore::ComputeKMedoidsFilter: Rejects unrepresentable clusters 
   args.insertOrAssign(ComputeKMedoidsFilter::k_InitClusters_Key, std::make_any<uint64>(3));
   const DataPath maskPath = k_CellPath.createChildPath("AllFalseMask");
   const auto& input = dataStructure.getDataRefAs<IDataArray>(k_CellPath.createChildPath("DAMAGE"));
-  auto* maskPtr = BoolArrayType::CreateWithStore<BoolDataStoreType>(dataStructure, "AllFalseMask", input.getTupleShape(), ShapeType{1}, dataStructure.getDataRefAs<AttributeMatrix>(k_CellPath).getId());
+  auto* maskPtr =
+      BoolArrayType::CreateWithStore<BoolDataStoreType>(dataStructure, "AllFalseMask", input.getTupleShape(), ShapeType{1}, dataStructure.getDataRefAs<AttributeMatrix>(k_CellPath).getId());
   REQUIRE(maskPtr != nullptr);
   args.insertOrAssign(ComputeKMedoidsFilter::k_UseMask_Key, std::make_any<bool>(true));
   args.insertOrAssign(ComputeKMedoidsFilter::k_MaskArrayPath_Key, std::make_any<DataPath>(maskPath));

@@ -59,7 +59,7 @@ Result<> CreateStringArrayAction::apply(DataStructure& dataStructure, Mode /*mod
   if(totalTuples > capacity)
   {
     return MakeErrorResult(dimension_conversion::k_StringCapacity, fmt::format("String array '{}' tuple dimensions [{}] require {} strings, above storage capacity {}. Use a smaller shape.",
-                                                                              path().toString(), string_utilities::FormatDimensions(m_Dims), totalTuples, capacity));
+                                                                               path().toString(), string_utilities::FormatDimensions(m_Dims), totalTuples, capacity));
   }
 
   std::vector<std::string> values(totalTuples, m_InitializeValue);

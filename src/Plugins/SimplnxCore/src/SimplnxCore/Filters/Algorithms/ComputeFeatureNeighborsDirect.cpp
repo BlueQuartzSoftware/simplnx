@@ -45,8 +45,8 @@ struct ComputeFeatureNeighborsFunctor
    */
   template <detail::ImageDimensionality ImageDimensionStateT>
   Result<> operator()(BoolAbstractDataStoreType* surfaceFeatures, Int8AbstractDataStoreType* boundaryCells, Float32NeighborListType& sharedSurfaceAreaList, Int32NeighborListType& neighborsList,
-                      Int32AbstractDataStoreType& numNeighbors, const Int32AbstractDataStoreType& featureIds, usize totalFeatures, const std::array<int64, 3>& dims, const std::array<float64, 3> spacing,
-                      ThrottledMessageHandler& progressThrottle, const std::atomic_bool& shouldCancel) const
+                      Int32AbstractDataStoreType& numNeighbors, const Int32AbstractDataStoreType& featureIds, usize totalFeatures, const std::array<int64, 3>& dims,
+                      const std::array<float64, 3> spacing, ThrottledMessageHandler& progressThrottle, const std::atomic_bool& shouldCancel) const
   {
     constexpr FaceNeighborType k_NeighborCount = VoxelNeighbors<ImageDimensionStateT>::k_FaceNeighborCount;
 

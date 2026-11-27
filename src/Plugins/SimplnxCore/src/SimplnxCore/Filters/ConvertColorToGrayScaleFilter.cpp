@@ -56,7 +56,7 @@ Parameters ConvertColorToGrayScaleFilter::parameters() const
   params.insertLinkableParameter(std::make_unique<ChoicesParameter>(k_ConversionAlgorithm_Key, "Conversion Algorithm", "Which method to use when flattening the RGB array", 0,
                                                                     ChoicesParameter::ChoicesType{"Luminosity", "Average", "Lightness", "SingleChannel"}));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_ColorWeights_Key, "Color Weighting", "The weightings for each R|G|B component when using the luminosity conversion algorithm",
-                                                         std::vector<float32>{0.2125F, 0.7154F, 0.0721F}, std::vector<std::string>{"Red", "Green", "Blue"}));
+                                                             std::vector<float32>{0.2125F, 0.7154F, 0.0721F}, std::vector<std::string>{"Red", "Green", "Blue"}));
   params.insert(std::make_unique<Int32ParameterType>(k_ColorChannel_Key, "Color Channel", "The specific R|G|B channel to use as the GrayScale values", 0));
   params.linkParameters(k_ConversionAlgorithm_Key, k_ColorWeights_Key, std::make_any<ChoicesParameter::ValueType>(0));
   params.linkParameters(k_ConversionAlgorithm_Key, k_ColorChannel_Key, std::make_any<ChoicesParameter::ValueType>(3));

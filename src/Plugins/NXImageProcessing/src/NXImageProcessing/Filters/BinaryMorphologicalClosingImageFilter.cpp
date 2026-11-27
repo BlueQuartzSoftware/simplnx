@@ -62,13 +62,13 @@ Parameters BinaryMorphologicalClosingImageFilter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<VectorUInt32ParameterType>(k_KernelRadius_Key, "Kernel Radius", "The radius of the kernel structuring element.", std::vector<uint32>(3, 1),
-                                                        std::vector<std::string>{"X", "Y", "Z"}));
+                                                            std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<ChoicesParameter>(k_KernelType_Key, "Kernel Type", "Set the kernel or structuring element used for the morphology.",
                                                    static_cast<uint64>(ImageProcessing::KernelType::Ball), ChoicesParameter::ChoicesType{"Annulus", "Ball", "Box", "Cross"}));
   params.insert(std::make_unique<Float64ParameterType>(k_ForegroundValue_Key, "Foreground Value",
-                                                   "The value identifying the objects to close. Only voxels equal to this value are foreground; all other values are background. For an integer "
-                                                   "input image the value must be finite and within the image type's range.",
-                                                   1.0));
+                                                       "The value identifying the objects to close. Only voxels equal to this value are foreground; all other values are background. For an integer "
+                                                       "input image the value must be finite and within the image type's range.",
+                                                       1.0));
   params.insert(std::make_unique<BoolParameter>(k_SafeBorder_Key, "Safe Border", "A safe border is added to input image to avoid borders effects and remove it once the closing is done", true));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
@@ -116,7 +116,7 @@ IFilter::PreflightResult BinaryMorphologicalClosingImageFilter::preflightImpl(co
   if(inputArray.getNumberOfComponents() != 1)
   {
     return {.output_actions = MakeErrorResult<OutputActions>(k_NonScalarInput, fmt::format("Binary Morphological Closing requires a single-component (scalar) input array, but '{}' has {} components.",
-                                                                                          selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
+                                                                                           selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
   }
 
   Result<OutputActions> resultOutputActions =

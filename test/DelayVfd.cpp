@@ -165,4 +165,4 @@ void SetDelayMicroseconds(uint64 microseconds)
 {
   SDelayMicroseconds.store(microseconds);
 }
-} // namespace DelayVfd
+} // namespace delay_vfd

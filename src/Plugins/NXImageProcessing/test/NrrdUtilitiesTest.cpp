@@ -187,7 +187,7 @@ TEST_CASE("NXImageProcessing::NrrdUtilities: permuted directions flag rotation",
   auto result = nrrd::ReadNrrdHeader(p);
   REQUIRE(result.valid());
   const auto& md = result.value();
-  REQUIRE(md.affine_has_rotation);          // permutation is not axis-aligned
+  REQUIRE(md.affine_has_rotation);        // permutation is not axis-aligned
   REQUIRE(md.spacing[0] == Approx(2.0f)); // ||(0,-2,0)||
   REQUIRE(md.spacing[2] == Approx(2.5f)); // ||(2.5,0,0)||
 }

@@ -46,7 +46,7 @@ Parameters GrayscaleErodeImageFilter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<VectorUInt32ParameterType>(k_KernelRadius_Key, "Kernel Radius", "The radius of the kernel structuring element.", std::vector<uint32>(3, 1),
-                                                        std::vector<std::string>{"X", "Y", "Z"}));
+                                                            std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<ChoicesParameter>(k_KernelType_Key, "Kernel Type", "Set the kernel or structuring element used for the morphology.",
                                                    static_cast<uint64>(ImageProcessing::KernelType::Ball), ChoicesParameter::ChoicesType{"Annulus", "Ball", "Box", "Cross"}));
 
@@ -93,7 +93,7 @@ IFilter::PreflightResult GrayscaleErodeImageFilter::preflightImpl(const DataStru
   if(inputArray.getNumberOfComponents() != 1)
   {
     return {.output_actions = MakeErrorResult<OutputActions>(-8360, fmt::format("Grayscale Erode requires a single-component (scalar) input array, but '{}' has {} components.",
-                                                                               selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
+                                                                                selectedInputArray.toString(), inputArray.getNumberOfComponents()))};
   }
   Result<OutputActions> resultOutputActions =
       ImageProcessing::PreflightFullOverwriteImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath);

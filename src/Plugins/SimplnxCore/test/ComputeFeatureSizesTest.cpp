@@ -287,8 +287,9 @@ public:
   static void RequireOocStoreExecution()
   {
     const AlgorithmPathExecutionCounts counts = GetAlgorithmPathExecutionCounts();
-    INFO("Dispatch counts: in-core=" << counts.in_core << ", OOC=" << counts.out_of_core << ", OOC/resident=" << counts.out_of_core_on_in_memory_store << ", OOC/OOC=" << counts.out_of_core_on_out_of_core_store
-                                     << ", in-core/resident=" << counts.in_core_on_in_memory_store << ", in-core/OOC=" << counts.in_core_on_out_of_core_store);
+    INFO("Dispatch counts: in-core=" << counts.in_core << ", OOC=" << counts.out_of_core << ", OOC/resident=" << counts.out_of_core_on_in_memory_store
+                                     << ", OOC/OOC=" << counts.out_of_core_on_out_of_core_store << ", in-core/resident=" << counts.in_core_on_in_memory_store
+                                     << ", in-core/OOC=" << counts.in_core_on_out_of_core_store);
     REQUIRE(counts.out_of_core > 0);
     REQUIRE(counts.in_core == 0);
     REQUIRE(counts.out_of_core_on_out_of_core_store > 0);
@@ -970,8 +971,8 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: Valid: Image 2D", "[SimplnxCore][Co
     SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
     unit_test::RequireAutomaticCreateArrayActions(preflightResult.output_actions, 3);
     unit_test::RequireAutomaticCreateArrayActions(preflightResult.output_actions, std::vector<DataPath>{test::k_FeatureAMPath.createChildPath(test::k_VolumesName),
-                                                                                                      test::k_FeatureAMPath.createChildPath(test::k_EquivalentDiametersName),
-                                                                                                      test::k_FeatureAMPath.createChildPath(test::k_NumElementsName)});
+                                                                                                        test::k_FeatureAMPath.createChildPath(test::k_EquivalentDiametersName),
+                                                                                                        test::k_FeatureAMPath.createChildPath(test::k_NumElementsName)});
     auto executeResult = scope.executeFilter(filter, dataStructure, args);
     SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   }
@@ -1003,8 +1004,9 @@ TEST_CASE("SimplnxCore::ComputeFeatureSizes: 2D area excludes the flat-dimension
   const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
   CAPTURE(scenario);
   unit_test::AlgorithmTestScope scope(scenario);
-  auto [label, dims, spacing] = GENERATE(std::make_tuple("flat Z", SizeVec3Type{2, 2, 1}, FloatVec3Type{2.0f, 3.0f, 5.0f}), std::make_tuple("flat X", SizeVec3Type{1, 2, 2}, FloatVec3Type{5.0f, 2.0f, 3.0f}),
-                                         std::make_tuple("flat Y", SizeVec3Type{2, 1, 2}, FloatVec3Type{2.0f, 5.0f, 3.0f}));
+  auto [label, dims, spacing] =
+      GENERATE(std::make_tuple("flat Z", SizeVec3Type{2, 2, 1}, FloatVec3Type{2.0f, 3.0f, 5.0f}), std::make_tuple("flat X", SizeVec3Type{1, 2, 2}, FloatVec3Type{5.0f, 2.0f, 3.0f}),
+               std::make_tuple("flat Y", SizeVec3Type{2, 1, 2}, FloatVec3Type{2.0f, 5.0f, 3.0f}));
 
   DYNAMIC_SECTION(label)
   {

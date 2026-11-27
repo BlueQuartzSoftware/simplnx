@@ -35,8 +35,8 @@ uint64 ConvertToUInt64(uint32 highWord, uint32 lowWord)
 class SharedFeatureFaceImpl
 {
 public:
-  SharedFeatureFaceImpl(const std::vector<std::pair<int32, int32>>& faceLabelVector, Int32AbstractDataStoreType& surfaceMeshFeatureFaceLabels, Int32AbstractDataStoreType& surfaceMeshFeatureFaceNumTriangles,
-                        const std::map<uint64, int32>& faceSizeMap, const std::atomic_bool& shouldCancel)
+  SharedFeatureFaceImpl(const std::vector<std::pair<int32, int32>>& faceLabelVector, Int32AbstractDataStoreType& surfaceMeshFeatureFaceLabels,
+                        Int32AbstractDataStoreType& surfaceMeshFeatureFaceNumTriangles, const std::map<uint64, int32>& faceSizeMap, const std::atomic_bool& shouldCancel)
   : m_FaceLabelVector(faceLabelVector)
   , m_SurfaceMeshFeatureFaceLabels(surfaceMeshFeatureFaceLabels)
   , m_SurfaceMeshFeatureFaceNumTriangles(surfaceMeshFeatureFaceNumTriangles)
@@ -129,8 +129,8 @@ void RandomizeFaceIds(nx::core::Int32ArrayType& featureIds, uint64 totalFeatures
   }
 }
 
-Result<> ComputeSharedFeatureFacesInBlocks(DataStructure& dataStructure, const SharedFeatureFaceInputValues& inputValues, usize totalPoints, const Int32ArrayType& faceLabels, Int32ArrayType& featureFaceIds,
-                                           const std::atomic_bool& shouldCancel)
+Result<> ComputeSharedFeatureFacesInBlocks(DataStructure& dataStructure, const SharedFeatureFaceInputValues& inputValues, usize totalPoints, const Int32ArrayType& faceLabels,
+                                           Int32ArrayType& featureFaceIds, const std::atomic_bool& shouldCancel)
 {
   Result<> result;
   std::map<uint64, int32> faceSizeMap;
@@ -150,10 +150,10 @@ Result<> ComputeSharedFeatureFacesInBlocks(DataStructure& dataStructure, const S
     const usize bufferTriangles = static_cast<usize>(reservation.sizeBytes() / k_BytesPerTriangle);
     if(bufferTriangles == 0)
     {
-      return MakeErrorResult(-12919,
-                             fmt::format("Cannot allocate shared face input buffers for '{}' and '{}': requested {} bytes but received {}. At least {} bytes are required. "
-                                         "Release other working memory or increase the cache budget and retry.",
-                                         inputValues.face_labels_array_path.toString(), inputValues.feature_face_ids_array_path.toString(), requestedBytes, reservation.sizeBytes(), k_BytesPerTriangle));
+      return MakeErrorResult(-12919, fmt::format("Cannot allocate shared face input buffers for '{}' and '{}': requested {} bytes but received {}. At least {} bytes are required. "
+                                                 "Release other working memory or increase the cache budget and retry.",
+                                                 inputValues.face_labels_array_path.toString(), inputValues.feature_face_ids_array_path.toString(), requestedBytes, reservation.sizeBytes(),
+                                                 k_BytesPerTriangle));
     }
     reservation.shrinkTo(bufferTriangles * k_BytesPerTriangle);
     std::vector<int32> faceLabelsBuffer(bufferTriangles * 2);

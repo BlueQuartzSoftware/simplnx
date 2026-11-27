@@ -622,7 +622,8 @@ Result<> CropSubtractFromStore(const AbstractDataStore<T>& padded, const Abstrac
  * @pre @p markerStore has the same tuple/element layout as @p inStore (X fastest). @tparam T scalar type.
  */
 template <class T>
-Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& markerStore, const SizeVec3Type& dims, ReconMarker kind, float64 height, const std::atomic_bool& shouldCancel)
+Result<> BuildReconstructionMarker(const AbstractDataStore<T>& inStore, AbstractDataStore<T>& markerStore, const SizeVec3Type& dims, ReconMarker kind, float64 height,
+                                   const std::atomic_bool& shouldCancel)
 {
   if(kind == ReconMarker::MinusHeight || kind == ReconMarker::PlusHeight)
   {

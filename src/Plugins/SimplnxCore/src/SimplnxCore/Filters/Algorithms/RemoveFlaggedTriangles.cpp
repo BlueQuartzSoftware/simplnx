@@ -194,7 +194,7 @@ Result<> RemoveFlaggedTriangles::operator()()
   if(m_InputValues->triangle_data_handling == detail::k_CopySelectedTriangleArraysIdx)
   {
     transfer_geometry_element_data::TransferElementData(m_DataStructure, reducedTriangleGeom.getFaceAttributeMatrixRef(), m_InputValues->selected_triangle_data, newTrianglesIndexList, m_ShouldCancel,
-                                                     m_MessageHandler);
+                                                        m_MessageHandler);
   }
   else if(m_InputValues->triangle_data_handling == detail::k_CopyAllTriangleArraysIdx)
   {
@@ -203,7 +203,7 @@ Result<> RemoveFlaggedTriangles::operator()()
     if(getChildrenResult.has_value())
     {
       transfer_geometry_element_data::TransferElementData(m_DataStructure, reducedTriangleGeom.getFaceAttributeMatrixRef(), getChildrenResult.value(), newTrianglesIndexList, m_ShouldCancel,
-                                                       m_MessageHandler);
+                                                          m_MessageHandler);
     }
   }
 
@@ -211,7 +211,7 @@ Result<> RemoveFlaggedTriangles::operator()()
   if(m_InputValues->vertex_data_handling == detail::k_CopySelectedVertexArraysIdx)
   {
     transfer_geometry_element_data::TransferElementData(m_DataStructure, reducedTriangleGeom.getVertexAttributeMatrixRef(), m_InputValues->selected_vertex_data, vertexListIndices, m_ShouldCancel,
-                                                     m_MessageHandler);
+                                                        m_MessageHandler);
   }
   else if(m_InputValues->vertex_data_handling == detail::k_CopyAllVertexArraysIdx)
   {
@@ -220,7 +220,7 @@ Result<> RemoveFlaggedTriangles::operator()()
     if(getChildrenResult.has_value())
     {
       transfer_geometry_element_data::TransferElementData(m_DataStructure, reducedTriangleGeom.getVertexAttributeMatrixRef(), getChildrenResult.value(), vertexListIndices, m_ShouldCancel,
-                                                       m_MessageHandler);
+                                                          m_MessageHandler);
     }
   }
 

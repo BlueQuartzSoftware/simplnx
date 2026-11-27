@@ -60,7 +60,8 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Node Types follow the NodeType conven
   const std::set<int8> distinctValues = CollectNodeTypeValues(meshResult);
 
   // Only the shared convention values may appear: 2/3/4 interior, 12/13/14 on the box wall.
-  const std::set<int8> allowedValues = {node_type::k_Default, node_type::k_TriplePoint, node_type::k_QuadPoint, node_type::k_SurfaceDefault, node_type::k_SurfaceTriplePoint, node_type::k_SurfaceQuadPoint};
+  const std::set<int8> allowedValues = {node_type::k_Default,        node_type::k_TriplePoint,        node_type::k_QuadPoint,
+                                        node_type::k_SurfaceDefault, node_type::k_SurfaceTriplePoint, node_type::k_SurfaceQuadPoint};
   for(const int8 value : distinctValues)
   {
     INFO("Unexpected Node Type value: " << static_cast<int32>(value));
@@ -88,7 +89,7 @@ TEST_CASE("SimplnxCore::SurfaceNetsFilter: Node Types agree with QuickSurfaceMes
   surface_meshing_test::MeshResult surfaceNetsResult = RunSurfaceNetsForNodeTypes();
   surface_meshing_test::MeshResult quickMeshResult =
       surface_meshing_test::RunMesher<QuickSurfaceMeshFilter>(surface_meshing_test::CreateCylinderInBox(true), k_QuickMeshTriangleGeomPath, bounding_box_skin_mode::k_Off,
-                                                            [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
+                                                              [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
 
   // Both meshers should produce the same number of nodes, since both emit one per grid
   // corner where two or more Features meet.

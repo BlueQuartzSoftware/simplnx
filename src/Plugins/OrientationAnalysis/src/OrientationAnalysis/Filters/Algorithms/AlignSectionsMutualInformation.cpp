@@ -93,8 +93,8 @@ Result<int32> AlignSectionsMutualInformation::formFeaturesForSlice(const float32
         {
           return MakeErrorResult<int32>(-53703,
                                         fmt::format("Cell Phases array '{}' has value {} at voxel index {}, but Crystal Structures array '{}' has {} tuples. Valid Phase indices are in [0, {}).",
-                                                    m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, sliceOffset + currentpoint, m_InputValues->crystal_structures_array_path.toString(),
-                                                    crystalStructures.size(), crystalStructures.size()));
+                                                    m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, sliceOffset + currentpoint,
+                                                    m_InputValues->crystal_structures_array_path.toString(), crystalStructures.size(), crystalStructures.size()));
         }
         const uint32 currentLaueIndex = crystalStructures[currentPhaseIdx];
         if(currentLaueIndex >= orientationOps.size())
@@ -138,9 +138,9 @@ Result<int32> AlignSectionsMutualInformation::formFeaturesForSlice(const float32
             const uint32 neighborLaueIndex = crystalStructures[neighborCellPhaseIdx];
             if(neighborLaueIndex >= orientationOps.size())
             {
-              return MakeErrorResult<int32>(-53704,
-                                            fmt::format("Crystal Structures array '{}' has value {} at Phase index {}, but only {} Laue operations are available. Valid Laue indices are in [0, {}).",
-                                                        m_InputValues->crystal_structures_array_path.toString(), neighborLaueIndex, neighborCellPhaseIdx, orientationOps.size(), orientationOps.size()));
+              return MakeErrorResult<int32>(
+                  -53704, fmt::format("Crystal Structures array '{}' has value {} at Phase index {}, but only {} Laue operations are available. Valid Laue indices are in [0, {}).",
+                                      m_InputValues->crystal_structures_array_path.toString(), neighborLaueIndex, neighborCellPhaseIdx, orientationOps.size(), orientationOps.size()));
             }
 
             if(currentLaueIndex == neighborLaueIndex)

@@ -183,7 +183,8 @@ Result<Arguments> CombineAttributeArraysFilter::FromSIMPLJson(const nlohmann::js
     // This parameter does not appear in 6.5, thus we only include it in the output if it's valid
     results.push_back(std::move(moveResult));
   }
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::MultiDataArraySelectionFilterParameterConverter>(args, json, simpl::k_SelectedDataArrayPathsKey, k_SelectedDataArrayPaths_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_StackedDataArrayNameKey, k_StackedDataArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));

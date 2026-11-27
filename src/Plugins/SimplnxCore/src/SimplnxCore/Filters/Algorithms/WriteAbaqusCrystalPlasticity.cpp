@@ -417,7 +417,8 @@ Result<> WriteAbaqusCrystalPlasticity::operator()()
   const int32 maxGrainId = maximumResult.value();
   if(maxGrainId <= 0)
   {
-    return MakeErrorResult(-12011, fmt::format("The feature IDs array '{}' has no positive feature IDs. The Abaqus deck requires at least one grain.", m_InputValues->feature_ids_array_path.toString()));
+    return MakeErrorResult(-12011,
+                           fmt::format("The feature IDs array '{}' has no positive feature IDs. The Abaqus deck requires at least one grain.", m_InputValues->feature_ids_array_path.toString()));
   }
 
   ThrottledMessageHandler progressThrottle(m_MessageHandler);

@@ -176,7 +176,7 @@ IFilter::PreflightResult ComputeFeatureBoundsFilter::preflightImpl(const DataStr
   if(pCreateEdgeGeometry)
   {
     auto createGeometryAction = std::make_unique<CreateEdgeGeometryActionType>(pSliceDataContainerNameValue, 1, 2, INodeGeometry0D::k_VertexAttributeMatrixName, pEdgeAttributeMatrixNameValue,
-                                                                           EdgeGeom::k_SharedVertexListName, EdgeGeom::k_SharedEdgeListName);
+                                                                               EdgeGeom::k_SharedVertexListName, EdgeGeom::k_SharedEdgeListName);
     resultOutputActions.value().appendAction(std::move(createGeometryAction));
 
     std::vector<size_t> tDims = {1};

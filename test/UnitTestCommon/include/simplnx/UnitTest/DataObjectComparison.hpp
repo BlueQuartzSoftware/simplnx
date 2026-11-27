@@ -419,4 +419,4 @@ inline bool CompareDataObject(const DataObject& exemplarObject, const DataObject
   }
   }
 }
-} // namespace nx::core::UnitTest::Comparison
+} // namespace nx::core::unit_test::comparison

@@ -43,7 +43,7 @@ inline constexpr int32 k_ValidateAllowedTypeError = -207;
 inline constexpr int32 k_ValidateTupleShapeValue = -208;
 inline constexpr int32 k_ValidateDataLocationError = -209;
 inline constexpr int32 k_ValidateInvalidDataObjectName = -210;
-} // namespace FilterParameter::Constants
+} // namespace filter_parameter::constants
 
 /**
  * @brief IParameter provides an interface for filter parameters including metadata (e.g. name, uuid, etc.)

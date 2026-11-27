@@ -93,8 +93,8 @@ Result<> ComputeSlipTransmissionMetrics::operator()()
           return MakeErrorResult(
               -94742,
               fmt::format("Feature Phases array '{}' has value {} at neighbor Feature index {}, but Crystal Structures array '{}' contains {} tuples. Valid positive Phase indices are in [1, {}).",
-                          m_InputValues->feature_phases_array_path.toString(), neighborFeaturePhaseIdx, neighborFeatureIdx, m_InputValues->crystal_structures_array_path.toString(), numCrystalStructures,
-                          numCrystalStructures));
+                          m_InputValues->feature_phases_array_path.toString(), neighborFeaturePhaseIdx, neighborFeatureIdx, m_InputValues->crystal_structures_array_path.toString(),
+                          numCrystalStructures, numCrystalStructures));
         }
       }
 

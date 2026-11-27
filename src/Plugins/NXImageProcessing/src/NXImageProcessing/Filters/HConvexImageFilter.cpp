@@ -55,10 +55,11 @@ Parameters HConvexImageFilter::parameters() const
 {
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
-  params.insert(std::make_unique<Float64ParameterType>(k_Height_Key, "Height",
-                                                   "The height (contrast) cap. Each regional maximum is transformed to its own height capped at this value (its dome height); the rest of the image "
-                                                   "becomes 0. Must be finite.",
-                                                   2.0));
+  params.insert(
+      std::make_unique<Float64ParameterType>(k_Height_Key, "Height",
+                                             "The height (contrast) cap. Each regional maximum is transformed to its own height capped at this value (its dome height); the rest of the image "
+                                             "becomes 0. Must be finite.",
+                                             2.0));
   params.insert(std::make_unique<BoolParameter>(k_FullyConnected_Key, "Fully Connected",
                                                 "Whether the connected components are defined strictly by face connectivity (Off) or by face+edge+vertex connectivity (On). Default is Off. For "
                                                 "maxima that are 1 pixel wide, use On.",

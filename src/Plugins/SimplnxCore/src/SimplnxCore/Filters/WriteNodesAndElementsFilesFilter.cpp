@@ -53,8 +53,8 @@ Parameters WriteNodesAndElementsFilesFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedGeometry, "Geometry To Write", "The Geometry that will be written to the output file(s).", DataPath(),
-                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Triangle, IGeometry::Type::Quad,
-                                                                                                      IGeometry::Type::Tetrahedral, IGeometry::Type::Hexahedral}));
+                                                             GeometrySelectionParameter::AllowedTypeSetType{IGeometry::Type::Vertex, IGeometry::Type::Edge, IGeometry::Type::Triangle,
+                                                                                                            IGeometry::Type::Quad, IGeometry::Type::Tetrahedral, IGeometry::Type::Hexahedral}));
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_WriteNodeFile, "Write Node File", "Whether or not to write the node information out to a file.", true));
   params.insert(std::make_unique<BoolParameter>(k_NumberNodes, "Number Nodes", "Whether or not to number each node in the node information output file.", true));
   params.insert(std::make_unique<BoolParameter>(k_IncludeNodeFileHeader, "Include Node File Header", "Whether or not to include the node file header in the node output file.", true));
@@ -106,15 +106,15 @@ IFilter::PreflightResult WriteNodesAndElementsFilesFilter::preflightImpl(const D
   if(!writeNodeFile && !writeElementFile)
   {
     return {.output_actions = MakeErrorResult<OutputActions>(to_underlying(WriteNodesAndElementsFiles::ErrorCodes::NoFileWriterChosen),
-                                                            "Neither 'Write Node File' nor 'Write Element/Cell File' have been chosen.  Please choose at least one of these options.")};
+                                                             "Neither 'Write Node File' nor 'Write Element/Cell File' have been chosen.  Please choose at least one of these options.")};
   }
 
   const auto& selectedGeometry = dataStructure.getDataRefAs<IGeometry>(selectedGeometryPath);
   if(selectedGeometry.getGeomType() == IGeometry::Type::Vertex && writeElementFile)
   {
     return {.output_actions = MakeErrorResult<OutputActions>(to_underlying(WriteNodesAndElementsFiles::ErrorCodes::VertexGeomHasNoElements),
-                                                            "The selected geometry is a vertex geometry, so an element file cannot be written.  Please turn off 'Write Element/Cell File' or select a "
-                                                            "different geometry with a type other than Vertex.")};
+                                                             "The selected geometry is a vertex geometry, so an element file cannot be written.  Please turn off 'Write Element/Cell File' or select a "
+                                                             "different geometry with a type other than Vertex.")};
   }
 
   return {};

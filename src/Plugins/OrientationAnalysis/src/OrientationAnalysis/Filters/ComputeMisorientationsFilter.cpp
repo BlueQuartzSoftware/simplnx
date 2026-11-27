@@ -78,7 +78,7 @@ Parameters ComputeMisorientationsFilter::parameters() const
                                                                     compute_misorientations_constants::k_UseArraysIndex, compute_misorientations_constants::k_ComputationTypeStrings));
 
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_ReferenceOrientation_Key, "Reference Axis-Angle", "<xyz> w (w in degrees)", std::vector<float32>{0.0f, 0.0f, 1.0f, 0.0f},
-                                                         std::vector<std::string>{"x", "y", "z", "w (Deg)"}));
+                                                             std::vector<std::string>{"x", "y", "z", "w (Deg)"}));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_InputOrientationArrayPath1_Key, "Euler Angles 1", "Three angles defining the orientation of the Element in Bunge convention (Z-X-Z)",

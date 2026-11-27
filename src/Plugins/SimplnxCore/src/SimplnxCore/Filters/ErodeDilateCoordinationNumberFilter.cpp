@@ -56,7 +56,7 @@ Parameters ErodeDilateCoordinationNumberFilter::parameters() const
 
   // Create the parameter descriptors that are needed for this filter
   params.insert(std::make_unique<Int32ParameterType>(k_CoordinationNumber_Key, "Coordination Number to Consider",
-                                                 " Number of neighboring **Cells** that can be of opposite classification before a **Cell** will be removed", 6));
+                                                     " Number of neighboring **Cells** that can be of opposite classification before a **Cell** will be removed", 6));
   params.insert(std::make_unique<BoolParameter>(k_Loop_Key, "Loop Until Gone", "Keep looping until all criteria is met", false));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});

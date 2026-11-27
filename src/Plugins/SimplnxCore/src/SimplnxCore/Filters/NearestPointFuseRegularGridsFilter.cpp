@@ -195,11 +195,11 @@ Result<Arguments> NearestPointFuseRegularGridsFilter::FromSIMPLJson(const nlohma
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_ReferenceCellAttributeMatrixPathKey, k_ReferenceGeometryPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_ReferenceCellAttributeMatrixPathKey,
-                                                                                                                         k_ReferenceCellAttributeMatrixPath_Key));
+                                                                                                                           k_ReferenceCellAttributeMatrixPath_Key));
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_SamplingCellAttributeMatrixPathKey, k_SamplingGeometryPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_SamplingCellAttributeMatrixPathKey,
-                                                                                                                         k_SamplingCellAttributeMatrixPath_Key));
+                                                                                                                           k_SamplingCellAttributeMatrixPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

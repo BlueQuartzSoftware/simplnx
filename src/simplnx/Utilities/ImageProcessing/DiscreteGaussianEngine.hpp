@@ -776,8 +776,8 @@ Result<> DiscreteGaussianAxisPass(const SrcStoreT& src, DstStoreT& dst, const Si
 // `variance`/`maximumError` are per-axis (3-long). This is the engine entry point the facade and tests call.
 template <class T>
 Result<> ApplyDiscreteGaussian(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3Type& dims, const std::vector<float64>& variance, uint32 maximumKernelWidth,
-                               const std::vector<float64>& maximumError, bool useImageSpacing, FloatVec3Type spacing, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler,
-                               const DiscreteGaussianPassOptions& options = {})
+                               const std::vector<float64>& maximumError, bool useImageSpacing, FloatVec3Type spacing, const std::atomic_bool& shouldCancel,
+                               const IFilter::MessageHandler& messageHandler, const DiscreteGaussianPassOptions& options = {})
 {
   if(dims[0] == 0 || dims[1] == 0 || dims[2] == 0)
   {
@@ -874,7 +874,7 @@ Result<> ApplyDiscreteGaussian(const AbstractDataStore<T>& in, AbstractDataStore
   }
 
   auto workPtr = data_store_utilities::CreateDataStoreWithFormat<T>(in.getDataFormat(), std::vector<usize>{static_cast<usize>(dims[2]), static_cast<usize>(dims[1]), static_cast<usize>(dims[0])},
-                                                                  std::vector<usize>{1});
+                                                                    std::vector<usize>{1});
   AbstractDataStore<T>& work = *workPtr;
 
   for(uint32 pass = 0; pass < effDim; ++pass)

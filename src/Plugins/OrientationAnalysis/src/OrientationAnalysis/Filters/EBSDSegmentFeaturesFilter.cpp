@@ -64,7 +64,7 @@ Parameters EBSDSegmentFeaturesFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float32ParameterType>(k_MisorientationTolerance_Key, "Misorientation Tolerance (Degrees)",
-                                                   "Tolerance (in degrees) used to determine if neighboring Cells belong to the same Feature", 5.0f));
+                                                       "Tolerance (in degrees) used to determine if neighboring Cells belong to the same Feature", 5.0f));
   params.insert(std::make_unique<BoolParameter>(k_RandomizeFeatureIds_Key, "Randomize Feature Ids", "Specifies if feature IDs should be randomized during calculations", false));
   params.insert(std::make_unique<ChoicesParameter>(k_NeighborScheme_Key, "Neighbor Scheme", "How many neighbors to use", segment_features::k_6NeighborIndex, segment_features::k_OperationChoices));
 
@@ -233,8 +233,8 @@ Result<Arguments> EBSDSegmentFeaturesFilter::FromSIMPLJson(const nlohmann::json&
     results.push_back(std::move(randomizeResult));
   }
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_QuatsArrayPathKey, k_QuatsArrayPath_Key));
-  results.push_back(
-      simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_CellPhasesArrayPathKey, k_SelectedImageGeometryPath_Key));
+  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_CellPhasesArrayPathKey,
+                                                                                                                                        k_SelectedImageGeometryPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CellPhasesArrayPathKey, k_CellPhasesArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_GoodVoxelsArrayPathKey, k_MaskArrayPath_Key));
   results.push_back(

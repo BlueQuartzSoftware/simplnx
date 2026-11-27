@@ -107,7 +107,7 @@ IFilter::PreflightResult ComputeTriangleAreasFilter::preflightImpl(const DataStr
   if(faceAttributeMatrixPtr == nullptr)
   {
     return {.output_actions = MakeErrorResult<OutputActions>(k_MissingFeatureAttributeMatrix,
-                                                            fmt::format("Could not find Triangle Face Attribute Matrix with in the Triangle Geometry '{}'", pTriangleGeometryDataPath.toString()))};
+                                                             fmt::format("Could not find Triangle Face Attribute Matrix with in the Triangle Geometry '{}'", pTriangleGeometryDataPath.toString()))};
   }
   {
     DataPath createArrayDataPath = pTriangleGeometryDataPath.createChildPath(faceAttributeMatrixPtr->getName()).createChildPath(pCalculatedAreasName);
@@ -282,9 +282,9 @@ Result<Arguments> ComputeTriangleAreasFilter::FromSIMPLJson(const nlohmann::json
   std::vector<Result<>> results;
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionToGeometrySelectionFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleAreasArrayPathKey,
-                                                                                                                                      k_TriangleGeometryDataPath_Key));
+                                                                                                                                        k_TriangleGeometryDataPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_SurfaceMeshTriangleAreasArrayPathKey,
-                                                                                                                                  k_CalculatedAreasDataName_Key));
+                                                                                                                                    k_CalculatedAreasDataName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

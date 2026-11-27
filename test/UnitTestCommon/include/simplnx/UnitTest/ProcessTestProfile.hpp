@@ -373,4 +373,4 @@ private:
   bool m_Finished = false;
   bool m_FinishSucceeded = false;
 };
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test

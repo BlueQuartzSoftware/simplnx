@@ -133,7 +133,8 @@ Result<Arguments> MoveDataFilter::FromSIMPLJson(const nlohmann::json& json)
 
   if(json[simpl::k_WhatToMoveKey].get<int32>() == 0)
   {
-    results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_AttributeMatrixSourceKey, k_SourceDataPaths_Key));
+    results.push_back(
+        simpl_conversion::ConvertParameter<simpl_conversion::SingleToMultiDataPathSelectionFilterParameterConverter>(args, json, simpl::k_AttributeMatrixSourceKey, k_SourceDataPaths_Key));
     results.push_back(
         simpl_conversion::ConvertParameter<simpl_conversion::DataContainerSelectionFilterParameterConverter>(args, json, simpl::k_DataContainerDestinationKey, k_DestinationParentPath_Key));
   }

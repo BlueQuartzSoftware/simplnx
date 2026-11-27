@@ -126,7 +126,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Valid filter execut
     data.input_file_path = fmt::format("{}/6_6_Small_IN100_GBCD/6_6_Small_IN100_GBCD_Triangles.ph", unit_test::k_TestFilesDir);
     data.custom_headers = {k_Phi1Right, k_PhiRight, k_Phi2Right, k_Phi1Left, k_PhiLeft, k_Phi2Left, k_TriangleNormal0, k_TriangleNormal1, k_TriangleNormal2, k_SurfaceArea};
     data.data_types = {CSVType::float32, CSVType::float32, CSVType::float32, CSVType::float32, CSVType::float32,
-                      CSVType::float32, CSVType::float64, CSVType::float64, CSVType::float64, CSVType::float64};
+                       CSVType::float32, CSVType::float64, CSVType::float64, CSVType::float64, CSVType::float64};
     data.skipped_array_mask = {false, false, false, false, false, false, false, false, false, false};
     data.start_import_row = 6;
     data.delimiters = {' '};
@@ -148,7 +148,7 @@ TEST_CASE("OrientationAnalysis::WriteGBCDTriangleDataFilter: Valid filter execut
     data.input_file_path = outputFile.string();
     data.custom_headers = {k_Phi1Right, k_PhiRight, k_Phi2Right, k_Phi1Left, k_PhiLeft, k_Phi2Left, k_TriangleNormal0, k_TriangleNormal1, k_TriangleNormal2, k_SurfaceArea};
     data.data_types = {CSVType::float32, CSVType::float32, CSVType::float32, CSVType::float32, CSVType::float32,
-                      CSVType::float32, CSVType::float64, CSVType::float64, CSVType::float64, CSVType::float64};
+                       CSVType::float32, CSVType::float64, CSVType::float64, CSVType::float64, CSVType::float64};
     data.skipped_array_mask = {false, false, false, false, false, false, false, false, false, false};
     data.start_import_row = 5;
     data.delimiters = {' '};

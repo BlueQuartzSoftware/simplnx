@@ -758,4 +758,4 @@ void PrintDataSetsToSingleFile(std::ostream& outputStrm, const std::vector<DataP
     }
   }
 };
-} // namespace nx::core::OStreamUtilities
+} // namespace nx::core::o_stream_utilities

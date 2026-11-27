@@ -60,7 +60,8 @@ Parameters ComputeFeaturePhasesBinaryFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Mask and Feature Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Mask Array", "Boolean or uint8 Cell or Feature mask. Zero assigns phase 0; any nonzero value assigns phase 1.",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
   params.insert(std::make_unique<AttributeMatrixSelectionParameter>(k_CellFeatureAMPath_Key, "Cell Feature Attribute Matrix",
                                                                     "The Feature Attribute Matrix where the binary phases array will be created. A mask in this matrix selects Feature-mask mode.",
                                                                     DataPath{}));
@@ -158,7 +159,8 @@ Result<Arguments> ComputeFeaturePhasesBinaryFilter::FromSIMPLJson(const nlohmann
       simpl_conversion::ConvertParameter<simpl_conversion::DataArrayCreationToDataObjectNameFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_FeaturePhasesArrayName_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::AttributeMatrixSelectionFilterParameterConverter>(args, json, simpl::k_FeaturePhasesArrayPathKey, k_CellFeatureAMPath_Key));
 
-  results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAMName_Key));
+  results.push_back(
+      simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAMName_Key));
   args.insertOrAssign(k_CreateCellEnsembleAM_Key, std::make_any<bool>(true));
 
   Result<> conversionResult = MergeResults(std::move(results));

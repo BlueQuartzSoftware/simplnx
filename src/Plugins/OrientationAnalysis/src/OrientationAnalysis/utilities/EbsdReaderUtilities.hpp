@@ -326,9 +326,9 @@ void GeneratePreflightPhaseInformation(ReaderType& reader, std::vector<IFilter::
     {
       const auto laueOpPtr = ebsdlib::LaueOps::GetLaueOpsFromSpaceGroupNumber(phaseInfo.space_group);
       preflightUpdatedValues.push_back({fmt::format("{}: ", phaseInfo.phase_index), fmt::format("Material Name: {}    |    Crystal Symmetry: {}    |    Space Group: {}", phaseInfo.name,
-                                                                                               laueOpPtr != nullptr ? laueOpPtr->getSymmetryName() : "Unknown", phaseInfo.space_group)});
+                                                                                                laueOpPtr != nullptr ? laueOpPtr->getSymmetryName() : "Unknown", phaseInfo.space_group)});
     }
   }
 }
 
-} // namespace EbsdReaderUtilities
+} // namespace ebsd_reader_utilities

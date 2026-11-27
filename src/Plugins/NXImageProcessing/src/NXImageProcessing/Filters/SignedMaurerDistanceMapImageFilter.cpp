@@ -110,7 +110,7 @@ Parameters SignedMaurerDistanceMapImageFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_UseImageSpacing_Key, "Use Image Spacing",
                                                 "Whether distances are measured in physical units using the Image Geometry's per-axis spacing (On) or in voxel units (Off). Default is Off.", false));
   params.insert(std::make_unique<Float64ParameterType>(k_BackgroundValue_Key, "Background Value",
-                                                   "The input value that marks the background; every voxel whose value is not equal to this is treated as inside the object.", 0.0));
+                                                       "The input value that marks the background; every voxel whose value is not equal to this is treated as inside the object.", 0.0));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),

@@ -54,8 +54,10 @@ ImageGeometryCropOptions CreateCropOptions(const DataPath& inputGeometryPath, co
   options.remove_original_geometry = removeOriginalGeometry;
   options.min_voxel = {static_cast<uint64>(croppingOptions.x_bound_voxels[0]), static_cast<uint64>(croppingOptions.y_bound_voxels[0]), static_cast<uint64>(croppingOptions.z_bound_voxels[0])};
   options.max_voxel = {static_cast<uint64>(croppingOptions.x_bound_voxels[1]), static_cast<uint64>(croppingOptions.y_bound_voxels[1]), static_cast<uint64>(croppingOptions.z_bound_voxels[1])};
-  options.min_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[0]), static_cast<float64>(croppingOptions.y_bound_physical[0]), static_cast<float64>(croppingOptions.z_bound_physical[0])};
-  options.max_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[1]), static_cast<float64>(croppingOptions.y_bound_physical[1]), static_cast<float64>(croppingOptions.z_bound_physical[1])};
+  options.min_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[0]), static_cast<float64>(croppingOptions.y_bound_physical[0]),
+                            static_cast<float64>(croppingOptions.z_bound_physical[0])};
+  options.max_coordinate = {static_cast<float64>(croppingOptions.x_bound_physical[1]), static_cast<float64>(croppingOptions.y_bound_physical[1]),
+                            static_cast<float64>(croppingOptions.z_bound_physical[1])};
   return options;
 }
 
@@ -218,11 +220,11 @@ Parameters ReadImageFilter::parameters() const
   params.insert(std::make_unique<BoolParameter>(k_CenterOrigin_Key, "Center Geometry on (0, 0, 0)",
                                                 "When on, the origin is set so that the center of the Image Geometry is at (0, 0, 0). The Origin value is not used.", false));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Origin (Physical Units)", "Specifies the new origin values in physical units.", std::vector<float32>{0.0F, 0.0F, 0.0F},
-                                                         std::vector<std::string>{"X", "Y", "Z"}));
+                                                             std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeSpacing_Key, "Set Spacing", "Specifies if the spacing should be changed", false));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_Spacing_Key, "Spacing (Physical Units)", "Specifies the new spacing values in physical units.", std::vector<float32>{1.0F, 1.0F, 1.0F},
-                                                         std::vector<std::string>{"X", "Y", "Z"}));
+                                                             std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<ChoicesParameter>(k_OriginSpacingProcessing_Key, "Origin & Spacing Processing", "Whether the origin & spacing should be preprocessed or postprocessed.", 1,
                                                    ChoicesParameter::ChoicesType{"Preprocessed", "Postprocessed"}));
 

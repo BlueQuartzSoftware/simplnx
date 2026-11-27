@@ -221,8 +221,9 @@ public:
 
 namespace
 {
-Result<> CalculateFaceIPFColorsInBlocks(const Int32ArrayType& faceLabels, const Int32ArrayType& phases, const Float64ArrayType& faceNormals, const Float32ArrayType& eulerAngles, const UInt32ArrayType& structures,
-                                        UInt8ArrayType& firstColors, UInt8ArrayType& secondColors, const ComputeFaceIPFColoringInputValues& inputValues, const std::atomic_bool& shouldCancel)
+Result<> CalculateFaceIPFColorsInBlocks(const Int32ArrayType& faceLabels, const Int32ArrayType& phases, const Float64ArrayType& faceNormals, const Float32ArrayType& eulerAngles,
+                                        const UInt32ArrayType& structures, UInt8ArrayType& firstColors, UInt8ArrayType& secondColors, const ComputeFaceIPFColoringInputValues& inputValues,
+                                        const std::atomic_bool& shouldCancel)
 {
   const usize numTriangles = faceLabels.getNumberOfTuples();
   if(shouldCancel || numTriangles == 0)

@@ -65,4 +65,4 @@ inline bool FinishTestApplication() noexcept
   }
   return successful;
 }
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test

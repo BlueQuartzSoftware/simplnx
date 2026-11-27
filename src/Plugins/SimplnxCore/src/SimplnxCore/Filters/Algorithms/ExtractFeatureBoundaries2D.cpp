@@ -91,7 +91,8 @@ Result<> CountEdges(const AbstractDataStore<T>& featureIds, usize dimX, usize di
  */
 template <typename T>
 Result<> PopulateVerticalEdges(const AbstractDataStore<T>& featureIds, usize dimX, usize dimY, float32 originX, float32 originY, float32 originZ, float32 spacingX, float32 spacingY,
-                               INodeGeometry0D::SharedVertexListType& vertices, INodeGeometry1D::SharedEdgeListType& edges, usize& currentEdge, nonstd::span<T> rowBuffer, const std::atomic_bool& shouldCancel)
+                               INodeGeometry0D::SharedVertexListType& vertices, INodeGeometry1D::SharedEdgeListType& edges, usize& currentEdge, nonstd::span<T> rowBuffer,
+                               const std::atomic_bool& shouldCancel)
 {
   for(usize y = 0; y < dimY; y++)
   {

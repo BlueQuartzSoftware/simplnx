@@ -76,7 +76,7 @@ Parameters ComputeCAxisReferenceMisalignmentsFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_ReferenceDir_Key, "Reference Direction", "Sample-frame direction to compare with the crystal c-axis. Must be finite and nonzero.",
-                                                         std::vector<float32>{0.0F, 0.0F, 1.0F}, std::vector<std::string>{"X", "Y", "Z"}));
+                                                             std::vector<float32>{0.0F, 0.0F, 1.0F}, std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insertSeparator(Parameters::Separator{"Optional Data Mask"});
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Whether to assign NaN to tuples where the mask is false or zero", false));
@@ -136,9 +136,9 @@ IFilter::PreflightResult ComputeCAxisReferenceMisalignmentsFilter::preflightImpl
     if(inputValues.output_array_path == inputRef.second)
     {
       return {.output_actions = MakeErrorResult<OutputActions>(ComputeCAxisReferenceMisalignments::k_OutputPathCollisionError,
-                                                              fmt::format("The output array path '{}' is the path of the selected {} array. Change the C-Axis Reference Misalignments name '{}' to a "
-                                                                          "name that no input array uses.",
-                                                                          inputValues.output_array_path.toString(), inputRef.first, inputValues.output_array_path.getTargetName()))};
+                                                               fmt::format("The output array path '{}' is the path of the selected {} array. Change the C-Axis Reference Misalignments name '{}' to a "
+                                                                           "name that no input array uses.",
+                                                                           inputValues.output_array_path.toString(), inputRef.first, inputValues.output_array_path.getTargetName()))};
     }
   }
   const auto& quatsRef = dataStructure.getDataRefAs<Float32ArrayType>(inputValues.quats_array_path);

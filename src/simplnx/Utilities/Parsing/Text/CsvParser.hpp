@@ -316,4 +316,4 @@ Result<> ReadFile(const std::filesystem::path& filename, AbstractDataStore<T>& d
   }
   return data.copyFromBuffer(outputOffset, nonstd::span<const T>(valueBuffer.get(), bufferedValues));
 }
-} // namespace nx::core::CsvParser
+} // namespace nx::core::csv_parser

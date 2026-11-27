@@ -122,4 +122,4 @@ uint64 HashStore(const AbstractDataStore<T>& store)
   }
   return hash;
 }
-} // namespace nx::core::FeatureRemovalTest
+} // namespace nx::core::feature_removal_test

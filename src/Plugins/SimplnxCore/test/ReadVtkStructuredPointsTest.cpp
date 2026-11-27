@@ -118,9 +118,9 @@ TEST_CASE("SimplnxCore::ReadVtkStructuredPointsFilter: Singleton and Zero Dimens
     // A singleton axis contributes a factor of one, including a single vertex cell.
     // Thus 10x10x1 points have 9x9x1 = 81 cells, and 4x1x1 points have 3 cells.
     const std::array<SizeVec3Type, 8> pointDimensions = {SizeVec3Type{10, 10, 1}, SizeVec3Type{3, 1, 4}, SizeVec3Type{1, 3, 4}, SizeVec3Type{4, 1, 1},
-                                                     SizeVec3Type{1, 4, 1},   SizeVec3Type{1, 1, 4}, SizeVec3Type{1, 1, 1}, SizeVec3Type{3, 3, 3}};
+                                                         SizeVec3Type{1, 4, 1},   SizeVec3Type{1, 1, 4}, SizeVec3Type{1, 1, 1}, SizeVec3Type{3, 3, 3}};
     const std::array<SizeVec3Type, 8> cellDimensions = {SizeVec3Type{9, 9, 1}, SizeVec3Type{2, 1, 3}, SizeVec3Type{1, 2, 3}, SizeVec3Type{3, 1, 1},
-                                                    SizeVec3Type{1, 3, 1}, SizeVec3Type{1, 1, 3}, SizeVec3Type{1, 1, 1}, SizeVec3Type{2, 2, 2}};
+                                                        SizeVec3Type{1, 3, 1}, SizeVec3Type{1, 1, 3}, SizeVec3Type{1, 1, 1}, SizeVec3Type{2, 2, 2}};
     const auto& pointDims = pointDimensions[grid];
     const auto& cellDims = cellDimensions[grid];
     std::vector<int32> pointValues(pointDims[0] * pointDims[1] * pointDims[2]);

@@ -51,7 +51,7 @@ Parameters ComputeKernelAvgMisorientationsFilter::parameters() const
   // Create the filter parameter descriptors.
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<VectorInt32ParameterType>(k_KernelSize_Key, "Kernel Radius", "Size of the kernel in the X, Y and Z directions (in number of Cells)", std::vector<int32>{1, 1, 1},
-                                                       std::vector<std::string>{"X", "Y", "Z"}));
+                                                           std::vector<std::string>{"X", "Y", "Z"}));
   params.insert(std::make_unique<BoolParameter>(
       k_UseFeatureIds_Key, "Use Feature Ids",
       "When checked (default), only kernel Cells belonging to the same Feature as the central Cell are included in the average (per-grain KAM). When unchecked, every in-bounds kernel Cell with a "
@@ -172,7 +172,7 @@ Result<Arguments> ComputeKernelAvgMisorientationsFilter::FromSIMPLJson(const nlo
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayPathKey, k_CrystalStructuresArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_KernelAverageMisorientationsArrayNameKey,
-                                                                                                                   k_KernelAverageMisorientationsArrayName_Key));
+                                                                                                                     k_KernelAverageMisorientationsArrayName_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

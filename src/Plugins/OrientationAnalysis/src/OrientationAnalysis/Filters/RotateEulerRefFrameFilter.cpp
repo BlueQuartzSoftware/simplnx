@@ -54,7 +54,7 @@ Parameters RotateEulerRefFrameFilter::parameters() const
   // Create the parameter descriptors that are needed for this filter
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_RotationAxisAngle_Key, "Rotation Axis-Angle [<ijk>w]", "Axis-Angle in sample reference frame to rotate about.",
-                                                         VectorFloat32ParameterType::ValueType{0.0f, 0.0f, 0.0f, 90.0F}, std::vector<std::string>{"i", "j", "k", "w (Deg)"}));
+                                                             VectorFloat32ParameterType::ValueType{0.0f, 0.0f, 0.0f, 90.0F}, std::vector<std::string>{"i", "j", "k", "w (Deg)"}));
 
   params.insertSeparator(Parameters::Separator{"Input Data"});
   params.insert(std::make_unique<ArraySelectionParameter>(k_EulerAnglesArrayPath_Key, "Input Euler Angles", "Three angles defining the orientation of the Cell in Bunge convention (Z-X-Z)", DataPath{},
@@ -92,12 +92,12 @@ IFilter::PreflightResult RotateEulerRefFrameFilter::preflightImpl(const DataStru
   if(axisMagnitude < std::numeric_limits<float32>::epsilon())
   {
     return {.output_actions = MakeErrorResult<OutputActions>(-96200, fmt::format("Rotation axis <{}, {}, {}> has zero length. The ijk components must define a non-zero direction.",
-                                                                                pRotationAxisAngleValue[0], pRotationAxisAngleValue[1], pRotationAxisAngleValue[2]))};
+                                                                                 pRotationAxisAngleValue[0], pRotationAxisAngleValue[1], pRotationAxisAngleValue[2]))};
   }
 
   resultOutputActions.value().modified_actions.emplace_back(DataObjectModification{.modified_path = pCellEulerAnglesArrayPathValue,
-                                                                                  .modified_type = DataObjectModification::ModifiedType::Modified,
-                                                                                  .data_object_type = dataStructure.getData(pCellEulerAnglesArrayPathValue)->getDataObjectType()});
+                                                                                   .modified_type = DataObjectModification::ModifiedType::Modified,
+                                                                                   .data_object_type = dataStructure.getData(pCellEulerAnglesArrayPathValue)->getDataObjectType()});
 
   // Return both the resultOutputActions and the preflightUpdatedValues via std::move()
   return {.output_actions = std::move(resultOutputActions), .output_values = std::move(preflightUpdatedValues)};

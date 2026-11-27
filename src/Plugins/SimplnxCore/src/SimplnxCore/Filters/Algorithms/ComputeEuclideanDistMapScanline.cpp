@@ -88,7 +88,8 @@ void AddUniqueNeighbor(std::array<int32, 6>& coordination, usize& coordinationCo
  * Three Feature ID slices bound resident source memory. Completed seed slices remain after cancellation.
  */
 template <typename T>
-Result<> InitializeSeeds(const Int32AbstractDataStoreType& featureIds, const DistanceStoreArrayType<T>& distanceStores, const SizeVec3Type& dims, const std::atomic_bool& shouldCancel, bool& hasBlockedCells)
+Result<> InitializeSeeds(const Int32AbstractDataStoreType& featureIds, const DistanceStoreArrayType<T>& distanceStores, const SizeVec3Type& dims, const std::atomic_bool& shouldCancel,
+                         bool& hasBlockedCells)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];

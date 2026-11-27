@@ -61,7 +61,7 @@ Parameters InterpolatePointCloudToRegularGridFilter::parameters() const
   params.insert(
       std::make_unique<VectorFloat32ParameterType>(k_KernelSize_Key, "Kernel Size", "Specifies the kernel size", std::vector<float32>{1.0f, 1.0f, 1.0f}, std::vector<std::string>{"x", "y", "z"}));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_GaussianSigmas_Key, "Gaussian Sigmas", "Specifies the Gaussian sigmas", std::vector<float32>{1.0f, 1.0f, 1.0f},
-                                                         std::vector<std::string>{"x", "y", "z"}));
+                                                             std::vector<std::string>{"x", "y", "z"}));
 
   params.insertSeparator(Parameters::Separator{"Destination Image Geometry"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Interpolated Image Geometry", "DataPath to interpolated geometry", DataPath{},

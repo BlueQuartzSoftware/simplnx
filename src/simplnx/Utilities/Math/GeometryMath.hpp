@@ -854,5 +854,5 @@ char IsPointInPolyhedron(const nx::core::TriangleGeom& triangleGeomRef, const st
 
   return 'o';
 }
-} // namespace GeometryMath
+} // namespace geometry_math
 } // namespace nx::core

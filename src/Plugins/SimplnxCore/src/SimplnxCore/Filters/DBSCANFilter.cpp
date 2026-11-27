@@ -79,7 +79,7 @@ Parameters DBSCANFilter::parameters() const
   params.insert(std::make_unique<Float32ParameterType>(
       k_Epsilon_Key, "Epsilon", "The epsilon-neighborhood around each point is queried (i.e., the maximum acceptable distance between points to be considered `connected`)", 0.0001f));
   params.insert(std::make_unique<Int32ParameterType>(k_MinPoints_Key, "Minimum Points",
-                                                 "The minimum number of points needed to form a 'dense region' (i.e., the minimum number of points needed to be called a cluster)", 2));
+                                                     "The minimum number of points needed to form a 'dense region' (i.e., the minimum number of points needed to be called a cluster)", 2));
   params.insert(std::make_unique<ChoicesParameter>(
       k_DistanceMetric_Key, "Distance Metric", "Distance Metric type to be used for calculations", to_underlying(cluster_utilities::DistanceMetric::Euclidean),
       ChoicesParameter::ChoicesType{"Euclidean", "Squared Euclidean", "Manhattan", "Cosine", "Pearson", "Squared Pearson"})); // Choice order matches ClusterUtilities::DistanceMetric values.
@@ -250,7 +250,7 @@ Result<Arguments> DBSCANFilter::FromSIMPLJson(const nlohmann::json& json)
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_MaskArrayPathKey, k_MaskArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::StringFilterParameterConverter>(args, json, simpl::k_FeatureIdsArrayNameKey, k_FeatureIdsArrayName_Key));
   results.push_back(simpl_conversion::Convert2Parameters<simpl_conversion::AMPathBuilderFilterParameterConverter>(args, json, simpl::k_SelectedArrayPathKey, simpl::k_FeatureAttributeMatrixNameKey,
-                                                                                                                k_FeatureAMPath_Key));
+                                                                                                                  k_FeatureAMPath_Key));
 
   Result<> conversionResult = MergeResults(std::move(results));
 

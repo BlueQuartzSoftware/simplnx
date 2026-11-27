@@ -499,12 +499,14 @@ Result<usize> CalculateReconstructionMinimumWorkingMemoryBytes(const SizeVec3Typ
   usize planeBytes = 0;
   if(!TryMultiplyReconstructionSize(dims[0], dims[1], planeValues) || !TryMultiplyReconstructionSize(planeValues, sizeof(T), planeBytes))
   {
-    return MakeErrorResult<usize>(-8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing the minimum working-memory plan.", string_utilities::FormatDimensions3D(dims)));
+    return MakeErrorResult<usize>(-8643,
+                                  fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing the minimum working-memory plan.", string_utilities::FormatDimensions3D(dims)));
   }
   usize minimumBytes = 0;
   if(!TryMultiplyReconstructionSize(planeBytes, usize{3}, minimumBytes))
   {
-    return MakeErrorResult<usize>(-8643, fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing the minimum working-memory plan.", string_utilities::FormatDimensions3D(dims)));
+    return MakeErrorResult<usize>(-8643,
+                                  fmt::format("Morphological reconstruction dimensions ({}) overflow while sizing the minimum working-memory plan.", string_utilities::FormatDimensions3D(dims)));
   }
   return {std::min(minimumBytes, usefulResult.value())};
 }

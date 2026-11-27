@@ -50,7 +50,7 @@ Parameters HierarchicalSmoothFilter::parameters() const
 
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Int32ParameterType>(k_MaxIterations_Key, "Max Bisection Iterations",
-                                                 "Maximum number of bisection iterations for the smoothing parameter optimization. Higher values give more precise results.", 53));
+                                                     "Maximum number of bisection iterations for the smoothing parameter optimization. Higher values give more precise results.", 53));
   params.insert(std::make_unique<Float64ParameterType>(
       k_ErrorThreshold_Key, "Error Threshold",
       "Displacement rejection threshold as a multiple of the minimum edge length. Nodes displaced beyond this threshold are reset to their original positions.", 2.0));

@@ -28,8 +28,8 @@ namespace
 class ComputeIPFColorsImpl
 {
 public:
-  ComputeIPFColorsImpl(ComputeIPFColorsDirect* filter, nx::core::FloatVec3Type referenceDir, nx::core::Float32ArrayType& eulers, nx::core::Int32ArrayType& phases, nx::core::UInt32ArrayType& crystalStructures,
-                       int32_t numPhases, const nx::core::IDataArray* goodVoxels, nx::core::UInt8ArrayType& colors, ebsdlib::ColorKeyKind colorKey)
+  ComputeIPFColorsImpl(ComputeIPFColorsDirect* filter, nx::core::FloatVec3Type referenceDir, nx::core::Float32ArrayType& eulers, nx::core::Int32ArrayType& phases,
+                       nx::core::UInt32ArrayType& crystalStructures, int32_t numPhases, const nx::core::IDataArray* goodVoxels, nx::core::UInt8ArrayType& colors, ebsdlib::ColorKeyKind colorKey)
   : m_Filter(filter)
   , m_ReferenceDir(std::move(referenceDir))
   , m_CellEulerAngles(eulers.getDataStoreRef())
@@ -218,8 +218,8 @@ Result<> ComputeIPFColorsDirect::operator()()
       const int32 currentPhaseIdx = cellPhasesStoreRef[voxelIdx];
       if(calculateIpf && currentPhaseIdx < 0)
       {
-        return MakeErrorResult(-48001, fmt::format("Cell Phases array '{}' has value {} at voxel index {}. Valid enabled Phase indices are in [0, {}).", m_InputValues->cell_phases_array_path.toString(),
-                                                   currentPhaseIdx, voxelIdx, numPhases));
+        return MakeErrorResult(-48001, fmt::format("Cell Phases array '{}' has value {} at voxel index {}. Valid enabled Phase indices are in [0, {}).",
+                                                   m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, voxelIdx, numPhases));
       }
     }
     return {};

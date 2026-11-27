@@ -23,4 +23,4 @@ ORIENTATIONANALYSIS_EXPORT Result<std::vector<uint8>> ReadExactBytes(const std::
 ORIENTATIONANALYSIS_EXPORT uint32 DecodeUInt32LittleEndian(const uint8* bytes);
 ORIENTATIONANALYSIS_EXPORT uint64 DecodeUInt64LittleEndian(const uint8* bytes);
 ORIENTATIONANALYSIS_EXPORT float64 DecodeFloat64LittleEndian(const uint8* bytes);
-} // namespace nx::core::EbsdPatternFileUtilities
+} // namespace nx::core::ebsd_pattern_file_utilities

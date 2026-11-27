@@ -2582,8 +2582,8 @@ TEST_CASE("ReadDREAM3DFilter: uses default origin and spacing values for invalid
   SIMPLNX_RESULT_REQUIRE_INVALID(strict.output_actions);
   CHECK(strict.output_actions.errors().front().code == ImageGeom::k_InvalidSpacing);
   CHECK(strict.output_actions.errors().front().message == fmt::format("Cannot read image geometry 'Exemplar Data' from '{}'. Spacing on the X axis must be finite and greater than zero. Received 0. "
-                                                                     "Enable 'Use Default Origin/Spacing for Invalid Values' to use defaults for invalid components in the loaded geometry.",
-                                                                     file.string()));
+                                                                      "Enable 'Use Default Origin/Spacing for Invalid Values' to use defaults for invalid components in the loaded geometry.",
+                                                                      file.string()));
 
   args.insertOrAssign(ReadDREAM3DFilter::k_UseDefaultGeometryValues_Key, true);
   const auto execution = filter.execute(dataStructure, args);

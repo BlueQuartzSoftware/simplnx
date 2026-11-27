@@ -111,7 +111,7 @@ Result<> PadImageGeometry::operator()()
   auto& srcImageGeom = m_DataStructure.getDataRefAs<ImageGeom>(m_InputValues->selected_image_geometry_path);
   const std::array<bool, 3> active = {m_InputValues->pad_in_x, m_InputValues->pad_in_y, m_InputValues->pad_in_z};
   const std::array<std::reference_wrapper<const VectorInt32ParameterType::ValueType>, 3> vectors = {std::cref(m_InputValues->x_min_max), std::cref(m_InputValues->y_min_max),
-                                                                                                std::cref(m_InputValues->z_min_max)};
+                                                                                                    std::cref(m_InputValues->z_min_max)};
   std::array<std::array<int32, 2>, 3> padding{};
   for(usize axis = 0; axis < 3; ++axis)
   {

@@ -208,7 +208,7 @@ TEST_CASE("SimplnxCore::CombineStlFilesFilter: Valid Filter Execution", "[Simpln
   REQUIRE(computedTriangleGeom.getFaceAttributeMatrix()->getShape() == exemplarTriangleGeom.getFaceAttributeMatrix()->getShape());
 
   unit_test::CompareArrays<float64>(dataStructure, k_ExemplarTriangleDataContainerName.createChildPath(k_FaceData).createChildPath(k_FaceNormals),
-                                   k_ComputedTriangleDataContainerName.createChildPath(k_FaceData).createChildPath("Face Normals"));
+                                    k_ComputedTriangleDataContainerName.createChildPath(k_FaceData).createChildPath("Face Normals"));
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
 }

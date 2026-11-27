@@ -235,8 +235,8 @@ SIMPLNX_EXPORT Result<> CalculateNormals(const INodeGeometry2D::SharedFaceListTy
  * The method uses direct per-value DataStore access and does not report I/O errors.
  */
 template <class ContainerT>
-Result<> CalculateFeatureVolumes(const INodeGeometry2D::SharedFaceListType::StoreType& triangles, const INodeGeometry2D::SharedVertexListType::StoreType& verts, const Int32AbstractDataStoreType& idsStore,
-                                 ContainerT& volumes, const std::atomic_bool& shouldCancel)
+Result<> CalculateFeatureVolumes(const INodeGeometry2D::SharedFaceListType::StoreType& triangles, const INodeGeometry2D::SharedVertexListType::StoreType& verts,
+                                 const Int32AbstractDataStoreType& idsStore, ContainerT& volumes, const std::atomic_bool& shouldCancel)
 {
   usize volumeSize = volumes.size();
   std::array<usize, 3> faceVertexIndices = {0, 0, 0};
@@ -307,4 +307,4 @@ Result<> CalculateFeatureVolumes(const INodeGeometry2D::SharedFaceListType::Stor
 
   return {};
 }
-} // namespace nx::core::MeshingUtilities
+} // namespace nx::core::meshing_utilities

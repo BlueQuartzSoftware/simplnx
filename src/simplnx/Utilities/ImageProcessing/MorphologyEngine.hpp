@@ -272,8 +272,8 @@ Result<> MakeMorphologySlabPlan(const AbstractDataStore<T>& in, const AbstractDa
   }
   if(out.getSize() != plan.volume_values)
   {
-    return MakeErrorResult(-8653, fmt::format("Morphology output store size ({}) does not match the expected image volume ({}) for dimensions {} x {} x {}.", out.getSize(), plan.volume_values, dims[0],
-                                              dims[1], dims[2]));
+    return MakeErrorResult(-8653, fmt::format("Morphology output store size ({}) does not match the expected image volume ({}) for dimensions {} x {} x {}.", out.getSize(), plan.volume_values,
+                                              dims[0], dims[1], dims[2]));
   }
 
   usize planeBytes = 0;
@@ -311,7 +311,7 @@ template <class T>
 struct BinaryMorphPlaneBody
 {
   const T* slab;           // read-only slab covering Z in [zLo, zHi], laid out [slabZ][y][x]
-  T* out_slab;              // output slab, outputDepth*dimX*dimY
+  T* out_slab;             // output slab, outputDepth*dimX*dimY
   const SEOffset* offsets; // structuring-element offsets (dx,dy,dz)
   usize num_offsets;
   usize dim_x;
@@ -563,8 +563,8 @@ inline bool CanUseFixedMorphologyInput2D(usize dimX, usize totalValues, usize in
 }
 
 template <class T, class BodyFactory>
-Result<> ExecuteBoundedMorphology2D(const AbstractDataStore<T>& inputStore, AbstractDataStore<T>& outputStore, const SizeVec3Type& dims, const StructuringElement& se, const std::atomic_bool& shouldCancel,
-                                    usize requestedTargetBytes, BodyFactory&& bodyFactory)
+Result<> ExecuteBoundedMorphology2D(const AbstractDataStore<T>& inputStore, AbstractDataStore<T>& outputStore, const SizeVec3Type& dims, const StructuringElement& se,
+                                    const std::atomic_bool& shouldCancel, usize requestedTargetBytes, BodyFactory&& bodyFactory)
 {
   const usize dimX = dims[0];
   const usize dimY = dims[1];
@@ -1353,8 +1353,8 @@ inline std::pair<usize, usize> MorphologyInteriorXRange(usize boundDimX, usize o
  * @tparam Dilate true for max; false for min.
  */
 template <class T, bool Dilate>
-void RunMorphologyFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3Type& boundDims, usize stagedZLo, const SizeVec3Type& outputDims, const SizeVec3Type& outputOrigin, const StructuringElement& se,
-                                const std::vector<MorphologyFlatFoldOffset>& offsets, const std::atomic_bool& shouldCancel)
+void RunMorphologyFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3Type& boundDims, usize stagedZLo, const SizeVec3Type& outputDims, const SizeVec3Type& outputOrigin,
+                                const StructuringElement& se, const std::vector<MorphologyFlatFoldOffset>& offsets, const std::atomic_bool& shouldCancel)
 {
   const usize sliceValues = boundDims[0] * boundDims[1];
   const int64 boundX = static_cast<int64>(boundDims[0]);
@@ -1460,8 +1460,8 @@ void RunMorphologyFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3T
  * @tparam Dilate True for max; false for min.
  */
 template <class T, bool Dilate>
-void RunMorphologyFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3Type& boundDims, usize stagedZLo, const SizeVec3Type& outputDims, const SizeVec3Type& outputOrigin, const StructuringElement& se,
-                                const std::atomic_bool& shouldCancel)
+void RunMorphologyFlatFoldBlock(const T* stagedInput, T* output, const SizeVec3Type& boundDims, usize stagedZLo, const SizeVec3Type& outputDims, const SizeVec3Type& outputOrigin,
+                                const StructuringElement& se, const std::atomic_bool& shouldCancel)
 {
   const std::vector<MorphologyFlatFoldOffset> offsets = MakeMorphologyFlatFoldOffsets(se, boundDims);
   RunMorphologyFlatFoldBlock<T, Dilate>(stagedInput, output, boundDims, stagedZLo, outputDims, outputOrigin, se, offsets, shouldCancel);
@@ -1901,7 +1901,8 @@ inline PackedBinaryPlaneLayout MakePackedBinaryPlaneLayout(const SizeVec3Type& b
  * @return True when all rows were packed.
  */
 template <class T>
-bool PackBinaryMorphologyStagedPlanes(const T* stagedInput, BinaryMorphWordType* packedOutput, const PackedBinaryPlaneLayout& layout, usize stagedDepth, T foreground, const std::atomic_bool& shouldCancel)
+bool PackBinaryMorphologyStagedPlanes(const T* stagedInput, BinaryMorphWordType* packedOutput, const PackedBinaryPlaneLayout& layout, usize stagedDepth, T foreground,
+                                      const std::atomic_bool& shouldCancel)
 {
   constexpr usize k_WordBits = std::numeric_limits<BinaryMorphWordType>::digits;
   const usize rawPlaneValues = layout.dim_x * layout.dim_y;
@@ -1985,8 +1986,8 @@ inline BinaryMorphWordType ExtractPackedBinaryWord(const PackedBinaryPlanesView&
  * @param boundaryToForeground Maps out-of-bounds coordinates to set bits.
  * @return Packed membership bits.
  */
-inline BinaryMorphWordType ExtractPackedBinaryWord(const BinaryMorphWordType* packedInput, const PackedBinaryPlaneLayout& layout, const SizeVec3Type& boundDims, usize stagedZLo, usize stagedDepth, int64 xStart,
-                                               int64 y, int64 z, bool boundaryToForeground)
+inline BinaryMorphWordType ExtractPackedBinaryWord(const BinaryMorphWordType* packedInput, const PackedBinaryPlaneLayout& layout, const SizeVec3Type& boundDims, usize stagedZLo, usize stagedDepth,
+                                                   int64 xStart, int64 y, int64 z, bool boundaryToForeground)
 {
   return ExtractPackedBinaryWord({.words = packedInput, .layout = layout, .z_lo = stagedZLo, .depth = stagedDepth, .capacity = stagedDepth, .head = 0}, boundDims, xStart, y, z, boundaryToForeground);
 }
@@ -2102,8 +2103,8 @@ BinaryMorphWordType FoldPackedBinaryWord(const PackedBinaryPlanesView& view, con
  * @tparam Dilate True for any; false for all.
  */
 template <class T, bool Dilate>
-bool RunPrepackedBinaryMorphologyBlock(const PackedBinaryPlanesView& view, T* output, const SizeVec3Type& boundDims, const SizeVec3Type& outputDims, const SizeVec3Type& outputOrigin, const StructuringElement& se,
-                                       T foreground, T background, bool boundaryToForeground, const std::atomic_bool& shouldCancel)
+bool RunPrepackedBinaryMorphologyBlock(const PackedBinaryPlanesView& view, T* output, const SizeVec3Type& boundDims, const SizeVec3Type& outputDims, const SizeVec3Type& outputOrigin,
+                                       const StructuringElement& se, T foreground, T background, bool boundaryToForeground, const std::atomic_bool& shouldCancel)
 {
   assert(!se.offsets.empty());
   if(shouldCancel)
@@ -2187,8 +2188,8 @@ bool RunPrepackedBinaryMorphologyBlock(const BinaryMorphWordType* packedInput, T
  * @tparam Dilate True for any; false for all.
  */
 template <bool Dilate>
-bool RunPrepackedBinaryMorphologyPlane(const PackedBinaryPlanesView& inputView, BinaryMorphWordType* packedOutput, const SizeVec3Type& boundDims, const SizeVec3Type& outputOrigin, const StructuringElement& se,
-                                       bool boundaryToForeground, const std::atomic_bool& shouldCancel)
+bool RunPrepackedBinaryMorphologyPlane(const PackedBinaryPlanesView& inputView, BinaryMorphWordType* packedOutput, const SizeVec3Type& boundDims, const SizeVec3Type& outputOrigin,
+                                       const StructuringElement& se, bool boundaryToForeground, const std::atomic_bool& shouldCancel)
 {
   assert(!se.offsets.empty());
   if(shouldCancel)
@@ -2233,8 +2234,8 @@ bool RunPrepackedBinaryMorphologyPlane(const PackedBinaryPlanesView& inputView, 
  * @tparam T Scalar voxel type.
  */
 template <class T>
-bool PackBinaryPaddedPlane(const T* sourcePlane, BinaryMorphWordType* packedOutput, const PackedBinaryPlaneLayout& layout, const SizeVec3Type& sourceDims, const std::array<usize, 3>& cropOffset, T foreground,
-                           const std::atomic_bool& shouldCancel)
+bool PackBinaryPaddedPlane(const T* sourcePlane, BinaryMorphWordType* packedOutput, const PackedBinaryPlaneLayout& layout, const SizeVec3Type& sourceDims, const std::array<usize, 3>& cropOffset,
+                           T foreground, const std::atomic_bool& shouldCancel)
 {
   if(shouldCancel)
   {
@@ -2290,8 +2291,8 @@ bool PackBinaryPaddedPlane(const T* sourcePlane, BinaryMorphWordType* packedOutp
  * @tparam Dilate True for any; false for all.
  */
 template <class T, bool Dilate>
-bool RunPackedBinaryMorphologyBlock(const T* stagedInput, T* output, const SizeVec3Type& boundDims, usize stagedZLo, usize stagedDepth, const SizeVec3Type& outputDims, const SizeVec3Type& outputOrigin,
-                                    const StructuringElement& se, T foreground, T background, bool boundaryToForeground, const std::atomic_bool& shouldCancel)
+bool RunPackedBinaryMorphologyBlock(const T* stagedInput, T* output, const SizeVec3Type& boundDims, usize stagedZLo, usize stagedDepth, const SizeVec3Type& outputDims,
+                                    const SizeVec3Type& outputOrigin, const StructuringElement& se, T foreground, T background, bool boundaryToForeground, const std::atomic_bool& shouldCancel)
 {
   const PackedBinaryPlaneLayout layout = MakePackedBinaryPlaneLayout(boundDims);
   usize packedWordCount = 0;
@@ -3801,8 +3802,8 @@ Result<usize> CalculateMorphologyCompositePipelineWorkingMemoryBytes(const SizeV
     {
       if(cropOffset[axis] > (std::numeric_limits<usize>::max() - dims[axis]) / 2)
       {
-        return MakeErrorResult<usize>(
-            -8479, fmt::format("SafeBorder morphology-composite padded dimensions overflow. Dimensions: {}; axis: {}; radius: {}.", string_utilities::FormatDimensions3D(dims), axis, cropOffset[axis]));
+        return MakeErrorResult<usize>(-8479, fmt::format("SafeBorder morphology-composite padded dimensions overflow. Dimensions: {}; axis: {}; radius: {}.",
+                                                         string_utilities::FormatDimensions3D(dims), axis, cropOffset[axis]));
       }
       paddedDims[axis] = dims[axis] + 2 * cropOffset[axis];
     }
@@ -4849,8 +4850,8 @@ private:
  * @tparam T scalar voxel type.
  */
 template <class T>
-Result<> ApplyMorphologyGradient(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3Type& dims, const StructuringElement& se, const IDataArray& inArray, const IDataArray& outArray,
-                                 const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+Result<> ApplyMorphologyGradient(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, const SizeVec3Type& dims, const StructuringElement& se, const IDataArray& inArray,
+                                 const IDataArray& outArray, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
 {
   if(auto layout = ValidateMorphologyLayout(dims, se, false, sizeof(T)); layout.invalid())
   {
@@ -5082,13 +5083,13 @@ public:
         }
         if(dilate)
         {
-          detail::RunPrepackedBinaryMorphologyBlock<T, true>(packedSlab.data(), outSlab.get(), m_Dims, zLo, slabDepth, SizeVec3Type{dimX, dimY, outputDepth}, SizeVec3Type{0, 0, zBegin}, m_SE, m_Fg, m_Bg,
-                                                             m_BoundaryToForeground, m_ShouldCancel);
+          detail::RunPrepackedBinaryMorphologyBlock<T, true>(packedSlab.data(), outSlab.get(), m_Dims, zLo, slabDepth, SizeVec3Type{dimX, dimY, outputDepth}, SizeVec3Type{0, 0, zBegin}, m_SE, m_Fg,
+                                                             m_Bg, m_BoundaryToForeground, m_ShouldCancel);
         }
         else
         {
-          detail::RunPrepackedBinaryMorphologyBlock<T, false>(packedSlab.data(), outSlab.get(), m_Dims, zLo, slabDepth, SizeVec3Type{dimX, dimY, outputDepth}, SizeVec3Type{0, 0, zBegin}, m_SE, m_Fg, m_Bg,
-                                                              m_BoundaryToForeground, m_ShouldCancel);
+          detail::RunPrepackedBinaryMorphologyBlock<T, false>(packedSlab.data(), outSlab.get(), m_Dims, zLo, slabDepth, SizeVec3Type{dimX, dimY, outputDepth}, SizeVec3Type{0, 0, zBegin}, m_SE, m_Fg,
+                                                              m_Bg, m_BoundaryToForeground, m_ShouldCancel);
         }
       }
       else
@@ -5287,7 +5288,8 @@ private:
         // so the resident fast path stays below its former two-raw-volume scratch peak.
         data.reset();
         auto output = std::make_unique<T[]>(vol);
-        detail::RunPrepackedBinaryMorphologyBlock<T, Dilate>(packedInput.data(), output.get(), m_Dims, 0, dimZ, m_Dims, SizeVec3Type{0, 0, 0}, m_SE, m_Fg, m_Bg, m_BoundaryToForeground, m_ShouldCancel);
+        detail::RunPrepackedBinaryMorphologyBlock<T, Dilate>(packedInput.data(), output.get(), m_Dims, 0, dimZ, m_Dims, SizeVec3Type{0, 0, 0}, m_SE, m_Fg, m_Bg, m_BoundaryToForeground,
+                                                             m_ShouldCancel);
         if(m_ShouldCancel)
         {
           return {};
@@ -5509,8 +5511,8 @@ template <class T>
 class BinaryMorphWorkingMemory
 {
 public:
-  BinaryMorphWorkingMemory(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3Type dims, const StructuringElement& se, MorphOp op, T foreground, T background, bool boundaryToForeground,
-                           const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
+  BinaryMorphWorkingMemory(const AbstractDataStore<T>& in, AbstractDataStore<T>& out, SizeVec3Type dims, const StructuringElement& se, MorphOp op, T foreground, T background,
+                           bool boundaryToForeground, const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& messageHandler)
   : m_In(in)
   , m_Out(out)
   , m_Dims(std::move(dims))
@@ -5670,8 +5672,8 @@ Result<usize> CalculateBinaryMorphologyCompositePipelineWorkingMemoryBytes(const
  * @return An error result for invalid memory dimensions or store transfers.
  */
 template <class T>
-Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& input, AbstractDataStore<T>& output, const SizeVec3Type& dims, const StructuringElement& se, MorphOp firstOp, MorphOp secondOp,
-                                                bool safeBorder, T foreground, T background, const std::atomic_bool& shouldCancel, usize grantedWorkingMemoryBytes)
+Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& input, AbstractDataStore<T>& output, const SizeVec3Type& dims, const StructuringElement& se, MorphOp firstOp,
+                                                MorphOp secondOp, bool safeBorder, T foreground, T background, const std::atomic_bool& shouldCancel, usize grantedWorkingMemoryBytes)
 {
   if(auto layout = ValidateMorphologyLayout(dims, se, safeBorder, sizeof(T)); layout.invalid())
   {
@@ -5918,8 +5920,8 @@ Result<> ApplyBinaryMorphologyCompositePipeline(const AbstractDataStore<T>& inpu
         }
         else
         {
-          detail::RunBinaryMorphologyFlatFoldBlock<T, false>(inputRing.get(), planePtr, paddedDims, inputZLo, SizeVec3Type{paddedDims[0], paddedDims[1], 1}, SizeVec3Type{0, 0, paddedZ}, se, foreground,
-                                                             background, firstBoundaryToForeground, flatOffsets, shouldCancel);
+          detail::RunBinaryMorphologyFlatFoldBlock<T, false>(inputRing.get(), planePtr, paddedDims, inputZLo, SizeVec3Type{paddedDims[0], paddedDims[1], 1}, SizeVec3Type{0, 0, paddedZ}, se,
+                                                             foreground, background, firstBoundaryToForeground, flatOffsets, shouldCancel);
         }
       }
       else

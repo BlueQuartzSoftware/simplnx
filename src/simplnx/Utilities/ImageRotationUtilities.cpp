@@ -22,7 +22,7 @@ FloatVec6Type DetermineMinMaxCoords(const BoundingBox3DfType& imageGeomBoundingB
 
   /* clang-format on */
   FloatVec6Type minMaxValues = {std::numeric_limits<float>::max(),  -std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
-                            -std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),  -std::numeric_limits<float>::max()};
+                                -std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),  -std::numeric_limits<float>::max()};
 
   for(size_t i = 0; i < 8; i++)
   {
@@ -130,8 +130,8 @@ RotateArgs CreateRotationArgs(const ImageGeom& imageGeom, const Matrix4fRType& t
   }
 
   USizeVec3Type outputDims = {static_cast<IGeometry::MeshIndexType>(std::nearbyint((minMaxCoords[1] - minMaxCoords[0]) / outputSpacing[0])),
-                          static_cast<IGeometry::MeshIndexType>(std::nearbyint((minMaxCoords[3] - minMaxCoords[2]) / outputSpacing[1])),
-                          static_cast<IGeometry::MeshIndexType>(std::nearbyint((minMaxCoords[5] - minMaxCoords[4]) / outputSpacing[2]))};
+                              static_cast<IGeometry::MeshIndexType>(std::nearbyint((minMaxCoords[3] - minMaxCoords[2]) / outputSpacing[1])),
+                              static_cast<IGeometry::MeshIndexType>(std::nearbyint((minMaxCoords[5] - minMaxCoords[4]) / outputSpacing[2]))};
 
   if(outputDims[0] == 0)
   {
@@ -379,4 +379,4 @@ size_t FindOctant(const RotateArgs& params, const FloatVec3Type& centerPoint, co
 
   return minIndex;
 }
-} // namespace nx::core::ImageRotationUtilities
+} // namespace nx::core::image_rotation_utilities

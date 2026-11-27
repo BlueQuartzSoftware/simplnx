@@ -32,4 +32,4 @@ inline void RequireReaderGeometryExecution(const IFilter& filter, const Argument
   SIMPLNX_RESULT_REQUIRE_VALID(result.result);
   RequireReaderGeometry(dataStructure, path, origin, spacing);
 }
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test

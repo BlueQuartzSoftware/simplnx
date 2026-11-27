@@ -229,7 +229,8 @@ Result<> FillBadDataBFS::operator()()
 
   // Collect all cell data arrays that need updating when a voxel is filled
   // (excludes user-specified ignored arrays)
-  std::optional<std::vector<DataPath>> allChildArrays = GetAllChildDataPaths(m_DataStructure, selectedImageGeom.getCellDataPath(), DataObject::Type::DataArray, m_InputValues->ignored_data_array_paths);
+  std::optional<std::vector<DataPath>> allChildArrays =
+      GetAllChildDataPaths(m_DataStructure, selectedImageGeom.getCellDataPath(), DataObject::Type::DataArray, m_InputValues->ignored_data_array_paths);
   std::vector<DataPath> voxelArrayNames;
   if(allChildArrays.has_value())
   {

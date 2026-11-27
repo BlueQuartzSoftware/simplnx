@@ -319,8 +319,8 @@ using ParsersVectorType = std::vector<std::unique_ptr<AbstractDataParser>>;
  * @pre csvTypes, skippedArrays, and headers have equal sizes. Each non-skipped
  * destination exists and has the requested concrete array type.
  */
-SIMPLNX_EXPORT Result<ParsersVectorType> CreateParsers(const std::vector<CSVType>& csvTypes, const std::vector<bool>& skippedArrays, const DataPath& parentPath, const std::vector<std::string>& headers,
-                                                   DataStructure& dataStructure);
+SIMPLNX_EXPORT Result<ParsersVectorType> CreateParsers(const std::vector<CSVType>& csvTypes, const std::vector<bool>& skippedArrays, const DataPath& parentPath,
+                                                       const std::vector<std::string>& headers, DataStructure& dataStructure);
 
 /**
  * @brief Flushes all non-skipped CSV parsers.
@@ -344,8 +344,8 @@ SIMPLNX_EXPORT Result<> FlushParsers(const ParsersVectorType& dataParsers);
  * @return Parse result for the line.
  * @pre dataParsers and headers cover every token. lineNumber is not less than beginIndex.
  */
-SIMPLNX_EXPORT Result<> ParseLine(std::fstream& inStream, const ParsersVectorType& dataParsers, const std::vector<std::string>& headers, const std::vector<char>& delimiters, bool consecutiveDelimiters,
-                                  usize lineNumber, usize beginIndex, bool& flushRequired);
+SIMPLNX_EXPORT Result<> ParseLine(std::fstream& inStream, const ParsersVectorType& dataParsers, const std::vector<std::string>& headers, const std::vector<char>& delimiters,
+                                  bool consecutiveDelimiters, usize lineNumber, usize beginIndex, bool& flushRequired);
 
 /**
  * @brief Formats tuple dimensions with an x separator.
@@ -382,5 +382,5 @@ SIMPLNX_EXPORT bool SkipNumberOfLines(std::fstream& inStream, usize numberOfLine
  * @pre headersLineNum is at least one.
  */
 SIMPLNX_EXPORT Result<std::vector<std::string>> ReadHeaders(const std::string& inputFilePath, usize headersLineNum, const std::vector<char>& delimiters, bool consecutiveDelimiters);
-} // namespace CSV
-} // namespace nx::core::FileUtilities
+} // namespace csv
+} // namespace nx::core::file_utilities

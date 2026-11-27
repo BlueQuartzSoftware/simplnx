@@ -276,7 +276,7 @@ Result<Arguments> ComputeGroupingDensityFilter::FromSIMPLJson(const nlohmann::js
       simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ContiguousNeighborListArrayPathKey, k_ContiguousNeighborListArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedBooleanFilterParameterConverter>(args, json, simpl::k_FindCheckedFeaturesKey, k_FindCheckedFeatures_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_NonContiguousNeighborListArrayPathKey,
-                                                                                                                   k_NonContiguousNeighborListArrayPath_Key));
+                                                                                                                     k_NonContiguousNeighborListArrayPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_ParentDensitiesArrayNameKey, k_GroupingDensitiesName_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ParentIdsArrayPathKey, k_ParentIdsPath_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::DataArraySelectionFilterParameterConverter>(args, json, simpl::k_ParentVolumesArrayPathKey, k_ParentVolumesPath_Key));

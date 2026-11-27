@@ -329,7 +329,7 @@ TEMPLATE_TEST_CASE("NXImageProcessing::ZeroCrossingEngine: direct route matches 
   constexpr uint8 k_Foreground = 7;
   constexpr uint8 k_Background = 3;
   const std::array<SizeVec3Type, 10> dimensions = {SizeVec3Type{1, 1, 1}, SizeVec3Type{1, 1, 7}, SizeVec3Type{7, 1, 1},    SizeVec3Type{1, 5, 1},  SizeVec3Type{2, 2, 2},
-                                               SizeVec3Type{3, 3, 3}, SizeVec3Type{7, 6, 5}, SizeVec3Type{17, 13, 11}, SizeVec3Type{33, 9, 7}, SizeVec3Type{5, 40, 3}};
+                                                   SizeVec3Type{3, 3, 3}, SizeVec3Type{7, 6, 5}, SizeVec3Type{17, 13, 11}, SizeVec3Type{33, 9, 7}, SizeVec3Type{5, 40, 3}};
 
   for(usize dimensionsIndex = 0; dimensionsIndex < dimensions.size(); ++dimensionsIndex)
   {

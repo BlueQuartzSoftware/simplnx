@@ -34,7 +34,8 @@ class FindDensityGrouping
 {
 public:
   FindDensityGrouping(const std::atomic_bool& shouldCancel, const IFilter::MessageHandler& mesgHandler, const Int32ArrayType& parentIds, const Float32ArrayType& parentVolumes,
-                      const Float32ArrayType& featureVolumes, const Int32NeighborListType& contiguousNL, Float32ArrayType& groupingDensities, const Int32NeighborListType& nonContiguousNL, Int32ArrayType& checkedFeatures)
+                      const Float32ArrayType& featureVolumes, const Int32NeighborListType& contiguousNL, Float32ArrayType& groupingDensities, const Int32NeighborListType& nonContiguousNL,
+                      Int32ArrayType& checkedFeatures)
   : m_ShouldCancel(shouldCancel)
   , m_MessageHandler(mesgHandler)
   , m_ParentIds(parentIds)

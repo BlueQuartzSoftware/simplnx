@@ -59,7 +59,7 @@ TEST_CASE("OrientationAnalysis::ConvertOrientationsToVertexGeometry", "[Orientat
       SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions)
       unit_test::RequireAutomaticCreateArrayActions(preflightResult.output_actions, 1);
       unit_test::RequireAutomaticCreateArrayActions(preflightResult.output_actions,
-                                                   std::vector<DataPath>{kOutputGeometry.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(kInputPhasesPath.getTargetName())});
+                                                    std::vector<DataPath>{kOutputGeometry.createChildPath(VertexGeom::k_VertexAttributeMatrixName).createChildPath(kInputPhasesPath.getTargetName())});
 
       // Execute the filter and check the result
       auto executeResult = filter.execute(dataStructure, args);

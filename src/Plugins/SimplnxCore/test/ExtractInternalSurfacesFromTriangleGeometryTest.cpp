@@ -211,7 +211,7 @@ const DataPath k_QuickMeshPath({"QuickMesh"});
 surface_meshing_test::MeshResult RunQuickSurfaceMeshForExtraction(ChoicesParameter::ValueType boundingBoxSkinMode)
 {
   return surface_meshing_test::RunMesher<QuickSurfaceMeshFilter>(surface_meshing_test::CreateCylinderInBox(true), k_QuickMeshPath, boundingBoxSkinMode,
-                                                               [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
+                                                                 [](Arguments& args) { args.insertOrAssign(QuickSurfaceMeshFilter::k_FixProblemVoxels_Key, std::make_any<bool>(false)); });
 }
 } // namespace
 

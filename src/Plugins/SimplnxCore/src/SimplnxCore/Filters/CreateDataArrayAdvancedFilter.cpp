@@ -178,8 +178,8 @@ IFilter::PreflightResult CreateDataArrayAdvancedFilter::preflightImpl(const Data
   const usize previewCapacity = std::min(std::vector<float64>().max_size(), std::vector<std::string>().max_size());
   if(numComponents > previewCapacity)
   {
-    return MakePreflightErrorResult(dimension_conversion::k_ComponentCapacity, fmt::format("Component count {} for array '{}' exceeds preview storage capacity {}. Use fewer components.", numComponents,
-                                                                                          dataArrayPath.toString(), previewCapacity));
+    return MakePreflightErrorResult(dimension_conversion::k_ComponentCapacity, fmt::format("Component count {} for array '{}' exceeds preview storage capacity {}. Use fewer components.",
+                                                                                           numComponents, dataArrayPath.toString(), previewCapacity));
   }
 
   ShapeType tupleDims = {};

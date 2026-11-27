@@ -738,4 +738,4 @@ void RunNeighborSchemeExemplarTest(AlgorithmTestScope& algorithmTestScope, DataS
                                          tupleCheckIgnoredPaths);
 }
 
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test

@@ -64,11 +64,11 @@ Parameters SetImageGeomOriginScalingFilter::parameters() const
   params.insert(
       std::make_unique<BoolParameter>(k_CenterOrigin_Key, "Put Input Origin at the Center of Geometry", "Specifies if the origin should be aligned with the corner (false) or center (true)", false));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Origin (Physical Units)", "Specifies the new origin values in physical units.", std::vector<float32>{0.0f, 0.0f, 0.0f},
-                                                         std::vector<std::string>{"X", "Y", "Z"}));
+                                                             std::vector<std::string>{"X", "Y", "Z"}));
 
   params.insertLinkableParameter(std::make_unique<BoolParameter>(k_ChangeSpacing_Key, "Set Spacing", "Specifies if the spacing should be changed", true));
   params.insert(std::make_unique<VectorFloat32ParameterType>(k_Spacing_Key, "Spacing (Physical Units)", "Specifies the new spacing values in physical units.", std::vector<float32>{1.0f, 1.0f, 1.0f},
-                                                         std::vector<std::string>{"X", "Y", "Z"}));
+                                                             std::vector<std::string>{"X", "Y", "Z"}));
 
   params.linkParameters(k_ChangeOrigin_Key, k_Origin_Key, std::make_any<bool>(true));
   params.linkParameters(k_ChangeOrigin_Key, k_CenterOrigin_Key, std::make_any<bool>(true));
@@ -160,7 +160,7 @@ IFilter::PreflightResult SetImageGeomOriginScalingFilter::preflightImpl(const Da
 
   // Store the preflight updated value(s) into the preflightUpdatedValues vector using the appropriate methods.
   preflightUpdatedValues.push_back({"Input Geometry  [Before Update]", nx::core::geometry_helpers::description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), srcImageGeomPtr->getSpacing(),
-                                                                                                                                    srcImageGeomPtr->getOrigin(), srcImageGeomPtr->getUnits())});
+                                                                                                                                     srcImageGeomPtr->getOrigin(), srcImageGeomPtr->getUnits())});
 
   preflightUpdatedValues.push_back(
       {"Image Geometry [After Update]", nx::core::geometry_helpers::description::GenerateGeometryInfo(srcImageGeomPtr->getDimensions(), spacingVec, originVec, srcImageGeomPtr->getUnits())});

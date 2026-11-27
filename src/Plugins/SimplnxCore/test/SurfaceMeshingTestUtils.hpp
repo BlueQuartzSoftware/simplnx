@@ -390,4 +390,4 @@ inline std::set<std::pair<int32, int32>> CollectLabelPairs(const MeshResult& mes
   }
   return labelPairs;
 }
-} // namespace SurfaceMeshingTest
+} // namespace surface_meshing_test

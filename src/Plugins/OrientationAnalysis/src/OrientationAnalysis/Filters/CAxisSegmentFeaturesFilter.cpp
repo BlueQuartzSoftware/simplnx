@@ -60,7 +60,7 @@ Parameters CAxisSegmentFeaturesFilter::parameters() const
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
 
   params.insert(std::make_unique<Float32ParameterType>(k_MisorientationTolerance_Key, "C-Axis Misorientation Tolerance (Degrees)",
-                                                   "Tolerance (in degrees) used to determine if neighboring Cells belong to the same Feature", 5.0f));
+                                                       "Tolerance (in degrees) used to determine if neighboring Cells belong to the same Feature", 5.0f));
   params.insert(std::make_unique<BoolParameter>(k_RandomizeFeatureIds_Key, "Randomize Feature Ids", "Specifies whether to randomize the Feature Ids with a deterministic shuffle", false));
   params.insert(std::make_unique<ChoicesParameter>(k_NeighborScheme_Key, "Neighbor Scheme", "How many neighbors to use", segment_features::k_6NeighborIndex, segment_features::k_OperationChoices));
 
@@ -68,7 +68,8 @@ Parameters CAxisSegmentFeaturesFilter::parameters() const
   params.insertLinkableParameter(
       std::make_unique<BoolParameter>(k_UseMask_Key, "Use Mask Array", "Specifies whether to use a boolean array to exclude some Cells from the Feature identification process", true));
   params.insert(std::make_unique<ArraySelectionParameter>(k_MaskArrayPath_Key, "Cell Mask Array", "Specifies if the Cell is to be counted in the algorithm. Only required if Use Mask Array is checked",
-                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
+                                                          DataPath{}, ArraySelectionParameter::AllowedTypeSetType{DataType::boolean, DataType::uint8},
+                                                          ArraySelectionParameter::AllowedComponentShapesType{{1}}));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_SelectedImageGeometryPath_Key, "Input Grid Geometry", "DataPath to input Grid Geometry", DataPath{},
@@ -157,7 +158,7 @@ IFilter::PreflightResult CAxisSegmentFeaturesFilter::preflightImpl(const DataStr
   if(quats.getNumberOfTuples() != inputGridGeomPtr->getNumberOfCells())
   {
     return {.output_actions = MakeErrorResult<OutputActions>(-652, fmt::format("The selected cell arrays have {} tuples but the selected geometry '{}' has {} cells.", quats.getNumberOfTuples(),
-                                                                              gridGeomPath.toString(), inputGridGeomPtr->getNumberOfCells()))};
+                                                                               gridGeomPath.toString(), inputGridGeomPtr->getNumberOfCells()))};
   }
 
   // Use the cell AttributeMatrix shape for FeatureIds.

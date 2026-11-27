@@ -113,7 +113,8 @@ Matrix3X1fType ClosestPointTriangle(const Matrix3X1fType& p, const Matrix3X1fTyp
  *
  * The caller takes the square root after it chooses the closest triangle.
  */
-float32 PointTriangleDistance(const Matrix3X1fType& point, const Matrix3X1fType& vert0, const Matrix3X1fType& vert1, const Matrix3X1fType& vert2, const int64 triangle, const Float64AbstractDataStoreType& normals)
+float32 PointTriangleDistance(const Matrix3X1fType& point, const Matrix3X1fType& vert0, const Matrix3X1fType& vert1, const Matrix3X1fType& vert2, const int64 triangle,
+                              const Float64AbstractDataStoreType& normals)
 {
   Matrix3X1fType closestPointInTriangle = ClosestPointTriangle(point, vert0, vert1, vert2);
 

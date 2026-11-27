@@ -1209,7 +1209,7 @@ void CheckArraysInheritTupleDims(const DataStructure& dataStructure, const std::
   }
 }
 
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test
 
 namespace nx::core::unit_test::cropping
 {
@@ -1264,7 +1264,8 @@ std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBo
 
     std::vector<std::optional<SizeVec2Type>> yOpts = cy ? std::vector<std::optional<SizeVec2Type>>(C.voxel_y.begin(), C.voxel_y.end()) : std::vector<std::optional<SizeVec2Type>>{std::nullopt};
 
-    std::vector<std::optional<SizeVec2Type>> zOpts = (!is2D && cz) ? std::vector<std::optional<SizeVec2Type>>(C.voxel_z.begin(), C.voxel_z.end()) : std::vector<std::optional<SizeVec2Type>>{std::nullopt};
+    std::vector<std::optional<SizeVec2Type>> zOpts =
+        (!is2D && cz) ? std::vector<std::optional<SizeVec2Type>>(C.voxel_z.begin(), C.voxel_z.end()) : std::vector<std::optional<SizeVec2Type>>{std::nullopt};
 
     for(const auto& xb : xOpts)
     {
@@ -1349,7 +1350,7 @@ std::vector<CropGeometryParameter::ValueType> GenerateAllCropValues(const AxisBo
   return out;
 }
 
-} // namespace nx::core::UnitTest::Cropping
+} // namespace nx::core::unit_test::cropping
 
 namespace small_in100
 {
@@ -1430,4 +1431,4 @@ void ExecuteIdentifySample(DataStructure& dataStructure, const FilterList& filte
   unit_test::CheckArraysInheritTupleDims(dataStructure, k_TupleCheckIgnoredPaths);
 }
 
-} // namespace SmallIn100
+} // namespace small_in100

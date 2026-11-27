@@ -435,16 +435,16 @@ Result<> ReadOnScaleTableFile::operator()()
       }
 
       m_MessageHandler.sendInfoMessage(fmt::format("Reading {} bounds", SectionName(section).substr(0, 1)));
-      auto valuesResult =
-          ReadSectionTokens(input, line, lineNumber, m_InputValues->input_file, section, count, true, k_BoundValuesTooShortError, [&](std::string_view token, usize tokenLine, usize index) -> Result<> {
-            auto valueResult = ParseFloat(token, tokenLine, section, m_InputValues->input_file);
-            if(valueResult.invalid())
-            {
-              return ConvertResult(std::move(valueResult));
-            }
-            (*boundsArrays[axis])[index] = valueResult.value();
-            return {};
-          });
+      auto valuesResult = ReadSectionTokens(input, line, lineNumber, m_InputValues->input_file, section, count, true, k_BoundValuesTooShortError,
+                                            [&](std::string_view token, usize tokenLine, usize index) -> Result<> {
+                                              auto valueResult = ParseFloat(token, tokenLine, section, m_InputValues->input_file);
+                                              if(valueResult.invalid())
+                                              {
+                                                return ConvertResult(std::move(valueResult));
+                                              }
+                                              (*boundsArrays[axis])[index] = valueResult.value();
+                                              return {};
+                                            });
       if(valuesResult.invalid())
       {
         return valuesResult;

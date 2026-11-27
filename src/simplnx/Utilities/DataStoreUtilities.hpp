@@ -31,7 +31,7 @@ namespace array_creation_utilities
 {
 // This declaration avoids an include cycle with ArrayCreationUtilities.hpp, which owns the API documentation.
 SIMPLNX_EXPORT std::string ResolveStorageFormat(const DataStructure& dataStructure, const DataPath& path, DataType numericType, uint64 dataSizeBytes, const std::string& requestedFormat);
-} // namespace ArrayCreationUtilities
+} // namespace array_creation_utilities
 } // namespace nx::core
 
 /**
@@ -311,4 +311,4 @@ std::shared_ptr<AbstractDataStore<T>> ConvertDataStore(const AbstractDataStore<T
   newStore->copy(dataStore);
   return newStore;
 }
-} // namespace nx::core::DataStoreUtilities
+} // namespace nx::core::data_store_utilities

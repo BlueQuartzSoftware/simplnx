@@ -164,4 +164,4 @@ SIMPLNX_EXPORT std::unique_ptr<MaskCompare> InstantiateMaskCompare(DataStructure
  * @return
  */
 SIMPLNX_EXPORT std::unique_ptr<MaskCompare> InstantiateMaskCompare(IDataArray& maskArrayPtr);
-} // namespace nx::core::MaskCompareUtilities
+} // namespace nx::core::mask_compare_utilities

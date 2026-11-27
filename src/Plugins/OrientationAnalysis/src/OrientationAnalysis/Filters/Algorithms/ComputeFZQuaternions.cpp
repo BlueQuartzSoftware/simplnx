@@ -64,8 +64,8 @@ template <typename MaskArrayType>
 class GenerateFZQuatsAbstractImpl
 {
 public:
-  GenerateFZQuatsAbstractImpl(Float32ArrayType& quats, Int32ArrayType& phases, const std::vector<ebsdlib::LaueOps::Pointer>& phaseOps, int32 numPhases, MaskArrayType* goodVoxels, Float32ArrayType& fzQuats,
-                              const std::atomic_bool& shouldCancel, std::atomic_int32_t& warningCount, const std::function<void(usize)>& reportProgress)
+  GenerateFZQuatsAbstractImpl(Float32ArrayType& quats, Int32ArrayType& phases, const std::vector<ebsdlib::LaueOps::Pointer>& phaseOps, int32 numPhases, MaskArrayType* goodVoxels,
+                              Float32ArrayType& fzQuats, const std::atomic_bool& shouldCancel, std::atomic_int32_t& warningCount, const std::function<void(usize)>& reportProgress)
   : m_Quats(quats)
   , m_CellPhases(phases)
   , m_PhaseOps(phaseOps)
@@ -330,8 +330,8 @@ private:
       const int32 currentPhaseIdx = cellPhasesStoreRef[tupleIdx];
       if(generateFzQuat && currentPhaseIdx < 0)
       {
-        return MakeErrorResult(-49009, fmt::format("Cell Phases array '{}' has value {} at tuple index {}. Valid enabled Phase indices are in [0, {}).", m_InputValues->cell_phases_array_path.toString(),
-                                                   currentPhaseIdx, tupleIdx, numPhases));
+        return MakeErrorResult(-49009, fmt::format("Cell Phases array '{}' has value {} at tuple index {}. Valid enabled Phase indices are in [0, {}).",
+                                                   m_InputValues->cell_phases_array_path.toString(), currentPhaseIdx, tupleIdx, numPhases));
       }
     }
 

@@ -84,11 +84,11 @@ Parameters CreateGeometryFilter::parameters() const
                                                    to_underlying(ArrayHandlingType::Move), ChoicesParameter::ChoicesType{"Copy Attribute Arrays", "Move Attribute Arrays" /*, "Reference Array"*/}));
 
   params.insert(std::make_unique<VectorUInt64ParameterType>(k_Dimensions_Key, "Dimensions", "The number of cells in each of the X, Y, Z directions", std::vector<uint64_t>{20ULL, 60ULL, 200ULL},
-                                                        std::vector<std::string>{"X"s, "Y"s, "Z"s}));
+                                                            std::vector<std::string>{"X"s, "Y"s, "Z"s}));
   params.insert(
       std::make_unique<VectorFloat32ParameterType>(k_Origin_Key, "Origin", "The origin of each of the axes in X, Y, Z order", std::vector<float32>(3), std::vector<std::string>{"X"s, "Y"s, "Z"s}));
-  params.insert(
-      std::make_unique<VectorFloat32ParameterType>(k_Spacing_Key, "Spacing", "The length scale of each voxel/pixel", std::vector<float32>{1.0F, 1.0F, 1.0F}, std::vector<std::string>{"X"s, "Y"s, "Z"s}));
+  params.insert(std::make_unique<VectorFloat32ParameterType>(k_Spacing_Key, "Spacing", "The length scale of each voxel/pixel", std::vector<float32>{1.0F, 1.0F, 1.0F},
+                                                             std::vector<std::string>{"X"s, "Y"s, "Z"s}));
 
   params.insert(std::make_unique<ArraySelectionParameter>(k_XBoundsPath_Key, "X Bounds", "The spatial locations of the planes along the x direction", DataPath{},
                                                           ArraySelectionParameter::AllowedTypeSetType{DataType::float32}, ArraySelectionParameter::AllowedComponentShapesType{{1}}));
@@ -283,7 +283,8 @@ IFilter::PreflightResult CreateGeometryFilter::preflightImpl(const DataStructure
   {
     auto pTriangleListPath = filterArgs.value<DataPath>(k_TriangleListPath_Key);
 
-    auto createTriangleGeomAction = std::make_unique<CreateTriangleGeometryActionType>(pGeometryPath, pVertexListPath, pTriangleListPath, pVertexAMName, pFaceAMName, ArrayHandlingType{pArrayHandling});
+    auto createTriangleGeomAction =
+        std::make_unique<CreateTriangleGeometryActionType>(pGeometryPath, pVertexListPath, pTriangleListPath, pVertexAMName, pFaceAMName, ArrayHandlingType{pArrayHandling});
     resultOutputActions.value().appendAction(std::move(createTriangleGeomAction));
   }
   if(pGeometryType == k_QuadGeometry) // QuadGeom

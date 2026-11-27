@@ -3087,7 +3087,8 @@ Result<> FinalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     const usize numCellArrays = inputValues->selected_cell_data_array_paths.size();
     for(usize i = 0; i < inputValues->selected_feature_data_array_paths.size(); i++)
     {
-      AddFeatureTupleTransferInstance(dataStructure, inputValues->selected_feature_data_array_paths[i], inputValues->created_data_array_paths[numCellArrays + i], inputValues->feature_ids_array_path, transfers);
+      AddFeatureTupleTransferInstance(dataStructure, inputValues->selected_feature_data_array_paths[i], inputValues->created_data_array_paths[numCellArrays + i], inputValues->feature_ids_array_path,
+                                      transfers);
     }
 
     for(int64 i = 0; i < nTriangleFinal; i++)
@@ -3127,7 +3128,7 @@ Result<> FinalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
       const auto& connectivity = dataStructure.getDataRefAs<IGeometry::ElementDynamicListType>(optionalId.value());
       messageHandler.sendInfoMessage("Repairing windings...");
       Result<> windingResult = meshing_utilities::RepairTriangleWinding(triangleGeom.getFaces()->getDataStoreRef(), connectivity,
-                                                                       dataStructure.getDataAs<Int32ArrayType>(inputValues->face_labels_data_path)->getDataStoreRef(), shouldCancel, messageHandler);
+                                                                        dataStructure.getDataAs<Int32ArrayType>(inputValues->face_labels_data_path)->getDataStoreRef(), shouldCancel, messageHandler);
       dataStructure.removeData(triangleGeom.getElementContainingVertId().value());
       dataStructure.removeData(triangleGeom.getElementNeighborsId().value());
       if(windingResult.invalid())
@@ -3146,7 +3147,7 @@ Result<> FinalizeMesh(DataStructure& dataStructure, const M3CSurfaceMeshingInput
     if(nTriangleFinal == 0)
     {
       return meshing_utilities::MakeEmptyMeshWarning(inputValues->triangle_geometry_path, dataStructure.getDataRefAs<Int32ArrayType>(inputValues->feature_ids_array_path).getNumberOfTuples(),
-                                                    static_cast<usize>(nNodes));
+                                                     static_cast<usize>(nNodes));
     }
     // A fully-indexed volume (no Feature Id 0) makes the option a no-op: nothing was pruned, and
     // the user otherwise gets byte-identical output with no feedback that the option had no effect.
@@ -4143,8 +4144,11 @@ Result<> M3CSurfaceMeshing::runOutOfCore(const std::vector<const IArray*>& dispa
         {
           return first.invalid() ? ConvertResult(std::move(first)) : ConvertResult(std::move(second));
         }
-        transferValues[local] = {
-            .face_index = destination + start + local, .firstc_index = first.value(), .secondc_index = second.value(), .face_label0 = labelValues[local * 2], .face_label1 = labelValues[local * 2 + 1]};
+        transferValues[local] = {.face_index = destination + start + local,
+                                 .firstc_index = first.value(),
+                                 .secondc_index = second.value(),
+                                 .face_label0 = labelValues[local * 2],
+                                 .face_label1 = labelValues[local * 2 + 1]};
       }
       auto faceWrite = faceStore.copyFromBuffer((destination + start) * 3, nonstd::span<const IGeometry::MeshIndexType>(faceValues.data(), count * 3));
       auto labelWrite = faceLabelsStore.copyFromBuffer((destination + start) * 2, nonstd::span<const int32>(labelValues.data(), count * 2));

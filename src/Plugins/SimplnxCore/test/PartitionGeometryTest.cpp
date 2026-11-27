@@ -170,8 +170,8 @@ Arguments CreateBasicPartitionGeometryArguments(const DataPath& inputGeometryPat
  * @param lengthPerPartition Partition lengths in geometry units.
  * @return Configured advanced-mode arguments.
  */
-Arguments CreateAdvancedPartitionGeometryArguments(const DataPath& inputGeometryPath, const DataPath& attrMatrixPath, const std::string& partitionIdsArrayName, const IntVec3Type& numOfPartitionsPerAxis,
-                                                   const FloatVec3Type& partitioningSchemeOrigin, const FloatVec3Type& lengthPerPartition)
+Arguments CreateAdvancedPartitionGeometryArguments(const DataPath& inputGeometryPath, const DataPath& attrMatrixPath, const std::string& partitionIdsArrayName,
+                                                   const IntVec3Type& numOfPartitionsPerAxis, const FloatVec3Type& partitioningSchemeOrigin, const FloatVec3Type& lengthPerPartition)
 {
   Arguments args;
   args.insert(PartitionGeometryFilter::k_PartitioningMode_Key, static_cast<ChoicesParameter::ValueType>(PartitionGeometryFilter::PartitioningMode::Advanced));
@@ -825,7 +825,7 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Basic", "[Plugins][PartitionGeo
                                                   k_EdgeGeomTestFilePath,        k_VertexGeomTestFilePath,      k_VertexGeomTestFilePath,     k_QuadGeomTestFilePath,      k_QuadGeomTestFilePath,
                                                   k_TetrahedralGeomTestFilePath, k_TetrahedralGeomTestFilePath, k_HexahedralGeomTestFilePath, k_HexahedralGeomTestFilePath};
   std::vector<IntVec3Type> partitionDimensions = {{5, 5, 5},   {5, 5, 5},  {5, 4, 4},  {5, 4, 4},    {4, 4, 4},    {4, 4, 4}, {20, 10, 5},
-                                              {20, 10, 5}, {10, 5, 3}, {10, 5, 3}, {100, 45, 8}, {100, 45, 8}, {6, 7, 8}, {6, 7, 8}};
+                                                  {20, 10, 5}, {10, 5, 3}, {10, 5, 3}, {100, 45, 8}, {100, 45, 8}, {6, 7, 8}, {6, 7, 8}};
   std::vector<std::string> amNames = {"CellData",   "CellData",   "VertexData", "VertexData", "VertexData", "VertexData", "VertexData",
                                       "VertexData", "VertexData", "VertexData", "VertexData", "VertexData", "VertexData", "VertexData"};
   std::vector<std::string> maskArrayNames = {"", "", "", "Mask", "", "Mask", "", "Mask", "", "Mask", "", "Mask", "", "Mask"};
@@ -922,21 +922,21 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Advanced", "[Plugins][Partition
                                                   k_VertexGeomTestFilePath, k_QuadGeomTestFilePath,     k_TetrahedralGeomTestFilePath, k_HexahedralGeomTestFilePath};
   std::vector<IntVec3Type> partitionDimensions = {{5, 5, 5}, {5, 5, 5}, {5, 4, 4}, {4, 4, 4}, {20, 10, 5}, {10, 5, 3}, {100, 45, 8}, {6, 7, 8}};
   std::vector<FloatVec3Type> partitionOrigins = {{-10, 5, 2},
-                                             {0, 0, 0},
-                                             {-0.997462, -0.997462, -0.00001},
-                                             {-0.997462, -0.997462, -0.00001},
-                                             {-0.997462, -0.997462, -0.00001},
-                                             {-0.997462, -0.997462, -0.00001},
-                                             {-0.997462, -0.997462, -0.00001},
-                                             {0.9999989867210388, 0.9999989867210388, 1.5499989986419678}};
+                                                 {0, 0, 0},
+                                                 {-0.997462, -0.997462, -0.00001},
+                                                 {-0.997462, -0.997462, -0.00001},
+                                                 {-0.997462, -0.997462, -0.00001},
+                                                 {-0.997462, -0.997462, -0.00001},
+                                                 {-0.997462, -0.997462, -0.00001},
+                                                 {0.9999989867210388, 0.9999989867210388, 1.5499989986419678}};
   std::vector<FloatVec3Type> partitionSpacing = {{5, 5, 5},
-                                             {6, 6, 6},
-                                             {0.398984, 0.49873, 0.247939},
-                                             {0.49873, 0.49873, 0.247939},
-                                             {0.099746, 0.199492, 0.198351},
-                                             {0.199492, 0.398984, 0.330585333333333},
-                                             {0.0199492, 0.044331555555556, 0.12397},
-                                             {1.105000376701355, 0.2857145667076111, 0.2500002384185791}};
+                                                 {6, 6, 6},
+                                                 {0.398984, 0.49873, 0.247939},
+                                                 {0.49873, 0.49873, 0.247939},
+                                                 {0.099746, 0.199492, 0.198351},
+                                                 {0.199492, 0.398984, 0.330585333333333},
+                                                 {0.0199492, 0.044331555555556, 0.12397},
+                                                 {1.105000376701355, 0.2857145667076111, 0.2500002384185791}};
   std::vector<std::string> amNames = {"CellData", "CellData", "VertexData", "VertexData", "VertexData", "VertexData", "VertexData", "VertexData"};
   // std::vector<std::string> maskArrayNames = {"", "", "", "Mask", "", "Mask", "", "Mask", "", "Mask", "", "Mask", "", "Mask"};
   std::vector<std::string> exemplaryArrayNames = {"ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds",
@@ -1026,21 +1026,21 @@ TEST_CASE("SimplnxCore::PartitionGeometryFilter: Bounding Box", "[Plugins][Parti
                                                   k_VertexGeomTestFilePath, k_QuadGeomTestFilePath,     k_TetrahedralGeomTestFilePath, k_HexahedralGeomTestFilePath};
   std::vector<IntVec3Type> partitionDimensions = {{5, 5, 5}, {5, 5, 5}, {5, 4, 4}, {4, 4, 4}, {20, 10, 5}, {10, 5, 3}, {100, 45, 8}, {6, 7, 8}};
   std::vector<FloatVec3Type> lowerLeftCoords = {{-10, 5, 2},
-                                            {0, 0, 0},
-                                            {-0.997462, -0.997462, -0.00001},
-                                            {-0.997462, -0.997462, -0.00001},
-                                            {-0.997462, -0.997462, -0.00001},
-                                            {-0.997462, -0.997462, -0.00001},
-                                            {-0.997462, -0.997462, -0.00001},
-                                            {0.9999989867210388, 0.9999989867210388, 1.5499989986419678}};
+                                                {0, 0, 0},
+                                                {-0.997462, -0.997462, -0.00001},
+                                                {-0.997462, -0.997462, -0.00001},
+                                                {-0.997462, -0.997462, -0.00001},
+                                                {-0.997462, -0.997462, -0.00001},
+                                                {-0.997462, -0.997462, -0.00001},
+                                                {0.9999989867210388, 0.9999989867210388, 1.5499989986419678}};
   std::vector<FloatVec3Type> upperRightCoords = {{15, 30, 27},
-                                             {30, 30, 30},
-                                             {0.997463, 0.997462, 0.991746},
-                                             {0.997462, 0.997462, 0.991746},
-                                             {0.997462, 0.997458, 0.991745},
-                                             {0.997462, 0.997462, 0.991746},
-                                             {0.997458, 0.99746, 0.99175},
-                                             {7.630001068115234, 3.0000009536743164, 3.5500009059906006}};
+                                                 {30, 30, 30},
+                                                 {0.997463, 0.997462, 0.991746},
+                                                 {0.997462, 0.997462, 0.991746},
+                                                 {0.997462, 0.997458, 0.991745},
+                                                 {0.997462, 0.997462, 0.991746},
+                                                 {0.997458, 0.99746, 0.99175},
+                                                 {7.630001068115234, 3.0000009536743164, 3.5500009059906006}};
   std::vector<std::string> amNames = {"CellData", "CellData", "VertexData", "VertexData", "VertexData", "VertexData", "VertexData", "VertexData"};
   std::vector<std::string> exemplaryArrayNames = {"ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds",
                                                   "ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds", "ExemplaryPartitioningSchemeIds"};

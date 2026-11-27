@@ -56,9 +56,9 @@ Parameters HMaximaImageFilter::parameters() const
   Parameters params;
   params.insertSeparator(Parameters::Separator{"Input Parameter(s)"});
   params.insert(std::make_unique<Float64ParameterType>(k_Height_Key, "Height",
-                                                   "The height (contrast) below which a regional maximum is suppressed. Every regional maximum whose depth is less than Height is removed; each "
-                                                   "surviving maximum is lowered by exactly Height. Must be finite.",
-                                                   2.0));
+                                                       "The height (contrast) below which a regional maximum is suppressed. Every regional maximum whose depth is less than Height is removed; each "
+                                                       "surviving maximum is lowered by exactly Height. Must be finite.",
+                                                       2.0));
 
   params.insertSeparator(Parameters::Separator{"Input Cell Data"});
   params.insert(std::make_unique<GeometrySelectionParameter>(k_InputImageGeomPath_Key, "Image Geometry", "Select the Image Geometry Group from the DataStructure.", DataPath({"Image Geometry"}),
@@ -105,7 +105,7 @@ IFilter::PreflightResult HMaximaImageFilter::preflightImpl(const DataStructure& 
   // requireScalar=true: the grayscale reconstruction engine is defined on scalar images (matching the legacy ITK
   // operator); the shared preflight also validates type membership and the geometry/tuple match.
   return {.output_actions = ImageProcessing::PreflightImageFilter<ImageProcessing::AllNumeric, ImageProcessing::SameAsInput>(dataStructure, selectedInputArray, imageGeomPath, outputArrayPath,
-                                                                                                                            /*requireScalar=*/true)};
+                                                                                                                             /*requireScalar=*/true)};
 }
 Result<> HMaximaImageFilter::executeImpl(DataStructure& dataStructure, const Arguments& filterArgs, const PipelineFilter* /*pipelineNode*/, const MessageHandler& messageHandler,
                                          const std::atomic_bool& shouldCancel, const ExecutionContext& /*executionContext*/) const

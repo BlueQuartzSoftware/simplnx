@@ -186,8 +186,8 @@ public:
       usize v1Idx = m_FacesBuffer[t * 3 + 1];
       usize v2Idx = m_FacesBuffer[t * 3 + 2];
       std::array<FloatVec3Type, 3> verts = {FloatVec3Type{m_VerticesBuffer[v0Idx * 3], m_VerticesBuffer[v0Idx * 3 + 1], m_VerticesBuffer[v0Idx * 3 + 2]},
-                                       FloatVec3Type{m_VerticesBuffer[v1Idx * 3], m_VerticesBuffer[v1Idx * 3 + 1], m_VerticesBuffer[v1Idx * 3 + 2]},
-                                       FloatVec3Type{m_VerticesBuffer[v2Idx * 3], m_VerticesBuffer[v2Idx * 3 + 1], m_VerticesBuffer[v2Idx * 3 + 2]}};
+                                            FloatVec3Type{m_VerticesBuffer[v1Idx * 3], m_VerticesBuffer[v1Idx * 3 + 1], m_VerticesBuffer[v1Idx * 3 + 2]},
+                                            FloatVec3Type{m_VerticesBuffer[v2Idx * 3], m_VerticesBuffer[v2Idx * 3 + 1], m_VerticesBuffer[v2Idx * 3 + 2]}};
 
       float32 ex1 = NAN;
       float32 ey1 = NAN;
@@ -525,7 +525,7 @@ Result<> RegularGridSampleSurfaceMesh::operator()()
   SizeVec3Type dims = imageGeom.getDimensions();
   m_CellsPerSlice = dims[0] * dims[1];
 
-  return ExecuteDataFunctionIntType(ZSliceFunctor{}, m_DataStructure.getDataAsUnsafe<IDataArray>(m_InputValues->surface_mesh_face_labels_array_path)->getDataType(), this, m_DataStructure, m_ShouldCancel,
-                                    m_MessageHandler, imageGeom, triangleGeom, m_InputValues->surface_mesh_face_labels_array_path,
+  return ExecuteDataFunctionIntType(ZSliceFunctor{}, m_DataStructure.getDataAsUnsafe<IDataArray>(m_InputValues->surface_mesh_face_labels_array_path)->getDataType(), this, m_DataStructure,
+                                    m_ShouldCancel, m_MessageHandler, imageGeom, triangleGeom, m_InputValues->surface_mesh_face_labels_array_path,
                                     m_DataStructure.getDataRefAs<IDataArray>(m_InputValues->feature_ids_array_path).getDataType());
 }

@@ -91,4 +91,4 @@ std::optional<DatasetProbeInfo> ProbeHdf5Dataset(const std::filesystem::path& fi
   return info;
 }
 
-} // namespace nx::core::UnitTest
+} // namespace nx::core::unit_test

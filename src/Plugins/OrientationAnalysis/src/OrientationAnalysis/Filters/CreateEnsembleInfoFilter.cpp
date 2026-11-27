@@ -146,8 +146,8 @@ Result<Arguments> CreateEnsembleInfoFilter::FromSIMPLJson(const nlohmann::json& 
   // Data Container Name parameter is not applicable in NX
 
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::EnsembleInfoFilterParameterConverter>(args, json, simpl::k_EnsembleKey, k_Ensemble_Key));
-  results.push_back(simpl_conversion::Convert2Parameters<simpl_conversion::AMPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey, simpl::k_CellEnsembleAttributeMatrixNameKey,
-                                                                                                                k_CellEnsembleAttributeMatrixPath_Key));
+  results.push_back(simpl_conversion::Convert2Parameters<simpl_conversion::AMPathBuilderFilterParameterConverter>(args, json, simpl::k_DataContainerNameKey,
+                                                                                                                  simpl::k_CellEnsembleAttributeMatrixNameKey, k_CellEnsembleAttributeMatrixPath_Key));
   results.push_back(
       simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_CrystalStructuresArrayNameKey, k_CrystalStructuresArrayName_Key));
   results.push_back(simpl_conversion::ConvertParameter<simpl_conversion::LinkedPathCreationFilterParameterConverter>(args, json, simpl::k_PhaseTypesArrayNameKey, k_PhaseTypesArrayName_Key));
