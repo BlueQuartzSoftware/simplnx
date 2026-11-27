@@ -3,6 +3,14 @@
 
 #include "NXImageProcessing/Filters/OtsuMultipleThresholdsImageFilter.hpp"
 
+#include "simplnx/Core/Application.hpp"
+#include "simplnx/Core/Preferences.hpp"
+#include "simplnx/DataStructure/DataArray.hpp"
+#include "simplnx/UnitTest/UnitTestCommon.hpp"
+
+#include <catch2/catch.hpp>
+
+#include <any>
 #include <array>
 
 using namespace nx::core;
@@ -82,6 +90,54 @@ void RunCompactInt16Otsu(DataStructure& dataStructure, const DataPath& inputPath
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
 }
 } // namespace
+
+TEST_CASE("NXImageProcessing::OtsuMultipleThresholdsImageFilter: uint8 class label interval", "[NXImageProcessing][OtsuMultipleThresholdsImageFilter][Issue1874]")
+{
+  (void)Application::GetOrCreateInstance();
+  const unit_test::PreferencesSentinel prefsSentinel(DataStorageMode::ForceInCore, 0);
+  DataStructure dataStructure;
+  const DataPath inputPath = ip_test::BuildScalarValuesImage<uint8>(dataStructure, {0, 4});
+  const OtsuMultipleThresholdsImageFilter filter;
+  Arguments args = filter.getDefaultArguments();
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_InputImageGeomPath_Key, std::make_any<DataPath>(DataPath({"Image Geometry"})));
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_InputImageDataPath_Key, std::make_any<DataPath>(inputPath));
+  args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_OutputImageArrayName_Key, std::make_any<std::string>("Output"));
+
+  SECTION("preflight checks the last configured class label")
+  {
+    const auto [offset, thresholds, valid] = GENERATE(Catch::Generators::table<uint8, uint8, bool>({{255, 1, false}, {254, 2, false}, {253, 2, true}, {0, 255, true}}));
+    CAPTURE(static_cast<uint32>(offset), static_cast<uint32>(thresholds));
+    args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_LabelOffset_Key, std::make_any<uint8>(offset));
+    args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfThresholds_Key, std::make_any<uint8>(thresholds));
+    args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfHistogramBins_Key, std::make_any<uint32>(256));
+    const auto preflight = filter.preflight(dataStructure, args);
+    if(valid)
+    {
+      SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
+    }
+    else
+    {
+      SIMPLNX_RESULT_REQUIRE_INVALID(preflight.output_actions);
+      REQUIRE(preflight.output_actions.errors().front().code == -8312);
+    }
+  }
+  SECTION("one threshold can write labels 254 and 255")
+  {
+    args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_LabelOffset_Key, std::make_any<uint8>(254));
+    args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfThresholds_Key, std::make_any<uint8>(1));
+    args.insertOrAssign(OtsuMultipleThresholdsImageFilter::k_NumberOfHistogramBins_Key, std::make_any<uint32>(2));
+    const auto preflight = filter.preflight(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(preflight.output_actions);
+    const auto execution = filter.execute(dataStructure, args);
+    SIMPLNX_RESULT_REQUIRE_VALID(execution.result);
+    const auto* labelsPtr = dataStructure.getDataAs<UInt8ArrayType>(inputPath.replaceName("Output"));
+    REQUIRE(labelsPtr != nullptr);
+    REQUIRE(labelsPtr->getSize() == 2);
+    CHECK((*labelsPtr)[0] == 254);
+    CHECK((*labelsPtr)[1] == 255);
+  }
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
+}
 
 // -----------------------------------------------------------------------------
 // (3) Validation: a data-independent guard must reject a threshold count that is 0 or >= the bin count

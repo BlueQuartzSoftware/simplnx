@@ -12,6 +12,8 @@ This filter creates a labeled image that separates the input image into various 
 
 Each output voxel is assigned the index of the class its intensity falls into: the number of thresholds the value exceeds, plus the **Label Offset**. The output is always a `uint8` label image, regardless of the (numeric, single-component) input element type.
 
+The highest possible label is **Label Offset** + **Number Of Thresholds**. Preflight rejects a sum above 255.
+
 This filter also includes an option to use the valley emphasis algorithm from H.F. Ng, "Automatic thresholding for defect detection", Pattern Recognition Letters, (27): 1644-1649, 2006. The valley emphasis algorithm is particularly effective when the object to be thresholded is small. It is turned off by default; enable it with **Valley Emphasis**.
 
 ITK-free, out-of-core-capable reimplementation of the legacy ITK Otsu Multiple Thresholds Image Filter. The histogram and input range are computed with bounded-memory streaming passes, so memory use stays bounded regardless of image size.

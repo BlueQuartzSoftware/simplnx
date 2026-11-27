@@ -2,6 +2,7 @@
 
 #include "NXImageProcessing/utils/ImageFilterTemplateExecutors.hpp"
 
+#include "simplnx/Common/Types.hpp"
 #include "simplnx/Common/TypesUtility.hpp"
 #include "simplnx/Parameters/ArraySelectionParameter.hpp"
 #include "simplnx/Parameters/BoolParameter.hpp"
@@ -14,7 +15,7 @@
 #include "simplnx/Utilities/ImageProcessing/ImageProcessingFilterUtilities.hpp"
 #include "simplnx/Utilities/SIMPLConversion.hpp"
 
-#include <fmt/core.h>
+#include <fmt/format.h>
 
 #include <algorithm>
 #include <vector>
@@ -23,6 +24,8 @@ using namespace nx::core;
 
 namespace
 {
+constexpr int32 k_OtsuClassIntervalOverflow = -8312;
+
 struct OtsuOperation
 {
   uint32 num_bins = 128u;
@@ -116,6 +119,15 @@ IFilter::PreflightResult OtsuMultipleThresholdsImageFilter::preflightImpl(const 
   {
     return {.output_actions = MakeErrorResult<OutputActions>(
                 -8311, fmt::format("NumberOfThresholds ({}) must be >= 1 and < NumberOfHistogramBins ({}).", static_cast<uint32>(numberOfThresholds), numberOfHistogramBins))};
+  }
+
+  const uint32 labelOffset = filterArgs.value<uint8>(k_LabelOffset_Key);
+  const uint32 lastLabel = labelOffset + static_cast<uint32>(numberOfThresholds);
+  if(lastLabel > 255)
+  {
+    return {.output_actions = MakeErrorResult<OutputActions>(k_OtsuClassIntervalOverflow,
+                                                             fmt::format("Label Offset ({}) plus Number Of Thresholds ({}) exceeds 255. Reduce either value to keep every class label within uint8.",
+                                                                         labelOffset, static_cast<uint32>(numberOfThresholds)))};
   }
 
   const auto& inputArray = dataStructure.getDataRefAs<IDataArray>(selectedInputArray);
