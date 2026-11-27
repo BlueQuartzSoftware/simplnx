@@ -313,7 +313,7 @@ TEST_CASE("SimplnxCore::ComputeMomentInvariants2DFilter: Cancel after non-XY rec
   REQUIRE((appPtr != nullptr));
   const bool saveCentralMoments = GENERATE(false, true);
 #ifndef SIMPLNX_ENABLE_MULTICORE
-  const auto scenario = GENERATE(from_range(UnitTest::SelectAlgorithmTestScenariosForInMemoryStores()));
+  const auto scenario = GENERATE(from_range(unit_test::SelectAlgorithmTestScenariosForInMemoryStores()));
 #else
   const auto scenarios = unit_test::SelectAlgorithmTestScenariosForInMemoryStores();
   const auto scanlineIter = std::ranges::find(scenarios, unit_test::AlgorithmTestScenario::OutOfCoreAlgorithmOnInMemoryStore);

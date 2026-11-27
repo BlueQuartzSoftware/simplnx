@@ -59,7 +59,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: Algorithm Test", "[R
 
 // The optional output supports manual inspection of the aligned result.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/align_sections_feature_centroid.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/align_sections_feature_centroid.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -136,7 +136,7 @@ TEST_CASE("SimplnxCore::AlignSectionsFeatureCentroidFilter: output test", "[Reco
 
 // The optional output supports manual inspection of the aligned result.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/output_align_sections_feature_centroids.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/output_align_sections_feature_centroids.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);

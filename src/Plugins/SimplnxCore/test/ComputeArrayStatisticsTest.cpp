@@ -395,12 +395,12 @@ public:
   {
   }
 
-  Result<> append(uint64, nonstd::span<const std::byte>, const std::atomic_bool&, const ExternalSortProgressCallback&) override
+  Result<> append(uint64, nonstd::span<const std::byte>, const std::atomic_bool&, const ExternalSortProgressCallbackType&) override
   {
     return MakeErrorResult(m_ErrorCode, "Injected statistics external-sort append failure");
   }
 
-  Result<> finish(const std::atomic_bool&, const ExternalSortProgressCallback&) override
+  Result<> finish(const std::atomic_bool&, const ExternalSortProgressCallbackType&) override
   {
     return {};
   }

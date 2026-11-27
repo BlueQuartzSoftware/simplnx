@@ -695,7 +695,7 @@ Result<> ExecuteRollingWindow(DataStructure& dataStructure, const ComputeKernelA
       return {};
     }
 
-    assert(plan.WindowSlices > 0);
+    assert(plan.window_slices > 0);
     const usize windowZMin = plane - std::min(plane, kZ);
     const usize windowZMax = plane + std::min(kZ, (zPoints - 1) - plane);
 

@@ -143,7 +143,7 @@ TEST_CASE("AtomicFile::CommitReplacesFileWithFullSharingHandle", "[simplnx]")
   AtomicFile atomicFile = std::move(atomicFileResult.value());
   WriteTemporaryFile(atomicFile, "new contents");
 
-  const bool supportsPosixRename = UnitTest::VolumeSupportsPosixRename(directory);
+  const bool supportsPosixRename = unit_test::VolumeSupportsPosixRename(directory);
   {
     const HANDLE held = CreateFileW(outputPath.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
     REQUIRE(held != INVALID_HANDLE_VALUE);

@@ -98,7 +98,7 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: Baseline Incoherenc
 
 // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/compute_twin_boundaries/base_incoherence.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/compute_twin_boundaries/base_incoherence.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -162,7 +162,7 @@ TEST_CASE("OrientationAnalysis::ComputeTwinBoundariesFilter: No Incoherence", "[
 
 // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/compute_twin_boundaries/no_incoherence.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/compute_twin_boundaries/no_incoherence.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);

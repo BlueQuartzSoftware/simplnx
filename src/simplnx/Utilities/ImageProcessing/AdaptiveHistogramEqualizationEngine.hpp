@@ -227,7 +227,7 @@ struct AdaptiveHistogramEqualizationLutPlaneBody
             // gate in ApplyAdaptiveHistogramEqualization guarantees this difference does not overflow int64.
             const int64 d = static_cast<int64>(centerValue) - static_cast<int64>(slab[rowBase + static_cast<usize>(nx)]);
             const usize lutIndex = static_cast<usize>(d - d_min); // in [0, 2*span] by construction
-            assert(lutIndex < lutSize);
+            assert(lutIndex < lut_size);
             localSum += static_cast<float64>(g_lut[lutIndex] + betaU);
             ++inBounds;
           }
@@ -795,7 +795,7 @@ struct AdaptiveHistogramEqualizationLut2DBlockBody
           const int64 neighborX = static_cast<int64>(x) + dx;
           const int64 difference = static_cast<int64>(centerValue) - static_cast<int64>(input[inputRow + static_cast<usize>(neighborX) - input_x_begin]);
           const usize lookupIndex = static_cast<usize>(difference - difference_minimum);
-          assert(lookupIndex < lookupTableSize);
+          assert(lookupIndex < lookup_table_size);
           localSum += static_cast<float64>(lookup_table[lookupIndex] + betaU);
           ++inBounds;
         }

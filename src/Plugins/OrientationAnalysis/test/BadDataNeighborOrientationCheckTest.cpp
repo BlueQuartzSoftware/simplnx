@@ -128,7 +128,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.1.
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_1_1.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_1_1.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -177,7 +177,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.1.
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_1_2.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_1_2.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -226,7 +226,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.1.
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_1_3.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_1_3.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -275,7 +275,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.2.
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_2_1.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_2_1.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -327,7 +327,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.2.
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_2_2.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_2_2.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -376,7 +376,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.2.
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_2_3.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_2_3.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -425,7 +425,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.3.
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_3_1.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_3_1.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -474,7 +474,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.3.
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_3_2.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_3_2.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -523,7 +523,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.3.
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_3_3.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_3_3.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -572,7 +572,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.4.
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_4_1.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_4_1.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -621,7 +621,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.4.
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_4_2.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_4_2.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -670,7 +670,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.4.
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_4_3.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_4_3.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -719,7 +719,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.5.
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_5_1.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_5_1.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -768,7 +768,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.5.
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_5_2.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_5_2.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -817,7 +817,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.5.
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_5_3.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_5_3.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -866,7 +866,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.6.
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_6_1.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_6_1.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -915,7 +915,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.6.
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_6_2.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_6_2.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -964,7 +964,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 1.6.
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_6_3.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_1_6_3.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -1011,7 +1011,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.1"
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_2_1.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_2_1.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -1058,7 +1058,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.2"
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_2_2.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_2_2.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -1105,7 +1105,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.3"
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_2_3.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_2_3.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -1152,7 +1152,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.4"
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_2_4.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_2_4.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -1199,7 +1199,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.5"
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_2_5.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_2_5.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -1246,7 +1246,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 2.6"
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_2_6.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_2_6.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -1293,7 +1293,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 3.1"
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_3_1.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_3_1.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -1340,7 +1340,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 3.2"
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_3_2.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_3_2.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -1422,7 +1422,7 @@ TEST_CASE("OrientationAnalysis::BadDataNeighborOrientationCheckFilter: Case 4", 
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_4.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/verification/bad_data_neighbor_orientation_check_v2/case_4.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);

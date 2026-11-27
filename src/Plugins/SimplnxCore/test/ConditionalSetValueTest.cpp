@@ -300,7 +300,7 @@ TEST_CASE("SimplnxCore::ConditionalSetValueFilter: Test Algorithm Bool", "[Condi
 
   // The optional output supports manual inspection of the replaced values.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/ConditionalSetValueTest.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/ConditionalSetValueTest.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);

@@ -33,12 +33,12 @@ uint64 GetTotalMemory()
   return totalKilos * 1024;
 }
 
-dataStorage GetAvailableStorageOnDrive(const std::filesystem::path& path)
+DataStorage GetAvailableStorageOnDrive(const std::filesystem::path& path)
 {
   const std::filesystem::path rootDirectory = path.root_directory();
   const std::filesystem::path driveDirectory = path.root_name();
 
-  dataStorage storage;
+  DataStorage storage;
   const std::string driveName = driveDirectory.string();
 
   if(GetDriveType(driveName.data()) != DRIVE_FIXED)

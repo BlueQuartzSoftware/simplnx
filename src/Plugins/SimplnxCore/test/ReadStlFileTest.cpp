@@ -159,7 +159,7 @@ TEST_CASE("SimplnxCore::ReadStlFileFilter:Valid_File", "[SimplnxCore][ReadStlFil
 
   // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/StlFileReaderTest.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/StlFileReaderTest.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);

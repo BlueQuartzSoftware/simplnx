@@ -995,7 +995,7 @@ bounded_read::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const E
       {
         unsigned ignoredMask = 0;
 #if SIMPLNX_BUILD_TESTS
-        ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredReadAttempt, metadata.Record.storedSize, 0);
+        ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredReadAttempt, metadata.Record.stored_size, 0);
 #endif
         // H5Dread_chunk has no capacity argument. Query, length check, and read share this lock.
         bool injectedFailure = false;
@@ -1005,13 +1005,13 @@ bounded_read::Status ParallelChunkCodec::readExtentIntoBufferBoundedImpl(const E
         if(injectedFailure || H5Dread_chunk(m_DatasetId, H5P_DEFAULT, metadata.Origin.data(), &ignoredMask, stored.data.get()) < 0)
         {
 #if SIMPLNX_BUILD_TESTS
-          ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredReadFailed, metadata.Record.storedSize, 0);
+          ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredReadFailed, metadata.Record.stored_size, 0);
 #endif
-          diagnostic = MakeErrorResult<>(BoundedRead::ReadFailure, fmt::format("Bounded raw HDF5 chunk read failed."));
+          diagnostic = MakeErrorResult<>(bounded_read::ReadFailure, fmt::format("Bounded raw HDF5 chunk read failed."));
           return Status::Failed;
         }
 #if SIMPLNX_BUILD_TESTS
-        ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredRead, metadata.Record.storedSize, 0);
+        ObserveCodecIoForTesting(m_FilePath, m_DatasetPath, CodecIoEventForTesting::StoredRead, metadata.Record.stored_size, 0);
 #endif
       }
 #endif

@@ -249,7 +249,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientation Small IN100 Pipeline
   unit_test::CompareExemplarToGeneratedData(dataStructure, exemplarDataStructure, constants::k_CellAttributeMatrix, constants::k_ExemplarDataContainer);
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/align_sections_misorientation.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/align_sections_misorientation.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure, small_in100::k_TupleCheckIgnoredPaths);
@@ -332,7 +332,7 @@ TEST_CASE("OrientationAnalysis::AlignSectionsMisorientationFilter: output test",
   unit_test::CompareDataArrays<int64>(exemplarDataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath), dataStructure.getDataRefAs<IDataArray>(cumulativeShiftsPath));
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/output_align_sections_misorientation.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/output_align_sections_misorientation.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure, small_in100::k_TupleCheckIgnoredPaths);

@@ -440,7 +440,7 @@ TEST_CASE("SimplnxCore::SliceTriangleGeometryFilter: Valid Filter Execution", "[
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   fs::path testFileOutputPath(fmt::format("{}/slice_triangle_geometry.dream3d", unit_test::k_BinaryTestOutputDir));
   std::cout << "Writing Output file: " << testFileOutputPath << std::endl;
-  UnitTest::WriteTestDataStructure(dataStructure, testFileOutputPath);
+  unit_test::WriteTestDataStructure(dataStructure, testFileOutputPath);
 #endif
 
   // Compare the exemplar and the computed outputs

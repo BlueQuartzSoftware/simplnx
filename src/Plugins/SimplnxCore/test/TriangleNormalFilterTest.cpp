@@ -110,7 +110,7 @@ TEST_CASE("SimplnxCore::TriangleNormalFilter", "[SimplnxCore][TriangleNormalFilt
 
     // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-    nx::core::UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/TriangleNormals.dream3d", unit_test::k_BinaryTestOutputDir)));
+    nx::core::unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/TriangleNormals.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
     DataPath triangleNormalsDataPath = geometryPath.createChildPath(triangleFaceDataGroupName).createChildPath(triangleNormalsName);

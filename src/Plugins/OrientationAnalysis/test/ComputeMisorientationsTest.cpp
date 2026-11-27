@@ -41,7 +41,7 @@ static std::vector<usize> KTupleShape = {k_Size * k_Size * k_Size};
 #ifdef GENERATE_TEST_DATA
 Result<> CreateDataStructure(DataStructure& dataStructure, uint32 xtal)
 {
-  UnitTest::LoadPlugins();
+  unit_test::LoadPlugins();
   ShapeType compShape = {3};
   DataPath k_EulersDataPath = DataPath::FromString(fmt::format("{}/Eulers", xtal)).value();
 
@@ -60,12 +60,12 @@ Result<> CreateDataStructure(DataStructure& dataStructure, uint32 xtal)
   result = CreateArray<int32>(dataStructure, tupleShape, compShape, phasePath, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_EulersDataPath));
-  auto& eulersRef = dataStructure.getDataRefAs<Float32Array>(k_EulersDataPath);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32Array>(k_Eulers2DataPath));
-  auto& eulers2Ref = dataStructure.getDataRefAs<Float32Array>(k_Eulers2DataPath);
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32Array>(phasePath));
-  auto& phasesRef = dataStructure.getDataRefAs<Int32Array>(phasePath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_EulersDataPath));
+  auto& eulersRef = dataStructure.getDataRefAs<Float32ArrayType>(k_EulersDataPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Float32ArrayType>(k_Eulers2DataPath));
+  auto& eulers2Ref = dataStructure.getDataRefAs<Float32ArrayType>(k_Eulers2DataPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(phasePath));
+  auto& phasesRef = dataStructure.getDataRefAs<Int32ArrayType>(phasePath);
   size_t tupleIdx = 0;
 
   for(size_t phi1 = 0; phi1 < size; phi1++)
@@ -74,13 +74,13 @@ Result<> CreateDataStructure(DataStructure& dataStructure, uint32 xtal)
     {
       for(size_t phi2 = 0; phi2 < size; phi2++)
       {
-        eulersRef[tupleIdx * 3 + 0] = (phi1 * increment) * nx::core::Constants::k_PiOver180F;
-        eulersRef[tupleIdx * 3 + 1] = (Phi * increment) * nx::core::Constants::k_PiOver180F;
-        eulersRef[tupleIdx * 3 + 2] = (phi2 * increment) * nx::core::Constants::k_PiOver180F;
+        eulersRef[tupleIdx * 3 + 0] = (phi1 * increment) * nx::core::constants::k_PiOver180F;
+        eulersRef[tupleIdx * 3 + 1] = (Phi * increment) * nx::core::constants::k_PiOver180F;
+        eulersRef[tupleIdx * 3 + 2] = (phi2 * increment) * nx::core::constants::k_PiOver180F;
 
-        eulers2Ref[tupleIdx * 3 + 0] = (phi1 * increment * 0.5) * nx::core::Constants::k_PiOver180F;
-        eulers2Ref[tupleIdx * 3 + 1] = (Phi * increment * 2.0f) * nx::core::Constants::k_PiOver180F;
-        eulers2Ref[tupleIdx * 3 + 2] = (phi2 * increment) * nx::core::Constants::k_PiOver180F;
+        eulers2Ref[tupleIdx * 3 + 0] = (phi1 * increment * 0.5) * nx::core::constants::k_PiOver180F;
+        eulers2Ref[tupleIdx * 3 + 1] = (Phi * increment * 2.0f) * nx::core::constants::k_PiOver180F;
+        eulers2Ref[tupleIdx * 3 + 2] = (phi2 * increment) * nx::core::constants::k_PiOver180F;
 
         phasesRef[tupleIdx] = static_cast<int32>(xtal + 1);
         tupleIdx++;
@@ -97,8 +97,8 @@ void GenerateReferenceOrientationTestData()
   Result<> result = CreateArray<uint32>(dataStructure, {12ULL}, {1ULL}, k_CrystalStructuresDataPath, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresDataPath));
-  auto& xtalRef = dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresDataPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(k_CrystalStructuresDataPath));
+  auto& xtalRef = dataStructure.getDataRefAs<UInt32ArrayType>(k_CrystalStructuresDataPath);
   xtalRef[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
   for(uint32 i = 1; i < 12; i++)
   {
@@ -125,7 +125,7 @@ void GenerateReferenceOrientationTestData()
     args.insertOrAssign(ComputeMisorientationsFilter::k_OutputMisorientationArrayName_Key, std::make_any<std::string>(k_OutputArrayName));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    REQUIRE(preflightResult.output_actions.valid());
 
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
@@ -140,8 +140,8 @@ void GenerateTestDataInputArrays()
   Result<> result = CreateArray<uint32>(dataStructure, {12ULL}, {1ULL}, k_CrystalStructuresDataPath, IDataAction::Mode::Execute);
   SIMPLNX_RESULT_REQUIRE_VALID(result);
 
-  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresDataPath));
-  auto& xtalRef = dataStructure.getDataRefAs<UInt32Array>(k_CrystalStructuresDataPath);
+  REQUIRE_NOTHROW(dataStructure.getDataRefAs<UInt32ArrayType>(k_CrystalStructuresDataPath));
+  auto& xtalRef = dataStructure.getDataRefAs<UInt32ArrayType>(k_CrystalStructuresDataPath);
   xtalRef[0] = ebsdlib::CrystalStructure::UnknownCrystalStructure;
   for(uint32 i = 1; i < 12; i++)
   {
@@ -169,7 +169,7 @@ void GenerateTestDataInputArrays()
     args.insertOrAssign(ComputeMisorientationsFilter::k_OutputMisorientationArrayName_Key, std::make_any<std::string>(k_OutputArrayName));
 
     auto preflightResult = filter.preflight(dataStructure, args);
-    REQUIRE(preflightResult.outputActions.valid());
+    REQUIRE(preflightResult.output_actions.valid());
 
     auto executeResult = filter.execute(dataStructure, args);
     REQUIRE(executeResult.result.valid());
@@ -183,7 +183,7 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:MakeTestData", "[Or
   GenerateTestDataInputArrays();
   GenerateReferenceOrientationTestData();
 
-  UnitTest::CheckArraysInheritTupleDims(dataStructure);
+  unit_test::CheckArraysInheritTupleDims(dataStructure);
 }
 #endif
 
@@ -220,7 +220,7 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:Reference Orientati
     unit_test::CompareArrays<float32>(dataStructure, kEulersDataPath.replaceName(computedArrayName), kEulersDataPath.replaceName(compute_misorientations_test::k_OutputArrayName));
   }
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/compute_misorientation_reference_orientation.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/compute_misorientation_reference_orientation.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);
@@ -263,7 +263,7 @@ TEST_CASE("OrientationAnalysis::ComputeMisorientationsFilter:InputArrays", "[Rec
   }
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/compute_misorientation_arrays.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/compute_misorientation_arrays.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);

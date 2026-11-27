@@ -510,17 +510,17 @@ DataStructure CreateM3CParityData(bool useConfiguredCellStores)
   std::shared_ptr<AbstractDataStore<int32>> cellVectorsStore;
   if(useConfiguredCellStores)
   {
-    featureIdsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_ParityFeatureIdsPath, tupleShape, {1});
-    cellVectorsStore = DataStoreUtilities::CreateDataStore<int32>(dataStructure, k_ParityCellVectorsPath, tupleShape, {2});
+    featureIdsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_ParityFeatureIdsPath, tupleShape, {1});
+    cellVectorsStore = data_store_utilities::CreateDataStore<int32>(dataStructure, k_ParityCellVectorsPath, tupleShape, {2});
   }
   else
   {
-    featureIdsStore = std::make_shared<Int32DataStore>(tupleShape, ShapeType{1}, std::optional<int32>{});
-    cellVectorsStore = std::make_shared<Int32DataStore>(tupleShape, ShapeType{2}, std::optional<int32>{});
+    featureIdsStore = std::make_shared<Int32DataStoreType>(tupleShape, ShapeType{1}, std::optional<int32>{});
+    cellVectorsStore = std::make_shared<Int32DataStoreType>(tupleShape, ShapeType{2}, std::optional<int32>{});
   }
-  auto* featureIds = Int32Array::Create(dataStructure, k_ParityFeatureIdsPath.getTargetName(), featureIdsStore, cellData->getId());
-  auto* cellVectors = Int32Array::Create(dataStructure, k_ParityCellVectorsPath.getTargetName(), cellVectorsStore, cellData->getId());
-  auto* featureValues = Float32Array::CreateWithStore<Float32DataStore>(dataStructure, k_ParityFeatureValuesPath.getTargetName(), {4}, {1}, featureData->getId());
+  auto* featureIds = Int32ArrayType::Create(dataStructure, k_ParityFeatureIdsPath.getTargetName(), featureIdsStore, cellData->getId());
+  auto* cellVectors = Int32ArrayType::Create(dataStructure, k_ParityCellVectorsPath.getTargetName(), cellVectorsStore, cellData->getId());
+  auto* featureValues = Float32ArrayType::CreateWithStore<Float32DataStoreType>(dataStructure, k_ParityFeatureValuesPath.getTargetName(), {4}, {1}, featureData->getId());
   REQUIRE(featureIds != nullptr);
   REQUIRE(cellVectors != nullptr);
   REQUIRE(featureValues != nullptr);
@@ -581,7 +581,7 @@ void ExecuteM3CParityCase(DataStructure& dataStructure, AlgorithmTestScope& scop
   M3CSurfaceMeshingFilter filter;
   const Arguments args = CreateM3CParityArguments();
   auto preflightResult = filter.preflight(dataStructure, args);
-  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.outputActions);
+  SIMPLNX_RESULT_REQUIRE_VALID(preflightResult.output_actions);
   auto executeResult = scope.executeFilter(filter, dataStructure, args);
   SIMPLNX_RESULT_REQUIRE_VALID(executeResult.result);
   CheckMeshIntegrity(dataStructure, k_ParityMeshPath, k_ParityFaceLabelsPath, k_ParityNodeTypesPath);

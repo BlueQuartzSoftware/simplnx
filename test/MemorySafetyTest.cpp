@@ -26,7 +26,7 @@ namespace
 void RegisterPlaceholderManagerForStrictBuild()
 {
 #if SIMPLNX_STORE_COPY_STRICT_FORMAT
-  auto registration = UnitTest::RegisterPlaceholderPlanManager(Application::GetOrCreateInstance()->getIOCollection(), "HDF5-OOC");
+  auto registration = unit_test::RegisterPlaceholderPlanManager(Application::GetOrCreateInstance()->getIOCollection(), "HDF5-OOC");
   SIMPLNX_RESULT_REQUIRE_VALID(registration);
 #endif
 }

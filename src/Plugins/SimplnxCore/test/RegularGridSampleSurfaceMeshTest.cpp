@@ -235,7 +235,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:CreateImageGeom", "[S
 
 // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-    UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
+    unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
     DataPath exemplarImageGeomPath({sectionTitle});
@@ -279,7 +279,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:CreateImageGeom", "[S
 
 // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-    UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
+    unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
     DataPath exemplarImageGeomPath({sectionTitle});
@@ -323,7 +323,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:CreateImageGeom", "[S
 
 // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-    UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
+    unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
     DataPath exemplarImageGeomPath({sectionTitle});
@@ -399,7 +399,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:ExistingImageGeom", "
 
 // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-    UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
+    unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
     DataPath exemplarFeatureIdsPath = exemplarImageGeometryPath.createChildPath(constants::k_CellData).createChildPath(sectionTitle);
     DataPath computedFeatureIdsPath = exemplarImageGeometryPath.createChildPath(constants::k_CellData).createChildPath("FeatureIds");
@@ -434,7 +434,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:ExistingImageGeom", "
 
 // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-    UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
+    unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
     DataPath exemplarFeatureIdsPath = exemplarImageGeometryPath.createChildPath(constants::k_CellData).createChildPath(sectionTitle);
     DataPath computedFeatureIdsPath = exemplarImageGeometryPath.createChildPath(constants::k_CellData).createChildPath("FeatureIds");
@@ -469,7 +469,7 @@ TEST_CASE("SimplnxCore::RegularGridSampleSurfaceMeshFilter:ExistingImageGeom", "
 
 // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-    UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
+    unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_regular_grid_sample_surface_mesh_create_geometry.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
     DataPath exemplarFeatureIdsPath = exemplarImageGeometryPath.createChildPath(constants::k_CellData).createChildPath(sectionTitle);
     DataPath computedFeatureIdsPath = exemplarImageGeometryPath.createChildPath(constants::k_CellData).createChildPath("FeatureIds");

@@ -493,7 +493,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: Flipped Image Even-Even X/Y"
   ::ReadInFlippedXYExemplars(dataStructure, filePrefix);
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/even_even_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/even_even_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   // Compare against exemplars
@@ -517,7 +517,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: Flipped Image Even-Odd X/Y",
   ::ReadInFlippedXYExemplars(dataStructure, filePrefix);
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/even_odd_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/even_odd_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   // Compare against exemplars
@@ -538,7 +538,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: Flipped Image Odd-Even X/Y",
   ::ReadInFlippedXYExemplars(dataStructure, filePrefix);
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/odd_even_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/odd_even_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   ::CompareXYFlippedGeometries(dataStructure);
@@ -558,7 +558,7 @@ TEST_CASE("NXImageProcessing::ReadImageStackFilter: Flipped Image Odd-Odd X/Y", 
   ::ReadInFlippedXYExemplars(dataStructure, filePrefix);
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fmt::format("{}/odd_odd_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
+  unit_test::WriteTestDataStructure(dataStructure, fmt::format("{}/odd_odd_import_image_stack_test.dream3d", unit_test::k_BinaryTestOutputDir));
 #endif
 
   ::CompareXYFlippedGeometries(dataStructure);

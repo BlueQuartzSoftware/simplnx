@@ -69,7 +69,7 @@ TEST_CASE("NXImageProcessing::ReadZeissTxmFileFilter:Read_Full_Volume", "[NXImag
 
   // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/read_zeiss_txm_file_test_output.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/read_zeiss_txm_file_test_output.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   unit_test::CompareImageGeometry(dataStructure, exemplarFullVolumePath, ::k_CreatedImageGeometryPath);
@@ -131,7 +131,7 @@ TEST_CASE("NXImageProcessing::ReadZeissTxmFileFilter:Read_Sub_Volume", "[NXImage
 
     // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-    UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/read_zeiss_txm_file_test_output.dream3d", unit_test::k_BinaryTestOutputDir)));
+    unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/read_zeiss_txm_file_test_output.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
     unit_test::CompareImageGeometry(dataStructure, DataPath({exemplaryGeomName}), DataPath({k_CreatedImageGeometryPath}));

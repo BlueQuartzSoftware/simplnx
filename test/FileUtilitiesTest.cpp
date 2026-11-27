@@ -257,7 +257,7 @@ TEST_CASE("FileUtilities returns a Windows status error for a Unicode path", "[s
   {
     const auto filePath = outputPath / "out.txt";
     Result<> result;
-    REQUIRE_NOTHROW(result = FileUtilities::ValidateDirectoryWritePermission(filePath, true));
+    REQUIRE_NOTHROW(result = file_utilities::ValidateDirectoryWritePermission(filePath, true));
     checkStatusError(result, -4092);
     CHECK(result.errors()[0].message.find("out.txt") != std::string::npos);
   }

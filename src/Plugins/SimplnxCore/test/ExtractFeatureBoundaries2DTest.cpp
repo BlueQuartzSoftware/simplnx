@@ -161,7 +161,7 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter::Valid_8_Cases", "[Simp
 
       // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-      UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/test_output_{}", unit_test::k_BinaryTestOutputDir, fileName)));
+      unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/test_output_{}", unit_test::k_BinaryTestOutputDir, fileName)));
 #endif
 
       VerifyOutput(dataStructure, k_ExemplarEdgeGeometryPath, k_OutputEdgeGeometryPath);
@@ -200,7 +200,7 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Max", "[SimplnxCore]
 
   // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/test_output_08_complex_mixed_z_max", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/test_output_08_complex_mixed_z_max", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   VerifyOutput(dataStructure, DataPath({"Feature Boundaries Max Z"}), k_OutputEdgeGeometryPath);
@@ -237,7 +237,7 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Custom", "[SimplnxCo
 
   // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/test_output_08_complex_mixed_z_custom", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/test_output_08_complex_mixed_z_custom", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   VerifyOutput(dataStructure, DataPath({"Feature Boundaries Custom Z"}), k_OutputEdgeGeometryPath);
@@ -275,7 +275,7 @@ TEST_CASE("SimplnxCore::ExtractFeatureBoundaries2DFilter: Z Min No Edges", "[Sim
 
   // Write the DataStructure out to the file system
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/test_output_08_complex_mixed_no_edges", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/test_output_08_complex_mixed_no_edges", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   VerifyOutput(dataStructure, DataPath({"Feature Boundaries Min Z No Edges"}), k_OutputEdgeGeometryPath);

@@ -329,7 +329,7 @@ TEST_CASE("StorageFormatPlan: factory creates validated memory and registered OO
   REQUIRE(registeredResult.value()->memoryUsage() == 0);
 
 #if SIMPLNX_STORE_COPY_STRICT_FORMAT
-  auto placeholderRegistration = UnitTest::RegisterPlaceholderPlanManager(Application::GetOrCreateInstance()->getIOCollection(), "HDF5-OOC");
+  auto placeholderRegistration = unit_test::RegisterPlaceholderPlanManager(Application::GetOrCreateInstance()->getIOCollection(), "HDF5-OOC");
   SIMPLNX_RESULT_REQUIRE_VALID(placeholderRegistration);
   auto oocResult = EmptyDataStore<float32>::Create(ShapeType{2, 3}, ShapeType{2}, "HDF5-OOC");
   SIMPLNX_RESULT_REQUIRE_VALID(oocResult);

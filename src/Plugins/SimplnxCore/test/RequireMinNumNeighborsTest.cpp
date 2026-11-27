@@ -621,7 +621,7 @@ TEST_CASE("SimplnxCore::RequireMinNumNeighborsFilter", "[SimplnxCore][RequireMin
 
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
   // The optional output supports manual inspection of the coarsened arrays.
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/minimum_neighbors_test.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/minimum_neighbors_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   unit_test::CheckArraysInheritTupleDims(dataStructure);

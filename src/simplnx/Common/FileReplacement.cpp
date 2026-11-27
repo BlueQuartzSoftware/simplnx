@@ -154,10 +154,10 @@ FileReplacementSteps PlatformFileReplacementSteps(FileReplacementDurability dura
 {
   const auto wait = [](std::chrono::milliseconds duration) { std::this_thread::sleep_for(duration); };
 #ifdef _WIN32
-  return {.Rename = [durability](const fs::path& replacement, const fs::path& destination) { return renameOnWindows(replacement, destination, durability); },
-          .IsTransient = isWindowsRenameErrorTransient,
-          .Wait = wait,
-          .Flush = durability == FileReplacementDurability::WriteThrough ? flushOnWindows : std::function<std::error_code(const fs::path&)>{}};
+  return {.rename = [durability](const fs::path& replacement, const fs::path& destination) { return renameOnWindows(replacement, destination, durability); },
+          .is_transient = isWindowsRenameErrorTransient,
+          .wait = wait,
+          .flush = durability == FileReplacementDurability::WriteThrough ? flushOnWindows : std::function<std::error_code(const fs::path&)>{}};
 #else
   static_cast<void>(durability);
   return {.rename =
@@ -173,7 +173,7 @@ FileReplacementSteps PlatformFileReplacementSteps(FileReplacementDurability dura
 
 FileReplacementOutcome InstallReplacementFile(const fs::path& replacement, const fs::path& destination, const FileReplacementSteps& steps)
 {
-  assert(steps.Rename && steps.IsTransient && steps.Wait);
+  assert(steps.rename && steps.is_transient && steps.wait);
   FileReplacementOutcome outcome;
   bool flushed = !steps.flush;
   std::chrono::milliseconds nextWait = k_FileReplacementFirstWaitMs;
@@ -216,7 +216,7 @@ FileReplacementOutcome InstallReplacementFile(const fs::path& replacement, const
 
 std::string DescribeFileReplacementSystemError(const FileReplacementOutcome& outcome)
 {
-  assert(outcome.Error);
+  assert(outcome.error);
   if(outcome.attempts > 1)
   {
     return fmt::format("Operating system error: {} (tried {} times over {} ms).", outcome.error.message(), outcome.attempts, outcome.waited.count());
@@ -226,7 +226,7 @@ std::string DescribeFileReplacementSystemError(const FileReplacementOutcome& out
 
 bool FileReplacementLeftDestinationUnchanged(const FileReplacementOutcome& outcome)
 {
-  assert(outcome.Error);
+  assert(outcome.error);
   if(!outcome.rename_attempted || outcome.retries_exhausted)
   {
     return true;

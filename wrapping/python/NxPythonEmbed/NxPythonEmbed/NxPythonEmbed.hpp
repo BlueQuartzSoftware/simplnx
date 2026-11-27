@@ -165,9 +165,9 @@ inline std::set<std::string> GetPythonPluginListFromEnvironment()
   }
 
 #if defined(_WIN32)
-  std::vector<std::string> pluginList = nx::core::StringUtilities::Split(var, ';');
+  std::vector<std::string> pluginList = nx::core::string_utilities::Split(var, ';');
 #else
-  std::vector<std::string> pluginList = nx::core::StringUtilities::Split(var, ':');
+  std::vector<std::string> pluginList = nx::core::string_utilities::Split(var, ':');
 #endif
 
   return std::set<std::string>(std::make_move_iterator(pluginList.begin()), std::make_move_iterator(pluginList.end()));

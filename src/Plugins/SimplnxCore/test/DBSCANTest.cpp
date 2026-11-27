@@ -131,7 +131,7 @@ void LDFTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minPtsV
 
   // The optional output supports manual inspection.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_LDF_2d_{}_test.dream3d", unit_test::k_BinaryTestOutputDir, targetPath.getTargetName())));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_LDF_2d_{}_test.dream3d", unit_test::k_BinaryTestOutputDir, targetPath.getTargetName())));
 #endif
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(generatedIdsPath));
@@ -199,7 +199,7 @@ void RandomTestCase2D(const DataPath& targetPath, float32 epsilonVal, int32 minP
 
   // The optional output supports manual inspection.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_Random_2d_{}_test.dream3d", unit_test::k_BinaryTestOutputDir, targetPath.getTargetName())));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_Random_2d_{}_test.dream3d", unit_test::k_BinaryTestOutputDir, targetPath.getTargetName())));
 #endif
 
   // ParseOrder::Random draws a time-based seed inside the filter, so the shuffle differs on every
@@ -543,7 +543,7 @@ TEST_CASE("SimplnxCore::DBSCAN: 3D Test (LowDensityFirst)", "[SimplnxCore][DBSCA
 
   // The optional output supports manual inspection.
 #ifdef SIMPLNX_WRITE_TEST_OUTPUT
-  UnitTest::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_LDF_3d_test.dream3d", unit_test::k_BinaryTestOutputDir)));
+  unit_test::WriteTestDataStructure(dataStructure, fs::path(fmt::format("{}/7_0_DBSCAN_LDF_3d_test.dream3d", unit_test::k_BinaryTestOutputDir)));
 #endif
 
   REQUIRE_NOTHROW(dataStructure.getDataRefAs<Int32ArrayType>(generatedIdsPath));

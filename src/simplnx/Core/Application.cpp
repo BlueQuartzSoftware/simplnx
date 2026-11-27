@@ -300,7 +300,7 @@ Result<> Application::loadPlugins(const std::filesystem::path& pluginDir, bool v
 #ifdef NDEBUG // Release mode
       if(!string_utilities::EndsWith(path.string(), "_d.simplnx") && string_utilities::EndsWith(path.string(), ".simplnx"))
 #else
-      if(StringUtilities::ends_with(path.string(), "_d.simplnx"))
+      if(string_utilities::EndsWith(path.string(), "_d.simplnx"))
 #endif
       {
         auto result = loadPlugin(path, verbose);

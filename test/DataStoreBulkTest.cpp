@@ -612,7 +612,7 @@ TEST_CASE("Bounded diagnostics retain valid Unicode and explicitly escape malfor
   const std::string supplementary = "\xF0\x9F\x8C\x90";
 #ifdef _WIN32
   const std::filesystem::path path(std::wstring{L'p', wchar_t{0xD83C}, wchar_t{0xDF10}, wchar_t{0xD800}});
-  const auto result = MakeErrorResult<>(BoundedRead::ReadFailure, "Read failed" + BoundedRead::FormatSourceContext(path, "data"));
+  const auto result = MakeErrorResult<>(bounded_read::ReadFailure, "Read failed" + bounded_read::FormatSourceContext(path, "data"));
   REQUIRE(result.invalid());
   REQUIRE(result.errors().size() == 1);
   REQUIRE(result.errors().front().message.find(supplementary) != std::string::npos);

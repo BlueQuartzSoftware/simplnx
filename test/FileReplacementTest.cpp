@@ -206,8 +206,8 @@ TEST_CASE("FileReplacement identifies known preservation and uncertain rename er
   SECTION("Native Windows refusal")
   {
     const auto refusal = GENERATE(ERROR_ACCESS_DENIED, ERROR_SHARING_VIOLATION, ERROR_LOCK_VIOLATION);
-    outcome.Error = {static_cast<int>(refusal), std::system_category()};
-    outcome.RenameAttempted = true;
+    outcome.error = {static_cast<int>(refusal), std::system_category()};
+    outcome.rename_attempted = true;
   }
 #endif
   SECTION("Uncertain rename error")
@@ -444,7 +444,7 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
   SECTION("A full-sharing indexer handle follows the volume rename capability")
   {
     WriteFile(replacement, "new");
-    const bool supportsPosixRename = UnitTest::VolumeSupportsPosixRename(directory);
+    const bool supportsPosixRename = unit_test::VolumeSupportsPosixRename(directory);
     {
       const HANDLE held = CreateFileW(destination.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
       REQUIRE((held != INVALID_HANDLE_VALUE));
@@ -452,20 +452,20 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
       const auto outcome = InstallReplacementFile(replacement, destination);
       if(supportsPosixRename)
       {
-        REQUIRE_FALSE(outcome.Error);
+        REQUIRE_FALSE(outcome.error);
         CHECK((ReadFile(destination) == "new"));
         CHECK_FALSE(fs::exists(replacement));
       }
       else
       {
-        REQUIRE(outcome.Error);
+        REQUIRE(outcome.error);
         CHECK((ReadFile(destination) == "old"));
         CHECK((ReadFile(replacement) == "new"));
       }
     }
     if(!supportsPosixRename)
     {
-      REQUIRE_FALSE(InstallReplacementFile(replacement, destination).Error);
+      REQUIRE_FALSE(InstallReplacementFile(replacement, destination).error);
       CHECK((ReadFile(destination) == "new"));
       CHECK_FALSE(fs::exists(replacement));
     }
@@ -475,24 +475,24 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
   {
     WriteFile(replacement, "new");
     auto steps = detail::PlatformFileReplacementSteps();
-    steps.Rename = [](const fs::path& from, const fs::path& to) {
+    steps.rename = [](const fs::path& from, const fs::path& to) {
       return detail::RenameWithFallback(
           [] { return std::error_code{ERROR_NOT_SUPPORTED, std::system_category()}; },
           [&] { return MoveFileExW(from.c_str(), to.c_str(), MOVEFILE_REPLACE_EXISTING) == 0 ? std::error_code{static_cast<int>(GetLastError()), std::system_category()} : std::error_code{}; },
           [](const std::error_code&) { return false; });
     };
-    steps.Wait = [](std::chrono::milliseconds) {};
+    steps.wait = [](std::chrono::milliseconds) {};
     {
       const HANDLE held = CreateFileW(destination.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr);
       REQUIRE((held != INVALID_HANDLE_VALUE));
       const auto closeHandle = MakeScopeGuard([held]() noexcept { CloseHandle(held); });
       const auto outcome = detail::InstallReplacementFile(replacement, destination, steps);
-      REQUIRE(outcome.Error);
-      CHECK(outcome.RetriesExhausted);
+      REQUIRE(outcome.error);
+      CHECK(outcome.retries_exhausted);
       CHECK((ReadFile(destination) == "old"));
       CHECK((ReadFile(replacement) == "new"));
     }
-    REQUIRE_FALSE(detail::InstallReplacementFile(replacement, destination, steps).Error);
+    REQUIRE_FALSE(detail::InstallReplacementFile(replacement, destination, steps).error);
     CHECK((ReadFile(destination) == "new"));
     CHECK_FALSE(fs::exists(replacement));
   }
@@ -509,7 +509,7 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
       }
     });
     auto steps = detail::PlatformFileReplacementSteps();
-    steps.Wait = [&held](std::chrono::milliseconds) {
+    steps.wait = [&held](std::chrono::milliseconds) {
       if(held != INVALID_HANDLE_VALUE)
       {
         REQUIRE((CloseHandle(held) != 0));
@@ -518,8 +518,8 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     };
 
     const auto outcome = detail::InstallReplacementFile(replacement, destination, steps);
-    REQUIRE_FALSE(outcome.Error);
-    CHECK((outcome.Attempts >= 2));
+    REQUIRE_FALSE(outcome.error);
+    CHECK((outcome.attempts >= 2));
     CHECK((ReadFile(destination) == "new"));
     CHECK_FALSE(fs::exists(replacement));
   }
@@ -531,13 +531,13 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     REQUIRE((held != INVALID_HANDLE_VALUE));
     const auto closeHandle = MakeScopeGuard([held]() noexcept { CloseHandle(held); });
     auto steps = detail::PlatformFileReplacementSteps();
-    steps.Wait = [](std::chrono::milliseconds) {};
+    steps.wait = [](std::chrono::milliseconds) {};
 
     const auto outcome = detail::InstallReplacementFile(replacement, destination, steps);
-    CHECK((outcome.Error.category() == std::system_category()));
-    CHECK((outcome.Error.value() == ERROR_SHARING_VIOLATION || outcome.Error.value() == ERROR_ACCESS_DENIED));
-    CHECK((outcome.Waited == detail::k_FileReplacementTotalWaitLimitMs));
-    CHECK(outcome.RetriesExhausted);
+    CHECK((outcome.error.category() == std::system_category()));
+    CHECK((outcome.error.value() == ERROR_SHARING_VIOLATION || outcome.error.value() == ERROR_ACCESS_DENIED));
+    CHECK((outcome.waited == detail::k_FileReplacementTotalWaitLimitMs));
+    CHECK(outcome.retries_exhausted);
     CHECK((ReadFile(destination) == "old"));
     CHECK((ReadFile(replacement) == "new"));
   }
@@ -550,13 +550,13 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     const auto restoreAttributes = MakeScopeGuard([&destination, originalAttributes]() noexcept { SetFileAttributesW(destination.c_str(), originalAttributes); });
     REQUIRE((SetFileAttributesW(destination.c_str(), (originalAttributes & ~static_cast<DWORD>(FILE_ATTRIBUTE_NORMAL)) | FILE_ATTRIBUTE_READONLY) != 0));
     auto steps = detail::PlatformFileReplacementSteps();
-    steps.Wait = [](std::chrono::milliseconds) {};
+    steps.wait = [](std::chrono::milliseconds) {};
 
     const auto outcome = detail::InstallReplacementFile(replacement, destination, steps);
-    CHECK((outcome.Error.category() == std::system_category()));
-    CHECK((outcome.Error.value() == ERROR_ACCESS_DENIED));
-    CHECK((outcome.Attempts == 1));
-    CHECK_FALSE(outcome.RetriesExhausted);
+    CHECK((outcome.error.category() == std::system_category()));
+    CHECK((outcome.error.value() == ERROR_ACCESS_DENIED));
+    CHECK((outcome.attempts == 1));
+    CHECK_FALSE(outcome.retries_exhausted);
     CHECK((ReadFile(destination) == "old"));
     CHECK((ReadFile(replacement) == "new"));
   }
@@ -568,12 +568,12 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
     REQUIRE((held != INVALID_HANDLE_VALUE));
     const auto closeHandle = MakeScopeGuard([held]() noexcept { CloseHandle(held); });
     auto steps = detail::PlatformFileReplacementSteps();
-    steps.Wait = [](std::chrono::milliseconds) {};
+    steps.wait = [](std::chrono::milliseconds) {};
 
     const auto outcome = detail::InstallReplacementFile(replacement, destination, steps);
-    CHECK((outcome.Error.category() == std::system_category()));
-    CHECK((outcome.Error.value() == ERROR_SHARING_VIOLATION));
-    CHECK(outcome.RetriesExhausted);
+    CHECK((outcome.error.category() == std::system_category()));
+    CHECK((outcome.error.value() == ERROR_SHARING_VIOLATION));
+    CHECK(outcome.retries_exhausted);
     CHECK((ReadFile(destination) == "old"));
     CHECK((ReadFile(replacement) == "new"));
   }
@@ -582,7 +582,7 @@ TEST_CASE("InstallReplacementFile replaces real files", "[simplnx]")
   {
     WriteFile(replacement, "new");
     const auto outcome = InstallReplacementFile(replacement, destination, FileReplacementDurability::WriteThrough);
-    REQUIRE_FALSE(outcome.Error);
+    REQUIRE_FALSE(outcome.error);
     CHECK((ReadFile(destination) == "new"));
     CHECK_FALSE(fs::exists(replacement));
   }
