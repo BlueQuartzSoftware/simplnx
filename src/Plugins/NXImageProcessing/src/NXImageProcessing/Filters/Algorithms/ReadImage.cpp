@@ -30,6 +30,22 @@ using namespace nx::core;
 
 namespace
 {
+std::string DescribePageLayout(const IImageIO::PageMetadata& layout)
+{
+  switch(layout.sampleFormat)
+  {
+  case IImageIO::SampleFormat::Unsigned:
+    return fmt::format("{}-component uint{}", layout.numComponents, layout.bitsPerSample);
+  case IImageIO::SampleFormat::Signed:
+    return fmt::format("{}-component int{}", layout.numComponents, layout.bitsPerSample);
+  case IImageIO::SampleFormat::Float:
+    return fmt::format("{}-component float{}", layout.numComponents, layout.bitsPerSample);
+  case IImageIO::SampleFormat::Unknown:
+    break;
+  }
+  return fmt::format("{}-component {}-bit samples of an unsupported type", layout.numComponents, layout.bitsPerSample);
+}
+
 /**
  * @brief Geometry of one raster read (2D raster or multi-page TIFF Z-stack).
  *
@@ -287,6 +303,12 @@ Result<> ReadRasterBackend(DataStructure& dataStructure, const ReadImageInputVal
     return MakeErrorResult(-2001, fmt::format("Crop window (start=[{},{},{}], size=[{},{},{}]) does not fit within the source image (size=[{},{},{}])", stream.x_start, stream.y_start, stream.z_start,
                                               stream.dst_width, stream.dst_height, stream.dst_depth, stream.src_width, stream.src_height, metadata.num_pages));
   }
+  // Only the decoded pages are validated. Page 0 sets the output layout, so each decoded page is compared with it.
+  auto layoutResult = ReadImage::ValidatePageLayouts(*imageIO, inputFilePath, stream.single_page_only ? usize{0} : stream.z_start, stream.dst_depth);
+  if(layoutResult.invalid())
+  {
+    return layoutResult;
+  }
 
   const DataType destType = imageArray.getDataType();
   const DataType srcType = metadata.data_type;
@@ -455,4 +477,37 @@ Result<> ReadImage::operator()()
   }
 
   return ReadRasterBackend(m_DataStructure, m_InputValues, m_MessageHandler, m_ShouldCancel);
+}
+
+// -----------------------------------------------------------------------------
+Result<> ReadImage::ValidatePageLayouts(const IImageIO& imageIO, const std::filesystem::path& filePath, usize firstPage, usize pageCount)
+{
+  // Page 0 sets the output layout. A read of page 0 alone has nothing to compare.
+  if(pageCount == 0 || (firstPage == 0 && pageCount == 1))
+  {
+    return {};
+  }
+  auto result = imageIO.readPageLayouts(filePath);
+  if(result.invalid())
+  {
+    return ConvertResult(std::move(result));
+  }
+  const auto& layouts = result.value();
+  if(layouts.empty())
+  {
+    return {};
+  }
+  const auto& first = layouts.front();
+  const usize endPage = std::min(layouts.size(), firstPage + pageCount);
+  for(usize page = std::max(firstPage, usize{1}); page < endPage; ++page)
+  {
+    const auto& current = layouts[page];
+    if(current.numComponents != first.numComponents || current.bitsPerSample != first.bitsPerSample || current.sampleFormat != first.sampleFormat)
+    {
+      return MakeErrorResult(
+          -50579, fmt::format("TIFF '{}': page {} is {}, page 0 is {}. Each page that is read must have the same component count and data type as page 0. Use a TIFF with matching page layouts.",
+                              filePath.string(), page, DescribePageLayout(current), DescribePageLayout(first)));
+    }
+  }
+  return {};
 }
